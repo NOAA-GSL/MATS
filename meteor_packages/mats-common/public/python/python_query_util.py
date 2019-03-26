@@ -644,7 +644,7 @@ def parse_query_data_reliability(cursor, has_levels):
     data['y'] = hit_rate
     data['subVals'] = sample_climo
     data['error_x'] = oy_all
-    data['error_y'] = on_all
+    data['subLevs'] = on_all
     data['xmax'] = 1.0
     data['xmin'] = 0.0
     data['ymax'] = 1.0

@@ -668,6 +668,7 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
         var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
 
+        var sample_climo = data.subVals;
         var di = 0;
         var values = [];
         var indVars = [];
@@ -699,22 +700,21 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
 
         while (di < data.x.length) {
 
-            rawStat = data.subVals[di];
 
             values.push(data.y[di]);
-            indVars.push(data.subVals[di]);
-
-
-            // remove sub values and times to save space
-            data.subVals[di] = [];
-            data.subSecs[di] = [];
-            data.subLevs[di] = [];
 
             // store statistics for this di datapoint
             data.stats[di] = {
                 prob_bin: data.x[di],
                 hit_rate: data.y[di],
+                obs_y: data.error_x[di],
+                obs_n: data.subLevs[di]
             };
+
+            // remove sub values and times to save space
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
 
             // this is the tooltip, it is the last element of each dataseries element.
             // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
@@ -738,6 +738,8 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
                 case matsTypes.PlotTypes.reliability:
                     data.text[di] = data.text[di] + "<br>probability bin: " + data.x[di];
                     data.text[di] = data.text[di] + "<br>hit rate: " + data.y[di];
+                    data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
+                    data.text[di] = data.text[di] + "<br>on: " + data.error_y[di];
                     break;
                 case matsTypes.PlotTypes.threshold:
                     data.text[di] = data.text[di] + "<br>threshold: " + data.x[di];
@@ -761,7 +763,9 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
             maxy = 0;
         }
 
-        dataset[curveIndex]['glob_stats'] = "";
+        dataset[curveIndex]['glob_stats'] = {
+                sample_climo: sample_climo
+            };
 
     }
 
@@ -769,10 +773,29 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
     const perfectLine = matsDataCurveOpsUtils.getLinearValueLine(curveInfoParams.xmax, curveInfoParams.xmin, data.ymax, data.ymin, matsTypes.ReservedWords.perfectReliability);
     dataset.push(perfectLine);
 
-    // add black 0 line curve
-    // need to define the minimum and maximum x value for making the zero curve
-    //const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
-    //dataset.push(zeroLine);
+    if (sample_climo >= data.ymin) {
+        var skillmin = sample_climo - ((sample_climo - data.xmin)/2);
+    } else {
+        var skillmin = data.xmin - ((data.xmin - sample_climo)/2);
+    }
+    if (sample_climo >= data.ymax) {
+        var skillmax = sample_climo - ((sample_climo - data.xmax)/2);
+    } else {
+        var skillmax = data.xmax - ((data.xmax - sample_climo)/2);
+    }
+
+
+    // add black no skill line curve
+    const noSkillLine = matsDataCurveOpsUtils.getLinearValueLine(curveInfoParams.xmax, curveInfoParams.xmin, skillmax, skillmin, matsTypes.ReservedWords.noSkill);
+    dataset.push(noSkillLine);
+
+    // add sample climo lines
+    // need to define the minimum and maximum x value for making the curves
+    const xClimoLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, sample_climo, matsTypes.ReservedWords.zero);
+    dataset.push(xClimoLine);
+
+    const yClimoLine = matsDataCurveOpsUtils.getVerticalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, sample_climo, matsTypes.ReservedWords.zero);
+    dataset.push(yClimoLine);
 
     //add ideal value lines, if any
     //var idealValueLine;

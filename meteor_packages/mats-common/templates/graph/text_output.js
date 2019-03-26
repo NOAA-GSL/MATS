@@ -80,7 +80,8 @@ Template.textOutput.helpers({
                 // no stat for scatter
                 break;
             case matsTypes.PlotTypes.reliability:
-                // no stat for reliability yet
+                header += "<th>label</th>\
+                    <th>sample climotology</th>";
                 break;
             case matsTypes.PlotTypes.map:
                 header += "<th>label</th>\
@@ -163,7 +164,9 @@ Template.textOutput.helpers({
                 break;
             case matsTypes.PlotTypes.reliability:
                 header += "<th>" + curve.label + " probability bin</th>\
-                        <th>hit rate</th>";
+                        <th>hit rate</th>\
+                        <th>oy</th>\
+                        <th>on</th>";
                 break;
             case matsTypes.PlotTypes.scatter2d:
                 header += "<th>" + curve.label + " x axis</th>\
@@ -268,7 +271,9 @@ Template.textOutput.helpers({
                 break;
             case matsTypes.PlotTypes.reliability:
                 line += "<td>" + element[labelKey += " probability bin"] + "</td>" +
-                    "<td>" + (element['hit rate'] != undefined && element['hit rate'] !== null ? element['hit rate'].toPrecision(4) : fillStr) + "</td>";
+                    "<td>" + (element['hit rate'] != undefined && element['hit rate'] !== null ? element['hit rate'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['oy'] != undefined && element['oy'] !== null ? element['oy'] : fillStr) + "</td>" +
+                    "<td>" + (element['on'] != undefined && element['on'] !== null ? element['on'] : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.threshold:
                 line += "<td>" + element[labelKey += " threshold (in)"] + "</td>" +
@@ -359,6 +364,9 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.reliability:
+                line += "<td>" + curve['label'] + "</td>" +
+                    "<td>" + (stats['sample climo'] != undefined && stats['sample climo'] !== null ? stats['sample climo'].toPrecision(4) : "undefined").toString() + "</td>";
+                break;
             case matsTypes.PlotTypes.validtime:
                 line += "<td>" + curve['label'] + "</td>" +
                     "<td>" + (stats['mean'] != undefined && stats['mean'] !== null ? stats['mean'].toPrecision(4) : "undefined").toString() + "</td>" +

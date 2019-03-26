@@ -324,7 +324,7 @@ const _getJSON = function (params, req, res, next) {
 const _getFlattenedResultData = function (rk, p, np) {
     if (Meteor.isServer) {
         var resp;
-        try {
+        //try {
             var r = rk;
             var p = p;
             var np = np;
@@ -443,6 +443,10 @@ const _getFlattenedResultData = function (rk, p, np) {
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
                         }
+                        var stats = {};
+                        stats['label'] = data[ci].label;
+                        stats['sample climo'] = data[ci].glob_stats.sample_climo;
+                        returnData.stats[data[ci].label] = stats;
 
                         var cdata = data[ci].data;
                         var curveData = [];  // array of maps
@@ -450,6 +454,8 @@ const _getFlattenedResultData = function (rk, p, np) {
                             var curveDataElement = {};
                             curveDataElement[data[ci].label + ' probability bin'] = data[ci].stats[cdi].prob_bin;
                             curveDataElement['hit rate'] = data[ci].stats[cdi].hit_rate;
+                            curveDataElement['oy'] = data[ci].stats[cdi].obs_y;
+                            curveDataElement['on'] = data[ci].stats[cdi].obs_n;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -671,9 +677,9 @@ const _getFlattenedResultData = function (rk, p, np) {
             returnData.dsiRealPageIndex = dsiRealPageIndex;
             returnData.dsiTextDirection = dsiTextDirection;
             return returnData;
-        } catch (error) {
-            throw new Meteor.Error("Error in _getFlattenedResultData function: " + error.message);
-        }
+        //} catch (error) {
+        //    throw new Meteor.Error("Error in _getFlattenedResultData function: " + error.message);
+        //}
     }
 };
 
