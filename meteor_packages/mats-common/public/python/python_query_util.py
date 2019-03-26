@@ -572,6 +572,9 @@ def parse_query_data_reliability(cursor, has_levels):
     total_times = []
     total_values = []
 
+    observed_total = 0
+    forecast_total = 0
+
     # get query data and calculate starting time interval of the returned data
     query_data = cursor.fetchall()
 
@@ -591,6 +594,10 @@ def parse_query_data_reliability(cursor, has_levels):
         if bin_number != "null" and threshold != "NULL" and oy != "null" and on != "NULL" and times != "NULL" and values != "NULL":
             # this function deals with pct and pct_thresh tables
             # we must add up all of the observed and not-observed values for each probability bin
+
+            observed_total = observed_total + oy
+            forecast_total = forecast_total + oy + on
+
             if len(oy_all) < bin_number:
                 oy_all.append(oy)
             else:
@@ -627,12 +634,17 @@ def parse_query_data_reliability(cursor, has_levels):
         #print('HR: '+str(hr))
         hit_rate.append(hr)
 
+    # calculate the sample climatology
+    sample_climo = float(observed_total) / float(forecast_total)
+
     # Since everything is combined already, put it into the data structure
     n0 = total_values
     n_times = total_times
     data['x'] = threshold_all
     data['y'] = hit_rate
-    data['subVals'] = hit_rate
+    data['subVals'] = sample_climo
+    data['error_x'] = oy_all
+    data['error_y'] = on_all
     data['xmax'] = 1.0
     data['xmin'] = 0.0
     data['ymax'] = 1.0
