@@ -16,123 +16,113 @@ dataMap = function (plotParams, plotFunction) {
     var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
+    if (curves.length > 1) {
+        throw new Error("INFO:  There must only be one added curve.");
+    }
     var dataset = [];
     var curve = curves[0];
-    var diffFrom = curve.diffFrom;
     var dataSource = curve['data-source'];
     var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var forecastLength = curve['forecast-length'];
+    var modelTable;
+    var forecastLengthClause;
+    if (forecastLength === 1) {
+        modelTable = model + "qp1f";
+        forecastLengthClause = "";
+    } else {
+        modelTable = (model.includes('ret_') || model.includes('Ret_')) ? model + "p" : model + "qp";
+        forecastLengthClause = "and m0.fcst_len = " + forecastLength + " "
+    }
     var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
-    var modelTable = (model.includes('ret_') || model.includes('Ret_')) ? model + "p" : model + "qp";
-    var sitesList = curve['sites'];
-    var siteLength = sitesList.length;
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
+    var sitesClause = "";
+    var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+    if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
+        sitesClause = " and s.name in('" + sitesList.join("','") + "')";
+    }
     var variableStr = curve['variable'];
-    var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 2})['optionsMap'];
-    var variableOption = variableOptionsMap[variableStr];
-    var variable = variableOption[2];
+    var variable = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 2})['optionsMap'][variableStr][2];
+    var variableClause;
+    if (variable === "temp" || variable === "dp") {
+        variableClause = "sum((((m0." + variable + "/10)-32)*(5/9)) - (((o." + variable + "/10)-32)*(5/9)))";
+    } else if (variable === "rh" || variable === "press") {
+        variableClause = "sum((m0." + variable + " - o." + variable + ")/10)";
+    } else {
+        variableClause = "sum((m0." + variable + " - o." + variable + ")*0.44704)";
+    }
     var statisticSelect = 'diff';
     var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {mapVarUnitMap: 1})['mapVarUnitMap'];
     var varUnits = statVarUnitMap[statisticSelect][variableStr];
-    var forecastLength = curve['forecast-length'];
+    var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-    // axisKey is used to determine which axis a curve should use.
-    // This axisKeySet object is used like a set and if a curve has the same
-    // variable and statistic (axisKey) it will use the same axis,
-    // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
-    var axisKey = varUnits;
-    curves[0].axisKey = axisKey; // stash the axisKey to use it later for axis options
-    var d;
-    var dBlue;
-    var dBlack;
-    var dRed;
-    for (var siteIndex = 0; siteIndex < siteLength; siteIndex++) {
-        if (diffFrom == null) {
-            var site = sitesList[siteIndex];
+    if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
+        validTimeClause = " and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + "))" +
+            " OR (m0.time%3600>=1800 and FROM_UNIXTIME((m0.time-((m0.time%3600)-3600)),'%H') IN (" + validTimes + ")))";
+    }
 
-            var siteOptions = matsCollections.SiteMap.findOne({siteName: site});
+    var statement = "select s.name as sta_name, " +
+        "s.madis_id as sta_id, " +
+        "count(distinct m0.time) as N_times, " +
+        "min(m0.time) as min_time, " +
+        "max(m0.time) as max_time, " +
+        "{{variableClause}}/count(distinct m0.time) as model_ob_diff " +
+        "from metars as s, {{obsTable}} as o, {{modelTable}} as m0 " +
+        "where 1=1 " +
+        "and s.madis_id = m0.sta_id " +
+        "and s.madis_id = o.sta_id " +
+        "and m0.time = o.time " +
+        "{{sitesClause}} " +
+        "and m0.time >= '{{fromSecs}}' " +
+        "and m0.time <= '{{toSecs}}' " +
+        "and o.time >= '{{fromSecs}}' " +
+        "and o.time <= '{{toSecs}}' " +
+        "{{forecastLengthClause}} " +
+        "{{validTimeClause}}" +
+        "group by sta_name " +
+        "order by sta_name" +
+        ";";
 
-            // this is a database driven curve, not a difference curve
-            var statement = "select s.name as sta_name, " +
-                "count(distinct m0.time) as N_times, " +
-                "min(m0.time) as min_time, " +
-                "max(m0.time) as max_time, " +
-                "sum({{variable}} - {{variable}})/count(distinct m0.time) as model_ob_diff " +
-                "from metars as s, {{obsTable}} as o, {{model}} as m0 " +
-                "where 1=1 " +
-                "and s.madis_id = m0.sta_id " +
-                "and s.madis_id = o.sta_id " +
-                "and m0.time = o.time " +
-                "and s.madis_id = '{{station}}' " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.time >= '{{fromSecs}}' " +
-                "and m0.time <= '{{toSecs}}' " +
-                "{{validTimeClause}}" +
-                ";";
+    statement = statement.replace('{{modelTable}}', modelTable);
+    statement = statement.replace('{{obsTable}}', obsTable);
+    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+    statement = statement.replace('{{sitesClause}}', sitesClause);
+    statement = statement.replace('{{variableClause}}', variableClause);
+    statement = statement.replace('{{validTimeClause}}', validTimeClause);
+    statement = statement.split('{{fromSecs}}').join(fromSecs);
+    statement = statement.split('{{toSecs}}').join(toSecs);
+    dataRequests[curve.label + " - " + 0] = statement;
+    var queryResult;
+    var startMoment = moment();
+    var finishMoment;
+    try {
+        queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, dataSource, variable, varUnits, siteMap);
+        finishMoment = moment();
+        dataRequests["data retrieval (query) time - " + curve.label + " - " + 0] = {
+            begin: startMoment.format(),
+            finish: finishMoment.format(),
+            duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+            recordCount: queryResult.data.length
+        };
 
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            if (forecastLength == 1) {
-                statement = statement.replace('{{model}}', model + "qp1f");
-                statement = statement.replace('and m0.fcst_len = {{forecastLength}}', "");
+        var d = queryResult.data;
+        var dBlue = queryResult.dataBlue;
+        var dBlack = queryResult.dataBlack;
+        var dRed = queryResult.dataRed;
+
+    } catch (e) {
+        e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+        throw new Error(e.message);
+    }
+    if (queryResult.error !== undefined && queryResult.error !== "") {
+        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+            // This is NOT an error just a no data condition
+            dataFoundForCurve = false;
+        } else {
+            error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+            if (error.includes('Unknown column')) {
+                throw new Error("INFO:  The variable combination [" + variableStr + "] is not supported by the database for the model/site [" + model + " and " + site + "].");
             } else {
-                statement = statement.replace('{{model}}', modelTable);
-                statement = statement.replace('{{forecastLength}}', forecastLength);
-            }
-            if (variable == "temp" || variable == "dp") {
-                statement = statement.replace('{{variable}}', "(((m0." + variable + "/10)-32)*(5/9))");
-                statement = statement.replace('{{variable}}', "(((o." + variable + "/10)-32)*(5/9))");
-            } else if (variable == "rh" || variable == "press") {
-                statement = statement.replace('{{variable}}', "m0." + variable + "/10");
-                statement = statement.replace('{{variable}}', "o." + variable + "/10");
-            } else {
-                statement = statement.replace('{{variable}}', "m0." + variable + "*0.44704");
-                statement = statement.replace('{{variable}}', "o." + variable + "*0.44704");
-            }
-            statement = statement.replace('{{station}}', siteOptions.siteId);
-            statement = statement.replace('{{obsTable}}', obsTable);
-            var validTimeClause = " ";
-            if (validTimes.length > 0) {
-                validTimeClause = " and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + "))" +
-                    " OR (m0.time%3600>=1800 and FROM_UNIXTIME((m0.time-((m0.time%3600)-3600)),'%H') IN (" + validTimes + ")))";
-            }
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-
-            dataRequests[curve.label + " - " + site] = statement;
-            var queryResult;
-            var startMoment = moment();
-            var finishMoment;
-            try {
-                queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, d, dBlue, dBlack, dRed, dataSource, variable, varUnits, site, siteIndex, siteMap);
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label + " - " + site] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
-                };
-
-                d = queryResult.data;
-                dBlue = queryResult.dataBlue;
-                dBlack = queryResult.dataBlack;
-                dRed = queryResult.dataRed;
-
-            } catch (e) {
-                e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
-                throw new Error(e.message);
-            }
-            if (queryResult.error !== undefined && queryResult.error !== "") {
-                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-                    // This is NOT an error just a no data condition
-                    dataFoundForCurve = false;
-                } else {
-                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The variable combination [" + variableStr + "] is not supported by the database for the model/site [" + model + " and " + site + "].");
-                    } else {
-                        throw new Error(error);
-                    }
-                }
+                throw new Error(error);
             }
         }
     }
@@ -143,10 +133,10 @@ dataMap = function (plotParams, plotFunction) {
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blueCurveText, dBlue);  // generate blue text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blackCurveText,dBlack);  // generate black text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blackCurveText, dBlack);  // generate black text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.redCurveText,dRed);  // generate red text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.redCurveText, dRed);  // generate red text layer
     dataset.push(cOptions);
 
     const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions();

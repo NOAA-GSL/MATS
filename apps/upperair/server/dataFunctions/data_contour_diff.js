@@ -134,12 +134,12 @@ dataContourDiff = function (plotParams, plotFunction) {
             "{{statistic}} " +
             "from {{model}} as m0{{matchModel}} " +
             "where 1=1 " +
+            "{{matchClause}} " +
             "and {{dateClause}} >= '{{fromSecs}}' " +
             "and {{dateClause}} <= '{{toSecs}}' " +
             "{{matchDates}} " +
             "{{levelClause}} " +
             "{{matchLevelClause}} " +
-            "{{matchClause}} " +
             "{{validTimeClause}} " +
             "{{matchValidTimeClause}} " +
             "{{forecastLengthClause}} " +
