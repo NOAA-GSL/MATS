@@ -81,31 +81,37 @@ Template.GraphStandAlone.helpers({
                         setError(error);
                         return false;
                     }
+                    var mapLoadPause = 0;
                     options = ret.layout;
                     if (plotType === matsTypes.PlotTypes.map) {
                         options.mapbox.zoom = 2.75;
+                        mapLoadPause = 1000;
                     }
                     resizeOptions = options;
 
                     // initial plot
                     $("#legendContainer").empty();
                     $("#placeholder").empty();
+
+                    // need a slight delay for plotly to load
                     setTimeout(function () {
-                        Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
-                        // update changes to the curve ops
-                        const updates = ret.curveOpsUpdate.curveOpsUpdate;
-                        for (var uidx = 0; uidx < updates.length; uidx++) {
-                            var curveOpsUpdate = {};
-                            var updatedKeys = Object.keys(updates[uidx]);
-                            for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
-                                var jsonHappyKey = updatedKeys[kidx];
-                                // turn the json placeholder back into .
-                                var updatedKey = jsonHappyKey.split("____").join(".");
-                                curveOpsUpdate[updatedKey] = updates[uidx][jsonHappyKey];
+                        Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: false});
+                        // update changes to the curve ops -- need to pause if we're doing a map so the map can finish loading before we try to edit it
+                        setTimeout(function() {
+                            const updates = ret.curveOpsUpdate.curveOpsUpdate;
+                            for (var uidx = 0; uidx < updates.length; uidx++) {
+                                var curveOpsUpdate = {};
+                                var updatedKeys = Object.keys(updates[uidx]);
+                                for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+                                    var jsonHappyKey = updatedKeys[kidx];
+                                    // turn the json placeholder back into .
+                                    var updatedKey = jsonHappyKey.split("____").join(".");
+                                    curveOpsUpdate[updatedKey] = updates[uidx][jsonHappyKey];
+                                }
+                                Plotly.restyle($("#placeholder")[0], curveOpsUpdate, uidx);
                             }
-                            Plotly.restyle($("#placeholder")[0], curveOpsUpdate, uidx);
-                        }
-                    }, 100);    // need a slight delay for plotly to load
+                        }, mapLoadPause);
+                    }, 100);
 
                     // append annotations
                     if (plotType !== matsTypes.PlotTypes.map) {
