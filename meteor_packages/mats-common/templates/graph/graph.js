@@ -550,6 +550,7 @@ Template.graph.helpers({
 Template.graph.events({
     'click .mvCtrlButton': function () {
         window.open(this.url, "mv", "height=200,width=200");
+        window.location.reload();
     },
     'click .back': function () {
         const plotType = Session.get('plotType');
@@ -564,6 +565,7 @@ Template.graph.events({
     },
     'click .new': function () {
         window.open(location);
+        window.location.reload();
         return false;
     },
     'click .header': function (event) {
@@ -641,6 +643,7 @@ Template.graph.events({
     },
     'click .basis': function () {
         window.open(window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
+        window.location.reload();
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');

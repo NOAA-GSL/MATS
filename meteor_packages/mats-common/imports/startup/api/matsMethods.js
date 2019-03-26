@@ -51,17 +51,14 @@ if (Meteor.isServer) {
     });
 
     Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
-debugger
         Picker.middleware(_getCSV(params, req, res, next));
     });
 
     Picker.route('/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
-debugger
         Picker.middleware(_getCSV(params, req, res, next));
     });
 
     Picker.route('/gsd/mats/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
-debugger
         Picker.middleware(_getCSV(params, req, res, next));
     });
 
