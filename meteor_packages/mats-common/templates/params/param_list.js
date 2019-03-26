@@ -101,6 +101,7 @@ Template.paramList.events({
         }
         var isScatter = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d;
         var isMap = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map;
+        var isReliability = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.reliability;
         var isContour = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.contour;
         var isContourDiff = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.contourDiff;
         var curves = Session.get('Curves');
@@ -229,6 +230,9 @@ Template.paramList.events({
                 return false;
             } else if (isContourDiff && curves.length >= 2) {
                 setError(new Error('ERROR: Contour Diff plot-type can only have two curves!'));
+                return false;
+            } else if (isReliability && curves.length >= 1) {
+                setError(new Error('ERROR: Reliability plot-type can only have one curve right now!'));
                 return false;
             } else {
                 for (var i = 0; i < l; i++) {
