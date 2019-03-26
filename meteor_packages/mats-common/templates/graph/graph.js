@@ -572,7 +572,7 @@ Template.graph.events({
     },
     'click .header': function (event) {
         document.getElementById('graph-control').style.display = 'block';
-        document.getElementById('showAdministration').style.display = 'block';
+        // document.getElementById('showAdministration').style.display = 'block';
         document.getElementById('navbar').style.display = 'block';
         document.getElementById('footnav').style.display = 'block';
 
