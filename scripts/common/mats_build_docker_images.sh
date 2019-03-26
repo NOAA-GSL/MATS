@@ -12,7 +12,7 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag] [-b branch] \n\
+usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag] [-l (local only - do not push)] [-b branch] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, and e is build environment"
@@ -21,7 +21,8 @@ requestedTag=""
 requestedBranch=""
 tag=""
 build_env=""
-while getopts "ar:e:t:b:" o; do
+pushImage="yes"
+while getopts "alr:e:t:b:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
@@ -31,6 +32,9 @@ while getopts "ar:e:t:b:" o; do
         a)
         #all apps
             requestedApp="all"
+        ;;
+        l)
+            pushImage="no"
         ;;
         b)
             requestedBranch=(${OPTARG})
@@ -304,7 +308,12 @@ ENTRYPOINT ["/usr/app/run_app.sh"]
     # build container
     docker build --no-cache --rm -t ${REPO}:${TAG} .
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
-    #docker push ${REPO}:${TAG}
+    if [ "${pushImage}" == "yes" ]; then
+        echo "pushing image ${REPO}:${TAG}"
+        docker push ${REPO}:${TAG}
+    else
+        echo "NOT pushing image ${REPO}:${TAG}"
+    fi
     # example run command
     echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
     echo "created container in ${BUNDLE_DIRECTORY}"
