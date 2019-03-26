@@ -92,20 +92,20 @@ Template.GraphStandAlone.helpers({
                     $("#placeholder").empty();
                     setTimeout(function () {
                         Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
-                    }, 100);    // need a slight delay for plotly to load
-                    // update changes to the curve ops
-                    const updates = ret.curveOpsUpdate.curveOpsUpdate;
-                    for (var uidx = 0; uidx < updates.length; uidx++) {
-                        var curveOpsUpdate = {};
-                        var updatedKeys = Object.keys(updates[uidx]);
-                        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
-                            var jsonHappyKey = updatedKeys[kidx];
-                            // turn the json placeholder back into .
-                            var updatedKey = jsonHappyKey.split("____").join(".");
-                            curveOpsUpdate[updatedKey] = updates[uidx][jsonHappyKey];
+                        // update changes to the curve ops
+                        const updates = ret.curveOpsUpdate.curveOpsUpdate;
+                        for (var uidx = 0; uidx < updates.length; uidx++) {
+                            var curveOpsUpdate = {};
+                            var updatedKeys = Object.keys(updates[uidx]);
+                            for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+                                var jsonHappyKey = updatedKeys[kidx];
+                                // turn the json placeholder back into .
+                                var updatedKey = jsonHappyKey.split("____").join(".");
+                                curveOpsUpdate[updatedKey] = updates[uidx][jsonHappyKey];
+                            }
+                            Plotly.restyle($("#placeholder")[0], curveOpsUpdate, uidx);
                         }
-                        Plotly.restyle($("#placeholder")[0], curveOpsUpdate, uidx);
-                    }
+                    }, 100);    // need a slight delay for plotly to load
 
                     // append annotations
                     if (plotType !== matsTypes.PlotTypes.map) {
@@ -277,6 +277,7 @@ Template.GraphStandAlone.events({
                 obj.style.display = "block";
             });
         });
+
         function saveAs(uri, filename) {
             var link = document.createElement('a');
             if (typeof link.download === 'string') {
