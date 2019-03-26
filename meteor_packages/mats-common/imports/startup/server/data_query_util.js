@@ -265,46 +265,49 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
 };
 
 //this method queries the database for map plots
-const queryMapDB = function (pool, statement, d, dBlue, dBlack, dRed, dataSource, variable, varUnits, site, siteIndex, siteMap) {
+const queryMapDB = function (pool, statement, dataSource, variable, varUnits, siteMap) {
     if (Meteor.isServer) {
-        if (d === undefined) {
-            d = {
-                siteName: [],
-                queryVal: [],
-                lat: [],
-                lon: [],
-                color: [],
-                stats: [],
-                text: []
-            };  // d will contain the curve data
-            dBlue = {
-                siteName: [],
-                queryVal: [],
-                lat: [],
-                lon: [],
-                stats: [],
-                text: [],
-                color: "rgb(0,0,255)"
-            };  // for biases <= -1
-            dBlack = {
-                siteName: [],
-                queryVal: [],
-                lat: [],
-                lon: [],
-                stats: [],
-                text: [],
-                color: "rgb(0,0,0)"
-            };  // for biases > -1 and < 1
-            dRed = {
-                siteName: [],
-                queryVal: [],
-                lat: [],
-                lon: [],
-                stats: [],
-                text: [],
-                color: "rgb(255,0,0)"
-            };  // for biases >= 1
-        }
+        // d will contain the curve data
+        var d = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            color: [],
+            stats: [],
+            text: []
+        };
+        // for biases <= -1
+        var dBlue = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(0,0,255)"
+        };
+        // for biases > -1 and < 1
+        var dBlack = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(0,0,0)"
+        };
+        // for biases >= 1
+        var dRed = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(255,0,0)"
+        };
+
         var error = "";
         const Future = require('fibers/future');
         var pFuture = new Future();
@@ -317,8 +320,9 @@ const queryMapDB = function (pool, statement, d, dBlue, dBlack, dRed, dataSource
             } else {
                 var queryVal;
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    const site = rows[rowIndex].sta_name;
                     queryVal = rows[rowIndex].model_ob_diff;
-                    d.siteName.push(rows[rowIndex].sta_name);
+                    d.siteName.push(site);
                     d.queryVal.push(queryVal);
                     d.stats.push({
                         N_times: rows[rowIndex].N_times,
@@ -328,8 +332,8 @@ const queryMapDB = function (pool, statement, d, dBlue, dBlack, dRed, dataSource
                     var tooltips = site +
                         "<br>" + "variable: " + variable +
                         "<br>" + "model: " + dataSource +
-                        "<br>" + "model-obs: " + d.queryVal[siteIndex] + " " + varUnits +
-                        "<br>" + "n: " + d.stats[siteIndex].N_times;
+                        "<br>" + "model-obs: " + queryVal + " " + varUnits +
+                        "<br>" + "n: " + rows[rowIndex].N_times;
                     d.text.push(tooltips);
 
                     var thisSite = siteMap.find(obj => {
@@ -341,21 +345,21 @@ const queryMapDB = function (pool, statement, d, dBlue, dBlack, dRed, dataSource
                     var textMarker = queryVal === null ? "" : queryVal.toFixed(0);
                     if (queryVal <= -1) {
                         d.color.push("rgb(0,0,255)");
-                        dBlue.siteName.push(rows[rowIndex].sta_name);
+                        dBlue.siteName.push(site);
                         dBlue.queryVal.push(queryVal);
                         dBlue.text.push(textMarker);
                         dBlue.lat.push(thisSite.point[0]);
                         dBlue.lon.push(thisSite.point[1]);
                     } else if (queryVal >= 1) {
                         d.color.push("rgb(255,0,0)");
-                        dRed.siteName.push(rows[rowIndex].sta_name);
+                        dRed.siteName.push(site);
                         dRed.queryVal.push(queryVal);
                         dRed.text.push(textMarker);
                         dRed.lat.push(thisSite.point[0]);
                         dRed.lon.push(thisSite.point[1]);
                     } else {
                         d.color.push("rgb(0,0,0)");
-                        dBlack.siteName.push(rows[rowIndex].sta_name);
+                        dBlack.siteName.push(site);
                         dBlack.queryVal.push(queryVal);
                         dBlack.text.push(textMarker);
                         dBlack.lat.push(thisSite.point[0]);
