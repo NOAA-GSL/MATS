@@ -71,7 +71,7 @@ const getVerticalValueLine = function (ymax, ymin, xValue, cLabel) {
     return valueLine
 };
 
-// adds a horizontal black line along a specific y value
+// adds a linear line
 const getLinearValueLine = function (xmax, xmin, ymax, ymin, cLabel) {
 
     const valueLine = {
