@@ -551,9 +551,9 @@ Template.graph.events({
     'click .mvCtrlButton': function () {
         var mvWindow = window.open(this.url, "mv", "height=200,width=200");
         setTimeout(function () {
-            wind.resizeTo(w, h);
+            mvWindow.reload();
         }, 500);
-        mvWindow.reload();
+
     },
     'click .back': function () {
         const plotType = Session.get('plotType');
@@ -566,10 +566,7 @@ Template.graph.events({
         matsCurveUtils.resetPlotResultData();
         return false;
     },
-    'click .new': function () {
-        window.open(location);
-        return false;
-    },
+
     'click .header': function (event) {
         document.getElementById('graph-control').style.display = 'block';
         document.getElementById('showAdministration').style.display = 'block';
@@ -646,9 +643,8 @@ Template.graph.events({
     'click .basis': function () {
         var basisWindow = window.open(window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
         setTimeout(function () {
-            wind.resizeTo(w, h);
+            basisWindow.reload();
         }, 500);
-        basisWindow.reload();
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');

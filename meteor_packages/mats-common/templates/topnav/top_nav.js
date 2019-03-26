@@ -14,9 +14,11 @@ Template.topNav.events({
             }
         }
         console.log("window.location.assign(" + homeref +")");
-        window.location.assign(homeref);
-        window.location = homeref;
-        window.reload();
+        setTimeout(function () {
+                window.location.assign(homeref);
+                window.location = homeref;
+            },500);
+        console.log("window.location.assign(" + homeref +")");
         return false;
     },
     'click .about' : function() {
