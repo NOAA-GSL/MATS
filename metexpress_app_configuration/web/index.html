@@ -49,10 +49,21 @@
     }
 
     function change(app){
-	console.log ('new location: ' + "http://" + app + ".localhost");
-	window.location = "http://" + app + ".localhost";
+        console.log ('new location: ' + "http://" + app + ".localhost");
+	    window.location = "http://" + app + ".localhost";
     }
 
+    function changePort(port){
+        refParts = window.location.href.split(":");
+        if (refParts.length > 2){
+            refParts[refParts.length -1] = port;
+        } else {
+            refParts[length] = ":" + port;
+        }
+        newHome = refParts.join(":");
+        console.log ("changePort - newHome is: " + newHome);
+        window.location = newHome;
+    }
     </script>
 
 </head>
@@ -131,7 +142,7 @@
                                 <ul class="nav navbar-nav navbar-left">
                                     <h3>{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
-                                        <button  type="button" class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;" onclick="change('{{item.app}}')">{{item.displayName}}</button>
+                                        <button  type="button" class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;" onclick="changePort({{item.port}})">{{item.displayName}}</button>
                                     </li>
                                 </ul>
                         </li>

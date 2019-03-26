@@ -2,16 +2,19 @@
 {
   "app": "met-anomalycor",
   "displayName": "MET Anomaly Correlation",
-  "group": "MET Express"
+  "group": "MET Express",
+  "port":"3001"
 },
 {
   "app": "met-surface",
   "displayName": "MET Surface",
-  "group": "MET Express"
+  "group": "MET Express",
+  "port": "3002"
 },
 {
   "app": "met-upperair",
   "displayName": "MET Upper Air",
-  "group": "MET Express"
+  "group": "MET Express",
+  "port": "3003"
 }
 ]

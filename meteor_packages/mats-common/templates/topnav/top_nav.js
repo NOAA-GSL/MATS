@@ -5,19 +5,19 @@ Template.topNav.events({
         var homeref = document.referrer;
         if (homeref === "" || homeref === undefined) {
             var r = document.location.href;
-            if (r.split(":").length >= 2) {
-                // has a port - don't change it
-                homeref = r;
+            var rparts = r.split(":");
+            if (rparts.length >= 2) {
+                // has a port - remove the port part
+                rparts.pop
+                homeref = rparts.join(":");
             } else {
                 // doesn't have a port - strip the appreference
-                homeref = r.split("://")[0] + "://" + r.split("://")[1].split(".").splice(1, 10).join(".")
+                var appref = Session.get("app").appref;
+                homeref = appref.substring(0, appref.lastIndexOf("/"));
+//                homeref = r.split("://")[0] + "://" + r.split("://")[1].split(".").splice(1, 10).join(".")
             }
         }
-        console.log("window.location.assign(" + homeref +")");
-        setTimeout(function () {
-                window.location.assign(homeref);
-            },500);
-        console.log("window.location.assign(" + homeref +")");
+        window.location.replace(homeref);
         return false;
     },
     'click .about' : function() {

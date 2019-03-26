@@ -2,28 +2,27 @@ version: "2"
 
 networks:
   web:
-    external: true
   internal:
     external: false
 
 services:
 
- traefik:
-   container_name: traefik
-   image: traefik:1.7.2-alpine
-   restart: always
-   networks:
-     - web
-   ports:
-     - "80:80"
-     - "443:443"
-   volumes:
-     - /var/run/docker.sock:/var/run/docker.sock
-     - $HOME/metexpress_app_configuration/traefik.toml:/traefik.toml
-     - $HOME/metexpress_app_configuration/acme.json:/acme.json
-   labels:
-    - traefik.frontend.rule=Host:proxy.localhost
-    - traefik.port=8090
+# traefik:
+#   container_name: traefik
+#   image: traefik:1.7.2-alpine
+#   restart: always
+#   networks:
+#     - web
+#   ports:
+#     - "80:80"
+#     - "443:443"
+#   volumes:
+#     - /var/run/docker.sock:/var/run/docker.sock
+#     - $HOME/metexpress_app_configuration/traefik.toml:/traefik.toml
+#     - $HOME/metexpress_app_configuration/acme.json:/acme.json
+#   labels:
+#    - traefik.frontend.rule=Host:proxy.localhost
+#    - traefik.port=8090
 
  met-http:
   container_name: "met-http"
@@ -40,6 +39,7 @@ services:
    - traefik.port=8080
   networks:
    - web
+   - internal
 
  mongo:
   container_name: "mongo"
@@ -59,6 +59,8 @@ services:
     - DELAY=3
   links:
    - mongo
+  ports:
+    - "3001:80"
   volumes:
    - $HOME/metexpress_app_configuration/settings:/usr/app/settings
   depends_on:
@@ -80,6 +82,8 @@ services:
     - DELAY=2
   links:
    - mongo
+  ports:
+    - "3002:80"
   volumes:
    - $HOME/metexpress_app_configuration/settings:/usr/app/settings
   depends_on:
@@ -102,6 +106,8 @@ services:
     - DELAY=2
   links:
    - mongo
+  ports:
+    - "3003:80"
   volumes:
    - $HOME/metexpress_app_configuration/settings:/usr/app/settings
   depends_on:

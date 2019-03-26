@@ -13,7 +13,7 @@ Create an empty data directory for the mongo container $HOME/mongodata and make 
 
 NOTE: 
 You need to modify the metexpress_app_configuration/settings/*/settings.json files
-and change the some_db_host, some_db_port, some_db_user, and some_db_password entries to conform to the database on your system. 
+and change the some_db_host, some_db_port, some_db_user, and some_db_password entries to conform to the MET database on your system.
 These ones in vlab are dummy values. Normally these files are all the same, but they might change under special circumstances.
 
 NOTE:
@@ -35,6 +35,8 @@ like...
      - DELAY=3
    links:
     - mongo
+   ports:
+       - "300n:300n"     # change n to an unused port number that will match the corresponding applist.json entry
    volumes:
     - $HOME/metexpress_app_configuration/settings:/usr/app/settings
    depends_on:
@@ -56,6 +58,7 @@ like...
   "app": "met-fred",
   "displayName": "MET Fred"
   "group": "MET Express"
+  "url:"
 }
 ...
 
