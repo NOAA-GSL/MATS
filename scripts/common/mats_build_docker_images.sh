@@ -304,7 +304,7 @@ ENTRYPOINT ["/usr/app/run_app.sh"]
     # build container
     docker build --no-cache --rm -t ${REPO}:${TAG} .
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
-    docker push ${REPO}:${TAG}
+    #docker push ${REPO}:${TAG}
     # example run command
     echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
     echo "created container in ${BUNDLE_DIRECTORY}"
