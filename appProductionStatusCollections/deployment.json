@@ -98,8 +98,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.4-2019.03.26.06.04",
-      "buildDate": "2019.03.26.06.04",
+      "version": "2.1.4-2019.03.26.22.07",
+      "buildDate": "2019.03.26.22.07",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -162,8 +162,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.4-2019.03.26.06.01",
-      "buildDate": "2019.03.26.06.01",
+      "version": "2.1.4-2019.03.26.22.14",
+      "buildDate": "2019.03.26.22.14",
       "last_test_run": "",
       "last_test_status": ""
     }
