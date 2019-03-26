@@ -549,8 +549,11 @@ Template.graph.helpers({
 
 Template.graph.events({
     'click .mvCtrlButton': function () {
-        window.open(this.url, "mv", "height=200,width=200");
-        window.location.reload();
+        var mvWindow = window.open(this.url, "mv", "height=200,width=200");
+        setTimeout(function () {
+            wind.resizeTo(w, h);
+        }, 500);
+        mvWindow.reload();
     },
     'click .back': function () {
         const plotType = Session.get('plotType');
@@ -565,7 +568,6 @@ Template.graph.events({
     },
     'click .new': function () {
         window.open(location);
-        window.location.reload();
         return false;
     },
     'click .header': function (event) {
@@ -598,7 +600,7 @@ Template.graph.events({
         var wind = window.open(window.location + "/preview/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h + ",width=" + w);
         setTimeout(function () {
             wind.resizeTo(w, h);
-        }, 100);
+        }, 500);
         openWindows.push(wind);
     },
     'click .closeapp': function () {
@@ -642,8 +644,11 @@ Template.graph.events({
         $("#sendModal").modal('show');
     },
     'click .basis': function () {
-        window.open(window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
-        window.location.reload();
+        var basisWindow = window.open(window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
+        setTimeout(function () {
+            wind.resizeTo(w, h);
+        }, 500);
+        basisWindow.reload();
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');
