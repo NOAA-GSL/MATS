@@ -13,8 +13,10 @@ Template.topNav.events({
                 homeref = r.split("://")[0] + "://" + r.split("://")[1].split(".").splice(1, 10).join(".")
             }
         }
-        console.log("window.location.assign(homeref)");
+        console.log("window.location.assign(" + homeref +")");
         window.location.assign(homeref);
+        window.location = homeref;
+        window.reload();
         return false;
     },
     'click .about' : function() {
