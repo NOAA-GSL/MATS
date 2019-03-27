@@ -768,6 +768,7 @@ class QueryUtil:
                               cursorclass=MySQLdb.cursors.DictCursor)
         with closing(cnx.cursor()) as cursor:
             # cnx, cursor = connect_to_mysql(args[1])
+            cursor.execute('set group_concat_max_len = 4294967295')
             self.query_db(cursor, options["statement"], options["statistic"], options["plotType"], options["hasLevels"],
                           options["completenessQCParam"], options["vts"])
         cnx.close()
