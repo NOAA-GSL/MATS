@@ -48,11 +48,6 @@
         });
     }
 
-    function change(app){
-        console.log ('new location: ' + "http://" + app + ".localhost");
-	    window.location = "http://" + app + ".localhost";
-    }
-
     function changePort(port){
         refParts = window.location.href.split(":");
         if (refParts.length > 2){
