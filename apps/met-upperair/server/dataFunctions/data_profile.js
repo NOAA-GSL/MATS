@@ -156,15 +156,13 @@ dataProfile = function (plotParams, plotFunction) {
                         "-u", sumPool.config.connectionConfig.user,
                         "-p", sumPool.config.connectionConfig.password,
                         "-d", sumPool.config.connectionConfig.database,
-                        "-q",statement,
+                        "-q", statement,
                         "-s", statistic,
                         "-t", plotType,
                         "-l", hasLevels,
-                        "-c", 0,
+                        "-c", completenessQCParam,
                         "-v", vts
                     ]                };
-
-
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();
