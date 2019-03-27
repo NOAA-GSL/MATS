@@ -711,11 +711,6 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
                 obs_n: data.subLevs[di]
             };
 
-            // remove sub values and times to save space
-            data.subVals[di] = [];
-            data.subSecs[di] = [];
-            data.subLevs[di] = [];
-
             // this is the tooltip, it is the last element of each dataseries element.
             // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
             data.text[di] = label;
@@ -739,7 +734,7 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
                     data.text[di] = data.text[di] + "<br>probability bin: " + data.x[di];
                     data.text[di] = data.text[di] + "<br>hit rate: " + data.y[di];
                     data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
-                    data.text[di] = data.text[di] + "<br>on: " + data.error_y[di];
+                    data.text[di] = data.text[di] + "<br>on: " + data.subLevs[di];
                     break;
                 case matsTypes.PlotTypes.threshold:
                     data.text[di] = data.text[di] + "<br>threshold: " + data.x[di];
@@ -748,6 +743,11 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
                     data.text[di] = data.text[di] + "<br>" + data.x[di];
                     break;
             }
+
+            // remove sub values and times to save space
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
 
             di++;
         }
