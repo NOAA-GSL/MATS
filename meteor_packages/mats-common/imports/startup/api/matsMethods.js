@@ -1914,7 +1914,7 @@ const resetApp = function (appRef) {
             case "development":
             case "integration":
             case "production":
-                dep_env = Meteor.settings.private.process.RUN_ENV
+                dep_env = Meteor.settings.private.process.RUN_ENV;
                 break;
             default:
                 dep_env = process.env.NODE_ENV;
