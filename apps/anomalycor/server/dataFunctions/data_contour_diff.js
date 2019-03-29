@@ -126,12 +126,12 @@ dataContourDiff = function (plotParams, plotFunction) {
             "count(m0.wacorr) as N0 " +
             "from {{dbtable}} as m0{{matchModel}} " +
             "where 1=1 " +
+            "{{matchClause}} " +
             "and {{dateClause}} >= '{{fromSecs}}' " +
             "and {{dateClause}} <= '{{toSecs}}' " +
             "{{matchDates}} " +
             "{{levelClause}} " +
             "{{matchLevelClause}} " +
-            "{{matchClause}} " +
             "and m0.variable = '{{variable}}' " +
             "{{matchVariableClause}} " +
             "{{validTimeClause}} " +

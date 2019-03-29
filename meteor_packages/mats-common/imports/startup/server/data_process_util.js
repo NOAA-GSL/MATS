@@ -12,7 +12,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
     var errorMax = Number.MIN_VALUE;
     var error = "";
 
-    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+    const appName = matsCollections.appName.findOne({}).app;
 
     // if matching, pare down dataset to only matching data
     if (curveInfoParams.curvesLength > 1 && appParams.matching) {
@@ -269,7 +269,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     var errorMax = Number.MIN_VALUE;
     var error = "";
 
-    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+    const appName = matsCollections.appName.findOne({}).app;
 
     // if matching, pare down dataset to only matching data
     if (curveInfoParams.curvesLength > 1 && appParams.matching) {
@@ -599,7 +599,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 
 const processDataContour = function (dataset, curveInfoParams, plotParams, bookkeepingParams) {
     var error = "";
-    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+    const appName = matsCollections.appName.findOne({}).app;
     var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curve[0]['statistic'];
     var data = dataset[0];
     const label = dataset[0].label;

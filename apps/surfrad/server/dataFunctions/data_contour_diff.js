@@ -139,6 +139,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             "{{statistic}} " +
             "from surfrad as ob0, {{data_source}} as m0{{matchModel}} " +
             "where 1=1 " +
+            "{{matchClause}} " +
             "and ob0.secs = m0.secs " +
             "and ob0.id = m0.id " +
             "and {{dateClause}} >= '{{fromSecs}}' " +
@@ -150,7 +151,6 @@ dataContourDiff = function (plotParams, plotFunction) {
             "{{matchRegionClause}} " +
             "{{validTimeClause}} " +
             "{{forecastLengthClause}} " +
-            "{{matchClause}} " +
             "group by xVal,yVal " +
             "order by xVal,yVal" +
             ";";

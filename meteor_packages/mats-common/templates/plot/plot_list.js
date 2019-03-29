@@ -417,8 +417,9 @@ Template.plotList.events({
     }
 });
 Template.plotList.onRendered( function() {
-    //console.log('doing client matsParamUtils.setAllParamsToDefault ');
-    matsParamUtils.setAllParamsToDefault();
+    // last bit of stuff that needs to be done when the page finally renders
+
+    // hide selectors that don't belong to timeseries
     var elem;
     for (var sidx = 0; sidx < matsTypes.selectorsToHide.length; sidx++) {
         elem = document.getElementById(matsTypes.selectorsToHide[sidx] + '-item');
@@ -426,4 +427,46 @@ Template.plotList.onRendered( function() {
             elem.style.display = 'none';
         }
     }
+
+    // need to display correct selectors on page load if default plot type is not timeseries
+    const plotType = matsPlotUtils.getPlotType();
+    switch (plotType) {
+        case matsTypes.PlotTypes.profile:
+            matsCurveUtils.showProfileFace();
+            break;
+        case matsTypes.PlotTypes.dieoff:
+            matsCurveUtils.showDieOffFace();
+            break;
+        case matsTypes.PlotTypes.threshold:
+            matsCurveUtils.showThresholdFace();
+            break;
+        case matsTypes.PlotTypes.validtime:
+            matsCurveUtils.showValidTimeFace();
+            break;
+        case matsTypes.PlotTypes.dailyModelCycle:
+            matsCurveUtils.showDailyModelCycleFace();
+            break;
+        case matsTypes.PlotTypes.map:
+            matsCurveUtils.showMapFace();
+            break;
+        case matsTypes.PlotTypes.histogram:
+            matsCurveUtils.showHistogramFace();
+            break;
+        case matsTypes.PlotTypes.reliability:
+            matsCurveUtils.showReliabilityFace();
+            break;
+        case matsTypes.PlotTypes.contour:
+        case matsTypes.PlotTypes.contourDiff:
+            matsCurveUtils.showContourFace();
+            break;
+        case matsTypes.PlotTypes.scatter2d:
+            matsCurveUtils.showScatterFace();
+            break;
+        case matsTypes.PlotTypes.timeSeries:
+        default:
+            break;
+    }
+
+    // make sure everything is at default
+    matsParamUtils.setAllParamsToDefault();
 });

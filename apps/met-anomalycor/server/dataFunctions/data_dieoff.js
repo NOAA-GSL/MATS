@@ -160,8 +160,19 @@ dataDieOff = function (plotParams, plotFunction) {
                     scriptPath: process.env.NODE_ENV === "development" ?
                         process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
                         process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
-                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
-                };
+                    args: [
+                        "-h", sumPool.config.connectionConfig.host,
+                        "-P", sumPool.config.connectionConfig.port,
+                        "-u", sumPool.config.connectionConfig.user,
+                        "-p", sumPool.config.connectionConfig.password,
+                        "-d", sumPool.config.connectionConfig.database,
+                        "-q", statement,
+                        "-s", statistic,
+                        "-t", plotType,
+                        "-l", hasLevels,
+                        "-c", completenessQCParam,
+                        "-v", vts
+                    ]                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();

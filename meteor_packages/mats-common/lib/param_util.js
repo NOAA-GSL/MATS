@@ -470,8 +470,8 @@ const getOptionsForParam = function (paramName) {
 };
 
 const getAppName = function () {
-    const app = matsCollections.appName.findOne({name: "appName"});
-    return app.app;
+    const app = matsCollections.appName.findOne({}).app;
+    return app;
 };
 
 const getCurveItemValueForParamName = function (curveNumber, paramName) {

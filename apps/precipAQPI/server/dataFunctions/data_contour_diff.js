@@ -123,10 +123,10 @@ dataContourDiff = function (plotParams, plotFunction) {
             "{{statistic}} " +
             "from {{data_source}} as m0{{matchModel}} " +
             "where 1=1 " +
+            "{{matchClause}} " +
             "and {{dateClause}} >= '{{fromSecs}}' " +
             "and {{dateClause}} <= '{{toSecs}}' " +
             "{{matchDates}} " +
-            "{{matchClause}} " +
             "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
             "{{thresholdClause}} " +
             "{{matchThresholdClause}} " +

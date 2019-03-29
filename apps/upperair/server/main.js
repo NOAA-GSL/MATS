@@ -927,13 +927,13 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
-            checked: true
+            checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
             graphFunction: "graphPlotly",
             dataFunction: "dataProfile",
-            checked: false
+            checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
@@ -1035,10 +1035,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("modelPool", "ruc_ua", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp(mdr);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "upperair"});
-});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'upperair'});});
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
