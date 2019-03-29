@@ -14,7 +14,7 @@ export METEOR_SETTINGS=$(cat /usr/app/settings/${APPNAME}/settings.json)
 cd /usr/app
 if [[ $DEBUG ]]; then
     echo "run_app => Starting meteor app for DEBUG on port:$PORT with settings $METEOR_SETTINGS"
-    node --inspect-brk main.js
+    node --inspect main.js
 else
     echo "run_app => Starting meteor app  on port:$PORT with settings $METEOR_SETTINGS"
     node main.js
