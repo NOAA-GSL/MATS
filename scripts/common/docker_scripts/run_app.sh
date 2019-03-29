@@ -12,6 +12,10 @@ export PORT=${PORT:-80}
 export NODE_ENV=production
 export METEOR_SETTINGS=$(cat /usr/app/settings/${APPNAME}/settings.json)
 cd /usr/app
-
-echo "run_app => Starting meteor app on port:$PORT with settings $METEOR_SETTINGS"
-node main.js
+if [[ $DEBUG ]]; then
+    echo "run_app => Starting meteor app for DEBUG on port:$PORT with settings $METEOR_SETTINGS"
+    node inspect main.js
+else
+    echo "run_app => Starting meteor app  on port:$PORT with settings $METEOR_SETTINGS"
+    node main.js
+fi

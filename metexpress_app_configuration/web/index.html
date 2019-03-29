@@ -25,6 +25,7 @@
 
     <script type='text/javascript'> //<![CDATA[
     function TCtrl($scope, $http) {
+    	$scope.domain = ".localhost"
         $scope.items = {};
         $scope.groups = [];  // used to maintain the order from the applist.json
         $http({method: "GET", url: "applist.json"}).
@@ -46,6 +47,14 @@
         error(function (data, status, headers, config) {
             alert("Could not read application list: /applist.json \n(should be automatically generated)");
         });
+    }
+
+    function changeApp(app){
+        refParts = window.location.href.split("://");
+        protocol = refParts[0];
+	newhome = protocol + "://" + app + "." + refParts[1];
+        console.log ('new location: ' + newhome);
+	window.location = newhome;
     }
 
     function changePort(port){
@@ -137,7 +146,7 @@
                                 <ul class="nav navbar-nav navbar-left">
                                     <h3>{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
-                                        <button  type="button" class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;" onclick="changePort({{item.port}})">{{item.displayName}}</button>
+                                        <button  type="button" class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;" onclick="changeApp('{{item.app}}')">{{item.displayName}}</button>
                                     </li>
                                 </ul>
                         </li>
