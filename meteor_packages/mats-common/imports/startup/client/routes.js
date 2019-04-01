@@ -33,6 +33,6 @@ FlowRouter.route('/gsd/mats/*/', {
 
 FlowRouter.route('*', {
     action() {
-        this.render('notFound');
+        this.render('Home');
     }
 });

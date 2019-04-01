@@ -266,8 +266,6 @@ cat <<-%EOFdockerfile > Dockerfile
 # the corresponding usr/app/settings/${APPNAME}/settings-mysql.cnf file needs to be referenced by
 # "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
 # and the MYSQL_CONF_PATH entry in the settings.json
-# e.g.
-# docker run -v /Users/pierce/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t randytpierce/mats1:${APPNAME}-2.0.1
 # Pull base image.
 FROM node:8.11.4-alpine
 # Create app directory
