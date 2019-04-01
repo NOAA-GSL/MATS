@@ -649,10 +649,9 @@ Template.graph.events({
         $("#sendModal").modal('show');
     },
     'click .basis': function () {
-        var basisWindow = window.open(window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
-        setTimeout(function () {
-            basisWindow.reload();
-        }, 500);
+        var fileUrl = window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
+        var fileName = Session.get("plotResultKey") + ".json";
+        matsGraphUtils.downloadFile(fileUrl,fileName);
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');

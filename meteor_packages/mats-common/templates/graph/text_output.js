@@ -420,10 +420,8 @@ Template.textOutput.events({
         var plotType = Session.get('plotType');
         var key = Session.get('plotResultKey');
         // open a new window with
-        var csvWin = window.open(window.location + "/CSV/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title);
-        setTimeout(function () {
-            wind.resizeTo(w, h);
-        }, 500);
-        csvWin.reload();
+        var fileUrl = window.location + "/CSV/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
+        var fileName = Session.get("plotResultKey") + ".csv";
+        matsGraphUtils.downloadFile(fileUrl,fileName);
     }
 });

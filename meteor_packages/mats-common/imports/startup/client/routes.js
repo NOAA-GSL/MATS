@@ -31,22 +31,9 @@ FlowRouter.route('/gsd/mats/*/', {
     }
 });
 
-FlowRouter.route('/*/CSV*', {
-    name: 'CSV',
-    action() {
-        console.log('route for CSV');
-    }
-});
-
-FlowRouter.route('/*/JSON*', {
-    name: 'JSON',
-    action() {
-        console.log('route for JSON');
-    }
-});
-
 FlowRouter.route('*', {
     action() {
+        console.log ('route: ' + ' not found' )
         this.render('notFound');
     }
 });
