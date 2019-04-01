@@ -233,9 +233,9 @@ for app in ${apps[*]}; do
         echo -e "${failed} to meteor build - must exit now"
         exit 1
     fi
-    buildVer=$(getVersionForAppForServer ${app} ${SERVER})
-    git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
-    git push origin +${tag}:${BUILD_CODE_BRANCH}
+    echo buildVer=$(getVersionForAppForServer ${app} ${SERVER})
+    echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
+    echo git push origin +${tag}:${BUILD_CODE_BRANCH}
     echo -e tagged repo with ${GRN}${tag}${NC}
 
     # build container....
