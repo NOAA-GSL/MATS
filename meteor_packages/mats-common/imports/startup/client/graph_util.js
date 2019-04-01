@@ -102,9 +102,9 @@ var width = function (plotType) {
         case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
-        case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
         default:
@@ -127,11 +127,11 @@ var height = function (plotType) {
         case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
-        case matsTypes.PlotTypes.reliability:
         default:
             // set the height wide
             return rectangleHeight();

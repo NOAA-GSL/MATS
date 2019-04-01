@@ -28,16 +28,16 @@ var InputTypes = {
 var PlotTypes = {
     timeSeries: "TimeSeries",
     profile: "Profile",
-    scatter2d: "Scatter2d",
     dieoff: "DieOff",
     threshold: "Threshold",
     validtime: "ValidTime",
     dailyModelCycle: "DailyModelCycle",
+    reliability: "Reliability",
     map: "Map",
     histogram: "Histogram",
     contour: "Contour",
     contourDiff: "ContourDiff",
-    reliability: "Reliability"
+    scatter2d: "Scatter2d"
 };
 
 var ForecastTypes = {

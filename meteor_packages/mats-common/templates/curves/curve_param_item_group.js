@@ -33,11 +33,11 @@ Template.curveParamItemGroup.helpers({
             case matsTypes.PlotTypes.validtime:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.validtime});
                 break;
-            case matsTypes.PlotTypes.reliability:
-                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.reliability});
-                break;
             case matsTypes.PlotTypes.dailyModelCycle:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.dailyModelCycle});
+                break;
+            case matsTypes.PlotTypes.reliability:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.reliability});
                 break;
             case matsTypes.PlotTypes.map:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.map});

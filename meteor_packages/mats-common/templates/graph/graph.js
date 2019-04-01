@@ -63,11 +63,11 @@ Template.graph.helpers({
                     break;
                 case matsTypes.PlotTypes.timeSeries:
                 case matsTypes.PlotTypes.profile:
-                case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
-                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.reliability:
                     // saved curve options for line graphs
                     var lineTypeResetOpts = [];
                     for (var lidx = 0; lidx < dataset.length; lidx++) {
@@ -194,14 +194,14 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.timeSeries:
                 case matsTypes.PlotTypes.profile:
                 case matsTypes.PlotTypes.dieoff:
-                case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.threshold:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
                     return "block";
+                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
                 case matsTypes.PlotTypes.scatter2d:
-                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.contour:
                 case matsTypes.PlotTypes.contourDiff:
                 default:
@@ -240,18 +240,18 @@ Template.graph.helpers({
                     return "Profile: " + format;
                 case matsTypes.PlotTypes.dieoff:
                     return "DieOff: " + format;
-                case matsTypes.PlotTypes.dailyModelCycle:
-                    return "DailyModelCycle " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.threshold:
                     return "Threshold: " + format;
                 case matsTypes.PlotTypes.validtime:
                     return "ValidTime: " + format;
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    return "DailyModelCycle " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.reliability:
+                    return "Reliability: " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.map:
                     return "Map " + p.dates + " ";
                 case matsTypes.PlotTypes.histogram:
                     return "Histogram: " + format;
-                case matsTypes.PlotTypes.reliability:
-                    return "Reliability: " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contour:
                     return "Contour " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contourDiff:
@@ -311,10 +311,10 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.timeSeries:
             case matsTypes.PlotTypes.profile:
             case matsTypes.PlotTypes.dieoff:
-            case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.threshold:
-            case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.reliability:
                 return true;
             case matsTypes.PlotTypes.map:
             case matsTypes.PlotTypes.histogram:
@@ -387,9 +387,9 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.timeSeries:
             case matsTypes.PlotTypes.profile:
             case matsTypes.PlotTypes.dieoff:
-            case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.scatter2d:
                 return "block";
@@ -407,9 +407,9 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.timeSeries:
             case matsTypes.PlotTypes.profile:
             case matsTypes.PlotTypes.dieoff:
-            case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.scatter2d:
                 return "block";
@@ -429,14 +429,14 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.timeSeries:
                 case matsTypes.PlotTypes.profile:
                 case matsTypes.PlotTypes.dieoff:
-                case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.threshold:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
                     return "block";
+                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
                 case matsTypes.PlotTypes.scatter2d:
-                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.contour:
                 case matsTypes.PlotTypes.contourDiff:
                 default:
@@ -1029,11 +1029,11 @@ Template.graph.events({
                     break;
                 case matsTypes.PlotTypes.timeSeries:
                 case matsTypes.PlotTypes.profile:
-                case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
-                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.reliability:
                     // restyle for line plots
                     const lineTypeResetOpts = Session.get('lineTypeResetOpts');
                     for (var lidx = 0; lidx < lineTypeResetOpts.length; lidx++) {

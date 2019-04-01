@@ -324,7 +324,7 @@ const _getJSON = function (params, req, res, next) {
 const _getFlattenedResultData = function (rk, p, np) {
     if (Meteor.isServer) {
         var resp;
-        //try {
+        try {
             var r = rk;
             var p = p;
             var np = np;
@@ -434,37 +434,9 @@ const _getFlattenedResultData = function (rk, p, np) {
                         returnData.data[data[ci].label] = curveData;
                     }
                     break;
-                case matsTypes.PlotTypes.reliability:
-                    var returnData = {};
-                    returnData.stats = {};   // map of maps
-                    returnData.data = {};  // map of arrays of map
-                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
-                        var reservedWords = Object.values(matsTypes.ReservedWords);
-                        if (reservedWords.indexOf(data[ci].label) >= 0) {
-                            continue; // don't process the zero or max curves
-                        }
-                        var stats = {};
-                        stats['label'] = data[ci].label;
-                        stats['sample climo'] = data[ci].glob_stats.sample_climo;
-                        returnData.stats[data[ci].label] = stats;
-
-                        var cdata = data[ci].data;
-                        var curveData = [];  // array of maps
-                        for (var cdi = 0; cdi < data[ci].y.length; cdi++) {  // for each datapoint
-                            var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' probability bin'] = data[ci].stats[cdi].prob_bin;
-                            curveDataElement['hit rate'] = data[ci].stats[cdi].hit_rate;
-                            curveDataElement['oy'] = data[ci].stats[cdi].obs_y;
-                            curveDataElement['on'] = data[ci].stats[cdi].obs_n;
-                            curveData.push(curveDataElement);
-                        }
-                        returnData.data[data[ci].label] = curveData;
-                        //debugger;
-                    }
-                    break;
                 case matsTypes.PlotTypes.dieoff:
-                case matsTypes.PlotTypes.validtime:
                 case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
                     var labelSuffix;
                     switch (plotType) {
                         case matsTypes.PlotTypes.dieoff:
@@ -503,6 +475,33 @@ const _getFlattenedResultData = function (rk, p, np) {
                             curveDataElement['plotted stat'] = data[ci].y[cdi];
                             curveDataElement['std dev'] = data[ci].stats[cdi].sd;
                             curveDataElement['n'] = data[ci].stats[cdi].n_good;
+                            curveData.push(curveDataElement);
+                        }
+                        returnData.data[data[ci].label] = curveData;
+                    }
+                    break;
+                case matsTypes.PlotTypes.reliability:
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = {};  // map of arrays of map
+                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
+                        }
+                        var stats = {};
+                        stats['label'] = data[ci].label;
+                        stats['sample climo'] = data[ci].glob_stats.sample_climo;
+                        returnData.stats[data[ci].label] = stats;
+
+                        var cdata = data[ci].data;
+                        var curveData = [];  // array of maps
+                        for (var cdi = 0; cdi < data[ci].y.length; cdi++) {  // for each datapoint
+                            var curveDataElement = {};
+                            curveDataElement[data[ci].label + ' probability bin'] = data[ci].stats[cdi].prob_bin;
+                            curveDataElement['hit rate'] = data[ci].stats[cdi].hit_rate;
+                            curveDataElement['oy'] = data[ci].stats[cdi].obs_y;
+                            curveDataElement['on'] = data[ci].stats[cdi].obs_n;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -578,6 +577,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                     }
                     break;
                 case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of maps
@@ -677,9 +677,9 @@ const _getFlattenedResultData = function (rk, p, np) {
             returnData.dsiRealPageIndex = dsiRealPageIndex;
             returnData.dsiTextDirection = dsiTextDirection;
             return returnData;
-        //} catch (error) {
-        //    throw new Meteor.Error("Error in _getFlattenedResultData function: " + error.message);
-        //}
+        } catch (error) {
+           throw new Meteor.Error("Error in _getFlattenedResultData function: " + error.message);
+        }
     }
 };
 
