@@ -232,6 +232,9 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.validtime:
                                 matsCurveUtils.showValidTimeFace();
                                 break;
+                            case matsTypes.PlotTypes.reliability:
+                                matsCurveUtils.showReliabilityFace();
+                                break;
                             case matsTypes.PlotTypes.dailyModelCycle:
                                 matsCurveUtils.showDailyModelCycleFace();
                                 break;
@@ -448,6 +451,9 @@ Template.plotList.onRendered( function() {
             break;
         case matsTypes.PlotTypes.histogram:
             matsCurveUtils.showHistogramFace();
+            break;
+        case matsTypes.PlotTypes.reliability:
+            matsCurveUtils.showReliabilityFace();
             break;
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:

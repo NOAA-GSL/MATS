@@ -142,6 +142,9 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 case matsTypes.PlotTypes.validtime:
                     data.text[di] = data.text[di] + "<br>hour of day: " + data.x[di];
                     break;
+                case matsTypes.PlotTypes.reliability:
+                    data.text[di] = data.text[di] + "<br>reliaiblity: " + data.x[di];
+                    break;
                 case matsTypes.PlotTypes.threshold:
                     data.text[di] = data.text[di] + "<br>threshold: " + data.x[di];
                     break;
@@ -231,6 +234,9 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             break;
         case matsTypes.PlotTypes.validtime:
             resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            break;
+        case matsTypes.PlotTypes.reliability:
+            resultOptions = matsDataPlotOpsUtils.generateReliabilityPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.threshold:
             resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
@@ -651,11 +657,203 @@ const processDataContour = function (dataset, curveInfoParams, plotParams, bookk
     };
 };
 
+const processDataReliability = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
+    var error = "";
+
+    //const appName = matsCollections.appName.findOne({name: 'app'}, {app: 1}).app;
+
+    // calculate data statistics (including error bars) for each curve
+    for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
+
+        var data = dataset[curveIndex];
+        const label = dataset[curveIndex].label;
+
+        var sample_climo = data.subVals;
+        var di = 0;
+        var values = [];
+        var indVars = [];
+        var means = [];
+        var rawStat;
+
+        /*
+        dataset[curveIndex] is the dataset.
+        it looks like:
+
+        d = {
+            x: [],
+            y: [],
+            error_x: [],   // curveTime
+            error_y: [],   // values
+            subVals: [],   //subVals
+            subSecs: [],   //subSecs
+            subLevs: [],   //subLevs
+            stats: [],     //pointStats
+            text: [],
+            glob_stats: {},     //curveStats
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            sum: 0
+        };
+        */
+
+        while (di < data.x.length) {
+
+
+            values.push(data.y[di]);
+
+            // store statistics for this di datapoint
+            data.stats[di] = {
+                prob_bin: data.x[di],
+                hit_rate: data.y[di],
+                obs_y: data.error_x[di],
+                obs_n: data.subLevs[di]
+            };
+
+            // this is the tooltip, it is the last element of each dataseries element.
+            // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
+            data.text[di] = label;
+            switch (appParams.plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                    data.text[di] = data.text[di] + "<br>time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
+                    break;
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    var fhr = ((data.x[di] / 1000) % (24 * 3600)) / 3600 - curveInfoParams.utcCycleStarts[curveIndex];
+                    fhr = fhr < 0 ? fhr + 24 : fhr;
+                    data.text[di] = data.text[di] + "<br>time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
+                    data.text[di] = data.text[di] + "<br>forecast hour: " + fhr;
+                    break;
+                case matsTypes.PlotTypes.dieoff:
+                    data.text[di] = data.text[di] + "<br>fhr: " + data.x[di];
+                    break;
+                case matsTypes.PlotTypes.validtime:
+                    data.text[di] = data.text[di] + "<br>hour of day: " + data.x[di];
+                    break;
+                case matsTypes.PlotTypes.reliability:
+                    data.text[di] = data.text[di] + "<br>probability bin: " + data.x[di];
+                    data.text[di] = data.text[di] + "<br>hit rate: " + data.y[di];
+                    data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
+                    data.text[di] = data.text[di] + "<br>on: " + data.subLevs[di];
+                    break;
+                case matsTypes.PlotTypes.threshold:
+                    data.text[di] = data.text[di] + "<br>threshold: " + data.x[di];
+                    break;
+                default:
+                    data.text[di] = data.text[di] + "<br>" + data.x[di];
+                    break;
+            }
+
+            // remove sub values and times to save space
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
+
+            di++;
+        }
+
+
+        // get the overall stats for the text output - this uses the means not the stats.
+        var miny = data.ymin;
+        var maxy = data.ymax;
+        if (means.indexOf(0) !== -1 && 0 < miny) {
+            miny = 0;
+        }
+        if (means.indexOf(0) !== -1 && 0 > maxy) {
+            maxy = 0;
+        }
+
+        dataset[curveIndex]['glob_stats'] = {
+                sample_climo: sample_climo
+            };
+
+    }
+
+    // add black perfect reliability line curve
+    const perfectLine = matsDataCurveOpsUtils.getLinearValueLine(curveInfoParams.xmax, curveInfoParams.xmin, data.ymax, data.ymin, matsTypes.ReservedWords.perfectReliability);
+    dataset.push(perfectLine);
+
+    if (sample_climo >= data.ymin) {
+        var skillmin = sample_climo - ((sample_climo - data.xmin)/2);
+    } else {
+        var skillmin = data.xmin - ((data.xmin - sample_climo)/2);
+    }
+    if (sample_climo >= data.ymax) {
+        var skillmax = sample_climo - ((sample_climo - data.xmax)/2);
+    } else {
+        var skillmax = data.xmax - ((data.xmax - sample_climo)/2);
+    }
+
+
+    // add black no skill line curve
+    const noSkillLine = matsDataCurveOpsUtils.getLinearValueLine(curveInfoParams.xmax, curveInfoParams.xmin, skillmax, skillmin, matsTypes.ReservedWords.noSkill);
+    dataset.push(noSkillLine);
+
+    // add sample climo lines
+    // need to define the minimum and maximum x value for making the curves
+    const xClimoLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, sample_climo, matsTypes.ReservedWords.zero);
+    dataset.push(xClimoLine);
+
+    const yClimoLine = matsDataCurveOpsUtils.getVerticalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, sample_climo, matsTypes.ReservedWords.zero);
+    dataset.push(yClimoLine);
+
+    //add ideal value lines, if any
+    //var idealValueLine;
+    //var idealLabel;
+    //for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
+    //    idealLabel = "ideal" + ivIdx.toString();
+    //    idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+    //    dataset.push(idealValueLine);
+    //}
+
+    // generate plot options
+    var resultOptions;
+    switch (appParams.plotType) {
+        case matsTypes.PlotTypes.timeSeries:
+        case matsTypes.PlotTypes.dailyModelCycle:
+            resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            break;
+        case matsTypes.PlotTypes.dieoff:
+            resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            break;
+        case matsTypes.PlotTypes.validtime:
+            resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            break;
+        case matsTypes.PlotTypes.reliability:
+            resultOptions = matsDataPlotOpsUtils.generateReliabilityPlotOptions();
+            break;
+        case matsTypes.PlotTypes.threshold:
+            resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            break;
+        default:
+            break;
+    }
+
+    var totalProcessingFinish = moment();
+    bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
+        begin: bookkeepingParams.totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(bookkeepingParams.totalProcessingStart)).asSeconds() + ' seconds'
+    };
+
+    // pass result to client-side plotting functions
+    return {
+        error: error,
+        data: dataset,
+        options: resultOptions,
+        basis: {
+            plotParams: plotParams,
+            queries: bookkeepingParams.dataRequests
+        }
+    };
+};
+
 export default matsDataProcessUtils = {
 
     processDataXYCurve: processDataXYCurve,
     processDataProfile: processDataProfile,
     processDataHistogram: processDataHistogram,
+    processDataReliability: processDataReliability,
     processDataContour: processDataContour
 
 }

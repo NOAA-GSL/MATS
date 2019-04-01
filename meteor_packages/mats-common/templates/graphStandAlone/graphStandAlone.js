@@ -193,6 +193,8 @@ Template.GraphStandAlone.helpers({
                     return "Map " + p.dates + " ";
                 case matsTypes.PlotTypes.histogram:
                     return "Histogram: " + format;
+                case matsTypes.PlotTypes.reliability:
+                    return "Reliability: " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contour:
                     return "Contour " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contourDiff:

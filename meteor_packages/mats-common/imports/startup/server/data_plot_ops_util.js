@@ -453,6 +453,50 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
     return layout;
 };
 
+// sets plot options for reliability graphs
+const generateReliabilityPlotOptions = function (dataset) {
+    var xmin = 0;
+    var xmax = 1;
+    var ymin = 0;
+    var ymax = 1;
+
+    var layout = {
+        margin: {
+            l: 80,
+            r: 80,
+            b: 80,
+            t: 20,
+            pad: 4
+        },
+        zeroline: true,
+        perfectLine: false,
+        hovermode: 'closest',
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
+        showlegend: false
+    };
+
+    layout['xaxis'] = {
+        title: 'Forecast Probability',
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 14},
+        tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
+        range: [xmin, xmax]
+    };
+
+    layout['yaxis'] = {
+        title: 'Observed Relative Frequency',
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 14},
+        tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
+        range: [ymin, ymax]
+    };
+
+    return layout;
+};
+
+
 // sets plot options for map graphs
 const generateMapPlotOptions = function () {
     const options = {
@@ -573,6 +617,7 @@ export default matsDataPlotOpsUtils = {
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
+    generateReliabilityPlotOptions: generateReliabilityPlotOptions,
     generateMapPlotOptions: generateMapPlotOptions,
     generateHistogramPlotOptions: generateHistogramPlotOptions,
     generateContourPlotOptions: generateContourPlotOptions

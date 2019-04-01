@@ -66,6 +66,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.validtime:
                     // saved curve options for line graphs
                     var lineTypeResetOpts = [];
@@ -200,6 +201,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
                 case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.contour:
                 case matsTypes.PlotTypes.contourDiff:
                 default:
@@ -248,6 +250,8 @@ Template.graph.helpers({
                     return "Map " + p.dates + " ";
                 case matsTypes.PlotTypes.histogram:
                     return "Histogram: " + format;
+                case matsTypes.PlotTypes.reliability:
+                    return "Reliability: " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contour:
                     return "Contour " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contourDiff:
@@ -309,6 +313,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.validtime:
                 return true;
             case matsTypes.PlotTypes.map:
@@ -385,6 +390,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.scatter2d:
                 return "block";
             case matsTypes.PlotTypes.map:
@@ -404,6 +410,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.scatter2d:
                 return "block";
             case matsTypes.PlotTypes.map:
@@ -429,6 +436,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
                 case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.contour:
                 case matsTypes.PlotTypes.contourDiff:
                 default:
@@ -1023,6 +1031,7 @@ Template.graph.events({
                 case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.validtime:
                     // restyle for line plots
                     const lineTypeResetOpts = Session.get('lineTypeResetOpts');

@@ -69,6 +69,9 @@ const _plotText = function (plotParams) {
         case matsTypes.PlotTypes.validtime:
             return "ValidTime: " + format;
             break;
+        case matsTypes.PlotTypes.reliability:
+            return "Reliability: " + format;
+            break;
         case matsTypes.PlotTypes.dailyModelCycle:
             return "DailyModelCycle " + plotParams.dates + " : " + format;
             break;
@@ -573,6 +576,9 @@ const addSeries = function(plot, dependentAxes, plotParams) {
             case matsTypes.PlotTypes.validtime:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
+            case matsTypes.PlotTypes.reliability:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                break;
             case matsTypes.PlotTypes.threshold:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
@@ -771,6 +777,9 @@ const _addSeriesLabels = function(element,dependentAxes, plotParams) {
         case matsTypes.PlotTypes.validtime:
             label = "Hour of Day";
             break;
+        case matsTypes.PlotTypes.reliability:
+            label = "Reliability";
+            break;
         case matsTypes.PlotTypes.threshold:
             label = "Threshold";
             break;
@@ -928,6 +937,7 @@ const addMiscellaneous = function(plot,plotParams) {
         case matsTypes.PlotTypes.dailyModelCycle:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.threshold:
             plot.ele('vert_plot', 'false');
             plot.ele('x_reverse', 'false');

@@ -16,12 +16,14 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/landuse/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mats4met-ensemble/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/met-anomalycor/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/met-surface/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/met-upperair/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/metproto/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipAQPI/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipitation/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/precipitation1hr/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipitation24hr/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipitationAQPI/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipitationSub24hr/.meteor/local" />

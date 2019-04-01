@@ -3,7 +3,8 @@
  */
 var AppTypes = {
     mats: 'mats',
-    metexpress: 'metexpress'
+    metexpress: 'metexpress',
+    mats4met: 'mats4met'
 };
 
 var InputTypes = {
@@ -35,7 +36,8 @@ var PlotTypes = {
     map: "Map",
     histogram: "Histogram",
     contour: "Contour",
-    contourDiff: "ContourDiff"
+    contourDiff: "ContourDiff",
+    reliability: "Reliability"
 };
 
 var ForecastTypes = {
@@ -96,6 +98,8 @@ var ReservedWords = {
     ideal7: "ideal7",
     ideal8: "ideal8",
     ideal9: "ideal9",
+    perfectReliability: "Perfect Reliability",
+    noSkill: "No Skill",
     blueCurveText: "blueCurveText",
     blackCurveText: "blackCurveText",
     redCurveText: "redCurveText"
