@@ -74,7 +74,7 @@ if [ "X${requestedBranch}" != "X" ]; then
     echo -e "overriding git branch with ${requestedBranch}"
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
-echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(/bin/date +%F_%T)"
+echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: date: $(/bin/date +%F_%T)"
 # Environment vars are set from the appProduction databse. Example for int....
 #    "server" : "mats-int.gsd.esrl.noaa.gov",
 #    "deployment_environment" : "integration",
