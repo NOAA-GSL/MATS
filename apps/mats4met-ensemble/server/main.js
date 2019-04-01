@@ -675,10 +675,12 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['level: ', 'level', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, ']
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "group", "database", "data-source", "region", "variable", "forecast-length", "level"
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
             ],
             groupSize: 6
         });

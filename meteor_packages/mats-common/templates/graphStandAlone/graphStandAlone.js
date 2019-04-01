@@ -183,18 +183,18 @@ Template.GraphStandAlone.helpers({
                     return "Profile: " + format;
                 case matsTypes.PlotTypes.dieoff:
                     return "DieOff: " + format;
-                case matsTypes.PlotTypes.dailyModelCycle:
-                    return "DailyModelCycle " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.threshold:
                     return "Threshold: " + format;
                 case matsTypes.PlotTypes.validtime:
                     return "ValidTime: " + format;
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    return "DailyModelCycle " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.reliability:
+                    return "Reliability: " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.map:
                     return "Map " + p.dates + " ";
                 case matsTypes.PlotTypes.histogram:
                     return "Histogram: " + format;
-                case matsTypes.PlotTypes.reliability:
-                    return "Reliability: " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contour:
                     return "Contour " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contourDiff:
