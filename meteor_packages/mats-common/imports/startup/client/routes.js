@@ -31,8 +31,14 @@ FlowRouter.route('/gsd/mats/*/', {
     }
 });
 
+FlowRouter.route('*/JSON*', {
+    action() {
+        console.log('JSON');
+    }
+});
+
 FlowRouter.route('*', {
     action() {
-        this.render('Home');
+        this.render('notFound');
     }
 });
