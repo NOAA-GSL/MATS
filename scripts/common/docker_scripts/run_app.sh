@@ -13,9 +13,9 @@ export NODE_ENV=production
 export METEOR_SETTINGS=$(cat /usr/app/settings/${APPNAME}/settings.json)
 cd /usr/app
 if [[ $DEBUG ]]; then
-    //echo "run_app => Starting meteor app for DEBUG on port:$PORT with settings $METEOR_SETTINGS"
+    #echo "run_app => Starting meteor app for DEBUG on port:$PORT with settings $METEOR_SETTINGS"
     node --inspect=0.0.0.0:9229  main.js
 else
-    //echo "run_app => Starting meteor app  on port:$PORT with settings $METEOR_SETTINGS"
+    #echo "run_app => Starting meteor app  on port:$PORT with settings $METEOR_SETTINGS"
     node main.js
 fi
