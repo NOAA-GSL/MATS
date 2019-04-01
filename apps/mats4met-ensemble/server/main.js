@@ -29,7 +29,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6,
+                displayGroup: 1,
                 help: "dateHelp.html"
             });
 
@@ -48,21 +48,21 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 8
+                displayGroup: 3
             });
 
         matsCollections.PlotParams.insert(
             {
                 name: 'metexpress-mode',
                 type: matsTypes.InputTypes.radioGroup,
-                optionsMap: {'mats':'mats','matsmv':'matsmv'},
-                options: ['mats', 'matsmv'],
+                optionsMap: {'mats':'mats'}, //,'matsmv':'matsmv'},
+                options: ['mats'], //, 'matsmv'],
                 default: 'mats',
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 8
+                displayGroup: 3
             });
 
         var yAxisOptionsMap = {
@@ -217,7 +217,7 @@ const doCurveParams = function () {
     var dbs;
     var dbArr;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select * from anomalycor_database_groups order by db_group;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select * from ensemble_database_groups order by db_group;");
         for (var i = 0; i < rows.length; i++) {
             thisGroup = rows[i].db_group.trim();
             dbs = rows[i].dbs;
@@ -325,7 +325,7 @@ const doCurveParams = function () {
     }
 
 
-        var defaultGroup = (Object.keys(dbGroupMap).indexOf("PROD") !== -1) ? "PROD" : Object.keys(dbGroupMap)[0];
+        var defaultGroup = (Object.keys(dbGroupMap).indexOf("EnsembleTest") !== -1) ? "EnsembleTest" : Object.keys(dbGroupMap)[0];
     var defaultDB = dbGroupMap[defaultGroup][0];
 
     if (matsCollections.CurveParams.findOne({name: 'group'}) == undefined) {
@@ -678,7 +678,7 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, ']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "variable", "forecast-length", "level"
+                "label", "group", "database", "data-source", "region", "variable", "forecast-length", "level"
             ],
             groupSize: 6
         });

@@ -660,7 +660,7 @@ const processDataContour = function (dataset, curveInfoParams, plotParams, bookk
 const processDataReliability = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
     var error = "";
 
-    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+    //const appName = matsCollections.appName.findOne({name: 'app'}, {app: 1}).app;
 
     // calculate data statistics (including error bars) for each curve
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
