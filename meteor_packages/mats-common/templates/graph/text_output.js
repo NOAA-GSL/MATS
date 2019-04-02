@@ -78,7 +78,7 @@ Template.textOutput.helpers({
                 break;
             case matsTypes.PlotTypes.reliability:
                 header += "<th>label</th>\
-                    <th>sample climotology</th>";
+                    <th>sample climatology</th>";
                 break;
             case matsTypes.PlotTypes.map:
                 header += "<th>label</th>\
