@@ -78,7 +78,7 @@ const getLinearValueLine = function (xmax, xmin, ymax, ymin, cLabel) {
         "label": cLabel,
         "curveId": cLabel,
         "annotation": "",
-        "name": "Perfect Reliability",
+        "name": cLabel,
         "mode": "lines",
         "x": [xmin, xmax],
         "x_epoch": [xmin, xmax],
