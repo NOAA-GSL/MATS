@@ -69,11 +69,11 @@ const _plotText = function (plotParams) {
         case matsTypes.PlotTypes.validtime:
             return "ValidTime: " + format;
             break;
-        case matsTypes.PlotTypes.reliability:
-            return "Reliability: " + format;
-            break;
         case matsTypes.PlotTypes.dailyModelCycle:
             return "DailyModelCycle " + plotParams.dates + " : " + format;
+            break;
+        case matsTypes.PlotTypes.reliability:
+            return "Reliability: " + format;
             break;
         case matsTypes.PlotTypes.map:
             return "Map " + plotParams.dates + " ";
@@ -549,9 +549,6 @@ const addSeries = function(plot, dependentAxes, plotParams) {
             case matsTypes.PlotTypes.dailyModelCycle:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
                 break;
-            case matsTypes.PlotTypes.histogram:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
-                break;
             case matsTypes.PlotTypes.profile:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','curve-dates':'fcst_valid_beg'};
                 break;
@@ -573,13 +570,16 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                    sVars['utc-cycle-start'] = 'init_hour';
                }
                 break;
+            case matsTypes.PlotTypes.threshold:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                break;
             case matsTypes.PlotTypes.validtime:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
             case matsTypes.PlotTypes.reliability:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
-            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.histogram:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
             default:

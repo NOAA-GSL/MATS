@@ -74,7 +74,7 @@ if [ "X${requestedBranch}" != "X" ]; then
     echo -e "overriding git branch with ${requestedBranch}"
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
-echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(/bin/date +%F_%T)"
+echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: date: $(/bin/date +%F_%T)"
 # Environment vars are set from the appProduction databse. Example for int....
 #    "server" : "mats-int.gsd.esrl.noaa.gov",
 #    "deployment_environment" : "integration",
@@ -233,7 +233,7 @@ for app in ${apps[*]}; do
         echo -e "${failed} to meteor build - must exit now"
         exit 1
     fi
-    echo buildVer=$(getVersionForAppForServer ${app} ${SERVER})
+    buildVer=$(getVersionForAppForServer ${app} ${SERVER})
     echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
     echo git push origin +${tag}:${BUILD_CODE_BRANCH}
     echo -e tagged repo with ${GRN}${tag}${NC}

@@ -179,74 +179,6 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     return curveOptions;
 };
 
-// provides curve options for all plot types with an independent x axis and a dependent y axis
-const generateReliabilityCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
-
-    const label = curve['label'];
-    const annotation = curve['annotation'];
-
-    // adjust axes for later setting of the plot options
-    const ymin = curve['ymin'];
-    const ymax = curve['ymax'];
-    const xmin = curve['xmin'];
-    const xmax = curve['xmax'];
-    const axisKey = curve['axisKey'];
-    if (axisKey in axisMap) {
-        axisMap[axisKey].axisLabel = axisKey;
-        axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
-        axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
-        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
-        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
-    } else {
-        axisMap[axisKey] = {
-            index: Object.keys(axisMap).length + 1,
-            xmin: xmin,
-            xmax: xmax,
-            ymin: ymin,
-            ymax: ymax,
-            axisLabel: axisKey
-        };
-    }
-
-    const axisNumber = Object.keys(axisMap).indexOf(axisKey);
-
-    var error_y_temp = {
-        error_y: {
-            array: dataSeries.error_y,
-            thickness: 1,     // set the thickness of the error bars
-            color: curve['color'],
-            visible: false, // changed later if matching
-            // width: 0
-        }
-    };
-    var curveOptions = {
-        ...{
-            label: label,
-            curveId: label,
-            name: label,
-            xaxis: "x1",
-            yaxis: "y" + (axisNumber + 1),
-            annotation: annotation,
-            annotateColor: curve['color'],
-            mode: "lines+markers",
-            marker: {
-                color: curve['color'],
-                size: 8
-            },
-            line: {
-                color: curve['color'],
-            },
-            visible: true
-        }, ...dataSeries
-    };
-
-    delete curveOptions.error_y;
-
-    curveOptions['error_y'] = error_y_temp.error_y;
-
-    return curveOptions;
-};
-
 // provides curve options for all plot types with an independent y axis and a dependent x axis
 const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataProfile) {
 
@@ -314,6 +246,77 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
     delete curveOptions.error_x;
 
     curveOptions['error_x'] = error_x_temp.error_x;
+
+    return curveOptions;
+};
+
+// provides curve options for reliability diagrams
+const generateReliabilityCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
+
+    const label = curve['label'];
+    const annotation = curve['annotation'];
+
+    // adjust axes for later setting of the plot options
+    const ymin = curve['ymin'];
+    const ymax = curve['ymax'];
+    const xmin = curve['xmin'];
+    const xmax = curve['xmax'];
+    const axisKey = curve['axisKey'];
+    if (axisKey in axisMap) {
+        axisMap[axisKey].axisLabel = axisKey;
+        axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
+        axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
+        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
+    } else {
+        axisMap[axisKey] = {
+            index: Object.keys(axisMap).length + 1,
+            xmin: xmin,
+            xmax: xmax,
+            ymin: ymin,
+            ymax: ymax,
+            axisLabel: axisKey
+        };
+    }
+
+    const axisNumber = Object.keys(axisMap).indexOf(axisKey);
+
+    var error_y_temp = {
+        error_y: {
+            array: dataSeries.error_y,
+            thickness: 1,     // set the thickness of the error bars
+            color: curve['color'],
+            visible: false, // changed later if matching
+            // width: 0
+        }
+    };
+    var curveOptions = {
+        ...{
+            label: label,
+            curveId: label,
+            name: label,
+            xaxis: "x1",
+            yaxis: "y" + (axisNumber + 1),
+            annotation: annotation,
+            annotateColor: curve['color'],
+            mode: "lines+markers",
+            marker: {
+                symbol: "circle",
+                color: curve['color'],
+                size: 8
+            },
+            line: {
+                dash: 'solid',
+                color: curve['color'],
+                width: 2
+            },
+            visible: true
+        }, ...dataSeries
+    };
+
+    delete curveOptions.error_y;
+
+    curveOptions['error_y'] = error_y_temp.error_y;
 
     return curveOptions;
 };

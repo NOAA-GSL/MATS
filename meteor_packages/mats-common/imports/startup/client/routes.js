@@ -7,6 +7,23 @@ FlowRouter.route('/', {
     }
 });
 
+FlowRouter.route('/CSV/:graphFunction/:key/:matching/:appName', {
+    name: 'csv',
+    action(params) {
+        console.log("in csv route");
+        window.location.href=FlowRouter.path;
+    }
+});
+
+FlowRouter.route('/JSON/:graphFunction/:key/:matching/:appName', {
+    name: 'json',
+    action(params) {
+        console.log("in json route");
+        window.location.href=FlowRouter.path;
+    }
+});
+
+
 FlowRouter.route('/preview/:graphFunction/:key/:matching/:appName', {
     name: 'preview',
     action(params) {
@@ -17,7 +34,7 @@ FlowRouter.route('/preview/:graphFunction/:key/:matching/:appName', {
 
 
 FlowRouter.route('/gsd/mats/*/preview/:graphFunction/:key/:matching/:appName', {
-    name: 'preview',
+    name: 'previewgsd',
     action(params) {
         console.log("in preview route- setting params", params);
         this.render('GraphStandAlone', params);
@@ -31,22 +48,9 @@ FlowRouter.route('/gsd/mats/*/', {
     }
 });
 
-FlowRouter.route('/*/CSV*', {
-    name: 'CSV',
-    action() {
-        console.log('route for CSV');
-    }
-});
-
-FlowRouter.route('/*/JSON*', {
-    name: 'JSON',
-    action() {
-        console.log('route for JSON');
-    }
-});
-
 FlowRouter.route('*', {
     action() {
+        console.log ('route: ' + ' not found' )
         this.render('notFound');
     }
 });

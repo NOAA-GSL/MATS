@@ -232,11 +232,11 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.validtime:
                                 matsCurveUtils.showValidTimeFace();
                                 break;
-                            case matsTypes.PlotTypes.reliability:
-                                matsCurveUtils.showReliabilityFace();
-                                break;
                             case matsTypes.PlotTypes.dailyModelCycle:
                                 matsCurveUtils.showDailyModelCycleFace();
+                                break;
+                            case matsTypes.PlotTypes.reliability:
+                                matsCurveUtils.showReliabilityFace();
                                 break;
                             case matsTypes.PlotTypes.map:
                                 matsCurveUtils.showMapFace();
@@ -446,14 +446,14 @@ Template.plotList.onRendered( function() {
         case matsTypes.PlotTypes.dailyModelCycle:
             matsCurveUtils.showDailyModelCycleFace();
             break;
+        case matsTypes.PlotTypes.reliability:
+            matsCurveUtils.showReliabilityFace();
+            break;
         case matsTypes.PlotTypes.map:
             matsCurveUtils.showMapFace();
             break;
         case matsTypes.PlotTypes.histogram:
             matsCurveUtils.showHistogramFace();
-            break;
-        case matsTypes.PlotTypes.reliability:
-            matsCurveUtils.showReliabilityFace();
             break;
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
