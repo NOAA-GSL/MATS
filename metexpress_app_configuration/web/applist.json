@@ -13,5 +13,10 @@
   "app": "met-upperair",
   "displayName": "MET Upper Air",
   "group": "MET Express"
+},
+{
+  "app": "mats4met-ensemble",
+  "displayName": "MET ENSEMBLE",
+  "group": "MET Express"
 }
 ]

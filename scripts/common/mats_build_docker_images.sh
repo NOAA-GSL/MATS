@@ -307,6 +307,7 @@ ENTRYPOINT ["/usr/app/run_app.sh"]
     docker build --no-cache --rm -t ${REPO}:${TAG} .
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
     if [ "${pushImage}" == "yes" ]; then
+        echo 'RTP!2019d0cker' | docker login -u randytpierce --password-stdin
         echo "pushing image ${REPO}:${TAG}"
         docker push ${REPO}:${TAG}
     else

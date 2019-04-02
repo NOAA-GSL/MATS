@@ -1,10 +1,10 @@
 version: "2"
 
 networks:
-  web:
-    external: true
-  internal:
-    external: false
+ web:
+   external: true
+ backend:
+   external: false
 
 services:
 
@@ -48,13 +48,13 @@ services:
    - $HOME/mongodata:/data/db
   restart: always
   networks:
-   - internal
+   - backend
 
  met-anomalycor:
   container_name: "met-anomalycor"
-  image: randytpierce/mats1:met-anomalycor-dev-2.1.4
+  image: randytpierce/mats1:met-anomalycor-dev-2.1.5-2019.03.29.06.49
   environment:
-    - DELAY=3
+   - DELAY=3
   links:
    - mongo
   volumes:
@@ -69,13 +69,13 @@ services:
    - traefik.port=80
   networks:
    - web
-   - internal
-
+   - backend
+ 
  met-surface:
   container_name: "met-surface"
-  image: randytpierce/mats1:met-surface-dev-2.1.4
+  image: randytpierce/mats1:met-surface-dev-2.1.5-2019.03.29.06.00
   environment:
-    - DELAY=2
+   - DELAY=3
   links:
    - mongo
   volumes:
@@ -90,14 +90,13 @@ services:
    - traefik.port=80
   networks:
    - web
-   - internal
-
+   - backend
 
  met-upperair:
   container_name: "met-upperair"
-  image: randytpierce/mats1:met-upperair-dev-2.1.4-2019.03.26.06.16
+  image: randytpierce/mats1:met-upperair-dev-2.1.5-2019.03.29.06.15
   environment:
-    - DELAY=2
+   - DELAY=3
   links:
    - mongo
   volumes:
@@ -112,4 +111,4 @@ services:
    - traefik.port=80
   networks:
    - web
-   - internal
+   - backend
