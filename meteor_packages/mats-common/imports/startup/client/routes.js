@@ -34,7 +34,7 @@ FlowRouter.route('/preview/:graphFunction/:key/:matching/:appName', {
 
 
 FlowRouter.route('/gsd/mats/*/preview/:graphFunction/:key/:matching/:appName', {
-    name: 'previewgsd',
+    name: 'preview',
     action(params) {
         console.log("in preview route- setting params", params);
         this.render('GraphStandAlone', params);
@@ -50,7 +50,7 @@ FlowRouter.route('/gsd/mats/*/', {
 
 FlowRouter.route('*', {
     action() {
-        console.log ('route: ' + ' not found' )
+        console.log ('route: ' + ' not found' );
         this.render('notFound');
     }
 });

@@ -652,9 +652,6 @@ Template.graph.events({
         $("#sendModal").modal('show');
     },
     'click .basis': function () {
-        // var fileUrl = window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
-        // var fileName = Session.get("plotResultKey") + ".json";
-        // matsGraphUtils.downloadFile(fileUrl,fileName);
         window.open(window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
     },
     'click .axisLimitButton': function () {

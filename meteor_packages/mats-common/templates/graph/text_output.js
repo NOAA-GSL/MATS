@@ -421,8 +421,5 @@ Template.textOutput.events({
         var key = Session.get('plotResultKey');
         // open a new window with
         window.open(window.location + "/CSV/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title);
-        // var fileUrl = window.location + "/CSV/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
-        // var fileName = Session.get("plotResultKey") + ".csv";
-        // matsGraphUtils.downloadFile(fileUrl,fileName);
     }
 });
