@@ -58,7 +58,7 @@ Template.graph.helpers({
                         'contours.end': dataset[0].contours.end,
                         'contours.size': dataset[0].contours.size,
                         'reversescale': false,
-                        'colorscale': dataset[0].colorscale
+                        'colorscale': JSON.stringify(dataset[0].colorscale)
                     });
                     break;
                 case matsTypes.PlotTypes.timeSeries:
