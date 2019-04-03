@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 
 networks:
  web:
@@ -22,7 +22,7 @@ services:
      - $HOME/metexpress_app_configuration/traefik.toml:/traefik.toml
      - $HOME/metexpress_app_configuration/acme.json:/acme.json
    labels:
-    - traefik.frontend.rule=Host:proxy.localhost
+    - traefik.frontend.rule=Host:proxy.pierce-lt.fsl.noaa.gov
     - traefik.port=8090
 
  met-http:
@@ -33,7 +33,7 @@ services:
   restart: always
   labels:
    - traefik.backend=met-http/index.html
-   - traefik.frontend.rule=Host:localhost
+   - traefik.frontend.rule=Host:pierce-lt.fsl.noaa.gov
    - traefik.docker.network=web
    - traefik.port=8080
   networks:
@@ -64,7 +64,7 @@ services:
   restart: always
   labels:
    - traefik.backend=met-anomalycor
-   - traefik.frontend.rule=Host:met-anomalycor.localhost
+   - traefik.frontend.rule=Host:met-anomalycor.pierce-lt.fsl.noaa.gov
    - traefik.docker.network=web
    - traefik.port=80
   networks:
@@ -85,7 +85,7 @@ services:
   restart: always
   labels:
    - traefik.backend=met-surface
-   - traefik.frontend.rule=Host:met-surface.localhost
+   - traefik.frontend.rule=Host:met-surface.pierce-lt.fsl.noaa.gov
    - traefik.docker.network=web
    - traefik.port=80
   networks:
@@ -106,9 +106,31 @@ services:
   restart: always
   labels:
    - traefik.backend=met-upperair
-   - traefik.frontend.rule=Host:met-upperair.localhost
+   - traefik.frontend.rule=Host:met-upperair.pierce-lt.fsl.noaa.gov
    - traefik.docker.network=web
    - traefik.port=80
   networks:
    - web
    - backend
+
+ mats4met-ensemble:
+  container_name: "mats4met-ensemble"
+  image: randytpierce/mats1:mats4met-ensemble-dev-2.1.5-2019.03.29.06.22
+  environment:
+   - DELAY=3
+  links:
+   - mongo
+  volumes:
+   - $HOME/metexpress_app_configuration/settings:/usr/app/settings
+  depends_on:
+   - mongo
+  restart: always
+  labels:
+   - traefik.backend=mats4met-ensemble
+   - traefik.frontend.rule=Host:mats4met-ensemble.pierce-lt.fsl.noaa.gov
+   - traefik.docker.network=web
+   - traefik.port=80
+  networks:
+   - web
+   - backend
+

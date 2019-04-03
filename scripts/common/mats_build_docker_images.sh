@@ -74,7 +74,7 @@ if [ "X${requestedBranch}" != "X" ]; then
     echo -e "overriding git branch with ${requestedBranch}"
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
-echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(/bin/date +%F_%T)"
+echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: date: $(/bin/date +%F_%T)"
 # Environment vars are set from the appProduction databse. Example for int....
 #    "server" : "mats-int.gsd.esrl.noaa.gov",
 #    "deployment_environment" : "integration",
@@ -307,6 +307,7 @@ ENTRYPOINT ["/usr/app/run_app.sh"]
     docker build --no-cache --rm -t ${REPO}:${TAG} .
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
     if [ "${pushImage}" == "yes" ]; then
+        echo 'RTP!2019d0cker' | docker login -u randytpierce --password-stdin
         echo "pushing image ${REPO}:${TAG}"
         docker push ${REPO}:${TAG}
     else

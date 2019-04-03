@@ -78,7 +78,7 @@ Template.textOutput.helpers({
                 break;
             case matsTypes.PlotTypes.reliability:
                 header += "<th>label</th>\
-                    <th>sample climotology</th>";
+                    <th>sample climatology</th>";
                 break;
             case matsTypes.PlotTypes.map:
                 header += "<th>label</th>\
@@ -420,8 +420,9 @@ Template.textOutput.events({
         var plotType = Session.get('plotType');
         var key = Session.get('plotResultKey');
         // open a new window with
-        var fileUrl = window.location + "/CSV/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
-        var fileName = Session.get("plotResultKey") + ".csv";
-        matsGraphUtils.downloadFile(fileUrl,fileName);
+        window.open(window.location + "/CSV/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title);
+        // var fileUrl = window.location + "/CSV/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
+        // var fileName = Session.get("plotResultKey") + ".csv";
+        // matsGraphUtils.downloadFile(fileUrl,fileName);
     }
 });
