@@ -328,6 +328,9 @@ Template.graph.helpers({
     isContour: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.contour || Session.get('plotType') === matsTypes.PlotTypes.contourDiff)
     },
+    isContourDiff: function () {
+        return (Session.get('plotType') === matsTypes.PlotTypes.contourDiff)
+    },
     isNotMap: function () {
         return (Session.get('plotType') !== matsTypes.PlotTypes.map)
     },

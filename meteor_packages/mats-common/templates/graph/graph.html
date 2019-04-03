@@ -274,27 +274,33 @@
                                 <div class="row">
                                     <label class="col-sm-5">Select colormap: </label>
                                     <select id="colormapSelect">
-                                        <option value="RdBu" selected="selected">RedBlue</option>
-                                        <option value="Jet">Jet</option>
-                                        <option value="Portland">Portland</option>
-                                        <option value="Rainbow">Rainbow</option>
-                                        <option value="Blackbody">Blackbody</option>
-                                        <option value="Earth">Earth</option>
-                                        <option value="Electric">Electric</option>
-                                        <option value="Hot">Hot</option>
-                                        <option value="Picnic">Picnic</option>
-                                        <option value="Reds">Reds</option>
-                                        <option value="Greens">Greens</option>
-                                        <option value="Blues">Blues</option>
-                                        <option value="Greys">Greys</option>
-                                        <option value="Viridis">Viridis</option>
-                                        <option value="Cividis">Cividis</option>
-                                        <option value="Bluered">BlueRed</option>
-                                        <option value="YlGnBu">YellowGreenBlue</option>
-                                        <option value="YlOrRd">YellowOrangeRed</option>
+                                        {{#if isContourDiff}}
+                                            <option value='RdBu'>RedBlue</option>
+                                            <option value='[[0,"rgb(5,10,172)"],[0.35,"rgb(106,137,247)"],[0.45,"rgb(255,255,255)"],[0.55,"rgb(255,255,255)"],[0.6,"rgb(220,170,132)"],[0.7,"rgb(230,145,90)"],[1,"rgb(178,10,28)"]]' selected="selected">RedWhiteBlue</option>
+                                        {{else}}
+                                            <option value='RdBu' selected="selected">RedBlue</option>
+                                            <option value='[[0,"rgb(5,10,172)"],[0.35,"rgb(106,137,247)"],[0.45,"rgb(255,255,255)"],[0.55,"rgb(255,255,255)"],[0.6,"rgb(220,170,132)"],[0.7,"rgb(230,145,90)"],[1,"rgb(178,10,28)"]]'>RedWhiteBlue</option>
+                                        {{/if}}
+                                        <option value='Jet'>Jet</option>
+                                        <option value='Portland'>Portland</option>
+                                        <option value='Rainbow'>Rainbow</option>
+                                        <option value='Blackbody'>Blackbody</option>
+                                        <option value='Earth'>Earth</option>
+                                        <option value='Electric'>Electric</option>
+                                        <option value='Hot'>Hot</option>
+                                        <option value='Picnic'>Picnic</option>
+                                        <option value='Reds'>Reds</option>
+                                        <option value='Greens'>Greens</option>
+                                        <option value='Blues'>Blues</option>
+                                        <option value='Greys'>Greys</option>
+                                        <option value='Viridis'>Viridis</option>
+                                        <option value='Cividis'>Cividis</option>
+                                        <option value='Bluered'>BlueRed</option>
+                                        <option value='YlGnBu'>YellowGreenBlue</option>
+                                        <option value='YlOrRd'>YellowOrangeRed</option>
                                     </select>
                                 </div>
-                           </div>
+                            </div>
                         </div>
                         <div class="modal-footer btn-group">
                             <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
