@@ -444,7 +444,7 @@ const getDataForDiffContour = function (dataset) {
             diffDataset.zTextOutput.push(diffValue);
             diffDataset.nTextOutput.push(diffNumber);
             diffDataset.minDateTextOutput.push(diffMinDate);
-            diffDataset.minDateTextOutput.push(diffMaxDate);
+            diffDataset.maxDateTextOutput.push(diffMaxDate);
         }
     }
 

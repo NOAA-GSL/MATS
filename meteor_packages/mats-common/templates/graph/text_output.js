@@ -97,6 +97,7 @@ Template.textOutput.helpers({
                     <th>maximum</th>";
                 break;
             case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
                 header += "<th>label</th>\
                     <th>mean stat</th>\
                     <th>n</th>\
@@ -185,6 +186,7 @@ Template.textOutput.helpers({
                         <th>bin std dev</th>";
                 break;
             case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
                 header += "<th>X Value</th>\
                         <th>Y Value</th>\
                         <th>Stat</th>\
@@ -306,6 +308,7 @@ Template.textOutput.helpers({
                     "<td>" + (element['bin std dev'] != undefined && element['bin std dev'] !== null ? element['bin std dev'].toPrecision(4) : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
                 line += "<td>" + element["xVal"] + "</td>" +
                     "<td>" + element["yVal"] + "</td>" +
                     "<td>" + (element['stat'] != undefined && element['stat'] !== null ? element['stat'] : fillStr) + "</td>" +
@@ -392,6 +395,7 @@ Template.textOutput.helpers({
                     "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
                 line += "<td>" + curve['label'] + "</td>" +
                     "<td>" + (stats['mean stat'] != undefined && stats['mean stat'] !== null ? stats['mean stat'].toPrecision(4) : "undefined").toString() + "</td>" +
                     "<td>" + (stats['total number of points'] != undefined && stats['total number of points'] !== null ? stats['total number of points'] : "undefined").toString() + "</td>" +
