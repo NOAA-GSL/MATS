@@ -1209,12 +1209,6 @@ Template.graph.events({
                 update['colorbar.titlefont'] = {size: 16, family: 'Arial, sans-serif'};
             }
         });
-        $("input[id=colorbarNumber]").get().forEach(function (elem, index) {
-            if (elem.value !== undefined && elem.value !== "") {
-                update['autocontour'] = true;
-                update['ncontours'] = elem.value;
-            }
-        });
         $("input[id=colorbarMin]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
                 update['autocontour'] = false;
@@ -1227,20 +1221,25 @@ Template.graph.events({
                 update['contours.end'] = elem.value;
             }
         });
+        $("input[id=colorbarNumber]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['autocontour'] = false;
+                update['ncontours'] = elem.value;   // sadly plotly regards this as a "less than or equal to" value, so we have to manually set contour size
+                const isStartDefined = update['contours.start'] !== undefined;
+                const isEndDefined = update['contours.end'] !== undefined;
+                const startVal = isStartDefined ? update['contours.start'] : dataset[0].zmin+(dataset[0].zmax-dataset[0].zmin)/16;
+                const endVal = isEndDefined ? update['contours.end'] : dataset[0].zmax-(dataset[0].zmax-dataset[0].zmin)/16;
+                update['contours.size'] = (endVal - startVal) / (Number(update['ncontours']) - 1);
+            }
+        });
         $("input[id=colorbarStep]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
-                update['contours.size'] = elem.value;
                 if (update['ncontours'] === undefined) {
                     update['autocontour'] = false;
+                    update['contours.size'] = elem.value;
                 }
             }
         });
-        // deal with situation where the user wants to automatically calculate the step but has also specified a max and/or min
-        if (update['ncontours'] !== undefined && !update['autocontour']) {
-            const startVal = update['contours.start'] !== undefined ? update['contours.start'] : dataset[0].zmin;
-            const endVal = update['contours.end'] !== undefined ? update['contours.end'] : dataset[0].zmax;
-            update['contours.size'] = (endVal - startVal) / (Number(update['ncontours']) + 1);
-        }
         $("input[id=colorbarReverse]").get().forEach(function (elem, index) {
             if (elem && elem.checked) {
                 update['reversescale'] = true;

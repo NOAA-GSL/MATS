@@ -443,8 +443,8 @@ const generateContourCurveOptions = function (curve, axisMap, dataset) {
                 color: curve['color'],
             },
             type: 'contour',
-            autocontour: true,
-            ncontours: 15,
+            autocontour: false,
+            ncontours: 15,   // apparently plotly regards this as a "less than or equal to" field
             contours: {
                 // these are only used if autocontour is set to false and ncontour is disregarded
                 start: dataset.zmin + (dataset.zmax - dataset.zmin) / 16,
