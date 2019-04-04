@@ -14,9 +14,6 @@ Template.curveItem.onRendered(function() {
 });
 
 Template.curveItem.helpers({
-    editCurve: function() {
-        return (Session.get("editMode"));
-    },
     removeCurve: function() {
       var confirmRemoveCurve = Session.get("confirmRemoveCurve");
       return confirmRemoveCurve ? confirmRemoveCurve.label : null;

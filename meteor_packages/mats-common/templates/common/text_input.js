@@ -48,6 +48,7 @@ Template.textInput.events({
             const text = event.currentTarget.value;
             if (Object.values(matsTypes.ReservedWords).indexOf(text) === -1) {
                 matsParamUtils.setValueTextForParamName(event.target.name, text);
+                Session.set("NextCurveLabel", text);
             } else {
                 console.log("that curve label is not allowed");
                 setTimeout(function (){
