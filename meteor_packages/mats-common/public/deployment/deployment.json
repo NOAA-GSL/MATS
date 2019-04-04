@@ -170,8 +170,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.5-2019.04.03.06.00",
-      "buildDate": "2019.04.03.06.00",
+      "version": "2.1.6-2019.04.04.06.00",
+      "buildDate": "2019.04.04.06.00",
       "last_test_run": "",
       "last_test_status": ""
     }
@@ -361,128 +361,128 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.18",
+      "version": "2.1.5",
+      "buildDate": "2019.04.04.00.01",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "aircraft",
       "title": "Upper Air (AMDAR)",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.58",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.40",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.14",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.57",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.02",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.44",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.42",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.23",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.06",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.48",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.50",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.32",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.38",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.19",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.30",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.11",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.34",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.15",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.11",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.22.55",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.21",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.03",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.16",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.22.59",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.07",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.22.50",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.46",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.27",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.54",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.36",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -497,24 +497,24 @@
     {
       "app": "met-upperair",
       "title": "MET Upper Air",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.25",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.07",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.10",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.23.52",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.00",
+      "version": "2.1.5",
+      "buildDate": "2019.04.03.22.45",
       "last_test_run": "",
       "last_test_status": ""
     }
