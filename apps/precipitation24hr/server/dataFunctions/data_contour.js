@@ -4,7 +4,6 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataContour = function (plotParams, plotFunction) {
@@ -41,7 +40,6 @@ dataContour = function (plotParams, plotFunction) {
     var forecastType = Object.keys(matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
     var scaleStr = curve['scale'];
     var scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
-    const forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
     var thresholdClause = "";
     var dateClause = "m0.time";
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {

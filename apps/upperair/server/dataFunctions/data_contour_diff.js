@@ -3,10 +3,8 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
@@ -70,7 +68,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var dateClause = "";
         if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
             var forecastLength = curve['forecast-length'];
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         }
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             const validTimeStr = curve['valid-time'];
@@ -80,7 +78,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
             const top = curve['top'];
             const bottom = curve['bottom'];
-            levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10 "
+            levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10"
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
             dateClause = "unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600";
@@ -102,12 +100,14 @@ dataContourDiff = function (plotParams, plotFunction) {
 
             matchModel = ", " + otherModel + otherRegion + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
-            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
-            matchClause = "and m0.date = a0.date and m0.hour = a0.hour and m0.mb10 = a0.mb10";
+            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
+            matchClause = "and m0.date = a0.date and m0.hour = a0.hour";
 
             if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
                 var matchForecastLength = curves[otherCurveIndex]['forecast-length'];
-                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength + " ";
+                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength;
+            } else {
+                matchForecastLengthClause = "and m0.fcst_len = a0.fcst_len";
             }
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                 matchValidTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][curves[otherCurveIndex]['valid-time']][0];
@@ -116,7 +116,9 @@ dataContourDiff = function (plotParams, plotFunction) {
             if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
                 var matchTop = curves[otherCurveIndex]['top'];
                 var matchBottom = curves[otherCurveIndex]['bottom'];
-                matchLevelClause = "and a0.mb10 >= " + matchTop + "/10 and a0.mb10 <= " + matchBottom + "/10 "
+                matchLevelClause = "and m0.mb10 = a0.mb10 and a0.mb10 >= " + matchTop + "/10 and a0.mb10 <= " + matchBottom + "/10"    // multiselects always need an additional straight match clause
+            } else {
+                matchLevelClause = "and m0.mb10 = a0.mb10";
             }
         }
 

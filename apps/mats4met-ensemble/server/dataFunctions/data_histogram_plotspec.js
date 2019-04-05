@@ -10,7 +10,6 @@ import {
     matsParamUtils,
     matsTypes
 } from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 var xmlBuilder = require('xmlbuilder');

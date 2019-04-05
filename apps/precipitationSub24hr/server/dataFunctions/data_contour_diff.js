@@ -3,10 +3,8 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
@@ -49,14 +47,13 @@ dataContourDiff = function (plotParams, plotFunction) {
         var forecastType = Object.keys(matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
         var scaleStr = curve['scale'];
         var scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
-        const forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
         var thresholdClause = "";
         var dateClause = "m0.time";
         if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
             var thresholdStr = curve['threshold'];
             var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
             threshold = threshold * 0.01;
-            thresholdClause = "and m0.trsh = " + threshold + " ";
+            thresholdClause = "and m0.trsh = " + threshold;
         }
 
         // for two contours it's faster to just take care of matching in the query
@@ -73,15 +70,17 @@ dataContourDiff = function (plotParams, plotFunction) {
 
             matchModel = ", " + otherModel + "_" + otherScale + '_' + otherRegion + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
-            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
+            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
             matchClause = "and m0.time = a0.time";
 
             var matchForecastType = curves[otherCurveIndex]['forecast-type'];
-            matchForecastTypeClause = "and a0.accum_len = '" + matchForecastType + "' ";
+            matchForecastTypeClause = "and a0.accum_len = '" + matchForecastType + "'";
 
             if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
                 var matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === curves[otherCurveIndex]['threshold']);
-                matchThresholdClause = "and a0.trsh = " + matchThreshold + " ";
+                matchThresholdClause = "and a0.trsh = " + matchThreshold;
+            } else {
+                matchThresholdClause = "and m0.trsh = a0.trsh";
             }
         }
 

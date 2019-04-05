@@ -574,9 +574,7 @@ const doCurveParams = function () {
         const optionsMap = {
             'Pressure level': "select m0.mb10*10 as xVal, ",
             'Valid UTC hour': "select m0.hour as xVal, ",
-            'Init UTC hour': "select (unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
             'Valid Date': "select unix_timestamp(m0.date)+3600*m0.hour as xVal, ",
-            'Init Date': "select unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 as xVal, "
         };
 
         matsCollections.CurveParams.insert(
@@ -606,9 +604,7 @@ const doCurveParams = function () {
         const optionsMap = {
             'Pressure level': "m0.mb10*10 as yVal,",
             'Valid UTC hour': "m0.hour as yVal,",
-            'Init UTC hour': "(unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600)%(24*3600)/3600 as yVal,",
             'Valid Date': "unix_timestamp(m0.date)+3600*m0.hour as yVal, ",
-            'Init Date': "unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 as yVal, "
         };
 
         matsCollections.CurveParams.insert(

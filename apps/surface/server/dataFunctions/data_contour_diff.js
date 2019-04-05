@@ -3,10 +3,8 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
@@ -66,7 +64,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var dateClause = "";
         if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
             var forecastLength = curve['forecast-length'];
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         }
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -94,12 +92,14 @@ dataContourDiff = function (plotParams, plotFunction) {
 
             matchModel = ", " + otherModel + "_" + otherMetar + "_" + otherRegion + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
-            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
+            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
             matchClause = "and m0.valid_day = a0.valid_day and m0.hour = a0.hour";
 
             if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
                 var matchForecastLength = curves[otherCurveIndex]['forecast-length'];
-                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength + " ";
+                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength;
+            } else {
+                matchForecastLengthClause = "and m0.fcst_len = a0.fcst_len";
             }
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                 var matchValidTimes = curves[otherCurveIndex]['valid-time'] === undefined ? [] : curves[otherCurveIndex]['valid-time'];

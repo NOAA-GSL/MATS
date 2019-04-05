@@ -1,6 +1,5 @@
 import {Meteor} from 'meteor/meteor';
 import {matsPlotSpecUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 plotSpecDieOff = function (plotParams, key, plotSpecCallback) {

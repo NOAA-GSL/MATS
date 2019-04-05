@@ -3,10 +3,8 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
@@ -51,7 +49,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var dateClause = "";
         if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
             var forecastLength = curve['forecast-length'];
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         }
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             const validTimeStr = curve['valid-time'];
@@ -88,15 +86,17 @@ dataContourDiff = function (plotParams, plotFunction) {
 
             matchModel = ", " + otherModel + "_anomcorr_" + otherRegion + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
-            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
-            matchClause = "and m0.valid_date = a0.valid_date and m0.valid_hour = a0.valid_hour and m0.level = a0.level";
+            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
+            matchClause = "and m0.valid_date = a0.valid_date and m0.valid_hour = a0.valid_hour";
 
             var matchVariable = curves[otherCurveIndex]['variable'];
-            matchVariableClause = "and a0.variable = '" + matchVariable + "' ";
+            matchVariableClause = "and a0.variable = '" + matchVariable + "'";
 
             if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
                 var matchForecastLength = curves[otherCurveIndex]['forecast-length'];
-                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength + " ";
+                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength;
+            } else {
+                matchForecastLengthClause = "and m0.fcst_len = a0.fcst_len";
             }
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                 matchValidTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][curves[otherCurveIndex]['valid-time']][0];
@@ -105,8 +105,10 @@ dataContourDiff = function (plotParams, plotFunction) {
             if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
                 var matchLevels = curves[otherCurveIndex]['pres-level'] === undefined ? [] : curves[otherCurveIndex]['pres-level'];
                 if (matchLevels.length > 0 && matchLevels !== matsTypes.InputTypes.unused) {
-                    matchLevelClause = "and a0.level IN(" + matchLevels + ")";
+                    matchLevelClause = "and m0.level = a0.level and a0.level IN(" + matchLevels + ")";    // multiselects always need an additional straight match clause
                 }
+            }  else {
+                matchLevelClause = "and m0.level = a0.level";
             }
         }
 

@@ -3,10 +3,8 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
@@ -75,7 +73,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
             const top = curve['top'];
             const bottom = curve['bottom'];
-            levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10 "
+            levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10"
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
             dateClause = "unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600";
@@ -92,6 +90,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var matchDates = "";
         var matchValidTimeClause = "";
         var matchLevelClause = "";
+        var matchPhase = "";
         var matchClause = "";
         if (matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
@@ -101,20 +100,24 @@ dataContourDiff = function (plotParams, plotFunction) {
 
             matchModel = ", " + otherModel + "_" + otherFHR + "_" + otherRegion + "_sums as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
-            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
-            matchClause = "and m0.date = a0.date and m0.hour = a0.hour and m0.mb10 = a0.mb10";
+            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
+            matchClause = "and m0.date = a0.date and m0.hour = a0.hour";
+
+            matchPhase = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'][curves[otherCurveIndex]['phase']];
+            matchPhase = matchPhase.split('m0').join('a0');
 
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                 const matchValidTimes = curves[otherCurveIndex]['valid-time'] === undefined ? [] : curves[otherCurveIndex]['valid-time'];
                 if (matchValidTimes.length > 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    matchValidTimeClause = " and  a0.hour IN(" + matchValidTimes + ")";
+                    matchValidTimeClause = " and a0.hour IN(" + matchValidTimes + ")";
                 }
             }
-
             if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
                 var matchTop = curves[otherCurveIndex]['top'];
                 var matchBottom = curves[otherCurveIndex]['bottom'];
-                matchLevelClause = "and a0.mb10 >= " + matchTop + "/10 and a0.mb10 <= " + matchBottom + "/10 "
+                matchLevelClause = "and m0.mb10 = a0.mb10 and a0.mb10 >= " + matchTop + "/10 and a0.mb10 <= " + matchBottom + "/10" // multiselects always need an additional straight match clause
+            } else {
+                matchLevelClause = "and m0.mb10 = a0.mb10";
             }
         }
 
@@ -141,6 +144,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             "{{validTimeClause}} " +
             "{{matchValidTimeClause}} " +
             "{{phase}} " +
+            "{{matchPhase}} " +
             "group by xVal,yVal " +
             "order by xVal,yVal" +
             ";";
@@ -153,6 +157,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{validTimeClause}}', validTimeClause);
         statement = statement.replace('{{matchValidTimeClause}}', matchValidTimeClause);
         statement = statement.replace('{{phase}}', phase);
+        statement = statement.replace('{{matchPhase}}', matchPhase);
         statement = statement.replace('{{levelClause}}', levelClause);
         statement = statement.replace('{{matchLevelClause}}', matchLevelClause);
         statement = statement.split('{{dateClause}}').join(dateClause);

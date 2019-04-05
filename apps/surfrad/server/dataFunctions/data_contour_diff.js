@@ -3,10 +3,8 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
@@ -68,9 +66,10 @@ dataContourDiff = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var forecastLengthClause = "";
         var dateClause = "";
+        var obsDateClause = "";
         if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
             var forecastLength = Number(curve['forecast-length']) * 60;
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         }
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -80,8 +79,10 @@ dataContourDiff = function (plotParams, plotFunction) {
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
             dateClause = "m0.secs-m0.fcst_len*60";
+            obsDateClause = "ob0.secs-ob0.fcst_len*60";
         } else {
             dateClause = "m0.secs";
+            obsDateClause = "ob0.secs";
         }
 
         // for two contours it's faster to just take care of matching in the query
@@ -97,8 +98,8 @@ dataContourDiff = function (plotParams, plotFunction) {
             const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
             matchModel = ", " + otherModel + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
-            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
-            matchClause = "and m0.secs = a0.secs";
+            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
+            matchClause = "and m0.secs = a0.secs and m0.id = a0.id and ob0.secs = a0.secs and ob0.id = a0.id";
 
             const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
             if (otherRegion === 'all_stat') {
@@ -114,8 +115,10 @@ dataContourDiff = function (plotParams, plotFunction) {
             matchScaleClause = "and a0.scale = '" + otherScale + "'";
 
             if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-                var matchForecastLength = curves[otherCurveIndex]['forecast-length'];
-                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength + " ";
+                var matchForecastLength = Number(curves[otherCurveIndex]['forecast-length']) * 60;
+                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength;
+            } else {
+                matchForecastLengthClause = "and m0.fcst_len = a0.fcst_len";
             }
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                 var matchValidTimes = curves[otherCurveIndex]['valid-time'] === undefined ? [] : curves[otherCurveIndex]['valid-time'];
@@ -144,13 +147,17 @@ dataContourDiff = function (plotParams, plotFunction) {
             "and ob0.id = m0.id " +
             "and {{dateClause}} >= '{{fromSecs}}' " +
             "and {{dateClause}} <= '{{toSecs}}' " +
+            "and {{obsDateClause}} >= '{{fromSecs}}' " +
+            "and {{obsDateClause}} <= '{{toSecs}}' " +
             "{{matchDates}} " +
             "and m0.scale = '{{scale}}' " +
             "{{matchScaleClause}} " +
             "{{regionClause}} " +
             "{{matchRegionClause}} " +
             "{{validTimeClause}} " +
+            "{{matchValidTimeClause}} " +
             "{{forecastLengthClause}} " +
+            "{{matchForecastLengthClause}} " +
             "group by xVal,yVal " +
             "order by xVal,yVal" +
             ";";
@@ -160,17 +167,20 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{statistic}}', statistic);
         statement = statement.replace('{{data_source}}', data_source);
         statement = statement.replace('{{matchModel}}', matchModel);
-        statement = statement.replace('{{fromSecs}}', fromSecs);
-        statement = statement.replace('{{toSecs}}', toSecs);
+        statement = statement.split('{{fromSecs}}').join(fromSecs);
+        statement = statement.split('{{toSecs}}').join(toSecs);
         statement = statement.replace('{{scale}}', grid_scale);
         statement = statement.replace('{{matchScaleClause}}', matchScaleClause);
         statement = statement.replace('{{matchDates}}', matchDates);
         statement = statement.replace('{{matchClause}}', matchClause);
         statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+        statement = statement.replace('{{matchForecastLengthClause}}', matchForecastLengthClause);
         statement = statement.replace('{{validTimeClause}}', validTimeClause);
+        statement = statement.replace('{{matchValidTimeClause}}', matchValidTimeClause);
         statement = statement.replace('{{regionClause}}', regionClause);
         statement = statement.replace('{{matchRegionClause}}', matchRegionClause);
         statement = statement.split('{{dateClause}}').join(dateClause);
+        statement = statement.split('{{obsDateClause}}').join(obsDateClause);
         dataRequests[curve.label] = statement;
 
         if (data_source !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
