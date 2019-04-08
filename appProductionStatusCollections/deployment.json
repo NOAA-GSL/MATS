@@ -369,8 +369,8 @@
     {
       "app": "aircraft",
       "title": "Upper Air (AMDAR)",
-      "version": "2.1.5",
-      "buildDate": "2019.04.03.23.40",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.01",
       "last_test_run": "",
       "last_test_status": ""
     },
