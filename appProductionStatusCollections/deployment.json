@@ -190,8 +190,8 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.18",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.27",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -207,7 +207,7 @@
       "app": "anomalycor",
       "title": "Anomaly Correlation",
       "version": "2.1.6",
-      "buildDate": "2019.03.27.23.14",
+      "buildDate": "2019.04.08.19.22",
       "last_test_run": "",
       "last_test_status": ""
     },
