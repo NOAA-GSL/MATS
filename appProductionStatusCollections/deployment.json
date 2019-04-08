@@ -198,15 +198,15 @@
     {
       "app": "aircraft",
       "title": "Upper Air (AMDAR)",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.22.58",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.01",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.1.4",
+      "version": "2.1.6",
       "buildDate": "2019.03.27.23.14",
       "last_test_run": "",
       "last_test_status": ""
@@ -214,8 +214,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.02",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.06",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -230,8 +230,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.06",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.11",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -334,8 +334,8 @@
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "2.1.4",
-      "buildDate": "2019.03.27.23.10",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.16",
       "last_test_run": "",
       "last_test_status": ""
     },
