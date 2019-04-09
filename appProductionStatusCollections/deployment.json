@@ -146,8 +146,8 @@
     {
       "app": "mats4met-ensemble",
       "title": "Ensemble",
-      "version": "2.1.5-2019.04.09.06.04",
-      "buildDate": "2019.04.09.06.04",
+      "version": "2.1.7-2019.04.09.06.20",
+      "buildDate": "2019.04.09.06.20",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -491,6 +491,14 @@
       "title": "WFIP2",
       "version": "1.8.3",
       "buildDate": "2018.10.25.20.36",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "mats4met-ensemble",
+      "title": "Ensemble",
+      "version": "2.1.7",
+      "buildDate": "2019.04.09.22.52",
       "last_test_run": "",
       "last_test_status": ""
     },
