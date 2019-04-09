@@ -286,8 +286,8 @@ ADD bundle /usr/app
 COPY run_app.sh /usr/app
 RUN chmod +x /usr/app/run_app.sh
 RUN cd /usr/app/programs/server && npm install --production
-RUN apk del --purge  make gcc g++ bash && npm uninstall -g node-gyp
-RUN rm -rf /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
+RUN apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp
+RUN rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
 ENV APPNAME=${APPNAME}
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV ROOT_URL=http://localhost:80/
