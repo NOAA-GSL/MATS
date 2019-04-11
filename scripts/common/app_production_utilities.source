@@ -592,6 +592,66 @@ getBuildDateForAppForServer() {
 
 
 
+
+# This routine will output apps (app references, titles, and versions) that are currently defined in the production deployment collection of the
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov for the given server, in the correct order
+# according to how they are stored in the database. The data is output as a valid JSON array.... i.e.
+# [
+#   {
+#       "app": "upperair",
+#       "title": "Upper Air (RAOBS)",
+#       "version": "2.1.6"
+#   },
+#   {
+#       "app": "anomalycor",
+#       "title": "Anomaly Correlation"
+#       "version": "2.1.6"
+#   },
+#   ......
+# ]
+#PARAMETERS: server
+#RETURNS: list of app references with buildStatus enabled
+#TRANSFORMATION: none
+getProductionDeploymentAppsForServer() {
+    if [ $# -ne 1 ]; then
+        echo $0 - wrong number of params - usage: $0 server
+        return 1
+    fi
+    local server=$1
+    openTunnel
+    unset data
+    local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
+		db.getCollection('deployment').find( {servers: {\$in:["${server}"]}}, {"apps.app":1,"apps.title":1,"apps.version":1,_id:0});
+	%EODgetBuildableAppsForServer
+    )
+    closeTunnel
+    APPS=($(echo $data | jq -r '.[]'))
+    echo ${APPS[@]}
+}
+
+getDeploymentAppsForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
+	fi
+	local server=$1
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetDeploymentEnvironmentForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
+		{ servers: {
+		      \$in:["${server}"]
+		}},
+		{
+			_id:0,
+			deployment_environment:1
+	   	});
+	%EODgetDeploymentEnvironmentForServer
+	)
+	closeTunnel
+	echo $data | jq -r '.deployment_environment'
+}
+
 # NOTE ABOUT ROLLING VERSIONS:
 # When the nightly build (development branch) happens the version must acquire a higher patch number than the integration version. This is
 # because the code gets tagged with a combination of the app and the version number. We want to be able to roll the code back to either an integration version or

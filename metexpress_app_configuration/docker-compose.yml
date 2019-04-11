@@ -1,29 +1,30 @@
-version: "2"
+version: "3"
 
 networks:
  web:
-   external: true
+  external: true
  backend:
-   external: false
+  external: false
 
 services:
 
  traefik:
-   container_name: traefik
-   image: traefik:1.7.2-alpine
-   restart: always
-   networks:
-     - web
-   ports:
-     - "80:80"
-     - "443:443"
-   volumes:
-     - /var/run/docker.sock:/var/run/docker.sock
-     - $HOME/metexpress_app_configuration/traefik.toml:/traefik.toml
-     - $HOME/metexpress_app_configuration/acme.json:/acme.json
-   labels:
-    - traefik.frontend.rule=Host:proxy.localhost
-    - traefik.port=8090
+  container_name: traefik
+  image: traefik:1.7.2-alpine
+  restart: always
+  networks:
+   - web
+  ports:
+   - "80:80"
+   - "443:443"
+  volumes:
+   - /var/run/docker.sock:/var/run/docker.sock
+   - $HOME/metexpress_app_configuration/traefik.toml:/traefik.toml
+   - $HOME/metexpress_app_configuration/acme.json:/acme.json
+   - /etc/ssl/certs:/etc/ssl/certs
+ #   labels:
+ #    - traefik.frontend.rule=Host:proxy.mats-meteor.gsd.esrl.noaa.gov
+ #    - traefik.port=8090
 
  met-http:
   container_name: "met-http"
@@ -33,7 +34,7 @@ services:
   restart: always
   labels:
    - traefik.backend=met-http/index.html
-   - traefik.frontend.rule=Host:localhost
+   - traefik.frontend.rule=Host:mats-meteor.gsd.esrl.noaa.gov
    - traefik.docker.network=web
    - traefik.port=8080
   networks:
@@ -64,13 +65,13 @@ services:
   restart: always
   labels:
    - traefik.backend=met-anomalycor
-   - traefik.frontend.rule=Host:met-anomalycor.localhost
+   - traefik.frontend.rule=Host:met-anomalycor.mats-meteor.gsd.esrl.noaa.gov
    - traefik.docker.network=web
    - traefik.port=80
   networks:
    - web
    - backend
- 
+
  met-surface:
   container_name: "met-surface"
   image: randytpierce/mats1:met-surface-dev-2.1.5-2019.03.29.06.00
@@ -85,7 +86,7 @@ services:
   restart: always
   labels:
    - traefik.backend=met-surface
-   - traefik.frontend.rule=Host:met-surface.localhost
+   - traefik.frontend.rule=Host:met-surface.mats-meteor.gsd.esrl.noaa.gov
    - traefik.docker.network=web
    - traefik.port=80
   networks:
@@ -106,7 +107,7 @@ services:
   restart: always
   labels:
    - traefik.backend=met-upperair
-   - traefik.frontend.rule=Host:met-upperair.localhost
+   - traefik.frontend.rule=Host:met-upperair.mats-meteor.gsd.esrl.noaa.gov
    - traefik.docker.network=web
    - traefik.port=80
   networks:

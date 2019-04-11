@@ -257,7 +257,7 @@ for app in ${apps[*]}; do
     # save and export the meteor node version for the build_app script
     export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
     export METEOR_NPM_VERSION=$(meteor npm -v)
-    export TAG="${app}-${build_env}-${buildVer}"
+    export TAG="${app}-${buildVer}"
     cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
     chmod +x run_app.sh
     #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
