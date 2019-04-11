@@ -170,8 +170,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.7-2019.04.10.06.00",
-      "buildDate": "2019.04.10.06.00",
+      "version": "2.1.7-2019.04.11.06.00",
+      "buildDate": "2019.04.11.06.00",
       "last_test_run": "",
       "last_test_status": ""
     }
@@ -499,6 +499,215 @@
       "title": "Ensemble",
       "version": "2.1.6",
       "buildDate": "2019.04.09.23.03",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "met-upperair",
+      "title": "MET Upper Air",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.22",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "met-anomalycor",
+      "title": "MET Anomaly Correlation",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "met-surface",
+      "title": "MET Surface",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.17.57",
+      "last_test_run": "",
+      "last_test_status": ""
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "5cae23fc3e7944f4a08d2dc4"
+  },
+  "deployment_environment": "docker-metexpress",
+  "homePage": "metexpress.html",
+  "servers": [
+    "mats-meteor.gsd.esrl.noaa.gov",
+    "metexpress.mdl.nws.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "met-upperair",
+      "title": "MET Upper Air",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.22",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "met-anomalycor",
+      "title": "MET Anomaly Correlation",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "met-surface",
+      "title": "MET Surface",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.17.57",
+      "last_test_run": "",
+      "last_test_status": ""
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "5cae27a63e7944f4a08d2dc6"
+  },
+  "deployment_environment": "docker-mats",
+  "homePage": "mats.html",
+  "servers": [
+    "metv-int.gsd.esrl.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "upperair",
+      "title": "Upper Air (RAOBS)",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.27",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "aircraft",
+      "title": "Upper Air (AMDAR)",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.01",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "anomalycor",
+      "title": "Anomaly Correlation",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.22",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "ceiling",
+      "title": "Ceiling",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.06",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "ceiling15",
+      "title": "Ceiling 15 Min",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.42",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "visibility",
+      "title": "Visibility",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.19.11",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "visibility15",
+      "title": "Visibility 15 Min",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.51",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "surface",
+      "title": "Surface",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.37",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "landuse",
+      "title": "Surface Land Use",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.27",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "surfrad",
+      "title": "Surface Radiation",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.32",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipAQPI",
+      "title": "AQPI Precipitation",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.08",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitation24hr",
+      "title": "24 Hour Precipitation",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.18",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitationSub24hr",
+      "title": "Sub 24 Hour Precipitation",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.12",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "compositeReflectivity",
+      "title": "Composite Reflectivity",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.03",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "vil",
+      "title": "Vertically Integrated Liquid",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.56",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "echotop",
+      "title": "Echo Top",
+      "version": "2.1.6",
+      "buildDate": "2019.04.08.18.47",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "wfip2",
+      "title": "WFIP2",
+      "version": "1.8.3",
+      "buildDate": "2018.10.25.20.36",
       "last_test_run": "",
       "last_test_status": ""
     },
