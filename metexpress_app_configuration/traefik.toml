@@ -1,11 +1,11 @@
 defaultEntryPoints = ["http", "https"]
 
 [entryPoints]
-  [entryPoints.dashboard]
-    address = ":8090"
-    [entryPoints.dashboard.auth]
-      [entryPoints.dashboard.auth.basic]
-        users = ["admin:$apr1$GZ23gG9v$8slcUumLt29SsZ9MiL.z30"]
+#  [entryPoints.dashboard]
+#    address = ":8090"
+#    [entryPoints.dashboard.auth]
+#      [entryPoints.dashboard.auth.basic]
+#        users = ["admin:$apr1$GZ23gG9v$8slcUumLt29SsZ9MiL.z30"]
   [entryPoints.http]
     address = ":80"
       [entryPoints.http.redirect]
@@ -13,20 +13,14 @@ defaultEntryPoints = ["http", "https"]
   [entryPoints.https]
     address = ":443"
       [entryPoints.https.tls]
+        [[entryPoints.https.tls.certificates]]
+        certFile = "/etc/ssl/certs/mats-meteor.crt"
+        keyFile = "/etc/ssl/certs/mats-meteor.key"
 
-[api]
-entrypoint="dashboard"
-
-[acme]
-email = "randy.pierce@noaa.gov"
-storage = "acme.json"
-entryPoint = "https"
-onHostRule = true
-  [acme.httpChallenge]
-  entryPoint = "http"
+#[api]
+#entrypoint="dashboard"
 
 [docker]
-domain = "localhost"
+domain = "mats-meteor.gsd.esrl.noaa.gov"
 watch = true
 network = "web"
-
