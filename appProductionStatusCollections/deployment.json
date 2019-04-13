@@ -182,8 +182,8 @@
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "2.1.7-2019.04.12.06.59",
-      "buildDate": "2019.04.12.06.59",
+      "version": "2.1.7-2019.04.13.06.59",
+      "buildDate": "2019.04.13.06.59",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express"
