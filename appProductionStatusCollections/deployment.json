@@ -101,8 +101,8 @@
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.1.7-2019.04.12.06.10",
-      "buildDate": "2019.04.12.06.10",
+      "version": "2.1.7-2019.04.13.06.10",
+      "buildDate": "2019.04.13.06.10",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation"
