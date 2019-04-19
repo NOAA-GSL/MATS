@@ -11,217 +11,217 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "2.1.7-2019.04.18.08.03",
-      "buildDate": "2019.04.18.08.03",
+      "version": "2.1.7-2019.04.15.07.04",
+      "buildDate": "2019.04.15.07.04",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "aircraft",
       "title": "Upper Air (AMDAR)",
-      "version": "2.1.7-2019.04.18.07.47",
-      "buildDate": "2019.04.18.07.47",
+      "version": "2.1.7-2019.04.15.06.47",
+      "buildDate": "2019.04.15.06.47",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.1.7-2019.04.18.08.00",
-      "buildDate": "2019.04.18.08.00",
+      "version": "2.1.7-2019.04.15.07.01",
+      "buildDate": "2019.04.15.07.01",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.1.7-2019.04.18.07.50",
-      "buildDate": "2019.04.18.07.50",
+      "version": "2.1.7-2019.04.15.06.50",
+      "buildDate": "2019.04.15.06.50",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.1.7-2019.04.18.07.34",
-      "buildDate": "2019.04.18.07.34",
+      "version": "2.1.7-2019.04.15.06.34",
+      "buildDate": "2019.04.15.06.34",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.1.7-2019.04.18.07.53",
-      "buildDate": "2019.04.18.07.53",
+      "version": "2.1.7-2019.04.15.06.54",
+      "buildDate": "2019.04.15.06.54",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.1.7-2019.04.18.07.40",
-      "buildDate": "2019.04.18.07.40",
+      "version": "2.1.7-2019.04.15.06.40",
+      "buildDate": "2019.04.15.06.40",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.1.7-2019.04.18.07.30",
-      "buildDate": "2019.04.18.07.30",
+      "version": "2.1.7-2019.04.15.06.30",
+      "buildDate": "2019.04.15.06.30",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "site_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.1.7-2019.04.18.07.24",
-      "buildDate": "2019.04.18.07.24",
+      "version": "2.1.7-2019.04.15.06.24",
+      "buildDate": "2019.04.15.06.24",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "sumSettings"
+      "dbroles": [
+        "sums_data"
       ]
     },
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.1.7-2019.04.18.07.27",
-      "buildDate": "2019.04.18.07.27",
+      "version": "2.1.7-2019.04.15.06.27",
+      "buildDate": "2019.04.15.06.27",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "sumSettings"
+      "dbroles": [
+        "sums_data"
       ]
     },
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.1.7-2019.04.18.07.10",
-      "buildDate": "2019.04.18.07.10",
+      "version": "2.1.7-2019.04.15.06.10",
+      "buildDate": "2019.04.15.06.10",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.1.7-2019.04.18.07.17",
-      "buildDate": "2019.04.18.07.17",
+      "version": "2.1.7-2019.04.15.06.17",
+      "buildDate": "2019.04.15.06.17",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.1.7-2019.04.18.07.13",
-      "buildDate": "2019.04.18.07.13",
+      "version": "2.1.7-2019.04.15.06.13",
+      "buildDate": "2019.04.15.06.13",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.7-2019.04.18.07.07",
-      "buildDate": "2019.04.18.07.07",
+      "version": "2.1.7-2019.04.15.06.07",
+      "buildDate": "2019.04.15.06.07",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "2.1.7-2019.04.18.07.37",
-      "buildDate": "2019.04.18.07.37",
+      "version": "2.1.7-2019.04.15.06.37",
+      "buildDate": "2019.04.15.06.37",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.1.7-2019.04.18.07.43",
-      "buildDate": "2019.04.18.07.43",
+      "version": "2.1.7-2019.04.15.06.44",
+      "buildDate": "2019.04.15.06.44",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -232,61 +232,60 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Experimental",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "site_data"
       ]
     },
     {
       "app": "mats4met-ensemble",
       "title": "Ensemble",
-      "version": "2.1.7-2019.04.18.07.03",
-      "buildDate": "2019.04.18.07.03",
+      "version": "2.1.7-2019.04.15.06.03",
+      "buildDate": "2019.04.15.06.03",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Experimental",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "met-upperair",
       "title": "MET Upper Air",
-      "version": "2.1.7-2019.04.18.07.20",
-      "buildDate": "2019.04.18.07.20",
+      "version": "2.1.7-2019.04.15.06.20",
+      "buildDate": "2019.04.15.06.20",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "2.1.7-2019.04.18.07.56",
-      "buildDate": "2019.04.18.07.56",
+      "version": "2.1.7-2019.04.15.06.57",
+      "buildDate": "2019.04.15.06.57",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.7-2019.04.18.07.00",
-      "buildDate": "2019.04.18.07.00",
+      "version": "2.1.7-2019.04.19.07.00",
+      "buildDate": "2019.04.19.07.00",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     }
   ]
@@ -310,10 +309,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -324,9 +323,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -337,9 +336,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -350,10 +349,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -364,10 +363,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -378,10 +377,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -392,10 +391,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -406,10 +405,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "site_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -420,8 +419,8 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "sumSettings"
+      "dbroles": [
+        "sums_data"
       ]
     },
     {
@@ -432,8 +431,8 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "sumSettings"
+      "dbroles": [
+        "sums_data"
       ]
     },
     {
@@ -444,10 +443,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -458,9 +457,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -471,9 +470,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -484,10 +483,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -498,10 +497,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -512,10 +511,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -526,9 +525,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Experimntal",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -539,9 +538,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -552,9 +551,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -565,9 +564,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     }
   ]
@@ -590,10 +589,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -604,9 +603,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -617,9 +616,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -630,10 +629,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -644,10 +643,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -658,10 +657,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -672,10 +671,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -686,10 +685,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "site_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -700,8 +699,8 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "sumSettings"
+      "dbroles": [
+        "sums_data"
       ]
     },
     {
@@ -712,8 +711,8 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
-      "dbpools": [
-        "sumSettings"
+      "dbroles": [
+        "sums_data"
       ]
     },
     {
@@ -724,10 +723,10 @@
       "last_test_run": "",
       "last_test_status": "Precipitation",
       "group": "Precipitation",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -738,9 +737,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -751,9 +750,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -764,10 +763,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -778,10 +777,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -792,10 +791,10 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
-      "dbpools": [
-        "modelSettings",
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "model_data",
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -806,9 +805,8 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Experimental",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "site_data"
       ]
     },
     {
@@ -819,9 +817,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "Experimental",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -832,9 +830,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -845,9 +843,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -858,9 +856,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     }
   ]
@@ -884,9 +882,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET Express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -897,9 +895,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET Express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     },
     {
@@ -910,9 +908,9 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET Express",
-      "dbpools": [
-        "sumSettings",
-        "metadataSettings"
+      "dbroles": [
+        "sums_data",
+        "meta_data"
       ]
     }
   ]
