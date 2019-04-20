@@ -4,6 +4,7 @@
   },
   "deployment_environment": "development",
   "homePage": "mats.html",
+  "image-type": "nightly",
   "servers": [
     "mats-dev.gsd.esrl.noaa.gov"
   ],
@@ -278,8 +279,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.7-2019.04.19.07.00",
-      "buildDate": "2019.04.19.07.00",
+      "version": "2.1.7-2019.04.20.07.00",
+      "buildDate": "2019.04.20.07.00",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
@@ -296,6 +297,7 @@
   },
   "deployment_environment": "production",
   "homePage": "mats.html",
+  "image-type": "stable",
   "servers": [
     "mats.gsd.esrl.noaa.gov",
     "www.esrl.noaa.gov"
@@ -577,6 +579,7 @@
   },
   "deployment_environment": "integration",
   "homePage": "mats.html",
+  "image-type": "versioned",
   "servers": [
     "mats-int.gsd.esrl.noaa.gov"
   ],
@@ -869,6 +872,7 @@
   },
   "deployment_environment": "metexpress",
   "homePage": "metexpress.html",
+  "image-type": "stable",
   "servers": [
     "mats-meteor.gsd.esrl.noaa.gov",
     "metexpress.mdl.nws.noaa.gov"
@@ -883,8 +887,8 @@
       "last_test_status": "",
       "group": "MET Express",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sum_data",
+        "metadata"
       ]
     },
     {
@@ -896,8 +900,8 @@
       "last_test_status": "",
       "group": "MET Express",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sum_data",
+        "metadata"
       ]
     },
     {
@@ -909,8 +913,8 @@
       "last_test_status": "",
       "group": "MET Express",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sum_data",
+        "metadata"
       ]
     }
   ]
