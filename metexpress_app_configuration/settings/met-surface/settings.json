@@ -13,7 +13,7 @@
     },
       {
         "name": "metadataSetting",
-        "role": "metadata",
+        "role": "meta_data",
         "status": "active",
         "host": "137.75.129.120",
         "port": "3312",

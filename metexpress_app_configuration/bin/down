@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+docker stack rm metexpress
+docker network rm web

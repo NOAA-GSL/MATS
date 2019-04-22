@@ -1,11 +1,11 @@
 defaultEntryPoints = ["http", "https"]
 
 [entryPoints]
-#  [entryPoints.dashboard]
-#    address = ":8090"
-#    [entryPoints.dashboard.auth]
-#      [entryPoints.dashboard.auth.basic]
-#        users = ["admin:$apr1$GZ23gG9v$8slcUumLt29SsZ9MiL.z30"]
+  [entryPoints.dashboard]
+    address = ":8090"
+    [entryPoints.dashboard.auth]
+      [entryPoints.dashboard.auth.basic]
+        users = ["admin:$apr1$GZ23gG9v$8slcUumLt29SsZ9MiL.z30"]
   [entryPoints.http]
     address = ":80"
       [entryPoints.http.redirect]
@@ -17,8 +17,8 @@ defaultEntryPoints = ["http", "https"]
         certFile = "/etc/ssl/certs/mats-meteor.crt"
         keyFile = "/etc/ssl/certs/mats-meteor.key"
 
-#[api]
-#entrypoint="dashboard"
+[api]
+entrypoint="dashboard"
 
 [docker]
 domain = "mats-meteor.gsd.esrl.noaa.gov"

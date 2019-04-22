@@ -13,7 +13,7 @@
     },
       {
         "name": "metadataSetting",
-        "role": "metadata",
+        "role": "meta_data",
         "status": "active",
         "host": "some_db_host",
         "port": "some_db_port",

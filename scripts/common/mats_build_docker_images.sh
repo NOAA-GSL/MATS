@@ -75,7 +75,7 @@ if [ "X${requestedBranch}" != "X" ]; then
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
 echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: date: $(/bin/date +%F_%T)"
-# Environment vars are set from the appProduction databse. Example for int....
+# Environment vars are set from the appProduction database. Example for int....
 #    "server" : "mats-int.gsd.esrl.noaa.gov",
 #    "deployment_environment" : "integration",
 #    "deployment_status" : "active",
@@ -101,9 +101,9 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
         exit 1
     fi
 fi
-
+export buildCodeBranch = $(git rev-parse --abbrev-ref HEAD)
 cd ${DEPLOYMENT_DIRECTORY}
-currentCommit=$(git rev-parse HEAD)
+export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${failed} to git the current HEAD commit - must exit now"
     exit 1
@@ -113,7 +113,7 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
 fi
-newCommit=$(git rev-parse HEAD)
+newCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${failed} to git the new HEAD commit - must exit now"
     exit 1
@@ -139,15 +139,13 @@ else
     fi
 fi
 
-
-
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
-diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCommit}...${newCommit})
+diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit})
 ret=$?
 if [ $ret -ne 0 ]; then
-    echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCommit}...${newCommit}' ... ret $ret - must exit now"
+    echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}' ... ret $ret - must exit now"
     exit 1
 fi
 
@@ -253,14 +251,23 @@ for app in ${apps[*]}; do
     export MONGO_PORT=27017
     export MONGO_DB=${app}
     export APPNAME=${app}
-    export REPO=randytpierce/mats1
+    export REPO=matsapps/production
+    export TAG="${app}-${buildVer}"
+    if [[ ${build_env} == "int" ]]; then
+        REPO="matsapps/integration"
+    else if [[ ${build_env} == "dev" ]]; then
+            REPO="matsapps/development"
+            TAG="${app}-nightly"
+        fi
+    fi
+
     # save and export the meteor node version for the build_app script
     export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
     export METEOR_NPM_VERSION=$(meteor npm -v)
-    export TAG="${app}-${buildVer}"
     cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
     chmod +x run_app.sh
     #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
+
 cat <<-%EOFdockerfile > Dockerfile
 # have to mount meteor settings as usr/app/settings/${APPNAME} - so that settings.json can get picked up by run_app.sh
 # the corresponding usr/app/settings/${APPNAME}/settings-mysql.cnf file needs to be referenced by
@@ -293,11 +300,11 @@ ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV ROOT_URL=http://localhost:80/
 EXPOSE 80
 ENTRYPOINT ["/usr/app/run_app.sh"]
-
+LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodecommit}"
     # build container
-        #docker build --no-cache --rm -t randytpierce/mats1:${APPNAME}-2.0.1 .
-        #docker tag randytpierce/mats1:${APPNAME}-2.0.1 randytpierce/mats1:${APPNAME}-2.0.1
-        #docker push randytpierce/mats1:${APPNAME}-2.0.1
+        #docker build --no-cache --rm -t ${REPO}:${APPNAME}-${buildVer} .
+        #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
+        #docker push ${REPO}:${APPNAME}-${buildVer}
 %EOFdockerfile
     # stop any running containers....
     docker rm $(docker ps -a -q)
@@ -307,7 +314,7 @@ ENTRYPOINT ["/usr/app/run_app.sh"]
     docker build --no-cache --rm -t ${REPO}:${TAG} .
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
     if [ "${pushImage}" == "yes" ]; then
-        echo 'RTP!2019d0cker' | docker login -u randytpierce --password-stdin
+        echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
         echo "pushing image ${REPO}:${TAG}"
         docker push ${REPO}:${TAG}
     else

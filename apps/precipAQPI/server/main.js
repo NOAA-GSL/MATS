@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
@@ -936,8 +940,7 @@ Meteor.startup(function () {
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
-            name: "sumSetting",
-            role: "sum_data",
+            role: matsTypes.DatabaseRoles.SUMS_DATA,
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
@@ -946,8 +949,7 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
-            name: "modelSetting",
-            role: "model_data",
+            role: matsTypes.DatabaseRoles.MODEL_DATA,
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
@@ -956,8 +958,7 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
-            name: "metadataSetting",
-            role: "metadata",
+            role: matsTypes.DatabaseRoles.META_DATA,
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
@@ -967,7 +968,7 @@ Meteor.startup(function () {
         });
     }
 
-    const modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
+    const modelSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}, {
         host: 1,
         user: 1,
         password: 1,
@@ -980,7 +981,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
+    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         user: 1,
         password: 1,
@@ -993,7 +994,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
+    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
         user: 1,
         password: 1,
