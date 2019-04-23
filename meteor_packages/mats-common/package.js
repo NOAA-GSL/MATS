@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 Package.describe({
     name: 'randyp:mats-common',
     version: '2.1.0',

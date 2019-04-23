@@ -154,9 +154,17 @@
       "buildStatus": "disabled"
     },
     {
+      "app": "mats4met-ensemble",
+      "displayName": "Ensemble",
+      "displayOrder": 18,
+      "group": "Experimental",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
       "app": "met-upperair",
       "displayName": "MET Upper Air",
-      "displayOrder": 18,
+      "displayOrder": 19,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -164,7 +172,7 @@
     {
       "app": "met-anomalycor",
       "displayName": "MET Anomaly Correlation",
-      "displayOrder": 19,
+      "displayOrder": 20,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -172,7 +180,7 @@
     {
       "app": "met-surface",
       "displayName": "MET Surface",
-      "displayOrder": 20,
+      "displayOrder": 21,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -275,7 +283,7 @@
       "displayName": "Surface Radiation",
       "displayOrder": 10,
       "group": "Surface",
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "enabled"
     },
     {
