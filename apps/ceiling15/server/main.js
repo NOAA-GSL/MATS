@@ -904,7 +904,7 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
-            role: "metadata",
+            role: matsTypes.DatabaseRoles.META_DATA,
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
