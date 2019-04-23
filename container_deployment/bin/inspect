@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+docker service ls | tr -s ' ' | cut -d ' ' -f 2 | grep -v NAME | grep -v http | grep -v mongo | grep -v traefik | while read n
+do
+    docker service inspect --pretty $n
+    echo -------------
+done

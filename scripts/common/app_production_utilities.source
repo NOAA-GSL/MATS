@@ -590,9 +590,6 @@ getBuildDateForAppForServer() {
 	echo $data | jq -r '.apps[] | .buildDate'
 }
 
-
-
-
 # This routine will output apps (app references, titles, and versions) that are currently defined in the production deployment collection of the
 # appProductionStatus mongo database on mats.gsd.esrl.noaa.gov for the given server, in the correct order
 # according to how they are stored in the database. The data is output as a valid JSON array.... i.e.

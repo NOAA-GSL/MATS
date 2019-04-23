@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from "meteor/meteor";
 import {ValidatedMethod} from 'meteor/mdg:validated-method';
 import {SimpleSchema} from 'meteor/aldeed:simple-schema';

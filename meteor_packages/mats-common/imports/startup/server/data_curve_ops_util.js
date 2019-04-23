@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 // adds a horizontal black line along a specific y value
 const getHorizontalValueLine = function (xmax, xmin, yValue, cLabel) {
 
