@@ -101,7 +101,7 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
         exit 1
     fi
 fi
-export buildCodeBranch = $(git rev-parse --abbrev-ref HEAD)
+export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 cd ${DEPLOYMENT_DIRECTORY}
 export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
