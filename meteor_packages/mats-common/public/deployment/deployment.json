@@ -758,8 +758,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.6",
-      "buildDate": "2019.04.08.18.03",
+      "version": "2.1.7",
+      "buildDate": "2019.04.23.17.14",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
