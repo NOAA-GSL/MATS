@@ -46,10 +46,10 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/packages/modules.js?hash=36d19d99a8489439d62951c9e4ec469ad1a343de",
-      "size": 320597,
-      "hash": "36d19d99a8489439d62951c9e4ec469ad1a343de",
-      "sri": "XV9VpPmeHZUg3yy0z64DuJeipugXV/6RK4+kYns9ktOSR2VoO12F3GGE5hcAY/qifppUTr9nPUKuRQ2Bsi4NNA=="
+      "url": "/packages/modules.js?hash=ac7a1bb6890fc8b47378ffbfae25c1118a2d89a5",
+      "size": 332486,
+      "hash": "ac7a1bb6890fc8b47378ffbfae25c1118a2d89a5",
+      "sri": "npHNQttfVuGknWxryw3o6V3GwEuE+hRUMtfVJEkqKSUr1a+2c3KgOkEZxlENZMpcNTvEdogoFkRAWT5j1eE/Mw=="
     },
     {
       "path": "packages/modern-browsers.js",
