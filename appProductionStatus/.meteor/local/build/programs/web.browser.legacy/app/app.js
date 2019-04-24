@@ -1024,13 +1024,22 @@ if (Meteor.isServer) {
   }()); // server side route for rest API
   // define some server side routes
 
-  Picker.route('/getStableDeployment/:deployment', function (params, req, res, next) {
+  Picker.route('/:app/getStableDeployment/:deployment', function (params, req, res, next) {
     Picker.middleware(_getStableDeployment2(params, req, res, next));
   });
-  Picker.route('/getStableDeploymentAppList/:deployment', function (params, req, res, next) {
+  Picker.route('/gsd/mats/:app/getStableDeployment/:deployment', function (params, req, res, next) {
+    Picker.middleware(_getStableDeployment2(params, req, res, next));
+  });
+  Picker.route('/:app/getStableDeploymentAppList/:deployment', function (params, req, res, next) {
     Picker.middleware(_getStableDeploymentAppList2(params, req, res, next));
   });
-  Picker.route('/getDeploymentEnvironments', function (params, req, res, next) {
+  Picker.route('/gsd/mats/:app/getStableDeploymentAppList/:deployment', function (params, req, res, next) {
+    Picker.middleware(_getStableDeploymentAppList2(params, req, res, next));
+  });
+  Picker.route('/:app/getDeploymentEnvironments', function (params, req, res, next) {
+    Picker.middleware(_getDeploymentEnvironments2(params, req, res, next));
+  });
+  Picker.route('/:app/getDeploymentEnvironments', function (params, req, res, next) {
     Picker.middleware(_getDeploymentEnvironments2(params, req, res, next));
   }); // private middleware for _getDeploymentEnvironments route
 
