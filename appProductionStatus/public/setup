@@ -118,6 +118,7 @@ done
 # record a repository name...
 # everything that isn't development or integration is production
 repository="matsapps/production"
+prodRepository="matsapps/production"
 if [[ ${depenv} == "integration" ]]; then
     repository="matsapps/integration"
 else if [[ ${depenv} == "development" ]]; then
