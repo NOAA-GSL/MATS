@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsCurveUtils} from 'meteor/randyp:mats-common';
@@ -362,7 +366,7 @@ const getDefaultDateRange = function(name) {
     const startInit = dateParam.startDate;
     const stopInit = dateParam.stopDate;
     const dstr = dateParam.default;
-    return {startInit:startInit,stopInit:stopInit,dstr:dstr};
+    return {startDate:startInit,stopDate:stopInit,dstr:dstr};
 };
 
 const getMinMaxDates = function(minDate, maxDate) {
@@ -470,8 +474,8 @@ const getOptionsForParam = function (paramName) {
 };
 
 const getAppName = function () {
-    const app = matsCollections.appName.findOne({name: "appName"});
-    return app.app;
+    const app = matsCollections.appName.findOne({}).app;
+    return app;
 };
 
 const getCurveItemValueForParamName = function (curveNumber, paramName) {

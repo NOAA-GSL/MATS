@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from "meteor/meteor";
 import {ValidatedMethod} from 'meteor/mdg:validated-method';
 import {SimpleSchema} from 'meteor/aldeed:simple-schema';
@@ -402,7 +406,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                     var returnData = {};
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of map
-                    for (var ci = 0; ci < data[ci].x.length; ci++) {  // for each curve
+                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
@@ -435,8 +439,8 @@ const _getFlattenedResultData = function (rk, p, np) {
                     }
                     break;
                 case matsTypes.PlotTypes.dieoff:
-                case matsTypes.PlotTypes.validtime:
                 case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
                     var labelSuffix;
                     switch (plotType) {
                         case matsTypes.PlotTypes.dieoff:
@@ -475,6 +479,33 @@ const _getFlattenedResultData = function (rk, p, np) {
                             curveDataElement['plotted stat'] = data[ci].y[cdi];
                             curveDataElement['std dev'] = data[ci].stats[cdi].sd;
                             curveDataElement['n'] = data[ci].stats[cdi].n_good;
+                            curveData.push(curveDataElement);
+                        }
+                        returnData.data[data[ci].label] = curveData;
+                    }
+                    break;
+                case matsTypes.PlotTypes.reliability:
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = {};  // map of arrays of map
+                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
+                        }
+                        var stats = {};
+                        stats['label'] = data[ci].label;
+                        stats['sample climo'] = data[ci].glob_stats.sample_climo;
+                        returnData.stats[data[ci].label] = stats;
+
+                        var cdata = data[ci].data;
+                        var curveData = [];  // array of maps
+                        for (var cdi = 0; cdi < data[ci].y.length; cdi++) {  // for each datapoint
+                            var curveDataElement = {};
+                            curveDataElement[data[ci].label + ' probability bin'] = data[ci].stats[cdi].prob_bin;
+                            curveDataElement['hit rate'] = data[ci].stats[cdi].hit_rate;
+                            curveDataElement['oy'] = data[ci].stats[cdi].obs_y;
+                            curveDataElement['on'] = data[ci].stats[cdi].obs_n;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -550,6 +581,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                     }
                     break;
                 case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of maps
@@ -650,7 +682,7 @@ const _getFlattenedResultData = function (rk, p, np) {
             returnData.dsiTextDirection = dsiTextDirection;
             return returnData;
         } catch (error) {
-            throw new Meteor.Error("Error in _getFlattenedResultData function: " + error.message);
+           throw new Meteor.Error("Error in _getFlattenedResultData function: " + error.message);
         }
     }
 };
@@ -1555,19 +1587,34 @@ const mvBatch = new ValidatedMethod({
             const hash = require('object-hash');
             const key = hash(params.plotParams);
             // generate the server router (Picker) urls according to the hash key.
-            const artifacts = {
-                png: appName + "/mvplot/" + key,
-                xml: appName + "/mvxml/" + key,
-                sql: appName + "/mvsql/" + key,
-                log: appName + "/mvlog/" + key,
-                err: appName + "/mverr/" + key,
-                R: appName + "/mvscript/" + key,
-                data: appName + "/mvdata/" + key,
-                points1: appName + "/mvpoints1/" + key,
-                points2: appName + "/mvpoints2/" + key,
-            };
-            const Future = require('fibers/future');
-            var mvFuture = new Future();
+            var artifacts = {};
+            if (process.env.NODE_ENV === "development") {
+                artifacts = {
+                    png: appName + "/mvplot/" + key,
+                    xml: appName + "/mvxml/" + key,
+                    sql: appName + "/mvsql/" + key,
+                    log: appName + "/mvlog/" + key,
+                    err: appName + "/mverr/" + key,
+                    R: appName + "/mvscript/" + key,
+                    data: appName + "/mvdata/" + key,
+                    points1: appName + "/mvpoints1/" + key,
+                    points2: appName + "/mvpoints2/" + key,
+                };
+            } else {
+                // in production the appName is already at the end of the location.href
+                // - which is used to form a url for retrieving the artifact
+                artifacts = {
+                    png: "/mvplot/" + key,
+                    xml: "/mvxml/" + key,
+                    sql: "/mvsql/" + key,
+                    log: "/mvlog/" + key,
+                    err: "/mverr/" + key,
+                    R: "/mvscript/" + key,
+                    data: "/mvdata/" + key,
+                    points1: "/mvpoints1/" + key,
+                    points2: "/mvpoints2/" + key,
+                };
+            }
             // generate the real file paths (these are not exposed to clients)
             const plotSpecFilePath = MV_DIRS.XMLDIR + key + ".xml";
             const pngFilePath = MV_DIRS.PLOTSDIR + key + ".png";
@@ -1659,7 +1706,7 @@ const mvBatch = new ValidatedMethod({
                             // save the plotSpec
                             fse.outputFileSync(plotSpecFilePath, plotSpec);
                             // exec mv batch with this plotSpec - this should be synchronous
-                            cp.exec(mvBatchCmd, (error, stdout, stderr) => {
+                            cp.execSync(mvBatchCmd, (error, stdout, stderr) => {
                                 if (stderr) {
                                     fse.outputFileSync(errFilePath, stderr, function (err) {
                                         if (err) {
@@ -1738,7 +1785,7 @@ const mvBatch = new ValidatedMethod({
 
                                         MV_OUTPUT/xml/key.xml is the plotSpec
                                 */
-                        mvFuture['return']();
+                                return {'key': key, 'artifacts':artifacts};
                             }); //ret = {key:key, result:{artifacts:artifacts}}
                             // return the key and the artifacts
                         }  // plotspec did not exist
@@ -1746,7 +1793,7 @@ const mvBatch = new ValidatedMethod({
                             // the files actually already existed but we needed the plotspec
                             // so just refresh the cache and return the key right away
                             matsCache.storeResult(key, artifacts);
-                            mvFuture['return']();
+                            return {'key': key, 'artifacts':artifacts};
                         }
                     }
                 });
@@ -1754,9 +1801,8 @@ const mvBatch = new ValidatedMethod({
             else {
                 // artifacts existed and plotspec existed - refresh the cache
                 matsCache.storeResult(key, artifacts);
-                mvFuture['return']();
+                return {'key': key, 'artifacts':artifacts};
             }
-            mvFuture.wait();
             return {'key': key, 'artifacts':artifacts};
         } // if Meteor is Server
     } // run
@@ -1884,46 +1930,49 @@ const removeDatabase = new ValidatedMethod({
 });
 
 // makes sure all of the parameters display appropriate selections in relation to one another
-const resetApp = function (metaDataTableRecords, type) {
+const resetApp = function (appRef) {
+    var fse = require('fs-extra');
+    const metaDataTableRecords = appRef.appMdr;
+    const type = appRef.appType;
+    const appName = appRef.app;
+    var dep_env = process.env.NODE_ENV;
+    // set some defaults for python processing - these can be overridden
+    if (Meteor.settings.private != null && Meteor.settings.private.PYTHON_PATH == null) {
+        Meteor.settings.private.PYTHON_PATH = "/usr/bin/python";
+    }
+
+    if (Meteor.settings.private != null && Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
+        switch (Meteor.settings.private.process.RUN_ENV) {
+            case "development":
+            case "integration":
+            case "production":
+                dep_env = Meteor.settings.private.process.RUN_ENV;
+                break;
+            default:
+                dep_env = process.env.NODE_ENV;
+               break;
+        }
+    }
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     if (deploymentText == null) {  // equivilent to deploymentText === null || deploymentText === undefined
     }
     deployment = JSON.parse(deploymentText);
-    const myUrlStr = Meteor.absoluteUrl();
-    var url = require('url');
-    var myUrl = url.parse(myUrlStr);
-    const hostName = myUrl.hostname.trim();
-    //console.log("url path is "+myUrl.pathname);
-    //console.log("PWD is "+process.env.PWD);
-    //console.log("CWD is "+process.cwd());
-    const urlPath = myUrl.pathname == "/" ? process.cwd() : myUrl.pathname.replace(/\/$/g, '');
-    const urlPathParts = urlPath.split("/");
-    //console.log("path parts are "+urlPathParts);
-    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length - 6].trim() : urlPathParts[urlPathParts.length - 1];
-    var developmentApp = {};
     var app = {};
     for (var ai = 0; ai < deployment.length; ai++) {
         var dep = deployment[ai];
-        if (dep.deployment_environment == "development") {
-            developmentApp = dep.apps.filter(function (app) {
-                return app.app === appReference
-            })[0];
-        }
-        if (dep.servers.indexOf(hostName) > -1) {
+        if (dep.deployment_environment == dep_env) {
             app = dep.apps.filter(function (app) {
-                return app.app === appReference
+                return app.app === appName;
             })[0];
-            break;
         }
-    }
-    if (app && Object.keys(app) && Object.keys(app).length === 0 && app.constructor === Object) {
-        app = developmentApp;
     }
     const appVersion = app ? app.version : "unknown";
     const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
     const appType = type ? type : matsTypes.AppTypes.mats;
+    matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
+
     // remember that we updated the metadata tables just now - create metaDataTableUpdates
     /*
         metaDataTableUpdates:
@@ -2106,14 +2155,18 @@ const saveLayout = new ValidatedMethod({
         },
         layout: {
             type: Object, blackbox: true
+        },
+        curveOpsUpdate: {
+            type: Object, blackbox: true
         }
     }).validator(),
     run(params) {
         if (Meteor.isServer) {
             var key = params.resultKey;
             var layout = params.layout;
+            var curveOpsUpdate = params.curveOpsUpdate;
             try {
-                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout}});
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate}});
             } catch (error) {
                 throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
             }

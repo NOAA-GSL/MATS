@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import { matsTypes } from "meteor/randyp:mats-common";
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
@@ -14,9 +18,6 @@ Template.curveItem.onRendered(function() {
 });
 
 Template.curveItem.helpers({
-    editCurve: function() {
-        return (Session.get("editMode"));
-    },
     removeCurve: function() {
       var confirmRemoveCurve = Session.get("confirmRemoveCurve");
       return confirmRemoveCurve ? confirmRemoveCurve.label : null;

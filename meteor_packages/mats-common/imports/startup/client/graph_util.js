@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {matsTypes} from 'meteor/randyp:mats-common';
 
 // set the label for the hide show buttons (NO DATA) for the initial time here
@@ -90,7 +94,7 @@ const setNoDataLabelsMap = function (dataset) {
 };
 
 // plot width helper used in multiple places
-var width = function (plotType) {
+const width = function (plotType) {
     switch (plotType) {
         case matsTypes.PlotTypes.profile:
         case matsTypes.PlotTypes.scatter2d:
@@ -102,9 +106,11 @@ var width = function (plotType) {
         case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:
+        case matsTypes.PlotTypes.contourDiff:
         default:
             // set the width wide
             return rectangleWidth();
@@ -113,7 +119,7 @@ var width = function (plotType) {
 };
 
 // plot height helper used in multiple places
-var height = function (plotType) {
+const height = function (plotType) {
     switch (plotType) {
         case matsTypes.PlotTypes.profile:
         case matsTypes.PlotTypes.scatter2d:
@@ -125,9 +131,11 @@ var height = function (plotType) {
         case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:
+        case matsTypes.PlotTypes.contourDiff:
         default:
             // set the height wide
             return rectangleHeight();
@@ -135,11 +143,11 @@ var height = function (plotType) {
     }
 };
 
-var standAloneWidth = function () {
+const standAloneWidth = function () {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     return (.9 * vpw).toString() + "px";
 };
-var standAloneHeight = function () {
+const standAloneHeight = function () {
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     return (.825 * vph).toString() + "px";
 };
@@ -177,7 +185,7 @@ const resizeGraph = function (plotType) {
 };
 
 // helper to bring up the text page
-var setTextView = function (plotType) {
+const setTextView = function (plotType) {
     //shows text page and proper text output, hides everything else
     document.getElementById('placeholder').style.width = width(plotType);
     document.getElementById('placeholder').style.height = height(plotType);
@@ -190,7 +198,7 @@ var setTextView = function (plotType) {
 };
 
 // helper to bring up the graph page
-var setGraphView = function (plotType) {
+const setGraphView = function (plotType) {
     document.getElementById('placeholder').style.width = width(plotType);
     document.getElementById('placeholder').style.height = height(plotType);
     //shows graph page, hides everything else
@@ -221,7 +229,7 @@ var setGraphView = function (plotType) {
 };
 
 // helper to bring up the graph page in a pop-up window
-var standAloneSetGraphView = function () {
+const standAloneSetGraphView = function () {
     //shows graph page, hides everything else
     document.getElementById('placeholder').style.width = standAloneWidth();
     document.getElementById('placeholder').style.height = standAloneHeight();
@@ -231,7 +239,7 @@ var standAloneSetGraphView = function () {
 };
 
 // helper to bring up the main selector page
-var setDefaultView = function () {
+const setDefaultView = function () {
     // show elements of the main page
     if (document.getElementById('paramList')) {
         document.getElementById('paramList').style.display = 'block';
@@ -261,6 +269,38 @@ var setDefaultView = function () {
     document.getElementById("textView").style.display = "none";
 };
 
+
+const downloadFile = function (fileURL, fileName) {
+    // for non-IE
+    if (!window.ActiveXObject) {
+        var save = document.createElement('a');
+        save.href = fileURL;
+        save.target = '_blank';
+        var filename = fileURL.substring(fileURL.lastIndexOf('/') + 1);
+        save.download = fileName || filename;
+        if (navigator.userAgent.toLowerCase().match(/(ipad|iphone|safari)/) && navigator.userAgent.search("Chrome") < 0) {
+            document.location = save.href;
+        // window event not working here
+        } else {
+            var evt = new MouseEvent('click', {
+                'view': window,
+                'bubbles': true,
+                'cancelable': false
+            });
+            save.dispatchEvent(evt);
+            (window.URL || window.webkitURL).revokeObjectURL(save.href);
+        }
+    }
+
+    // for IE < 11
+    else if (!!window.ActiveXObject && document.execCommand) {
+        var _window = window.open(fileURL, '_blank');
+        _window.document.close();
+        _window.document.execCommand('SaveAs', true, fileName || fileURL)
+        _window.close();
+    }
+};
+
 export default matsGraphUtils = {
     setNoDataLabels: setNoDataLabels,
     setNoDataLabelsMap: setNoDataLabelsMap,
@@ -272,5 +312,6 @@ export default matsGraphUtils = {
     setTextView: setTextView,
     setGraphView: setGraphView,
     standAloneSetGraphView: standAloneSetGraphView,
-    setDefaultView: setDefaultView
+    setDefaultView: setDefaultView,
+    downloadFile: downloadFile
 };

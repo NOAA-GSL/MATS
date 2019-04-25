@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
@@ -5,7 +9,6 @@ import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataThreshold = function (plotParams, plotFunction) {
@@ -37,6 +40,11 @@ dataThreshold = function (plotParams, plotFunction) {
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var source = curve['truth'];
+        var sourceStr = "";
+        if (source !== "All") {
+            sourceStr = "_" + source;
+        }
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
@@ -78,7 +86,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + '_' + region);
+            statement = statement.replace('{{data_source}}', data_source + '_' + region + sourceStr);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             var validTimeClause = " ";

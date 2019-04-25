@@ -1,6 +1,10 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 Package.describe({
     name: 'randyp:mats-common',
-    version: '2.0.0',
+    version: '2.1.0',
     // Brief, one-line summary of the package.
     summary: 'MATS common files provides common functionality for mats apps',
     // URL to the Git repository containing the source code for this package.
@@ -279,7 +283,7 @@ Package.onUse(function (api) {
     api.addAssets('public/img/underConstruction.jpg', "client");
     api.addAssets('public/deployment/deployment.json', "server");
     api.addAssets('public/MATSReleaseNotes.html', "server");
-
+    api.addAssets('public/python/python_query_util.py', "server");
 });
 
 Package.onTest(function (api) {

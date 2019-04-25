@@ -1,25 +1,6 @@
-// utility for supplying alternating data markers for plots
-const getPointSymbol = function (curveIndex) {
-    var pointSymbol = "circle";
-    switch (curveIndex % 5) {
-        case 0:
-            pointSymbol = "circle";
-            break;
-        case 1:
-            pointSymbol = "square";
-            break;
-        case 2:
-            pointSymbol = "diamond";
-            break;
-        case 3:
-            pointSymbol = "triangle";
-            break;
-        case 4:
-            pointSymbol = "cross";
-            break;
-    }
-    return pointSymbol;
-};
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
 
 // adds a horizontal black line along a specific y value
 const getHorizontalValueLine = function (xmax, xmin, yValue, cLabel) {
@@ -94,6 +75,43 @@ const getVerticalValueLine = function (ymax, ymin, xValue, cLabel) {
     return valueLine
 };
 
+// adds a linear line
+const getLinearValueLine = function (xmax, xmin, ymax, ymin, cLabel) {
+
+    const valueLine = {
+        "label": cLabel,
+        "curveId": cLabel,
+        "annotation": "",
+        "name": cLabel,
+        "mode": "lines",
+        "x": [xmin, xmax],
+        "x_epoch": [xmin, xmax],
+        "y": [ymin, ymax],
+        "error_x": [null, null],
+        "error_y": [null, null],
+        "subVals": [],
+        "subSecs": [],
+        "subLevs": [],
+        "stats": [{"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, {
+            "d_mean": 0,
+            "sd": 0,
+            "n_good": 0,
+            "lag1": 0,
+            "stde": 0
+        }],
+        "tooltip": "",
+        "xmin": xmin,
+        "xmax": xmax,
+        "ymin": ymin,
+        "ymax": ymax,
+        "line": {
+            "color": "rgb(0,0,0)",
+        }
+    };
+
+    return valueLine
+};
+
 // provides curve options for all plot types with an independent x axis and a dependent y axis
 const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
 
@@ -145,11 +163,14 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
             annotateColor: curve['color'],
             mode: "lines+markers",
             marker: {
+                symbol: "circle",
                 color: curve['color'],
                 size: 8
             },
             line: {
+                dash: 'solid',
                 color: curve['color'],
+                width: 2
             },
             visible: true
         }, ...dataSeries
@@ -213,11 +234,14 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
             annotateColor: curve['color'],
             mode: "lines+markers",
             marker: {
+                symbol: "circle",
                 color: curve['color'],
                 size: 8
             },
             line: {
+                dash: 'solid',
                 color: curve['color'],
+                width: 2
             },
             visible: true
         }, ...dataProfile
@@ -226,6 +250,77 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
     delete curveOptions.error_x;
 
     curveOptions['error_x'] = error_x_temp.error_x;
+
+    return curveOptions;
+};
+
+// provides curve options for reliability diagrams
+const generateReliabilityCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
+
+    const label = curve['label'];
+    const annotation = curve['annotation'];
+
+    // adjust axes for later setting of the plot options
+    const ymin = curve['ymin'];
+    const ymax = curve['ymax'];
+    const xmin = curve['xmin'];
+    const xmax = curve['xmax'];
+    const axisKey = curve['axisKey'];
+    if (axisKey in axisMap) {
+        axisMap[axisKey].axisLabel = axisKey;
+        axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
+        axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
+        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
+    } else {
+        axisMap[axisKey] = {
+            index: Object.keys(axisMap).length + 1,
+            xmin: xmin,
+            xmax: xmax,
+            ymin: ymin,
+            ymax: ymax,
+            axisLabel: axisKey
+        };
+    }
+
+    const axisNumber = Object.keys(axisMap).indexOf(axisKey);
+
+    var error_y_temp = {
+        error_y: {
+            array: dataSeries.error_y,
+            thickness: 1,     // set the thickness of the error bars
+            color: curve['color'],
+            visible: false, // changed later if matching
+            // width: 0
+        }
+    };
+    var curveOptions = {
+        ...{
+            label: label,
+            curveId: label,
+            name: label,
+            xaxis: "x1",
+            yaxis: "y" + (axisNumber + 1),
+            annotation: annotation,
+            annotateColor: curve['color'],
+            mode: "lines+markers",
+            marker: {
+                symbol: "circle",
+                color: curve['color'],
+                size: 8
+            },
+            line: {
+                dash: 'solid',
+                color: curve['color'],
+                width: 2
+            },
+            visible: true
+        }, ...dataSeries
+    };
+
+    delete curveOptions.error_y;
+
+    curveOptions['error_y'] = error_y_temp.error_y;
 
     return curveOptions;
 };
@@ -348,28 +443,26 @@ const generateContourCurveOptions = function (curve, axisMap, dataset) {
             annotateColor: curve['color'],
             xAxisKey: curve['xAxisKey'],
             yAxisKey: curve['yAxisKey'],
-            line: {
-                // smoothing: 0.85     // smooths contour line divisions
-            },
             marker: {
                 color: curve['color'],
             },
             type: 'contour',
+            autocontour: false,
+            ncontours: 15,   // apparently plotly regards this as a "less than or equal to" field
             contours: {
-                // showlabels: true,       // shows labels on contours
-                // labelfont: {
-                //     family: 'Raleway',
-                //     size: 12,
-                //     color: 'white',
-                // }
+                // these are only used if autocontour is set to false and ncontour is disregarded
+                start: dataset.zmin + (dataset.zmax - dataset.zmin) / 16,
+                end: dataset.zmax - (dataset.zmax - dataset.zmin) / 16,
+                size:  (dataset.zmax - dataset.zmin) / 16,
+                showlabels: false
             },
-            // colorscale: 'Jet',
-            // reversescale: true,
+            colorscale: 'RdBu',
+            reversescale: false,
             colorbar:{
                 title: unitKey,
                 titleside: 'right',
                 titlefont: {
-                    size: 14,
+                    size: 20,
                     family: 'Arial, sans-serif'
                 }
             },
@@ -383,11 +476,12 @@ const generateContourCurveOptions = function (curve, axisMap, dataset) {
 
 export default matsDataCurveOpsUtils = {
 
-    getPointSymbol: getPointSymbol,
     getHorizontalValueLine: getHorizontalValueLine,
     getVerticalValueLine: getVerticalValueLine,
+    getLinearValueLine: getLinearValueLine,
 
     generateSeriesCurveOptions: generateSeriesCurveOptions,
+    generateReliabilityCurveOptions: generateReliabilityCurveOptions,
     generateProfileCurveOptions: generateProfileCurveOptions,
     generateBarChartCurveOptions: generateBarChartCurveOptions,
     generateMapCurveOptions: generateMapCurveOptions,

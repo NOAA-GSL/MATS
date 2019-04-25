@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from 'meteor/meteor';
 import {Hooks} from 'meteor/differential:event-hooks';
 import {
@@ -15,6 +19,7 @@ var annotation = "";
 var openWindows = [];
 var xAxes = [];
 var yAxes = [];
+var curveOpsUpdate = [];
 
 Template.graph.onCreated(function () {
     // the window resize event needs to also resize the graph
@@ -43,17 +48,91 @@ Template.graph.helpers({
             var dataset = matsCurveUtils.getGraphResult().data;
             var options = matsCurveUtils.getGraphResult().options;
             Session.set('options', options);
+
+            // need to save some curve options so that the reset button can undo Plotly.restyle
+            switch (plotType) {
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                    //saved curve options for contours
+                    Session.set('colorbarResetOpts', {
+                        'colorbar.title': dataset[0].colorbar.title,
+                        'autocontour': dataset[0].autocontour,
+                        'ncontours': dataset[0].ncontours,
+                        'contours.start': dataset[0].contours.start,
+                        'contours.end': dataset[0].contours.end,
+                        'contours.size': dataset[0].contours.size,
+                        'reversescale': false,
+                        'colorscale': JSON.stringify(dataset[0].colorscale)
+                    });
+                    break;
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.reliability:
+                    // saved curve options for line graphs
+                    var lineTypeResetOpts = [];
+                    for (var lidx = 0; lidx < dataset.length; lidx++) {
+                        if (Object.values(matsTypes.ReservedWords).indexOf(dataset[lidx].label) === -1) {
+                            lineTypeResetOpts.push({
+                                'visible': dataset[lidx].visible,
+                                'mode': dataset[lidx].mode,
+                                'error_y': dataset[lidx].error_y,
+                                'error_x': dataset[lidx].error_x,
+                                'line.dash': dataset[lidx].line.dash,
+                                'line.width': dataset[lidx].line.width,
+                                'marker.symbol': dataset[lidx].marker.symbol,
+                            });
+                        } else {
+                            break;
+                        }
+                    }
+                    Session.set('lineTypeResetOpts', lineTypeResetOpts);
+                    break;
+                case matsTypes.PlotTypes.histogram:
+                    // saved curve options for maps
+                    var barTypeResetOpts = [];
+                    for (var bidx = 0; bidx < dataset.length; bidx++) {
+                        if (Object.values(matsTypes.ReservedWords).indexOf(dataset[bidx].label) === -1) {
+                            barTypeResetOpts.push({
+                                'visible': dataset[bidx].visible,
+                            });
+                        } else {
+                            break;
+                        }
+                    }
+                    Session.set('barTypeResetOpts', barTypeResetOpts);
+                    break;
+                case matsTypes.PlotTypes.map:
+                    // saved curve options for maps
+                    var mapResetOpts = [];
+                    mapResetOpts[0] = {
+                        'marker.opacity': dataset[0].marker.opacity,
+                    };
+                    for (var midx = 1; midx < dataset.length; midx++) {
+                        mapResetOpts.push({
+                            'visible': dataset[midx].visible,
+                        });
+                    }
+                    Session.set('mapResetOpts', mapResetOpts);
+                    break;
+                case matsTypes.PlotTypes.scatter2d:
+                default:
+                    break;
+            }
+
+            // initial plot
             $("#legendContainer").empty();
             $("#placeholder").empty();
             if (!dataset || !options) {
                 return false;
             }
-
-            // initial plot
             Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
 
+            // append annotations
             if (plotType !== matsTypes.PlotTypes.map) {
-                // append annotations
                 annotation = "";
                 for (var i = 0; i < dataset.length; i++) {
                     if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
@@ -113,12 +192,28 @@ Template.graph.helpers({
         }
     },
     confidenceDisplay: function () {
-        if (Session.get('plotParameter') === "matched" && Session.get('plotType') !== matsTypes.PlotTypes.map && Session.get('plotType') !== matsTypes.PlotTypes.scatter2d && Session.get('plotType') !== matsTypes.PlotTypes.histogram) {
-            return "block";
+        if (Session.get('plotParameter') === "matched") {
+            var plotType = Session.get('plotType');
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    return "block";
+                case matsTypes.PlotTypes.reliability:
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                default:
+                    return "none";
+            }
         } else {
             return "none";
         }
-
     },
     mvSpanDisplay: function () {
         var updated = Session.get("MvResultsUpDated");
@@ -141,26 +236,34 @@ Template.graph.helpers({
             if (format === undefined) {
                 format = "Unmatched";
             }
-            if ((Session.get("plotType") === undefined) || Session.get("plotType") === matsTypes.PlotTypes.timeSeries) {
-                return "TimeSeries " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.profile) {
-                return "Profile: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
-                return "DieOff: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.threshold) {
-                return "Threshold: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.validtime) {
-                return "ValidTime: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dailyModelCycle) {
-                return "DailyModelCycle " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {
-                return "Map " + p.dates + " ";
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.histogram) {
-                return "Histogram: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.contour) {
-                return "Contour " + p.dates + " : " + format;
-            } else {
-                return "Scatter: " + p.dates + " : " + format;
+            var plotType = Session.get('plotType');
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                    return "TimeSeries " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.profile:
+                    return "Profile: " + format;
+                case matsTypes.PlotTypes.dieoff:
+                    return "DieOff: " + format;
+                case matsTypes.PlotTypes.threshold:
+                    return "Threshold: " + format;
+                case matsTypes.PlotTypes.validtime:
+                    return "ValidTime: " + format;
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    return "DailyModelCycle " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.reliability:
+                    return "Reliability: " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.map:
+                    return "Map " + p.dates + " ";
+                case matsTypes.PlotTypes.histogram:
+                    return "Histogram: " + format;
+                case matsTypes.PlotTypes.contour:
+                    return "Contour " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.contourDiff:
+                    return "ContourDiff " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.scatter2d:
+                    break;
+                default:
+                    return "Scatter: " + p.dates + " : " + format;
             }
         } else {
             return "no plot params";
@@ -205,6 +308,32 @@ Template.graph.helpers({
     },
     isProfile: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile)
+    },
+    isLinePlot: function () {
+        var plotType = Session.get('plotType');
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.reliability:
+                return true;
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.scatter2d:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return false;
+        }
+    },
+    isContour: function () {
+        return (Session.get('plotType') === matsTypes.PlotTypes.contour || Session.get('plotType') === matsTypes.PlotTypes.contourDiff)
+    },
+    isContourDiff: function () {
+        return (Session.get('plotType') === matsTypes.PlotTypes.contourDiff)
     },
     isNotMap: function () {
         return (Session.get('plotType') !== matsTypes.PlotTypes.map)
@@ -261,29 +390,67 @@ Template.graph.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.scatter2d:
+                return "block";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "none";
         }
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.scatter2d:
+                return "block";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "none";
         }
     },
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
-            return 'block';
+        if (isMatched) {
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    return "block";
+                case matsTypes.PlotTypes.reliability:
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                default:
+                    return "none";
+            }
         } else {
-            return 'none';
+            return "none";
         }
     },
     barsShowHideDisplay: function () {
@@ -296,7 +463,7 @@ Template.graph.helpers({
     },
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
         } else {
             return 'block';
@@ -314,7 +481,7 @@ Template.graph.helpers({
         Session.get('PlotResultsUpDated');
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
-            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
+            ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             return "none";
         } else {
             return "block";
@@ -324,7 +491,7 @@ Template.graph.helpers({
         Session.get('PlotResultsUpDated');
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
-            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
+            ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             return "block";
         } else {
             return "none";
@@ -332,7 +499,7 @@ Template.graph.helpers({
     },
     yAxisControlsNumberVisibility: function () {
         Session.get('PlotResultsUpDated');
-        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
+        if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
             return "none";
         } else {
             return "block";
@@ -340,7 +507,7 @@ Template.graph.helpers({
     },
     yAxisControlsTextVisibility: function () {
         Session.get('PlotResultsUpDated');
-        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
+        if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
             return "block";
         } else {
             return "none";
@@ -358,16 +525,16 @@ Template.graph.helpers({
             return "none";
         }
     },
-    metApp: function() {
+    metApp: function () {
         Session.get("PlotParams");
         Session.get('PlotResultsUpDated');
-        if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
+        if (matsCollections.Settings.findOne({}).appType && matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
             return "block";
         } else {
             return "none";
         }
     },
-    mvFiles: function() {
+    mvFiles: function () {
         var updated = Session.get('MvResultsUpDated');
         var key = Session.get('mvResultKey');
         var mvs = Session.get('mvs');
@@ -377,7 +544,7 @@ Template.graph.helpers({
             return [];
         }
     },
-    mvDisabled: function() {
+    mvDisabled: function () {
         var updated = Session.get('MvResultsUpDated');
         if (Session.get('mvs') == null || Session.get('PlotParams')['metexpress-mode'] == "mats") {
             return "none";
@@ -385,7 +552,7 @@ Template.graph.helpers({
             return "block";
         }
     },
-    mvLoading: function() {
+    mvLoading: function () {
         var updated = Session.get('MvResultsUpDated');
         if (Session.get('mvs') == null && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
             return "block";
@@ -396,22 +563,28 @@ Template.graph.helpers({
 });
 
 Template.graph.events({
-    'click .mvCtrlButton': function() {
-        window.open(this.url, "mv", "height=200,width=200");
+    'click .mvCtrlButton': function () {
+        var mvWindow = window.open(this.url, "mv", "height=200,width=200");
+        setTimeout(function () {
+            mvWindow.reload();
+        }, 500);
+
     },
     'click .back': function () {
+        const plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.contourDiff) {
+            const oldCurves = Session.get('oldCurves');
+            Session.set('Curves', oldCurves);
+        }
         matsPlotUtils.enableActionButtons();
         matsGraphUtils.setDefaultView();
         matsCurveUtils.resetPlotResultData();
         return false;
     },
-    'click .new': function () {
-        window.open(location);
-        return false;
-    },
+
     'click .header': function (event) {
         document.getElementById('graph-control').style.display = 'block';
-        document.getElementById('showAdministration').style.display = 'block';
+        // document.getElementById('showAdministration').style.display = 'block';
         document.getElementById('navbar').style.display = 'block';
         document.getElementById('footnav').style.display = 'block';
 
@@ -424,7 +597,11 @@ Template.graph.events({
         // capture the layout
         const layout = $("#placeholder")[0].layout;
         var key = Session.get('plotResultKey');
-        matsMethods.saveLayout.call({resultKey: key, layout: layout}, function (error) {
+        matsMethods.saveLayout.call({
+            resultKey: key,
+            layout: layout,
+            curveOpsUpdate: {curveOpsUpdate: curveOpsUpdate}
+        }, function (error) {
             if (error !== undefined) {
                 setError(error);
             }
@@ -435,8 +612,7 @@ Template.graph.events({
         var wind = window.open(window.location + "/preview/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h + ",width=" + w);
         setTimeout(function () {
             wind.resizeTo(w, h);
-            ;
-        }, 100);
+        }, 500);
         openWindows.push(wind);
     },
     'click .closeapp': function () {
@@ -446,8 +622,8 @@ Template.graph.events({
         openWindows = [];
     },
     'click .reload': function () {
-        var dataset = Session.get('dataset');
-        var options = Session.get('options');
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
         var graphFunction = Session.get('graphFunction');
         window[graphFunction](dataset, options);
     },
@@ -484,6 +660,12 @@ Template.graph.events({
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');
+    },
+    'click .lineTypeButton': function () {
+        $("#lineTypeModal").modal('show');
+    },
+    'click .colorbarButton': function () {
+        $("#colorbarModal").modal('show');
     },
     'click .axisYScale': function () {
         // get all yaxes and change their scales
@@ -640,6 +822,15 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .pointsVisibility': function (event) {
         event.preventDefault();
@@ -678,6 +869,15 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .errorBarVisibility': function (event) {
         event.preventDefault();
@@ -713,6 +913,15 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .barVisibility': function (event) {
         event.preventDefault();
@@ -733,6 +942,15 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .annotateVisibility': function (event) {
         event.preventDefault();
@@ -760,11 +978,17 @@ Template.graph.events({
                     'marker.opacity': 1
                 };
                 Plotly.restyle($("#placeholder")[0], update, 0);
+                // save the updates in case we want to pass them to a pop-out window.
+                curveOpsUpdate[0] = curveOpsUpdate[0] === undefined ? {} : curveOpsUpdate[0];
+                curveOpsUpdate[0]['marker____opacity'] = update['marker.opacity'];
                 update = {
                     'visible': false
                 };
                 for (didx = 1; didx < dataset.length; didx++) {
                     Plotly.restyle($("#placeholder")[0], update, didx);
+                    // save the updates in case we want to pass them to a pop-out window.
+                    curveOpsUpdate[didx] = curveOpsUpdate[didx] === undefined ? {} : curveOpsUpdate[didx];
+                    curveOpsUpdate[didx]['visible'] = update['visible'];
                 }
                 $('#' + label + "-curve-show-hide-heatmap")[0].value = "hide heat map";
             } else {
@@ -772,11 +996,17 @@ Template.graph.events({
                     'marker.opacity': 0
                 };
                 Plotly.restyle($("#placeholder")[0], update, 0);
+                // save the updates in case we want to pass them to a pop-out window.
+                curveOpsUpdate[0] = curveOpsUpdate[0] === undefined ? {} : curveOpsUpdate[0];
+                curveOpsUpdate[0]['marker____opacity'] = update['marker.opacity'];
                 update = {
                     'visible': true
                 };
                 for (didx = 1; didx < dataset.length; didx++) {
                     Plotly.restyle($("#placeholder")[0], update, didx);
+                    // save the updates in case we want to pass them to a pop-out window.
+                    curveOpsUpdate[didx] = curveOpsUpdate[didx] === undefined ? {} : curveOpsUpdate[didx];
+                    curveOpsUpdate[didx]['visible'] = update['visible'];
                 }
                 $('#' + label + "-curve-show-hide-heatmap")[0].value = "show heat map";
 
@@ -786,8 +1016,59 @@ Template.graph.events({
     // add refresh button
     'click #refresh-plot': function (event) {
         event.preventDefault();
+        var plotType = Session.get('plotType');
+        var dataset = matsCurveUtils.getGraphResult().data;
         var options = Session.get('options');
-        Plotly.relayout($("#placeholder")[0], options);
+        if (curveOpsUpdate.length === 0) {
+            // we just need a relayout
+            Plotly.relayout($("#placeholder")[0], options);
+        } else {
+            // we need both a relayout and a restyle
+            curveOpsUpdate = [];
+            switch (plotType) {
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                    // restyle for contour plots
+                    Plotly.restyle($("#placeholder")[0], Session.get('colorbarResetOpts'), 0);
+                    break;
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.reliability:
+                    // restyle for line plots
+                    const lineTypeResetOpts = Session.get('lineTypeResetOpts');
+                    for (var lidx = 0; lidx < lineTypeResetOpts.length; lidx++) {
+                        Plotly.restyle($("#placeholder")[0], lineTypeResetOpts[lidx], lidx);
+                        $('#' + dataset[lidx].label + "-curve-show-hide")[0].value = "hide curve";
+                        $('#' + dataset[lidx].label + "-curve-show-hide-points")[0].value = "hide points";
+                        $('#' + dataset[lidx].label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+                    }
+                    break;
+                case matsTypes.PlotTypes.histogram:
+                    // restyle for bar plots
+                    const barTypeResetOpts = Session.get('barTypeResetOpts');
+                    for (var bidx = 0; bidx < barTypeResetOpts.length; bidx++) {
+                        Plotly.restyle($("#placeholder")[0], barTypeResetOpts[bidx], bidx);
+                        $('#' + dataset[bidx].label + "-curve-show-hide-bars")[0].value = "hide bars";
+                    }
+                    break;
+                case matsTypes.PlotTypes.map:
+                    // restyle for maps
+                    const mapResetOpts = Session.get('mapResetOpts');
+                    for (var midx = 0; midx < mapResetOpts.length; midx++) {
+                        Plotly.restyle($("#placeholder")[0], mapResetOpts[midx], midx);
+                    }
+                    $('#' + dataset[0].label + "-curve-show-hide-heatmap")[0].value = "show heat map";
+                    break;
+                case matsTypes.PlotTypes.scatter2d:
+                default:
+                    break;
+            }
+            Plotly.relayout($("#placeholder")[0], options);
+        }
     },
     // add axis customization modal submit button
     'click #axisSubmit': function (event) {
@@ -802,7 +1083,7 @@ Template.graph.events({
             }
         });
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
-            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
+            ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             $("input[id^=x][id$=AxisMinText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
@@ -830,7 +1111,7 @@ Template.graph.events({
                 newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
         });
-        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
+        if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
             $("input[id^=y][id$=AxisMinText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
@@ -871,13 +1152,121 @@ Template.graph.events({
                 }
             });
         }
-        console.log(newOpts);
         Plotly.relayout($("#placeholder")[0], newOpts);
         // if needed, restore the log axis
         if (changeYScaleBack) {
             $("#axisYScale").click();
         }
         $("#axisLimitModal").modal('hide');
+    },
+    // add line style modal submit button
+    'click #lineTypeSubmit': function (event) {
+        event.preventDefault();
+        var plotType = Session.get('plotType');
+        var updates = [];
+        // get input line style change
+        $("[id$=LineStyle]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                updates[index] = updates[index] === undefined ? {} : updates[index];
+                updates[index]['line.dash'] = elem.value;
+            }
+        });
+        $("input[id$=LineWeight]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                updates[index] = updates[index] === undefined ? {} : updates[index];
+                updates[index]['line.width'] = elem.value;
+            }
+        });
+        $("[id$=LineMarker]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                updates[index] = updates[index] === undefined ? {} : updates[index];
+                updates[index]['marker.symbol'] = elem.value;
+            }
+        });
+        for (var uidx = 0; uidx < updates.length; uidx++) {
+            // apply new settings
+            Plotly.restyle($("#placeholder")[0], updates[uidx], uidx);
+        }
+        $("#lineTypeModal").modal('hide');
+        // save the updates in case we want to pass them to a pop-out window.
+        for (uidx = 0; uidx < updates.length; uidx++) {
+            curveOpsUpdate[uidx] = curveOpsUpdate[uidx] === undefined ? {} : curveOpsUpdate[uidx];
+            var updatedKeys = Object.keys(updates[uidx]);
+            for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+                var updatedKey = updatedKeys[kidx];
+                // json doesn't like . to be in keys, so replace it with a placeholder
+                var jsonHappyKey = updatedKey.split(".").join("____");
+                curveOpsUpdate[uidx][jsonHappyKey] = updates[uidx][updatedKey];
+            }
+        }
+    },
+    // add colorbar customization modal submit button
+    'click #colorbarSubmit': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var update = {};
+        // get new formatting
+        $("input[id=colorbarLabel]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['colorbar.title'] = elem.value;
+                update['colorbar.titleside'] = 'right';
+                update['colorbar.titlefont'] = {size: 16, family: 'Arial, sans-serif'};
+            }
+        });
+        $("input[id=colorbarMin]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['autocontour'] = false;
+                update['contours.start'] = elem.value;
+            }
+        });
+        $("input[id=colorbarMax]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['autocontour'] = false;
+                update['contours.end'] = elem.value;
+            }
+        });
+        $("input[id=colorbarNumber]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['autocontour'] = false;
+                update['ncontours'] = elem.value;   // sadly plotly regards this as a "less than or equal to" value, so we have to manually set contour size
+                const isStartDefined = update['contours.start'] !== undefined;
+                const isEndDefined = update['contours.end'] !== undefined;
+                const startVal = isStartDefined ? update['contours.start'] : dataset[0].zmin+(dataset[0].zmax-dataset[0].zmin)/16;
+                const endVal = isEndDefined ? update['contours.end'] : dataset[0].zmax-(dataset[0].zmax-dataset[0].zmin)/16;
+                update['contours.size'] = (endVal - startVal) / (Number(update['ncontours']) - 1);
+            }
+        });
+        $("input[id=colorbarStep]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                if (update['ncontours'] === undefined) {
+                    update['autocontour'] = false;
+                    update['contours.size'] = elem.value;
+                }
+            }
+        });
+        $("input[id=colorbarReverse]").get().forEach(function (elem, index) {
+            if (elem && elem.checked) {
+                update['reversescale'] = true;
+            } else {
+                update['reversescale'] = false;
+            }
+        });
+        var elem = document.getElementById("colormapSelect");
+        if (elem !== undefined && elem.value !== undefined) {
+            update['colorscale'] = elem.value;
+        }
+        // apply new settings
+        Plotly.restyle($("#placeholder")[0], update, 0);
+        $("#colorbarModal").modal('hide');
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[0] = curveOpsUpdate[0] === undefined ? {} : curveOpsUpdate[0];
+        const updatedKeys = Object.keys(update);
+        for (var uidx = 0; uidx < updatedKeys.length; uidx++) {
+            var updatedKey = updatedKeys[uidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[0][jsonHappyKey] = update[updatedKey];
+        }
     }
 });
 

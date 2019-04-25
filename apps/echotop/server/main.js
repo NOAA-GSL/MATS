@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
@@ -247,9 +251,9 @@ const doCurveParams = function () {
             var model = rows[i].display_text.trim();
             modelOptionsMap[model] = [model_value];
 
-            var minDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-            var maxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-            modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
+            var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+            var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+            modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -689,8 +693,8 @@ const doCurveParams = function () {
     modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
-    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minDate + ' - ' + maxDate;
+    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minusMonthMinDate + ' - ' + maxDate;
 
     if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         optionsMap = {
@@ -847,6 +851,27 @@ const doCurveTextPatterns = function () {
             groupSize: 6
 
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.contourDiff,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'scale', ', '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['x-axis: ', 'x-axis-parameter', ', '],
+                ['y-axis: ', 'y-axis-parameter', '']
+
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+            ],
+            groupSize: 6
+
+        });
     }
 };
 
@@ -900,6 +925,12 @@ const doPlotGraph = function () {
             dataFunction: "dataContour",
             checked: false
         });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.contourDiff,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataContourDiff",
+            checked: false
+        });
     }
 };
 
@@ -907,8 +938,7 @@ Meteor.startup(function () {
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
-            name: "sumSetting",
-            role: "sum_data",
+            role: matsTypes.DatabaseRoles.SUMS_DATA,
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
@@ -917,8 +947,7 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
-            name: "modelSetting",
-            role: "model_data",
+            role: matsTypes.DatabaseRoles.MODEL_DATA,
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
@@ -927,8 +956,7 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
-            name: "metadataSetting",
-            role: "metadata",
+            role: matsTypes.DatabaseRoles.META_DATA,
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
@@ -938,7 +966,7 @@ Meteor.startup(function () {
         });
     }
 
-    const modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
+    const modelSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}, {
         host: 1,
         user: 1,
         password: 1,
@@ -951,7 +979,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
+    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         user: 1,
         password: 1,
@@ -964,7 +992,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
+    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
         user: 1,
         password: 1,
@@ -978,9 +1006,7 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("modelPool", "echotop", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "echotop", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp(mdr);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "echotop"});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'echotop'});
 });
 
 // this object is global so that the reset code can get to it

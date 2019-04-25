@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import { matsTypes } from 'meteor/randyp:mats-common';
  import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
@@ -36,6 +40,9 @@ Template.curveParamItemGroup.helpers({
             case matsTypes.PlotTypes.dailyModelCycle:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.dailyModelCycle});
                 break;
+            case matsTypes.PlotTypes.reliability:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.reliability});
+                break;
             case matsTypes.PlotTypes.map:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.map});
                 break;
@@ -44,6 +51,9 @@ Template.curveParamItemGroup.helpers({
                 break;
             case matsTypes.PlotTypes.contour:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.contour});
+                break;
+            case matsTypes.PlotTypes.contourDiff:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.contourDiff});
                 break;
             case matsTypes.PlotTypes.scatter2d:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.scatter2d});

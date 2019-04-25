@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
@@ -12,7 +16,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
     var errorMax = Number.MIN_VALUE;
     var error = "";
 
-    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+    const appName = matsCollections.appName.findOne({}).app;
 
     // if matching, pare down dataset to only matching data
     if (curveInfoParams.curvesLength > 1 && appParams.matching) {
@@ -68,7 +72,12 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         while (di < data.x.length) {
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
-            var errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di]);
+            var errorResult;
+            if (appParams.hasLevels) {
+                errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], data.subLevs[di]);
+            } else {
+                errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], []);
+            }
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.y[di];
@@ -95,7 +104,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             means.push(errorResult.d_mean);
 
             // store error bars if matching
-            const errorBar = errorResult.sd * 1.96;
+            const errorBar = errorResult.stde_betsy * 1.96;
             if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data.error_y.array[di] = errorBar;
@@ -134,11 +143,11 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 case matsTypes.PlotTypes.dieoff:
                     data.text[di] = data.text[di] + "<br>fhr: " + data.x[di];
                     break;
-                case matsTypes.PlotTypes.validtime:
-                    data.text[di] = data.text[di] + "<br>hour of day: " + data.x[di];
-                    break;
                 case matsTypes.PlotTypes.threshold:
                     data.text[di] = data.text[di] + "<br>threshold: " + data.x[di];
+                    break;
+                case matsTypes.PlotTypes.validtime:
+                    data.text[di] = data.text[di] + "<br>hour of day: " + data.x[di];
                     break;
                 default:
                     data.text[di] = data.text[di] + "<br>" + data.x[di];
@@ -151,7 +160,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 "<br>n: " + errorResult.n_good +
                 // "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 // "<br>stde: " + errorResult.stde_betsy +
-                "<br>errorbars: " + Number((data.y[di]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data.y[di]) + (errorResult.sd * 1.96)).toPrecision(4);
+                "<br>errorbars: " + Number((data.y[di]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data.y[di]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
 
             di++;
         }
@@ -162,7 +171,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(values, indVars);
+        const stats = matsDataUtils.get_err(values, indVars, []);
         const filteredMeans = means.filter(x => x);
         var miny = Math.min(...filteredMeans);
         var maxy = Math.max(...filteredMeans);
@@ -258,7 +267,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     var errorMax = Number.MIN_VALUE;
     var error = "";
 
-    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+    const appName = matsCollections.appName.findOne({}).app;
 
     // if matching, pare down dataset to only matching data
     if (curveInfoParams.curvesLength > 1 && appParams.matching) {
@@ -308,7 +317,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         while (di < data.y.length) {
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
-            var errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di]);
+            var errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], data.subLevs[di]);
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.x[di];
@@ -329,7 +338,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
             means.push(errorResult.d_mean);
 
             // store error bars if matching
-            const errorBar = errorResult.sd * 1.96;
+            const errorBar = errorResult.stde_betsy * 1.96;
             if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data.error_x.array[di] = errorBar;
@@ -361,7 +370,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                 "<br>n: " + errorResult.n_good +
                 // "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 // "<br>stde: " + errorResult.stde_betsy +
-                "<br>errorbars: " + Number((data.x[di]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data.x[di]) + (errorResult.sd * 1.96)).toPrecision(4);
+                "<br>errorbars: " + Number((data.x[di]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data.x[di]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
 
             di++;
         }
@@ -372,7 +381,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(values.reverse(), levels.reverse()); // have to reverse because of data inversion
+        const stats = matsDataUtils.get_err(values.reverse(), levels.reverse(), []); // have to reverse because of data inversion
         const filteredMeans = means.filter(x => x);
         var minx = Math.min(...filteredMeans);
         var maxx = Math.max(...filteredMeans);
@@ -412,6 +421,122 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
     // generate plot options
     const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+    var totalProcessingFinish = moment();
+    bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
+        begin: bookkeepingParams.totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(bookkeepingParams.totalProcessingStart)).asSeconds() + ' seconds'
+    };
+
+    // pass result to client-side plotting functions
+    return {
+        error: error,
+        data: dataset,
+        options: resultOptions,
+        basis: {
+            plotParams: plotParams,
+            queries: bookkeepingParams.dataRequests
+        }
+    };
+};
+
+const processDataReliability = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
+    var error = "";
+
+    // calculate data statistics (including error bars) for each curve
+    for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
+
+        var data = dataset[curveIndex];
+        const label = dataset[curveIndex].label;
+
+        var sample_climo = data.subVals;
+        var di = 0;
+
+        /*
+        dataset[curveIndex] is the dataset.
+        it looks like:
+
+        d = {
+            x: [],
+            y: [],
+            error_x: [],   // curveTime
+            error_y: [],   // values
+            subVals: [],   //subVals
+            subSecs: [],   //subSecs
+            subLevs: [],   //subLevs
+            stats: [],     //pointStats
+            text: [],
+            glob_stats: {},     //curveStats
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            sum: 0
+        };
+        */
+
+        while (di < data.x.length) {
+
+            // store statistics for this di datapoint
+            data.stats[di] = {
+                prob_bin: data.x[di],
+                hit_rate: data.y[di],
+                obs_y: data.error_x[di],
+                obs_n: data.subLevs[di]
+            };
+
+            // this is the tooltip, it is the last element of each dataseries element.
+            // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
+            data.text[di] = label;
+            data.text[di] = data.text[di] + "<br>probability bin: " + data.x[di];
+            data.text[di] = data.text[di] + "<br>hit rate: " + data.y[di];
+            data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
+            data.text[di] = data.text[di] + "<br>on: " + data.subLevs[di];
+
+            // remove sub values and times to save space
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
+
+            di++;
+        }
+
+        dataset[curveIndex]['glob_stats'] = {
+            sample_climo: sample_climo
+        };
+    }
+
+    // add black perfect reliability line curve
+    const perfectLine = matsDataCurveOpsUtils.getLinearValueLine(curveInfoParams.xmax, curveInfoParams.xmin, data.ymax, data.ymin, matsTypes.ReservedWords.perfectReliability);
+    dataset.push(perfectLine);
+
+    if (sample_climo >= data.ymin) {
+        var skillmin = sample_climo - ((sample_climo - data.xmin) / 2);
+    } else {
+        var skillmin = data.xmin - ((data.xmin - sample_climo) / 2);
+    }
+    if (sample_climo >= data.ymax) {
+        var skillmax = sample_climo - ((sample_climo - data.xmax) / 2);
+    } else {
+        var skillmax = data.xmax - ((data.xmax - sample_climo) / 2);
+    }
+
+
+    // add black no skill line curve
+    const noSkillLine = matsDataCurveOpsUtils.getLinearValueLine(curveInfoParams.xmax, curveInfoParams.xmin, skillmax, skillmin, matsTypes.ReservedWords.noSkill);
+    dataset.push(noSkillLine);
+
+    // add sample climo lines
+    // need to define the minimum and maximum x value for making the curves
+    const xClimoLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, sample_climo, matsTypes.ReservedWords.zero);
+    dataset.push(xClimoLine);
+
+    const yClimoLine = matsDataCurveOpsUtils.getVerticalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, sample_climo, matsTypes.ReservedWords.zero);
+    dataset.push(yClimoLine);
+
+    // generate plot options
+    var resultOptions = matsDataPlotOpsUtils.generateReliabilityPlotOptions();
+
     var totalProcessingFinish = moment();
     bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
         begin: bookkeepingParams.totalProcessingStart.format(),
@@ -588,7 +713,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 
 const processDataContour = function (dataset, curveInfoParams, plotParams, bookkeepingParams) {
     var error = "";
-    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+    const appName = matsCollections.appName.findOne({}).app;
     var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curve[0]['statistic'];
     var data = dataset[0];
     const label = dataset[0].label;
@@ -617,7 +742,7 @@ const processDataContour = function (dataset, curveInfoParams, plotParams, bookk
             currText = label +
                 "<br>" + data['xAxisKey'] + ": " + data.x[i] +
                 "<br>" + data['yAxisKey'] + ": " + data.y[j] +
-                "<br>" + statisticSelect + ": " + (data.z[j][i] === null ? null : data.z[j][i].toPrecision(4)) +
+                "<br>" + statisticSelect + ": " + (data.z[j][i] === undefined || data.z[j][i] === null || data.z[j][i] === 'null' ? null : data.z[j][i].toPrecision(4)) +
                 "<br>n: " + data['n'][j][i];
             currYTextArray.push(currText);
         }
@@ -650,6 +775,7 @@ export default matsDataProcessUtils = {
 
     processDataXYCurve: processDataXYCurve,
     processDataProfile: processDataProfile,
+    processDataReliability: processDataReliability,
     processDataHistogram: processDataHistogram,
     processDataContour: processDataContour
 

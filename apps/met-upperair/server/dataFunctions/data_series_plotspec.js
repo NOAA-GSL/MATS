@@ -1,10 +1,14 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from 'meteor/meteor';
 import {matsPlotSpecUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
     try {
+        console.log('generating data_series_plotspec');
         var spec = matsPlotSpecUtils.startPlotSpec(sumPool,plotParams);
         var xml = spec.xml;
         var plot = spec.plot;

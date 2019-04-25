@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common'
 import { matsTypes } from 'meteor/randyp:mats-common'
@@ -48,6 +52,7 @@ Template.textInput.events({
             const text = event.currentTarget.value;
             if (Object.values(matsTypes.ReservedWords).indexOf(text) === -1) {
                 matsParamUtils.setValueTextForParamName(event.target.name, text);
+                Session.set("NextCurveLabel", text);
             } else {
                 console.log("that curve label is not allowed");
                 setTimeout(function (){

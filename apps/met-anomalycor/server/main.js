@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
@@ -29,7 +33,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6,
+                displayGroup: 1,
                 help: "dateHelp.html"
             });
 
@@ -48,7 +52,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 8
+                displayGroup: 3
             });
 
         matsCollections.PlotParams.insert(
@@ -62,7 +66,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 8
+                displayGroup: 3
             });
 
         var yAxisOptionsMap = {
@@ -80,7 +84,7 @@ const doPlotParams = function () {
                 controlButtonText: 'Y-axis mode',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         var binOptionsMap = {
@@ -111,7 +115,7 @@ const doPlotParams = function () {
                 controlButtonText: 'customize bins',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -128,7 +132,7 @@ const doPlotParams = function () {
                 controlButtonText: "number of bins",
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -145,7 +149,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin pivot value",
                 displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -162,7 +166,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin start",
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -179,7 +183,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin stride",
                 displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -193,7 +197,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
                 displayOrder: 7,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
     }
 };
@@ -203,6 +207,7 @@ const doCurveParams = function () {
         matsCollections.CurveParams.remove({});
     }
     var myDBs = [];
+    var dbGroupMap = {};
     var modelOptionsMap = {};
     var dbDateRangeMap = {};
     var regionModelOptionsMap = {};
@@ -212,11 +217,29 @@ const doCurveParams = function () {
     var variableOptionsMap = {};
 
     var rows;
+    var thisGroup;
+    var dbs;
+    var dbArr;
+    try {
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select * from anomalycor_database_groups order by db_group;");
+        for (var i = 0; i < rows.length; i++) {
+            thisGroup = rows[i].db_group.trim();
+            dbs = rows[i].dbs;
+            dbArr = dbs.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < dbArr.length; j++) {
+                dbArr[j] = dbArr[j].replace(/'|\[|\]/g, "");
+            }
+            dbGroupMap[thisGroup] = dbArr;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
     var thisDB;
     try {
         rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT DISTINCT db FROM anomalycor_mats_metadata;");
-        for (var j = 0; j < rows.length; j++) {
-            thisDB = rows[j].db.trim();
+        for (i = 0; i < rows.length; i++) {
+            thisDB = rows[i].db.trim();
             myDBs.push(thisDB);
         }
     } catch (err) {
@@ -235,15 +258,15 @@ const doCurveParams = function () {
             regionModelOptionsMap[thisDB] = {};
 
             rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate from anomalycor_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate order by model;");
-            for (var i = 0; i < rows.length; i++) {
+            for (i = 0; i < rows.length; i++) {
 
                 var model_value = rows[i].model.trim();
                 var model = rows[i].display_text.trim();
                 modelOptionsMap[thisDB][model] = [model_value];
 
-                var minDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-                var maxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-                dbDateRangeMap[thisDB][model] = {minDate: minDate, maxDate: maxDate};
+                var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+                var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+                dbDateRangeMap[thisDB][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
 
                 var forecastLengths = rows[i].fcst_lens;
                 var forecastValues = rows[i].fcst_orig;
@@ -286,7 +309,6 @@ const doCurveParams = function () {
         console.log(err.message);
     }
 
-    // all the rest
     if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -324,16 +346,18 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'database'}) == undefined) {
+    var defaultGroup = (Object.keys(dbGroupMap).indexOf("PROD") !== -1) ? "PROD" : Object.keys(dbGroupMap)[0];
+    var defaultDB = dbGroupMap[defaultGroup][0];
+
+    if (matsCollections.CurveParams.findOne({name: 'group'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
-                name: 'database',
+                name: 'group',
                 type: matsTypes.InputTypes.select,
-                options: myDBs,
-                dates: dbDateRangeMap,
-                dependentNames: ["data-source"],
+                options: Object.keys(dbGroupMap),
+                dependentNames: ["database"],
                 controlButtonCovered: true,
-                default: myDBs[0],
+                default: defaultGroup,
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
@@ -342,15 +366,52 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'database'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.options, myDBs))) {
+        var currentParam = matsCollections.CurveParams.findOne({name: 'group'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.options, Object.keys(dbGroupMap)))) {
             // have to reload model data
             if (process.env.NODE_ENV === "development") {
                 console.log("updating model data")
             }
-            matsCollections.CurveParams.update({name: 'data-source'}, {
+            matsCollections.CurveParams.update({name: 'group'}, {
                 $set: {
-                    options: myDBs
+                    options: Object.keys(dbGroupMap),
+                    default: defaultGroup,
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'database'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'database',
+                type: matsTypes.InputTypes.select,
+                optionsMap: dbGroupMap,
+                options: dbGroupMap[defaultGroup],
+                dates: dbDateRangeMap,
+                superiorNames: ["group"],
+                dependentNames: ["data-source"],
+                controlButtonCovered: true,
+                default: defaultDB,
+                unique: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'database'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, dbGroupMap))) {
+            // have to reload model data
+            if (process.env.NODE_ENV === "development") {
+                console.log("updating model data")
+            }
+            matsCollections.CurveParams.update({name: 'database'}, {
+                $set: {
+                    optionsMap: dbGroupMap,
+                    options: dbGroupMap[defaultGroup],
+                    default: defaultDB,
                 }
             });
         }
@@ -362,15 +423,15 @@ const doCurveParams = function () {
                 name: 'data-source',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
-                options: Object.keys(modelOptionsMap[myDBs[0]]),   // convenience
+                options: Object.keys(modelOptionsMap[defaultDB]),   // convenience
                 levelsMap: levelOptionsMap, // need to know what levels the metadata allows for each model.
                 superiorNames: ["database"],
                 dependentNames: ["region", "variable", "forecast-length", "pres-level", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: Object.keys(modelOptionsMap[myDBs[0]])[0],
+                default: Object.keys(modelOptionsMap[defaultDB])[0],
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -388,7 +449,7 @@ const doCurveParams = function () {
                     optionsMap: modelOptionsMap,
                     levelsMap: levelOptionsMap,
                     dates: dbDateRangeMap,
-                    options: Object.keys(modelOptionsMap[myDBs[0]])
+                    options: Object.keys(modelOptionsMap[defaultDB])
                 }
             });
         }
@@ -400,15 +461,15 @@ const doCurveParams = function () {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
-                options: regionModelOptionsMap[myDBs[0]][Object.keys(regionModelOptionsMap[myDBs[0]])[0]],   // convenience
+                options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],   // convenience
                 superiorNames: ['database','data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[myDBs[0]][Object.keys(regionModelOptionsMap[myDBs[0]])[0]][0],  // always use the first region for the first model
+                default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0],  // always use the first region for the first model
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2,
+                displayGroup: 3,
                 help: 'region.html'
             });
     } else {
@@ -419,7 +480,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'region'}, {
                 $set: {
                     optionsMap: regionModelOptionsMap,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap[myDBs[0]])[0]]
+                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap[defaultDB])[0]]
                 }
             });
         }
@@ -431,14 +492,14 @@ const doCurveParams = function () {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: variableOptionsMap,
-                options: variableOptionsMap[myDBs[0]][Object.keys(variableOptionsMap[myDBs[0]])[0]],   // convenience
+                options: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]],   // convenience
                 superiorNames: ['database','data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: variableOptionsMap[myDBs[0]][Object.keys(variableOptionsMap[myDBs[0]])[0]][0],  // always use the first region for the first model
+                default: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]][0],  // always use the first region for the first model
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -450,7 +511,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'variable'}, {
                 $set: {
                     optionsMap: variableOptionsMap,
-                    options: variableOptionsMap[Object.keys(variableOptionsMap[myDBs[0]])[0]]
+                    options: variableOptionsMap[Object.keys(variableOptionsMap[defaultDB])[0]]
                 }
             });
         }
@@ -458,7 +519,7 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
 
-        const fhrOptions = forecastLengthOptionsMap[myDBs[0]][Object.keys(forecastLengthOptionsMap[myDBs[0]])[0]];
+        const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
         var fhrDefault;
         if (fhrOptions.indexOf("24") !== -1) {
             fhrDefault = "24";
@@ -483,9 +544,9 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 controlButtonText: "forecast lead time",
                 multiple: true,
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     } else {
         // it is defined but check for necessary updates to forecastLengthOptionsMap
@@ -495,7 +556,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'forecast-length'}, {
                 $set: {
                     optionsMap: forecastLengthOptionsMap,
-                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap[myDBs[0]])[0]]
+                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap[defaultDB])[0]]
                 }
             });
         }
@@ -523,9 +584,28 @@ const doCurveParams = function () {
                 default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 controlButtonText: 'dieoff type',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'valid-time',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '6', '12', '18'],
+                selected: [],
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4,
+                multiple: true
             });
     }
 
@@ -544,28 +624,9 @@ const doCurveParams = function () {
                 default: 12,
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle init hour",
-                displayOrder: 1,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 4,
-            });
-    }
-
-    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'valid-time',
-                type: matsTypes.InputTypes.select,
-                options: ['0', '6', '12', '18'],
-                selected: [],
-                controlButtonCovered: true,
-                unique: false,
-                default: matsTypes.InputTypes.unused,
-                controlButtonVisibility: 'block',
-                controlButtonText: "valid utc hour",
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 4,
-                multiple: true
             });
     }
 
@@ -591,9 +652,9 @@ const doCurveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     }
 
@@ -603,7 +664,7 @@ const doCurveParams = function () {
                 name: 'pres-level',
                 type: matsTypes.InputTypes.select,
                 optionsMap: levelOptionsMap,
-                options: levelOptionsMap[myDBs[0]][Object.keys(levelOptionsMap[myDBs[0]])[0]],   // convenience
+                options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],   // convenience
                 superiorNames: ['database','data-source'],
                 selected: '',
                 controlButtonCovered: true,
@@ -611,9 +672,9 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "Pressure Level",
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 5,
                 multiple: true
             });
     } else {
@@ -624,10 +685,76 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'pres-level'}, {
                 $set: {
                     optionsMap: levelOptionsMap,
-                    options: levelOptionsMap[Object.keys(levelOptionsMap[myDBs[0]])[0]]
+                    options: levelOptionsMap[Object.keys(levelOptionsMap[defaultDB])[0]]
                 }
             });
         }
+    }
+
+    if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {
+
+        const optionsMap = {
+            'Fcst lead time': "select ld.fcst_lead as xVal, ",
+            'Pressure level': "select h.fcst_lev as xVal, ",
+            'Valid UTC hour': "select unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select unix_timestamp(ld.fcst_valid_beg) as xVal, ",
+            'Init Date': "select unix_timestamp(ld.fcst_init_beg) as xVal, "
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                // hideOtherFor: {
+                //     'forecast-length': ["Fcst lead time"],
+                //     'valid-time': ["Valid UTC hour"],
+                //     'pres-level': ["Pressure level"],
+                // },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'y-axis-parameter'}).count() == 0) {
+
+        const optionsMap = {
+            'Fcst lead time': "ld.fcst_lead as yVal, ",
+            'Pressure level': "h.fcst_lev as yVal, ",
+            'Valid UTC hour': "unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "unix_timestamp(ld.fcst_valid_beg) as yVal, ",
+            'Init Date': "unix_timestamp(ld.fcst_init_beg) as yVal, "
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                // hideOtherFor: {
+                //     'forecast-length': ["Fcst lead time"],
+                //     'valid-time': ["Valid UTC hour"],
+                //     'pres-level': ["Pressure level"],
+                // },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[1],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
     }
 
     // determine date defaults for dates and curveDates
@@ -636,8 +763,8 @@ const doCurveParams = function () {
     var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
     minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
     maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
-    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minDate + ' - ' + maxDate;
+    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minusMonthMinDate + ' - ' + maxDate;
 
     if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         optionsMap = {
@@ -664,7 +791,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 7,
                 help: "dateHelp.html"
             });
     }
@@ -697,7 +824,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "yaxes","database", "data-source", "region", "variable","valid-time", "average", "forecast-length", "pres-level"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable","valid-time", "average", "forecast-length", "pres-level"
             ],
             groupSize: 6
         });
@@ -714,7 +841,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "curve-dates"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "curve-dates"
             ],
             groupSize: 6
         });
@@ -733,7 +860,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "database", "data-source", "region", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "pres-level", "curve-dates"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "pres-level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -750,7 +877,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "database", "data-source", "region", "variable", "forecast-length", "pres-level", "curve-dates"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "forecast-length", "pres-level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -768,9 +895,30 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "pres-level", "curve-dates"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "pres-level", "curve-dates"
             ],
             groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.contour,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' ACC, '],
+                ['level: ', 'pres-level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['x-axis: ', 'x-axis-parameter', ', '],
+                ['y-axis: ', 'y-axis-parameter', '']
+
+            ],
+            displayParams: [
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "pres-level", "x-axis-parameter", "y-axis-parameter"
+            ],
+            groupSize: 6
+
         });
     }
 };
@@ -824,11 +972,22 @@ const doPlotGraph = function () {
             plotSpecFunction: "plotSpecHistogram",
             checked: false
         });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.contour,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataContour",
+            plotSpecFunction: "plotSpecContour",
+            checked: false
+        });
     }
 };
 
 
 Meteor.startup(function () {
+    if (Meteor.settings.private == null) {
+        console.log ("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+    }
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
         var databases = Meteor.settings.private.databases;
@@ -839,7 +998,7 @@ Meteor.startup(function () {
         }
     }
 
-    var sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
+    var sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         port: 1,
         user: 1,
@@ -852,7 +1011,7 @@ Meteor.startup(function () {
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
+    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
         user: 1,
         password: 1,
@@ -861,10 +1020,8 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
-    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['anomalycor_mats_metadata']);
-    matsMethods.resetApp(mdr, matsTypes.AppTypes.metexpress);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "met-anomalycor"});
+    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['anomalycor_mats_metadata', 'anomalycor_database_groups']);
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.metexpress, app:'met-anomalycor'});
 });
 
 // this object is global so that the reset code can get to it

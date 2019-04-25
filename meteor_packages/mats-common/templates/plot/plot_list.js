@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import { matsTypes } from 'meteor/randyp:mats-common'; 
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
@@ -235,6 +239,9 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.dailyModelCycle:
                                 matsCurveUtils.showDailyModelCycleFace();
                                 break;
+                            case matsTypes.PlotTypes.reliability:
+                                matsCurveUtils.showReliabilityFace();
+                                break;
                             case matsTypes.PlotTypes.map:
                                 matsCurveUtils.showMapFace();
                                 break;
@@ -242,6 +249,7 @@ Template.plotList.events({
                                 matsCurveUtils.showHistogramFace();
                                 break;
                             case matsTypes.PlotTypes.contour:
+                            case matsTypes.PlotTypes.contourDiff:
                                 matsCurveUtils.showContourFace();
                                 break;
                             case matsTypes.PlotTypes.scatter2d:
@@ -370,6 +378,12 @@ Template.plotList.events({
                     }
                     Session.set('expireKey', false);
                     matsCurveUtils.setGraphResult(ret.result);
+                    const plotType = Session.get('plotType');
+                    if (plotType === matsTypes.PlotTypes.contourDiff) {
+                        const oldCurves = Session.get('Curves');
+                        Session.set('oldCurves', oldCurves);
+                        Session.set('Curves', ret.result.basis.plotParams.curves);
+                    }
                     Session.set("plotResultKey", ret.key);
                     delete ret;
                     Session.set('graphFunction', graphFunction);
@@ -407,8 +421,9 @@ Template.plotList.events({
     }
 });
 Template.plotList.onRendered( function() {
-    //console.log('doing client matsParamUtils.setAllParamsToDefault ');
-    matsParamUtils.setAllParamsToDefault();
+    // last bit of stuff that needs to be done when the page finally renders
+
+    // hide selectors that don't belong to timeseries
     var elem;
     for (var sidx = 0; sidx < matsTypes.selectorsToHide.length; sidx++) {
         elem = document.getElementById(matsTypes.selectorsToHide[sidx] + '-item');
@@ -416,4 +431,46 @@ Template.plotList.onRendered( function() {
             elem.style.display = 'none';
         }
     }
+
+    // need to display correct selectors on page load if default plot type is not timeseries
+    const plotType = matsPlotUtils.getPlotType();
+    switch (plotType) {
+        case matsTypes.PlotTypes.profile:
+            matsCurveUtils.showProfileFace();
+            break;
+        case matsTypes.PlotTypes.dieoff:
+            matsCurveUtils.showDieOffFace();
+            break;
+        case matsTypes.PlotTypes.threshold:
+            matsCurveUtils.showThresholdFace();
+            break;
+        case matsTypes.PlotTypes.validtime:
+            matsCurveUtils.showValidTimeFace();
+            break;
+        case matsTypes.PlotTypes.dailyModelCycle:
+            matsCurveUtils.showDailyModelCycleFace();
+            break;
+        case matsTypes.PlotTypes.reliability:
+            matsCurveUtils.showReliabilityFace();
+            break;
+        case matsTypes.PlotTypes.map:
+            matsCurveUtils.showMapFace();
+            break;
+        case matsTypes.PlotTypes.histogram:
+            matsCurveUtils.showHistogramFace();
+            break;
+        case matsTypes.PlotTypes.contour:
+        case matsTypes.PlotTypes.contourDiff:
+            matsCurveUtils.showContourFace();
+            break;
+        case matsTypes.PlotTypes.scatter2d:
+            matsCurveUtils.showScatterFace();
+            break;
+        case matsTypes.PlotTypes.timeSeries:
+        default:
+            break;
+    }
+
+    // make sure everything is at default
+    matsParamUtils.setAllParamsToDefault();
 });

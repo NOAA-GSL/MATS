@@ -1,11 +1,11 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment';
 import {PythonShell} from 'python-shell';
 import {Meteor} from "meteor/meteor";
@@ -41,7 +41,7 @@ dataHistogram = function (plotParams, plotFunction) {
         var label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
-        var regions = curve['region'] === undefined ? [] : curve['region'];
+        var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
         regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
         if (regions.length > 0) {
@@ -56,7 +56,7 @@ dataHistogram = function (plotParams, plotFunction) {
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
         var forecastLengthsClause = "";
-        var fcsts = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
+        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
         fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
         if (fcsts.length > 0) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
@@ -65,7 +65,7 @@ dataHistogram = function (plotParams, plotFunction) {
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
-        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -74,7 +74,7 @@ dataHistogram = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
-            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+            // we can't just leave the level clause out, because we might end up with some weird levels in the mix
             levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
@@ -83,7 +83,7 @@ dataHistogram = function (plotParams, plotFunction) {
         }
         var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
-        if (curve['valid-time'] !== undefined) {
+        if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
             vts = curve['valid-time'];
             vts = Array.isArray(vts) ? vts : [vts];
             vts = vts.map(function (vt) {
@@ -165,9 +165,22 @@ dataHistogram = function (plotParams, plotFunction) {
                     mode: 'text',
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
-                    scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
-                };
+                    scriptPath: process.env.NODE_ENV === "development" ?
+                        process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
+                        process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
+                    args: [
+                        "-h", sumPool.config.connectionConfig.host,
+                        "-P", sumPool.config.connectionConfig.port,
+                        "-u", sumPool.config.connectionConfig.user,
+                        "-p", sumPool.config.connectionConfig.password,
+                        "-d", sumPool.config.connectionConfig.database,
+                        "-q", statement,
+                        "-s", statistic,
+                        "-t", plotType,
+                        "-l", hasLevels,
+                        "-c", completenessQCParam,
+                        "-v", vts
+                    ]                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();
@@ -208,7 +221,7 @@ dataHistogram = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/regions [" + model + " and " + regions + "].");
                     } else {
                         throw new Error(error);
                     }

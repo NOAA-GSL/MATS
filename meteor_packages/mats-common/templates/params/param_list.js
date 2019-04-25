@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsCurveUtils} from 'meteor/randyp:mats-common';
@@ -101,7 +105,9 @@ Template.paramList.events({
         }
         var isScatter = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d;
         var isMap = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map;
+        var isReliability = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.reliability;
         var isContour = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.contour;
+        var isContourDiff = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.contourDiff;
         var curves = Session.get('Curves');
         var p = {};
         var elems = event.target.valueOf().elements;
@@ -225,6 +231,12 @@ Template.paramList.events({
                 return false;
             } else if (isContour && curves.length >= 1) {
                 setError(new Error('ERROR: Contour plot-type can only have one curve!'));
+                return false;
+            } else if (isContourDiff && curves.length >= 2) {
+                setError(new Error('ERROR: Contour Diff plot-type can only have two curves!'));
+                return false;
+            } else if (isReliability && curves.length >= 1) {
+                setError(new Error('ERROR: Reliability plot-type can only have one curve right now!'));
                 return false;
             } else {
                 for (var i = 0; i < l; i++) {

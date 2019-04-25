@@ -1,6 +1,9 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from 'meteor/meteor';
 import {matsPlotSpecUtils} from 'meteor/randyp:mats-common';
-import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 plotSpecProfile = function (plotParams, key, plotSpecCallback) {

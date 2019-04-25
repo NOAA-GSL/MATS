@@ -1,9 +1,21 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 /**
  * Created by pierce on 8/31/16.
  */
+var DatabaseRoles = {
+    MODEL_DATA: 'model_data',
+    META_DATA: 'meta_data',
+    SUMS_DATA: 'sums_data',
+    SITE_DATA: 'site_data'
+};
+
 var AppTypes = {
     mats: 'mats',
-    metexpress: 'metexpress'
+    metexpress: 'metexpress',
+    mats4met: 'mats4met'
 };
 
 var InputTypes = {
@@ -27,14 +39,16 @@ var InputTypes = {
 var PlotTypes = {
     timeSeries: "TimeSeries",
     profile: "Profile",
-    scatter2d: "Scatter2d",
     dieoff: "DieOff",
     threshold: "Threshold",
     validtime: "ValidTime",
     dailyModelCycle: "DailyModelCycle",
+    reliability: "Reliability",
     map: "Map",
     histogram: "Histogram",
-    contour: "Contour"
+    contour: "Contour",
+    contourDiff: "ContourDiff",
+    scatter2d: "Scatter2d"
 };
 
 var ForecastTypes = {
@@ -95,6 +109,8 @@ var ReservedWords = {
     ideal7: "ideal7",
     ideal8: "ideal8",
     ideal9: "ideal9",
+    perfectReliability: "Perfect Reliability",
+    noSkill: "No Skill",
     blueCurveText: "blueCurveText",
     blackCurveText: "blackCurveText",
     redCurveText: "redCurveText"
@@ -105,7 +121,7 @@ var Messages = {
 };
 
 //hide non-timeseries selectors at startup
-var selectorsToHide = ['dieoff--type', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-pivot', 'bin-start', 'bin-stride', 'bin-bounds', 'x-axis-parameter', 'y-axis-parameter'];
+var selectorsToHide = ['dieoff-type', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-pivot', 'bin-start', 'bin-stride', 'bin-bounds', 'x-axis-parameter', 'y-axis-parameter'];
 
 /*
 Class for holding metaData records. These are stored in an array. An app can have multiple metadata databases and each database has a pool for connections.
@@ -162,6 +178,7 @@ export default matsTypes = {
     ReservedWords: ReservedWords,
     selectorsToHide: selectorsToHide,
     MetaDataDBRecord: MetaDataDBRecord,
-    AppTypes: AppTypes
+    AppTypes: AppTypes,
+    DatabaseRoles: DatabaseRoles
 }
 

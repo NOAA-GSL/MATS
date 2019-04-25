@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import { Meteor } from 'meteor/meteor';
 import matsCollections from 'meteor/randyp:mats-common';
 if (Meteor.isClient) {
@@ -25,8 +29,7 @@ if (Meteor.isClient) {
     Meteor.subscribe("SiteMap");
     Meteor.subscribe("StationMap");
     Meteor.subscribe("appName");
-    //Meteor.subscribe("Results");
-    //Meteor.subscribe("DownSampleResults");
+    Meteor.subscribe("LayoutStoreCollection");
     Session.set('Curves', []);
     Session.set('PlotParams', []);
 

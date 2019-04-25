@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {matsCollections, matsCurveUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 /*
@@ -55,8 +59,8 @@ Template.textOutput.helpers({
         var header = "";
         switch (Session.get('plotType')) {
             case matsTypes.PlotTypes.timeSeries:
-            case matsTypes.PlotTypes.profile:
             case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.profile:
                 header += "<th>label</th>\
                     <th>mean</th>\
                     <th>standard deviation</th>\
@@ -67,8 +71,8 @@ Template.textOutput.helpers({
                     <th>maximum</th>";
                 break;
             case matsTypes.PlotTypes.dieoff:
-            case matsTypes.PlotTypes.validtime:
             case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
                 header += "<th>label</th>\
                     <th>mean</th>\
                     <th>standard deviation</th>\
@@ -76,8 +80,9 @@ Template.textOutput.helpers({
                     <th>minimum</th>\
                     <th>maximum</th>";
                 break;
-            case matsTypes.PlotTypes.scatter2d:
-                // no stat for scatter
+            case matsTypes.PlotTypes.reliability:
+                header += "<th>label</th>\
+                    <th>sample climatology</th>";
                 break;
             case matsTypes.PlotTypes.map:
                 header += "<th>label</th>\
@@ -96,11 +101,15 @@ Template.textOutput.helpers({
                     <th>maximum</th>";
                 break;
             case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
                 header += "<th>label</th>\
                     <th>mean stat</th>\
                     <th>n</th>\
                     <th>minimum time</th>\
                     <th>maximum time</th>";
+                break;
+            case matsTypes.PlotTypes.scatter2d:
+                // no stat for scatter
                 break;
             default:
                 break;
@@ -158,10 +167,18 @@ Template.textOutput.helpers({
                         <th>std dev</th>\
                         <th>n</th>";
                 break;
-            case matsTypes.PlotTypes.scatter2d:
-                header += "<th>" + curve.label + " x axis</th>\
-                        <th>" + curve.label + " y axis</th>\
-                        <th>best fit</th>";
+            case matsTypes.PlotTypes.reliability:
+                header += "<th>" + curve.label + " probability bin</th>\
+                        <th>hit rate</th>\
+                        <th>oy</th>\
+                        <th>on</th>";
+                break;
+            case matsTypes.PlotTypes.map:
+                header += "<th>Site Name</th>\
+                        <th>Number of Times</th>\
+                        <th>Start Date</th>\
+                        <th>End Date</th>\
+                        <th>Average Difference</th>";
                 break;
             case matsTypes.PlotTypes.histogram:
                 header += "<th>" + curve.label + "  bin range</th>\
@@ -172,20 +189,19 @@ Template.textOutput.helpers({
                         <th>bin mean</th>\
                         <th>bin std dev</th>";
                 break;
-            case matsTypes.PlotTypes.map:
-                header += "<th>Site Name</th>\
-                        <th>Number of Times</th>\
-                        <th>Start Date</th>\
-                        <th>End Date</th>\
-                        <th>Average Difference</th>";
-                break;
             case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
                 header += "<th>X Value</th>\
                         <th>Y Value</th>\
                         <th>Stat</th>\
                         <th>Number</th>\
                         <th>Start Date</th>\
                         <th>End Date</th>";
+                break;
+            case matsTypes.PlotTypes.scatter2d:
+                header += "<th>" + curve.label + " x axis</th>\
+                        <th>" + curve.label + " y axis</th>\
+                        <th>best fit</th>";
                 break;
             default:
                 break;
@@ -252,15 +268,15 @@ Template.textOutput.helpers({
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
-            case matsTypes.PlotTypes.validtime:
-                line += "<td>" + element[labelKey += " hour of day"] + "</td>" +
+            case matsTypes.PlotTypes.threshold:
+                line += "<td>" + element[labelKey += " threshold (in)"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
-            case matsTypes.PlotTypes.threshold:
-                line += "<td>" + element[labelKey += " threshold (in)"] + "</td>" +
+            case matsTypes.PlotTypes.validtime:
+                line += "<td>" + element[labelKey += " hour of day"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
@@ -273,6 +289,19 @@ Template.textOutput.helpers({
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
+            case matsTypes.PlotTypes.reliability:
+                line += "<td>" + element[labelKey += " probability bin"] + "</td>" +
+                    "<td>" + (element['hit rate'] != undefined && element['hit rate'] !== null ? element['hit rate'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['oy'] != undefined && element['oy'] !== null ? element['oy'] : fillStr) + "</td>" +
+                    "<td>" + (element['on'] != undefined && element['on'] !== null ? element['on'] : fillStr) + "</td>";
+                break;
+            case matsTypes.PlotTypes.map:
+                line += "<td>" + element["Site Name"] + "</td>" +
+                    "<td>" + (element['Number of Times'] != undefined && element['Number of Times'] !== null ? element['Number of Times'] : fillStr) + "</td>" +
+                    "<td>" + (element['Start Date'] != undefined && element['Start Date'] !== null ? element['Start Date'] : fillStr) + "</td>" +
+                    "<td>" + (element['End Date'] != undefined && element['End Date'] !== null ? element['End Date'] : fillStr) + "</td>" +
+                    "<td>" + (element['Average Difference'] != undefined && element['Average Difference'] !== null ? element['Average Difference'] : fillStr) + "</td>";
+                break;
             case matsTypes.PlotTypes.histogram:
                 line += "<td>" + element[labelKey += " bin range"] + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>" +
@@ -282,14 +311,8 @@ Template.textOutput.helpers({
                     "<td>" + (element['bin mean'] != undefined && element['bin mean'] !== null ? element['bin mean'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['bin std dev'] != undefined && element['bin std dev'] !== null ? element['bin std dev'].toPrecision(4) : fillStr) + "</td>";
                 break;
-            case matsTypes.PlotTypes.map:
-                line += "<td>" + element["Site Name"] + "</td>" +
-                    "<td>" + (element['Number of Times'] != undefined && element['Number of Times'] !== null ? element['Number of Times'] : fillStr) + "</td>" +
-                    "<td>" + (element['Start Date'] != undefined && element['Start Date'] !== null ? element['Start Date'] : fillStr) + "</td>" +
-                    "<td>" + (element['End Date'] != undefined && element['End Date'] !== null ? element['End Date'] : fillStr) + "</td>" +
-                    "<td>" + (element['Average Difference'] != undefined && element['Average Difference'] !== null ? element['Average Difference'] : fillStr) + "</td>";
-                break;
             case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
                 line += "<td>" + element["xVal"] + "</td>" +
                     "<td>" + element["yVal"] + "</td>" +
                     "<td>" + (element['stat'] != undefined && element['stat'] !== null ? element['stat'] : fillStr) + "</td>" +
@@ -355,15 +378,9 @@ Template.textOutput.helpers({
                     "<td>" + (stats['minimum'] != undefined && stats['minimum'] != null ? stats['minimum'].toPrecision(4) : "undefined").toString() + "</td>" +
                     "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
-            case matsTypes.PlotTypes.scatter2d:
+            case matsTypes.PlotTypes.reliability:
                 line += "<td>" + curve['label'] + "</td>" +
-                    "<td>" + (stats['mean'] != undefined && stats['mean'] !== null ? stats['mean'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['standard deviation'] != undefined && stats['standard deviation'] !== null ? stats['standard deviation'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['n']).toString() + "</td>" +
-                    "<td>" + (stats['standard error'] != undefined && stats['standard error'] != null ? stats['standard error'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['lag1'] != undefined && stats['lag1'] != null ? stats['lag1'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['minimum'] != undefined && stats['minimum'] != null ? stats['minimum'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
+                    "<td>" + (stats['sample climo'] != undefined && stats['sample climo'] !== null ? stats['sample climo'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.map:
                 line += "<td>" + curve['label'] + "</td>" +
@@ -382,11 +399,22 @@ Template.textOutput.helpers({
                     "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
                 line += "<td>" + curve['label'] + "</td>" +
                     "<td>" + (stats['mean stat'] != undefined && stats['mean stat'] !== null ? stats['mean stat'].toPrecision(4) : "undefined").toString() + "</td>" +
                     "<td>" + (stats['total number of points'] != undefined && stats['total number of points'] !== null ? stats['total number of points'] : "undefined").toString() + "</td>" +
                     "<td>" + (stats['minimum time'] != undefined && stats['minimum time'] != null ? stats['minimum time'] : "undefined").toString() + "</td>" +
                     "<td>" + (stats['maximum time'] != undefined && stats['maximum time'] != null ? stats['maximum time'] : "undefined").toString() + "</td>";
+                break;
+            case matsTypes.PlotTypes.scatter2d:
+                line += "<td>" + curve['label'] + "</td>" +
+                    "<td>" + (stats['mean'] != undefined && stats['mean'] !== null ? stats['mean'].toPrecision(4) : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['standard deviation'] != undefined && stats['standard deviation'] !== null ? stats['standard deviation'].toPrecision(4) : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['n']).toString() + "</td>" +
+                    "<td>" + (stats['standard error'] != undefined && stats['standard error'] != null ? stats['standard error'].toPrecision(4) : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['lag1'] != undefined && stats['lag1'] != null ? stats['lag1'].toPrecision(4) : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['minimum'] != undefined && stats['minimum'] != null ? stats['minimum'].toPrecision(4) : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
             default:
                 break;

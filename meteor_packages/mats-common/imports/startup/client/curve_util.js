@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
@@ -658,6 +662,50 @@ const showDailyModelCycleFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a reliability curve
+const showReliabilityFace = function () {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.reliability).checked === true) {
+        var faceOptions = {
+            'curve-dates': 'none',
+            'dates': 'block',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'pres-level': 'block',
+            'forecast-length': 'block',
+            'dieoff-type': 'none',
+            'average': 'block',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'none',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
+        };
+        const faceSelectors = Object.keys(faceOptions);
+        var elem;
+        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
+            elem = document.getElementById(faceSelectors[fidx] + '-item');
+            if (elem && elem.style) {
+                elem.style.display = faceOptions[faceSelectors[fidx]];
+            }
+        }
+        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.reliability);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
 // method to display the appropriate selectors for a map
 const showMapFace = function () {
     // move dates selector to plot parameters - one date range for all curves
@@ -749,8 +797,10 @@ const showHistogramFace = function () {
 
 // method to display the appropriate selectors for a contour plot
 const showContourFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.contour).checked === true) {
+    // move dates selector to plot parameters - one date range for all curves
+    const isContour = document.getElementById('plot-type-' + matsTypes.PlotTypes.contour) !== null && document.getElementById('plot-type-' + matsTypes.PlotTypes.contour).checked === true;
+    const isContourDiff = document.getElementById('plot-type-' + matsTypes.PlotTypes.contourDiff) !== null && document.getElementById('plot-type-' + matsTypes.PlotTypes.contourDiff).checked === true;
+    if (isContour || isContourDiff) {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
@@ -759,7 +809,7 @@ const showContourFace = function () {
             'threshold': 'block',
             'pres-level': 'block',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
@@ -806,7 +856,11 @@ const showContourFace = function () {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
-        Session.set('plotType', matsTypes.PlotTypes.contour);
+        if (isContour) {
+            Session.set('plotType', matsTypes.PlotTypes.contour);
+        } else {
+            Session.set('plotType', matsTypes.PlotTypes.contourDiff);
+        }
         // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
@@ -1021,6 +1075,7 @@ export default matsCurveUtils = {
     showThresholdFace: showThresholdFace,
     showValidTimeFace: showValidTimeFace,
     showDailyModelCycleFace: showDailyModelCycleFace,
+    showReliabilityFace: showReliabilityFace,
     showMapFace: showMapFace,
     showHistogramFace: showHistogramFace,
     showContourFace: showContourFace,

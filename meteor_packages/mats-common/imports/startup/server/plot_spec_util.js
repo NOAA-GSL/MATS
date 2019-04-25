@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
 import {Meteor} from "meteor/meteor";
 import {
     matsCollections,
@@ -72,6 +76,9 @@ const _plotText = function (plotParams) {
         case matsTypes.PlotTypes.dailyModelCycle:
             return "DailyModelCycle " + plotParams.dates + " : " + format;
             break;
+        case matsTypes.PlotTypes.reliability:
+            return "Reliability: " + format;
+            break;
         case matsTypes.PlotTypes.map:
             return "Map " + plotParams.dates + " ";
             break;
@@ -116,7 +123,7 @@ const _getUniqDates = function(dates, database, model, dataSource, region, varia
     if (forecastLength != null) {
         forecastLength = Array.isArray(forecastLength) ? forecastLength : [forecastLength];
         if (forecastLength.length > 0) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][dataSource];
             const forecastLengths = forecastLength.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
@@ -125,8 +132,8 @@ const _getUniqDates = function(dates, database, model, dataSource, region, varia
     }
 
     var statement = "select ld.fcst_valid_beg as avtime " +
-        "from mv_gsd.stat_header h, mv_gsd.line_data_sl1l2 ld " +
-        "where 1=1 and h.model = '" + dataSource + "' " +
+        "from " + database + ".stat_header h, " + database + ".line_data_sl1l2 ld " +
+        "where 1=1 and h.model = '" + model + "' " +
         regionsClause +
         "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' " +
         "and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' " +
@@ -282,8 +289,8 @@ const addFolders = function(element) {
     try {
         element.ele('rscript', Meteor.settings.private.MV_RSCRIPT);
         var folders = element.ele('folders');
-        folders.ele('r_tmpl', matsMethods.MV_DIRS.HOME + "/r_tmpl");
-        folders.ele('r_work', matsMethods.MV_DIRS.HOME + "/r_work");
+        folders.ele('r_tmpl', matsMethods.MV_DIRS.HOME + "/R_tmpl");
+        folders.ele('r_work', matsMethods.MV_DIRS.HOME + "/R_work");
         folders.ele('plots', matsMethods.MV_DIRS.PLOTSDIR);
         folders.ele('data', matsMethods.MV_DIRS.DATADIR);
         folders.ele('scripts', matsMethods.MV_DIRS.SCRIPTSDIR);
@@ -546,9 +553,6 @@ const addSeries = function(plot, dependentAxes, plotParams) {
             case matsTypes.PlotTypes.dailyModelCycle:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
                 break;
-            case matsTypes.PlotTypes.histogram:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
-                break;
             case matsTypes.PlotTypes.profile:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','curve-dates':'fcst_valid_beg'};
                 break;
@@ -570,10 +574,16 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                    sVars['utc-cycle-start'] = 'init_hour';
                }
                 break;
+            case matsTypes.PlotTypes.threshold:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                break;
             case matsTypes.PlotTypes.validtime:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
-            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.reliability:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                break;
+            case matsTypes.PlotTypes.histogram:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
             default:
@@ -605,14 +615,22 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                                 sValues = _getSortedDatesForDepRange(curve);
                                 break;
                             case 'utc-cycle-start':
-                                const v = curve['utc-cycle-start']
+                                const v = curve['utc-cycle-start'];
                                 const paddedV = _pad(v,2);
                                 sValues = [paddedV]; // turn single selection padded value into array
+                                break;
+                            case 'forecast-length':
+                                sValues = curve[sVar];
+                                if (sValues == null || sValues.length === 0) {
+                                    sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the fcst leads
+                                }
+                                const forecastValueMap = matsParamUtils.getParameterForName(sVar).valuesMap[database][dataSource];
+                                sValues = sValues.map(function (fl) {return forecastValueMap[fl]}).join(',');
                                 break;
                             default:
                                 sValues = curve[sVar];
                                 if (sValues == null || sValues.length === 0) {
-                                    sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the region
+                                    sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the regions
                                 }
                         }
                         // check to see if this element was already added.
@@ -762,6 +780,9 @@ const _addSeriesLabels = function(element,dependentAxes, plotParams) {
             break;
         case matsTypes.PlotTypes.validtime:
             label = "Hour of Day";
+            break;
+        case matsTypes.PlotTypes.reliability:
+            label = "Reliability";
             break;
         case matsTypes.PlotTypes.threshold:
             label = "Threshold";
@@ -920,6 +941,7 @@ const addMiscellaneous = function(plot,plotParams) {
         case matsTypes.PlotTypes.dailyModelCycle:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.threshold:
             plot.ele('vert_plot', 'false');
             plot.ele('x_reverse', 'false');
