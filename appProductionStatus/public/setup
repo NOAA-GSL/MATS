@@ -206,7 +206,7 @@ network = "web"
 
         lim=$(( ${#dbroles[@]} - 1 ))
         echo -e ${GRN} creating settings file ./settings/${appref}/settings.json with database role ${dbroles[@]}
-        echo '{"private":{ "homepage":"'${homepage}'", "databases": [ ' > $tmpSettingsFile
+        echo '{"private":{"databases": [ ' > $tmpSettingsFile
         # need a databse entry for each database role
         for (( ri=0; ri<${#dbroles[@]}; ri++ )); do
             role=${dbroles[$ri]}
