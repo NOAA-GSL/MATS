@@ -158,7 +158,7 @@ else
     fi
 
     #create the traefik.toml file....
-cat <<- %ENDTRAEFIK >> ./traefik.toml
+cat <<- %ENDTRAEFIK > ./traefik.toml
 #To enable the proxy api and dashboard uncomment the '[api]' and '  entrypoint="dashboard"' lines below.
 #To set the passwd for the proxy dashboard use
 #sudo apt-get install apache2-utils
