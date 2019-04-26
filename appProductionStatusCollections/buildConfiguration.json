@@ -512,23 +512,30 @@
       "deploymentStatus": "disabled"
     },
     {
+      "app": "mats4met-ensemble",
+      "displayName": "Ensemble",
+      "displayOrder": 18,
+      "group": "Experimental",
+      "deploymentStatus": "disabled"
+    },
+    {
       "app": "met-upperair",
       "displayName": "MET Upper Air",
-      "displayOrder": 18,
+      "displayOrder": 19,
       "group": "MET Express",
       "deploymentStatus": "disabled"
     },
     {
       "app": "met-anomalycor",
       "displayName": "MET Anomaly Correlation",
-      "displayOrder": 19,
+      "displayOrder": 20,
       "group": "MET Express",
       "deploymentStatus": "disabled"
     },
     {
       "app": "met-surface",
       "displayName": "MET Surface",
-      "displayOrder": 20,
+      "displayOrder": 21,
       "group": "MET Express",
       "deploymentStatus": "disabled"
     }
