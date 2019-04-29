@@ -165,7 +165,10 @@ else
         echo -e ${NC}
         echo -e "${GRN}setting up for ${domain}${NC}"
     fi
-
+    htpasswd=$(which htpasswd)
+    if [[ $? == 0 ]]; then
+        adminPhrase=$($htpasswd -nbB admin adminpassword)
+    fi
     #create the traefik.toml file....
 cat <<- %ENDTRAEFIK > ./traefik.toml
 #To enable the proxy api and dashboard uncomment the '[api]' and '  entrypoint="dashboard"' lines below.
@@ -180,7 +183,7 @@ defaultEntryPoints = ["http", "https"]
     address = ":8090"
     [entryPoints.dashboard.auth]
       [entryPoints.dashboard.auth.basic]
-        users = ["admin:$2y$05$FSpslSN6lLFUZLcHTd6YP.MBq5P6nHPdbF2vPIJLGzvGjYMHmpSqq"]
+        users = ["${adminPhrase}"]
   [entryPoints.http]
     address = ":80"
       [entryPoints.http.redirect]
@@ -210,6 +213,14 @@ network = "web"
         if [[ ! -d "./settings/${appref}"  ]]; then
             echo -e "${RED}Creating a ./settings/${appref} directory${NC}"
             mkdir settings/${appref}
+        fi
+        if [[ -f  "./settings/${appref}/settings.json" ]]; then
+            read -p "Do you want to keep the existing settings for ${appref}? y|n" -n 1 -r
+            echo -e ${NC}
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                echo -e "${GRN}skipping setting up for ${appref}${NC}"
+                continue
+            fi
         fi
         dbroles=($(cat $tmpfile | jq -r --arg appref "$appref" '.apps[] | select(.app==$appref) | .dbroles[],""' 2> /dev/null))
         # set the settings files
