@@ -293,6 +293,8 @@ def update_model_in_metadata_table(cnx, cursor, mvdb, model, raw_metadata):
 def populate_db_group_tables(cnx, cursor, db_groups):
     cursor.execute("use mats_metadata;")
     cnx.commit()
+    cursor.execute("delete from anomalycor_database_groups_dev;")
+    cnx.commit()
     for group in db_groups:
         qd = []
         insert_row = "insert into anomalycor_database_groups_dev (db_group, dbs) values(%s, %s)"
