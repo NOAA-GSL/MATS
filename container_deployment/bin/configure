@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+RED='\033[0;31m'
+GRN='\033[0;32m'
+ORNG='\033[0;33m'
+NC='\033[0m' # No Color
+tmpfile=$(mktemp /tmp/setup.XXXXXX)
+function finish {
+    echo -e ${NC}
+    rm -rf $tmpfile
+}
+trap finish EXIT
+# are we in an install area (where the tar was unbundled)
+if [[ ! -d "./web"  ]]; then
+    echo -e "${RED}I don't see a ./web directory - I cannot set up anything, try cd'ing to the container deployment directory - exiting ${NC}"
+    exit 1
+fi
+setupurl="curl https://www.esrl.noaa.gov/gsd/mats/appProductionStatus/setup" 
+echo -e "${GRN} retrieving ... ${setupurl}"
+curl ${setupurl} > $tmpfile 2>/dev/null
+bash $tmpfile
+if  [[ $? -ne 0 ]]; then
+	cp $tmpfile /tmp/setup
+	echo -e "${RED} failed to run the setup file from \"${setupurl}\""
+	echo -e "Saved the configuration file in /tmp/setup - exiting ${NC}"
+fi

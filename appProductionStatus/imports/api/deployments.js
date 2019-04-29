@@ -39,7 +39,7 @@ if (Meteor.isServer) {
     Picker.route('/:app/getDeploymentEnvironments', function (params, req, res, next) {
         Picker.middleware(_getDeploymentEnvironments(params, req, res, next));
     });
-    Picker.route('/:app/getDeploymentEnvironments', function (params, req, res, next) {
+    Picker.route('/gsd/mats/:app/getDeploymentEnvironments', function (params, req, res, next) {
         Picker.middleware(_getDeploymentEnvironments(params, req, res, next));
     });
 

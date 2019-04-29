@@ -35,10 +35,12 @@ fi
 if [[ ! -d "${HOME}/mongodata"  ]]; then
     echo -e "${RED}Creating a ${HOME}/mongodata directory${NC}"
     mkdir mongodata
+else
+    rm -rf ${HOME}/mongodata/*
 fi
 DEPLOYDIR=$(pwd)
 
-cat <<%END
+cat <<%END > ./README
 This program will help you configure your MATS tool suite environment based on one of the standard environments.
 To do this you must have access to the internet.
 This program will ask the GSD server which deployment environments are currently
@@ -58,11 +60,16 @@ You must have docker, docker-compose and jq installed, and you must be running t
 You must be running this program as a user that can run docker - do not run this script as root, in fact do not run any containers as root.
 After once configuring an app you will have to confirm overwriting the old configuration if you run setup again.
 
-The reverse proxy has a user/password pre-set to user "admin" and password "adminipassword", you should change this by following the instructions in the traefik.toml file.
+The reverse proxy has a user/password pre-set to user "admin" and password "adminpassword", you should change this by following the instructions in the traefik.toml file.
 This program will create a settings directory here in this directory and a mongodata directory in the $HOME of this user if they do not already exist.
 
 You need to acquire an SSL cert for your domain and put the certificate in /etc/ssl/certs directory of this host. If you have authority over the DNS entry for
 your server you can use LetsEncrypt for no cost certs. The instructions for doing this are at https://docs.traefik.io/configuration/acme/.
+If you cannot acquire a certificate you can enable the apps temporarily by commenting out
+#        [[entryPoints.https.tls.certificates]]
+#        certFile = "/etc/ssl/certs/mats-meteor.crt"
+#        keyFile = "/etc/ssl/certs/mats-meteor.key"
+in the traefik.toml file.
 
 The toolsuite entrypoints are 
 https://yourfullyqualifieddomaini/proxy for the reverse proxy dashboard (look at comments in traefik.toml and docker-compose.yml to enable)
@@ -85,6 +92,8 @@ can tell the version of a running app by looking at the comments in the docker-c
 you run the setup, with the current version for each app.
 
 %END
+
+cat ./README
 echo -e ${GRN}
 # test for jq
 jq --version
@@ -118,6 +127,7 @@ done
 # record a repository name...
 # everything that isn't development or integration is production
 repository="matsapps/production"
+prodRepository="matsapps/production"
 if [[ ${depenv} == "integration" ]]; then
     repository="matsapps/integration"
 else if [[ ${depenv} == "development" ]]; then
@@ -157,7 +167,7 @@ else
     fi
 
     #create the traefik.toml file....
-cat <<- %ENDTRAEFIK >> ./traefik.toml
+cat <<- %ENDTRAEFIK > ./traefik.toml
 #To enable the proxy api and dashboard uncomment the '[api]' and '  entrypoint="dashboard"' lines below.
 #To set the passwd for the proxy dashboard use
 #sudo apt-get install apache2-utils
@@ -170,7 +180,7 @@ defaultEntryPoints = ["http", "https"]
     address = ":8090"
     [entryPoints.dashboard.auth]
       [entryPoints.dashboard.auth.basic]
-        users = ["admin:$2y$05$PLEqaXXL.hISJnF6EKx5e.DpEGyJzG6Dm6KDSV77JxhMKIBxbwZ7m"]
+        users = ["admin:$2y$05$FSpslSN6lLFUZLcHTd6YP.MBq5P6nHPdbF2vPIJLGzvGjYMHmpSqq"]
   [entryPoints.http]
     address = ":80"
       [entryPoints.http.redirect]
@@ -206,7 +216,7 @@ network = "web"
 
         lim=$(( ${#dbroles[@]} - 1 ))
         echo -e ${GRN} creating settings file ./settings/${appref}/settings.json with database role ${dbroles[@]}
-        echo '{"private":{ "homepage":"'${homepage}'", "databases": [ ' > $tmpSettingsFile
+        echo '{"private":{"databases": [ ' > $tmpSettingsFile
         # need a databse entry for each database role
         for (( ri=0; ri<${#dbroles[@]}; ri++ )); do
             role=${dbroles[$ri]}
