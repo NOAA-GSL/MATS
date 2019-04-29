@@ -127,6 +127,7 @@ def build_stats_object(cnx, cursor):
             mvdb_map[split_pair[0]].append(split_pair[1])
 
     print(mvdbs)
+    print(mvdb_map)
     sys.exit(0)
 
 
