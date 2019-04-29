@@ -69,16 +69,16 @@ def mysql_connect_and_check_tables():
 
 def update_tables_and_close_cnx(cnx, cursor):
     print("Publishing metadata")
-    # cursor.execute("use mats_metadata;")
-    # cnx.commit()
-    # cursor.execute("delete from anomalycor_mats_metadata;")
-    # cnx.commit()
-    # cursor.execute("insert into anomalycor_mats_metadata select * from anomalycor_mats_metadata_dev;")
-    # cnx.commit()
-    # cursor.execute("delete from anomalycor_database_groups;")
-    # cnx.commit()
-    # cursor.execute("insert into anomalycor_database_groups select * from anomalycor_database_groups_dev;")
-    # cnx.commit()
+    cursor.execute("use mats_metadata;")
+    cnx.commit()
+    cursor.execute("delete from anomalycor_mats_metadata;")
+    cnx.commit()
+    cursor.execute("insert into anomalycor_mats_metadata select * from anomalycor_mats_metadata_dev;")
+    cnx.commit()
+    cursor.execute("delete from anomalycor_database_groups;")
+    cnx.commit()
+    cursor.execute("insert into anomalycor_database_groups select * from anomalycor_database_groups_dev;")
+    cnx.commit()
 
     cursor.close()
     cnx.close()
@@ -259,7 +259,7 @@ def update_model_in_metadata_table(cnx, cursor, mvdb, model, raw_metadata):
     cnx.commit()
 
     # See if the db/model have previous metadata
-    cursor.execute("select * from anomalycor_mats_metadata_dev where db = '" + mvdb + "' and model = '" + model + "';")
+    cursor.execute("select * from anomalycor_mats_metadata where db = '" + mvdb + "' and model = '" + model + "';")
 
     if len(raw_metadata['regions']) > int(0) and len(raw_metadata['levels']) and len(raw_metadata['fcsts']) and len(
             raw_metadata['variables']) > int(0):
