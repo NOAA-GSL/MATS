@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-This script updates specified db/model combinations in the metadata tables required for a METexpress anomaly
-correlation app. It parses the required fields from any databases that begin with 'mv_' in a mysql instance.
+This script updates specified db/model combinations in the metadata tables required for a METexpress upper air app.
+It parses the required fields from any databases that begin with 'mv_' in a mysql instance.
 
 Arguments: path to a mysql .cnf file, comma-separated list of db.model pairs to update
 
-Usage: ./selective_update_MEanomalycor.py path_to_file.cnf db1.model1,db2.model2,...
+Usage: ./selective_update_MEupperair.py path_to_file.cnf db1.model1,db2.model2,...
 
 Author: Molly B Smith
 """
@@ -35,33 +35,33 @@ def mysql_connect_and_check_tables():
     cursor.execute('show databases like "mats_metadata";')
     cnx.commit()
     if cursor.rowcount == 0:
-        print("mats_metadata db does not exist. Run MEanomalycor.py to initialize it.")
+        print("mats_metadata db does not exist. Run MEupperair.py to initialize it.")
         sys.exit(1)
 
     cursor.execute("use mats_metadata;")
     cnx.commit()
 
     # see if the metadata tables already exist
-    print("Checking for anomalycor metadata tables")
-    cursor.execute('show tables like "anomalycor_mats_metadata_dev";')
+    print("Checking for upperair metadata tables")
+    cursor.execute('show tables like "upperair_mats_metadata_dev";')
     cnx.commit()
     if cursor.rowcount == 0:
-        print("anomalycor metadata table does not exist. Run MEanomalycor.py to initialize it.")
+        print("upperair metadata table does not exist. Run MEupperair.py to initialize it.")
         sys.exit(1)
-    cursor.execute('show tables like "anomalycor_mats_metadata";')
+    cursor.execute('show tables like "upperair_mats_metadata";')
     cnx.commit()
     if cursor.rowcount == 0:
-        print("anomalycor metadata table does not exist. Run MEanomalycor.py to initialize it.")
+        print("upperair metadata table does not exist. Run MEupperair.py to initialize it.")
         sys.exit(1)
 
     # see if the metadata group tables already exist
-    cursor.execute('show tables like "anomalycor_database_groups_dev";')
+    cursor.execute('show tables like "upperair_database_groups_dev";')
     if cursor.rowcount == 0:
-        print("anomalycor groups table does not exist. Run MEanomalycor.py to initialize it.")
+        print("upperair groups table does not exist. Run MEupperair.py to initialize it.")
         sys.exit(1)
-    cursor.execute('show tables like "anomalycor_database_groups";')
+    cursor.execute('show tables like "upperair_database_groups";')
     if cursor.rowcount == 0:
-        print("anomalycor groups table does not exist. Run MEanomalycor.py to initialize it.")
+        print("upperair groups table does not exist. Run MEupperair.py to initialize it.")
         sys.exit(1)
 
     return cnx, cursor
@@ -71,13 +71,13 @@ def update_tables_and_close_cnx(cnx, cursor):
     print("Publishing metadata")
     cursor.execute("use mats_metadata;")
     cnx.commit()
-    cursor.execute("delete from anomalycor_mats_metadata;")
+    cursor.execute("delete from upperair_mats_metadata;")
     cnx.commit()
-    cursor.execute("insert into anomalycor_mats_metadata select * from anomalycor_mats_metadata_dev;")
+    cursor.execute("insert into upperair_mats_metadata select * from upperair_mats_metadata_dev;")
     cnx.commit()
-    cursor.execute("delete from anomalycor_database_groups;")
+    cursor.execute("delete from upperair_database_groups;")
     cnx.commit()
-    cursor.execute("insert into anomalycor_database_groups select * from anomalycor_database_groups_dev;")
+    cursor.execute("insert into upperair_database_groups select * from upperair_database_groups_dev;")
     cnx.commit()
 
     cursor.close()
@@ -86,14 +86,11 @@ def update_tables_and_close_cnx(cnx, cursor):
 
 def strip_level(elem):
     # helper function for sorting levels
-    if elem[0] in ['P', 'Z', 'H', 'L']:
-        if '-' not in elem:
-            return int(elem[1:])
-        else:
-            hyphen_idx = elem.find('-')
-            return int(elem[1:hyphen_idx])
+    if '-' not in elem:
+        return int(elem[1:])
     else:
-        return elem
+        hyphen_idx = elem.find('-')
+        return int(elem[1:hyphen_idx])
 
 
 def build_stats_object(cnx, cursor):
@@ -135,8 +132,9 @@ def build_stats_object(cnx, cursor):
 
             # Get the stats for this model in this database
             get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs ' \
-                        'from stat_header h, line_data_sal1l2 ld ' \
+                        'from stat_header h, line_data_sl1l2 ld ' \
                         'where h.model ="' + model + '" ' \
+                        'and h.fcst_lev like "P%" ' \
                         'and ld.stat_header_id = h.stat_header_id;'
             print("Getting stats for model " + model)
             cursor.execute(get_stats)
@@ -151,7 +149,7 @@ def build_stats_object(cnx, cursor):
             if int(per_mvdb[mvdb][model]['numrecs']) > int(0):
 
                 # Get the regions for this model in this database
-                get_regions = 'select distinct vx_mask from stat_header where model ="' + model + '";'
+                get_regions = 'select distinct vx_mask from stat_header where fcst_lev like "P%" and model ="' + model + '";'
                 per_mvdb[mvdb][model]['regions'] = []
                 print("Getting regions for model " + model)
                 cursor.execute(get_regions)
@@ -162,7 +160,7 @@ def build_stats_object(cnx, cursor):
                 per_mvdb[mvdb][model]['regions'].sort()
 
                 # Get the levels for this model in this database
-                get_levels = 'select distinct fcst_lev from stat_header where model ="' + model + '";'
+                get_levels = 'select distinct fcst_lev from stat_header where fcst_lev like "P%" and model ="' + model + '";'
                 per_mvdb[mvdb][model]['levels'] = []
                 print("Getting levels for model " + model)
                 cursor.execute(get_levels)
@@ -172,8 +170,8 @@ def build_stats_object(cnx, cursor):
                     per_mvdb[mvdb][model]['levels'].append(level)
                 per_mvdb[mvdb][model]['levels'].sort(key=strip_level)
 
-                # Get the ACC variables for this model in this database
-                get_vars = 'select distinct fcst_var from stat_header where model ="' + model + '";'
+                # Get the UA variables for this model in this database
+                get_vars = 'select distinct fcst_var from stat_header where fcst_lev like "P%" and model ="' + model + '";'
                 per_mvdb[mvdb][model]['variables'] = []
                 print("Getting variables for model " + model)
                 cursor.execute(get_vars)
@@ -185,8 +183,9 @@ def build_stats_object(cnx, cursor):
 
                 # Get the fcst lead times for this model in this database
                 get_fcsts = 'select distinct ld.fcst_lead ' \
-                            'from stat_header h, line_data_sal1l2 ld ' \
+                            'from stat_header h, line_data_sl1l2 ld ' \
                             'where h.model ="' + model + '" ' \
+                            'and h.fcst_lev like "P%" ' \
                             'and ld.stat_header_id = h.stat_header_id;'
                 temp_fcsts = []
                 temp_fcsts_orig = []
@@ -259,7 +258,7 @@ def update_model_in_metadata_table(cnx, cursor, mvdb, model, raw_metadata):
     cnx.commit()
 
     # See if the db/model have previous metadata
-    cursor.execute("select * from anomalycor_mats_metadata where db = '" + mvdb + "' and model = '" + model + "';")
+    cursor.execute("select * from upperair_mats_metadata where db = '" + mvdb + "' and model = '" + model + "';")
 
     if len(raw_metadata['regions']) > int(0) and len(raw_metadata['levels']) and len(raw_metadata['fcsts']) and len(
             raw_metadata['variables']) > int(0):
@@ -271,12 +270,12 @@ def update_model_in_metadata_table(cnx, cursor, mvdb, model, raw_metadata):
         maxdate = maxdate.strftime('%s')
         display_text = model.replace('.', '_')
         if cursor.rowcount == 0:
-            update_statement = "insert into anomalycor_mats_metadata_dev (db, model, display_text, regions, levels, fcst_lens, variables, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            update_statement = "insert into upperair_mats_metadata_dev (db, model, display_text, regions, levels, fcst_lens, variables, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             qd.append(mvdb)
             qd.append(model)
             qd.append(display_text)
         else:
-            update_statement = "update anomalycor_mats_metadata_dev set regions = %s, levels = %s, fcst_lens = %s, variables = %s, fcst_orig = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s where db = '" + mvdb + "' and model = '" + model + "';"
+            update_statement = "update upperair_mats_metadata_dev set regions = %s, levels = %s, fcst_lens = %s, variables = %s, fcst_orig = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s where db = '" + mvdb + "' and model = '" + model + "';"
         qd.append(str(raw_metadata['regions']))
         qd.append(str(raw_metadata['levels']))
         qd.append(str(raw_metadata['fcsts']))
@@ -293,11 +292,11 @@ def update_model_in_metadata_table(cnx, cursor, mvdb, model, raw_metadata):
 def populate_db_group_tables(cnx, cursor, db_groups):
     cursor.execute("use mats_metadata;")
     cnx.commit()
-    cursor.execute("delete from anomalycor_database_groups_dev;")
+    cursor.execute("delete from upperair_database_groups_dev;")
     cnx.commit()
     for group in db_groups:
         qd = []
-        insert_row = "insert into anomalycor_database_groups_dev (db_group, dbs) values(%s, %s)"
+        insert_row = "insert into upperair_database_groups_dev (db_group, dbs) values(%s, %s)"
         qd.append(group)
         qd.append(str(db_groups[group]))
         cursor.execute(insert_row, qd)
@@ -324,10 +323,10 @@ if __name__ == '__main__':
             sys.exit(1)
         db_model_input = sys.argv[2]
     utc_now = str(datetime.now())
-    msg = 'ANOMALYCOR MATS FOR MET UPDATE METADATA START: ' + utc_now
+    msg = 'UPPERAIR MATS FOR MET UPDATE METADATA START: ' + utc_now
     print(msg)
     main()
     utc_now = str(datetime.now())
-    msg = 'ANOMALYCOR MATS FOR MET UPDATE METADATA END: ' + utc_now
+    msg = 'UPPERAIR MATS FOR MET UPDATE METADATA END: ' + utc_now
     print(msg)
     sys.exit(0)
