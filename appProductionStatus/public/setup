@@ -94,7 +94,7 @@ you run the setup, with the current version for each app.
 %END
 
 cat ./README
-echo -e ${GRN}
+
 # test for jq
 jq --version
 if [[ ! $? -eq 0  ]]; then
@@ -196,8 +196,8 @@ defaultEntryPoints = ["http", "https"]
         keyFile = "/etc/ssl/certs/mats-meteor.key"
 
 # uncomment the following to enable the proxy and the api
-#[api]
-#  entrypoint="dashboard"
+[api]
+  entrypoint="dashboard"
 [docker]
 domain = "${domain}"
 watch = true
