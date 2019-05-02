@@ -34,7 +34,7 @@ fi
 
 if [[ ! -d "${HOME}/mongodata"  ]]; then
     echo -e "${RED}Creating a ${HOME}/mongodata directory${NC}"
-    mkdir mongodata
+    mkdir ${HOME}/mongodata
 else
     rm -rf ${HOME}/mongodata/*
 fi
