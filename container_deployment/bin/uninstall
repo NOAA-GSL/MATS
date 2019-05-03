@@ -19,3 +19,5 @@ until [ -z "$(docker stack ps matsStack -q)" ] || [ "$limit" -lt 0 ]; do
     limit="$((limit-1))"
     echo -n "."
 done
+echo please be patient
+docker system prune -af
