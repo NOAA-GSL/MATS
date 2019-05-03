@@ -28,6 +28,16 @@
     	$scope.domain = ".localhost"
         $scope.items = {};
         $scope.groups = [];  // used to maintain the order from the applist.json
+        $http({method: "GET", url: "environment.json"}).
+        // success callback
+        success(function (env) {
+            $scope.env=env.environment;
+        }).
+        // error callback
+        error(function (data, status, headers, config) {
+            $scope.env="unknown";
+        });
+
         $http({method: "GET", url: "applist.json"}).
         // success callback
         success(function (data) {
@@ -185,6 +195,7 @@
                         <li style="height:1em"><a href="http://www.noaa.gov/" class="navbar-link">NOAA</a></li>
                         <li style="height:1em"><a href="http://www.commerce.gov/" class="navbar-link">U.S. Department of Commerce</a></li>
                         <li style="height:1em"><a href="https://www.weather.gov/" class="navbar-link">National Weather Service</a></li>
+                        <li style="height:1em"><a href="/" class="navbar-link"> env: {{env}} </a></li>
                     </ul>
                 </div>
                 <!-- /.navbar-collapse -->
