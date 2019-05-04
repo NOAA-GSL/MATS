@@ -278,8 +278,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.8-2019.05.03.07.00",
-      "buildDate": "2019.05.03.07.00",
+      "version": "2.1.8-2019.05.04.07.00",
+      "buildDate": "2019.05.04.07.00",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
@@ -524,7 +524,7 @@
       "buildDate": "2018.10.25.20.36",
       "last_test_run": "",
       "last_test_status": "",
-      "group": "Experimntal",
+      "group": "Experimental",
       "dbroles": [
         "sums_data",
         "meta_data"
