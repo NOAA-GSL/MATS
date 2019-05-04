@@ -84,7 +84,7 @@ const doPlotParams = function () {
                 controlButtonText: 'Y-axis mode',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         var binOptionsMap = {
@@ -115,7 +115,7 @@ const doPlotParams = function () {
                 controlButtonText: 'customize bins',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -132,7 +132,7 @@ const doPlotParams = function () {
                 controlButtonText: "number of bins",
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -149,7 +149,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin pivot value",
                 displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -166,7 +166,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin start",
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -183,7 +183,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin stride",
                 displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -197,8 +197,23 @@ const doPlotParams = function () {
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
                 displayOrder: 7,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
+    } else {
+        // need to update the dates selector if the metadata has changed
+        var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            // have to reload model data
+            matsCollections.PlotParams.update({name: 'dates'}, {
+                $set: {
+                    startDate: minDate,
+                    stopDate: maxDate,
+                    default: dstr
+                }
+            });
+        }
     }
 };
 
@@ -234,6 +249,7 @@ const doCurveParams = function () {
     } catch (err) {
         console.log(err.message);
     }
+
     var thisDB;
     try {
         rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT DISTINCT db FROM ensemble_mats_metadata;");
@@ -263,9 +279,9 @@ const doCurveParams = function () {
                 var model = rows[i].display_text.trim();
                 modelOptionsMap[thisDB][model] = [model_value];
 
-                var minDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-                var maxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-                dbDateRangeMap[thisDB][model] = {minDate: minDate, maxDate: maxDate};
+                var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+                var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+                dbDateRangeMap[thisDB][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
 
                 var forecastLengths = rows[i].fcst_lens;
                 var forecastValues = rows[i].fcst_orig;
@@ -308,7 +324,6 @@ const doCurveParams = function () {
         console.log(err.message);
     }
 
-    // all the rest
     if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -328,8 +343,7 @@ const doCurveParams = function () {
         );
     }
 
-
-        var defaultGroup = (Object.keys(dbGroupMap).indexOf("EnsembleTest") !== -1) ? "EnsembleTest" : Object.keys(dbGroupMap)[0];
+    var defaultGroup = (Object.keys(dbGroupMap).indexOf("EnsembleTest") !== -1) ? "EnsembleTest" : Object.keys(dbGroupMap)[0];
     var defaultDB = dbGroupMap[defaultGroup][0];
 
     if (matsCollections.CurveParams.findOne({name: 'group'}) == undefined) {
@@ -385,7 +399,8 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'database'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, dbGroupMap))) {
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, dbGroupMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.dates, dbDateRangeMap))) {
             // have to reload model data
             if (process.env.NODE_ENV === "development") {
                 console.log("updating model data")
@@ -393,8 +408,9 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'database'}, {
                 $set: {
                     optionsMap: dbGroupMap,
+                    dates: dbDateRangeMap,
                     options: dbGroupMap[defaultGroup],
-                    default: defaultDB,
+                    default: defaultDB
                 }
             });
         }
@@ -422,7 +438,7 @@ const doCurveParams = function () {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
         if ((!matsDataUtils.areObjectsEqual(modelOptionsMap, currentParam.optionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(dbDateRangeMap, currentParam.dates))) {
+            (!matsDataUtils.areObjectsEqual(levelOptionsMap, currentParam.levelsMap))) {
             // have to reload model data
             if (process.env.NODE_ENV === "development") {
                 console.log("updating model data")
@@ -431,8 +447,8 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: modelOptionsMap,
                     levelsMap: levelOptionsMap,
-                    dates: dbDateRangeMap,
-                    options: Object.keys(modelOptionsMap[defaultDB])
+                    options: Object.keys(modelOptionsMap[defaultDB]),
+                    default: Object.keys(modelOptionsMap[defaultDB])[0]
                 }
             });
         }
@@ -463,7 +479,8 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'region'}, {
                 $set: {
                     optionsMap: regionModelOptionsMap,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap[defaultDB])[0]]
+                    options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],
+                    default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0]
                 }
             });
         }
@@ -494,13 +511,12 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'variable'}, {
                 $set: {
                     optionsMap: variableOptionsMap,
-                    options: variableOptionsMap[Object.keys(variableOptionsMap[defaultDB])[0]]
+                    options: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]],
+                    default: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]][0]
                 }
             });
         }
     }
-
-    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
 
         const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
         var fhrDefault;
@@ -512,6 +528,7 @@ const doCurveParams = function () {
             fhrDefault = fhrOptions[0];
         }
 
+    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'forecast-length',
@@ -534,12 +551,15 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary updates to forecastLengthOptionsMap
         var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
-        if (!matsDataUtils.areObjectsEqual(forecastLengthOptionsMap, currentParam.optionsMap)) {
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, forecastValueOptionsMap))) {
             // have to reload model data
             matsCollections.CurveParams.update({name: 'forecast-length'}, {
                 $set: {
                     optionsMap: forecastLengthOptionsMap,
-                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap[defaultDB])[0]]
+                    valuesMap: forecastValueOptionsMap,
+                    options: fhrOptions,
+                    default: fhrDefault
                 }
             });
         }
@@ -640,7 +660,8 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'level'}, {
                 $set: {
                     optionsMap: levelOptionsMap,
-                    options: levelOptionsMap[Object.keys(levelOptionsMap[defaultDB])[0]]
+                    options: levelOptionsMap[Object.keys(levelOptionsMap[defaultDB])[0]],
+                    default: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]][0]
                 }
             });
         }
@@ -652,8 +673,8 @@ const doCurveParams = function () {
     var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
     minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
     maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
-    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minDate + ' - ' + maxDate;
+    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minusMonthMinDate + ' - ' + maxDate;
 
 };
 
