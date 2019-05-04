@@ -51,7 +51,7 @@ Database roles are usually some combination of meta_data - the database that con
 sums_data - the database that contains an apps statistical partial sum data, model_data - a database that
 contains metadata about data sources, and possibly sites_data - which contains non standard domain data.
 The credentials that you provide are stored in a ${DEPLOYDIR}/settings directory with the structure ${DEPLOYDIR}/settings/appreference/settings.json.
-If you are familiar with this directory and the serttings.json files you can make changes with an editor and the setup program
+If you are familiar with this directory and the settings.json files you can make changes with an editor and the setup program
 will use the existing values as defaults.
 The program also configures this deployment directory, creating a ${DEPLOYDIR}/docker-compose.yml configuration file,
 and a ${DEPLOYDIR}/traefik.toml file, a suitable ${DEPLOYDIR}/web/index.html as a homepage,  and suitable up and down scripts in the
@@ -135,6 +135,9 @@ else if [[ ${depenv} == "development" ]]; then
     fi
 fi
 
+#record the environment
+echo "{\"environment\":\"${depenv}\"}" > web/environment.json
+
 # get the applist just to check if the environment is valid
 curl ${serverUrl}/getStableDeploymentAppList/${depenv} 2>/dev/null > $tmpAppList
 checkapps=($(cat ${tmpAppList} | jq -r '.[].app'))
@@ -169,6 +172,7 @@ else
     if [[ $? == 0 ]]; then
         adminPhrase=$($htpasswd -nbB admin adminpassword)
     fi
+    unqualifiedHostName=$(echo ${hostname} | cut -f1 -d'.')
     #create the traefik.toml file....
 cat <<- %ENDTRAEFIK > ./traefik.toml
 #To enable the proxy api and dashboard uncomment the '[api]' and '  entrypoint="dashboard"' lines below.
@@ -192,8 +196,8 @@ defaultEntryPoints = ["http", "https"]
     address = ":443"
       [entryPoints.https.tls]
         [[entryPoints.https.tls.certificates]]
-        certFile = "/etc/ssl/certs/mats-meteor.crt"
-        keyFile = "/etc/ssl/certs/mats-meteor.key"
+        certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
+        keyFile = "/etc/ssl/certs/${unqualifiedHostName}.key"
 
 # uncomment the following to enable the proxy and the api
 [api]

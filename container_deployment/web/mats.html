@@ -27,6 +27,16 @@
     function TCtrl($scope, $http) {
         $scope.items = {};
         $scope.groups = [];  // used to maintain the order from the applist.json
+        $http({method: "GET", url: "environment.json"}).
+        // success callback
+        success(function (env) {
+            $scope.env=env.environment;
+        }).
+        // error callback
+        error(function (data, status, headers, config) {
+            $scope.env="unknown";
+        });
+
         $http({method: "GET", url: "applist.json"}).
         // success callback
         success(function (data) {
@@ -172,6 +182,7 @@
                             Division</a></li>
                         <li style="height:1em"><a href="mailto:webmaster.hiwpp@noaa.gov" class="navbar-link">Contact the
                             Webmaster</a></li>
+                        <li style="height:1em"><a href="/" class="navbar-link"> env: {{env}} </a></li>
                     </ul>
                 </div>
                 <!-- /.navbar-collapse -->

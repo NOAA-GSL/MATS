@@ -5,7 +5,7 @@ limit=20
 until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=matsStack -q)" ] || [ "$limit" -lt 0 ]; do
     sleep 1;
     limit="$((limit-1))"
-    printf "."
+    printf"."
 done
 limit=20
 until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q)" ] || [ "$limit" -lt 0 ]; do
@@ -19,3 +19,5 @@ until [ -z "$(docker stack ps matsStack -q)" ] || [ "$limit" -lt 0 ]; do
     limit="$((limit-1))"
     printf "."
 done
+echo please be patient
+docker system prune -af
