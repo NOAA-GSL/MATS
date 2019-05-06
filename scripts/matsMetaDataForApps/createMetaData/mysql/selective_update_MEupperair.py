@@ -271,6 +271,8 @@ def update_groups(cnx, cursor, mvdb):
     else:
         group = "NO GROUP"
 
+    print(group)
+
     # see if this mvdb is already in this group. If not, add it.
     cursor.execute("use mats_metadata;")
     cnx.commit()
@@ -279,22 +281,25 @@ def update_groups(cnx, cursor, mvdb):
     if cursor.rowcount > 0:
         update_needed = True
         for row in cursor:
+            print(row.values()[0])
             current_dbs = row.values()[0].strip('[]')
-            current_dbs = [x.strip("'").strip('"') for x in current_dbs.split(',')]
+            print(current_dbs)
+            current_dbs = [x.strip('"').strip("'") for x in current_dbs.split(',')]
+            print(current_dbs)
             if mvdb not in current_dbs:
                 current_dbs.append(mvdb)
     else:
         update_needed = False
         current_dbs = [mvdb]
 
-    print(current_dbs)
-
     # store the new group info
     if update_needed:
         update_group = 'update upperair_database_groups_dev set dbs = "' + str(current_dbs) + '" where db_group = "' + group + '";'
+        print(update_group)
         cursor.execute(update_group)
     else:
         insert_group = 'insert into upperair_database_groups_dev (db_group, dbs) values("' + str(group) + '", "' + str(current_dbs) + '");'
+        print(insert_group)
         cursor.execute(insert_group)
 
 
