@@ -280,12 +280,14 @@ def update_groups(cnx, cursor, mvdb):
         update_needed = True
         for row in cursor:
             current_dbs = row.values()[0].strip('[]')
-            current_dbs = [x.strip("'") for x in current_dbs.split(',')]
+            current_dbs = [x.strip("'").strip('"') for x in current_dbs.split(',')]
             if mvdb not in current_dbs:
                 current_dbs.append(mvdb)
     else:
         update_needed = False
         current_dbs = [mvdb]
+
+    print(current_dbs)
 
     # store the new group info
     if update_needed:
