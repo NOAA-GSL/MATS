@@ -172,7 +172,7 @@ else
     if [[ $? == 0 ]]; then
         adminPhrase=$($htpasswd -nbB admin adminpassword)
     fi
-    unqualifiedHostName=$(echo ${hostname} | cut -f1 -d'.')
+    unqualifiedHostName=$(echo ${domain} | cut -f1 -d'.')
     #create the traefik.toml file....
 cat <<- %ENDTRAEFIK > ./traefik.toml
 #To enable the proxy api and dashboard uncomment the '[api]' and '  entrypoint="dashboard"' lines below.
