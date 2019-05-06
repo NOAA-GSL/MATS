@@ -209,35 +209,7 @@ def build_stats_object(cnx, cursor):
             else:
                 print("\nNo valid metadata for model " + model)
 
-        # get mvdb group
-        get_group = 'select category from metadata'
-        cursor.execute(get_group)
-        if cursor.rowcount > 0:
-            for row in cursor:
-                group = row.values()[0]
-        else:
-            group = "NO GROUP"
-
-        # see if this mvdb is already in this group. If not, add it.
-        get_current_dbs_in_group = "select dbs from surface_database_groups_dev where db_group = '" + group + "';"
-        cursor.execute(get_current_dbs_in_group)
-        if cursor.rowcount > 0:
-            update_needed = True
-            for row in cursor:
-                current_dbs = row.values()[0].strip('[]').split(',')
-                if mvdb not in current_dbs:
-                    current_dbs.append(mvdb)
-        else:
-            update_needed = False
-            current_dbs = [mvdb]
-
-        # store the new group info
-        if update_needed:
-            update_group = "update surface_database_groups_dev set dbs = '" + str(current_dbs) + "' where db_group = '" + group + "';"
-            cursor.execute(update_group)
-        else:
-            insert_group = "insert into surface_database_groups_dev (db_group, dbs) values('" + str(group) + "', '" + str(current_dbs) + "');"
-            cursor.execute(insert_group)
+        update_groups(cnx, cursor, mvdb)
 
     # Print full metadata object
     print(json.dumps(per_mvdb, sort_keys=True, indent=4))
@@ -286,6 +258,42 @@ def update_model_in_metadata_table(cnx, cursor, mvdb, model, raw_metadata):
         qd.append(updated_utc)
         cursor.execute(update_statement, qd)
         cnx.commit()
+
+
+def update_groups(cnx, cursor, mvdb):
+    # get mvdb group
+    get_group = 'select category from metadata'
+    cursor.execute(get_group)
+    if cursor.rowcount > 0:
+        for row in cursor:
+            group = row.values()[0]
+    else:
+        group = "NO GROUP"
+
+    # see if this mvdb is already in this group. If not, add it.
+    cursor.execute("use mats_metadata;")
+    cnx.commit()
+    get_current_dbs_in_group = "select dbs from surface_database_groups_dev where db_group = '" + group + "';"
+    cursor.execute(get_current_dbs_in_group)
+    if cursor.rowcount > 0:
+        update_needed = True
+        for row in cursor:
+            current_dbs = row.values()[0].strip('[]').split(',')
+            if mvdb not in current_dbs:
+                current_dbs.append(mvdb)
+    else:
+        update_needed = False
+        current_dbs = [mvdb]
+
+    # store the new group info
+    if update_needed:
+        update_group = "update surface_database_groups_dev set dbs = '" + str(
+            current_dbs) + "' where db_group = '" + group + "';"
+        cursor.execute(update_group)
+    else:
+        insert_group = "insert into surface_database_groups_dev (db_group, dbs) values('" + str(group) + "', '" + str(
+            current_dbs) + "');"
+        cursor.execute(insert_group)
 
 
 def main():
