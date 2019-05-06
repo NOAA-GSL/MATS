@@ -292,11 +292,11 @@ def update_groups(cnx, cursor, mvdb):
 
     # store the new group info
     if update_needed:
-        update_group = "update surface_database_groups_dev set dbs = '" + str(current_dbs) + "' where db_group = '" + group + "';"
+        update_group = 'update surface_database_groups_dev set dbs = "' + str(current_dbs) + '" where db_group = "' + group + '";'
         print(update_group)
         cursor.execute(update_group)
     else:
-        insert_group = "insert into surface_database_groups_dev (db_group, dbs) values('" + str(group) + "', '" + str(current_dbs) + "');"
+        insert_group = 'insert into surface_database_groups_dev (db_group, dbs) values("' + str(group) + '", "' + str(current_dbs) + '");'
         print(insert_group)
         cursor.execute(insert_group)
 
