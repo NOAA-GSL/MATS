@@ -211,35 +211,7 @@ def build_stats_object(cnx, cursor):
             else:
                 print("\nNo valid metadata for model " + model)
 
-
-    # Redo db groups
-    show_mvdbs = 'show databases like "mv_%";'
-    cursor.execute(show_mvdbs)
-    cnx.commit()
-    for line in cursor:
-        mvdb = line.values()[0]
-        use_db = "use " + mvdb
-        cursor2.execute(use_db)
-        cnx2.commit()
-        get_groups = 'select category from metadata'
-        cursor2.execute(get_groups)
-        if cursor2.rowcount > 0:
-            for row in cursor2:
-                group = row.values()[0]
-                if group in db_groups:
-                    db_groups[group].append(mvdb)
-                else:
-                    db_groups[group] = [mvdb]
-        else:
-            group = "NO GROUP"
-            if group in db_groups:
-                db_groups[group].append(mvdb)
-            else:
-                db_groups[group] = [mvdb]
-
-    # save db group information
-    print(db_groups)
-    populate_db_group_tables(cnx, cursor, db_groups)
+        update_groups(cnx, cursor, mvdb)
 
     # Print full metadata object
     print(json.dumps(per_mvdb, sort_keys=True, indent=4))
@@ -290,18 +262,45 @@ def update_model_in_metadata_table(cnx, cursor, mvdb, model, raw_metadata):
         cnx.commit()
 
 
-def populate_db_group_tables(cnx, cursor, db_groups):
+def update_groups(cnx, cursor, mvdb):
+    # get mvdb group
+    get_group = 'select category from metadata'
+    cursor.execute(get_group)
+    if cursor.rowcount > 0:
+        for row in cursor:
+            group = row.values()[0]
+    else:
+        group = "NO GROUP"
+
+    print(group)
+
+    # see if this mvdb is already in this group. If not, add it.
     cursor.execute("use mats_metadata;")
     cnx.commit()
-    cursor.execute("delete from anomalycor_database_groups_dev;")
-    cnx.commit()
-    for group in db_groups:
-        qd = []
-        insert_row = "insert into anomalycor_database_groups_dev (db_group, dbs) values(%s, %s)"
-        qd.append(group)
-        qd.append(str(db_groups[group]))
-        cursor.execute(insert_row, qd)
-        cnx.commit()
+    get_current_dbs_in_group = "select dbs from anomalycor_database_groups_dev where db_group = '" + group + "';"
+    cursor.execute(get_current_dbs_in_group)
+    if cursor.rowcount > 0:
+        update_needed = True
+        for row in cursor:
+            current_dbs = row.values()[0].strip('[]')
+            current_dbs = [x.strip("'") for x in current_dbs.split(',')]
+            if mvdb not in current_dbs:
+                current_dbs.append(mvdb)
+    else:
+        update_needed = False
+        current_dbs = [mvdb]
+
+    print(current_dbs)
+
+    # store the new group info
+    if update_needed:
+        update_group = 'update anomalycor_database_groups_dev set dbs = "' + str(current_dbs) + '" where db_group = "' + group + '";'
+        print(update_group)
+        cursor.execute(update_group)
+    else:
+        insert_group = 'insert into anomalycor_database_groups_dev (db_group, dbs) values("' + str(group) + '", "' + str(current_dbs) + '");'
+        print(insert_group)
+        cursor.execute(insert_group)
 
 
 def main():
