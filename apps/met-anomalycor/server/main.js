@@ -199,6 +199,21 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+    } else {
+        // need to update the dates selector if the metadata has changed
+        var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            // have to reload model data
+            matsCollections.PlotParams.update({name: 'dates'}, {
+                $set: {
+                    startDate: minDate,
+                    stopDate: maxDate,
+                    default: dstr
+                }
+            });
+        }
     }
 };
 
@@ -402,7 +417,8 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'database'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, dbGroupMap))) {
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, dbGroupMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.dates, dbDateRangeMap))) {
             // have to reload model data
             if (process.env.NODE_ENV === "development") {
                 console.log("updating model data")
@@ -410,8 +426,9 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'database'}, {
                 $set: {
                     optionsMap: dbGroupMap,
+                    dates: dbDateRangeMap,
                     options: dbGroupMap[defaultGroup],
-                    default: defaultDB,
+                    default: defaultDB
                 }
             });
         }
@@ -439,7 +456,7 @@ const doCurveParams = function () {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
         if ((!matsDataUtils.areObjectsEqual(modelOptionsMap, currentParam.optionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(dbDateRangeMap, currentParam.dates))) {
+            (!matsDataUtils.areObjectsEqual(levelOptionsMap, currentParam.levelsMap))) {
             // have to reload model data
             if (process.env.NODE_ENV === "development") {
                 console.log("updating model data")
@@ -448,8 +465,8 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: modelOptionsMap,
                     levelsMap: levelOptionsMap,
-                    dates: dbDateRangeMap,
-                    options: Object.keys(modelOptionsMap[defaultDB])
+                    options: Object.keys(modelOptionsMap[defaultDB]),
+                    default: Object.keys(modelOptionsMap[defaultDB])[0]
                 }
             });
         }
@@ -480,7 +497,8 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'region'}, {
                 $set: {
                     optionsMap: regionModelOptionsMap,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap[defaultDB])[0]]
+                    options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],
+                    default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0]
                 }
             });
         }
@@ -511,23 +529,24 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'variable'}, {
                 $set: {
                     optionsMap: variableOptionsMap,
-                    options: variableOptionsMap[Object.keys(variableOptionsMap[defaultDB])[0]]
+                    options: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]],
+                    default: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]][0]
                 }
             });
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
+    const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
+    var fhrDefault;
+    if (fhrOptions.indexOf("24") !== -1) {
+        fhrDefault = "24";
+    } else if (fhrOptions.indexOf("12") !== -1) {
+        fhrDefault = "12";
+    } else {
+        fhrDefault = fhrOptions[0];
+    }
 
-        const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
-        var fhrDefault;
-        if (fhrOptions.indexOf("24") !== -1) {
-            fhrDefault = "24";
-        } else if (fhrOptions.indexOf("12") !== -1) {
-            fhrDefault = "12";
-        } else {
-            fhrDefault = fhrOptions[0];
-        }
+    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
 
         matsCollections.CurveParams.insert(
             {
@@ -551,12 +570,15 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary updates to forecastLengthOptionsMap
         var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
-        if (!matsDataUtils.areObjectsEqual(forecastLengthOptionsMap, currentParam.optionsMap)) {
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, forecastValueOptionsMap))) {
             // have to reload model data
             matsCollections.CurveParams.update({name: 'forecast-length'}, {
                 $set: {
                     optionsMap: forecastLengthOptionsMap,
-                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap[defaultDB])[0]]
+                    valuesMap: forecastValueOptionsMap,
+                    options: fhrOptions,
+                    default: fhrDefault
                 }
             });
         }
@@ -685,7 +707,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'pres-level'}, {
                 $set: {
                     optionsMap: levelOptionsMap,
-                    options: levelOptionsMap[Object.keys(levelOptionsMap[defaultDB])[0]]
+                    options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]]
                 }
             });
         }
@@ -766,7 +788,7 @@ const doCurveParams = function () {
     var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
     dstr = minusMonthMinDate + ' - ' + maxDate;
 
-    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+    if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
         optionsMap = {
             '1 day': ['1 day'],
             '3 days': ['3 days'],
@@ -794,6 +816,21 @@ const doCurveParams = function () {
                 displayGroup: 7,
                 help: "dateHelp.html"
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'curve-dates'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'curve-dates'}, {
+                $set: {
+                    startDate: minDate,
+                    stopDate: maxDate,
+                    default: dstr
+                }
+            });
+        }
     }
 };
 

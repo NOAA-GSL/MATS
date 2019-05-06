@@ -185,6 +185,21 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+    } else {
+        // need to update the dates selector if the metadata has changed
+        var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            // have to reload model data
+            matsCollections.PlotParams.update({name: 'dates'}, {
+                $set: {
+                    startDate: minDate,
+                    stopDate: maxDate,
+                    default: dstr
+                }
+            });
+        }
     }
 };
 
@@ -313,12 +328,15 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap))) {
             // have to reload model data
             matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
-                    options: Object.keys(modelOptionsMap)
+                    dates: modelDateRangeMap,
+                    options: Object.keys(modelOptionsMap),
+                    default: Object.keys(modelOptionsMap)[0]
                 }
             });
         }
@@ -351,7 +369,8 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)]
+                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)],
+                    default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
                 }
             });
         }
@@ -494,7 +513,8 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: scaleModelOptionsMap,
                     valuesMap: masterScaleValuesMap,
-                    options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]]
+                    options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)],
+                    default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[1]]
                 }
             });
         }
@@ -683,8 +703,8 @@ const doCurveParams = function () {
     var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
     dstr = minusMonthMinDate + ' - ' + maxDate;
 
-    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
-        optionsMap = {
+    if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
+        const optionsMap = {
             '1 day': ['1 day'],
             '3 days': ['3 days'],
             '7 days': ['7 days'],
@@ -711,6 +731,21 @@ const doCurveParams = function () {
                 displayGroup: 6,
                 help: "dateHelp.html"
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'curve-dates'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'curve-dates'}, {
+                $set: {
+                    startDate: minDate,
+                    stopDate: maxDate,
+                    default: dstr
+                }
+            });
+        }
     }
 };
 
