@@ -284,7 +284,7 @@ def update_groups(cnx, cursor, mvdb):
             print(row.values()[0])
             current_dbs = row.values()[0].strip('[]')
             print(current_dbs)
-            current_dbs = [x.strip('"').strip("'") for x in current_dbs.split(',')]
+            current_dbs = [x.replace(" ", "").strip("'") for x in current_dbs.split(',')]
             print(current_dbs)
             if mvdb not in current_dbs:
                 current_dbs.append(mvdb)
