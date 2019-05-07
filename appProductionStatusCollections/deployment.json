@@ -304,8 +304,8 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "2.1.7",
-      "buildDate": "2019.04.23.18.41",
+      "version": "2.1.8",
+      "buildDate": "2019.05.07.00.45",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -331,8 +331,8 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.1.7",
-      "buildDate": "2019.04.23.18.36",
+      "version": "2.1.8",
+      "buildDate": "2019.05.07.00.40",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -372,8 +372,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.1.7",
-      "buildDate": "2019.04.23.18.24",
+      "version": "2.1.8",
+      "buildDate": "2019.05.07.00.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -559,8 +559,8 @@
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "2.1.7",
-      "buildDate": "2019.04.23.18.30",
+      "version": "2.1.8",
+      "buildDate": "2019.05.07.00.34",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
