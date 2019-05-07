@@ -24,7 +24,8 @@
                 <div class="btn-toolbar btn-toolbar-xs" role="toolbar">
                     {{#each curveParams this}}
                         <button type="button" class="displayBtn btn btn-sm btn-default" name="{{name this}}" id="{{buttonId this}}" style="margin:3px 3px 3px 3px;border:{{border this}};border-radius:10px;display:{{displayParam this}}">
-                            <span class="displayItemSpan"  id="{{spanId this}}">{{label this}}: {{value this}}</span>
+                            <label for="{{buttonId this}}">{{label this}}:&nbsp;&nbsp;</label>
+                            <span class="displayItemSpan"  id="{{spanId this}}">{{value this}}</span>
                         </button>
                     {{/each}}
                 </div>
