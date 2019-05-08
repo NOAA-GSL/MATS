@@ -114,10 +114,14 @@ if [[ ! $? -eq 0  ]]; then
     exit 1
 fi 
 echo -e ${NC}
-
+domain=$(hostname)
 serverUrl="https://www.esrl.noaa.gov/gsd/mats/appProductionStatus"
+if [[ "$(hostname)" =~ ".gsd.esrl.noaa.gov" ]]; then
+    # we might be in the dmz and have to use the local url
+    serverUrl="https://mats.gsd.esrl.noaa.gov/appProductionStatus"
+fi
 #get deployment environments - only happens one time
-depenvs=$(curl ${serverUrl}/getDeploymentEnvironments 2>/dev/null | jq -r '.[]')
+depenvs=$(curl -k ${serverUrl}/getDeploymentEnvironments 2>/dev/null | jq -r '.[]')
 #get applist
 echo -e "${ORNG}You must choose an environment to deploy (number [ENTER]) ${NC}"
 select depenv in ${depenvs}; do
@@ -139,14 +143,14 @@ fi
 echo "{\"environment\":\"${depenv}\"}" > web/environment.json
 
 # get the applist just to check if the environment is valid
-curl ${serverUrl}/getStableDeploymentAppList/${depenv} 2>/dev/null > $tmpAppList
+curl -k ${serverUrl}/getStableDeploymentAppList/${depenv} 2>/dev/null > $tmpAppList
 checkapps=($(cat ${tmpAppList} | jq -r '.[].app'))
 if [[ ${#checkapps[@]} < 1 ]]; then
     echo -e "${RED}There are no apps to configure. exiting.${NC}"
         exit 1
 else 
     #get the stable deployment and save it to tmpfile
-    curl ${serverUrl}/getStableDeployment/${depenv} 2>/dev/null > $tmpfile
+    curl -k ${serverUrl}/getStableDeployment/${depenv} 2>/dev/null > $tmpfile
     # load the apps from the stable deployment -
     # order is preserved in the array from the tempfile
     apps=($(cat $tmpfile | jq -r '.apps[] | .app'))
@@ -157,7 +161,7 @@ else
     cp web/${homepage} web/index.html
 
     echo -e ${ORNG}
-    domain=$(hostname)
+
     read -p "Is '${domain}' the fully qualified hostname for this deployment? y|n" -n 1 -r
     echo -e ${NC}
     if [[ $REPLY =~ ^[Yy]$ ]]; then
