@@ -225,18 +225,6 @@
       ]
     },
     {
-      "app": "wfip2",
-      "title": "WFIP2",
-      "version": "1.8.3-2018.11.09.06.39",
-      "buildDate": "2018.11.09.06.39",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Experimental",
-      "dbroles": [
-        "site_data"
-      ]
-    },
-    {
       "app": "mats4met-ensemble",
       "title": "Ensemble",
       "version": "2.1.9-2019.05.08.07.03",
@@ -278,8 +266,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.9-2019.05.08.07.00",
-      "buildDate": "2019.05.08.07.00",
+      "version": "2.1.9-2019.05.09.07.00",
+      "buildDate": "2019.05.09.07.00",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
@@ -518,19 +506,6 @@
       ]
     },
     {
-      "app": "wfip2",
-      "title": "WFIP2",
-      "version": "1.8.3",
-      "buildDate": "2018.10.25.20.36",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Experimental",
-      "dbroles": [
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
       "app": "mats4met-ensemble",
       "title": "Ensemble",
       "version": "2.1.8",
@@ -734,7 +709,7 @@
       "version": "2.1.8",
       "buildDate": "2019.05.06.23.18",
       "last_test_run": "",
-      "last_test_status": "Precipitation",
+      "last_test_status": "",
       "group": "Precipitation",
       "dbroles": [
         "model_data",
@@ -811,18 +786,6 @@
       ]
     },
     {
-      "app": "wfip2",
-      "title": "WFIP2",
-      "version": "1.8.3",
-      "buildDate": "2018.10.25.20.36",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Experimental",
-      "dbroles": [
-        "site_data"
-      ]
-    },
-    {
       "app": "mats4met-ensemble",
       "title": "Ensemble",
       "version": "2.1.8",
@@ -888,13 +851,26 @@
   ],
   "apps": [
     {
-      "app": "met-anomalycor",
-      "title": "MET Anomaly Correlation",
-      "version": "2.1.7",
-      "buildDate": "2019.04.08.19.16",
+      "app": "met-upperair",
+      "title": "MET Upper Air",
+      "version": "2.1.8",
+      "buildDate": "2019.05.06.23.34",
       "last_test_run": "",
       "last_test_status": "",
-      "group": "MET Express",
+      "group": "MET express",
+      "dbroles": [
+        "sums_data",
+        "meta_data"
+      ]
+    },
+    {
+      "app": "met-anomalycor",
+      "title": "MET Anomaly Correlation",
+      "version": "2.1.8",
+      "buildDate": "2019.05.07.00.34",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "MET express",
       "dbroles": [
         "sums_data",
         "meta_data"
@@ -903,24 +879,11 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.7",
-      "buildDate": "2019.04.08.17.57",
+      "version": "2.1.8",
+      "buildDate": "2019.05.06.22.57",
       "last_test_run": "",
       "last_test_status": "",
-      "group": "MET Express",
-      "dbroles": [
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
-      "app": "met-upperair",
-      "title": "MET Upper Air",
-      "version": "2.1.7",
-      "buildDate": "2019.04.08.18.22",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "MET Express",
+      "group": "MET express",
       "dbroles": [
         "sums_data",
         "meta_data"
