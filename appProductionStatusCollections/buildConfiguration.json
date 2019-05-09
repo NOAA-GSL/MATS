@@ -146,14 +146,6 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "wfip2",
-      "displayName": "Wfip2",
-      "displayOrder": 17,
-      "group": "Experimental",
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
-    },
-    {
       "app": "mats4met-ensemble",
       "displayName": "Ensemble",
       "displayOrder": 18,
@@ -283,7 +275,7 @@
       "displayName": "Surface Radiation",
       "displayOrder": 10,
       "group": "Surface",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -333,14 +325,6 @@
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
-    },
-    {
-      "app": "wfip2",
-      "displayName": "Wfip2",
-      "displayOrder": 17,
-      "group": "Experimental",
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
     },
     {
       "app": "mats4met-ensemble",
@@ -502,13 +486,6 @@
       "displayName": "Vertically Integrated Liquid",
       "displayOrder": 16,
       "group": "Radar",
-      "deploymentStatus": "disabled"
-    },
-    {
-      "app": "wfip2",
-      "displayName": "Wfip2",
-      "displayOrder": 17,
-      "group": "Experimental",
       "deploymentStatus": "disabled"
     },
     {
