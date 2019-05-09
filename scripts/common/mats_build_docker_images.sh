@@ -277,7 +277,6 @@ cat <<-%EOFdockerfile > Dockerfile
 FROM node:8.11.4-alpine
 # Create app directory
 ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
-RUN mkdir -p /usr/app
 WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
