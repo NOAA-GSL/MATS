@@ -1,3 +1,9 @@
 #!/usr/bin/env sh
+if docker node ls > /dev/null 2>&1; then
+    echo running in swarm node
+else
+    echo "initializing swarm mode"
+    docker swarm init
+fi
 docker network create -d overlay web
 docker stack deploy -c docker-compose.yml matsStack

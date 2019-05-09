@@ -279,6 +279,8 @@ FROM node:8.11.4-alpine
 ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
 RUN mkdir -p /usr/app
 WORKDIR /usr/app
+ADD bundle /usr/app
+COPY run_app.sh /usr/app
 RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-dev bash && \\
     npm install -g npm@6.4.1 && \\
     npm cache clean -f && \\
@@ -288,13 +290,11 @@ RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
     pip3 install numpy && \\
-    pip3 install mysqlclient
-ADD bundle /usr/app
-COPY run_app.sh /usr/app
-RUN chmod +x /usr/app/run_app.sh
-RUN cd /usr/app/programs/server && npm install --production
-RUN apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp
-RUN rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
+    pip3 install mysqlclient && \\
+    chmod +x /usr/app/run_app.sh && \\
+    cd /usr/app/programs/server && npm install --production && \\
+    apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
+    rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
 ENV APPNAME=${APPNAME}
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV ROOT_URL=http://localhost:80/

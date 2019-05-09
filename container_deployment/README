@@ -1,8 +1,8 @@
 Dependencies:
-You must have docker, docker-compose and jq installed. You should have a certificate installed in /etc/ssl/certs.
+You must have docker, docker-compose, httpaswd, and jq installed. You should have a certificate installed in /etc/ssl/certs.
 
 Configuration steps:
-1) install Docker, docker-compose, and jq.
+1) install Docker, docker-compose, htpasswd (apache-utils), and jq.
 2) Install a certificate in /etc/ssl/certs.
 3) download the latest tar file from https://drive.google.com/drive/folders/1lRBlHj8c_awcGSah-Ybv2pn_4gbLpi3L?usp=sharing
 4) un-bundle the tarball.
