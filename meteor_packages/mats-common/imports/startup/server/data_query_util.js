@@ -494,17 +494,23 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
         }
 
         // store sub values that will later be used for calculating error bar statistics.
-        var sub_values;
-        var sub_secs;
-        var sub_levs;
-        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_values0 !== undefined) {
+        var sub_values = [];
+        var sub_secs = [];
+        var sub_levs = [];
+        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_data !== undefined) {
             try {
-                sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
-                sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
-                if (hasLevels) {
-                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',');
-                    if (!isNaN(Number(sub_levs[0]))) {
-                        sub_levs = sub_levs.map(Number);
+                var sub_data = rows[rowIndex].sub_data.toString().split(',');
+                var curr_sub_data;
+                for (var sd_idx = 0; sd_idx < sub_data.length; sd_idx++) {
+                    curr_sub_data = sub_data[sd_idx].split(';');
+                    sub_values.push(Number(curr_sub_data[0]));
+                    sub_secs.push(Number(curr_sub_data[1]));
+                    if (hasLevels) {
+                        if (!isNaN(Number(curr_sub_data[2]))) {
+                            sub_levs.push(Number(curr_sub_data[2]));
+                        } else {
+                            sub_levs.push(curr_sub_data[2]);
+                        }
                     }
                 }
             } catch (e) {
@@ -675,7 +681,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         if (plotType === matsTypes.PlotTypes.validtime) {
             independentVar = Number(rows[rowIndex].hr_of_day);
         } else if (plotType === matsTypes.PlotTypes.profile) {
-            independentVar = Number((rows[rowIndex].avVal).toString().replace('P',''));
+            independentVar = Number((rows[rowIndex].avVal).toString().replace('P', ''));
         } else if (plotType === matsTypes.PlotTypes.dailyModelCycle) {
             independentVar = Number(rows[rowIndex].avtime) * 1000;
         } else {
@@ -686,17 +692,23 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         N0.push(rows[rowIndex].N0);             // number of values that go into a point on the graph
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a point on the graph
 
-        var sub_stats;
-        var sub_secs;
-        var sub_levs;
-        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_values0 !== undefined) {
+        var sub_stats = [];
+        var sub_secs = [];
+        var sub_levs = [];
+        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_data !== undefined) {
             try {
-                sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
-                sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
-                if (hasLevels) {
-                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',');
-                    if (!isNaN(Number(sub_levs[0]))) {
-                        sub_levs = sub_levs.map(Number);
+                var sub_data = rows[rowIndex].sub_data.toString().split(',');
+                var curr_sub_data;
+                for (var sd_idx = 0; sd_idx < sub_data.length; sd_idx++) {
+                    curr_sub_data = sub_data[sd_idx].split(';');
+                    sub_stats.push(Number(curr_sub_data[0]));
+                    sub_secs.push(Number(curr_sub_data[1]));
+                    if (hasLevels) {
+                        if (!isNaN(Number(curr_sub_data[2]))) {
+                            sub_levs.push(Number(curr_sub_data[2]));
+                        } else {
+                            sub_levs.push(curr_sub_data[2]);
+                        }
                     }
                 }
             } catch (e) {
@@ -712,7 +724,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             }
         }
 
-        //deal with missing forecast cycles for dailyModelCycle plot type
+        // deal with missing forecast cycles for dailyModelCycle plot type
         if (plotType === matsTypes.PlotTypes.dailyModelCycle && rowIndex > 0 && (Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) > 3600 * 24 * 1000) {
             const cycles_missing = Math.floor((Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) / (3600 * 24 * 1000));
             for (var missingIdx = cycles_missing; missingIdx > 0; missingIdx--) {
@@ -898,23 +910,28 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
 
         var stat = rows[rowIndex].stat;
-        var sub_stats;
-        var sub_secs;
-        var sub_levs;
-
-        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_values0 !== undefined) {
+        var sub_stats = [];
+        var sub_secs = [];
+        var sub_levs = [];
+        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_data !== undefined) {
             try {
-                sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
-                curveSubStatsRaw.push(sub_stats);
-                sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
-                curveSubSecsRaw.push(sub_secs);
-                if (hasLevels) {
-                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',');
-                    if (!isNaN(Number(sub_levs[0]))) {
-                        sub_levs = sub_levs.map(Number);
+                var sub_data = rows[rowIndex].sub_data.toString().split(',');
+                var curr_sub_data;
+                for (var sd_idx = 0; sd_idx < sub_data.length; sd_idx++) {
+                    curr_sub_data = sub_data[sd_idx].split(';');
+                    sub_stats.push(Number(curr_sub_data[0]));
+                    sub_secs.push(Number(curr_sub_data[1]));
+                    if (hasLevels) {
+                            if (!isNaN(Number(curr_sub_data[2]))) {
+                                sub_levs.push(Number(curr_sub_data[2]));
+                            } else {
+                                sub_levs.push(curr_sub_data[2]);
+                            }
+                        }
+                        curveSubLevsRaw.push(sub_levs);
                     }
-                    curveSubLevsRaw.push(sub_levs);
-                }
+                curveSubStatsRaw.push(sub_stats);
+                curveSubSecsRaw.push(sub_secs);
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in parseQueryDataHistogram. The expected fields don't seem to be present in the results cache: " + e.message;
@@ -976,7 +993,7 @@ const parseQueryDataContour = function (rows, d) {
         var rowYVal = rows[rowIndex].yVal;
         var statKey = rowXVal.toString() + '_' + rowYVal.toString();
         var stat = rows[rowIndex].stat;
-        var n = rows[rowIndex].sub_values0 !== null ? rows[rowIndex].sub_values0.toString().split(',').length : 0;
+        var n = rows[rowIndex].sub_data !== null ? rows[rowIndex].sub_data.toString().split(',').length : 0;
         var minDate = rows[rowIndex].min_secs;
         var maxDate = rows[rowIndex].max_secs;
         if (stat === undefined || stat === null || stat === 'NULL') {
