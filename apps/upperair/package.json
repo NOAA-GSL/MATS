@@ -16,6 +16,7 @@
     "object-sizeof": "^1.2.0",
     "rimraf": "^2.6.2",
     "shrinkwrap": "^0.4.0",
-    "xmlbuilder": "^10.1.1"
+    "xmlbuilder": "^10.1.1",
+    "chai": "^4.2.0"
   }
 }
