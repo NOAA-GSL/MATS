@@ -10,15 +10,16 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag]  \n\
+usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag] [-i] \n\
 	where -a is force build all apps, \n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
-	default is build changed apps, and e is build environment"
+	default is build changed apps, e is build environment (dev or int), and i is build images also"
 requestedApp=""
 requestedTag=""
 tag=""
 build_env=""
-while getopts "ar:e:t:" o; do
+build_images="no"
+while getopts "air:e:t:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
@@ -29,6 +30,10 @@ while getopts "ar:e:t:" o; do
         #all apps
             requestedApp="all"
         ;;
+        i)
+        # build images also
+            build_images="yes"
+            ;;
         r)
             requestedApp=(${OPTARG})
             echo -e "requsted apps ${requestedApp[@]}"
@@ -237,4 +242,14 @@ chmod a+r static/applist.json
 echo -e "$0 trigger nginx restart"
 /bin/touch /builds/restart_nginx
 echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
+
+# temporary - rebuild to get images. These two operations should be merged into one when we start using containers only.
+if [[ build_images == "yes" ]];then
+    cd ${BUILD_DIRECTORY}
+    if [[ requestedApp == "all" ]]; then
+        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images -e ${build_env} -a
+    else
+        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images -e ${build_env} -r ${requestedApp[@]}
+    fi
+fi
 exit 0
