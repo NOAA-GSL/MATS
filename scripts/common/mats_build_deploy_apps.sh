@@ -247,9 +247,9 @@ echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
 if [[ "${build_images}" == "yes" ]];then
     cd ${BUILD_DIRECTORY}
     if [[ requestedApp == "all" ]]; then
-        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images -e ${build_env} -a
+        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images.sh -e ${build_env} -a
     else
-        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images -e ${build_env} -r ${requestedApp[@]}
+        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images.sh -e ${build_env} -r ${requestedApp[@]}
     fi
 fi
 exit 0
