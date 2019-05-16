@@ -237,4 +237,12 @@ chmod a+r static/applist.json
 echo -e "$0 trigger nginx restart"
 /bin/touch /builds/restart_nginx
 echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
+
+# temporary - rebuild to get images. These two operations should be merged into one when we start using containers only.
+cd ${BUILD_DIRECTORY}
+if [[ requestedApp == "all" ]]; then
+    ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images -e ${build_env} -a
+else
+    ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images -e ${build_env} -r ${requestedApp[@]}
+fi
 exit 0

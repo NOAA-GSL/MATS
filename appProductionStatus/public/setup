@@ -381,7 +381,7 @@ services:
    - ${DEPLOYDIR}/web:/web
   labels:
    - traefik.backend=mats-http/index.html
-   - traefik.frontend.rule=Host:${domain}
+   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:/
    - traefik.docker.network=web
    - traefik.port=8080
   networks:
