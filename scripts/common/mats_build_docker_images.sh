@@ -207,6 +207,7 @@ echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 for app in ${apps[*]}; do
     cd $app
     echo -e "$0 - building app ${GRN}${app}${NC}"
+    rm -rf ./bundle
     /usr/local/bin/meteor reset
     /usr/local/bin/meteor npm install --production
 # UNCOMMENT THIS WHEN WE ARE ONLY DOING NIGHTLY DOCKER container BUILDS i.e. we abandon the server builds
@@ -225,7 +226,11 @@ for app in ${apps[*]}; do
     git push origin ${BUILD_CODE_BRANCH}
 
     BUNDLE_DIRECTORY=/builds/deployments/${app}
-    rm -rf ${BUNDLE_DIRECTORY}
+    if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
+        mkdir -p ${BUNDLE_DIRECTORY}
+    else
+        rm -rf ${BUNDLE_DIRECTORY}
+    fi
     /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
         echo -e "${failed} to meteor build - must exit now"

@@ -27,9 +27,7 @@ REPO_LIST=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/
 found=0
 for r in "${REPO_LIST[@]}"
 do
-  echo repo: "X${repo}"  and "X${r}"}
-  if [[ "X${r}" == X${repo} ]]; then
-    echo found
+  if [[ "X${r}" == "X${repo}" ]]; then
     found=1
   fi
 done
@@ -39,14 +37,16 @@ if [[ $found -eq 0  ]]; then
   exit 1
 fi
 
-echo  build a list of all tags for repo
+#echo  build a list of all tags for repo
 IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${UNAME}/${repo}/tags/?page_size=10000 | jq -r '.results|.[]|.name'))
-echo tags are ${IMAGE_TAGS[@]}
+#echo tags are ${IMAGE_TAGS[@]}
 
+echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
 for i in ${IMAGE_TAGS[@]}
 do
   echo ${i}
   docker pull ${UNAME}/development:$i
   docker tag ${UNAME}/${repo}:${i} harbor-dev.gsd.esrl.noaa.gov/matsapps/${repo}:${i}
-  docker push harbor-dev.gsd.esrl.noaa.gov/mats-dev/${repo}:${i}
+  docker push harbor-dev.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}
 done
+docker logout
