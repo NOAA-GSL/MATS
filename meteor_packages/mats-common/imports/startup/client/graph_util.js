@@ -13,61 +13,81 @@ const setNoDataLabels = function (dataset) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').value = 'NO DATA';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').disabled = true;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').style["background-color"] = "red";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').style["border-color"] = "black";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').style["color"] = "white";
             }
             Session.set(dataset[c].curveId + "pointsButtonText", 'NO DATA');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-points')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').value = 'NO DATA';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').disabled = true;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style["background-color"] = "red";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style["border-color"] = "black";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style["color"] = "white";
             }
             Session.set(dataset[c].curveId + "errorBarButtonText", 'NO DATA');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').value = 'NO DATA';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').disabled = true;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').style["background-color"] = "red";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').style["border-color"] = "black";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').style["color"] = "white";
             }
             Session.set(dataset[c].curveId + "barChartButtonText", 'NO DATA');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-bars')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').value = 'NO DATA';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').disabled = true;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').style["background-color"] = "red";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').style["border-color"] = "black";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').style["color"] = "white";
             }
             Session.set(dataset[c].curveId + "annotateButtonText", 'NO DATA');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').value = 'NO DATA';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').disabled = true;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').style["background-color"] = "red";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').style["border-color"] = "black";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').style["color"] = "white";
             }
         } else {
             Session.set(dataset[c].curveId + "hideButtonText", 'hide curve');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').value = 'hide curve';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').disabled = false;
-                document.getElementById(dataset[c].curveId + '-curve-show-hide').style["background-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').style["background-color"] = "white";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').style["border-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').style["color"] = dataset[c].marker.color;
             }
             Session.set(dataset[c].curveId + "pointsButtonText", 'hide points');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-points')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').value = 'hide points';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').disabled = false;
-                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style["background-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style["background-color"] = "white";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style["border-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style["color"] = dataset[c].marker.color;
             }
             Session.set(dataset[c].curveId + "errorBarButtonText", 'hide error bars');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').value = 'hide error bars';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').disabled = false;
-                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').style["background-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').style["background-color"] = "white";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').style["border-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').style["color"] = dataset[c].marker.color;
             }
             Session.set(dataset[c].curveId + "barChartButtonText", 'hide bars');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-bars')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').value = 'hide bars';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').disabled = false;
-                document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').style["background-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').style["background-color"] = "white";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').style["border-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-bars').style["color"] = dataset[c].marker.color;
             }
             Session.set(dataset[c].curveId + "annotateButtonText", 'hide annotation');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').value = 'hide annotation';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').disabled = false;
-                document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').style["background-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').style["background-color"] = "white";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').style["border-color"] = dataset[c].marker.color;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').style["color"] = dataset[c].marker.color;
             }
         }
     }
@@ -81,13 +101,17 @@ const setNoDataLabelsMap = function (dataset) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').value = 'NO DATA';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').disabled = true;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["background-color"] = "red";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["border-color"] = "black";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["color"] = "white";
             }
         } else {
             Session.set(dataset[c].curveId + "heatMapButtonText", 'show heat map');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').value = 'show heat map';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').disabled = false;
-                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["background-color"] = "red";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["background-color"] = "white";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["border-color"] = "red";
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["color"] = "red";
             }
         }
     }
