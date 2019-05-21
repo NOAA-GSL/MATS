@@ -64,6 +64,7 @@ const doPlotParams = function () {
                 default: 'mats',
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
+                hidden: true,
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 3

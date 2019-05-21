@@ -5,11 +5,13 @@
 import {Meteor} from 'meteor/meteor';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {assert} from 'meteor/practicalmeteor:chai';
-import {expect} from 'meteor/practicalmeteor:chai';
 
 describe('test resetting app', () => {
     if (Meteor.isServer) {
+        require ('chai');
+        var assert = chai.assert;
+        var expect = chai.expect;
+
         var models = undefined;
         var modelsModified = undefined;
         var lastRefreshed;

@@ -7,11 +7,12 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsMethods} from 'meteor/randyp:mats-common';
-import {assert} from 'meteor/practicalmeteor:chai';
-import {expect} from 'meteor/practicalmeteor:chai';
 
 describe('test mapping of tables wrt models, regions, and forecast lengths - server app test', () => {
     if (Meteor.isServer) {
+        require ('chai');
+        var assert = chai.assert;
+        var expect = chai.expect;
         describe('mapping models regions forecastlens tables test', function () {
             var models = undefined;
             var optionsMap = undefined;

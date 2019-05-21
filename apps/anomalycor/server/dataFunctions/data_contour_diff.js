@@ -128,7 +128,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             "min({{dateClause}}) as min_secs, " +
             "max({{dateClause}}) as max_secs, " +
             "avg(m0.wacorr/100) as stat, " +
-            "group_concat(m0.wacorr/100 order by {{dateClause}}) as sub_values0, " +
+            "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data, " +
             "count(m0.wacorr) as N0 " +
             "from {{dbtable}} as m0{{matchModel}} " +
             "where 1=1 " +
