@@ -244,12 +244,12 @@ echo -e "$0 trigger nginx restart"
 echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
 
 # temporary - rebuild to get images. These two operations should be merged into one when we start using containers only.
-if [[ "${build_images}" == "yes" ]];then
+if [[ build_images == "yes" ]];then
     cd ${BUILD_DIRECTORY}
     if [[ requestedApp == "all" ]]; then
-        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images.sh -e ${build_env} -a
+        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images -e ${build_env} -a
     else
-        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images.sh -e ${build_env} -r ${requestedApp[@]}
+        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images -e ${build_env} -r ${requestedApp[@]}
     fi
 fi
 exit 0
