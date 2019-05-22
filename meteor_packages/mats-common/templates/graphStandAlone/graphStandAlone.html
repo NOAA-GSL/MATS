@@ -18,11 +18,11 @@
         </div>
         <div id="curves" class="row">
             {{#each curves}}
-                <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
+                <span style="color:{{color}}; font-weight: bolder;">--- </span><span style="font-size:small;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-group-xs previewCurveButtons">
                     <input type="button" class="annotateVisibility btn btn-primary"
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
-                           style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: {{this.color}}">
+                           style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
                 </div>
                 <br>
             {{/each}}
