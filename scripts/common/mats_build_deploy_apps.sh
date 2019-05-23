@@ -213,7 +213,7 @@ APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 for app in ${apps[*]}; do
-    cd $app
+    cd ${APP_DIRECTORY}/$app
     echo -e "$0 - building app ${GRN}${app}${NC}"
     rm -rf ./bundle
     /usr/local/bin/meteor reset
@@ -239,8 +239,8 @@ for app in ${apps[*]}; do
     fi
     /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
-        echo -e "${failed} to meteor build - must exit now"
-        exit 1
+        echo -e "${RED} ${failed} to meteor build - must skip app ${app} ${NC}"
+        continue
     fi
 
     cd ${BUNDLE_DIRECTORY}
@@ -351,7 +351,6 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         echo "created container in ${BUNDLE_DIRECTORY}"
     fi
     rm -rf ${BUNDLE_DIRECTORY}/*
-    cd ${APP_DIRECTORY}
 done
 
 # clean up /tmp files
