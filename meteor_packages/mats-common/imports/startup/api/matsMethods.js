@@ -247,7 +247,7 @@ const _getCSV = function (params, req, res, next) {
                         return;
                     }
                     res.write(output);
-                    res.end("<body><h1>_getCSV Done! </h1></body>");
+                    res.end();
                 });
                 delete result;
                 delete statResultArray;
@@ -278,7 +278,7 @@ const _getJSON = function (params, req, res, next) {
         }
         res.setHeader('Content-Type', 'application/json');
         res.write(flatJSON);
-        res.end("<body><h1>_getJSON Done!</h1></body>");
+        res.end();
         delete flatJSON;
         delete result;
     }

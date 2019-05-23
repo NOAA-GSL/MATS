@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-
+# This script builds and deploys an app, optionally takes the bundle that was already built and adds a dockerfile
+# and then builds the image from an appropriate node image that corresponds to the node verwsion of the app.
+#
 # source the build environment and mongo utilities
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
 # assign all the top level environment values from the build configuration to shell variables
@@ -10,16 +12,20 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag] [-i] \n\
-	where -a is force build all apps, \n\
+usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] \n\
+	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, e is build environment (dev or int), and i is build images also"
 requestedApp=""
 requestedTag=""
+requestedBranch=""
 tag=""
 build_env=""
+pushImage="yes"
 build_images="no"
-while getopts "air:e:t:" o; do
+deploy_build = "yes"
+WEB_DEPLOY_DIRECTORY="/web"
+while getopts "alir:e:t:b:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
@@ -34,6 +40,13 @@ while getopts "air:e:t:" o; do
         # build images also
             build_images="yes"
             ;;
+        l)
+            pushImage="no"
+        ;;
+        b)
+            requestedBranch=(${OPTARG})
+            echo -e "requested branch ${requestedBranch}"
+        ;;
         r)
             requestedApp=(${OPTARG})
             echo -e "requsted apps ${requestedApp[@]}"
@@ -64,8 +77,27 @@ if [ "X${build_env}" == "X" ]; then
 	echo "${RED}Must exit now${NC}"
 	exit 1
 fi
-
+if [ "X${requestedBranch}" != "X" ]; then
+    echo -e "overriding git branch with ${requestedBranch}"
+    BUILD_CODE_BRANCH=${requestedBranch}
+fi
 echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: date: $(/bin/date +%F_%T)"
+# Environment vars are set from the appProduction database. Example for int....
+#    "server" : "mats-int.gsd.esrl.noaa.gov",
+#    "deployment_environment" : "integration",
+#    "deployment_status" : "active",
+#    "deployment_directory" : "/builds/buildArea/MATS_for_EMB",
+#    "build_git_repo" : "gerrit:MATS_for_EMB",
+#    "build_code_branch" : "master",
+#    "build_directory" : "/builds/buildArea/",
+#    "build_cmd" : "sh /builds/buildArea/MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e int",
+#    "cmd_execute_server" : "mats-int.gsd.esrl.noaa.gov",
+#    "test_git_repo" : "https://user@vlab.ncep.noaa.gov/git/mats-testing",
+#    "test_code_branch" : "master",
+#    "test_directory" : "/builds/buildArea/mats-testing",
+#    "test_command" : "sh ./matsTest -b phantomjs -s mats-int.gsd.esrl.noaa.gov -f progress:/builds/buildArea/test_results/mats-int-`/bin/date +%Y.%m.%d.%H.%M.%S`",
+#    "test_result_directory" : "/builds/buildArea/test_results",
+
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  clone ${DEPLOYMENT_DIRECTORY}"
@@ -76,9 +108,9 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
         exit 1
     fi
 fi
-
+export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 cd ${DEPLOYMENT_DIRECTORY}
-currentCommit=$(git rev-parse HEAD)
+export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${failed} to git the current HEAD commit - must exit now"
     exit 1
@@ -88,7 +120,7 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
 fi
-newCommit=$(git rev-parse HEAD)
+newCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${failed} to git the new HEAD commit - must exit now"
     exit 1
@@ -114,15 +146,13 @@ else
     fi
 fi
 
-
-
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
-diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCommit}...${newCommit})
+diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit})
 ret=$?
 if [ $ret -ne 0 ]; then
-    echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCommit}...${newCommit}' ... ret $ret - must exit now"
+    echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}' ... ret $ret - must exit now"
     exit 1
 fi
 
@@ -179,13 +209,14 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
-cd ${DEPLOYMENT_DIRECTORY}/apps
+APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
+cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 for app in ${apps[*]}; do
     cd $app
     echo -e "$0 - building app ${GRN}${app}${NC}"
+    rm -rf ./bundle
     /usr/local/bin/meteor reset
-    /usr/local/bin/meteor npm install
     if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
         rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
     else
@@ -199,57 +230,151 @@ for app in ${apps[*]}; do
             ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
     git push origin ${BUILD_CODE_BRANCH}
-    /usr/local/bin/meteor build /builds
+
+    BUNDLE_DIRECTORY=/builds/deployments/${app}
+    if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
+        mkdir -p ${BUNDLE_DIRECTORY}
+    else
+        rm -rf ${BUNDLE_DIRECTORY}/*
+    fi
+    /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
         echo -e "${failed} to meteor build - must exit now"
         exit 1
     fi
-    buildVer=$(getVersionForAppForServer ${app} ${SERVER})
-    git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
-    git push origin +${tag}:${BUILD_CODE_BRANCH}
-    echo -e tagged repo with ${GRN}${tag}${NC}
-    cd ..
+
+    cd ${BUNDLE_DIRECTORY}
+    (cd programs/server && /usr/local/bin/meteor npm install)
+
+    if [[ "${deploy_build}" == "yes" ]]; then
+        if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
+            echo -e "${RED} Cannot deploy ${app} to missing directory: ${WEB_DEPLOY_DIRECTORY} ${NC}"
+        else
+            if [ ! -d "${WEB_DEPLOY_DIRECTORY}/${app}" ]; then
+                mkdir ${WEB_DEPLOY_DIRECTORY}/${app}
+            else
+                rm -rf ${WEB_DEPLOY_DIRECTORY}/${app}/*
+            fi
+            cp -a * /web/${app}
+        fi
+    fi
+
+    if [[ "${build_images}" == "yes" ]]; then
+        echo -e "Building image for ${app}"
+        buildVer=$(getVersionForAppForServer ${app} ${SERVER})
+        echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
+        echo git push origin +${tag}:${BUILD_CODE_BRANCH}
+        echo -e tagged repo with ${GRN}${tag}${NC}
+
+        # build container....
+        echo "building container in ${BUNDLE_DIRECTORY}"
+        # stop the container if it is running
+        docker stop ${REPO}:${TAG} || true && docker rm ${REPO}:${TAG} || true
+        # prune all stopped containers
+        docker container prune -f
+        # Create the Dockerfile
+        echo "=> Creating Dockerfile..."
+        export METEORD_DIR=/opt/meteord
+        export MONGO_URL="mongodb://mongo"
+        export MONGO_PORT=27017
+        export MONGO_DB=${app}
+        export APPNAME=${app}
+        export REPO=matsapps/production
+        export TAG="${app}-${buildVer}"
+        if [[ ${build_env} == "int" ]]; then
+            REPO="matsapps/integration"
+        else if [[ ${build_env} == "dev" ]]; then
+                REPO="matsapps/development"
+                TAG="${app}-nightly"
+            fi
+        fi
+
+        # save and export the meteor node version for the build_app script
+        export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
+        export METEOR_NPM_VERSION=$(meteor npm -v)
+        cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
+        chmod +x run_app.sh
+        #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
+
+    cat <<-%EOFdockerfile > Dockerfile
+# have to mount meteor settings as usr/app/settings/${APPNAME} - so that settings.json can get picked up by run_app.sh
+# the corresponding usr/app/settings/${APPNAME}/settings-mysql.cnf file needs to be referenced by
+# "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
+# and the MYSQL_CONF_PATH entry in the settings.json
+# Pull base image.
+FROM node:8.11.4-alpine
+# Create app directory
+ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
+WORKDIR /usr/app
+ADD bundle /usr/app
+COPY run_app.sh /usr/app
+RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-dev bash && \\
+    npm install -g npm@6.4.1 && \\
+    npm cache clean -f && \\
+    npm install -g n && \\
+    npm install -g node-gyp && \\
+    node-gyp install && \\
+    python3 -m ensurepip && \\
+    pip3 install --upgrade pip setuptools && \\
+    pip3 install numpy && \\
+    pip3 install mysqlclient && \\
+    chmod +x /usr/app/run_app.sh && \\
+    cd /usr/app/programs/server && npm install --production && \\
+    apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
+    rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
+ENV APPNAME=${APPNAME}
+ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
+ENV ROOT_URL=http://localhost:80/
+EXPOSE 80
+ENTRYPOINT ["/usr/app/run_app.sh"]
+LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodecommit}"
+    # build container
+        #docker build --no-cache --rm -t ${REPO}:${APPNAME}-${buildVer} .
+        #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
+        #docker push ${REPO}:${APPNAME}-${buildVer}
+%EOFdockerfile
+        # stop any running containers....
+        docker rm $(docker ps -a -q)
+        # clean up old images
+        docker system prune -af
+        # build container
+        docker build --no-cache --rm -t ${REPO}:${TAG} .
+        docker tag ${REPO}:${TAG} ${REPO}:${TAG}
+        if [ "${pushImage}" == "yes" ]; then
+            echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
+            echo "pushing image ${REPO}:${TAG}"
+            docker push ${REPO}:${TAG}
+        else
+            echo "NOT pushing image ${REPO}:${TAG}"
+        fi
+        # example run command
+        echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
+        echo "created container in ${BUNDLE_DIRECTORY}"
+    fi
+    cd ${APP_DIRECTORY}
 done
 
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
 
-# now deploy any newly built apps
-echo deploying modified apps ${apps[*]}
-cd /web
-for app in ${apps[*]}; do
-    echo -e "deploying ${GRN}$app${NC}"
-    mkdir $app
-    cd $app
-    tar -xzf "/builds/${app}.tar.gz"
-    if [ $? -ne 0 ]; then
-        echo -e "${failed} untar app /builds/${app}.tar.gz - must exit now"
-        exit 1
-    fi
-    rm -rf "/builds/${app}.tar.gz"
-    cd bundle
-    (cd programs/server && /usr/local/bin/meteor npm install)
-    cd ../..
-done
-
 # build the applist.json
-applistFile=`mktemp`
-echo $(getApplistJSONForServer ${SERVER}) > $applistFile
-mv $applistFile static/applist.json
-chmod a+r static/applist.json
-
-echo -e "$0 trigger nginx restart"
-/bin/touch /builds/restart_nginx
-echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
-
-# temporary - rebuild to get images. These two operations should be merged into one when we start using containers only.
-if [[ "${build_images}" == "yes" ]];then
-    cd ${BUILD_DIRECTORY}
-    if [[ requestedApp == "all" ]]; then
-        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images.sh -e ${build_env} -a
+if [[ "${deploy_build}" == "yes" ]]; then
+    if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
+        echo -e "${RED} Cannot deploy applist to missing directory: ${WEB_DEPLOY_DIRECTORY} ${NC}"
     else
-        ${DEPLOYMENT_DIRECTORY}/scripts/common/mats_build_docker_images.sh -e ${build_env} -r ${requestedApp[@]}
+        if [ ! -d "${WEB_DEPLOY_DIRECTORY}/static" ]; then
+            mkdir ${WEB_DEPLOY_DIRECTORY}/static
+        fi
+        applistFile=`mktemp`
+        echo $(getApplistJSONForServer ${SERVER}) > $applistFile
+        mv $applistFile static/applist.json
+        chmod a+r static/applist.json
+        echo -e "$0 trigger nginx restart"
+        /bin/touch /builds/restart_nginx
     fi
 fi
+
+echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
+
 exit 0
