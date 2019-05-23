@@ -23,7 +23,7 @@ tag=""
 build_env=""
 pushImage="yes"
 build_images="no"
-deploy_build = "yes"
+deploy_build="yes"
 WEB_DEPLOY_DIRECTORY="/web"
 while getopts "alir:e:t:b:" o; do
     case "${o}" in
