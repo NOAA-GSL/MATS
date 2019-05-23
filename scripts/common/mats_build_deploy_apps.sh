@@ -351,6 +351,7 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
         echo "created container in ${BUNDLE_DIRECTORY}"
     fi
+    rm -rf ${BUNDLE_DIRECTORY}/*
     cd ${APP_DIRECTORY}
 done
 
