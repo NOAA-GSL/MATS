@@ -490,24 +490,24 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'cloud-coverage'}) == undefined) {
-        optionsMap = {All: ['All'], Clear: ['Clear'], Cloudy: ['Cloudy']};
-        matsCollections.CurveParams.insert(
-            {
-                name: 'cloud-coverage',
-                type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: ['All', 'Clear', 'Cloudy'],
-                controlButtonCovered: true,
-                unique: false,
-                default: 'All',
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 2
-            });
-    }
-
+    // if (matsCollections.CurveParams.findOne({name: 'cloud-coverage'}) == undefined) {
+    //     optionsMap = {All: ['All'], Clear: ['Clear'], Cloudy: ['Cloudy']};
+    //     matsCollections.CurveParams.insert(
+    //         {
+    //             name: 'cloud-coverage',
+    //             type: matsTypes.InputTypes.select,
+    //             optionsMap: optionsMap,
+    //             options: ['All', 'Clear', 'Cloudy'],
+    //             controlButtonCovered: true,
+    //             unique: false,
+    //             default: 'All',
+    //             controlButtonVisibility: 'block',
+    //             displayOrder: 3,
+    //             displayPriority: 1,
+    //             displayGroup: 2
+    //         });
+    // }
+    //
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -826,11 +826,10 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['clouds: ', 'cloud-coverage', ', '],
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "average", "forecast-length", "top", "bottom"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "average", "forecast-length", "top", "bottom"
             ],
             groupSize: 6
         });
@@ -846,11 +845,10 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['clouds: ', 'cloud-coverage', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -867,11 +865,10 @@ const doCurveTextPatterns = function () {
                 ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
-                ['clouds: ', 'cloud-coverage', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "dieoff-type", "valid-time", "utc-cycle-start", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -887,11 +884,10 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['clouds: ', 'cloud-coverage', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -907,13 +903,12 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['clouds: ', 'cloud-coverage', ', '],
                 ['x-axis: ', 'x-axis-parameter', ', '],
                 ['y-axis: ', 'y-axis-parameter', '']
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "forecast-length", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 
@@ -930,13 +925,12 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['clouds: ', 'cloud-coverage', ', '],
                 ['x-axis: ', 'x-axis-parameter', ', '],
                 ['y-axis: ', 'y-axis-parameter', '']
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "forecast-length", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 
