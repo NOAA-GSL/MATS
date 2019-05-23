@@ -108,8 +108,8 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
         exit 1
     fi
 fi
-export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 cd ${DEPLOYMENT_DIRECTORY}
+export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${failed} to git the current HEAD commit - must exit now"
@@ -267,6 +267,20 @@ for app in ${apps[*]}; do
         echo -e tagged repo with ${GRN}${tag}${NC}
 
         # build container....
+        export METEORD_DIR=/opt/meteord
+        export MONGO_URL="mongodb://mongo"
+        export MONGO_PORT=27017
+        export MONGO_DB=${app}
+        export APPNAME=${app}
+        export TAG="${app}-${buildVer}"
+        export REPO=matsapps/production
+        if [[ ${build_env} == "int" ]]; then
+            REPO="matsapps/integration"
+        else if [[ ${build_env} == "dev" ]]; then
+            REPO="matsapps/development"
+            TAG="${app}-nightly"
+        fi
+        fi
         echo "building container in ${BUNDLE_DIRECTORY}"
         # stop the container if it is running
         docker stop ${REPO}:${TAG} || true && docker rm ${REPO}:${TAG} || true
@@ -274,21 +288,6 @@ for app in ${apps[*]}; do
         docker container prune -f
         # Create the Dockerfile
         echo "=> Creating Dockerfile..."
-        export METEORD_DIR=/opt/meteord
-        export MONGO_URL="mongodb://mongo"
-        export MONGO_PORT=27017
-        export MONGO_DB=${app}
-        export APPNAME=${app}
-        export REPO=matsapps/production
-        export TAG="${app}-${buildVer}"
-        if [[ ${build_env} == "int" ]]; then
-            REPO="matsapps/integration"
-        else if [[ ${build_env} == "dev" ]]; then
-                REPO="matsapps/development"
-                TAG="${app}-nightly"
-            fi
-        fi
-
         # save and export the meteor node version for the build_app script
         export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
         export METEOR_NPM_VERSION=$(meteor npm -v)
