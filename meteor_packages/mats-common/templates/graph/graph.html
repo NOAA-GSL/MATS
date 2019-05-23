@@ -315,26 +315,26 @@
         </div>
         <div id="curves" class="row">
             {{#each curves}}
-                <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
+                <span style="color:{{color}}; font-weight: bolder;">--- </span><span style="font-size:small;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-group-xs">
                     <input type="button" class="curveVisibility btn btn-primary"
                            value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
-                           style="border-radius: 5px; display:{{curveShowHideDisplay}}; background-color: {{this.color}}">
-                    <input type="button" class="pointsVisibility btn btn-primary" value="{{pointsButtonText}}"
-                           id="{{this.label}}-curve-show-hide-points"
-                           style="border-radius: 5px; display:{{pointsShowHideDisplay}}; background-color: {{this.color}}">
+                           style="border-radius: 5px; display:{{curveShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
+                    <input type="button" class="pointsVisibility btn btn-primary"
+                           value="{{pointsButtonText}}" id="{{this.label}}-curve-show-hide-points"
+                           style="border-radius: 5px; display:{{pointsShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
                     <input type="button" class="errorBarVisibility btn btn-primary"
                            value="{{errorBarButtonText}}" id="{{this.label}}-curve-show-hide-errorbars"
-                           style="border-radius: 5px; display:{{errorbarsShowHideDisplay}}; background-color: {{this.color}}">
+                           style="border-radius: 5px; display:{{errorbarsShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
                     <input type="button" class="barVisibility btn btn-primary"
                            value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bars"
-                           style="border-radius: 5px; display:{{barsShowHideDisplay}}; background-color: {{this.color}}">
+                           style="border-radius: 5px; display:{{barsShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
                     <input type="button" class="annotateVisibility btn btn-primary"
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
-                           style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: {{this.color}}">
+                           style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
                     <input type="button" class="heatMapVisibility btn btn-primary"
                            value="{{heatMapButtonText}}" id="{{this.label}}-curve-show-hide-heatmap"
-                           style="border-radius: 5px; display:{{heatMapShowHideDisplay}}; background-color: {{this.color}}">
+                           style="border-radius: 5px; display:{{heatMapShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
                 </div>
                 <br>
             {{/each}}
