@@ -4,14 +4,14 @@
 
 import { Meteor } from 'meteor/meteor';
 import { FlowRouter } from 'meteor/ostrio:flow-router-extra';
-FlowRouter.route('/', {
+FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/', {
     name: 'main',
     action() {
         this.render('Home')
     }
 });
 
-FlowRouter.route('/CSV/:graphFunction/:key/:matching/:appName', {
+FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/CSV/:graphFunction/:key/:matching/:appName', {
     name: 'csv',
     action(params) {
         console.log("in csv route");
@@ -19,7 +19,7 @@ FlowRouter.route('/CSV/:graphFunction/:key/:matching/:appName', {
     }
 });
 
-FlowRouter.route('/JSON/:graphFunction/:key/:matching/:appName', {
+FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/JSON/:graphFunction/:key/:matching/:appName', {
     name: 'json',
     action(params) {
         console.log("in json route");
@@ -28,7 +28,7 @@ FlowRouter.route('/JSON/:graphFunction/:key/:matching/:appName', {
 });
 
 
-FlowRouter.route('/preview/:graphFunction/:key/:matching/:appName', {
+FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/preview/:graphFunction/:key/:matching/:appName', {
     name: 'preview',
     action(params) {
         console.log("in preview route- setting params", params);
@@ -37,7 +37,7 @@ FlowRouter.route('/preview/:graphFunction/:key/:matching/:appName', {
 });
 
 
-FlowRouter.route('/gsd/mats/*/preview/:graphFunction/:key/:matching/:appName', {
+FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/*/preview/:graphFunction/:key/:matching/:appName', {
     name: 'preview',
     action(params) {
         console.log("in preview route- setting params", params);
@@ -45,10 +45,10 @@ FlowRouter.route('/gsd/mats/*/preview/:graphFunction/:key/:matching/:appName', {
     }
 });
 
-FlowRouter.route('/gsd/mats/*/', {
+FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/*/', {
     name: 'main',
     action() {
-        this.render('Home')
+        this.render('notFound')
     }
 });
 

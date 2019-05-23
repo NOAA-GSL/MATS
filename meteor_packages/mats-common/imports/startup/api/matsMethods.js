@@ -48,125 +48,85 @@ if (Meteor.isServer) {
     // add indexes to result and axes collections
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     LayoutStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
-
+    // set the default proxy prefix path to ""
+    if (Meteor.settings.public != null && Meteor.settings.public.proxy_prefix_path  == null) {
+        Meteor.settings.public.proxy_prefix_path = "";
+    }
     // define some server side routes
-    Picker.route('/_getCSV/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/_getCSV/:key', function (params, req, res, next) {
         Picker.middleware(_getCSV(params, req, res, next));
     });
 
-    Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/CSV/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(_getCSV(params, req, res, next));
     });
 
-    Picker.route('/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(_getCSV(params, req, res, next));
     });
 
-    Picker.route('/gsd/mats/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(_getCSV(params, req, res, next));
-    });
-
-    Picker.route('/_getJSON/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/_getJSON/:key', function (params, req, res, next) {
         Picker.middleware(_getJSON(params, req, res, next));
     });
 
-    Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/JSON/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(_getJSON(params, req, res, next));
     });
 
-    Picker.route('/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(_getJSON(params, req, res, next));
     });
 
-    Picker.route('/gsd/mats/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(_getJSON(params, req, res, next));
-    });
-
-    Picker.route('/_clearCache', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/clearCache', function (params, req, res, next) {
         Picker.middleware(_clearCache(params, req, res, next));
     });
 
-    Picker.route('/:app/_clearCache', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/clearCache', function (params, req, res, next) {
         Picker.middleware(_clearCache(params, req, res, next));
     });
 
-    Picker.route('/gsd/mats/:app/_clearCache', function (params, req, res, next) {
-        Picker.middleware(_clearCache(params, req, res, next));
-    });
-
-    Picker.route('/refreshMetadata', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/refreshMetadata', function (params, req, res, next) {
         Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
     });
 
-    Picker.route('/:app/refreshMetadata', function (params, req, res, next) {
-        Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
-    });
-
-    Picker.route('/gsd/mats/:app/refreshMetadata', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/refreshMetadata', function (params, req, res, next) {
         Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
     });
 
 // create picker routes for metviewer middleware static files
-    Picker.route('/:app/mvdata/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetData(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mvdata/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvdata/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetData(params, req, res, next));
     });
 
-    Picker.route('/:app/mvpoints1/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetPoints1(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mvpoints1/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvpoints1/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetPoints1(params, req, res, next));
     });
 
-    Picker.route('/:app/mvpoints2/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetPoints2(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mvpoints2/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvpoints2/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetPoints2(params, req, res, next));
     });
 
-    Picker.route('/:app/mvxml/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetXml(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mvxml/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvxml/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetXml(params, req, res, next));
     });
 
-    Picker.route('/:app/mvplot/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetPlot(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mvplot/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvplot/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetPlot(params, req, res, next));
     });
 
-    Picker.route('/:app/mvscript/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetScript(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mvscript/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvscript/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetScript(params, req, res, next));
     });
 
-    Picker.route('/:app/mvsql/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetSql(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mvsql/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvsql/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetSql(params, req, res, next));
     });
 
-    Picker.route('/:app/mvlog/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetLog(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mvlog/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvlog/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetLog(params, req, res, next));
     });
 
-    Picker.route('/:app/mverr/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetErr(params, req, res, next));
-    });
-    Picker.route('/gsd/mats/:app/mverr/:key', function (params, req, res, next) {
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mverr/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetErr(params, req, res, next));
     });
 }
@@ -235,7 +195,7 @@ const _checkMetaDataRefresh = function () {
 const _clearCache = function (params, req, res, next) {
     if (Meteor.isServer) {
         matsCache.clear();
-        res.end();
+        res.end("<body><h1>clearCache Done!</h1></body>");
     }
 };
 
@@ -275,7 +235,7 @@ const _getCSV = function (params, req, res, next) {
                 if (err) {
                     console.log("error in _getCSV:", err);
                     res.write("error," + err.toLocaleString());
-                    res.end();
+                    res.end("<body><h1>_getCSV Error! " + err.toLocaleString() + "</h1></body>");
                     return;
                 }
                 res.write(output);
@@ -283,11 +243,11 @@ const _getCSV = function (params, req, res, next) {
                     if (err) {
                         console.log("error in _getCSV:", err);
                         res.write("error," + err.toLocaleString());
-                        res.end();
+                        res.end("<body><h1>_getCSV Error! " + err.toLocaleString() + "</h1></body>");
                         return;
                     }
                     res.write(output);
-                    res.end();
+                    res.end("<body><h1>_getCSV Done! </h1></body>");
                 });
                 delete result;
                 delete statResultArray;
@@ -298,7 +258,7 @@ const _getCSV = function (params, req, res, next) {
             csv = "error," + e.toLocaleString();
             res.setHeader('Content-disposition', 'attachment; filename=matsplot.csv');
             res.setHeader('Content-Type', 'attachment.ContentType');
-            res.end(csv);
+            res.end("<body><h1>_getCSV Error! " + csv + "</h1></body>");
         }
     }
 };
@@ -318,7 +278,7 @@ const _getJSON = function (params, req, res, next) {
         }
         res.setHeader('Content-Type', 'application/json');
         res.write(flatJSON);
-        res.end();
+        res.end("<body><h1>_getJSON Done!</h1></body>");
         delete flatJSON;
         delete result;
     }
@@ -958,11 +918,11 @@ const _mvGetErr = function(params, req, res, next) {
 }
 
 
-// private define a middleware for clearing the cache
+// private define a middleware for refreshing the metadata
 const _refreshMetadataMWltData = function (params, req, res, next) {
     if (Meteor.isServer) {
         _checkMetaDataRefresh();
-        res.end();
+        res.end("<body><h1>refreshMetadata Done!</h1></body>");
     }
 };
 
