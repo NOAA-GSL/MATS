@@ -2,6 +2,11 @@
  * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
+import {
+    matsPlotUtils,
+    matsTypes
+} from 'meteor/randyp:mats-common';
+
 // adds a horizontal black line along a specific y value
 const getHorizontalValueLine = function (xmax, xmin, yValue, cLabel) {
 
@@ -33,7 +38,8 @@ const getHorizontalValueLine = function (xmax, xmin, yValue, cLabel) {
         "ymax": yValue,
         "line": {
             "color": "rgb(0,0,0)",
-        }
+        },
+        "showlegend": false
     };
 
     return valueLine
@@ -69,7 +75,8 @@ const getVerticalValueLine = function (ymax, ymin, xValue, cLabel) {
         "ymax": ymax,
         "line": {
             "color": "rgb(0,0,0)",
-        }
+        },
+        "showlegend": false
     };
 
     return valueLine
@@ -106,7 +113,8 @@ const getLinearValueLine = function (xmax, xmin, ymax, ymin, cLabel) {
         "ymax": ymax,
         "line": {
             "color": "rgb(0,0,0)",
-        }
+        },
+        "showlegend": false
     };
 
     return valueLine
@@ -187,6 +195,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
 const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataProfile) {
 
     const label = curve['label'];
+    const longLabel = matsPlotUtils.getCurveTextWrapping(matsTypes.PlotTypes.profile, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -227,7 +236,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
         ...{
             label: label,
             curveId: label,
-            name: label,
+            name: longLabel,
             xaxis: "x" + (axisNumber + 1),
             yaxis: "y1",
             annotation: annotation,
@@ -243,7 +252,8 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
                 color: curve['color'],
                 width: 2
             },
-            visible: true
+            visible: true,
+            showlegend: true
         }, ...dataProfile
     };
 
