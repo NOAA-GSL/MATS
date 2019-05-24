@@ -107,8 +107,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.1.10-2019.05.24.08.48",
-      "buildDate": "2019.05.24.08.48",
+      "version": "2.1.10-2019.05.24.15.41",
+      "buildDate": "2019.05.24.15.41",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -240,8 +240,8 @@
     {
       "app": "met-upperair",
       "title": "MET Upper Air",
-      "version": "2.1.10-2019.05.24.15.15",
-      "buildDate": "2019.05.24.15.15",
+      "version": "2.1.10-2019.05.24.15.42",
+      "buildDate": "2019.05.24.15.42",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
