@@ -174,6 +174,10 @@ if [ "${build_env}" == "int" ]; then
     git push
 fi
 
+if [[ "${build_images}" == "yes" -a "${requestedApp}"=="all" ]]; then
+    # clean up and remove existing images images
+    docker system prune -af
+fi
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
     if [ "${requestedApp}" == "all" ]; then
@@ -213,7 +217,7 @@ APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 for app in ${apps[*]}; do
-    cd ${APP_DIRECTORY}/$app
+    cd ${APP_DIRECTORY}/${app}
     echo -e "$0 - building app ${GRN}${app}${NC}"
     rm -rf ./bundle
     /usr/local/bin/meteor reset
@@ -283,9 +287,7 @@ for app in ${apps[*]}; do
         fi
         echo "building container in ${BUNDLE_DIRECTORY}"
         # stop the container if it is running
-        docker stop ${REPO}:${TAG} || true && docker rm ${REPO}:${TAG} || true
-        # prune all stopped containers
-        docker container prune -f
+        docker stop ${REPO}:${TAG}
         # Create the Dockerfile
         echo "=> Creating Dockerfile..."
         # save and export the meteor node version for the build_app script
