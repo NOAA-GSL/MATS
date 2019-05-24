@@ -133,8 +133,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.1.10-2019.05.24.08.42",
-      "buildDate": "2019.05.24.08.42",
+      "version": "2.1.10-2019.05.24.15.32",
+      "buildDate": "2019.05.24.15.32",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -185,8 +185,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.10-2019.05.24.15.02",
-      "buildDate": "2019.05.24.15.02",
+      "version": "2.1.10-2019.05.24.15.30",
+      "buildDate": "2019.05.24.15.30",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
@@ -227,8 +227,8 @@
     {
       "app": "mats4met-ensemble",
       "title": "Ensemble",
-      "version": "2.1.10-2019.05.24.14.59",
-      "buildDate": "2019.05.24.14.59",
+      "version": "2.1.10-2019.05.24.15.27",
+      "buildDate": "2019.05.24.15.27",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Experimental",
@@ -253,8 +253,8 @@
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "2.1.10-2019.05.23.18.02",
-      "buildDate": "2019.05.23.18.02",
+      "version": "2.1.10-2019.05.24.09.28",
+      "buildDate": "2019.05.24.09.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
