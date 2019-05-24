@@ -51,8 +51,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.1.10-2019.05.23.17.52",
-      "buildDate": "2019.05.23.17.52",
+      "version": "2.1.10-2019.05.24.09.18",
+      "buildDate": "2019.05.24.09.18",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -79,8 +79,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.1.10-2019.05.23.17.58",
-      "buildDate": "2019.05.23.17.58",
+      "version": "2.1.10-2019.05.24.09.22",
+      "buildDate": "2019.05.24.09.22",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -121,8 +121,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.1.10-2019.05.24.08.38",
-      "buildDate": "2019.05.24.08.38",
+      "version": "2.1.10-2019.05.24.15.24",
+      "buildDate": "2019.05.24.15.24",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -266,8 +266,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.10-2019.05.24.14.56",
-      "buildDate": "2019.05.24.14.56",
+      "version": "2.1.10-2019.05.24.15.23",
+      "buildDate": "2019.05.24.15.23",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
