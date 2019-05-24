@@ -43,14 +43,29 @@ if (Meteor.isServer) {
         Picker.middleware(_getDeploymentEnvironments(params, req, res, next));
     });
 
-    Picker.route('/:app/api', function (params, req, res, next) {
-        res.setHeader('Content-Type', 'application/text');
-        res.write("getDeploymentEnvironments");
-        res.write("getStableDeployment/deploymentEnvironment");
-        res.write("getStableDeploymentAppList/deploymentEnvironment");
+    Picker.route('/api', function (params, req, res, next) {
+        res.setHeader('Content-Type', 'text/html');
+        res.write("<html><body>")
+        res.write("<h1>ApplicationStatus API</h1>")
+        res.write("<UL>")
+        res.write("<li>getDeploymentEnvironments</li>");
+        res.write("<li>getStableDeployment/deploymentEnvironment</li>");
+        res.write("<li>getStableDeploymentAppList/deploymentEnvironment</li>");
+        res.write("</UL>")
+        res.write("</body></html>")
         res.end();
     });
     Picker.route('/gsd/mats/:app/api', function (params, req, res, next) {
+        res.setHeader('Content-Type', 'text/html');
+        res.write("<html><body>")
+        res.write("<h1>ApplicationStatus API</h1>")
+        res.write("<UL>")
+        res.write("<li>getDeploymentEnvironments</li>");
+        res.write("<li>getStableDeployment/deploymentEnvironment</li>");
+        res.write("<li>getStableDeploymentAppList/deploymentEnvironment</li>");
+        res.write("</UL>")
+        res.write("</body></html>")
+        res.end();
     });
 
     // private middleware for _getDeploymentEnvironments route
