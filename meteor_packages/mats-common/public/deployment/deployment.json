@@ -121,8 +121,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.1.10-2019.05.23.17.08",
-      "buildDate": "2019.05.23.17.08",
+      "version": "2.1.10-2019.05.24.08.38",
+      "buildDate": "2019.05.24.08.38",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -133,8 +133,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.1.10-2019.05.23.17.14",
-      "buildDate": "2019.05.23.17.14",
+      "version": "2.1.10-2019.05.24.08.42",
+      "buildDate": "2019.05.24.08.42",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -185,8 +185,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.10-2019.05.24.14.23",
-      "buildDate": "2019.05.24.14.23",
+      "version": "2.1.10-2019.05.24.14.43",
+      "buildDate": "2019.05.24.14.43",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
