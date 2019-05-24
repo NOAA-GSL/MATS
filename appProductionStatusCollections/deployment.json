@@ -25,8 +25,8 @@
     {
       "app": "aircraft",
       "title": "Upper Air (AMDAR)",
-      "version": "2.1.10-2019.05.24.09.12",
-      "buildDate": "2019.05.24.09.12",
+      "version": "2.1.10-2019.05.24.16.09",
+      "buildDate": "2019.05.24.16.09",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -51,8 +51,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.1.10-2019.05.24.09.18",
-      "buildDate": "2019.05.24.09.18",
+      "version": "2.1.10-2019.05.24.16.12",
+      "buildDate": "2019.05.24.16.12",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -213,8 +213,8 @@
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.1.10-2019.05.24.09.07",
-      "buildDate": "2019.05.24.09.07",
+      "version": "2.1.10-2019.05.24.16.13",
+      "buildDate": "2019.05.24.16.13",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
