@@ -185,8 +185,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.10-2019.05.23.16.43",
-      "buildDate": "2019.05.23.16.43",
+      "version": "2.1.10-2019.05.24.08.12",
+      "buildDate": "2019.05.24.08.12",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
@@ -227,8 +227,8 @@
     {
       "app": "mats4met-ensemble",
       "title": "Ensemble",
-      "version": "2.1.10-2019.05.23.16.37",
-      "buildDate": "2019.05.23.16.37",
+      "version": "2.1.10-2019.05.24.08.06",
+      "buildDate": "2019.05.24.08.06",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Experimental",
@@ -266,8 +266,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.10-2019.05.24.07.00",
-      "buildDate": "2019.05.24.07.00",
+      "version": "2.1.10-2019.05.24.14.13",
+      "buildDate": "2019.05.24.14.13",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
