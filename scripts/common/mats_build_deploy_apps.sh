@@ -336,8 +336,8 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
 %EOFdockerfile
         # stop any running containers....
         docker rm $(docker ps -a -q)
-        # clean up old images
-        docker system prune -af
+#        # clean up old images
+#        docker system prune -af
         # build container
         docker build --no-cache --rm -t ${REPO}:${TAG} .
         docker tag ${REPO}:${TAG} ${REPO}:${TAG}
