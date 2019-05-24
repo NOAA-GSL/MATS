@@ -79,8 +79,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.1.10-2019.05.24.09.22",
-      "buildDate": "2019.05.24.09.22",
+      "version": "2.1.10-2019.05.24.16.15",
+      "buildDate": "2019.05.24.16.15",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -213,8 +213,8 @@
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.1.10-2019.05.24.16.06",
-      "buildDate": "2019.05.24.16.06",
+      "version": "2.1.10-2019.05.24.16.13",
+      "buildDate": "2019.05.24.16.13",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
