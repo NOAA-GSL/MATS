@@ -41,7 +41,7 @@ fi
 IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${UNAME}/${repo}/tags/?page_size=10000 | jq -r '.results|.[]|.name'))
 #echo tags are ${IMAGE_TAGS[@]}
 
-echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
+#echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
 for i in ${IMAGE_TAGS[@]}
 do
   echo ${i}

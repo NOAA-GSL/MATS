@@ -795,7 +795,7 @@ Template.graph.events({
         if (params.plotAction === "matched") {
             actionId = plotMatched;
         }
-        Session.set('expireCache', true);
+        Session.set('expireKey', true);
         document.getElementById("plot-curves").click();
     },
     'click .curveVisibility': function (event) {

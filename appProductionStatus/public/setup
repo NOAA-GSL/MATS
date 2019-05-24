@@ -179,12 +179,12 @@ else
     unqualifiedHostName=$(echo ${domain} | cut -f1 -d'.')
     #create the traefik.toml file....
 cat <<- %ENDTRAEFIK > ./traefik.toml
-#To enable the proxy api and dashboard uncomment the '[api]' and '  entrypoint="dashboard"' lines below.
 #To set the passwd for the proxy dashboard use
 #sudo apt-get install apache2-utils
 #htpasswd -nbB admin your_special_password
 #replace "admin:$apr1$GZ23gG9v$8slcUumLt29SsZ9MiL.z30" in the "users =" line of the [entryPoints.dashboard.auth.basic]
 #entrypoint below. The traefik user challenge will then work for the user admin and your_special_password
+logLevel = "INFO"
 defaultEntryPoints = ["http", "https"]
 [entryPoints]
   [entryPoints.dashboard]
@@ -198,18 +198,27 @@ defaultEntryPoints = ["http", "https"]
         entryPoint = "https"
   [entryPoints.https]
     address = ":443"
-      [entryPoints.https.tls]
-        [[entryPoints.https.tls.certificates]]
-        certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
-        keyFile = "/etc/ssl/certs/${unqualifiedHostName}.key"
-
-# uncomment the following to enable the proxy and the api
+    # GSD WAF has this interesting trait where all the URLS from the outside have to be translated to
+    # www.esrl.noa.gov/{organization}/{servername}
+    # for consistency we are keeping that artificial path structure here.
+    [entryPoints.https.redirect]
+        regex = "^(https://${domain})/?$"
+        replacement = "$1/"
+    [entryPoints.https.tls]
+      [[entryPoints.https.tls.certificates]]
+      certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
+      keyFile = "/etc/ssl/certs/${unqualifiedHostName}.key"
 [api]
   entrypoint="dashboard"
 [docker]
 domain = "${domain}"
 watch = true
 network = "web"
+exposedbydefualt = false
+[traefikLog]
+  filePath = "/logs/traefik.log"
+[accessLog]
+  filePath = "/logs/access.log"
 %ENDTRAEFIK
 
     echo -e ${GRN}configuring applist...  ${apps[@]}${NC}
@@ -361,18 +370,18 @@ networks:
 services:
 
  traefik:
-  image: ${prodRepository}:mats-traefik
+  image: traefik
   networks:
    - web
   ports:
-   - "80:80"
    - "443:443"
   volumes:
    - /var/run/docker.sock:/var/run/docker.sock
    - ${DEPLOYDIR}/traefik.toml:/traefik.toml
+   - ${DEPLOYDIR}/logs:/logs
    - /etc/ssl/certs:/etc/ssl/certs
   labels:
-   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:/proxy;PathPrefix:/proxy
+   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:/gsd/${unqualifiedHostName}/proxy
    - traefik.port=8090
 
  mats-http:
@@ -381,7 +390,7 @@ services:
    - ${DEPLOYDIR}/web:/web
   labels:
    - traefik.backend=mats-http/index.html
-   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:/
+   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:/gsd/${unqualifiedHostName}
    - traefik.docker.network=web
    - traefik.port=8080
   networks:
@@ -412,14 +421,14 @@ services:
   image: ${repository}:${apptag}
   environment:
    - DELAY=6
-   - ROOT_URL=https://${domain}/${appref}
+   - ROOT_URL=https://www.esrl.noaa.gov/gsd/${unqualifiedHostName}/${appref}
   volumes:
    - ${DEPLOYDIR}/settings:/usr/app/settings
   depends_on:
    - mongo
   labels:
    - traefik.backend=${appref}
-   - traefik.frontend.rule=Host:${domain};PathPrefix:/${appref}
+   - traefik.frontend.rule=Host:${domain};PathPrefix:/gsd/${unqualifiedHostName}/${appref}
    - traefik.docker.network=web
    - traefik.port=80
   networks:
