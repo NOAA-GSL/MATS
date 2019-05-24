@@ -25,8 +25,8 @@
     {
       "app": "aircraft",
       "title": "Upper Air (AMDAR)",
-      "version": "2.1.10-2019.05.24.16.09",
-      "buildDate": "2019.05.24.16.09",
+      "version": "2.1.10-2019.05.24.16.21",
+      "buildDate": "2019.05.24.16.21",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -79,8 +79,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.1.10-2019.05.24.09.22",
-      "buildDate": "2019.05.24.09.22",
+      "version": "2.1.10-2019.05.24.16.15",
+      "buildDate": "2019.05.24.16.15",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -253,8 +253,8 @@
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "2.1.10-2019.05.24.09.28",
-      "buildDate": "2019.05.24.09.28",
+      "version": "2.1.10-2019.05.24.16.18",
+      "buildDate": "2019.05.24.16.18",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
