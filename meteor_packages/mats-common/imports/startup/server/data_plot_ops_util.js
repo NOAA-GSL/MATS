@@ -22,7 +22,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -209,7 +209,7 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -297,7 +297,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -385,7 +385,7 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -476,7 +476,7 @@ const generateReliabilityPlotOptions = function () {
         perfectLine: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -524,7 +524,7 @@ const generateMapPlotOptions = function () {
             t: 10,
             pad: 4
         },
-        showlegend: false,
+        legend: {orientation: "h", x: 0, y: 1.07}
     };
     return options;
 };
@@ -547,7 +547,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         barmode: 'group',
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -583,7 +583,8 @@ const generateContourPlotOptions = function (dataset) {
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}}
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.07}
     };
 
     layout['xaxis'] = {

@@ -124,6 +124,7 @@ const getLinearValueLine = function (xmax, xmin, ymax, ymin, cLabel) {
 const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
 
     const label = curve['label'];
+    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -164,7 +165,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
         ...{
             label: label,
             curveId: label,
-            name: label,
+            name: longLabel,
             xaxis: "x1",
             yaxis: "y" + (axisNumber + 1),
             annotation: annotation,
@@ -180,7 +181,8 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
                 color: curve['color'],
                 width: 2
             },
-            visible: true
+            visible: true,
+            showlegend: true
         }, ...dataSeries
     };
 
@@ -268,6 +270,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
 const generateReliabilityCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
 
     const label = curve['label'];
+    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -308,7 +311,7 @@ const generateReliabilityCurveOptions = function (curve, curveIndex, axisMap, da
         ...{
             label: label,
             curveId: label,
-            name: label,
+            name: longLabel,
             xaxis: "x1",
             yaxis: "y" + (axisNumber + 1),
             annotation: annotation,
@@ -324,7 +327,8 @@ const generateReliabilityCurveOptions = function (curve, curveIndex, axisMap, da
                 color: curve['color'],
                 width: 2
             },
-            visible: true
+            visible: true,
+            showlegend: true
         }, ...dataSeries
     };
 
@@ -339,6 +343,7 @@ const generateReliabilityCurveOptions = function (curve, curveIndex, axisMap, da
 const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataBars) {
 
     const label = curve['label'];
+    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -368,7 +373,7 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
         ...{
             label: label,
             curveId: label,
-            name: label,
+            name: longLabel,
             annotation: annotation,
             annotateColor: curve['color'],
             marker: {
@@ -378,7 +383,8 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
                 }
             },
             type: 'bar',
-            visible: true
+            visible: true,
+            showlegend: true
         }, ...dataBars
     };
 
@@ -392,12 +398,13 @@ const generateMapCurveOptions = function (curve, dataSeries) {
     });
 
     const label = curve['label'];
+    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
 
     const curveOptions = {
         ...{
             label: label,
             curveId: label,
-            name: label,
+            name: longLabel,
             type: 'scattermapbox',
             mode: 'markers',
             marker: {
@@ -405,6 +412,7 @@ const generateMapCurveOptions = function (curve, dataSeries) {
                 size: markerSizes,
                 opacity: 0
             },
+            showlegend: true
         }, ...dataSeries
     };
 
@@ -418,6 +426,8 @@ const generateMapColorTextOptions = function (label, dataSeries) {
     const curveOptions = {
         ...{
             label: label,
+            curveId: label,
+            name: label,
             type: 'scattermapbox',
             mode: 'markers+text',
             marker: {
@@ -429,7 +439,8 @@ const generateMapColorTextOptions = function (label, dataSeries) {
                 color: dataSeries.color
             },
             hoverinfo: 'skip',
-            visible: true
+            visible: true,
+            showlegend: true
         }, ...dataSeries
     };
 
@@ -441,6 +452,7 @@ const generateMapColorTextOptions = function (label, dataSeries) {
 const generateContourCurveOptions = function (curve, axisMap, dataset) {
 
     const label = curve['label'];
+    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
     const annotation = curve['annotation'];
     const unitKey = curve['unitKey'];
 
@@ -448,7 +460,7 @@ const generateContourCurveOptions = function (curve, axisMap, dataset) {
         ...{
             label: label,
             curveId: label,
-            name: label,
+            name: longLabel,
             annotation: annotation,
             annotateColor: curve['color'],
             xAxisKey: curve['xAxisKey'],
@@ -477,7 +489,8 @@ const generateContourCurveOptions = function (curve, axisMap, dataset) {
                 }
             },
             // connectgaps: true,   // this option will interpolate to fill in nulls
-            visible: true
+            visible: true,
+            showlegend: true
         }, ...dataset
     };
 

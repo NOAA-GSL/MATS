@@ -134,15 +134,25 @@ Template.graph.helpers({
             Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
 
             // append annotations
-            if (plotType !== matsTypes.PlotTypes.map) {
-                for (var i = 0; i < dataset.length; i++) {
-                    if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
+            for (var i = 0; i < dataset.length; i++) {
+                switch (plotType) {
+                    case matsTypes.PlotTypes.timeSeries:
+                    case matsTypes.PlotTypes.profile:
+                    case matsTypes.PlotTypes.dieoff:
+                    case matsTypes.PlotTypes.threshold:
+                    case matsTypes.PlotTypes.validtime:
+                    case matsTypes.PlotTypes.dailyModelCycle:
+                    case matsTypes.PlotTypes.reliability:
+                    case matsTypes.PlotTypes.scatter2d:
                         annotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
-                    } else {
-                        annotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].curveId + " </div>";
-                    }
-                    $("#legendContainer" + dataset[i].curveId).empty().append(annotation);
+                    case matsTypes.PlotTypes.map:
+                    case matsTypes.PlotTypes.histogram:
+                    case matsTypes.PlotTypes.contour:
+                    case matsTypes.PlotTypes.contourDiff:
+                    default:
+                        annotation = "";
                 }
+                $("#legendContainer" + dataset[i].curveId).empty().append(annotation);
 
                 // store the existing axes.
                 Object.keys($("#placeholder")[0].layout).filter(function (k) {
@@ -314,22 +324,26 @@ Template.graph.helpers({
     },
     isLinePlot: function () {
         var plotType = Session.get('plotType');
-        switch (plotType) {
-            case matsTypes.PlotTypes.timeSeries:
-            case matsTypes.PlotTypes.profile:
-            case matsTypes.PlotTypes.dieoff:
-            case matsTypes.PlotTypes.threshold:
-            case matsTypes.PlotTypes.validtime:
-            case matsTypes.PlotTypes.dailyModelCycle:
-            case matsTypes.PlotTypes.reliability:
-                return true;
-            case matsTypes.PlotTypes.map:
-            case matsTypes.PlotTypes.histogram:
-            case matsTypes.PlotTypes.scatter2d:
-            case matsTypes.PlotTypes.contour:
-            case matsTypes.PlotTypes.contourDiff:
-            default:
-                return false;
+        if (plotType !== undefined) {
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.reliability:
+                    return true;
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                default:
+                    return false;
+            }
+        } else {
+            return true;
         }
     },
     isContour: function () {
@@ -1167,6 +1181,7 @@ Template.graph.events({
     // add line style modal submit button
     'click #lineTypeSubmit': function (event) {
         event.preventDefault();
+        var plotType = Session.get('plotType');
         var updates = [];
         // get input line style change
         $("[id$=LineStyle]").get().forEach(function (elem, index) {

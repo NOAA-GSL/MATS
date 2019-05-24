@@ -9,6 +9,7 @@ import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
+import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
@@ -228,6 +229,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     dataset = matsDataDiffUtils.getDataForDiffContour(dataset);
     plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
     curves = plotParams.curves;
+    dataset[0]['name'] = matsPlotUtils.getCurveText(matsTypes.PlotTypes.contourDiff, curves[0]);
 
     // process the data returned by the query
     const curveInfoParams = {"curve": curves, "axisMap": axisMap};

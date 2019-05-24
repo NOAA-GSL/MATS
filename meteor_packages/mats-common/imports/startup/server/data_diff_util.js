@@ -307,6 +307,7 @@ const getDataForDiffContour = function (dataset) {
             xAxisKey: [],
             yAxisKey: [],
             visible: boolean,
+            showlegend: boolean,
             xTextOutput: [],                *****
             yTextOutput: [],                *****
             zTextOutput: [],                *****
@@ -330,7 +331,7 @@ const getDataForDiffContour = function (dataset) {
     var diffDataset = {};
     diffDataset['label'] = dataset[1].label + '-' + dataset[0].label;
     diffDataset['curveId'] = dataset[1].curveId + '-' + dataset[0].curveId;
-    diffDataset['name'] = dataset[1].name + '-' + dataset[0].name;
+    diffDataset['name'] = dataset[1].label + '-' + dataset[0].label;
     diffDataset['annotateColor'] = "rgb(255,165,0)";
     diffDataset['annotation'] = "";
     diffDataset['text'] = [];
@@ -339,6 +340,7 @@ const getDataForDiffContour = function (dataset) {
     diffDataset['xAxisKey'] = dataset[0].xAxisKey;
     diffDataset['yAxisKey'] = dataset[0].yAxisKey;
     diffDataset['visible'] = dataset[0].visible;
+    diffDataset['showlegend'] = dataset[0].showlegend;
     diffDataset['x'] = [];
     diffDataset['y'] = [];
     diffDataset['z'] = [];
