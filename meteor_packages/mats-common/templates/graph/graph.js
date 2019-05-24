@@ -145,12 +145,14 @@ Template.graph.helpers({
                     case matsTypes.PlotTypes.reliability:
                     case matsTypes.PlotTypes.scatter2d:
                         annotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
+                        break;
                     case matsTypes.PlotTypes.map:
                     case matsTypes.PlotTypes.histogram:
                     case matsTypes.PlotTypes.contour:
                     case matsTypes.PlotTypes.contourDiff:
                     default:
                         annotation = "";
+                        break;
                 }
                 $("#legendContainer" + dataset[i].curveId).empty().append(annotation);
 
