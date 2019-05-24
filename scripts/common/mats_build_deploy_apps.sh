@@ -174,7 +174,7 @@ if [ "${build_env}" == "int" ]; then
     git push
 fi
 
-if [[ "${build_images}" == "yes" -a "${requestedApp}" == "all" ]]; then
+if [ "${build_images}" == "yes" ] && [ "${requestedApp}" == "all" ]; then
     # clean up and remove existing images images
     docker system prune -af
 fi
