@@ -133,8 +133,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.1.10-2019.05.24.08.42",
-      "buildDate": "2019.05.24.08.42",
+      "version": "2.1.10-2019.05.24.15.32",
+      "buildDate": "2019.05.24.15.32",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -145,8 +145,8 @@
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.1.10-2019.05.24.15.05",
-      "buildDate": "2019.05.24.15.05",
+      "version": "2.1.10-2019.05.24.15.33",
+      "buildDate": "2019.05.24.15.33",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
