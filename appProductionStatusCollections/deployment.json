@@ -11,8 +11,8 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "2.1.10-2019.05.24.09.38",
-      "buildDate": "2019.05.24.09.38",
+      "version": "2.1.10-2019.05.24.16.25",
+      "buildDate": "2019.05.24.16.25",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -38,8 +38,8 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.1.10-2019.05.24.09.33",
-      "buildDate": "2019.05.24.09.33",
+      "version": "2.1.10-2019.05.24.16.22",
+      "buildDate": "2019.05.24.16.22",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -51,8 +51,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.1.10-2019.05.24.16.12",
-      "buildDate": "2019.05.24.16.12",
+      "version": "2.1.10-2019.05.24.16.30",
+      "buildDate": "2019.05.24.16.30",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
