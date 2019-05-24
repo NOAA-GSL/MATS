@@ -25,8 +25,8 @@
     {
       "app": "aircraft",
       "title": "Upper Air (AMDAR)",
-      "version": "2.1.10-2019.05.24.16.09",
-      "buildDate": "2019.05.24.16.09",
+      "version": "2.1.10-2019.05.24.16.21",
+      "buildDate": "2019.05.24.16.21",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -38,8 +38,8 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.1.10-2019.05.24.09.33",
-      "buildDate": "2019.05.24.09.33",
+      "version": "2.1.10-2019.05.24.16.22",
+      "buildDate": "2019.05.24.16.22",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
