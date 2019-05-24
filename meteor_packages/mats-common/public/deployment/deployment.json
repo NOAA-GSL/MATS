@@ -159,8 +159,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.1.10-2019.05.23.16.58",
-      "buildDate": "2019.05.23.16.58",
+      "version": "2.1.10-2019.05.24.08.27",
+      "buildDate": "2019.05.24.08.27",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
@@ -227,8 +227,8 @@
     {
       "app": "mats4met-ensemble",
       "title": "Ensemble",
-      "version": "2.1.10-2019.05.24.14.19",
-      "buildDate": "2019.05.24.14.19",
+      "version": "2.1.10-2019.05.24.14.34",
+      "buildDate": "2019.05.24.14.34",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Experimental",
@@ -240,8 +240,8 @@
     {
       "app": "met-upperair",
       "title": "MET Upper Air",
-      "version": "2.1.10-2019.05.23.17.04",
-      "buildDate": "2019.05.23.17.04",
+      "version": "2.1.10-2019.05.24.08.32",
+      "buildDate": "2019.05.24.08.32",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
