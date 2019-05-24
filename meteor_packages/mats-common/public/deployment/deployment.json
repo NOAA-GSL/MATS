@@ -65,8 +65,8 @@
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.1.10-2019.05.24.08.53",
-      "buildDate": "2019.05.24.08.53",
+      "version": "2.1.10-2019.05.24.15.48",
+      "buildDate": "2019.05.24.15.48",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -133,8 +133,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.1.10-2019.05.24.15.32",
-      "buildDate": "2019.05.24.15.32",
+      "version": "2.1.10-2019.05.24.15.49",
+      "buildDate": "2019.05.24.15.49",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
