@@ -172,8 +172,8 @@
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.1.10-2019.05.23.16.53",
-      "buildDate": "2019.05.23.16.53",
+      "version": "2.1.10-2019.05.24.08.21",
+      "buildDate": "2019.05.24.08.21",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
@@ -185,8 +185,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.10-2019.05.24.08.12",
-      "buildDate": "2019.05.24.08.12",
+      "version": "2.1.10-2019.05.24.14.23",
+      "buildDate": "2019.05.24.14.23",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
