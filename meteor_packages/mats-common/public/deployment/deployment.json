@@ -11,8 +11,8 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "2.1.10-2019.05.23.18.13",
-      "buildDate": "2019.05.23.18.13",
+      "version": "2.1.10-2019.05.24.09.38",
+      "buildDate": "2019.05.24.09.38",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -159,8 +159,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.1.10-2019.05.24.15.11",
-      "buildDate": "2019.05.24.15.11",
+      "version": "2.1.10-2019.05.24.15.39",
+      "buildDate": "2019.05.24.15.39",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
