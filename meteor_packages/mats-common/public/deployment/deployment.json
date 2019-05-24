@@ -65,8 +65,8 @@
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.1.10-2019.05.24.08.53",
-      "buildDate": "2019.05.24.08.53",
+      "version": "2.1.10-2019.05.24.15.48",
+      "buildDate": "2019.05.24.15.48",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -121,8 +121,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.1.10-2019.05.24.15.24",
-      "buildDate": "2019.05.24.15.24",
+      "version": "2.1.10-2019.05.24.15.46",
+      "buildDate": "2019.05.24.15.46",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -240,8 +240,8 @@
     {
       "app": "met-upperair",
       "title": "MET Upper Air",
-      "version": "2.1.10-2019.05.24.15.15",
-      "buildDate": "2019.05.24.15.15",
+      "version": "2.1.10-2019.05.24.15.42",
+      "buildDate": "2019.05.24.15.42",
       "last_test_run": "",
       "last_test_status": "",
       "group": "MET express",
