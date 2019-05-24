@@ -115,7 +115,7 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to git the current HEAD commit - must exit now"
     exit 1
 fi
-/usr/bin/git pull
+/usr/bin/git pull -Xtheirs
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
@@ -171,7 +171,8 @@ if [ "${build_env}" == "int" ]; then
     echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
     /usr/bin/sed -i -e "s/\(<x-bd>\).*\(<\/x-bd>\)/$cv/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
     git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
-    git push
+    /usr/bin/git pull
+    /usr/bin/git push
 fi
 
 if [ "${build_images}" == "yes" ] && [ "${requestedApp}" == "all" ]; then
@@ -233,6 +234,7 @@ for app in ${apps[*]}; do
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
             ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    /usr/bin/git pull
     git push origin ${BUILD_CODE_BRANCH}
 
     BUNDLE_DIRECTORY=/builds/deployments/${app}
@@ -248,7 +250,7 @@ for app in ${apps[*]}; do
     fi
 
     cd ${BUNDLE_DIRECTORY}
-    (cd programs/server && /usr/local/bin/meteor npm install)
+    (cd bundle/programs/server && /usr/local/bin/meteor npm install)
 
     if [[ "${deploy_build}" == "yes" ]]; then
         if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
