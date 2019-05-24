@@ -250,7 +250,7 @@ for app in ${apps[*]}; do
     fi
 
     cd ${BUNDLE_DIRECTORY}
-    (cd programs/server && /usr/local/bin/meteor npm install)
+    (cd bundle/programs/server && /usr/local/bin/meteor npm install)
 
     if [[ "${deploy_build}" == "yes" ]]; then
         if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then

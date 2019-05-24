@@ -43,6 +43,16 @@ if (Meteor.isServer) {
         Picker.middleware(_getDeploymentEnvironments(params, req, res, next));
     });
 
+    Picker.route('/:app/api', function (params, req, res, next) {
+        res.setHeader('Content-Type', 'application/text');
+        res.write("getDeploymentEnvironments");
+        res.write("getStableDeployment/deploymentEnvironment");
+        res.write("getStableDeploymentAppList/deploymentEnvironment");
+        res.end();
+    });
+    Picker.route('/gsd/mats/:app/api', function (params, req, res, next) {
+    });
+
     // private middleware for _getDeploymentEnvironments route
     const _getDeploymentEnvironments = function (params, req, res, next) {
         var rawdata = Deployments.find({},{fields:{'deployment_environment':1,'_id':0}}).fetch();
