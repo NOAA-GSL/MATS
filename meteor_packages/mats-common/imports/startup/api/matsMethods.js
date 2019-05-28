@@ -52,8 +52,20 @@ if (Meteor.isServer) {
     if (Meteor.settings.public != null && Meteor.settings.public.proxy_prefix_path  == null) {
         Meteor.settings.public.proxy_prefix_path = "";
     }
-    // define some server side routes
+
+    Picker.route('/_getCSV/:key', function (params, req, res, next) {
+        Picker.middleware(_getCSV(params, req, res, next));
+    });
+
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/_getCSV/:key', function (params, req, res, next) {
+        Picker.middleware(_getCSV(params, req, res, next));
+    });
+
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/app:/_getCSV/:key', function (params, req, res, next) {
+        Picker.middleware(_getCSV(params, req, res, next));
+    });
+
+    Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(_getCSV(params, req, res, next));
     });
 
@@ -65,7 +77,19 @@ if (Meteor.isServer) {
         Picker.middleware(_getCSV(params, req, res, next));
     });
 
+    Picker.route('/_getJSON/:key', function (params, req, res, next) {
+        Picker.middleware(_getJSON(params, req, res, next));
+    });
+
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/_getJSON/:key', function (params, req, res, next) {
+        Picker.middleware(_getJSON(params, req, res, next));
+    });
+
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/app:/_getJSON/:key', function (params, req, res, next) {
+        Picker.middleware(_getJSON(params, req, res, next));
+    });
+
+    Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(_getJSON(params, req, res, next));
     });
 
@@ -77,12 +101,20 @@ if (Meteor.isServer) {
         Picker.middleware(_getJSON(params, req, res, next));
     });
 
+    Picker.route('/clearCache', function (params, req, res, next) {
+        Picker.middleware(_clearCache(params, req, res, next));
+    });
+
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/clearCache', function (params, req, res, next) {
         Picker.middleware(_clearCache(params, req, res, next));
     });
 
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/clearCache', function (params, req, res, next) {
         Picker.middleware(_clearCache(params, req, res, next));
+    });
+
+    Picker.route('/refreshMetadata', function (params, req, res, next) {
+        Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
     });
 
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/refreshMetadata', function (params, req, res, next) {
