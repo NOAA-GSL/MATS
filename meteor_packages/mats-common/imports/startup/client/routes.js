@@ -11,6 +11,13 @@ FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/', {
     }
 });
 
+FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/:appName', {
+    name: 'main',
+    action() {
+        this.render('Home')
+    }
+});
+
 FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/CSV/:graphFunction/:key/:matching/:appName', {
     name: 'csv',
     action(params) {
