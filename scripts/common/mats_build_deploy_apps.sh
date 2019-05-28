@@ -297,6 +297,8 @@ for app in ${apps[*]}; do
         export METEOR_NPM_VERSION=$(meteor npm -v)
         cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
         chmod +x run_app.sh
+        # remove the node_modules to force rebuild in container
+        rm -rf bundle/programs/server/node_modules
         #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
 
     cat <<-%EOFdockerfile > Dockerfile
@@ -322,7 +324,7 @@ RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-
     pip3 install numpy && \\
     pip3 install mysqlclient && \\
     chmod +x /usr/app/run_app.sh && \\
-    cd /usr/app/programs/server && npm install -g && \\
+    cd /usr/app/programs/server && npm install && \\
     apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
     rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
 ENV APPNAME=${APPNAME}
