@@ -435,6 +435,8 @@ services:
    - ${HOME}/mongodata:/data/db
   networks:
    - backend
+   - web
+
 %COMPOSEEND
 
     for (( i=0; i<${#apps[@]}; i++ )); do
