@@ -147,8 +147,6 @@ else if [[ ${depenv} == "development" ]]; then
     fi
 fi
 
-#record the environment
-echo "{\"environment\":\"${depenv}\"}" > web/environment.json
 
 # get the applist just to check if the environment is valid
 curl -k ${serverUrl}/getStableDeploymentAppList/${depenv} 2>/dev/null > $tmpAppList
@@ -201,11 +199,14 @@ else
     else
         echo -e ${RED}
         read -p "Enter the proxy path:" proxyPath
-	proxyPath=${proxyPath%/}  # remove any trailing slash
+	    proxyPath=${proxyPath%/}  # remove any trailing slash
         echo -e ${NC}
         echo -e "${GRN}setting proxyPath to ${proxyPath}${NC}"
-	echo -e "${GRN} The route to the main page will be https://${proxyHost}${proxyPath}"
+	    echo -e "${GRN} The route to the main page will be https://${proxyHost}${proxyPath}"
     fi
+    #record the environment
+    echo "{\"environment\":\"${depenv}\",\"proxy_path\":\"${proxyPath}\"}" > web/environment.json
+
     htpasswd=$(which htpasswd)
     if [[ $? == 0 ]]; then
         adminPhrase=$($htpasswd -nbB admin adminpassword)

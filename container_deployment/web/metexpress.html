@@ -25,13 +25,15 @@
 
     <script type='text/javascript'> //<![CDATA[
     function TCtrl($scope, $http) {
-    	$scope.domain = ".localhost"
+    	$scope.domain = ".localhost";
+    	$scope.proxy_prefix="";
         $scope.items = {};
         $scope.groups = [];  // used to maintain the order from the applist.json
         $http({method: "GET", url: "environment.json"}).
         // success callback
         success(function (env) {
             $scope.env=env.environment;
+            $scope.proxy_prefix=env.proxy_prefix;
         }).
         // error callback
         error(function (data, status, headers, config) {
@@ -158,7 +160,7 @@
                                 <ul class="nav navbar-nav navbar-left">
                                     <h3>{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
-                                        <a class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;"href="/{{item.app}}">{{item.title}}</a>
+                                        <a class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;"href="{{proxy_prefix}}/{{item.app}}">{{item.title}}</a>
                                     </li>
                                 </ul>
                         </li>
