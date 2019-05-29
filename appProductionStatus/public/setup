@@ -205,7 +205,7 @@ else
 	    echo -e "${GRN} The route to the main page will be https://${proxyHost}${proxyPath}"
     fi
     #record the environment
-    echo "{\"environment\":\"${depenv}\",\"proxy_path\":\"${proxyPath}\"}" > web/environment.json
+    echo "{\"environment\":\"${depenv}\",\"proxy_prefix\":\"${proxyPath}\"}" > web/environment.json
 
     htpasswd=$(which htpasswd)
     if [[ $? == 0 ]]; then
