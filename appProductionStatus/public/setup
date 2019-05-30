@@ -237,8 +237,8 @@ defaultEntryPoints = ["http", "https"]
     # www.esrl.noa.gov/{organization}/{servername}
     # for consistency we are keeping that artificial path structure here.
     [entryPoints.https.redirect]
-        regex = "^(https://${domain})/?$"
-        replacement = "$1/"
+        regex = "^(https://(${domain}|${proxyHost})/(${proxyPath})/?$"
+        replacement = "$1/$2/"
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
       certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
