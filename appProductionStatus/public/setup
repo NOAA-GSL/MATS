@@ -237,8 +237,8 @@ defaultEntryPoints = ["http", "https"]
     # www.esrl.noa.gov/{organization}/{servername}
     # for consistency we are keeping that artificial path structure here.
     [entryPoints.https.redirect]
-        regex = "^(https://(${domain}|${proxyHost})/(${proxyPath})/?$"
-        replacement = "$1/$2/"
+        regex = "^(https://${domain}${proxyPath})/?$"
+        replacement = "\$1/"
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
       certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
@@ -381,7 +381,7 @@ exposedbydefualt = false
             fi
         done
         #finish up the document
-        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"${proxyPath}/\"}}" >> $tmpSettingsFile
+        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}\"}}" >> $tmpSettingsFile
         jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
     done
