@@ -402,6 +402,12 @@ services:
 
  traefik:
   image: traefik
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
   networks:
    - web
   ports:
@@ -417,6 +423,12 @@ services:
 
  mats-http:
   image: ${prodRepository}:mats-http
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 20s
   volumes:
    - ${DEPLOYDIR}/web:/web
   labels:
@@ -429,6 +441,12 @@ services:
 
  mongo:
   image: mongo
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 30s
   command: -nojournal
   ports:
    - "27017:27017"
@@ -453,6 +471,12 @@ services:
  ${appref}:
   # app ${appref} version is ${appversion}
   image: ${repository}:${apptag}
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 60s
   environment:
    - DELAY=6
    - ROOT_URL=https://${proxyHost}${proxyPath}/${appref}
