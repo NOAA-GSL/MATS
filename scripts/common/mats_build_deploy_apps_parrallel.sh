@@ -357,9 +357,16 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
     rm -rf ${BUNDLE_DIRECTORY}/*
 }
 
-
+i=0
 for app in ${apps[*]}; do
     (buildApp ${app})&
+    pids[${i}]=$!
+    i=$((i+1))
+    sleep 10
+done
+# wait for all pids
+for pid in ${pids[*]}; do
+    wait $pid
 done
 exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
 /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
