@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 if docker node ls > /dev/null 2>&1; then
     echo running in swarm node
 else
