@@ -6,142 +6,6 @@
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
 
 
-buildApp() {
-    myApp=$1
-    cd ${APP_DIRECTORY}/${myApp}
-    echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
-    rm -rf ./bundle
-    /usr/local/bin/meteor reset
-    if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
-        rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
-    else
-        if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
-            rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
-        fi
-    fi
-
-    BUNDLE_DIRECTORY=/builds/deployments/${myApp}
-    if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
-        mkdir -p ${BUNDLE_DIRECTORY}
-    else
-        rm -rf ${BUNDLE_DIRECTORY}/*
-    fi
-    /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
-    if [ $? -ne 0 ]; then
-        echo -e "$0:${myApp}: ${RED} ${failed} to meteor build - must skip app ${myApp} ${NC}"
-        continue
-    fi
-
-    cd ${BUNDLE_DIRECTORY}
-    (cd bundle/programs/server && /usr/local/bin/meteor npm install)
-
-    if [[ "${deploy_build}" == "yes" ]]; then
-        if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
-            echo -e "$0:${myApp}: ${RED} Cannot deploy ${myApp} to missing directory: ${WEB_DEPLOY_DIRECTORY} ${NC}"
-        else
-            if [ ! -d "${WEB_DEPLOY_DIRECTORY}/${myApp}" ]; then
-                mkdir ${WEB_DEPLOY_DIRECTORY}/${myApp}
-            else
-                rm -rf ${WEB_DEPLOY_DIRECTORY}/${myApp}/*
-            fi
-            cp -a * /web/${myApp}
-        fi
-    fi
-
-    if [[ "${build_images}" == "yes" ]]; then
-        echo -e "$0:${myApp}: Building image for ${myApp}"
-        #buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
-        #echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${myApp}-${buildVer}"
-        #echo git push origin +${tag}:${BUILD_CODE_BRANCH}
-        #echo -e tagged repo with ${GRN}${tag}${NC}
-
-        # build container....
-        export METEORD_DIR=/opt/meteord
-        export MONGO_URL="mongodb://mongo"
-        export MONGO_PORT=27017
-        export MONGO_DB=${myApp}
-        export APPNAME=${myApp}
-        export TAG="${myApp}-${buildVer}"
-        export REPO=matsapps/production
-        if [[ ${build_env} == "int" ]]; then
-            REPO="matsapps/integration"
-        else if [[ ${build_env} == "dev" ]]; then
-            REPO="matsapps/development"
-            TAG="${myApp}-nightly"
-        fi
-        fi
-        echo "$0:${myApp}: building container in ${BUNDLE_DIRECTORY}"
-        # stop the container if it is running
-        docker stop ${REPO}:${TAG}
-        # Create the Dockerfile
-        echo "$0:${myApp}: => Creating Dockerfile..."
-        # save and export the meteor node version for the build_app script
-        export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
-        export METEOR_NPM_VERSION=$(meteor npm -v)
-        cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
-        chmod +x run_app.sh
-        # remove the node_modules to force rebuild in container
-        rm -rf bundle/programs/server/node_modules
-        #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
-
-        cat <<-%EOFdockerfile > Dockerfile
-# have to mount meteor settings as usr/app/settings/${APPNAME} - so that settings.json can get picked up by run_app.sh
-# the corresponding usr/app/settings/${APPNAME}/settings-mysql.cnf file needs to be referenced by
-# "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
-# and the MYSQL_CONF_PATH entry in the settings.json
-# Pull base image.
-FROM node:8.11.4-alpine
-# Create app directory
-ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
-WORKDIR /usr/app
-ADD bundle /usr/app
-COPY run_app.sh /usr/app
-RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-dev bash && \\
-    npm install -g npm@6.4.1 && \\
-    npm cache clean -f && \\
-    npm install -g n && \\
-    npm install -g node-gyp && \\
-    node-gyp install && \\
-    python3 -m ensurepip && \\
-    pip3 install --upgrade pip setuptools && \\
-    pip3 install numpy && \\
-    pip3 install mysqlclient && \\
-    chmod +x /usr/app/run_app.sh && \\
-    cd /usr/app/programs/server && npm install && \\
-    apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
-    rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
-ENV APPNAME=${APPNAME}
-ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
-ENV ROOT_URL=http://localhost:80/
-EXPOSE 80
-ENTRYPOINT ["/usr/app/run_app.sh"]
-LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodecommit}"
-    # build container
-        #docker build --no-cache --rm -t ${REPO}:${APPNAME}-${buildVer} .
-        #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
-        #docker push ${REPO}:${APPNAME}-${buildVer}
-%EOFdockerfile
-        # stop any running containers....
-        docker rm $(docker ps -a -q)
-        #        # clean up old images
-        #        docker system prune -af
-        # build container
-        docker build --no-cache --rm -t ${REPO}:${TAG} .
-        docker tag ${REPO}:${TAG} ${REPO}:${TAG}
-        if [ "${pushImage}" == "yes" ]; then
-            echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
-            echo "$0:${myApp}: pushing image ${REPO}:${TAG}"
-            docker push ${REPO}:${TAG}
-        else
-            echo "$0:${myApp}: NOT pushing image ${REPO}:${TAG}"
-        fi
-        # example run command
-        echo "$0:${myApp}: to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
-        echo "$0:${myApp}: created container in ${BUNDLE_DIRECTORY}"
-    fi
-    rm -rf ${BUNDLE_DIRECTORY}/*
-}
-
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
 logDir="/builds/buildArea/logs"
@@ -355,6 +219,145 @@ export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
+
+
+buildApp() {
+    local myApp=$1
+    cd ${APP_DIRECTORY}/${myApp}
+    echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
+    rm -rf ./bundle
+    /usr/local/bin/meteor reset
+    if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
+        rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
+    else
+        if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
+            rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
+        fi
+    fi
+
+    BUNDLE_DIRECTORY=/builds/deployments/${myApp}
+    if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
+        mkdir -p ${BUNDLE_DIRECTORY}
+    else
+        rm -rf ${BUNDLE_DIRECTORY}/*
+    fi
+    /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
+    if [ $? -ne 0 ]; then
+        echo -e "$0:${myApp}: ${RED} ${failed} to meteor build - must skip app ${myApp} ${NC}"
+        continue
+    fi
+
+    cd ${BUNDLE_DIRECTORY}
+    (cd bundle/programs/server && /usr/local/bin/meteor npm install)
+
+    if [[ "${deploy_build}" == "yes" ]]; then
+        if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
+            echo -e "$0:${myApp}: ${RED} Cannot deploy ${myApp} to missing directory: ${WEB_DEPLOY_DIRECTORY} ${NC}"
+        else
+            if [ ! -d "${WEB_DEPLOY_DIRECTORY}/${myApp}" ]; then
+                mkdir ${WEB_DEPLOY_DIRECTORY}/${myApp}
+            else
+                rm -rf ${WEB_DEPLOY_DIRECTORY}/${myApp}/*
+            fi
+            cp -a * /web/${myApp}
+        fi
+    fi
+
+    if [[ "${build_images}" == "yes" ]]; then
+        echo -e "$0:${myApp}: Building image for ${myApp}"
+        #buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
+        #echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${myApp}-${buildVer}"
+        #echo git push origin +${tag}:${BUILD_CODE_BRANCH}
+        #echo -e tagged repo with ${GRN}${tag}${NC}
+
+        # build container....
+        export METEORD_DIR=/opt/meteord
+        export MONGO_URL="mongodb://mongo"
+        export MONGO_PORT=27017
+        export MONGO_DB=${myApp}
+        export APPNAME=${myApp}
+        export TAG="${myApp}-${buildVer}"
+        export REPO=matsapps/production
+        if [[ ${build_env} == "int" ]]; then
+            REPO="matsapps/integration"
+        else if [[ ${build_env} == "dev" ]]; then
+            REPO="matsapps/development"
+            TAG="${myApp}-nightly"
+        fi
+        fi
+        echo "$0:${myApp}: building container in ${BUNDLE_DIRECTORY}"
+        # stop the container if it is running
+        docker stop ${REPO}:${TAG}
+        # Create the Dockerfile
+        echo "$0:${myApp}: => Creating Dockerfile..."
+        # save and export the meteor node version for the build_app script
+        export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
+        export METEOR_NPM_VERSION=$(meteor npm -v)
+        cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
+        chmod +x run_app.sh
+        # remove the node_modules to force rebuild in container
+        rm -rf bundle/programs/server/node_modules
+        #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
+
+        cat <<-%EOFdockerfile > Dockerfile
+# have to mount meteor settings as usr/app/settings/${APPNAME} - so that settings.json can get picked up by run_app.sh
+# the corresponding usr/app/settings/${APPNAME}/settings-mysql.cnf file needs to be referenced by
+# "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
+# and the MYSQL_CONF_PATH entry in the settings.json
+# Pull base image.
+FROM node:8.11.4-alpine
+# Create app directory
+ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
+WORKDIR /usr/app
+ADD bundle /usr/app
+COPY run_app.sh /usr/app
+RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-dev bash && \\
+    npm install -g npm@6.4.1 && \\
+    npm cache clean -f && \\
+    npm install -g n && \\
+    npm install -g node-gyp && \\
+    node-gyp install && \\
+    python3 -m ensurepip && \\
+    pip3 install --upgrade pip setuptools && \\
+    pip3 install numpy && \\
+    pip3 install mysqlclient && \\
+    chmod +x /usr/app/run_app.sh && \\
+    cd /usr/app/programs/server && npm install && \\
+    apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
+    rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
+ENV APPNAME=${APPNAME}
+ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
+ENV ROOT_URL=http://localhost:80/
+EXPOSE 80
+ENTRYPOINT ["/usr/app/run_app.sh"]
+LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodecommit}"
+    # build container
+        #docker build --no-cache --rm -t ${REPO}:${APPNAME}-${buildVer} .
+        #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
+        #docker push ${REPO}:${APPNAME}-${buildVer}
+%EOFdockerfile
+        # stop any running containers....
+        docker rm $(docker ps -a -q)
+        #        # clean up old images
+        #        docker system prune -af
+        # build container
+        docker build --no-cache --rm -t ${REPO}:${TAG} .
+        docker tag ${REPO}:${TAG} ${REPO}:${TAG}
+        if [ "${pushImage}" == "yes" ]; then
+            echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
+            echo "$0:${myApp}: pushing image ${REPO}:${TAG}"
+            docker push ${REPO}:${TAG}
+        else
+            echo "$0:${myApp}: NOT pushing image ${REPO}:${TAG}"
+        fi
+        # example run command
+        echo "$0:${myApp}: to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
+        echo "$0:${myApp}: created container in ${BUNDLE_DIRECTORY}"
+    fi
+    rm -rf ${BUNDLE_DIRECTORY}/*
+}
+
+
 for app in ${apps[*]}; do
     (buildApp ${app})&
 done
