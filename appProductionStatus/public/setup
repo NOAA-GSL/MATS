@@ -428,7 +428,8 @@ services:
    - web
 
  mongo:
-  image: ${prodRepository}:mats-mongo
+  image: mongo
+  command: -nojournal
   ports:
    - "27017:27017"
   volumes:
