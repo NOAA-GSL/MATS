@@ -7,7 +7,7 @@
 
 
 buildApp() {
-    myAapp=$1
+    myApp=$1
     cd ${APP_DIRECTORY}/${myApp}
     echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
