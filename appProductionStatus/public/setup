@@ -381,7 +381,7 @@ exposedbydefualt = false
             fi
         done
         #finish up the document
-        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}\"}}" >> $tmpSettingsFile
+        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
         jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
     done
