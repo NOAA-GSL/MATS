@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+stack="matsStack"
+if [ $# -eq 1 ]; then
+    stack=$1
+fi
 if docker node ls > /dev/null 2>&1; then
     echo running in swarm node
 else
@@ -6,4 +10,4 @@ else
     docker swarm init
 fi
 docker network create -d overlay web
-docker stack deploy -c docker-compose.yml matsStack
+docker stack deploy -c docker-compose.yml ${stack}

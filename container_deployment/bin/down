@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-docker stack rm matsStack
+stack="matsStack"
+if [ $# -eq 1 ]; then
+    stack=$1
+fi
+docker stack rm ${stack}
 docker network rm web
 limit=20
-until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=matsStack -q)" ] || [ "$limit" -lt 0 ]; do
+until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=${stack} -q)" ] || [ "$limit" -lt 0 ]; do
     sleep 1;
     limit="$((limit-1))"
     printf "."
@@ -14,7 +18,7 @@ until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q
     printf "."
 done
 limit=20
-until [ -z "$(docker stack ps matsStack -q)" ] || [ "$limit" -lt 0 ]; do
+until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
     sleep 1;
     limit="$((limit-1))"
     printf "."
