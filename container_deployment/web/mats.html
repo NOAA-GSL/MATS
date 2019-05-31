@@ -16,7 +16,7 @@
             $scope.proxy_prefix="";
             $scope.items = {};
             $scope.groups = [];  // used to maintain the order from the applist.json
-            $http({method: "GET", url: "environment.json"}).
+            $http({method: "GET", url: loc + "environment.json"}).
             // success callback
             success(function (env) {
                 $scope.env=env.environment;
@@ -27,7 +27,7 @@
                 $scope.env="unknown";
             });
 
-            $http({method: "GET", url: "applist.json"}).
+            $http({method: "GET", url: loc + "applist.json"}).
             // success callback
             success(function (data) {
                 for (var di=0; di < data.length;di++) {

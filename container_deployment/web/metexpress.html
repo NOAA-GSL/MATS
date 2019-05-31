@@ -10,12 +10,13 @@
         }
     </style>
     <script type='text/javascript'> //<![CDATA[
+        loc=window.location.href;
         function TCtrl($scope, $http) {
             $scope.domain = ".localhost";
             $scope.proxy_prefix="";
             $scope.items = {};
             $scope.groups = [];  // used to maintain the order from the applist.json
-            $http({method: "GET", url: "environment.json"}).
+            $http({method: "GET", url: loc + "environment.json"}).
             // success callback
             success(function (env) {
                 $scope.env=env.environment;
@@ -26,7 +27,7 @@
                 $scope.env="unknown";
             });
 
-            $http({method: "GET", url: "applist.json"}).
+            $http({method: "GET", url: loc + "applist.json"}).
             // success callback
             success(function (data) {
                 for (var di=0; di < data.length;di++) {
@@ -88,14 +89,13 @@
                 document.getElementsByTagName("head")[0].appendChild(fileref);
             }
         }
-    // load the resources dynamically to avoid relative links. The proxies have a tendency to mess up relative links.
-    loadJsCssFile(loc + "js/jquery.min.js", "js");
+        // load the resources dynamically to avoid relative links. The proxies have a tendency to mess up relative links.
+        loadJsCssFile(loc + "js/jquery.min.js", "js");
         loadJsCssFile(loc + "font-awesome-4.7.0/css/font-awesome.min.css", "css");
         loadJsCssFile(loc + "css/bootstrap.min.css", "css");
         loadJsCssFile(loc + "js/bootstrap.min.js", "js");
         loadJsCssFile(loc + 'js/angular.min.js', "js");
     </script>
-
 </head>
 <body style="background-image: url('img/bg.png')">
 <div ng-app ng-controller="TCtrl">
