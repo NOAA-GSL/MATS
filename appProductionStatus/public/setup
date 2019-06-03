@@ -233,12 +233,13 @@ defaultEntryPoints = ["http", "https"]
         entryPoint = "https"
   [entryPoints.https]
     address = ":443"
-    # GSD WAF has this interesting trait where all the URLS from the outside have to be translated to
-    # www.esrl.noa.gov/{organization}/{servername}
-    # for consistency we are keeping that artificial path structure here.
-    [entryPoints.https.redirect]
-        regex = "^(https://${domain}${proxyPath})/?$"
-        replacement = "\$1/"
+# uncomment the following four lines IF YOUR DOMAIN and PROXY ARE DIFFERENT
+# and you want to use both paths i.e. https://mydomain/myproxypath/anapp
+# AND https://myproxyhost/myproxypath/anapp
+#    [entryPoints.https.redirect]
+#        regex = "^(https://${domain}${proxyPath})/?$"
+#        replacement = "\$1/"
+#        permanent = true
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
       certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
@@ -466,8 +467,10 @@ services:
             apptag="${appref}-nightly"
         fi
 
+        #NOTE: the {id:[0-9]?} at the end of each app frontend.rule below is a workaround
+        # for short paths. For some as yet not understood reason short reference names like vil
+        # do not match the PathPrefix unless I append the unused regex qualifier. We need to fix this - or at least understand it.
         cat <<- %COMPOSEAPPEND >> $tmpDockerFile
-
  ${appref}:
   # app ${appref} version is ${appversion}
   image: ${repository}:${apptag}
@@ -486,7 +489,7 @@ services:
    - mongo
   labels:
    - traefik.backend=${appref}
-   - traefik.frontend.rule=Host:${domain};PathPrefix:${proxyPath}/${appref}
+   - traefik.frontend.rule=Host:${domain};PathPrefix:${proxyPath}/${appref}{id:[0-9]?}
    - traefik.docker.network=web
    - traefik.port=80
   networks:
