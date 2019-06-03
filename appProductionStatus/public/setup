@@ -236,6 +236,7 @@ defaultEntryPoints = ["http", "https"]
 # uncomment the following four lines IF YOUR DOMAIN and PROXY ARE DIFFERENT
 # and you want to use both paths i.e. https://mydomain/myproxypath/anapp
 # AND https://myproxyhost/myproxypath/anapp
+# Or if the domain and the proxy are the same - it takes care of missing trailing slashes.
 #    [entryPoints.https.redirect]
 #        regex = "^(https://${domain}${proxyPath})/?$"
 #        replacement = "\$1/"
