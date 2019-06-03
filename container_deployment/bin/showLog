@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 serviceNames=($(docker service ls --format "{{.Name}}"))
 if [ $# -ne 1 ]; then
 	echo "$0 - wrong number of params - usage: $0 serviceName (one of ${serviceNames[*]}))"
