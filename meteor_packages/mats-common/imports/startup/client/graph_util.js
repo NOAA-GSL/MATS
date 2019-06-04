@@ -245,11 +245,7 @@ const setGraphView = function (plotType) {
     document.getElementById("curves").style.display = "block";
     document.getElementById("graphView").style.display = "block";
     document.getElementById("textView").style.display = "none";
-    if (Session.get('plotType') !== matsTypes.PlotTypes.map) {
-        document.getElementById('plot-control-button-group').style.display = "block";
-    } else {
-        document.getElementById('plot-control-button-group').style.display = "none";
-    }
+    document.getElementById('plot-control-button-group').style.display = "block";
 };
 
 // helper to bring up the graph page in a pop-up window

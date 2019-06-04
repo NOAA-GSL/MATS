@@ -326,26 +326,22 @@ Template.graph.helpers({
     },
     isLinePlot: function () {
         var plotType = Session.get('plotType');
-        if (plotType !== undefined) {
-            switch (plotType) {
-                case matsTypes.PlotTypes.timeSeries:
-                case matsTypes.PlotTypes.profile:
-                case matsTypes.PlotTypes.dieoff:
-                case matsTypes.PlotTypes.threshold:
-                case matsTypes.PlotTypes.validtime:
-                case matsTypes.PlotTypes.dailyModelCycle:
-                case matsTypes.PlotTypes.reliability:
-                    return true;
-                case matsTypes.PlotTypes.map:
-                case matsTypes.PlotTypes.histogram:
-                case matsTypes.PlotTypes.scatter2d:
-                case matsTypes.PlotTypes.contour:
-                case matsTypes.PlotTypes.contourDiff:
-                default:
-                    return false;
-            }
-        } else {
-            return true;
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.reliability:
+                return true;
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.scatter2d:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return false;
         }
     },
     isContour: function () {
@@ -364,6 +360,26 @@ Template.graph.helpers({
             addresses.push(a[i].address);
         }
         return addresses;
+    },
+    btnColSize: function () {
+        var plotType = Session.get('plotType');
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.reliability:
+                return "col-sm-2";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.scatter2d:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "col-sm-8";
+        }
     },
     hideButtonText: function () {
         var sval = this.label + "hideButtonText";
