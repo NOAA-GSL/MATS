@@ -303,9 +303,17 @@
       "buildStatus": "enabled"
     },
     {
+      "app": "precipitation1hr",
+      "displayName": "1 Hour Precipitation",
+      "displayOrder": 14,
+      "group": "Precipitation",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
-      "displayOrder": 14,
+      "displayOrder": 15,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -313,7 +321,7 @@
     {
       "app": "echotop",
       "displayName": "Echo Top",
-      "displayOrder": 15,
+      "displayOrder": 16,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -321,7 +329,7 @@
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
-      "displayOrder": 16,
+      "displayOrder": 17,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
