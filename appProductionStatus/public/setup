@@ -43,24 +43,32 @@ DEPLOYDIR=$(pwd)
 cat <<%END > ./README
 This program will help you configure your MATS tool suite environment based on one of the standard environments.
 To do this you must have access to the internet.
-This program will ask the GSD server which deployment environments are currently
-supported for automatic deployment. It will ask you what environment you wish to deploy. The setup will ask the GSD server what versions
-of the apps for your selected deployment are currently up to date and then prompt you for database credentials for each
-role required by each app.
+This program will query the GSD appProduction service which deployment environments are currently
+supported for assisted deployment. Then it will ask a series of questions in this order...
+1) It will ask you which environment you wish to deploy. Choose an environment by number. The setup will ask the GSD server which versions
+of the apps for your selected deployment are currently up to date.
+2) The program will ask you to verify the domainName of your deployment server. It uses this to configure its own proxy service that fronts the apps.
+3) It will prompt you for the fully qualified proxy hostName, defaulting to the domainName. If your public URL is the same as your domainName just accept the default. Your
+deployment might be behind a redirection proxy with redirection to a different path than what is actually on the host - for example, at GSD our mats server might
+be deployed on a server with an internal URL "https://something.subnet.esrl.noaa.gov" with the landing page location "/", while the public URL is a proxy redirect
+"https://www.esrl.noaa.gov/gsd/mats". In this case the fully qualified proxy hostName is www.esrl.noaa.gov and the proxy_prefix_path needs to be set to "/gsd/mats".
+4) Next you will be prompted for a proxy redirection path. This allows you to serve a different path than "/".
+5) Finally you will be prompted you for database credentials for each role required by each app.
 Database roles are usually some combination of meta_data - the database that contains app metadata,
 sums_data - the database that contains an apps statistical partial sum data, model_data - a database that
 contains metadata about data sources, and possibly sites_data - which contains non standard domain data.
-The credentials that you provide are stored in a ${DEPLOYDIR}/settings directory with the structure ${DEPLOYDIR}/settings/appreference/settings.json.
-If you are familiar with this directory and the settings.json files you can make changes with an editor and the setup program
+The credentials that you provide are stored in a ${DEPLOYDIR}/settings directory with the structure ${DEPLOYDIR}/settings/appreference/settings.json. This directory will NOT
+be publicly accessible. If you are familiar with this directory and the settings.json files you can make changes with an editor and the setup program
 will use the existing values as defaults.
-The program also configures this deployment directory, creating a ${DEPLOYDIR}/docker-compose.yml configuration file,
-and a ${DEPLOYDIR}/traefik.toml file, a suitable ${DEPLOYDIR}/web/index.html as a homepage,  and suitable up and down scripts in the
+The settings files also hold the proxy_prefix_path from 4).
+The program configures this deployment directory, creating a ${DEPLOYDIR}/docker-compose.yml configuration file,
+and a ${DEPLOYDIR}/traefik.toml file, a suitable ${DEPLOYDIR}/web/index.html as a homepage,  and utilities such as up, down and monitoring scripts in the
 ${DEPLOYDIR}/bin directory.
 You must have docker, docker-compose and jq installed, and you must be running this script from ${DEPLOYDIR}.
 You must be running this program as a user that can run docker - do not run this script as root, in fact do not run any containers as root.
-After once configuring an app you will have to confirm overwriting the old configuration if you run setup again.
+After once configuring an app you will have to confirm overwriting the old configuration if you ever re-run setup.
 
-The reverse proxy has a user/password pre-set to user "admin" and password "adminpassword", you should change this by following the instructions in the traefik.toml file.
+The reverse proxy interface has a user/password pre-set to user "admin" and password "adminpassword", you should change this by following the instructions in the traefik.toml file.
 This program will create a settings directory here in this directory and a mongodata directory in the $HOME of this user if they do not already exist.
 
 You need to acquire an SSL cert for your domain and put the certificate in /etc/ssl/certs directory of this host. If you have authority over the DNS entry for
@@ -139,8 +147,6 @@ else if [[ ${depenv} == "development" ]]; then
     fi
 fi
 
-#record the environment
-echo "{\"environment\":\"${depenv}\"}" > web/environment.json
 
 # get the applist just to check if the environment is valid
 curl -k ${serverUrl}/getStableDeploymentAppList/${depenv} 2>/dev/null > $tmpAppList
@@ -172,6 +178,35 @@ else
         echo -e ${NC}
         echo -e "${GRN}setting up for ${domain}${NC}"
     fi
+
+    proxyHost=${domain}
+    read -p "Is '${proxyHost}' the fully qualified proxy hostname for this deployment (if you have no proxy then it should match ${domain})? y|n" -n 1 -r
+    echo -e ${NC}
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${GRN}setting proxyHost to ${domain}${NC}"
+    else
+        echo -e ${RED}
+        read -p "Enter the fully qualified proxy hostname:" proxyHost
+        echo -e ${NC}
+        echo -e "${GRN}setting proxyHost to ${proxyHost}${NC}"
+    fi
+
+    proxyPath=""
+    read -p "Is there a proxy path for this deployment? e.e '/gsd/mats' y|n" -n 1 -r
+    echo -e ${NC}
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        echo -e "${GRN}Leaving proxy path empty ${NC}"
+    else
+        echo -e ${RED}
+        read -p "Enter the proxy path:" proxyPath
+	    proxyPath=${proxyPath%/}  # remove any trailing slash
+        echo -e ${NC}
+        echo -e "${GRN}setting proxyPath to ${proxyPath}${NC}"
+	    echo -e "${GRN} The route to the main page will be https://${proxyHost}${proxyPath}"
+    fi
+    #record the environment
+    echo "{\"environment\":\"${depenv}\",\"proxy_prefix\":\"${proxyPath}\"}" > web/environment.json
+
     htpasswd=$(which htpasswd)
     if [[ $? == 0 ]]; then
         adminPhrase=$($htpasswd -nbB admin adminpassword)
@@ -198,12 +233,14 @@ defaultEntryPoints = ["http", "https"]
         entryPoint = "https"
   [entryPoints.https]
     address = ":443"
-    # GSD WAF has this interesting trait where all the URLS from the outside have to be translated to
-    # www.esrl.noa.gov/{organization}/{servername}
-    # for consistency we are keeping that artificial path structure here.
-    [entryPoints.https.redirect]
-        regex = "^(https://${domain})/?$"
-        replacement = "$1/"
+# uncomment the following four lines IF YOUR DOMAIN and PROXY ARE DIFFERENT
+# and you want to use both paths i.e. https://mydomain/myproxypath/anapp
+# AND https://myproxyhost/myproxypath/anapp
+# Or if the domain and the proxy are the same - it takes care of missing trailing slashes.
+#    [entryPoints.https.redirect]
+#        regex = "^(https://${domain}${proxyPath})/?$"
+#        replacement = "\$1/"
+#        permanent = true
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
       certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
@@ -346,12 +383,8 @@ exposedbydefualt = false
             fi
         done
         #finish up the document
-        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{} }" >> $tmpSettingsFile
-#        echo ---------
-#        cat $tmpSettingsFile
-#        echo ---------
-         jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
-#        echo ---------
+        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
+        jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
     done
         #set up the dockerfile
@@ -371,6 +404,12 @@ services:
 
  traefik:
   image: traefik
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
   networks:
    - web
   ports:
@@ -381,29 +420,44 @@ services:
    - ${DEPLOYDIR}/logs:/logs
    - /etc/ssl/certs:/etc/ssl/certs
   labels:
-   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:/gsd/${unqualifiedHostName}/proxy
+   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:${proxyPath}/proxy
    - traefik.port=8090
 
  mats-http:
   image: ${prodRepository}:mats-http
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 20s
   volumes:
    - ${DEPLOYDIR}/web:/web
   labels:
    - traefik.backend=mats-http/index.html
-   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:/gsd/${unqualifiedHostName}
+   - traefik.frontend.rule=Host:${domain};PathPrefixStrip:${proxyPath}/
    - traefik.docker.network=web
    - traefik.port=8080
   networks:
    - web
 
  mongo:
-  image: ${prodRepository}:mats-mongo
+  image: mongo
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 30s
+  command: -nojournal
   ports:
    - "27017:27017"
   volumes:
    - ${HOME}/mongodata:/data/db
   networks:
    - backend
+   - web
+
 %COMPOSEEND
 
     for (( i=0; i<${#apps[@]}; i++ )); do
@@ -414,21 +468,29 @@ services:
             apptag="${appref}-nightly"
         fi
 
+        #NOTE: the {id:[0-9]?} at the end of each app frontend.rule below is a workaround
+        # for short paths. For some as yet not understood reason short reference names like vil
+        # do not match the PathPrefix unless I append the unused regex qualifier. We need to fix this - or at least understand it.
         cat <<- %COMPOSEAPPEND >> $tmpDockerFile
-
  ${appref}:
   # app ${appref} version is ${appversion}
   image: ${repository}:${apptag}
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 60s
   environment:
    - DELAY=6
-   - ROOT_URL=https://www.esrl.noaa.gov/gsd/${unqualifiedHostName}/${appref}
+   - ROOT_URL=https://${proxyHost}${proxyPath}/${appref}
   volumes:
    - ${DEPLOYDIR}/settings:/usr/app/settings
   depends_on:
    - mongo
   labels:
    - traefik.backend=${appref}
-   - traefik.frontend.rule=Host:${domain};PathPrefix:/gsd/${unqualifiedHostName}/${appref}
+   - traefik.frontend.rule=Host:${domain};PathPrefix:${proxyPath}/${appref}{id:[0-9]?}
    - traefik.docker.network=web
    - traefik.port=80
   networks:

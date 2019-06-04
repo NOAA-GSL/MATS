@@ -4,6 +4,8 @@
 #
 # source the build environment and mongo utilities
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
+
+
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
 logDir="/builds/buildArea/logs"
@@ -12,7 +14,7 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] \n\
+usage="USAGE $0 -e dev|int [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, e is build environment (dev or int), and i is build images also"
@@ -217,27 +219,23 @@ export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
-for app in ${apps[*]}; do
-    cd ${APP_DIRECTORY}/${app}
-    echo -e "$0 - building app ${GRN}${app}${NC}"
+
+
+buildApp() {
+    local myApp=$1
+    cd ${APP_DIRECTORY}/${myApp}
+    echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
     /usr/local/bin/meteor reset
     if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
-        rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
+        rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
     else
         if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
-            rollIntegrationVersionAndDateForAppForServer ${app} ${SERVER}
+            rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
         fi
     fi
-    exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
-            ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    /usr/bin/git pull
-    git push origin ${BUILD_CODE_BRANCH}
 
-    BUNDLE_DIRECTORY=/builds/deployments/${app}
+    BUNDLE_DIRECTORY=/builds/deployments/${myApp}
     if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
         mkdir -p ${BUNDLE_DIRECTORY}
     else
@@ -245,7 +243,7 @@ for app in ${apps[*]}; do
     fi
     /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
-        echo -e "${RED} ${failed} to meteor build - must skip app ${app} ${NC}"
+        echo -e "$0:${myApp}: ${RED} ${failed} to meteor build - must skip app ${myApp} ${NC}"
         continue
     fi
 
@@ -254,44 +252,44 @@ for app in ${apps[*]}; do
 
     if [[ "${deploy_build}" == "yes" ]]; then
         if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
-            echo -e "${RED} Cannot deploy ${app} to missing directory: ${WEB_DEPLOY_DIRECTORY} ${NC}"
+            echo -e "$0:${myApp}: ${RED} Cannot deploy ${myApp} to missing directory: ${WEB_DEPLOY_DIRECTORY} ${NC}"
         else
-            if [ ! -d "${WEB_DEPLOY_DIRECTORY}/${app}" ]; then
-                mkdir ${WEB_DEPLOY_DIRECTORY}/${app}
+            if [ ! -d "${WEB_DEPLOY_DIRECTORY}/${myApp}" ]; then
+                mkdir ${WEB_DEPLOY_DIRECTORY}/${myApp}
             else
-                rm -rf ${WEB_DEPLOY_DIRECTORY}/${app}/*
+                rm -rf ${WEB_DEPLOY_DIRECTORY}/${myApp}/*
             fi
-            cp -a * /web/${app}
+            cp -a * /web/${myApp}
         fi
     fi
 
     if [[ "${build_images}" == "yes" ]]; then
-        echo -e "Building image for ${app}"
-        buildVer=$(getVersionForAppForServer ${app} ${SERVER})
-        echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
-        echo git push origin +${tag}:${BUILD_CODE_BRANCH}
-        echo -e tagged repo with ${GRN}${tag}${NC}
+        echo -e "$0:${myApp}: Building image for ${myApp}"
+        #buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
+        #echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${myApp}-${buildVer}"
+        #echo git push origin +${tag}:${BUILD_CODE_BRANCH}
+        #echo -e tagged repo with ${GRN}${tag}${NC}
 
         # build container....
         export METEORD_DIR=/opt/meteord
         export MONGO_URL="mongodb://mongo"
         export MONGO_PORT=27017
-        export MONGO_DB=${app}
-        export APPNAME=${app}
-        export TAG="${app}-${buildVer}"
+        export MONGO_DB=${myApp}
+        export APPNAME=${myApp}
+        export TAG="${myApp}-${buildVer}"
         export REPO=matsapps/production
         if [[ ${build_env} == "int" ]]; then
             REPO="matsapps/integration"
         else if [[ ${build_env} == "dev" ]]; then
             REPO="matsapps/development"
-            TAG="${app}-nightly"
+            TAG="${myApp}-nightly"
         fi
         fi
-        echo "building container in ${BUNDLE_DIRECTORY}"
+        echo "$0:${myApp}: building container in ${BUNDLE_DIRECTORY}"
         # stop the container if it is running
         docker stop ${REPO}:${TAG}
         # Create the Dockerfile
-        echo "=> Creating Dockerfile..."
+        echo "$0:${myApp}: => Creating Dockerfile..."
         # save and export the meteor node version for the build_app script
         export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
         export METEOR_NPM_VERSION=$(meteor npm -v)
@@ -301,7 +299,7 @@ for app in ${apps[*]}; do
         rm -rf bundle/programs/server/node_modules
         #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
 
-    cat <<-%EOFdockerfile > Dockerfile
+        cat <<-%EOFdockerfile > Dockerfile
 # have to mount meteor settings as usr/app/settings/${APPNAME} - so that settings.json can get picked up by run_app.sh
 # the corresponding usr/app/settings/${APPNAME}/settings-mysql.cnf file needs to be referenced by
 # "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
@@ -340,24 +338,43 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
 %EOFdockerfile
         # stop any running containers....
         docker rm $(docker ps -a -q)
-#        # clean up old images
-#        docker system prune -af
+        #        # clean up old images
+        #        docker system prune -af
         # build container
         docker build --no-cache --rm -t ${REPO}:${TAG} .
         docker tag ${REPO}:${TAG} ${REPO}:${TAG}
         if [ "${pushImage}" == "yes" ]; then
             echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
-            echo "pushing image ${REPO}:${TAG}"
+            echo "$0:${myApp}: pushing image ${REPO}:${TAG}"
             docker push ${REPO}:${TAG}
         else
-            echo "NOT pushing image ${REPO}:${TAG}"
+            echo "$0:${myApp}: NOT pushing image ${REPO}:${TAG}"
         fi
         # example run command
-        echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
-        echo "created container in ${BUNDLE_DIRECTORY}"
+        echo "$0:${myApp}: to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
+        echo "$0:${myApp}: created container in ${BUNDLE_DIRECTORY}"
     fi
     rm -rf ${BUNDLE_DIRECTORY}/*
+}
+
+i=0
+for app in ${apps[*]}; do
+    (buildApp ${app})&
+    pids[${i}]=$!
+    i=$((i+1))
+    sleep 10
 done
+# wait for all pids
+for pid in ${pids[*]}; do
+    wait $pid
+done
+exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
+${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+/usr/bin/git pull
+git push origin ${BUILD_CODE_BRANCH}
 
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
