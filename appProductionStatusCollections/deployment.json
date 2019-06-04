@@ -599,8 +599,8 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.1.11",
-      "buildDate": "2019.06.03.23.28",
+      "version": "2.1.10",
+      "buildDate": "2019.06.04.22.39",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
