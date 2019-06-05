@@ -14,7 +14,7 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] [-f(forced build build all apps)]\n\
+usage="USAGE $0 -e dev|int [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, e is build environment (dev or int), and i is build images also"
@@ -28,8 +28,7 @@ build_images="no"
 deploy_build="yes"
 WEB_DEPLOY_DIRECTORY="/web"
 roll_versions="yes"
-forced="no"
-while getopts "alisfr:e:t:b:" o; do
+while getopts "alirs:e:t:b:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
@@ -49,9 +48,6 @@ while getopts "alisfr:e:t:b:" o; do
         ;;
         s)
             roll_versions="no"
-        ;;
-        f)
-            forced="yes"
         ;;
         b)
             requestedBranch=(${OPTARG})
@@ -125,7 +121,7 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to git the current HEAD commit - must exit now"
     exit 1
 fi
-/usr/bin/git fetch 
+/usr/bin/git fetch
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
