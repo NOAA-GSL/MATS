@@ -195,7 +195,7 @@ if [ "X${requestedApp}" != "X" ]; then
         apps=( ${requestedApp[@]} )
     fi
 else
-    if [ "X${meteor_package_changed}" != "X" ] || [ "${forced} == "yes" ]; then
+    if [ "X${meteor_package_changed}" != "X" ] || [ "${forced}" == "yes" ]; then
         # common code changed (or forced) so we have to build all the apps
         echo -e common code changed - must build all buildable apps
         apps=${buildableApps}
