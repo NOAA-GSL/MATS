@@ -228,16 +228,16 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
     switch (appParams.plotType) {
         case matsTypes.PlotTypes.timeSeries:
         case matsTypes.PlotTypes.dailyModelCycle:
-            resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.dieoff:
-            resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.validtime:
-            resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.threshold:
-            resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curveInfoParams.axisMap, errorMax);
             break;
         default:
             break;
@@ -420,7 +420,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     }
 
     // generate plot options
-    const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curveInfoParams.axisMap, errorMax);
     var totalProcessingFinish = moment();
     bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
         begin: bookkeepingParams.totalProcessingStart.format(),
@@ -750,7 +750,7 @@ const processDataContour = function (dataset, curveInfoParams, plotParams, bookk
     }
 
     // generate plot options
-    const resultOptions = matsDataPlotOpsUtils.generateContourPlotOptions(dataset, curveInfoParams.axisMap);
+    const resultOptions = matsDataPlotOpsUtils.generateContourPlotOptions(dataset);
 
     var totalProcessingFinish = moment();
     bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {

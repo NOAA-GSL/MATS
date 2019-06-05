@@ -9,7 +9,6 @@ import {
     matsCurveUtils,
     matsGraphUtils,
     matsMethods,
-    matsParamUtils,
     matsPlotUtils,
     matsTypes
 } from 'meteor/randyp:mats-common';
@@ -55,6 +54,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.contourDiff:
                     //saved curve options for contours
                     Session.set('colorbarResetOpts', {
+                        'name': dataset[0].name,
                         'colorbar.title': dataset[0].colorbar.title,
                         'autocontour': dataset[0].autocontour,
                         'ncontours': dataset[0].ncontours,
@@ -77,6 +77,7 @@ Template.graph.helpers({
                     for (var lidx = 0; lidx < dataset.length; lidx++) {
                         if (Object.values(matsTypes.ReservedWords).indexOf(dataset[lidx].label) === -1) {
                             lineTypeResetOpts.push({
+                                'name': dataset[lidx].name,
                                 'visible': dataset[lidx].visible,
                                 'mode': dataset[lidx].mode,
                                 'error_y': dataset[lidx].error_y,
@@ -97,6 +98,7 @@ Template.graph.helpers({
                     for (var bidx = 0; bidx < dataset.length; bidx++) {
                         if (Object.values(matsTypes.ReservedWords).indexOf(dataset[bidx].label) === -1) {
                             barTypeResetOpts.push({
+                                'name': dataset[bidx].name,
                                 'visible': dataset[bidx].visible,
                             });
                         } else {
@@ -113,6 +115,7 @@ Template.graph.helpers({
                     };
                     for (var midx = 1; midx < dataset.length; midx++) {
                         mapResetOpts.push({
+                            'name': dataset[midx].name,
                             'visible': dataset[midx].visible,
                         });
                     }
@@ -124,7 +127,6 @@ Template.graph.helpers({
             }
 
             // initial plot
-            $("#legendContainer").empty();
             $("#placeholder").empty();
             if (!dataset || !options) {
                 return false;
@@ -132,14 +134,27 @@ Template.graph.helpers({
             Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
 
             // append annotations
-            if (plotType !== matsTypes.PlotTypes.map) {
-                annotation = "";
-                for (var i = 0; i < dataset.length; i++) {
-                    if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
-                        annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
-                    }
+            for (var i = 0; i < dataset.length; i++) {
+                switch (plotType) {
+                    case matsTypes.PlotTypes.timeSeries:
+                    case matsTypes.PlotTypes.profile:
+                    case matsTypes.PlotTypes.dieoff:
+                    case matsTypes.PlotTypes.threshold:
+                    case matsTypes.PlotTypes.validtime:
+                    case matsTypes.PlotTypes.dailyModelCycle:
+                    case matsTypes.PlotTypes.reliability:
+                    case matsTypes.PlotTypes.scatter2d:
+                        annotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
+                        break;
+                    case matsTypes.PlotTypes.map:
+                    case matsTypes.PlotTypes.histogram:
+                    case matsTypes.PlotTypes.contour:
+                    case matsTypes.PlotTypes.contourDiff:
+                    default:
+                        annotation = "";
+                        break;
                 }
-                $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
+                $("#legendContainer" + dataset[i].curveId).empty().append(annotation);
 
                 // store the existing axes.
                 Object.keys($("#placeholder")[0].layout).filter(function (k) {
@@ -345,6 +360,26 @@ Template.graph.helpers({
             addresses.push(a[i].address);
         }
         return addresses;
+    },
+    btnColSize: function () {
+        var plotType = Session.get('plotType');
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.reliability:
+                return "col-sm-2";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.scatter2d:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "col-sm-8";
+        }
     },
     hideButtonText: function () {
         var sval = this.label + "hideButtonText";
@@ -664,6 +699,9 @@ Template.graph.events({
     'click .lineTypeButton': function () {
         $("#lineTypeModal").modal('show');
     },
+    'click .legendTextButton': function () {
+        $("#legendTextModal").modal('show');
+    },
     'click .colorbarButton': function () {
         $("#colorbarModal").modal('show');
     },
@@ -956,16 +994,15 @@ Template.graph.events({
         event.preventDefault();
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
-        if ($('#' + label + "-annotation")[0].hidden) {
-            $('#' + label + "-annotation")[0].style.display = "block";
+        if ($("#legendContainer" + label)[0].hidden) {
+            $("#legendContainer" + label)[0].style.display = "block";
             $('#' + label + "-curve-show-hide-annotate")[0].value = "hide annotation";
-            $('#' + label + "-annotation")[0].hidden = false;
+            $("#legendContainer" + label)[0].hidden = false;
         } else {
-            $('#' + label + "-annotation")[0].style.display = "none";
+            $("#legendContainer" + label)[0].style.display = "none";
             $('#' + label + "-curve-show-hide-annotate")[0].value = "show annotation";
-            $('#' + label + "-annotation")[0].hidden = true;
+            $("#legendContainer" + label)[0].hidden = true;
         }
-        annotation = $('#annotationContainer')[0].innerHTML;
     },
     'click .heatMapVisibility': function (event) {
         event.preventDefault();
@@ -1198,6 +1235,28 @@ Template.graph.events({
                 var jsonHappyKey = updatedKey.split(".").join("____");
                 curveOpsUpdate[uidx][jsonHappyKey] = updates[uidx][updatedKey];
             }
+        }
+    },
+    // add legend text modal submit button
+    'click #legendTextSubmit': function (event) {
+        event.preventDefault();
+        var updates = [];
+        // get input line style change
+        $("[id$=LegendText]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                updates[index] = {};
+                updates[index]['name'] = elem.value;
+            }
+        });
+        for (var uidx = 0; uidx < updates.length; uidx++) {
+            // apply new settings
+            Plotly.restyle($("#placeholder")[0], updates[uidx], uidx);
+        }
+        $("#legendTextModal").modal('hide');
+        // save the updates in case we want to pass them to a pop-out window.
+        for (uidx = 0; uidx < updates.length; uidx++) {
+            curveOpsUpdate[uidx] = curveOpsUpdate[uidx] === undefined ? {} : curveOpsUpdate[uidx];
+            curveOpsUpdate[uidx]['name'] = updates[uidx]['name'];
         }
     },
     // add colorbar customization modal submit button

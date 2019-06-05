@@ -434,6 +434,7 @@ Template.plotList.onRendered( function() {
 
     // need to display correct selectors on page load if default plot type is not timeseries
     const plotType = matsPlotUtils.getPlotType();
+    Session.set('plotType', plotType);  // need to make sure plotType is in the Session this early
     switch (plotType) {
         case matsTypes.PlotTypes.profile:
             matsCurveUtils.showProfileFace();
