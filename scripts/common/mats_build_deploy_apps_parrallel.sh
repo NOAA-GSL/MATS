@@ -190,16 +190,24 @@ fi
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
    # something was requested. Either a few apps or all
-    if [ "${requestedApp}" == "all" ] && [ "${forced}" == "yes" ]; then
+    if [ "${requestedApp}" == "all" ]; then
         apps=( ${buildableApps[@]} )
+        echo -e all apps requested - must build all buildable apps
     else
-        apps=( ${changedApps[@]} )
+        # not all so find requested apps that are also buildable
+        echo -e specific apps requested - must build requested buildable apps
+        l2=" ${requestedApp[*]} "
+        for a in ${buildableApps[*]}; do
+            if [[ $l2 =~ " $a " ]]; then
+                apps+=( $a )
+            fi
+        done
     fi
 else
     # nothing was requested - build the changed apps unless force was used
-    if [ "X${meteor_package_changed}" != "X" ] || [ "${forced}" == "yes" ]; then
-        # common code changed (or forced) so we have to build all the apps
-        echo -e common code changed or forced - must build all buildable apps
+    if [ "X${meteor_package_changed}" != "X" ]; then
+        # common code changed so we have to build all the apps
+        echo -e common code changed  - must build all buildable apps
         apps=${buildableApps}
     else
         # no common code changes or force so just build changed apps
@@ -215,10 +223,14 @@ fi
 if [ "X${apps}" == "X" ]; then
     echo -e ${RED}no apps to build - exiting${NC}
     exit 1
+else
+    echo -e ${GRN}Resolved apps to build - building these apps[*]${NC}
 fi
 
-if [ "${build_images}" == "yes" ] && [ "${requestedApp}" == "all" ]; then
+echo -e "$0 ${GRN} clean and remove existing images ${NC}"
+if [ "${build_images}" == "yes" ]; then
     # clean up and remove existing images images
+    docker stop $(docker ps -a -q)
     docker system prune -af
 fi
 # go ahead and merge changes
