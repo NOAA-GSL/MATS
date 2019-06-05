@@ -189,18 +189,20 @@ fi
 
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
-    if [ "${requestedApp}" == "all" ]; then
+   # something was requested. Either a few apps or all
+    if [ "${requestedApp}" == "all" ] && [ "${forced}" == "yes" ]; then
         apps=( ${buildableApps[@]} )
     else
-        apps=( ${requestedApp[@]} )
+        apps=( ${changedApps[@]} )
     fi
 else
+    # nothing was requested - build the changed apps unless force was used
     if [ "X${meteor_package_changed}" != "X" ] || [ "${forced}" == "yes" ]; then
         # common code changed (or forced) so we have to build all the apps
-        echo -e common code changed - must build all buildable apps
+        echo -e common code changed or forced - must build all buildable apps
         apps=${buildableApps}
     else
-        # no common code changes do just build apps
+        # no common code changes or force so just build changed apps
         l2=" ${changedApps[*]} "
         for a in ${buildableApps[*]}; do
             if [[ $l2 =~ " $a " ]]; then
