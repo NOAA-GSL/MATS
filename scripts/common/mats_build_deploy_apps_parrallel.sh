@@ -14,7 +14,7 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] \n\
+usage="USAGE $0 -e dev|int [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, e is build environment (dev or int), and i is build images also"
@@ -27,7 +27,8 @@ pushImage="yes"
 build_images="no"
 deploy_build="yes"
 WEB_DEPLOY_DIRECTORY="/web"
-while getopts "alir:e:t:b:" o; do
+roll_versions="yes"
+while getopts "alirs:e:t:b:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
@@ -44,6 +45,9 @@ while getopts "alir:e:t:b:" o; do
             ;;
         l)
             pushImage="no"
+        ;;
+        s)
+            roll_versions="no"
         ;;
         b)
             requestedBranch=(${OPTARG})
@@ -227,14 +231,15 @@ buildApp() {
     echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
     /usr/local/bin/meteor reset
-    if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
-        rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
-    else
-        if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
-            rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
+    if [[ "${roll_versions}" == "yes" ]]; then
+        if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
+            rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
+        else
+            if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
+                rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
+            fi
         fi
     fi
-
     BUNDLE_DIRECTORY=/builds/deployments/${myApp}
     if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
         mkdir -p ${BUNDLE_DIRECTORY}
