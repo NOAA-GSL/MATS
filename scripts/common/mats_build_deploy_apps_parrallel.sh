@@ -125,7 +125,7 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to git the current HEAD commit - must exit now"
     exit 1
 fi
-/usr/bin/git pull -Xtheirs
+/usr/bin/git fetch 
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
@@ -159,7 +159,9 @@ fi
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
+echo **checking for changes with  *** /usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}***
 diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit})
+echo changes are $diffOut
 ret=$?
 if [ $ret -ne 0 ]; then
     echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}' ... ret $ret - must exit now"
@@ -185,10 +187,6 @@ if [ "${build_env}" == "int" ]; then
     /usr/bin/git push
 fi
 
-if [ "${build_images}" == "yes" ] && [ "${requestedApp}" == "all" ]; then
-    # clean up and remove existing images images
-    docker system prune -af
-fi
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
     if [ "${requestedApp}" == "all" ]; then
@@ -217,8 +215,12 @@ if [ "X${apps}" == "X" ]; then
     exit 1
 fi
 
+if [ "${build_images}" == "yes" ] && [ "${requestedApp}" == "all" ]; then
+    # clean up and remove existing images images
+    docker system prune -af
+fi
 # go ahead and merge changes
-/usr/bin/git pull
+/usr/bin/git pull -Xtheirs
 if [ $? -ne 0 ]; then
     echo -e "${failed} to do git pull - must exit now"
     exit 1
