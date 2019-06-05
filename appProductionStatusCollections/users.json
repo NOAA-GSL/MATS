@@ -117,18 +117,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2019-03-06T19:31:46.365+0000"
-          },
-          "hashedToken": "SbZIZdfZz/get5QbS5Dmf+o4G3JBB0sXlRL8lSGnM5U="
-        },
-        {
-          "when": {
-            "$date": "2019-03-06T19:31:46.786+0000"
-          },
-          "hashedToken": "VvZPZXvVzYIdLOZVMtTd1kaK1HqqdYV5QpvnidcOmvQ="
-        },
-        {
-          "when": {
             "$date": "2019-03-15T20:33:28.605+0000"
           },
           "hashedToken": "XBVY91WxYjCnz9u+yAdUabr00vyMInnj/Ey0lhuo5hQ="
