@@ -28,7 +28,7 @@ build_images="no"
 deploy_build="yes"
 WEB_DEPLOY_DIRECTORY="/web"
 roll_versions="yes"
-while getopts "alirs:e:t:b:" o; do
+while getopts "alisr:e:t:b:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
@@ -121,12 +121,17 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to git the current HEAD commit - must exit now"
     exit 1
 fi
-/usr/bin/git fetch
+/usr/bin/git pull -Xtheirs
+if [ $? -ne 0 ]; then
+    echo -e "${failed} to do git pull - must exit now"
+    exit 1
+fi
+
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
 fi
-newCommit=$(git rev-parse --short HEAD)
+newCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${failed} to git the new HEAD commit - must exit now"
     exit 1
@@ -230,11 +235,11 @@ if [ "${build_images}" == "yes" ]; then
     docker system prune -af
 fi
 # go ahead and merge changes
-/usr/bin/git pull -Xtheirs
-if [ $? -ne 0 ]; then
-    echo -e "${failed} to do git pull - must exit now"
-    exit 1
-fi
+#/usr/bin/git pull -Xtheirs
+#if [ $? -ne 0 ]; then
+#    echo -e "${failed} to do git pull - must exit now"
+#    exit 1
+#fi
 export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
