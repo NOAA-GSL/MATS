@@ -121,7 +121,7 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to git the current HEAD commit - must exit now"
     exit 1
 fi
-/usr/bin/git pull -Xtheirs
+/usr/bin/git fetch
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
@@ -155,7 +155,9 @@ fi
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
+echo **checking for changes with  *** /usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}***
 diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit})
+echo changes are $diffOut
 ret=$?
 if [ $ret -ne 0 ]; then
     echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}' ... ret $ret - must exit now"
@@ -181,24 +183,30 @@ if [ "${build_env}" == "int" ]; then
     /usr/bin/git push
 fi
 
-if [ "${build_images}" == "yes" ] && [ "${requestedApp}" == "all" ]; then
-    # clean up and remove existing images images
-    docker system prune -af
-fi
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
+   # something was requested. Either a few apps or all
     if [ "${requestedApp}" == "all" ]; then
         apps=( ${buildableApps[@]} )
+        echo -e all apps requested - must build all buildable apps
     else
-        apps=( ${requestedApp[@]} )
+        # not all so find requested apps that are also buildable
+        echo -e specific apps requested - must build requested buildable apps
+        l2=" ${requestedApp[*]} "
+        for a in ${buildableApps[*]}; do
+            if [[ $l2 =~ " $a " ]]; then
+                apps+=( $a )
+            fi
+        done
     fi
 else
+    # nothing was requested - build the changed apps unless force was used
     if [ "X${meteor_package_changed}" != "X" ]; then
         # common code changed so we have to build all the apps
-        echo -e common code changed - must build all buildable apps
+        echo -e common code changed  - must build all buildable apps
         apps=${buildableApps}
     else
-        # no common code changes do just build apps
+        # no common code changes or force so just build changed apps
         l2=" ${changedApps[*]} "
         for a in ${buildableApps[*]}; do
             if [[ $l2 =~ " $a " ]]; then
@@ -211,10 +219,18 @@ fi
 if [ "X${apps}" == "X" ]; then
     echo -e ${RED}no apps to build - exiting${NC}
     exit 1
+else
+    echo -e ${GRN}Resolved apps to build - building these apps[*]${NC}
 fi
 
+echo -e "$0 ${GRN} clean and remove existing images ${NC}"
+if [ "${build_images}" == "yes" ]; then
+    # clean up and remove existing images images
+    docker stop $(docker ps -a -q)
+    docker system prune -af
+fi
 # go ahead and merge changes
-/usr/bin/git pull
+/usr/bin/git pull -Xtheirs
 if [ $? -ne 0 ]; then
     echo -e "${failed} to do git pull - must exit now"
     exit 1
@@ -360,6 +376,8 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         echo "$0:${myApp}: created container in ${BUNDLE_DIRECTORY}"
     fi
     rm -rf ${BUNDLE_DIRECTORY}/*
+    # remove the docker image - conserve space for build
+    docker rmi ${REPO}:${TAG}
 }
 
 i=0
