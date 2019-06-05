@@ -373,14 +373,16 @@ done
 for pid in ${pids[*]}; do
     wait $pid
 done
-exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
-${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-/usr/bin/git pull
-git push origin ${BUILD_CODE_BRANCH}
-
+# only need to check in deployment.json if the versions rolled
+if [[ "${roll_versions}" == "yes" ]]; then
+    exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+    cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
+    ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    /usr/bin/git pull
+    git push origin ${BUILD_CODE_BRANCH}
+fi
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
