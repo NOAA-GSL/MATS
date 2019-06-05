@@ -380,6 +380,8 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         echo "$0:${myApp}: created container in ${BUNDLE_DIRECTORY}"
     fi
     rm -rf ${BUNDLE_DIRECTORY}/*
+    # remove the docker image - conserve space for build
+    docker rmi ${REPO}:${TAG}
 }
 
 i=0
