@@ -28,7 +28,7 @@ build_images="no"
 deploy_build="yes"
 WEB_DEPLOY_DIRECTORY="/web"
 roll_versions="yes"
-while getopts "alirs:e:t:b:" o; do
+while getopts "alisr:e:t:b:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
