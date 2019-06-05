@@ -126,7 +126,7 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
 fi
-newCommit=$(git rev-parse --short HEAD)
+newCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${failed} to git the new HEAD commit - must exit now"
     exit 1
