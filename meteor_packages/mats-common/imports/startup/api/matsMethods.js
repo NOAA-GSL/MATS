@@ -2151,6 +2151,9 @@ const saveLayout = new ValidatedMethod({
         },
         curveOpsUpdate: {
             type: Object, blackbox: true
+        },
+        annotation: {
+            type: String
         }
     }).validator(),
     run(params) {
@@ -2158,8 +2161,9 @@ const saveLayout = new ValidatedMethod({
             var key = params.resultKey;
             var layout = params.layout;
             var curveOpsUpdate = params.curveOpsUpdate;
+            var annotation = params.annotation;
             try {
-                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate}});
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate, annotation: annotation}});
             } catch (error) {
                 throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
             }

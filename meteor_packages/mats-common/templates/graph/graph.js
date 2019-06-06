@@ -134,7 +134,11 @@ Template.graph.helpers({
             Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
 
             // append annotations
+            var localAnnotation;
             for (var i = 0; i < dataset.length; i++) {
+                if (Object.values(matsTypes.ReservedWords).indexOf(dataset[i].label) >= 0) {
+                    continue; // don't process the zero or max curves
+                }
                 switch (plotType) {
                     case matsTypes.PlotTypes.timeSeries:
                     case matsTypes.PlotTypes.profile:
@@ -144,17 +148,17 @@ Template.graph.helpers({
                     case matsTypes.PlotTypes.dailyModelCycle:
                     case matsTypes.PlotTypes.reliability:
                     case matsTypes.PlotTypes.scatter2d:
-                        annotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
+                        localAnnotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                         break;
                     case matsTypes.PlotTypes.map:
                     case matsTypes.PlotTypes.histogram:
                     case matsTypes.PlotTypes.contour:
                     case matsTypes.PlotTypes.contourDiff:
                     default:
-                        annotation = "";
+                        localAnnotation = "";
                         break;
                 }
-                $("#legendContainer" + dataset[i].curveId).empty().append(annotation);
+                $("#legendContainer" + dataset[i].curveId).empty().append(localAnnotation);
 
                 // store the existing axes.
                 Object.keys($("#placeholder")[0].layout).filter(function (k) {
@@ -166,6 +170,7 @@ Template.graph.helpers({
                     }
                 });
             }
+            annotation = $("#curves")[0].innerHTML;
             matsCurveUtils.hideSpinner();
         }
         return graphFunction;
@@ -635,14 +640,15 @@ Template.graph.events({
         matsMethods.saveLayout.call({
             resultKey: key,
             layout: layout,
-            curveOpsUpdate: {curveOpsUpdate: curveOpsUpdate}
+            curveOpsUpdate: {curveOpsUpdate: curveOpsUpdate},
+            annotation: annotation
         }, function (error) {
             if (error !== undefined) {
                 setError(error);
             }
         });
         // open a new window with a standAlone graph of the current graph
-        var h = Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .5;
+        var h = Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .65;
         var w = h * 1.3;
         var wind = window.open(window.location + "/preview/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h + ",width=" + w);
         setTimeout(function () {
@@ -1003,6 +1009,7 @@ Template.graph.events({
             $('#' + label + "-curve-show-hide-annotate")[0].value = "show annotation";
             $("#legendContainer" + label)[0].hidden = true;
         }
+        annotation = $("#curves")[0].innerHTML;
     },
     'click .heatMapVisibility': function (event) {
         event.preventDefault();

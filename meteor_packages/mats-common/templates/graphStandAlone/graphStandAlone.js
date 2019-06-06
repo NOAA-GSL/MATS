@@ -10,15 +10,12 @@ import {
     matsCurveUtils,
     matsGraphUtils,
     matsMethods,
-    matsParamUtils,
-    matsPlotUtils,
     matsTypes
 } from 'meteor/randyp:mats-common';
 import {Template} from 'meteor/templating';
 import {FlowRouter} from 'meteor/ostrio:flow-router-extra';
 import './graphStandAlone.html';
 
-var annotation = "";
 var resizeOptions;
 
 Template.GraphStandAlone.onCreated(function () {
@@ -118,15 +115,7 @@ Template.GraphStandAlone.helpers({
                     }, 100);
 
                     // append annotations
-                    if (plotType !== matsTypes.PlotTypes.map) {
-                        annotation = "";
-                        for (var i = 0; i < dataset.length; i++) {
-                            if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
-                                annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
-                            }
-                        }
-                        $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
-                    }
+                    $("#legendContainer").append(ret.annotation);
                     document.getElementById("gsaSpinner").style.display = "none";
                 });
             }
@@ -149,23 +138,6 @@ Template.GraphStandAlone.helpers({
     },
     plotName: function () {
         return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || Session.get('plotType') === matsTypes.PlotTypes.map ? "" : Session.get('PlotParams').plotAction.toUpperCase();
-    },
-    curveText: function () {
-        if (this.diffFrom === undefined) {
-            var plotType = Session.get('plotType');
-            if (plotType === undefined) {
-                pfuncs = matsCollections.PlotGraphFunctions.find({}).fetch();
-                for (var i = 0; i < pfuncs.length; i++) {
-                    if (pfuncs[i].checked === true) {
-                        Session.set('plotType', pfuncs[i].plotType);
-                    }
-                }
-                plotType = Session.get('plotType');
-            }
-            return matsPlotUtils.getCurveText(plotType, this);
-        } else {
-            return this.label + ":  Difference";
-        }
     },
     plotText: function () {
         var p = Session.get('PlotParams');
@@ -215,21 +187,6 @@ Template.GraphStandAlone.helpers({
     color: function () {
         return this.color;
     },
-    annotateButtonText: function () {
-        var sval = this.label + "annotateButtonText";
-        if (Session.get(sval) === undefined) {
-            Session.set(sval, 'hide annotation');
-        }
-        return Session.get(sval);
-    },
-    annotateShowHideDisplay: function () {
-        var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
-            return 'none';
-        } else {
-            return 'block';
-        }
-    },
     matsplotFilemname: function () {
         return "matsplot-" + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss")
     },
@@ -244,21 +201,6 @@ Template.GraphStandAlone.helpers({
 });
 
 Template.GraphStandAlone.events({
-    'click .annotateVisibility': function (event) {
-        event.preventDefault();
-        const id = event.target.id;
-        const label = id.replace('-curve-show-hide-annotate', '');
-        if ($('#' + label + "-annotation")[0].hidden) {
-            $('#' + label + "-annotation")[0].style.display = "block";
-            $('#' + label + "-curve-show-hide-annotate")[0].value = "hide annotation";
-            $('#' + label + "-annotation")[0].hidden = false;
-        } else {
-            $('#' + label + "-annotation")[0].style.display = "none";
-            $('#' + label + "-curve-show-hide-annotate")[0].value = "show annotation";
-            $('#' + label + "-annotation")[0].hidden = true;
-        }
-        annotation = $('#annotationContainer')[0].innerHTML;
-    },
     'click .exportpdf': function (e) {
         $(".previewCurveButtons").each(function (i, obj) {
             obj.style.display = "none";
