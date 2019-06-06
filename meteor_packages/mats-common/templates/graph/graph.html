@@ -33,7 +33,9 @@
                         {{#if isContour}}
                             <button id="colorbarButton" type="button" class="colorbarButton btn btn-primary fa fa-paint-brush" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify colorbar">&nbsp;&nbsp;<strong>Colorbar</strong></button>
                         {{else}}
-                            <button id="lineTypeButton" type="button" class="lineTypeButton btn btn-primary fa fa-bars" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify line/bar styles">&nbsp;&nbsp;<strong>Curve Styles</strong></button>
+                            {{#if isNotMap}}
+                                <button id="lineTypeButton" type="button" class="lineTypeButton btn btn-primary fa fa-bars" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify line/bar styles">&nbsp;&nbsp;<strong>Curve Styles</strong></button>
+                            {{/if}}
                         {{/if}}
                         <button id="legendTextButton" type="button" class="legendTextButton btn btn-primary fa fa-pencil" style="display:block;"  data-toggle="tooltip" data-placement="top" title="edit legend text">&nbsp;&nbsp;<strong>Edit Legend</strong></button>
                         {{#if isNotMap}}
@@ -228,9 +230,6 @@
                                     <input type="button" class="annotateVisibility btn btn-primary"
                                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
                                            style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
-                                    <input type="button" class="heatMapVisibility btn btn-primary"
-                                           value="{{heatMapButtonText}}" id="{{this.label}}-curve-show-hide-heatmap"
-                                           style="border-radius: 5px; display:{{heatMapShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
                                 </span>
                             </div>
                         {{/each}}
@@ -367,6 +366,9 @@
         <div id="curves" class="row">
             {{#each curves}}
                 <span id="legendContainer{{this.label}}" class="col-sm-12" style="font-size:smaller;"></span>
+                <input type="button" class="heatMapVisibility btn btn-primary"
+                       value="{{heatMapButtonText}}" id="{{this.label}}-curve-show-hide-heatmap"
+                       style="border-radius: 5px; display:{{heatMapShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
             {{/each}}
         </div>
         <div id="textView" style="display:none;">
