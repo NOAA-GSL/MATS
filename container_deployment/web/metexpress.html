@@ -32,7 +32,7 @@
             success(function (data) {
                 for (var di=0; di < data.length;di++) {
                     <!-- skip the non net-express apps -->
-                    if (data[di].group.startsWith("MET ")) {
+                    if (data[di].group.startsWith("MET")) {
                         if ($scope.items[data[di].group] == null) {
                             $scope.items[data[di].group] = [data[di]];
                             $scope.groups.push(data[di].group);
