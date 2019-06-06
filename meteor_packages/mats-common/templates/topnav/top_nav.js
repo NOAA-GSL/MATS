@@ -2,6 +2,52 @@
 /*
  * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
+const getDeploymentEnvironment = function(){
+    if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {deployment_environment: 1}}) === undefined) {
+        return "";
+    } else {
+        return matsCollections.Settings.findOne({}, {fields: {deployment_environment: 1}}).deployment_environment;
+    }
+}
+
+Template.topNav.helpers({
+   agencyText: function () {
+       switch (getDeploymentEnvironment()) {
+           case "metexpress":
+                return "National Weather Service";
+               break;
+           default:
+               return "Earth System Research Laboratory";
+       }
+   },
+    agencyLink: function () {
+        switch (getDeploymentEnvironment()) {
+            case "metexpress":
+                return "https://www.weather.gov/"
+                break;
+            default:
+                return "http://esrl.noaa.gov/gsd/mdb";
+        }
+    },
+    productText: function () {
+        switch (getDeploymentEnvironment()) {
+            case "metexpress":
+                return "METexpress";
+                break;
+            default:
+                return "Model Analysis Tool Suite";
+        }
+    },
+    productLink: function () {
+        switch (getDeploymentEnvironment()) {
+            case "metexpress":
+                return ""
+                break;
+            default:
+                return "";
+        }
+    }
+});
 
 Template.topNav.events({
     'click .matshome' : function(event) {

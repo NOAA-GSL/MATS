@@ -1959,6 +1959,7 @@ const resetApp = function (appRef) {
             })[0];
         }
     }
+    const deployment_environment = Meteor.settings.public.deployment_environment ? Meteor.settings.public.deployment_environment : "unknown";
     const appVersion = app ? app.version : "unknown";
     const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
@@ -1998,7 +1999,7 @@ const resetApp = function (appRef) {
     matsCollections.ColorScheme.remove({});
     matsDataUtils.doColorScheme();
     matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType);
+    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType, deployment_environment);
     matsCollections.CurveParams.remove({});
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
