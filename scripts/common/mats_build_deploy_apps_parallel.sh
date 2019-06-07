@@ -322,8 +322,8 @@ buildApp() {
         fi
         fi
         echo "$0:${myApp}: building container in ${BUNDLE_DIRECTORY}"
-        # stop the container if it is running
-        docker stop ${REPO}:${TAG}
+        # remove the container if it exists - force in case it is running
+        docker rm -f ${REPO}:${TAG}
         # Create the Dockerfile
         echo "$0:${myApp}: => Creating Dockerfile..."
         # save and export the meteor node version for the build_app script
@@ -372,11 +372,6 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
         #docker push ${REPO}:${APPNAME}-${buildVer}
 %EOFdockerfile
-        # stop any running containers....
-        docker rm -f $(docker ps -a -q)
-        #        # clean up old images
-        #        docker system prune -af
-        # build container
         docker build --no-cache --rm -t ${REPO}:${TAG} .
         docker tag ${REPO}:${TAG} ${REPO}:${TAG}
         if [ "${pushImage}" == "yes" ]; then
