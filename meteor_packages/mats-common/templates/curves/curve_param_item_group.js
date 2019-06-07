@@ -43,6 +43,9 @@ Template.curveParamItemGroup.helpers({
             case matsTypes.PlotTypes.reliability:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.reliability});
                 break;
+            case matsTypes.PlotTypes.roc:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.roc});
+                break;
             case matsTypes.PlotTypes.map:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.map});
                 break;

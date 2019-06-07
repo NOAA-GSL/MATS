@@ -131,6 +131,7 @@ const width = function (plotType) {
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
         case matsTypes.PlotTypes.reliability:
+        case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:
@@ -156,6 +157,7 @@ const height = function (plotType) {
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
         case matsTypes.PlotTypes.reliability:
+        case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:

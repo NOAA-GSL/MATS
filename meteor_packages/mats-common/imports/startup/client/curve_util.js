@@ -706,6 +706,50 @@ const showReliabilityFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a ROC curve
+const showROCFace = function () {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.roc).checked === true) {
+        var faceOptions = {
+            'curve-dates': 'none',
+            'dates': 'block',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'pres-level': 'block',
+            'forecast-length': 'block',
+            'dieoff-type': 'none',
+            'average': 'block',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'none',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
+        };
+        const faceSelectors = Object.keys(faceOptions);
+        var elem;
+        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
+            elem = document.getElementById(faceSelectors[fidx] + '-item');
+            if (elem && elem.style) {
+                elem.style.display = faceOptions[faceSelectors[fidx]];
+            }
+        }
+        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.roc);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
 // method to display the appropriate selectors for a map
 const showMapFace = function () {
     // move dates selector to plot parameters - one date range for all curves
@@ -1076,6 +1120,7 @@ export default matsCurveUtils = {
     showValidTimeFace: showValidTimeFace,
     showDailyModelCycleFace: showDailyModelCycleFace,
     showReliabilityFace: showReliabilityFace,
+    showROCFace: showROCFace,
     showMapFace: showMapFace,
     showHistogramFace: showHistogramFace,
     showContourFace: showContourFace,

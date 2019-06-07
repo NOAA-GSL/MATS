@@ -500,6 +500,49 @@ const generateReliabilityPlotOptions = function (dataset) {
     return layout;
 };
 
+// sets plot options for ROC graphs
+const generateROCPlotOptions = function (dataset) {
+    var xmin = 0;
+    var xmax = 1;
+    var ymin = 0;
+    var ymax = 1;
+
+    var layout = {
+        margin: {
+            l: 80,
+            r: 80,
+            b: 80,
+            t: 20,
+            pad: 4
+        },
+        zeroline: true,
+        perfectLine: false,
+        hovermode: 'closest',
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
+        showlegend: false
+    };
+
+    layout['xaxis'] = {
+        title: 'False Alarm Rate',
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 14},
+        tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
+        range: [xmin, xmax]
+    };
+
+    layout['yaxis'] = {
+        title: 'Probability of Detection',
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 14},
+        tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
+        range: [ymin, ymax]
+    };
+
+    return layout;
+};
+
 
 // sets plot options for map graphs
 const generateMapPlotOptions = function () {
@@ -622,6 +665,7 @@ export default matsDataPlotOpsUtils = {
     generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
     generateReliabilityPlotOptions: generateReliabilityPlotOptions,
+    generateROCPlotOptions: generateROCPlotOptions,
     generateMapPlotOptions: generateMapPlotOptions,
     generateHistogramPlotOptions: generateHistogramPlotOptions,
     generateContourPlotOptions: generateContourPlotOptions

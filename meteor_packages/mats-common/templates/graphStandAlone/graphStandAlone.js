@@ -195,6 +195,8 @@ Template.GraphStandAlone.helpers({
                     return "DailyModelCycle " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.reliability:
                     return "Reliability: " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.roc:
+                    return "ROC: " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.map:
                     return "Map " + p.dates + " ";
                 case matsTypes.PlotTypes.histogram:

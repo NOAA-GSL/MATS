@@ -645,6 +645,158 @@ class QueryUtil:
         self.data['ymax'] = 1.0
         self.data['ymin'] = 0.0
 
+    # function for parsing the data returned by a roc query
+    def parse_query_data_roc(self, cursor, has_levels):
+        global error, error_bool, n0, n_times, data
+
+        threshold_all = []
+        oy_all = []
+        on_all = []
+        pody = []
+        far = []
+        total_times = []
+        total_values = []
+
+        observed_total = 0
+        forecast_total = 0
+
+        # get query data and calculate starting time interval of the returned data
+        query_data = cursor.fetchall()
+
+        # loop through the query results and store the returned values
+        for row in query_data:
+            bin_number = int(row['bin_number'])
+            threshold = row['threshold']
+            oy = int(row['oy_i'])
+            on = int(row['on_i'])
+            times = int(row['N_times'])
+            values = int(row['N0'])
+            #n0.append(int(row['N0']))
+            #n_times.append(int(row['N_times']))
+
+            #print(bin_number)
+
+            if bin_number != "null" and threshold != "NULL" and oy != "null" and on != "NULL" and times != "NULL" and values != "NULL":
+                # this function deals with pct and pct_thresh tables
+                # we must add up all of the observed and not-observed values for each probability bin
+
+                if len(oy_all) < bin_number:
+                    oy_all.append(oy)
+                else:
+                    oy_all[bin_number-1] = oy_all[bin_number-1] + oy
+                if len(on_all) < bin_number:
+                    on_all.append(on)
+                else:
+                    on_all[bin_number-1] = on_all[bin_number-1] + on
+                if len(total_times) < bin_number:
+                    total_times.append(on)
+                else:
+                    total_times[bin_number-1] = total_times[bin_number-1] + times
+                if len(total_values) < bin_number:
+                    total_values.append(on)
+                else:
+                    total_values[bin_number-1] = total_values[bin_number-1] + values
+                #print(oy_all[bin_number-1])
+                #print(on_all[bin_number-1])
+                if len(threshold_all) < bin_number:
+                    threshold_all.append(threshold)
+                else:
+                    continue
+
+        #print(threshold_all)
+        # Now, we must determine the probability of detection (hit rate) and probability of false detection (false alarm ratio) for each probability bin
+        #print(len(threshold_all))
+        for i in range (0, len(threshold_all), 1):
+            #print('THRESH: '+str(threshold_all[i]))
+            #print('OY: '+str(oy_all[i]))
+            #print('ON: '+str(on_all[i]))
+            #print(i)
+
+            hit = 0
+            miss = 0
+            fa = 0
+            cn = 0
+
+            for index, value in enumerate(oy_all):
+                if index > i:
+                    hit += value
+                if index <= i:
+                    miss += value
+            for index, value in enumerate(on_all):
+                if index > i:
+                    fa += value
+                if index <= i:
+                    cn += value
+
+            # POD
+            try:
+                hr = float(hit/(float(hit) + miss))
+            except ZeroDivisionError:
+                hr = None
+            #print('HR: '+str(hr))
+            pody.append(hr)
+
+            #POFD
+            try:
+                pofd = float(fa/(float(fa) + cn))
+            except ZeroDivisionError:
+                pofd = None
+
+            far.append(pofd)
+
+            #print("###############")
+            #print("threshold: " + str(threshold_all[i]))
+            #print("oy: " + str(oy_all[i]))
+            #print("on: " + str(on_all[i]))
+            #print("hit: " + str(hit))
+            #print("miss: " + str(miss))
+            #print("fa: " + str(fa))
+            #print("cn: " + str(cn))
+            #print("hr: " + str(hr))
+            #print("pofd: " + str(pofd))
+
+        # Reverse all of the lists (easier to graph)
+        pody = pody[::-1]
+        far = far[::-1]
+        threshold_all = threshold_all[::-1]
+        oy_all = oy_all[::-1]
+        on_all = on_all[::-1]
+        total_values = total_values[::-1]
+        total_times = total_times[::-1]
+
+        # Calculate AUC (not finished yet, I believe there may be a documentation typo in how MET says it does this)
+        #sum = 0
+
+        #for i in range(0, len(threshold_all) - 1, 1):
+            #sum = ((pody[i + 1] + pody[i]) * (far[i + 1] + far[i]))/2 + sum
+
+        #print(sum)
+        #auc = sum
+        #print(auc)
+
+        # Add one final point to allow for the AUC score to be calculated
+        pody.append(1)
+        far.append(1)
+        threshold_all.append(-999)
+        oy_all.append(-999)
+        on_all.append(-999)
+        total_values.append(-999)
+        total_times.append(-999)
+
+
+        # Since everything is combined already, put it into the data structure
+        self.n0 = total_values
+        self.n_times = total_times
+        self.data['subVals'] = threshold_all
+        self.data['y'] = pody
+        self.data['error_x'] = oy_all
+        self.data['x'] = far
+        self.data['subLevs'] = on_all
+        #self.data['sum'] = auc
+        self.data['xmax'] = 1.0
+        self.data['xmin'] = 0.0
+        self.data['ymax'] = 1.0
+        self.data['ymin'] = 0.0
 
     # function for parsing the data returned by a contour query
     def parse_query_data_contour(self, cursor, statistic, has_levels):
@@ -766,6 +918,8 @@ class QueryUtil:
                     self.parse_query_data_contour(cursor, statistic, has_levels)
                 elif plot_type == 'Reliability':
                     self.parse_query_data_reliability(cursor, has_levels)
+                elif plot_type == 'ROC':
+                    self.parse_query_data_roc(cursor, has_levels)
                 else:
                     self.parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels,
                                                           completeness_qc_param)
