@@ -222,10 +222,10 @@ else
     fi
 fi
 if [ "X${apps}" == "X" ]; then
-    echo -e ${RED}no apps to build - exiting${NC}
+    echo -e "${RED}no apps to build - exiting${NC}"
     exit 1
 else
-    echo -e ${GRN}Resolved apps to build - building these apps[*]${NC}
+    echo -e "${GRN}Resolved apps to build - building these apps[*]${NC}"
 fi
 
 echo -e "$0 ${GRN} clean and remove existing images ${NC}"
@@ -249,9 +249,13 @@ echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 buildApp() {
     local myApp=$1
     local logDir="/builds/buildArea/logs"
-    local logname="$logDir/"`basename $0 | cut -f1 -d"."`-${myApp}.log
-    touch $logname
-    exec > >( tee -i $logname )
+    local logName="$logDir/"`basename $0 | cut -f1 -d"."`-${myApp}.log
+    if [ -f "${logName}" ]; then
+        echo "" > ${logName}  # truncate log file
+    else
+        touch $logName
+    fi
+    exec > >( tee -i $logName )
     exec 2>&1
 
     cd ${APP_DIRECTORY}/${myApp}
