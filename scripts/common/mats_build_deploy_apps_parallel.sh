@@ -369,7 +369,7 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         #docker push ${REPO}:${APPNAME}-${buildVer}
 %EOFdockerfile
         # stop any running containers....
-        docker rm $(docker ps -a -q)
+        docker rm -f $(docker ps -a -q)
         #        # clean up old images
         #        docker system prune -af
         # build container
