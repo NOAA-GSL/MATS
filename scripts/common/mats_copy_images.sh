@@ -10,15 +10,11 @@ if [ $# -ne 2 ]; then
 fi
 repo="$1"
 version="$2"
-if [[ " development integration production " =~ " $repo " ]]; then
-	echo invalid repo $repo - must be one of (development integration production)
-        exit 1
-fi
 
 #echo  set username and password
 UNAME="matsapps"
 UPASS='mats@Gsd!1234'
-
+docker system prune -af
 #echo  get token to be able to talk to Docker Hub
 TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'${UNAME}'", "password": "'${UPASS}'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
 
@@ -43,15 +39,26 @@ if [[ $found -eq 0  ]]; then
 fi
 
 #echo  build a list of all tags for repo
-IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${UNAME}/${repo}/tags/?page_size=10000 | grep $version | jq -r '.results|.[]|.name'))
+IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${UNAME}/${repo}/tags/?page_size=10000 | jq -r '.results|.[]|.name'))
+FILTERED_IMAGE_TAGS=()
+for elem in ${IMAGE_TAGS[@]}
+do
+   if [[ ${elem} == *-${version} ]]; then
+        FILTERED_IMAGE_TAGS+=" ${elem}"
+   fi
+done
+#echo filtered tags are ${FILTERED_IMAGE_TAGS[@]}
+IMAGE_TAGS=()
+IMAGE_TAGS=$FILTERED_IMAGE_TAGS
 #echo tags are ${IMAGE_TAGS[@]}
 
 #echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
 for i in ${IMAGE_TAGS[@]}
 do
   echo ${i}
-  docker pull ${UNAME}/development:$i
+  docker pull ${UNAME}/${repo}:$i
   docker tag ${UNAME}/${repo}:${i} harbor-dev.gsd.esrl.noaa.gov/matsapps/${repo}:${i}
   docker push harbor-dev.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}
 done
 docker logout
+docker system prune -af
