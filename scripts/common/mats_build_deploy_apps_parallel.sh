@@ -222,10 +222,10 @@ else
     fi
 fi
 if [ "X${apps}" == "X" ]; then
-    echo -e ${RED}no apps to build - exiting${NC}
+    echo -e "${RED}no apps to build - exiting${NC}"
     exit 1
 else
-    echo -e ${GRN}Resolved apps to build - building these apps[*]${NC}
+    echo -e "${GRN}Resolved apps to build - building these apps[*]${NC}"
 fi
 
 echo -e "$0 ${GRN} clean and remove existing images ${NC}"
@@ -248,6 +248,16 @@ echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 
 buildApp() {
     local myApp=$1
+    local logDir="/builds/buildArea/logs"
+    local logName="$logDir/"`basename $0 | cut -f1 -d"."`-${myApp}.log
+    if [ -f "${logName}" ]; then
+        echo "" > ${logName}  # truncate log file
+    else
+        touch $logName
+    fi
+    exec > >( tee -i $logName )
+    exec 2>&1
+
     cd ${APP_DIRECTORY}/${myApp}
     echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
@@ -291,7 +301,7 @@ buildApp() {
 
     if [[ "${build_images}" == "yes" ]]; then
         echo -e "$0:${myApp}: Building image for ${myApp}"
-        #buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
+        buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
         #echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${myApp}-${buildVer}"
         #echo git push origin +${tag}:${BUILD_CODE_BRANCH}
         #echo -e tagged repo with ${GRN}${tag}${NC}
@@ -312,8 +322,8 @@ buildApp() {
         fi
         fi
         echo "$0:${myApp}: building container in ${BUNDLE_DIRECTORY}"
-        # stop the container if it is running
-        docker stop ${REPO}:${TAG}
+        # remove the container if it exists - force in case it is running
+        docker rm -f ${REPO}:${TAG}
         # Create the Dockerfile
         echo "$0:${myApp}: => Creating Dockerfile..."
         # save and export the meteor node version for the build_app script
@@ -362,17 +372,17 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
         #docker push ${REPO}:${APPNAME}-${buildVer}
 %EOFdockerfile
-        # stop any running containers....
-        docker rm $(docker ps -a -q)
-        #        # clean up old images
-        #        docker system prune -af
-        # build container
         docker build --no-cache --rm -t ${REPO}:${TAG} .
         docker tag ${REPO}:${TAG} ${REPO}:${TAG}
         if [ "${pushImage}" == "yes" ]; then
             echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
             echo "$0:${myApp}: pushing image ${REPO}:${TAG}"
             docker push ${REPO}:${TAG}
+            if [ $? -ne 0 ]; then
+                # retry
+                echo -e "${RED} Error pushing image - need to retry"
+                docker push ${REPO}:${TAG}
+            fi
         else
             echo "$0:${myApp}: NOT pushing image ${REPO}:${TAG}"
         fi
