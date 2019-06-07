@@ -379,6 +379,11 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
             echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
             echo "$0:${myApp}: pushing image ${REPO}:${TAG}"
             docker push ${REPO}:${TAG}
+            if [ $? -ne 0 ]; then
+                # retry
+                echo -e ${RED} Error pushing image - need to retry
+                docker push ${REPO}:${TAG}
+            fi
         else
             echo "$0:${myApp}: NOT pushing image ${REPO}:${TAG}"
         fi
