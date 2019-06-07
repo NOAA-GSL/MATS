@@ -797,16 +797,15 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'truth', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['avg: ', 'average', ' ']
+                ['avg: ', 'average', ', '],
+                ['', 'truth', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "truth", "average", "forecast-length", "valid-time"
+                "label", "data-source", "region", "statistic", "threshold", "average", "forecast-length", "valid-time", "truth"
             ],
             groupSize: 6
-
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
@@ -816,14 +815,14 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'truth', ', '],
                 ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "truth", "dieoff-type", "valid-time", "utc-cycle-start", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -835,12 +834,12 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'truth', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "truth", "forecast-length", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -852,11 +851,11 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'truth', ', '],
-                ['start utc: ', 'utc-cycle-start', ', ']
+                ['start utc: ', 'utc-cycle-start', ', '],
+                ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "truth", "utc-cycle-start"
+                "label", "data-source", "region", "statistic", "threshold", "utc-cycle-start", "truth"
             ],
             groupSize: 6
         });
@@ -868,13 +867,13 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'truth', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "truth", "forecast-length", "valid-time", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -886,15 +885,15 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'truth', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
+                ['', 'truth', ', '],
                 ['x-axis: ', 'x-axis-parameter', ', '],
                 ['y-axis: ', 'y-axis-parameter', '']
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "truth", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 
@@ -907,15 +906,15 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'truth', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
+                ['', 'truth', ', '],
                 ['x-axis: ', 'x-axis-parameter', ', '],
                 ['y-axis: ', 'y-axis-parameter', '']
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "truth", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 

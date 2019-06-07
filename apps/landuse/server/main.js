@@ -792,7 +792,7 @@ const doCurveTextPatterns = function () {
                 ['', 'vgtyp', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['start utc: ', 'utc-cycle-start', ', ']
+                ['start utc: ', 'utc-cycle-start', '']
             ],
             displayParams: [
                 "label", "data-source", "vgtyp", "statistic", "variable", "utc-cycle-start"
