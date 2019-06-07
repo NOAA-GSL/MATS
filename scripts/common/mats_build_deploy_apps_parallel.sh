@@ -248,6 +248,12 @@ echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 
 buildApp() {
     local myApp=$1
+    local logDir="/builds/buildArea/logs"
+    local logname="$logDir/"`basename $0 | cut -f1 -d"."`-${myApp}.log
+    touch $logname
+    exec > >( tee -i $logname )
+    exec 2>&1
+
     cd ${APP_DIRECTORY}/${myApp}
     echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
@@ -291,7 +297,7 @@ buildApp() {
 
     if [[ "${build_images}" == "yes" ]]; then
         echo -e "$0:${myApp}: Building image for ${myApp}"
-        #buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
+        buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
         #echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${myApp}-${buildVer}"
         #echo git push origin +${tag}:${BUILD_CODE_BRANCH}
         #echo -e tagged repo with ${GRN}${tag}${NC}
