@@ -14,7 +14,7 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] \n\
+usage="USAGE $0 -e dev|int [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, e is build environment (dev or int), and i is build images also"
@@ -27,7 +27,8 @@ pushImage="yes"
 build_images="no"
 deploy_build="yes"
 WEB_DEPLOY_DIRECTORY="/web"
-while getopts "alir:e:t:b:" o; do
+roll_versions="yes"
+while getopts "alisr:e:t:b:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
@@ -44,6 +45,9 @@ while getopts "alir:e:t:b:" o; do
             ;;
         l)
             pushImage="no"
+        ;;
+        s)
+            roll_versions="no"
         ;;
         b)
             requestedBranch=(${OPTARG})
@@ -119,10 +123,15 @@ if [ $? -ne 0 ]; then
 fi
 /usr/bin/git pull -Xtheirs
 if [ $? -ne 0 ]; then
+    echo -e "${failed} to do git pull - must exit now"
+    exit 1
+fi
+
+if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
 fi
-newCommit=$(git rev-parse --short HEAD)
+newCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${failed} to git the new HEAD commit - must exit now"
     exit 1
@@ -151,7 +160,9 @@ fi
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
+echo **checking for changes with  *** /usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}***
 diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit})
+echo changes are $diffOut
 ret=$?
 if [ $ret -ne 0 ]; then
     echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}' ... ret $ret - must exit now"
@@ -177,24 +188,30 @@ if [ "${build_env}" == "int" ]; then
     /usr/bin/git push
 fi
 
-if [ "${build_images}" == "yes" ] && [ "${requestedApp}" == "all" ]; then
-    # clean up and remove existing images images
-    docker system prune -af
-fi
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
+   # something was requested. Either a few apps or all
     if [ "${requestedApp}" == "all" ]; then
         apps=( ${buildableApps[@]} )
+        echo -e all apps requested - must build all buildable apps
     else
-        apps=( ${requestedApp[@]} )
+        # not all so find requested apps that are also buildable
+        echo -e specific apps requested - must build requested buildable apps
+        l2=" ${requestedApp[*]} "
+        for a in ${buildableApps[*]}; do
+            if [[ $l2 =~ " $a " ]]; then
+                apps+=( $a )
+            fi
+        done
     fi
 else
+    # nothing was requested - build the changed apps unless force was used
     if [ "X${meteor_package_changed}" != "X" ]; then
         # common code changed so we have to build all the apps
-        echo -e common code changed - must build all buildable apps
+        echo -e common code changed  - must build all buildable apps
         apps=${buildableApps}
     else
-        # no common code changes do just build apps
+        # no common code changes or force so just build changed apps
         l2=" ${changedApps[*]} "
         for a in ${buildableApps[*]}; do
             if [[ $l2 =~ " $a " ]]; then
@@ -205,16 +222,24 @@ else
     fi
 fi
 if [ "X${apps}" == "X" ]; then
-    echo -e ${RED}no apps to build - exiting${NC}
+    echo -e "${RED}no apps to build - exiting${NC}"
     exit 1
+else
+    echo -e "${GRN}Resolved apps to build - building these apps[*]${NC}"
 fi
 
-# go ahead and merge changes
-/usr/bin/git pull
-if [ $? -ne 0 ]; then
-    echo -e "${failed} to do git pull - must exit now"
-    exit 1
+echo -e "$0 ${GRN} clean and remove existing images ${NC}"
+if [ "${build_images}" == "yes" ]; then
+    # clean up and remove existing images images
+    docker stop $(docker ps -a -q)
+    docker system prune -af
 fi
+# go ahead and merge changes
+#/usr/bin/git pull -Xtheirs
+#if [ $? -ne 0 ]; then
+#    echo -e "${failed} to do git pull - must exit now"
+#    exit 1
+#fi
 export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
@@ -223,18 +248,29 @@ echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 
 buildApp() {
     local myApp=$1
+    local logDir="/builds/buildArea/logs"
+    local logName="$logDir/"`basename $0 | cut -f1 -d"."`-${myApp}.log
+    if [ -f "${logName}" ]; then
+        echo "" > ${logName}  # truncate log file
+    else
+        touch $logName
+    fi
+    exec > >( tee -i $logName )
+    exec 2>&1
+
     cd ${APP_DIRECTORY}/${myApp}
     echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
     /usr/local/bin/meteor reset
-    if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
-        rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
-    else
-        if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
-            rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
+    if [[ "${roll_versions}" == "yes" ]]; then
+        if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
+            rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
+        else
+            if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
+                rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
+            fi
         fi
     fi
-
     BUNDLE_DIRECTORY=/builds/deployments/${myApp}
     if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
         mkdir -p ${BUNDLE_DIRECTORY}
@@ -265,7 +301,7 @@ buildApp() {
 
     if [[ "${build_images}" == "yes" ]]; then
         echo -e "$0:${myApp}: Building image for ${myApp}"
-        #buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
+        buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
         #echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${myApp}-${buildVer}"
         #echo git push origin +${tag}:${BUILD_CODE_BRANCH}
         #echo -e tagged repo with ${GRN}${tag}${NC}
@@ -286,8 +322,8 @@ buildApp() {
         fi
         fi
         echo "$0:${myApp}: building container in ${BUNDLE_DIRECTORY}"
-        # stop the container if it is running
-        docker stop ${REPO}:${TAG}
+        # remove the container if it exists - force in case it is running
+        docker rm -f ${REPO}:${TAG}
         # Create the Dockerfile
         echo "$0:${myApp}: => Creating Dockerfile..."
         # save and export the meteor node version for the build_app script
@@ -336,17 +372,17 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
         #docker push ${REPO}:${APPNAME}-${buildVer}
 %EOFdockerfile
-        # stop any running containers....
-        docker rm $(docker ps -a -q)
-        #        # clean up old images
-        #        docker system prune -af
-        # build container
         docker build --no-cache --rm -t ${REPO}:${TAG} .
         docker tag ${REPO}:${TAG} ${REPO}:${TAG}
         if [ "${pushImage}" == "yes" ]; then
             echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
             echo "$0:${myApp}: pushing image ${REPO}:${TAG}"
             docker push ${REPO}:${TAG}
+            if [ $? -ne 0 ]; then
+                # retry
+                echo -e "${RED} Error pushing image - need to retry"
+                docker push ${REPO}:${TAG}
+            fi
         else
             echo "$0:${myApp}: NOT pushing image ${REPO}:${TAG}"
         fi
@@ -355,6 +391,8 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         echo "$0:${myApp}: created container in ${BUNDLE_DIRECTORY}"
     fi
     rm -rf ${BUNDLE_DIRECTORY}/*
+    # remove the docker image - conserve space for build
+    docker rmi ${REPO}:${TAG}
 }
 
 i=0
@@ -368,14 +406,16 @@ done
 for pid in ${pids[*]}; do
     wait $pid
 done
-exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
-${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-/usr/bin/git pull
-git push origin ${BUILD_CODE_BRANCH}
-
+# only need to check in deployment.json if the versions rolled
+if [[ "${roll_versions}" == "yes" ]]; then
+    exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+    cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
+    ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    /usr/bin/git pull
+    git push origin ${BUILD_CODE_BRANCH}
+fi
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*

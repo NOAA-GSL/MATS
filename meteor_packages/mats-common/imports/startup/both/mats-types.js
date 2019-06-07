@@ -113,9 +113,9 @@ var ReservedWords = {
     perfectReliability: "Perfect Reliability",
     perfectForecast: "Perfect Forecast",
     noSkill: "No Skill",
-    blueCurveText: "blueCurveText",
-    blackCurveText: "blackCurveText",
-    redCurveText: "redCurveText"
+    blueCurveText: "Cold bias",
+    blackCurveText: "Small bias",
+    redCurveText: "Warm bias"
 };
 
 var Messages = {

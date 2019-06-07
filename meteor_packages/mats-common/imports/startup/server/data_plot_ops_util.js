@@ -7,7 +7,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment'
 
 // sets plot options for timeseries graphs
-const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) {
+const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
 
@@ -21,8 +21,8 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -95,7 +95,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
 };
 
 // sets plot options for profile graphs
-const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {
+const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
     var ymin = 10;
     var ymax = 1075;
     const xAxisNumber = Object.keys(axisMap).length;
@@ -110,8 +110,8 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        hoverlabel: {font: {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "v", x: 1, y: 1}
     };
     var tickVals;
     var tickText;
@@ -194,7 +194,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
 };
 
 // sets plot options for dieoff graphs
-const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) {
+const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
 
@@ -208,8 +208,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -282,7 +282,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
 };
 
 // sets plot options for threshold graphs
-const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMax) {
+const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
     var xmin = 0;
     var xmax = 3;
 
@@ -296,8 +296,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -370,7 +370,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
 };
 
 // sets plot options for valid time graphs
-const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMax) {
+const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
     var xmin = 0;
     var xmax = 23;
 
@@ -384,8 +384,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -458,7 +458,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
 };
 
 // sets plot options for reliability graphs
-const generateReliabilityPlotOptions = function (dataset) {
+const generateReliabilityPlotOptions = function () {
     var xmin = 0;
     var xmax = 1;
     var ymin = 0;
@@ -475,8 +475,8 @@ const generateReliabilityPlotOptions = function (dataset) {
         zeroline: true,
         perfectLine: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -567,7 +567,7 @@ const generateMapPlotOptions = function () {
             t: 10,
             pad: 4
         },
-        showlegend: false,
+        legend: {orientation: "h", x: 0, y: 1.07}
     };
     return options;
 };
@@ -589,8 +589,8 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         bargap: 0.25,
         barmode: 'group',
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -612,7 +612,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
 };
 
 // sets plot options for valid time graphs
-const generateContourPlotOptions = function (dataset, axisMap) {
+const generateContourPlotOptions = function (dataset) {
     const xAxisKey = dataset[0]['xAxisKey'];
     const yAxisKey = dataset[0]['yAxisKey'];
 
@@ -626,7 +626,8 @@ const generateContourPlotOptions = function (dataset, axisMap) {
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}}
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.07}
     };
 
     layout['xaxis'] = {

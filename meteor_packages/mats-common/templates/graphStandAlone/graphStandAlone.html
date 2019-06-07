@@ -16,20 +16,8 @@
                 <button class="btn btn-xs col-sm-3 pull-right btn-primary exportpng" id="exportpng">save png</button>
             </span>
         </div>
-        <div id="curves" class="row">
-            {{#each curves}}
-                <span style="color:{{color}}; font-weight: bolder;">--- </span><span style="font-size:small;">{{curveText}}</span>
-                <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-group-xs previewCurveButtons">
-                    <input type="button" class="annotateVisibility btn btn-primary"
-                           value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
-                           style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: #FFFFFF; border-color: {{this.color}}; color: {{this.color}}">
-                </div>
-                <br>
-            {{/each}}
-            <hr/>
-        </div>
         <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
-            <div id="legendContainer" name="legendContainer"></div>
+            <div id="legendContainer" name="legendContainer" style="font-size:smaller;"></div>
             <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
                 {{! This is where plotly will place the graph - there is nothing here when the page loads}}
             </div>

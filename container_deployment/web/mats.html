@@ -48,11 +48,11 @@
         function changeApp(app){
             refParts = window.location.href.split("://");
             protocol = refParts[0];
-        parts = refParts[1].split('/');
-        parts[parts.length - 1] = app;
-        newhome = protocol + "://" + parts.join('/');
-            console.log ('new location: ' + newhome);
-        window.location = newhome;
+            parts = refParts[1].split('/');
+            parts[parts.length - 1] = app;
+            newhome = protocol + "://" + parts.join('/');
+                console.log ('new location: ' + newhome);
+            window.location = newhome;
         }
 
         function changePort(port){

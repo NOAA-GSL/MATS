@@ -4,11 +4,16 @@ export RED='\033[0;31m'
 export NC='\033[0m'
 
 set -e
-if [ $# -ne 1 ]; then
-  echo -e "${RED} $0 - wrong number of params - usage: $0 repository (one of development|integration|production) - exiting${NC}"
+if [ $# -ne 2 ]; then
+  echo -e "${RED} $0 - wrong number of params - usage: $0 repository (one of development|integration|production) version  - exiting${NC}"
   exit 1
 fi
 repo="$1"
+version="$2"
+if [[ " development integration production " =~ " $repo " ]]; then
+	echo invalid repo $repo - must be one of (development integration production)
+        exit 1
+fi
 
 #echo  set username and password
 UNAME="matsapps"
@@ -38,7 +43,7 @@ if [[ $found -eq 0  ]]; then
 fi
 
 #echo  build a list of all tags for repo
-IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${UNAME}/${repo}/tags/?page_size=10000 | jq -r '.results|.[]|.name'))
+IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${UNAME}/${repo}/tags/?page_size=10000 | grep $version | jq -r '.results|.[]|.name'))
 #echo tags are ${IMAGE_TAGS[@]}
 
 #echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin

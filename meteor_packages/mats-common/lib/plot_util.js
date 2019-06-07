@@ -48,6 +48,31 @@ const getCurveText = function (plotType, curve) {
     return text;
 };
 
+// like getCurveText but with wrapping
+const getCurveTextWrapping = function (plotType, curve) {
+    var curveTextPattern = matsCollections.CurveTextPatterns.findOne({plotType: plotType}).textPattern;
+    var text = "";
+    var wrapLimit = 40;
+    for (var i = 0; i < curveTextPattern.length; i++) {
+        var a = curveTextPattern[i];
+        if (a === undefined || a === null || curve[a[1]] === undefined) {
+            continue;
+        }
+        text += a[0];
+        if (curve[a[1]] instanceof Array && (curve[a[1]].length > 2)) {
+            text += curve[a[1]][0] + ".." + curve[a[1]][curve[a[1]].length - 1];
+        } else {
+            text += curve[a[1]];
+        }
+        text += a[2];
+        if (text.length > wrapLimit) {
+            text += "<br>";
+            wrapLimit = wrapLimit + 40;
+        }
+    }
+    return text;
+};
+
 // determine which plotType radio button is checked
 const getPlotType = function () {
     var buttons = document.getElementsByName('plot-type');
@@ -120,6 +145,7 @@ const enableActionButtons = function () {
 export default matsPlotUtils = {
     getAxisText: getAxisText,
     getCurveText: getCurveText,
+    getCurveTextWrapping: getCurveTextWrapping,
     getPlotType: getPlotType,
     getPlotFormat: getPlotFormat,
     getBestFit: getBestFit,

@@ -1986,6 +1986,7 @@ const resetApp = function (appRef) {
             })[0];
         }
     }
+    const deployment_environment = Meteor.settings.public.deployment_environment ? Meteor.settings.public.deployment_environment : "unknown";
     const appVersion = app ? app.version : "unknown";
     const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
@@ -2025,7 +2026,7 @@ const resetApp = function (appRef) {
     matsCollections.ColorScheme.remove({});
     matsDataUtils.doColorScheme();
     matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType);
+    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType, deployment_environment);
     matsCollections.CurveParams.remove({});
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
@@ -2177,6 +2178,9 @@ const saveLayout = new ValidatedMethod({
         },
         curveOpsUpdate: {
             type: Object, blackbox: true
+        },
+        annotation: {
+            type: String
         }
     }).validator(),
     run(params) {
@@ -2184,8 +2188,9 @@ const saveLayout = new ValidatedMethod({
             var key = params.resultKey;
             var layout = params.layout;
             var curveOpsUpdate = params.curveOpsUpdate;
+            var annotation = params.annotation;
             try {
-                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate}});
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate, annotation: annotation}});
             } catch (error) {
                 throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
             }
