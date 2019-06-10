@@ -218,7 +218,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         curve['zmax'] = d.zmax;
         curve['xAxisKey'] = xAxisParam;
         curve['yAxisKey'] = yAxisParam;
-        const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {

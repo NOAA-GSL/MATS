@@ -556,6 +556,106 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
     };
 };
 
+const processDataROC = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
+    var error = "";
+
+    // calculate data statistics (including error bars) for each curve
+    for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
+
+        var data = dataset[curveIndex];
+        const label = dataset[curveIndex].label;
+        var auc = data.sum;
+
+        var di = 0;
+
+        /*
+        dataset[curveIndex] is the dataset.
+        it looks like:
+
+        d = {
+            x: [],
+            y: [],
+            error_x: [],   // curveTime
+            error_y: [],   // values
+            subVals: [],   //subVals
+            subSecs: [],   //subSecs
+            subLevs: [],   //subLevs
+            stats: [],     //pointStats
+            text: [],
+            glob_stats: {},     //curveStats
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            sum: 0
+        };
+        */
+
+        while (di < data.x.length) {
+
+            // store statistics for this di datapoint
+            data.stats[di] = {
+                threshold: data.subVals[di],
+                pody: data.y[di],
+                fa: data.x[di],
+                obs_y: data.error_x[di],
+                obs_n: data.subLevs[di]
+            };
+
+            // this is the tooltip, it is the last element of each dataseries element.
+            // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
+            data.text[di] = label;
+            data.text[di] = data.text[di] + "<br>threshold: " + data.subVals[di];
+            data.text[di] = data.text[di] + "<br>probability of detection: " + data.y[di];
+            data.text[di] = data.text[di] + "<br>false alarm rate: " + data.x[di];
+            //data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
+            //data.text[di] = data.text[di] + "<br>on: " + data.subLevs[di];
+
+            // remove sub values and times to save space
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
+
+            di++;
+        }
+        dataset[curveIndex]['glob_stats'] = {
+            auc: auc
+        };
+    }
+
+    // add black no skill line curve
+    const noSkillLine = matsDataCurveOpsUtils.getLinearValueLine(curveInfoParams.xmax, curveInfoParams.xmin, data.ymax, data.ymin, matsTypes.ReservedWords.noSkill);
+    dataset.push(noSkillLine);
+
+    // add perfect forecast lines
+    const xPerfectLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, data.ymax, matsTypes.ReservedWords.perfectForecast);
+    dataset.push(xPerfectLine);
+
+    const yPerfectLine = matsDataCurveOpsUtils.getVerticalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, data.xmin, matsTypes.ReservedWords.perfectForecast);
+    dataset.push(yPerfectLine);
+
+    // generate plot options
+    var resultOptions = matsDataPlotOpsUtils.generateROCPlotOptions();
+
+    var totalProcessingFinish = moment();
+    bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
+        begin: bookkeepingParams.totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(bookkeepingParams.totalProcessingStart)).asSeconds() + ' seconds'
+    };
+
+    // pass result to client-side plotting functions
+    return {
+        error: error,
+        data: dataset,
+        options: resultOptions,
+        basis: {
+            plotParams: plotParams,
+            queries: bookkeepingParams.dataRequests
+        }
+    };
+};
+
 const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams) {
     var error = "";
     var curvesLengthSoFar = 0;
@@ -637,7 +737,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
         // also pass previously calculated axis stats to curve options
         curve['annotation'] = "";
         curve['axisKey'] = curveInfoParams.curves[curveIndex].axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, curveInfoParams.axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, curveInfoParams.axisMap, d, matsTypes.PlotTypes.histogram);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         curvesLengthSoFar++;
         var postQueryFinishMoment = moment();
@@ -776,6 +876,7 @@ export default matsDataProcessUtils = {
     processDataXYCurve: processDataXYCurve,
     processDataProfile: processDataProfile,
     processDataReliability: processDataReliability,
+    processDataROC: processDataROC,
     processDataHistogram: processDataHistogram,
     processDataContour: processDataContour
 

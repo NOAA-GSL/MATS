@@ -79,6 +79,9 @@ const _plotText = function (plotParams) {
         case matsTypes.PlotTypes.reliability:
             return "Reliability: " + format;
             break;
+        case matsTypes.PlotTypes.roc:
+            return "ROC: " + format;
+            break;
         case matsTypes.PlotTypes.map:
             return "Map " + plotParams.dates + " ";
             break;
@@ -583,6 +586,9 @@ const addSeries = function(plot, dependentAxes, plotParams) {
             case matsTypes.PlotTypes.reliability:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
+            case matsTypes.PlotTypes.roc:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                break;
             case matsTypes.PlotTypes.histogram:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
@@ -784,6 +790,9 @@ const _addSeriesLabels = function(element,dependentAxes, plotParams) {
         case matsTypes.PlotTypes.reliability:
             label = "Reliability";
             break;
+        case matsTypes.PlotTypes.roc:
+            label = "ROC";
+            break;
         case matsTypes.PlotTypes.threshold:
             label = "Threshold";
             break;
@@ -942,6 +951,7 @@ const addMiscellaneous = function(plot,plotParams) {
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.validtime:
         case matsTypes.PlotTypes.reliability:
+        case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.threshold:
             plot.ele('vert_plot', 'false');
             plot.ele('x_reverse', 'false');

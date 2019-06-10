@@ -72,6 +72,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.validtime:
                 case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.reliability:
+                case matsTypes.PlotTypes.roc:
                     // saved curve options for line graphs
                     var lineTypeResetOpts = [];
                     for (var lidx = 0; lidx < dataset.length; lidx++) {
@@ -151,6 +152,7 @@ Template.graph.helpers({
                         localAnnotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                         break;
                     case matsTypes.PlotTypes.map:
+                    case matsTypes.PlotTypes.roc:
                     case matsTypes.PlotTypes.histogram:
                     case matsTypes.PlotTypes.contour:
                     case matsTypes.PlotTypes.contourDiff:
@@ -223,6 +225,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.dailyModelCycle:
                     return "block";
                 case matsTypes.PlotTypes.reliability:
+                case matsTypes.PlotTypes.roc:
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
                 case matsTypes.PlotTypes.scatter2d:
@@ -272,6 +275,8 @@ Template.graph.helpers({
                     return "DailyModelCycle " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.reliability:
                     return "Reliability: " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.roc:
+                    return "ROC Curve: " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.map:
                     return "Map " + p.dates + " ";
                 case matsTypes.PlotTypes.histogram:
@@ -339,6 +344,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.validtime:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.roc:
                 return true;
             case matsTypes.PlotTypes.map:
             case matsTypes.PlotTypes.histogram:
@@ -438,6 +444,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.validtime:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.roc:
             case matsTypes.PlotTypes.scatter2d:
                 return "block";
             case matsTypes.PlotTypes.map:
@@ -458,6 +465,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.validtime:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.roc:
             case matsTypes.PlotTypes.scatter2d:
                 return "block";
             case matsTypes.PlotTypes.map:
@@ -481,6 +489,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.dailyModelCycle:
                     return "block";
                 case matsTypes.PlotTypes.reliability:
+                case matsTypes.PlotTypes.roc:
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
                 case matsTypes.PlotTypes.scatter2d:
@@ -1082,6 +1091,7 @@ Template.graph.events({
                 case matsTypes.PlotTypes.validtime:
                 case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.reliability:
+                case matsTypes.PlotTypes.roc:
                     // restyle for line plots
                     const lineTypeResetOpts = Session.get('lineTypeResetOpts');
                     for (var lidx = 0; lidx < lineTypeResetOpts.length; lidx++) {

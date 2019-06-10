@@ -84,6 +84,10 @@ Template.textOutput.helpers({
                 header += "<th>label</th>\
                     <th>sample climatology</th>";
                 break;
+            case matsTypes.PlotTypes.roc:
+                header += "<th>label</th>\
+                    <th>area under the ROC curve</th>";
+                break;
             case matsTypes.PlotTypes.map:
                 header += "<th>label</th>\
                     <th>mean</th>\
@@ -172,6 +176,12 @@ Template.textOutput.helpers({
                         <th>hit rate</th>\
                         <th>oy</th>\
                         <th>on</th>";
+                break;
+            case matsTypes.PlotTypes.roc:
+                header += "<th>" + curve.label + " threshold</th>\
+                        <th>probability of detection</th>\
+                        <th>false alarm rate</th>\
+                        ";
                 break;
             case matsTypes.PlotTypes.map:
                 header += "<th>Site Name</th>\
@@ -295,6 +305,11 @@ Template.textOutput.helpers({
                     "<td>" + (element['oy'] != undefined && element['oy'] !== null ? element['oy'] : fillStr) + "</td>" +
                     "<td>" + (element['on'] != undefined && element['on'] !== null ? element['on'] : fillStr) + "</td>";
                 break;
+            case matsTypes.PlotTypes.roc:
+                line += "<td>" + element[labelKey += " threshold"] + "</td>" +
+                    "<td>" + (element['probability of detection'] != undefined && element['probability of detection'] !== null ? element['probability of detection'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['false alarm rate'] != undefined && element['false alarm rate'] !== null ? element['false alarm rate'] : fillStr) + "</td>";
+                break;
             case matsTypes.PlotTypes.map:
                 line += "<td>" + element["Site Name"] + "</td>" +
                     "<td>" + (element['Number of Times'] != undefined && element['Number of Times'] !== null ? element['Number of Times'] : fillStr) + "</td>" +
@@ -381,6 +396,10 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.reliability:
                 line += "<td>" + curve['label'] + "</td>" +
                     "<td>" + (stats['sample climo'] != undefined && stats['sample climo'] !== null ? stats['sample climo'].toPrecision(4) : "undefined").toString() + "</td>";
+                break;
+            case matsTypes.PlotTypes.roc:
+                line += "<td>" + curve['label'] + "</td>" +
+                    "<td>" + (stats['auc'] != undefined && stats['auc'] !== null ? stats['auc'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.map:
                 line += "<td>" + curve['label'] + "</td>" +

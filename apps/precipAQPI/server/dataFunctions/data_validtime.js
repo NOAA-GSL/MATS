@@ -152,7 +152,7 @@ dataValidTime = function (plotParams, plotFunction) {
         curve['ymin'] = d.ymin;
         curve['ymax'] = d.ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
