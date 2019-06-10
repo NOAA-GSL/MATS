@@ -46,29 +46,6 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         var means = [];
         var rawStat;
 
-        /*
-        dataset[curveIndex] is the dataset.
-        it looks like:
-
-        d = {
-            x: [],
-            y: [],
-            error_x: [],   // curveTime
-            error_y: [],   // values
-            subVals: [],   //subVals
-            subSecs: [],   //subSecs
-            subLevs: [],   //subLevs
-            stats: [],     //pointStats
-            text: [],
-            glob_stats: {},     //curveStats
-            xmin: Number.MAX_VALUE,
-            xmax: Number.MIN_VALUE,
-            ymin: Number.MAX_VALUE,
-            ymax: Number.MIN_VALUE,
-            sum: 0
-        };
-        */
-
         while (di < data.x.length) {
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
@@ -127,7 +104,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 stde_betsy: errorResult.stde_betsy
             };
 
-            // this is the tooltip, it is the last element of each dataseries element.
+            // the tooltip is stored in data.text
             // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
             data.text[di] = label;
             switch (appParams.plotType) {
@@ -291,29 +268,6 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         var means = [];
         var rawStat;
 
-        /*
-        dataset[curveIndex] is the dataset.
-        it looks like:
-
-        d = {
-            x: [],
-            y: [],
-            error_x: [],   // curveTime
-            error_y: [],   // values
-            subVals: [],   //subVals
-            subSecs: [],   //subSecs
-            subLevs: [],   //subLevs
-            stats: [],     //pointStats
-            text: [],
-            glob_stats: {},     //curveStats
-            xmin: Number.MAX_VALUE,
-            xmax: Number.MIN_VALUE,
-            ymin: Number.MAX_VALUE,
-            ymax: Number.MIN_VALUE,
-            sum: 0
-        };
-        */
-
         while (di < data.y.length) {
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
@@ -361,7 +315,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                 stde_betsy: errorResult.stde_betsy
             };
 
-            // this is the tooltip, it is the last element of each dataseries element
+            // the tooltip is stored in data.text
             data.text[di] = label +
                 "<br>" + data.y[di] + "mb" +
                 "<br>" + statisticSelect + ": " + (data.x[di] === null ? null : data.x[di].toPrecision(4)) +
@@ -406,7 +360,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     }
 
     // add black 0 line curve
-    // need to define the minimum and maximum x value for making the zero curve
+    // need to define the minimum and maximum y value for making the zero curve
     const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1100, 0, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
@@ -443,7 +397,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 const processDataReliability = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
     var error = "";
 
-    // calculate data statistics (including error bars) for each curve
+    // sort data statistics for each curve
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
 
         var data = dataset[curveIndex];
@@ -451,29 +405,6 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
 
         var sample_climo = data.subVals;
         var di = 0;
-
-        /*
-        dataset[curveIndex] is the dataset.
-        it looks like:
-
-        d = {
-            x: [],
-            y: [],
-            error_x: [],   // curveTime
-            error_y: [],   // values
-            subVals: [],   //subVals
-            subSecs: [],   //subSecs
-            subLevs: [],   //subLevs
-            stats: [],     //pointStats
-            text: [],
-            glob_stats: {},     //curveStats
-            xmin: Number.MAX_VALUE,
-            xmax: Number.MIN_VALUE,
-            ymin: Number.MAX_VALUE,
-            ymax: Number.MIN_VALUE,
-            sum: 0
-        };
-        */
 
         while (di < data.x.length) {
 
@@ -485,22 +416,15 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
                 obs_n: data.subLevs[di]
             };
 
-            // this is the tooltip, it is the last element of each dataseries element.
-            // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
+            // the tooltip is stored in data.text
             data.text[di] = label;
             data.text[di] = data.text[di] + "<br>probability bin: " + data.x[di];
             data.text[di] = data.text[di] + "<br>hit rate: " + data.y[di];
             data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
             data.text[di] = data.text[di] + "<br>on: " + data.subLevs[di];
 
-            // remove sub values and times to save space
-            data.subVals[di] = [];
-            data.subSecs[di] = [];
-            data.subLevs[di] = [];
-
             di++;
         }
-
         dataset[curveIndex]['glob_stats'] = {
             sample_climo: sample_climo
         };
@@ -521,13 +445,11 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
         var skillmax = data.xmax - ((data.xmax - sample_climo) / 2);
     }
 
-
     // add black no skill line curve
     const noSkillLine = matsDataCurveOpsUtils.getLinearValueLine(curveInfoParams.xmax, curveInfoParams.xmin, skillmax, skillmin, matsTypes.ReservedWords.noSkill);
     dataset.push(noSkillLine);
 
     // add sample climo lines
-    // need to define the minimum and maximum x value for making the curves
     const xClimoLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, sample_climo, matsTypes.ReservedWords.zero);
     dataset.push(xClimoLine);
 
@@ -559,7 +481,7 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
 const processDataROC = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
     var error = "";
 
-    // calculate data statistics (including error bars) for each curve
+    // sort data statistics for each curve
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
 
         var data = dataset[curveIndex];
@@ -567,29 +489,6 @@ const processDataROC = function (dataset, appParams, curveInfoParams, plotParams
         var auc = data.sum;
 
         var di = 0;
-
-        /*
-        dataset[curveIndex] is the dataset.
-        it looks like:
-
-        d = {
-            x: [],
-            y: [],
-            error_x: [],   // curveTime
-            error_y: [],   // values
-            subVals: [],   //subVals
-            subSecs: [],   //subSecs
-            subLevs: [],   //subLevs
-            stats: [],     //pointStats
-            text: [],
-            glob_stats: {},     //curveStats
-            xmin: Number.MAX_VALUE,
-            xmax: Number.MIN_VALUE,
-            ymin: Number.MAX_VALUE,
-            ymax: Number.MIN_VALUE,
-            sum: 0
-        };
-        */
 
         while (di < data.x.length) {
 
@@ -602,19 +501,13 @@ const processDataROC = function (dataset, appParams, curveInfoParams, plotParams
                 obs_n: data.subLevs[di]
             };
 
-            // this is the tooltip, it is the last element of each dataseries element.
-            // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
+            // the tooltip is stored in data.text
             data.text[di] = label;
             data.text[di] = data.text[di] + "<br>threshold: " + data.subVals[di];
             data.text[di] = data.text[di] + "<br>probability of detection: " + data.y[di];
             data.text[di] = data.text[di] + "<br>false alarm rate: " + data.x[di];
             //data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
             //data.text[di] = data.text[di] + "<br>on: " + data.subLevs[di];
-
-            // remove sub values and times to save space
-            data.subVals[di] = [];
-            data.subSecs[di] = [];
-            data.subLevs[di] = [];
 
             di++;
         }
@@ -778,7 +671,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
             data.subSecs[di] = [];
             data.subLevs[di] = [];
 
-            // this is the tooltip, it is the last element of each dataseries element
+            // the tooltip is stored in data.text
             data.text[di] = label +
                 "<br>" + "bin: " + di + " (" + statisticSelect + " values between " + (data.bin_stats[di].binLowBound === null ? null : data.bin_stats[di].binLowBound.toPrecision(4)) + " and " + (data.bin_stats[di].binUpBound === null ? null : data.bin_stats[di].binUpBound.toPrecision(4)) + ")" +
                 "<br>" + "number in bin for this curve: " + (data.y[di] === null ? null : data.y[di]) +
@@ -818,6 +711,7 @@ const processDataContour = function (dataset, curveInfoParams, plotParams, bookk
     var data = dataset[0];
     const label = dataset[0].label;
 
+    // if we have dates on one axis, make sure they're formatted correctly
     if (data.xAxisKey.indexOf("Date") !== -1) {
         data.x = data.x.map(function (val) {
             return moment.utc(val * 1000).format("YYYY-MM-DD HH:mm");
@@ -828,6 +722,7 @@ const processDataContour = function (dataset, curveInfoParams, plotParams, bookk
         });
     }
 
+    // build the tooltip, and store it in data.text
     var i;
     var j;
     var currX;

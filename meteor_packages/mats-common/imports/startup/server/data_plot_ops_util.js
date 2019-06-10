@@ -518,8 +518,8 @@ const generateROCPlotOptions = function (dataset) {
         zeroline: true,
         perfectLine: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
-        showlegend: false
+        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1.1}
     };
 
     layout['xaxis'] = {
@@ -542,7 +542,6 @@ const generateROCPlotOptions = function (dataset) {
 
     return layout;
 };
-
 
 // sets plot options for map graphs
 const generateMapPlotOptions = function () {
