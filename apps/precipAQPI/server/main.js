@@ -771,7 +771,6 @@ const doCurveTextPatterns = function () {
                 "label", "data-source", "region", "statistic", "threshold", "average", "forecast-length", "valid-time", "truth"
             ],
             groupSize: 6
-
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
@@ -835,7 +834,7 @@ const doCurveTextPatterns = function () {
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
-                ['', 'truth', ' ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "utc-cycle-start", "truth"

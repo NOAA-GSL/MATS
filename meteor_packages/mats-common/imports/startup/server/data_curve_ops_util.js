@@ -121,10 +121,10 @@ const getLinearValueLine = function (xmax, xmin, ymax, ymin, cLabel) {
 };
 
 // provides curve options for all plot types with an independent x axis and a dependent y axis
-const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
+const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries, plotType) {
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
+    const longLabel = matsPlotUtils.getCurveText(plotType, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -194,10 +194,10 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
 };
 
 // provides curve options for all plot types with an independent y axis and a dependent x axis
-const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataProfile) {
+const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataProfile, plotType) {
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveTextWrapping(matsTypes.PlotTypes.profile, curve);
+    const longLabel = matsPlotUtils.getCurveTextWrapping(plotType, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -267,10 +267,10 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
 };
 
 // provides curve options for all plot types with an independent x axis and a dependent y axis
-const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataBars) {
+const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataBars, plotType) {
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
+    const longLabel = matsPlotUtils.getCurveText(plotType, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -318,14 +318,14 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
     return curveOptions;
 };
 
-const generateMapCurveOptions = function (curve, dataSeries) {
+const generateMapCurveOptions = function (curve, dataSeries, plotType) {
 
     const markerSizes = dataSeries.queryVal.map(function (val) {
         return Math.ceil(Math.abs(val * 4)) + 2;
     });
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
+    const longLabel = matsPlotUtils.getCurveText(plotType, curve);
 
     const curveOptions = {
         ...{
@@ -376,10 +376,10 @@ const generateMapColorTextOptions = function (label, dataSeries) {
     return curveOptions;
 };
 
-const generateContourCurveOptions = function (curve, axisMap, dataset) {
+const generateContourCurveOptions = function (curve, axisMap, dataset, plotType) {
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveText(matsTypes.PlotTypes.timeSeries, curve);
+    const longLabel = matsPlotUtils.getCurveText(plotType, curve);
     const annotation = curve['annotation'];
     const unitKey = curve['unitKey'];
 

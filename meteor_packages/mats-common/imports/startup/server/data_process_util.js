@@ -737,7 +737,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
         // also pass previously calculated axis stats to curve options
         curve['annotation'] = "";
         curve['axisKey'] = curveInfoParams.curves[curveIndex].axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, curveInfoParams.axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, curveInfoParams.axisMap, d, matsTypes.PlotTypes.histogram);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         curvesLengthSoFar++;
         var postQueryFinishMoment = moment();
