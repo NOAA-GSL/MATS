@@ -380,7 +380,7 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
             docker push ${REPO}:${TAG}
             if [ $? -ne 0 ]; then
                 # retry
-                echo -e "${RED} Error pushing image - need to retry"
+                echo -e "${RED} Error pushing image - need to retry${NC}"
                 docker push ${REPO}:${TAG}
             fi
         else
