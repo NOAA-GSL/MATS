@@ -13,12 +13,12 @@ class MyTestCase(unittest.TestCase):
                 "user": "met_admin",
                 "password": "MaPass4mvmay2018##",
                 "database": "metviewerDBstatus",
-                "statement": "select unix_timestamp(ld.fcst_valid_beg) as avtime, count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, sum(ld.total) as N0, avg(ld.fbar) as fbar, avg(ld.obar) as obar, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs from mv_gsd.stat_header h, mv_gsd.line_data_sl1l2 ld where 1=1 and h.model = 'GFS' and h.vx_mask IN('G2') and unix_timestamp(ld.fcst_valid_beg) >= '1541008800' and unix_timestamp(ld.fcst_valid_beg) <= '1541934000' and ld.fcst_lead IN (0) and h.fcst_var = 'HGT' and h.fcst_lev IN('P10','P20','P30','P50','P70','P100','P150','P200','P250','P300','P400','P500','P700','P850','P925','P1000') and ld.stat_header_id = h.stat_header_id group by avtime order by avtime;",
-                "statistic": "ACC",
-                "plotType": "TimeSeries",
+                "statement": "select unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as xVal,  ld.fcst_lead as yVal,  min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, count(ld.fbar) as n, avg(ld.fbar) as sub_fbar, avg(ld.obar) as sub_obar, avg(ld.ffbar) as sub_ffbar, avg(ld.oobar) as sub_oobar, avg(ld.fobar) as sub_fobar, avg(ld.total) as sub_total, avg(ld.fcst_valid_beg) as sub_secs, count(h.fcst_lev) as sub_levs from mv_test_2.stat_header h, mv_test_2.line_data_sl1l2 ld where 1=1 and h.model = 'AFWAOCv3.5.1_d01' and h.vx_mask IN('APL') and unix_timestamp(ld.fcst_valid_beg) >= '1309478400' and unix_timestamp(ld.fcst_valid_beg) <= '1310299200'   and h.fcst_var = 'DPT' and h.fcst_lev IN('Z0','Z2','Z10') and ld.stat_header_id = h.stat_header_id group by xVal,yVal order by xVal,yVal;",
+                "statistic": "RMS",
+                "plotType": "Contour",
                 "hasLevels": True,
                 "completenessQCParam": 0,
-                "vts": "0,6,12,18"
+                "vts": ""
             }
             qutil = QueryUtil()
             qutil.do_query(options)

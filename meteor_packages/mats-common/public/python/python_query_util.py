@@ -1,7 +1,7 @@
 import getopt
 import sys
-import MySQLdb
-import MySQLdb.cursors
+import pymysql
+import pymysql.cursors
 import math
 import numpy as np
 import json
@@ -721,8 +721,8 @@ class QueryUtil:
         self.data['xmax'] = max(x for x in self.data['x'] if x != 'null' and x != 'NaN')
         self.data['ymin'] = min(y for y in self.data['y'] if y != 'null' and y != 'NaN')
         self.data['ymax'] = max(y for y in self.data['y'] if y != 'null' and y != 'NaN')
-        self.data['zmin'] = min(min(z) for z in self.data['z'] if z != 'null' and z != 'NaN')
-        self.data['zmax'] = max(max(z) for z in self.data['z'] if z != 'null' and z != 'NaN')
+        self.data['zmin'] = min(z for z in self.data['zTextOutput'] if z != 'null' and z != 'NaN')
+        self.data['zmax'] = max(z for z in self.data['zTextOutput'] if z != 'null' and z != 'NaN')
         self.data['sum'] = loop_sum
         self.data['glob_stats']['mean'] = loop_sum / n_points
         self.data['glob_stats']['minDate'] = min(
@@ -738,7 +738,7 @@ class QueryUtil:
 
         try:
             cursor.execute(statement)
-        except MySQLdb.Error as e:
+        except pymysql.Error as e:
             self.error = "Error executing query: " + str(e)
             self.error_bool = True
 
@@ -853,10 +853,10 @@ class QueryUtil:
 
     def do_query(self, options):
         self.validate_options(options)
-        cnx = MySQLdb.Connect(host=options["host"], port=options["port"], user=options["user"],
+        cnx = pymysql.Connect(host=options["host"], port=options["port"], user=options["user"],
                               passwd=options["password"],
                               db=options["database"], charset='utf8',
-                              cursorclass=MySQLdb.cursors.DictCursor)
+                              cursorclass=pymysql.cursors.DictCursor)
         with closing(cnx.cursor()) as cursor:
             # cnx, cursor = connect_to_mysql(args[1])
             cursor.execute('set group_concat_max_len = 4294967295')
