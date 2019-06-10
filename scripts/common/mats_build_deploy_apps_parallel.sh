@@ -356,7 +356,7 @@ RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
     pip3 install numpy && \\
-    pip3 install mysqlclient && \\
+    pip3 install pymysql && \\
     chmod +x /usr/app/run_app.sh && \\
     cd /usr/app/programs/server && npm install && \\
     apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
