@@ -5,12 +5,12 @@ import pymysql.cursors
 import math
 import numpy as np
 import json
-from datetime import datetime
 from contextlib import closing
 
 
+# class that contains all of the tools necessary for querying the db and calculating statistics from the
+# returned data. In the future, we plan to split this into two classes, one for querying and one for statistics.
 class QueryUtil:
-    error_bool = False  # global variable to keep track of whether we've had an error
     error = ""  # one of the four fields to return at the end -- records any error message
     n0 = []  # one of the four fields to return at the end -- number of sub_values for each independent variable
     n_times = []  # one of the four fields to return at the end -- number of sub_secs for each independent variable
@@ -51,15 +51,13 @@ class QueryUtil:
 
     # function for constructing and jsonifying a dictionary of the output variables
     def construct_output_json(self):
-        global output_JSON, error, n0, n_times, data
-        output_JSON = {
+        self.output_JSON = {
             "data": self.data,
             "N0": self.n0,
             "N_times": self.n_times,
             "error": self.error
         }
-        self.output_JSON = json.dumps(output_JSON)
-
+        self.output_JSON = json.dumps(self.output_JSON)
 
     # function to check if a certain value is a float or int
     def is_number(self, s):
@@ -74,75 +72,58 @@ class QueryUtil:
         except ValueError:
             return False
 
-
     # function for calculating anomaly correlation from MET partial sums
     def calculate_acc(self, fbar, obar, ffbar, oobar, fobar, total):
-        global error, error_bool
         try:
             denom = (np.power(total, 2) * ffbar - np.power(total, 2) * np.power(fbar, 2)) \
                     * (np.power(total, 2) * oobar - np.power(total, 2) * np.power(obar, 2))
             acc = (np.power(total, 2) * fobar - np.power(total, 2) * fbar * obar) / np.sqrt(denom)
         except TypeError as e:
-            error = "Error calculating RMS: " + str(e)
-            error_bool = True
+            self.error = "Error calculating RMS: " + str(e)
             acc = np.empty(len(ffbar))
         except ValueError as e:
-            error = "Error calculating RMS: " + str(e)
-            error_bool = True
+            self.error = "Error calculating RMS: " + str(e)
             acc = np.empty(len(ffbar))
         return acc
 
-
     # function for calculating RMS from MET partial sums
     def calculate_rms(self, ffbar, oobar, fobar):
-        global error, error_bool
         try:
             rms = np.sqrt(ffbar + oobar - 2 * fobar)
         except TypeError as e:
-            error = "Error calculating RMS: " + str(e)
-            error_bool = True
+            self.error = "Error calculating RMS: " + str(e)
             rms = np.empty(len(ffbar))
         except ValueError as e:
-            error = "Error calculating RMS: " + str(e)
-            error_bool = True
+            self.error = "Error calculating RMS: " + str(e)
             rms = np.empty(len(ffbar))
         return rms
 
-
     # function for calculating bias from MET partial sums
     def calculate_bias(self, fbar, obar):
-        global error, error_bool
         try:
             bias = fbar - obar
         except TypeError as e:
-            error = "Error calculating bias: " + str(e)
-            error_bool = True
+            self.error = "Error calculating bias: " + str(e)
             bias = np.empty(len(fbar))
         except ValueError as e:
-            error = "Error calculating bias: " + str(e)
-            error_bool = True
+            self.error = "Error calculating bias: " + str(e)
             bias = np.empty(len(fbar))
         return bias
-
 
     # function for calculating N from MET partial sums
     def calculate_n(self, total):
         return total
 
-
     # function for calculating model average from MET partial sums
     def calculate_m_avg(self, fbar):
         return fbar
-
 
     # function for calculating obs average from MET partial sums
     def calculate_o_avg(self, obar):
         return obar
 
-
     # function for determining and calling the appropriate statistical calculation function
     def calculate_stat(self, statistic, fbar, obar, ffbar, oobar, fobar, total):
-        global error, error_bool
         stat_switch = {  # dispatcher of statistical calculation functions
             'ACC': self.calculate_acc,
             'RMS': self.calculate_rms,
@@ -164,21 +145,17 @@ class QueryUtil:
             sub_stats = stat_switch[statistic](*stat_args)  # call stat function
             stat = np.nanmean(sub_stats)  # calculate overall stat
         except KeyError as e:
-            error = "Error choosing statistic: " + str(e)
-            error_bool = True
+            self.error = "Error choosing statistic: " + str(e)
             sub_stats = np.empty(len(fbar))
             stat = 'null'
         except ValueError as e:
-            error = "Error calculating statistic: " + str(e)
-            error_bool = True
+            self.error = "Error calculating statistic: " + str(e)
             sub_stats = np.empty(len(fbar))
             stat = 'null'
         return sub_stats, stat
 
-
     # function for processing the sub-values from the query and calling calculate_stat
     def get_scalar_stat(self, has_levels, row, statistic):
-        global error, error_bool
         try:
             # get all of the partial sums for each time
             # fbar, obar, ffbar, fobar, and oobar may have different names in different partial sums tables,
@@ -200,16 +177,14 @@ class QueryUtil:
             else:
                 sub_levs = np.empty(len(sub_secs))
         except KeyError as e:
-            error = "Error parsing query data. The expected fields don't seem to be present " \
-                    "in the results cache: " + str(e)
-            error_bool = True
+            self.error = "Error parsing query data. The expected fields don't seem to be present " \
+                         "in the results cache: " + str(e)
             # if we don't have the data we expect just stop now and return empty data objects
             return np.nan, np.empty(0), np.empty(0), np.empty(0)
         # if we do have the data we expect, calculate the requested statistic
         sub_values, stat = self.calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar,
                                                sub_total)
         return stat, sub_levs, sub_secs, sub_values
-
 
     #  function for calculating the interval between the current time and the next time for models with irregular vts
     def get_time_interval(self, curr_time, time_interval, vts):
@@ -234,11 +209,9 @@ class QueryUtil:
 
         return ti
 
-
     # function for parsing the data returned by a timeseries query
     def parse_query_data_timeseries(self, cursor, statistic, has_levels, completeness_qc_param, vts):
-        global error, error_bool, n0, n_times, data
-
+        # initialize local variables
         xmax = float("-inf")
         xmin = float("inf")
         curve_times = []
@@ -302,6 +275,8 @@ class QueryUtil:
         time_interval = time_interval * 1000
         loop_time = xmin
         loop_sum = 0
+        ymin = sys.float_info.max
+        ymax = -1 * sys.float_info.max
 
         while loop_time <= xmax:
             # the reason we need to loop through everything again is to add in nulls for any missing points along the
@@ -310,11 +285,11 @@ class QueryUtil:
                 self.data['x'].append(loop_time)
                 self.data['y'].append('null')
                 self.data['error_y'].append('null')
-                self.data['subVals'].append(
-                    'NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                self.data['subVals'].append('NaN')
                 self.data['subSecs'].append('NaN')
                 if has_levels:
                     self.data['subLevs'].append('NaN')
+                # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
             else:
                 d_idx = curve_times.index(loop_time)
                 this_n0 = self.n0[d_idx]
@@ -324,12 +299,11 @@ class QueryUtil:
                     self.data['x'].append(loop_time)
                     self.data['y'].append('null')
                     self.data['error_y'].append('null')
-                    self.data['subVals'].append(
-                        'NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                    self.data['subVals'].append('NaN')
                     self.data['subSecs'].append('NaN')
                     if has_levels:
                         self.data['subLevs'].append('NaN')
-
+                # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
                 else:
                     # put the data in our final data dictionary, converting the numpy arrays to lists so we can jsonify
                     loop_sum += curve_stats[d_idx]
@@ -352,23 +326,23 @@ class QueryUtil:
                     self.data['subSecs'].append(list_secs)
                     if has_levels:
                         self.data['subLevs'].append(list_levs)
+                    ymin = curve_stats[d_idx] if curve_stats[d_idx] < ymin else ymin
+                    ymax = curve_stats[d_idx] if curve_stats[d_idx] > ymax else ymax
 
             if not regular:
                 # vts are giving us an irregular cadence, so the interval most likely will not be the one calculated above
                 time_interval = self.get_time_interval(loop_time, time_interval, vts)
             loop_time = loop_time + time_interval
 
-        self.data['xmin'] = min(x for x in self.data['x'] if self.is_number(x))
-        self.data['xmax'] = max(x for x in self.data['x'] if self.is_number(x))
-        self.data['ymin'] = min(y for y in self.data['y'] if self.is_number(y))
-        self.data['ymax'] = max(y for y in self.data['y'] if self.is_number(y))
+        self.data['xmin'] = self.data['x'][0]
+        self.data['xmax'] = self.data['x'][len(self.data['x'])-1]
+        self.data['ymin'] = ymin
+        self.data['ymax'] = ymax
         self.data['sum'] = loop_sum
-
 
     # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
     def parse_query_data_specialty_curve(self, cursor, statistic, plot_type, has_levels, completeness_qc_param):
-        global error, error_bool, n0, n_times, data
-
+        # initialize local variables
         curve_ind_vars = []
         curve_stats = []
         sub_vals_all = []
@@ -434,6 +408,10 @@ class QueryUtil:
         n0_max = max(self.n0)
         n_times_max = max(self.n_times)
         loop_sum = 0
+        ind_var_min = sys.float_info.max
+        ind_var_max = -1 * sys.float_info.max
+        dep_var_min = sys.float_info.max
+        dep_var_max = -1 * sys.float_info.max
 
         # profiles have the levels sorted as strings, not numbers. Need to fix that
         if plot_type == 'Profile':
@@ -446,6 +424,8 @@ class QueryUtil:
         for ind_var in curve_ind_vars:
             # the reason we need to loop through everything again is to add in nulls
             # for any bad data points along the curve.
+            ind_var_min = ind_var if ind_var < ind_var_min else ind_var_min
+            ind_var_max = ind_var if ind_var > ind_var_max else ind_var_max
             d_idx = curve_ind_vars.index(ind_var)
             this_n0 = self.n0[d_idx]
             this_n_times = self.n_times[d_idx]
@@ -460,16 +440,17 @@ class QueryUtil:
                     self.data['subVals'].append('NaN')
                     self.data['subSecs'].append('NaN')
                     self.data['subLevs'].append('NaN')
+                    # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
                 elif plot_type != 'DieOff':
                     # for dieoffs, we don't want to add a null for missing data. Just don't have a point for that FHR.
                     self.data['x'].append(ind_var)
                     self.data['y'].append('null')
                     self.data['error_y'].append('null')
-                    self.data['subVals'].append(
-                        'NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                    self.data['subVals'].append('NaN')
                     self.data['subSecs'].append('NaN')
                     if has_levels:
                         self.data['subLevs'].append('NaN')
+                    # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
             else:
                 # put the data in our final data dictionary, converting the numpy arrays to lists so we can jsonify
                 loop_sum += curve_stats[d_idx]
@@ -502,18 +483,24 @@ class QueryUtil:
                     self.data['subSecs'].append(list_secs)
                     if has_levels:
                         self.data['subLevs'].append(list_levs)
+                dep_var_min = curve_stats[d_idx] if curve_stats[d_idx] < dep_var_min else dep_var_min
+                dep_var_max = curve_stats[d_idx] if curve_stats[d_idx] > dep_var_max else dep_var_max
 
-        self.data['xmin'] = min(x for x in self.data['x'] if self.is_number(x))
-        self.data['xmax'] = max(x for x in self.data['x'] if self.is_number(x))
-        self.data['ymin'] = min(y for y in self.data['y'] if self.is_number(y))
-        self.data['ymax'] = max(y for y in self.data['y'] if self.is_number(y))
+        if plot_type == 'Profile':
+            self.data['xmin'] = dep_var_min
+            self.data['xmax'] = dep_var_max
+            self.data['ymin'] = ind_var_min
+            self.data['ymax'] = ind_var_max
+        else:
+            self.data['xmin'] = ind_var_min
+            self.data['xmax'] = ind_var_max
+            self.data['ymin'] = dep_var_min
+            self.data['ymax'] = dep_var_max
         self.data['sum'] = loop_sum
 
-
     # function for parsing the data returned by a histogram query
-    def parse_query_data_histogram(self, cursor, statistic, has_levels, completeness_qc_param):
-        global error, error_bool, n0, n_times, data
-
+    def parse_query_data_histogram(self, cursor, statistic, has_levels):
+        # initialize local variables
         sub_vals_all = []
         sub_secs_all = []
         sub_levs_all = []
@@ -557,9 +544,8 @@ class QueryUtil:
             self.data['subLevs'] = [item for sublist in sub_levs_all for item in sublist]
 
     # function for parsing the data returned by a reliability query
-    def parse_query_data_reliability(self, cursor, has_levels):
-        global error, error_bool, n0, n_times, data
-
+    def parse_query_data_reliability(self, cursor):
+        # initialize local variables
         threshold_all = []
         oy_all = []
         on_all = []
@@ -570,7 +556,7 @@ class QueryUtil:
         observed_total = 0
         forecast_total = 0
 
-        # get query data and calculate starting time interval of the returned data
+        # get query data
         query_data = cursor.fetchall()
 
         # loop through the query results and store the returned values
@@ -581,10 +567,6 @@ class QueryUtil:
             on = int(row['on_i'])
             times = int(row['N_times'])
             values = int(row['N0'])
-            #n0.append(int(row['N0']))
-            #n_times.append(int(row['N_times']))
-
-            #print(bin_number)
 
             if bin_number != "null" and threshold != "NULL" and oy != "null" and on != "NULL" and times != "NULL" and values != "NULL":
                 # this function deals with pct and pct_thresh tables
@@ -596,37 +578,30 @@ class QueryUtil:
                 if len(oy_all) < bin_number:
                     oy_all.append(oy)
                 else:
-                    oy_all[bin_number-1] = oy_all[bin_number-1] + oy
+                    oy_all[bin_number - 1] = oy_all[bin_number - 1] + oy
                 if len(on_all) < bin_number:
                     on_all.append(on)
                 else:
-                    on_all[bin_number-1] = on_all[bin_number-1] + on
+                    on_all[bin_number - 1] = on_all[bin_number - 1] + on
                 if len(total_times) < bin_number:
                     total_times.append(on)
                 else:
-                    total_times[bin_number-1] = total_times[bin_number-1] + times
+                    total_times[bin_number - 1] = total_times[bin_number - 1] + times
                 if len(total_values) < bin_number:
                     total_values.append(on)
                 else:
-                    total_values[bin_number-1] = total_values[bin_number-1] + values
-                #print(oy_all[bin_number-1])
-                #print(on_all[bin_number-1])
+                    total_values[bin_number - 1] = total_values[bin_number - 1] + values
                 if len(threshold_all) < bin_number:
                     threshold_all.append(threshold)
                 else:
                     continue
 
-        #print(threshold_all)
         # Now, we must determine the hit rate for each probability bin
-        for i in range (0, len(threshold_all), 1):
-            #print('THRESH: '+str(threshold_all[i]))
-            #print('OY: '+str(oy_all[i]))
-            #print('ON: '+str(on_all[i]))
+        for i in range(0, len(threshold_all), 1):
             try:
                 hr = float(oy_all[i]) / (float(oy_all[i]) + float(on_all[i]))
             except ZeroDivisionError:
                 hr = None
-            #print('HR: '+str(hr))
             hit_rate.append(hr)
 
         # calculate the sample climatology
@@ -646,9 +621,8 @@ class QueryUtil:
         self.data['ymin'] = 0.0
 
     # function for parsing the data returned by a roc query
-    def parse_query_data_roc(self, cursor, has_levels):
-        global error, error_bool, n0, n_times, data
-
+    def parse_query_data_roc(self, cursor):
+        # initialize local variables
         threshold_all = []
         oy_all = []
         on_all = []
@@ -660,7 +634,7 @@ class QueryUtil:
         observed_total = 0
         forecast_total = 0
 
-        # get query data and calculate starting time interval of the returned data
+        # get query data
         query_data = cursor.fetchall()
 
         # loop through the query results and store the returned values
@@ -671,10 +645,6 @@ class QueryUtil:
             on = int(row['on_i'])
             times = int(row['N_times'])
             values = int(row['N0'])
-            #n0.append(int(row['N0']))
-            #n_times.append(int(row['N_times']))
-
-            #print(bin_number)
 
             if bin_number != "null" and threshold != "NULL" and oy != "null" and on != "NULL" and times != "NULL" and values != "NULL":
                 # this function deals with pct and pct_thresh tables
@@ -683,35 +653,26 @@ class QueryUtil:
                 if len(oy_all) < bin_number:
                     oy_all.append(oy)
                 else:
-                    oy_all[bin_number-1] = oy_all[bin_number-1] + oy
+                    oy_all[bin_number - 1] = oy_all[bin_number - 1] + oy
                 if len(on_all) < bin_number:
                     on_all.append(on)
                 else:
-                    on_all[bin_number-1] = on_all[bin_number-1] + on
+                    on_all[bin_number - 1] = on_all[bin_number - 1] + on
                 if len(total_times) < bin_number:
                     total_times.append(on)
                 else:
-                    total_times[bin_number-1] = total_times[bin_number-1] + times
+                    total_times[bin_number - 1] = total_times[bin_number - 1] + times
                 if len(total_values) < bin_number:
                     total_values.append(on)
                 else:
-                    total_values[bin_number-1] = total_values[bin_number-1] + values
-                #print(oy_all[bin_number-1])
-                #print(on_all[bin_number-1])
+                    total_values[bin_number - 1] = total_values[bin_number - 1] + values
                 if len(threshold_all) < bin_number:
                     threshold_all.append(threshold)
                 else:
                     continue
 
-        #print(threshold_all)
         # Now, we must determine the probability of detection (hit rate) and probability of false detection (false alarm ratio) for each probability bin
-        #print(len(threshold_all))
-        for i in range (0, len(threshold_all), 1):
-            #print('THRESH: '+str(threshold_all[i]))
-            #print('OY: '+str(oy_all[i]))
-            #print('ON: '+str(on_all[i]))
-            #print(i)
-
+        for i in range(0, len(threshold_all), 1):
             hit = 0
             miss = 0
             fa = 0
@@ -730,30 +691,18 @@ class QueryUtil:
 
             # POD
             try:
-                hr = float(hit/(float(hit) + miss))
+                hr = float(hit / (float(hit) + miss))
             except ZeroDivisionError:
                 hr = None
-            #print('HR: '+str(hr))
             pody.append(hr)
 
-            #POFD
+            # POFD
             try:
-                pofd = float(fa/(float(fa) + cn))
+                pofd = float(fa / (float(fa) + cn))
             except ZeroDivisionError:
                 pofd = None
 
             far.append(pofd)
-
-            #print("###############")
-            #print("threshold: " + str(threshold_all[i]))
-            #print("oy: " + str(oy_all[i]))
-            #print("on: " + str(on_all[i]))
-            #print("hit: " + str(hit))
-            #print("miss: " + str(miss))
-            #print("fa: " + str(fa))
-            #print("cn: " + str(cn))
-            #print("hr: " + str(hr))
-            #print("pofd: " + str(pofd))
 
         # Reverse all of the lists (easier to graph)
         pody = pody[::-1]
@@ -765,14 +714,14 @@ class QueryUtil:
         total_times = total_times[::-1]
 
         # Calculate AUC (not finished yet, I believe there may be a documentation typo in how MET says it does this)
-        #sum = 0
+        # sum = 0
 
-        #for i in range(0, len(threshold_all) - 1, 1):
-            #sum = ((pody[i + 1] + pody[i]) * (far[i + 1] + far[i]))/2 + sum
+        # for i in range(0, len(threshold_all) - 1, 1):
+        # sum = ((pody[i + 1] + pody[i]) * (far[i + 1] + far[i]))/2 + sum
 
-        #print(sum)
-        #auc = sum
-        #print(auc)
+        # print(sum)
+        # auc = sum
+        # print(auc)
 
         # Add one final point to allow for the AUC score to be calculated
         pody.append(1)
@@ -783,7 +732,6 @@ class QueryUtil:
         total_values.append(-999)
         total_times.append(-999)
 
-
         # Since everything is combined already, put it into the data structure
         self.n0 = total_values
         self.n_times = total_times
@@ -792,7 +740,7 @@ class QueryUtil:
         self.data['error_x'] = oy_all
         self.data['x'] = far
         self.data['subLevs'] = on_all
-        #self.data['sum'] = auc
+        # self.data['sum'] = auc
         self.data['xmax'] = 1.0
         self.data['xmin'] = 0.0
         self.data['ymax'] = 1.0
@@ -800,8 +748,7 @@ class QueryUtil:
 
     # function for parsing the data returned by a contour query
     def parse_query_data_contour(self, cursor, statistic, has_levels):
-        global error, error_bool, n0, n_times, data
-
+        # initialize local variables
         curve_stat_lookup = {}
         curve_n_lookup = {}
 
@@ -810,10 +757,9 @@ class QueryUtil:
 
         # loop through the query results and store the returned values
         for row in query_data:
-            row_x_val = float(
-                str(row['xVal']).replace('P', ''))  # if it's a pressure level get rid of the P in front of the value
-            row_y_val = float(
-                str(row['yVal']).replace('P', ''))  # if it's a pressure level get rid of the P in front of the value
+            # if it's a pressure level get rid of the P in front of the value
+            row_x_val = float(str(row['xVal']).replace('P', ''))
+            row_y_val = float(str(row['yVal']).replace('P', ''))
             stat_key = str(row_x_val) + '_' + str(row_y_val)
             fbar = row['sub_fbar']
             obar = row['sub_obar']
@@ -850,6 +796,8 @@ class QueryUtil:
 
         loop_sum = 0
         n_points = 0
+        zmin = sys.float_info.max
+        zmax = -1 * sys.float_info.max
         for curr_y in self.data['y']:
             curr_y_stat_array = []
             curr_y_n_array = []
@@ -862,6 +810,8 @@ class QueryUtil:
                     n_points = n_points + 1
                     curr_y_stat_array.append(curr_stat)
                     curr_y_n_array.append(curr_n)
+                    zmin = curr_stat if curr_stat < zmin else zmin
+                    zmax = curr_stat if curr_stat > zmax else zmax
                 else:
                     curr_y_stat_array.append('null')
                     curr_y_n_array.append(0)
@@ -869,35 +819,27 @@ class QueryUtil:
             self.data['n'].append(curr_y_n_array)
 
         # calculate statistics
-        self.data['xmin'] = min(x for x in self.data['x'] if x != 'null' and x != 'NaN')
-        self.data['xmax'] = max(x for x in self.data['x'] if x != 'null' and x != 'NaN')
-        self.data['ymin'] = min(y for y in self.data['y'] if y != 'null' and y != 'NaN')
-        self.data['ymax'] = max(y for y in self.data['y'] if y != 'null' and y != 'NaN')
-        self.data['zmin'] = min(z for z in self.data['zTextOutput'] if z != 'null' and z != 'NaN')
-        self.data['zmax'] = max(z for z in self.data['zTextOutput'] if z != 'null' and z != 'NaN')
+        self.data['xmin'] = self.data['x'][0]
+        self.data['xmax'] = self.data['x'][len(self.data['x'])-1]
+        self.data['xmin'] = self.data['y'][0]
+        self.data['xmax'] = self.data['y'][len(self.data['y'])-1]
+        self.data['zmin'] = zmin
+        self.data['zmax'] = zmax
         self.data['sum'] = loop_sum
         self.data['glob_stats']['mean'] = loop_sum / n_points
-        self.data['glob_stats']['minDate'] = min(
-            m for m in self.data['minDateTextOutput'] if m != 'null' and m != 'NaN')
-        self.data['glob_stats']['maxDate'] = max(
-            m for m in self.data['minDateTextOutput'] if m != 'null' and m != 'NaN')
+        self.data['glob_stats']['minDate'] = self.data['minDateTextOutput'][0]
+        self.data['glob_stats']['maxDate'] = self.data['maxDateTextOutput'][len(self.data['maxDateTextOutput'])-1]
         self.data['glob_stats']['n'] = n_points
-
 
     # function for querying the database and sending the returned data to the parser
     def query_db(self, cursor, statement, statistic, plot_type, has_levels, completeness_qc_param, vts):
-        global error, error_bool, n0, n_times, data
-
         try:
             cursor.execute(statement)
         except pymysql.Error as e:
             self.error = "Error executing query: " + str(e)
-            self.error_bool = True
-
-        if not self.error_bool:
+        else:
             if cursor.rowcount == 0:
                 self.error = "INFO:0 data records found"
-                self.error_bool = True
             else:
                 if plot_type == 'TimeSeries':
                     if len(vts) > 0:
@@ -913,23 +855,23 @@ class QueryUtil:
                         vts = []
                     self.parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param, vts)
                 elif plot_type == 'Histogram':
-                    self.parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param)
+                    self.parse_query_data_histogram(cursor, statistic, has_levels)
                 elif plot_type == 'Contour':
                     self.parse_query_data_contour(cursor, statistic, has_levels)
                 elif plot_type == 'Reliability':
-                    self.parse_query_data_reliability(cursor, has_levels)
+                    self.parse_query_data_reliability(cursor)
                 elif plot_type == 'ROC':
-                    self.parse_query_data_roc(cursor, has_levels)
+                    self.parse_query_data_roc(cursor)
                 else:
                     self.parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels,
                                                           completeness_qc_param)
 
+    # makes sure all expected options were indeed passed in
     def validate_options(self, options):
         assert True, options.host != None and options.port != None and options.user != None and \
                      options.password != None and options.database != None and options.statement != None and \
                      options.statistic != None and options.plotType != None and options.hasLevels != None and \
                      options.completenessQCParam != None and options.vts != None
-
 
     # process 'c' style options - using getopt - usage describes options
     def get_options(self, args):
@@ -951,14 +893,12 @@ class QueryUtil:
             opts, args = getopt.getopt(args[1:], "h:p:u:P:d:q:s:t:l:c:v:", usage)
         except getopt.GetoptError as err:
             # print help information and exit:
-            print
-            str(err)  # will print something like "option -a not recognized"
-            # print usage from last param to getopt
-            usage()
+            print(str(err))  # will print something like "option -a not recognized"
+            print(usage)  # print usage from last param to getopt
             sys.exit(2)
         for o, a in opts:
             if o == "-?":
-                usage()
+                print(usage)
                 sys.exit(2)
             if o == "-h":
                 host = a
@@ -1004,7 +944,6 @@ class QueryUtil:
         }
         return options
 
-
     def do_query(self, options):
         self.validate_options(options)
         cnx = pymysql.Connect(host=options["host"], port=options["port"], user=options["user"],
@@ -1012,7 +951,6 @@ class QueryUtil:
                               db=options["database"], charset='utf8',
                               cursorclass=pymysql.cursors.DictCursor)
         with closing(cnx.cursor()) as cursor:
-            # cnx, cursor = connect_to_mysql(args[1])
             cursor.execute('set group_concat_max_len = 4294967295')
             self.query_db(cursor, options["statement"], options["statistic"], options["plotType"], options["hasLevels"],
                           options["completenessQCParam"], options["vts"])
