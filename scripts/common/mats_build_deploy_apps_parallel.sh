@@ -231,9 +231,34 @@ fi
 echo -e "$0 ${GRN} clean and remove existing images ${NC}"
 if [ "${build_images}" == "yes" ]; then
     # clean up and remove existing images images
-    docker stop $(docker ps -a -q)
+    #wait for stacks to drain
+    docker stack ls | grep -v NAME | awk '{print $1}' | while read stack
+    do
+        echo $stack
+        docker stack rm ${stack}
+        docker network rm web
+        limit=20
+        until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=${stack} -q)" ] || [ "$limit" -lt 0 ]; do
+            sleep 1;
+            limit="$((limit-1))"
+            printf "."
+        done
+        limit=20
+        until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q)" ] || [ "$limit" -lt 0 ]; do
+            sleep 1;
+            limit="$((limit-1))"
+            printf "."
+        done
+        limit=20
+        until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
+            sleep 1;
+            limit="$((limit-1))"
+            printf "."
+        done
+    done
     docker system prune -af
 fi
+
 # go ahead and merge changes
 #/usr/bin/git pull -Xtheirs
 #if [ $? -ne 0 ]; then
@@ -356,7 +381,7 @@ RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
     pip3 install numpy && \\
-    pip3 install mysqlclient && \\
+    pip3 install pymysql && \\
     chmod +x /usr/app/run_app.sh && \\
     cd /usr/app/programs/server && npm install && \\
     apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
@@ -380,7 +405,7 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
             docker push ${REPO}:${TAG}
             if [ $? -ne 0 ]; then
                 # retry
-                echo -e "${RED} Error pushing image - need to retry"
+                echo -e "${RED} Error pushing image - need to retry${NC}"
                 docker push ${REPO}:${TAG}
             fi
         else
