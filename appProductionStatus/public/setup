@@ -387,7 +387,9 @@ exposedbydefualt = false
             fi
         done
         #finish up the document
-        echo "], "process": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
+        echo "], \"process\": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}}" >> $tmpSettingsFile
+echo wrote settings to $tmpSettingsFile
+read
         jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
     done
