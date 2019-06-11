@@ -231,9 +231,34 @@ fi
 echo -e "$0 ${GRN} clean and remove existing images ${NC}"
 if [ "${build_images}" == "yes" ]; then
     # clean up and remove existing images images
-    docker stop $(docker ps -a -q)
+    #wait for stacks to drain
+    docker stack ls | grep -v NAME | awk '{print $1}' | while read stack
+    do
+        echo $stack
+        docker stack rm ${stack}
+        docker network rm web
+        limit=20
+        until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=${stack} -q)" ] || [ "$limit" -lt 0 ]; do
+            sleep 1;
+            limit="$((limit-1))"
+            printf "."
+        done
+        limit=20
+        until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q)" ] || [ "$limit" -lt 0 ]; do
+            sleep 1;
+            limit="$((limit-1))"
+            printf "."
+        done
+        limit=20
+        until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
+            sleep 1;
+            limit="$((limit-1))"
+            printf "."
+        done
+    done
     docker system prune -af
 fi
+
 # go ahead and merge changes
 #/usr/bin/git pull -Xtheirs
 #if [ $? -ne 0 ]; then
