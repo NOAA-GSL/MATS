@@ -22,13 +22,17 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        legend: {orientation: "h", x: 0, y: 1.1}
+        legend: {orientation: "h", x: 0, y: 1}
     };
 
     layout['xaxis'] = {
         title: 'Time',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 12}
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 16},
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        gridcolor: '#cfcfcf'
     };
 
     const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free', 4: 'free', 5: 'free', 6: 'free', 7: 'free'};
@@ -54,18 +58,26 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'yaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 zeroline: false
             };
         } else if (axisIdx < Object.keys(axisPosition).length) {
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
                 side: axisSide[axisIdx],
@@ -76,9 +88,13 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'y',
                 side: axisSide[Object.keys(axisPosition).length - 1],
@@ -87,7 +103,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const xPad = ((xmax - xmin) * 0.075) !== 0 ? (xmax - xmin) * 0.075 : 0.075;
+    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
     xmax = moment.utc(xmax + xPad * Math.ceil(yAxisNumber / 2)).format("YYYY-MM-DD HH:mm");
     xmin = moment.utc(xmin - xPad * Math.ceil(yAxisNumber / 2)).format("YYYY-MM-DD HH:mm");
     layout['xaxis']['range'] = [xmin, xmax];
@@ -111,7 +127,7 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {font: {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        legend: {orientation: "v", x: 1, y: 1}
+        legend: {orientation: "v", x: 1.05, y: 1}
     };
     var tickVals;
     var tickText;
@@ -124,10 +140,14 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
     }
     layout['yaxis'] = {
         title: 'Pressure Level',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
         tickvals: tickVals,
         ticktext: tickText,
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        // gridcolor: '#cfcfcf',
         type: 'linear',
         autorange: 'reversed'
     };
@@ -153,8 +173,12 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'xaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
                 range: [xmin - xPad, xmax + xPad],
                 zeroline: false
             };
@@ -162,8 +186,12 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'xaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
                 range: [xmin - xPad, xmax + xPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'x',
@@ -175,8 +203,12 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'xaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
                 range: [xmin - xPad, xmax + xPad],
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'x',
@@ -209,13 +241,17 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        legend: {orientation: "h", x: 0, y: 1.1}
+        legend: {orientation: "h", x: 0, y: 1}
     };
 
     layout['xaxis'] = {
         title: 'Forecast Hour',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        gridcolor: '#cfcfcf'
     };
 
     const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free', 4: 'free', 5: 'free', 6: 'free', 7: 'free'};
@@ -241,18 +277,26 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'yaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 zeroline: false
             };
         } else if (axisIdx < Object.keys(axisPosition).length) {
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
                 side: axisSide[axisIdx],
@@ -263,9 +307,13 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'y',
                 side: axisSide[Object.keys(axisPosition).length - 1],
@@ -274,7 +322,7 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const xPad = ((xmax - xmin) * 0.075) !== 0 ? (xmax - xmin) * 0.075 : 0.075;
+    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
     xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
     xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
@@ -297,15 +345,19 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        legend: {orientation: "h", x: 0, y: 1.1}
+        legend: {orientation: "h", x: 0, y: 1}
     };
 
     layout['xaxis'] = {
         title: 'Threshold',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
         tickvals: [0.01, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0],
-        ticktext: ["0.01", "0.10", "0.25", "0.50", "1.00", "1.50", "2.00", "3.00"]
+        ticktext: ["0.01", "0.10", "0.25", "0.50", "1.00", "1.50", "2.00", "3.00"],
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        gridcolor: '#cfcfcf'
     };
 
     const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free', 4: 'free', 5: 'free', 6: 'free', 7: 'free'};
@@ -329,18 +381,26 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'yaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 zeroline: false
             };
         } else if (axisIdx < Object.keys(axisPosition).length) {
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
                 side: axisSide[axisIdx],
@@ -351,9 +411,13 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'y',
                 side: axisSide[Object.keys(axisPosition).length - 1],
@@ -362,7 +426,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const xPad = ((xmax - xmin) * 0.075) !== 0 ? (xmax - xmin) * 0.075 : 0.075;
+    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
     xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
     xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
@@ -385,15 +449,19 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
         zeroline: false,
         hovermode: 'closest',
         hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        legend: {orientation: "h", x: 0, y: 1.1}
+        legend: {orientation: "h", x: 0, y: 1}
     };
 
     layout['xaxis'] = {
         title: 'Hour of Day',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 16},
         tickvals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
-        ticktext: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
+        ticktext: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"],
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        gridcolor: '#cfcfcf'
     };
 
     const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free', 4: 'free', 5: 'free', 6: 'free', 7: 'free'};
@@ -417,18 +485,26 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'yaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 zeroline: false
             };
         } else if (axisIdx < Object.keys(axisPosition).length) {
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
                 side: axisSide[axisIdx],
@@ -439,9 +515,13 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000', size: 22},
-                tickfont: {color: '#000000', size: 14},
-                range: [ymin - yPad, ymax + yPad],
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                // gridcolor: '#cfcfcf',
+                range: [ymin - yPad, ymax + 4 * yPad],
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'y',
                 side: axisSide[Object.keys(axisPosition).length - 1],
@@ -450,7 +530,7 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const xPad = ((xmax - xmin) * 0.075) !== 0 ? (xmax - xmin) * 0.075 : 0.075;
+    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
     xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
     xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
@@ -481,8 +561,8 @@ const generateReliabilityPlotOptions = function () {
 
     layout['xaxis'] = {
         title: 'Forecast Probability',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
         range: [xmin, xmax]
@@ -490,8 +570,8 @@ const generateReliabilityPlotOptions = function () {
 
     layout['yaxis'] = {
         title: 'Observed Relative Frequency',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
         range: [ymin, ymax]
@@ -524,8 +604,8 @@ const generateROCPlotOptions = function (dataset) {
 
     layout['xaxis'] = {
         title: 'False Alarm Rate',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
         range: [xmin, xmax]
@@ -533,8 +613,8 @@ const generateROCPlotOptions = function (dataset) {
 
     layout['yaxis'] = {
         title: 'Probability of Detection',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
         range: [ymin, ymax]
@@ -594,16 +674,22 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
 
     layout['xaxis'] = {
         title: 'Bin',
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 12},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 14},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
         tickvals: plotBins.binMeans,
         ticktext: plotBins.binLabels,
     };
 
     layout['yaxis'] = {
         title: axisLabel,
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 14},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
     };
 
     return layout;
@@ -631,15 +717,15 @@ const generateContourPlotOptions = function (dataset) {
 
     layout['xaxis'] = {
         title: xAxisKey,
-        titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 12},
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
     };
 
     if (yAxisKey === "Pressure level") {
         layout['yaxis'] = {
             title: yAxisKey,
-            titlefont: {color: '#000000', size: 22},
-            tickfont: {color: '#000000', size: 14},
+            titlefont: {color: '#000000', size: 24},
+            tickfont: {color: '#000000', size: 18},
             tickvals: [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100],
             ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
             range: [1100, 0],
@@ -649,8 +735,8 @@ const generateContourPlotOptions = function (dataset) {
     } else {
         layout['yaxis'] = {
             title: yAxisKey,
-            titlefont: {color: '#000000', size: 22},
-            tickfont: {color: '#000000', size: 14},
+            titlefont: {color: '#000000', size: 24},
+            tickfont: {color: '#000000', size: 18},
         };
     }
     return layout;
