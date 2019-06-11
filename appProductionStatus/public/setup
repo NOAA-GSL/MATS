@@ -136,14 +136,18 @@ select depenv in ${depenvs}; do
     echo -e "${GRN}You picked $depenv ($REPLY) deploying for $depenv${NC}"
     break
 done
+
+runenv="production"
 # record a repository name...
 # everything that isn't development or integration is production
 repository="matsapps/production"
 prodRepository="matsapps/production"
 if [[ ${depenv} == "integration" ]]; then
     repository="matsapps/integration"
+    runenv="integration"
 else if [[ ${depenv} == "development" ]]; then
         repository="matsapps/development"
+        runenv="development"
     fi
 fi
 
@@ -383,7 +387,7 @@ exposedbydefualt = false
             fi
         done
         #finish up the document
-        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
+        echo "], "process": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
         jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
     done
