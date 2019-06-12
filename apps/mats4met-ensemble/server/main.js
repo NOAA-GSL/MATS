@@ -710,6 +710,24 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.roc,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' '],
+                ['level: ', 'level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
+            ],
+            displayParams: [
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -731,6 +749,13 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.reliability,
             graphFunction: "graphPlotly",
             dataFunction: "dataReliability",
+            plotSpecFunction: "plotSpecDataSeries",
+            checked: true
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.roc,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataROC",
             plotSpecFunction: "plotSpecDataSeries",
             checked: true
         });

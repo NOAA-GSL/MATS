@@ -44,6 +44,7 @@ var PlotTypes = {
     validtime: "ValidTime",
     dailyModelCycle: "DailyModelCycle",
     reliability: "Reliability",
+    roc: "ROC",
     map: "Map",
     histogram: "Histogram",
     contour: "Contour",
@@ -110,10 +111,11 @@ var ReservedWords = {
     ideal8: "ideal8",
     ideal9: "ideal9",
     perfectReliability: "Perfect Reliability",
+    perfectForecast: "Perfect Forecast",
     noSkill: "No Skill",
-    blueCurveText: "blueCurveText",
-    blackCurveText: "blackCurveText",
-    redCurveText: "redCurveText"
+    blueCurveText: "Cold bias",
+    blackCurveText: "Small bias",
+    redCurveText: "Warm bias"
 };
 
 var Messages = {

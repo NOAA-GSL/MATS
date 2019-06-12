@@ -11,6 +11,9 @@ import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment'
 
 dataMap = function (plotParams, plotFunction) {
+    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
+    const plotType = matsTypes.PlotTypes.map;
+    const hasLevels = false;
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -130,7 +133,7 @@ dataMap = function (plotParams, plotFunction) {
         }
     }
 
-    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d);  // generate map with site data
+    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, plotType);  // generate map with site data
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blueCurveText, dBlue);  // generate blue text layer

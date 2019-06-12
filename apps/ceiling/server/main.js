@@ -780,7 +780,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['start utc: ', 'utc-cycle-start', ', ']
+                ['start utc: ', 'utc-cycle-start', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "utc-cycle-start"

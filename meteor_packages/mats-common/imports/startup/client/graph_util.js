@@ -120,17 +120,18 @@ const setNoDataLabelsMap = function (dataset) {
 // plot width helper used in multiple places
 const width = function (plotType) {
     switch (plotType) {
-        case matsTypes.PlotTypes.profile:
         case matsTypes.PlotTypes.scatter2d:
             // set the width square
             return squareWidthHeight();
             break;
+        case matsTypes.PlotTypes.profile:
         case matsTypes.PlotTypes.timeSeries:
         case matsTypes.PlotTypes.dailyModelCycle:
         case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
         case matsTypes.PlotTypes.reliability:
+        case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:
@@ -145,17 +146,18 @@ const width = function (plotType) {
 // plot height helper used in multiple places
 const height = function (plotType) {
     switch (plotType) {
-        case matsTypes.PlotTypes.profile:
         case matsTypes.PlotTypes.scatter2d:
             // set the height square
             return squareWidthHeight();
             break;
+        case matsTypes.PlotTypes.profile:
         case matsTypes.PlotTypes.timeSeries:
         case matsTypes.PlotTypes.dailyModelCycle:
         case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
         case matsTypes.PlotTypes.reliability:
+        case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:
@@ -245,11 +247,7 @@ const setGraphView = function (plotType) {
     document.getElementById("curves").style.display = "block";
     document.getElementById("graphView").style.display = "block";
     document.getElementById("textView").style.display = "none";
-    if (Session.get('plotType') !== matsTypes.PlotTypes.map) {
-        document.getElementById('plot-control-button-group').style.display = "block";
-    } else {
-        document.getElementById('plot-control-button-group').style.display = "none";
-    }
+    document.getElementById('plot-control-button-group').style.display = "block";
 };
 
 // helper to bring up the graph page in a pop-up window

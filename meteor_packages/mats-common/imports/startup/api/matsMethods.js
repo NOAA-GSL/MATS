@@ -503,6 +503,33 @@ const _getFlattenedResultData = function (rk, p, np) {
                         returnData.data[data[ci].label] = curveData;
                     }
                     break;
+                case matsTypes.PlotTypes.roc:
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = {};  // map of arrays of map
+                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
+                        }
+                        var stats = {};
+                        stats['label'] = data[ci].label;
+                        returnData.stats[data[ci].label] = stats;
+
+                        var cdata = data[ci].data;
+                        var curveData = [];  // array of maps
+                        for (var cdi = 0; cdi < data[ci].y.length; cdi++) {  // for each datapoint
+                            var curveDataElement = {};
+                            curveDataElement[data[ci].label + ' threshold'] = data[ci].stats[cdi].threshold;
+                            curveDataElement['probability of detection'] = data[ci].stats[cdi].pody;
+                            curveDataElement['false alarm rate'] = data[ci].stats[cdi].fa;
+                            curveDataElement['oy'] = data[ci].stats[cdi].obs_y;
+                            curveDataElement['on'] = data[ci].stats[cdi].obs_n;
+                            curveData.push(curveDataElement);
+                        }
+                        returnData.data[data[ci].label] = curveData;
+                    }
+                    break;
                 case matsTypes.PlotTypes.map:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
@@ -2151,6 +2178,9 @@ const saveLayout = new ValidatedMethod({
         },
         curveOpsUpdate: {
             type: Object, blackbox: true
+        },
+        annotation: {
+            type: String
         }
     }).validator(),
     run(params) {
@@ -2158,8 +2188,9 @@ const saveLayout = new ValidatedMethod({
             var key = params.resultKey;
             var layout = params.layout;
             var curveOpsUpdate = params.curveOpsUpdate;
+            var annotation = params.annotation;
             try {
-                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate}});
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate, annotation: annotation}});
             } catch (error) {
                 throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
             }

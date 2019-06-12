@@ -242,6 +242,9 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.reliability:
                                 matsCurveUtils.showReliabilityFace();
                                 break;
+                            case matsTypes.PlotTypes.roc:
+                                matsCurveUtils.showROCFace();
+                                break;
                             case matsTypes.PlotTypes.map:
                                 matsCurveUtils.showMapFace();
                                 break;
@@ -434,6 +437,7 @@ Template.plotList.onRendered( function() {
 
     // need to display correct selectors on page load if default plot type is not timeseries
     const plotType = matsPlotUtils.getPlotType();
+    Session.set('plotType', plotType);  // need to make sure plotType is in the Session this early
     switch (plotType) {
         case matsTypes.PlotTypes.profile:
             matsCurveUtils.showProfileFace();
@@ -452,6 +456,9 @@ Template.plotList.onRendered( function() {
             break;
         case matsTypes.PlotTypes.reliability:
             matsCurveUtils.showReliabilityFace();
+            break;
+        case matsTypes.PlotTypes.roc:
+            matsCurveUtils.showROCFace();
             break;
         case matsTypes.PlotTypes.map:
             matsCurveUtils.showMapFace();

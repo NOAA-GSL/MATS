@@ -231,7 +231,7 @@ dataProfile = function (plotParams, plotFunction) {
         curve['xmax'] = d.xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
-        const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {

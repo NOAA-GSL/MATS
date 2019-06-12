@@ -929,7 +929,7 @@ var doCurveTextPatterns = function () {
                 ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
-                ['', 'truth', ' '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
@@ -946,7 +946,7 @@ var doCurveTextPatterns = function () {
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
-                ['', 'truth', ' '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
@@ -963,7 +963,7 @@ var doCurveTextPatterns = function () {
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
-                ['', 'truth', ' ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "utc-cycle-start", "truth"
@@ -978,7 +978,7 @@ var doCurveTextPatterns = function () {
                 ['', 'sites', ': '],
                 ['', 'variable', ', '],
                 ['fcst_len: ', 'forecast-length', ' h '],
-                [' valid-time:', 'valid-time', ' ']
+                [' valid-time:', 'valid-time', '']
             ],
             displayParams: [
                 "data-source", "sites", "sitesMap", "variable", "forecast-length", "valid-time"
@@ -995,7 +995,7 @@ var doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['', 'truth', ' '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
