@@ -147,11 +147,11 @@ Template.graph.helpers({
                     case matsTypes.PlotTypes.threshold:
                     case matsTypes.PlotTypes.validtime:
                     case matsTypes.PlotTypes.dailyModelCycle:
-                    case matsTypes.PlotTypes.reliability:
                     case matsTypes.PlotTypes.scatter2d:
                         localAnnotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                         break;
                     case matsTypes.PlotTypes.map:
+                    case matsTypes.PlotTypes.reliability:
                     case matsTypes.PlotTypes.roc:
                     case matsTypes.PlotTypes.histogram:
                     case matsTypes.PlotTypes.contour:

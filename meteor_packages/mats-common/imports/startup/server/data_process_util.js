@@ -552,6 +552,10 @@ const processDataROC = function (dataset, appParams, curveInfoParams, plotParams
 const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams) {
     var error = "";
     var curvesLengthSoFar = 0;
+    var xmax = -1 * Number.MAX_VALUE;
+    var ymax = -1 * Number.MAX_VALUE;
+    var xmin = Number.MAX_VALUE;
+    var ymin = Number.MAX_VALUE;
 
     // flatten all the returned data into one stats array and one secs array in order to calculate histogram bins over the whole range.
     const curveSubStats = [].concat.apply([], allReturnedSubStats);
@@ -630,6 +634,10 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
         // also pass previously calculated axis stats to curve options
         curve['annotation'] = "";
         curve['axisKey'] = curveInfoParams.curves[curveIndex].axisKey;
+        xmin = d.xmin < xmin ? d.xmin : xmin;
+        xmax = d.xmax > xmax ? d.xmax : xmax;
+        ymin = d.ymin < ymin ? d.ymin : ymin;
+        ymax = d.ymax > ymax ? d.ymax : ymax;
         const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, curveInfoParams.axisMap, d, matsTypes.PlotTypes.histogram);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         curvesLengthSoFar++;
@@ -683,6 +691,10 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
     } // end curves
 
     // generate plot options
+    curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['xmin'] = xmin;
+    curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['xmax'] = xmax;
+    curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['ymin'] = ymin;
+    curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['ymax'] = ymax;
     const resultOptions = matsDataPlotOpsUtils.generateHistogramPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, plotBins);
     var totalProcessingFinish = moment();
     bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {

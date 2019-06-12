@@ -21,7 +21,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
         legend: {orientation: "h", x: 0, y: 1}
     };
 
@@ -240,7 +240,7 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
         legend: {orientation: "h", x: 0, y: 1}
     };
 
@@ -344,7 +344,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
         legend: {orientation: "h", x: 0, y: 1}
     };
 
@@ -448,7 +448,7 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
         legend: {orientation: "h", x: 0, y: 1}
     };
 
@@ -555,7 +555,7 @@ const generateReliabilityPlotOptions = function () {
         zeroline: true,
         perfectLine: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
         legend: {orientation: "h", x: 0, y: 1.1}
     };
 
@@ -598,7 +598,7 @@ const generateROCPlotOptions = function (dataset) {
         zeroline: true,
         perfectLine: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
         legend: {orientation: "h", x: 0, y: 1.1}
     };
 
@@ -655,6 +655,9 @@ const generateMapPlotOptions = function () {
 const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBins) {
     const axisKey = curves[0].axisKey;
     const axisLabel = axisMap[axisKey].axisLabel;
+    var ymin = axisMap[axisKey].ymin;
+    var ymax = axisMap[axisKey].ymax;
+    const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
 
     var layout = {
         margin: {
@@ -668,17 +671,17 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         bargap: 0.25,
         barmode: 'group',
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
-        legend: {orientation: "h", x: 0, y: 1.1}
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1}
     };
 
     layout['xaxis'] = {
         title: 'Bin',
         titlefont: {color: '#000000', size: 24},
         tickfont: {color: '#000000', size: 14},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
         tickvals: plotBins.binMeans,
         ticktext: plotBins.binLabels,
     };
@@ -687,11 +690,11 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         title: axisLabel,
         titlefont: {color: '#000000', size: 24},
         tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        range: [ymin - yPad, ymax + 4 * yPad]
     };
-
     return layout;
 
 };
@@ -711,7 +714,7 @@ const generateContourPlotOptions = function (dataset) {
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
         legend: {orientation: "h", x: 0, y: 1.07}
     };
 
