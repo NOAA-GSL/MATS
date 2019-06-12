@@ -227,6 +227,7 @@ getPublishableApps() {
 	echo ${APPS[@]}
 }
 
+
 # This routine will update the app in the apps list of the deployment collection production deployment_environment document of the
 # appProductionStatus mongo database on mats.gsd.esrl.noaa.gov to match the corresponding version and build date from the integration server app
 promoteApp() {
@@ -242,6 +243,15 @@ promoteApp() {
 	local intBuildDate=$(getBuildDateForAppForServer ${app} ${intServer})
 	updateVersionForAppForServer ${intVersion} ${app} ${prodServer}
 	updateBuildDateForAppForServer ${intBuildDate}  ${app} ${prodServer}
+	# get the deployed production servers
+    local deployedProductionServers=$(getDeployedProductionServers)
+    # remove the prodServer from this list
+    deployedProductionServers=( "${deployedProductionServers[@]/${prodServer}}" )
+    for s in ${deployedProductionServers[@]}
+        do
+            updateVersionForAppForServer ${intVersion} ${app} ${s}
+            updateBuildDateForAppForServer ${intBuildDate}  ${app} ${s}
+        done
 }
 
 
@@ -474,6 +484,18 @@ getDeploymentEnvironmentForServer() {
 	closeTunnel
 	echo $data | jq -r '.deployment_environment'
 	
+}
+
+getDeployedProductionServers() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    openTunnel
+    unset data
+    data=$(mongo  localhost:27018/appProductionStatus --quiet --eval "db.getCollection('deployment').find({run_environment:'production'},{_id:0,servers:1}).shellPrint()" | jq -r '.servers[]')
+    closeTunnel
+    echo $data
 }
 
 getProductionServer() {
