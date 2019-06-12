@@ -696,8 +696,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.1.11",
-      "buildDate": "2019.06.10.22.53",
+      "version": "2.2.0",
+      "buildDate": "2019.06.12.21.14",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
