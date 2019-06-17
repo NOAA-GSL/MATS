@@ -126,6 +126,7 @@ Template.graph.helpers({
                 default:
                     break;
             }
+            curveOpsUpdate = [];
 
             // initial plot
             $("#placeholder").empty();
