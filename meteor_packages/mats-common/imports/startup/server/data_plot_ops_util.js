@@ -53,7 +53,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
+        const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
         xmin = axisMap[axisKey].xmin < xmin ? axisMap[axisKey].xmin : xmin;
         xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
@@ -68,7 +68,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 zeroline: false
             };
         } else if (axisIdx < Object.keys(axisPosition).length) {
@@ -81,7 +81,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
                 side: axisSide[axisIdx],
@@ -98,7 +98,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'y',
                 side: axisSide[Object.keys(axisPosition).length - 1],
@@ -107,7 +107,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
+    const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
     xmax = moment.utc(xmax + xPad * Math.ceil(yAxisNumber / 2)).format("YYYY-MM-DD HH:mm");
     xmin = moment.utc(xmin - xPad * Math.ceil(yAxisNumber / 2)).format("YYYY-MM-DD HH:mm");
     layout['xaxis']['range'] = [xmin, xmax];
@@ -174,7 +174,7 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
         xmax = xmax + errorMax;
         xmin = xmin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
+        const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {
@@ -226,7 +226,7 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
+    const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
     ymax = ymax + (yPad * Math.ceil(xAxisNumber / 2));
     ymin = ymin - (yPad * Math.ceil(xAxisNumber / 2));
     layout['yaxis']['range'] = [ymax, ymin];
@@ -280,7 +280,7 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
+        const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
         xmin = axisMap[axisKey].xmin < xmin ? axisMap[axisKey].xmin : xmin;
         xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
@@ -295,7 +295,7 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 zeroline: false
             };
         } else if (axisIdx < Object.keys(axisPosition).length) {
@@ -308,7 +308,7 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
                 side: axisSide[axisIdx],
@@ -325,7 +325,7 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'y',
                 side: axisSide[Object.keys(axisPosition).length - 1],
@@ -334,7 +334,7 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
+    const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
     xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
     xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
@@ -390,7 +390,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
+        const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {
@@ -403,7 +403,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 zeroline: false
             };
         } else if (axisIdx < Object.keys(axisPosition).length) {
@@ -416,7 +416,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
                 side: axisSide[axisIdx],
@@ -433,7 +433,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'y',
                 side: axisSide[Object.keys(axisPosition).length - 1],
@@ -442,7 +442,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
+    const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
     xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
     xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
@@ -498,7 +498,7 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
+        const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {
@@ -511,7 +511,7 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 zeroline: false
             };
         } else if (axisIdx < Object.keys(axisPosition).length) {
@@ -524,7 +524,7 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
                 side: axisSide[axisIdx],
@@ -541,7 +541,7 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
                 linecolor: 'black',
                 linewidth: 2,
                 mirror: true,
-                range: [ymin - yPad, ymax + 4 * yPad],  // need to allow room at the top for the legend
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
                 anchor: axisAnchor[Object.keys(axisPosition).length - 1],
                 overlaying: 'y',
                 side: axisSide[Object.keys(axisPosition).length - 1],
@@ -550,7 +550,7 @@ const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
+    const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
     xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
     xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
@@ -683,7 +683,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
     const axisLabel = axisMap[axisKey].axisLabel;
     var ymin = axisMap[axisKey].ymin;
     var ymax = axisMap[axisKey].ymax;
-    const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
+    const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
 
     // overall plot options
     var layout = {
@@ -722,7 +722,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         linecolor: 'black',
         linewidth: 2,
         mirror: true,
-        range: [ymin - yPad, ymax + 4 * yPad]  // need to allow room at the top for the legend
+        range: [ymin - yPad, ymax + 8 * yPad]  // need to allow room at the top for the legend
     };
 
     return layout;
