@@ -112,8 +112,8 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
 
 // sets plot options for profile graphs
 const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
-    var ymin = 10;
-    var ymax = 1075;
+    var ymin = axisMap[Object.keys(axisMap)[0]].ymin;
+    var ymax = axisMap[Object.keys(axisMap)[0]].ymax;
     const xAxisNumber = Object.keys(axisMap).length;
 
     var layout = {
@@ -218,9 +218,9 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
             };
         }
     }
-    const yPad = ((ymax - ymin) * 0.25) !== 0 ? (ymax - ymin) * 0.25 : 0.25;
-    ymax = ymax + (yPad * Math.ceil(xAxisNumber / 2));
-    ymin = ymin - (yPad * Math.ceil(xAxisNumber / 2));
+    // const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
+    // ymax = ymax + (yPad * Math.ceil(xAxisNumber / 2));
+    // ymin = ymin - (yPad * Math.ceil(xAxisNumber / 2));
     layout['yaxis']['range'] = [ymin, ymax];
     return layout;
 };

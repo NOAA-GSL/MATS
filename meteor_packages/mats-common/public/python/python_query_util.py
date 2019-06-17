@@ -48,7 +48,6 @@ class QueryUtil:
     }
     output_JSON = {}  # JSON structure to pass the five output fields back to the MATS JS
 
-
     # function for constructing and jsonifying a dictionary of the output variables
     def construct_output_json(self):
         self.output_JSON = {
@@ -334,8 +333,8 @@ class QueryUtil:
                 time_interval = self.get_time_interval(loop_time, time_interval, vts)
             loop_time = loop_time + time_interval
 
-        self.data['xmin'] = self.data['x'][0]
-        self.data['xmax'] = self.data['x'][len(self.data['x'])-1]
+        self.data['xmin'] = xmin
+        self.data['xmax'] = xmax
         self.data['ymin'] = ymin
         self.data['ymax'] = ymax
         self.data['sum'] = loop_sum
@@ -343,6 +342,8 @@ class QueryUtil:
     # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
     def parse_query_data_specialty_curve(self, cursor, statistic, plot_type, has_levels, completeness_qc_param):
         # initialize local variables
+        ind_var_min = sys.float_info.max
+        ind_var_max = -1 * sys.float_info.max
         curve_ind_vars = []
         curve_stats = []
         sub_vals_all = []
@@ -369,6 +370,8 @@ class QueryUtil:
             self.n_times.append(int(row['N_times']))
 
             if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
+                ind_var_min = ind_var if ind_var < ind_var_min else ind_var_min
+                ind_var_max = ind_var if ind_var > ind_var_max else ind_var_max
                 # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
                 # other functions can be written for other table types
                 stat, sub_levs, sub_secs, sub_values = self.get_scalar_stat(has_levels, row, statistic)
@@ -408,8 +411,6 @@ class QueryUtil:
         n0_max = max(self.n0)
         n_times_max = max(self.n_times)
         loop_sum = 0
-        ind_var_min = sys.float_info.max
-        ind_var_max = -1 * sys.float_info.max
         dep_var_min = sys.float_info.max
         dep_var_max = -1 * sys.float_info.max
 
@@ -424,8 +425,6 @@ class QueryUtil:
         for ind_var in curve_ind_vars:
             # the reason we need to loop through everything again is to add in nulls
             # for any bad data points along the curve.
-            ind_var_min = ind_var if ind_var < ind_var_min else ind_var_min
-            ind_var_max = ind_var if ind_var > ind_var_max else ind_var_max
             d_idx = curve_ind_vars.index(ind_var)
             this_n0 = self.n0[d_idx]
             this_n_times = self.n_times[d_idx]
@@ -441,8 +440,7 @@ class QueryUtil:
                     self.data['subSecs'].append('NaN')
                     self.data['subLevs'].append('NaN')
                     # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
-                elif plot_type != 'DieOff':
-                    # for dieoffs, we don't want to add a null for missing data. Just don't have a point for that FHR.
+                else:
                     self.data['x'].append(ind_var)
                     self.data['y'].append('null')
                     self.data['error_y'].append('null')
@@ -820,15 +818,15 @@ class QueryUtil:
 
         # calculate statistics
         self.data['xmin'] = self.data['x'][0]
-        self.data['xmax'] = self.data['x'][len(self.data['x'])-1]
+        self.data['xmax'] = self.data['x'][len(self.data['x']) - 1]
         self.data['xmin'] = self.data['y'][0]
-        self.data['xmax'] = self.data['y'][len(self.data['y'])-1]
+        self.data['xmax'] = self.data['y'][len(self.data['y']) - 1]
         self.data['zmin'] = zmin
         self.data['zmax'] = zmax
         self.data['sum'] = loop_sum
         self.data['glob_stats']['mean'] = loop_sum / n_points
-        self.data['glob_stats']['minDate'] = self.data['minDateTextOutput'][0]
-        self.data['glob_stats']['maxDate'] = self.data['maxDateTextOutput'][len(self.data['maxDateTextOutput'])-1]
+        self.data['glob_stats']['minDate'] = min(m for m in self.data['minDateTextOutput'] if m != 'null')
+        self.data['glob_stats']['maxDate'] = max(m for m in self.data['maxDateTextOutput'] if m != 'null')
         self.data['glob_stats']['n'] = n_points
 
     # function for querying the database and sending the returned data to the parser
