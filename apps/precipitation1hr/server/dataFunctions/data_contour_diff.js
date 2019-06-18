@@ -46,10 +46,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var source = curve['truth'];
-        var sourceStr = "";
-        if (source !== "All") {
-            sourceStr = "_" + source;
-        }
+        var sourceStr = source !== "All" ? "_" + source : "";
         var scaleStr = curve['scale'];
         var scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var statisticSelect = curve['statistic'];
@@ -91,9 +88,11 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
             const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
+            const otherScale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === curves[otherCurveIndex]['scale']);
+            const otherSourceStr = curves[otherCurveIndex]['truth'] !== "All" ? "_" + curves[otherCurveIndex]['truth'] : "";
             const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
 
-            matchModel = ", " + otherModel + "_" + otherRegion + " as a0";
+            matchModel = ", " + otherModel + '_' + otherScale + otherSourceStr + '_' + otherRegion + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
             matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
             matchClause = "and m0.time = a0.time";
@@ -106,9 +105,9 @@ dataContourDiff = function (plotParams, plotFunction) {
             }
             if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
                 var matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === curves[otherCurveIndex]['threshold']);
-                matchThresholdClause = "and a0.thresh = " + matchThreshold;
+                matchThresholdClause = "and a0.trsh = " + matchThreshold * 0.01;
             } else {
-                matchThresholdClause = "and m0.thresh = a0.thresh";
+                matchThresholdClause = "and m0.trsh = a0.thresh";
             }
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                 var matchValidTimes = curves[otherCurveIndex]['valid-time'] === undefined ? [] : curves[otherCurveIndex]['valid-time'];
