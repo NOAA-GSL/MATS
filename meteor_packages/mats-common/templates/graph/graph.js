@@ -210,7 +210,11 @@ Template.graph.helpers({
                 }
                 plotType = Session.get('plotType');
             }
-            return matsPlotUtils.getCurveText(plotType, this);
+            if (plotType === matsTypes.PlotTypes.profile) {
+                return matsPlotUtils.getCurveTextWrapping(plotType, this);
+            } else {
+                return matsPlotUtils.getCurveText(plotType, this);
+            }
         } else {
             return this.label + ":  Difference";
         }
