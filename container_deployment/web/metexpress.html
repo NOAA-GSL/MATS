@@ -169,12 +169,14 @@
                 <ul class="nav navbar-nav navbar-left" style="min-height:10px;">
                     <div>
                         <li ng-repeat="group in groups">
+                            <div class="container-fluid">
                                 <ul class="nav navbar-nav navbar-left">
                                     <h3>{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
                                         <a class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;"href="{{proxy_prefix}}/{{item.app}}">{{item.title}}</a>
                                     </li>
                                 </ul>
+                            </div>
                         </li>
                     </div>
                 </ul>

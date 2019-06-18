@@ -119,17 +119,18 @@
                 </div>
                 <!-- /.container-fluid -->
             </nav>
-            <div style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right: 0"
-                 class="container-fluid">
+            <div style="background-color: #dddddd;height:100%;;margin-bottom:0;margin-top:0;padding-left:1em;padding-right:0" class="container-fluid">
                 <ul class="nav navbar-nav navbar-left" style="min-height:10px;">
                     <div>
                         <li ng-repeat="group in groups">
+				            <div class="container-fluid">
                                 <ul class="nav navbar-nav navbar-left">
                                     <h3>{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
                                         <a class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;"href="/{{item.app}}">{{item.displayName}}</a>
                                     </li>
                                 </ul>
+				            </div>
                         </li>
                     </div>
                 </ul>
