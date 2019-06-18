@@ -62,6 +62,7 @@ Template.graph.helpers({
                         'contours.end': dataset[0].contours.end,
                         'contours.size': dataset[0].contours.size,
                         'reversescale': false,
+                        'connectgaps': false,
                         'colorscale': JSON.stringify(dataset[0].colorscale)
                     });
                     break;
@@ -1326,6 +1327,13 @@ Template.graph.events({
                 update['reversescale'] = true;
             } else {
                 update['reversescale'] = false;
+            }
+        });
+        $("input[id=nullSmooth]").get().forEach(function (elem, index) {
+            if (elem && elem.checked) {
+                update['connectgaps'] = true;
+            } else {
+                update['connectgaps'] = false;
             }
         });
         var elem = document.getElementById("colormapSelect");
