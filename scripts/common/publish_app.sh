@@ -109,5 +109,3 @@ echo -e "${GRN}linking /gsd/mats${NC}"
 echo -e "${RED}triggering restart nginx on ${server}.${NC}"
 /usr/bin/ssh -q ${server} "/bin/touch /builds/restart_nginx"
 exit 0
-
-

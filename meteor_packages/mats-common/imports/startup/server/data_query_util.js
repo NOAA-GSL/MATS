@@ -460,21 +460,22 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             sum: 0
         };
     */
+    // initialize local variables
     d.error_x = null;  // time series doesn't use x errorbars
     var N0 = [];
     var N_times = [];
-    var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
-
+    var xmax = -1 * Number.MAX_VALUE;
     var curveTime = [];
     var curveStats = [];
     var subVals = [];
     var subSecs = [];
     var subLevs = [];
 
-    var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined; //calculate a base time interval -- will be used if data is regular
-    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    // default the time interval to an hour. It won't matter since it won't be used for only 0 or 1 data points.
+    var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : 3600;
 
+    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         var avSeconds = Number(rows[rowIndex].avtime);
         var avTime = avSeconds * 1000;
         xmin = avTime < xmin ? avTime : xmin;
@@ -483,9 +484,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
         N0.push(rows[rowIndex].N0);             // number of values that go into a time series point
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a time series point
 
-        // find the minimum time_interval. For regular models, this will differ from the previous time_interval
-        // if the interval was artificially large due to missing values. For irregular models, we need the minimum
-        // interval to be sure we don't accidentally go past the next data point.
+        // Find the minimum time_interval to be sure we don't accidentally go past the next data point.
         if (rowIndex < rows.length - 1) {
             var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
             if (time_diff < time_interval) {
@@ -537,33 +536,26 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
     var N0_max = Math.max(...N0);
     var N_times_max = Math.max(...N_times);
 
-    if (xmin < Number(rows[0].avtime) * 1000 || averageStr !== "None") {
-        xmin = Number(rows[0].avtime) * 1000;
-    }
+    xmin = xmin < Number(rows[0].avtime) * 1000 || averageStr !== "None" ? Number(rows[0].avtime) * 1000 : xmin;
 
     time_interval = time_interval * 1000;
     var loopTime = xmin;
     var sum = 0;
+    var ymin = Number.MAX_VALUE;
+    var ymax = -1 * Number.MAX_VALUE;
+
     while (loopTime <= xmax) {
+        // the reason we need to loop through everything again is to add in nulls for any missing points along the
+        // timeseries. The query only returns the data that it actually has.
         var d_idx = curveTime.indexOf(loopTime);
         if (d_idx < 0) {
+            d.x.push(loopTime);
+            d.y.push(null);
+            d.error_y.push(null);   //placeholder
+            d.subVals.push(NaN);
+            d.subSecs.push(NaN);
             if (hasLevels) {
-                //d.push([loopTime, null, -1, NaN, NaN, NaN]);// add a null for missing data
-                d.x.push(loopTime);
-                d.y.push(null);
-                //d.error_x not used
-                d.error_y.push(null);   //placeholder
-                d.subVals.push(NaN);
-                d.subSecs.push(NaN);
                 d.subLevs.push(NaN);
-            } else {
-                //d.push([loopTime, null, -1, NaN, NaN]);     // add a null for missing data
-                d.x.push(loopTime);
-                d.y.push(null);
-                //d.error_x not used
-                d.error_y.push(null); //placeholder
-                d.subVals.push(NaN);
-                d.subSecs.push(NaN);
             }
         } else {
             var this_N0 = N0[d_idx];
@@ -571,75 +563,47 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             // Make sure that we don't have any points with far less data than the rest of the graph, and that
             // we don't have any points with a smaller completeness value than specified by the user.
             if (this_N0 < 0.1 * N0_max || this_N_times < completenessQCParam * N_times_max) {
+                d.x.push(loopTime);
+                d.y.push(null);
+                d.error_y.push(null); //placeholder
+                d.subVals.push(NaN);
+                d.subSecs.push(NaN);
                 if (hasLevels) {
-//                    d.push([loopTime, null, -1, NaN, NaN, NaN]);     // add a null if this time doesn't pass QC
-                    d.x.push(loopTime);
-                    d.y.push(null);
-                    //d.error_x not used
-                    d.error_y.push(null); //placeholder
-                    d.subVals.push(NaN);
-                    d.subSecs.push(NaN);
                     d.subLevs.push(NaN);
-                } else {
-//                    d.push([loopTime, null, -1, NaN, NaN]);     // add a null if this time doesn't pass QC
-                    d.x.push(loopTime);
-                    d.y.push(null);
-                    //d.error_x not used
-                    d.error_y.push(null); //placeholder
-                    d.subVals.push(NaN);
-                    d.subSecs.push(NaN);
                 }
             } else {
+                // there's valid data at this point, so store it
                 sum += curveStats[d_idx];
+                d.x.push(loopTime);
+                d.y.push(curveStats[d_idx]);
+                d.error_y.push(null);
+                d.subVals.push(subVals[d_idx]);
+                d.subSecs.push(subSecs[d_idx]);
                 if (hasLevels) {
-                    //d.push([loopTime, curveStats[d_idx], -1, subVals[d_idx], subSecs[d_idx], subLevs[d_idx]]);   // else add the real data
-                    d.x.push(loopTime);
-                    d.y.push(curveStats[d_idx]);
-                    //d.error_x not used
-                    d.error_y.push(null);
-                    d.subVals.push(subVals[d_idx]);
-                    d.subSecs.push(subSecs[d_idx]);
                     d.subLevs.push(subLevs[d_idx]);
-                } else {
-                    //d.push([loopTime, curveStats[d_idx], -1, subVals[d_idx], subSecs[d_idx]]);   // else add the real data
-                    d.x.push(loopTime);
-                    d.y.push(curveStats[d_idx]);
-                    //d.error_x not used
-                    d.error_y.push(null);
-                    d.subVals.push(subVals[d_idx]);
-                    d.subSecs.push(subSecs[d_idx]);
                 }
+                ymin = curveStats[d_idx] < ymin ? curveStats[d_idx] : ymin;
+                ymax = curveStats[d_idx] > ymax ? curveStats[d_idx] : ymax;
             }
         }
-        if (!regular) {  // it is a model that has an irregular set of intervals, i.e. an irregular cadence
-            time_interval = getTimeInterval(loopTime, time_interval, foreCastOffset, cycles);   // the time interval most likely will not be the one calculated above
+        if (!regular) {
+            // it is a model that has an irregular set of intervals, i.e. an irregular cadence
+            // the time interval most likely will not be the one calculated above
+            time_interval = getTimeInterval(loopTime, time_interval, foreCastOffset, cycles);
         }
         loopTime = loopTime + time_interval;    // advance to the next time.
     }
+
     if (regular) {
         cycles = [time_interval];   // regular models will return one cycle cadence
     }
-    const filteredx = d.x.filter(x => x);
-    const filteredy = d.y.filter(y => y);
-    d.xmin = Math.min(...filteredx);
-    d.xmax = Math.max(...filteredx);
-    d.ymin = Math.min(...filteredy);
-    d.ymax = Math.max(...filteredy);
+
+    d.xmin = xmin;
+    d.xmax = xmax;
+    d.ymin = ymin;
+    d.ymax = ymax;
     d.sum = sum;
 
-    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)) {
-        d.xmin = 0;
-    }
-    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)) {
-        d.ymin = 0;
-    }
-
-    if (d.xmax == "-Infinity") {
-        d.xmax = 0;
-    }
-    if (d.ymax == "-Infinity") {
-        d.ymax = 0;
-    }
     return {
         d: d,
         N0: N0,
@@ -662,13 +626,14 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             stats: [],     //pointStats
             text: [],
             glob_stats: {},     //curveStats
-            xmin:num,
-            ymin:num,
-            xmax:num,
-            ymax:num,
-            sum:num;
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            sum: 0
         };
     */
+    // initialize local variables
     var N0 = [];
     var N_times = [];
     var curveIndependentVars = [];
@@ -687,7 +652,6 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         } else {
             independentVar = Number(rows[rowIndex].avtime);
         }
-
         var stat = rows[rowIndex].stat;
         N0.push(rows[rowIndex].N0);             // number of values that go into a point on the graph
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a point on the graph
@@ -745,133 +709,73 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             subLevs.push(sub_levs);
         }
     }
+
     var N0_max = Math.max(...N0);
     var N_times_max = Math.max(...N_times);
     var sum = 0;
+    var indVarMin = Number.MAX_VALUE;
+    var indVarMax = -1 * Number.MAX_VALUE;
+    var depVarMin = Number.MAX_VALUE;
+    var depVarMax = -1 * Number.MAX_VALUE;
+
     for (var d_idx = 0; d_idx < curveIndependentVars.length; d_idx++) {
         var this_N0 = N0[d_idx];
         var this_N_times = N_times[d_idx];
         // Make sure that we don't have any points with far less data than the rest of the graph, and that
         // we don't have any points with a smaller completeness value than specified by the user.
-        if (this_N0 < 0.05 * N0_max || this_N_times < completenessQCParam * N_times_max) {
-            if (plotType === matsTypes.PlotTypes.profile) {
-                // profile has the stat first, and then the independent var. The others have independent var and then stat.
-                // this is in the pattern of x-plotted-variable, y-plotted-variable.
-                //d.push([null, curveIndependentVars[d_idx], -1, NaN, NaN, NaN]);
-                d.x.push(null);
-                d.y.push(curveIndependentVars[d_idx]);
-                d.error_x.push(null);  // placeholder
-                //d.error_y not used for profile
+        if (this_N0 < 0.1 * N0_max || this_N_times < completenessQCParam * N_times_max) {
+            if (plotType !== matsTypes.PlotTypes.profile && plotType !== matsTypes.PlotTypes.dieoff) {
+                // for profiles and dieoffs, we don't want to add a null for missing data. Just don't have a point for that FHR.
+                d.x.push(curveIndependentVars[d_idx]);
+                d.y.push(null);
+                d.error_y.push(null);  // placeholder
                 d.subVals.push(NaN);
                 d.subSecs.push(NaN);
-                d.subLevs.push(NaN);
-            } else if (plotType !== matsTypes.PlotTypes.dieoff) {
-                // for dieoffs, we don't want to add a null for missing data. Just don't have a point for that FHR.
                 if (hasLevels) {
-                    //d.push([curveIndependentVars[d_idx], null, -1, NaN, NaN, NaN]);
-                    d.x.push(curveIndependentVars[d_idx]);
-                    d.y.push(null);
-                    //d.error_x not used for curves other than profile
-                    d.error_y.push(null);  // placeholder
-                    d.subVals.push(NaN);
-                    d.subSecs.push(NaN);
                     d.subLevs.push(NaN);
-                } else {
-                    //d.push([curveIndependentVars[d_idx], null, -1, NaN, NaN]);
-                    d.x.push(curveIndependentVars[d_idx]);
-                    d.y.push(null);
-                    //d.error_x not used for curves other than profile
-                    d.error_y.push(null);  // placeholder
-                    d.subVals.push(NaN);
-                    d.subSecs.push(NaN);
                 }
             }
         } else {
-            // else add the real data
+            // there's valid data at this point, so store it
             sum += curveStats[d_idx];
             if (plotType === matsTypes.PlotTypes.profile) {
                 // profile has the stat first, and then the independent var. The others have independent var and then stat.
                 // this is in the pattern of x-plotted-variable, y-plotted-variable.
-//                d.push([curveStats[d_idx], curveIndependentVars[d_idx], -1, subVals[d_idx], subSecs[d_idx], subLevs[d_idx]]);
                 d.x.push(curveStats[d_idx]);
                 d.y.push(curveIndependentVars[d_idx]);
                 d.error_x.push(null); // placeholder
-                //d.error_y not used for curves other than profile
-                d.subVals.push(subVals[d_idx]);
-                d.subSecs.push(subSecs[d_idx]);
-                d.subLevs.push(subLevs[d_idx]);
-            } else if (hasLevels) {
-//                d.push([curveIndependentVars[d_idx], curveStats[d_idx], -1, subVals[d_idx], subSecs[d_idx], subLevs[d_idx]]);
-                d.x.push(curveIndependentVars[d_idx]);
-                d.y.push(curveStats[d_idx]);
-                //d.error_x not used for curves other than profile
-                d.error_y.push(null);  // placeholder
                 d.subVals.push(subVals[d_idx]);
                 d.subSecs.push(subSecs[d_idx]);
                 d.subLevs.push(subLevs[d_idx]);
             } else {
-//                d.push([curveIndependentVars[d_idx], curveStats[d_idx], -1, subVals[d_idx], subSecs[d_idx]]);
                 d.x.push(curveIndependentVars[d_idx]);
                 d.y.push(curveStats[d_idx]);
-                //d.error_x not used for curves other than profile
                 d.error_y.push(null);  // placeholder
                 d.subVals.push(subVals[d_idx]);
                 d.subSecs.push(subSecs[d_idx]);
+                if (hasLevels) {
+                    d.subLevs.push(subLevs[d_idx]);
+                }
             }
+            indVarMin = curveIndependentVars[d_idx] < indVarMin ? curveIndependentVars[d_idx] : indVarMin;
+            indVarMax = curveIndependentVars[d_idx] > indVarMax ? curveIndependentVars[d_idx] : indVarMax;
+            depVarMin = curveStats[d_idx] < depVarMin ? curveStats[d_idx] : depVarMin;
+            depVarMax = curveStats[d_idx] > depVarMax ? curveStats[d_idx] : depVarMax;
         }
     }
 
-    // the met levels are ordered as strings, so we need to re-sort them
-    if (plotType === matsTypes.PlotTypes.profile && appType === matsTypes.AppTypes.metexpress) {
-        var dSorted = [];
-        for (var didx = 0; didx < d.y.length; didx++) {
-            dSorted.push({
-                y: d.y[didx],
-                x: d.x[didx],
-                error_x: d.error_x[didx],
-                subVals: d.subVals[didx],
-                subSecs: d.subSecs[didx],
-                subLevs: d.subLevs[didx]
-            });
-        }
-        d.y = [];
-        d.x = [];
-        d.error_x = [];
-        d.subVals = [];
-        d.subSecs = [];
-        d.subLevs = [];
-        dSorted.sort(function(a,b) { return a.y - b.y; });
-        dSorted.map(function (elem) {
-            d.y.push(elem.y);
-            d.x.push(elem.x);
-            d.error_x.push(elem.error_x);
-            d.subVals.push(elem.subVals);
-            d.subSecs.push(elem.subSecs);
-            d.subLevs.push(elem.subLevs);
-        });
+    if (plotType === matsTypes.PlotTypes.profile) {
+        d.xmin = depVarMin;
+        d.xmax = depVarMax;
+        d.ymin = indVarMin;
+        d.ymax = indVarMax;
+    } else {
+        d.xmin = indVarMin;
+        d.xmax = indVarMax;
+        d.ymin = depVarMin;
+        d.ymax = depVarMax;
     }
-
-    const filteredx = d.x.filter(x => x);
-    const filteredy = d.y.filter(y => y);
-    d.xmin = Math.min(...filteredx);
-    d.xmax = Math.max(...filteredx);
-    d.ymin = Math.min(...filteredy);
-    d.ymax = Math.max(...filteredy);
     d.sum = sum;
-
-    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)) {
-        d.xmin = 0;
-    }
-    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)) {
-        d.ymin = 0;
-    }
-
-    if (d.xmax == "-Infinity") {
-        d.xmax = 0;
-    }
-    if (d.ymax == "-Infinity") {
-        d.ymax = 0;
-    }
 
     return {
         d: d,
@@ -908,7 +812,6 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
 
     // parse the data returned from the query
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-
         var stat = rows[rowIndex].stat;
         var sub_stats = [];
         var sub_secs = [];
@@ -922,14 +825,14 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
                     sub_stats.push(Number(curr_sub_data[0]));
                     sub_secs.push(Number(curr_sub_data[1]));
                     if (hasLevels) {
-                            if (!isNaN(Number(curr_sub_data[2]))) {
-                                sub_levs.push(Number(curr_sub_data[2]));
-                            } else {
-                                sub_levs.push(curr_sub_data[2]);
-                            }
+                        if (!isNaN(Number(curr_sub_data[2]))) {
+                            sub_levs.push(Number(curr_sub_data[2]));
+                        } else {
+                            sub_levs.push(curr_sub_data[2]);
                         }
-                        curveSubLevsRaw.push(sub_levs);
                     }
+                    curveSubLevsRaw.push(sub_levs);
+                }
                 curveSubStatsRaw.push(sub_stats);
                 curveSubSecsRaw.push(sub_secs);
             } catch (e) {
@@ -985,8 +888,10 @@ const parseQueryDataContour = function (rows, d) {
             sum:num
         };
     */
+    // initialize local variables
     var curveStatLookup = {};
     var curveNLookup = {};
+
     // get all the data out of the query array
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         var rowXVal = rows[rowIndex].xVal;
@@ -1019,6 +924,7 @@ const parseQueryDataContour = function (rows, d) {
     d.y = matsDataUtils.arrayUnique(d.yTextOutput).sort(function (a, b) {
         return a - b
     });
+
     var i;
     var j;
     var currX;
@@ -1030,6 +936,9 @@ const parseQueryDataContour = function (rows, d) {
     var currYNArray;
     var sum = 0;
     var nPoints = 0;
+    var zmin = Number.MAX_VALUE;
+    var zmax = -1 * Number.MAX_VALUE;
+
     for (j = 0; j < d.y.length; j++) {
         currY = d.y[j];
         currYStatArray = [];
@@ -1047,6 +956,8 @@ const parseQueryDataContour = function (rows, d) {
                 nPoints = nPoints + 1;
                 currYStatArray.push(currStat);
                 currYNArray.push(currN);
+                zmin = currStat < zmin ? currStat : zmin
+                zmax = currStat > zmax ? currStat : zmax
             }
         }
         d.z.push(currYStatArray);
@@ -1054,36 +965,13 @@ const parseQueryDataContour = function (rows, d) {
     }
 
     // calculate statistics
-    const filteredx = d.x.filter(x => x);
-    const filteredy = d.y.filter(y => y);
-    const filteredz = d.zTextOutput.filter(z => z);
-    d.xmin = Math.min(...filteredx);
-    d.xmax = Math.max(...filteredx);
-    d.ymin = Math.min(...filteredy);
-    d.ymax = Math.max(...filteredy);
-    d.zmin = Math.min(...filteredz);
-    d.zmax = Math.max(...filteredz);
+    d.xmin = d.x[0];
+    d.xmax = d.x[d.x.length - 1];
+    d.ymin = d.y[0];
+    d.ymax = d.y[d.y.length - 1];
+    d.zmin = zmin;
+    d.zmax = zmax;
     d.sum = sum;
-
-    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)) {
-        d.xmin = 0;
-    }
-    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)) {
-        d.ymin = 0;
-    }
-    if (d.zmin == "-Infinity" || (d.zTextOutput.indexOf(0) !== -1 && 0 < d.zmin)) {
-        d.zmin = 0;
-    }
-
-    if (d.xmax == "-Infinity") {
-        d.xmax = 0;
-    }
-    if (d.ymax == "-Infinity") {
-        d.ymax = 0;
-    }
-    if (d.zmax == "-Infinity") {
-        d.zmax = 0;
-    }
 
     const filteredMinDate = d.minDateTextOutput.filter(t => t);
     const filteredMaxDate = d.maxDateTextOutput.filter(t => t);
