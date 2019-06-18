@@ -62,6 +62,7 @@ Template.graph.helpers({
                         'contours.end': dataset[0].contours.end,
                         'contours.size': dataset[0].contours.size,
                         'reversescale': false,
+                        'connectgaps': false,
                         'colorscale': JSON.stringify(dataset[0].colorscale)
                     });
                     break;
@@ -126,6 +127,7 @@ Template.graph.helpers({
                 default:
                     break;
             }
+            curveOpsUpdate = [];
 
             // initial plot
             $("#placeholder").empty();
@@ -208,7 +210,11 @@ Template.graph.helpers({
                 }
                 plotType = Session.get('plotType');
             }
-            return matsPlotUtils.getCurveText(plotType, this);
+            if (plotType === matsTypes.PlotTypes.profile) {
+                return matsPlotUtils.getCurveTextWrapping(plotType, this);
+            } else {
+                return matsPlotUtils.getCurveText(plotType, this);
+            }
         } else {
             return this.label + ":  Difference";
         }
@@ -1325,6 +1331,13 @@ Template.graph.events({
                 update['reversescale'] = true;
             } else {
                 update['reversescale'] = false;
+            }
+        });
+        $("input[id=nullSmooth]").get().forEach(function (elem, index) {
+            if (elem && elem.checked) {
+                update['connectgaps'] = true;
+            } else {
+                update['connectgaps'] = false;
             }
         });
         var elem = document.getElementById("colormapSelect");

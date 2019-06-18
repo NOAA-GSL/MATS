@@ -526,10 +526,7 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'forecast-type'}).count() == 0) {
         matsCollections.CurveParams.insert(
-            {// bias and model average are a different formula for wind (element 0 differs from element 1)
-                // but stays the same (element 0 and element 1 are the same) otherwise.
-                // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-                // time series we never append element 2. Element 3 is used to give us error values for error bars.
+            {
                 name: 'forecast-type',
                 type: matsTypes.InputTypes.select,
                 optionsMap: fcstTypeModelOptionsMap,
@@ -563,10 +560,7 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'scale'}).count() == 0) {
         matsCollections.CurveParams.insert(
-            {// bias and model average are a different formula for wind (element 0 differs from element 1)
-                // but stays the same (element 0 and element 1 are the same) otherwise.
-                // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-                // time series we never append element 2. Element 3 is used to give us error values for error bars.
+            {
                 name: 'scale',
                 type: matsTypes.InputTypes.select,
                 optionsMap: scaleModelOptionsMap,
@@ -658,8 +652,8 @@ const doCurveParams = function () {
     }
 
     // determine date defaults for dates and curveDates
-    var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
+    var defaultDataSource = matsCollections.CurveParams.findOne({name: "data-source"}, {default: 1}).default;
+    modelDateRangeMap = matsCollections.CurveParams.findOne({name: "data-source"}, {dates: 1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
     var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
@@ -908,12 +902,13 @@ Meteor.startup(function () {
         database: 1,
         connectionLimit: 1
     });
-// the pool is intended to be global
+    // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
 
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "precip2", ['regions_per_model_mats_all_categories', 'threshold_descriptions', 'scale_descriptions', 'fcst_type_descriptions']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'precipitationSub24hr'});});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'precipitationSub24hr'});
+});
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params

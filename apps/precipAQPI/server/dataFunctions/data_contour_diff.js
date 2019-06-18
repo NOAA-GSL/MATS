@@ -47,10 +47,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var source = curve['truth'];
-        var sourceStr = "";
-        if (source !== "All") {
-            sourceStr = "_" + source;
-        }
+        var sourceStr = source !== "All" ? "_" + source : "";
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
@@ -89,9 +86,10 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
             const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
+            const otherSourceStr = curves[otherCurveIndex]['truth'] !== "All" ? "_" + curves[otherCurveIndex]['truth'] : "";
             const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
 
-            matchModel = ", " + otherModel + "_" + otherRegion + " as a0";
+            matchModel = ", " + otherModel + "_" + otherRegion + otherSourceStr + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
             matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
             matchClause = "and m0.valid_time = a0.valid_time";

@@ -293,16 +293,6 @@ const doCurveParams = function () {
             }
             thresholdsModelOptionsMap[model] = thresholdsArr;
 
-            var regions = rows[i].regions;
-            var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
-            var regionsArr = [];
-            var dummyRegion;
-            for (var j = 0; j < regionsArrRaw.length; j++) {
-                dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
-                regionsArr.push(masterRegionValuesMap[dummyRegion]);
-            }
-            regionModelOptionsMap[model] = regionsArr;
-
             var scales = rows[i].scale;
             var scalesArrRaw = scales.split(',').map(Function.prototype.call, String.prototype.trim);
             var scalesArr = [];
@@ -312,6 +302,16 @@ const doCurveParams = function () {
                 scalesArr.push(masterScaleValuesMap[dummyScale]);
             }
             scaleModelOptionsMap[model] = scalesArr;
+
+            var regions = rows[i].regions;
+            var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+            var regionsArr = [];
+            var dummyRegion;
+            for (var j = 0; j < regionsArrRaw.length; j++) {
+                dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
+                regionsArr.push(masterRegionValuesMap[dummyRegion]);
+            }
+            regionModelOptionsMap[model] = regionsArr;
         }
 
     } catch (err) {
@@ -485,6 +485,41 @@ const doCurveParams = function () {
         }
     }
 
+    if (matsCollections.CurveParams.find({name: 'scale'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'scale',
+                type: matsTypes.InputTypes.select,
+                optionsMap: scaleModelOptionsMap,
+                options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],   // convenience
+                valuesMap: masterScaleValuesMap,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'scale'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'scale'}, {
+                $set: {
+                    optionsMap: scaleModelOptionsMap,
+                    valuesMap: masterScaleValuesMap,
+                    options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],
+                    default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0]
+                }
+            });
+        }
+
+    }
+
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         optionsMap = {
             'None': ['m0.time'],
@@ -644,44 +679,6 @@ const doCurveParams = function () {
                 }
             });
         }
-    }
-
-    if (matsCollections.CurveParams.find({name: 'scale'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {// bias and model average are a different formula for wind (element 0 differs from element 1)
-                // but stays the same (element 0 and element 1 are the same) otherwise.
-                // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-                // time series we never append element 2. Element 3 is used to give us error values for error bars.
-                name: 'scale',
-                type: matsTypes.InputTypes.select,
-                optionsMap: scaleModelOptionsMap,
-                options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],   // convenience
-                valuesMap: masterScaleValuesMap,
-                superiorNames: ['data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'scale'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap))) {
-            // have to reload model data
-            matsCollections.CurveParams.update({name: 'scale'}, {
-                $set: {
-                    optionsMap: scaleModelOptionsMap,
-                    valuesMap: masterScaleValuesMap,
-                    options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],
-                    default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0]
-                }
-            });
-        }
-
     }
 
     if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {

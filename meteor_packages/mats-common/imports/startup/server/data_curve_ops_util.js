@@ -415,7 +415,7 @@ const generateContourCurveOptions = function (curve, axisMap, dataset, plotType)
                     family: 'Arial, sans-serif'
                 }
             },
-            // connectgaps: true,   // this option will interpolate to fill in nulls
+            connectgaps: false,   // this option will interpolate to fill in nulls
             visible: true,
             showlegend: true
         }, ...dataset
