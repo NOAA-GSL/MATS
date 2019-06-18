@@ -1,0 +1,12 @@
+<template name="plotType">
+    <div id="plotType" class="container pull-left" style="display:block;">
+        <div class="row text-center">
+            <span style="align-content:center;font-size:xx-large; font-weight: bold;">{{title}}</span>
+        </div>
+        <div class="row well well-sm pull-left">
+            {{#each plotTypes}}
+                <input class="plot-type-{{plotType}}" type=radio name="plot-type" id="plot-type-{{plotType}}" {{display}} value="{{plotType}}" checked={{checked}} /> <label style="font-size: large;">{{plotType}}&nbsp;&nbsp;</label>
+            {{/each}}
+        </div>
+    </div>
+</template>
