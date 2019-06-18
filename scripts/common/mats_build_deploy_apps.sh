@@ -373,8 +373,8 @@ if [[ "${deploy_build}" == "yes" ]]; then
         fi
         applistFile=`mktemp`
         echo $(getApplistJSONForServer ${SERVER}) > $applistFile
-        mv $applistFile static/applist.json
-        chmod a+r static/applist.json
+        mv $applistFile ${WEB_DEPLOY_DIRECTORY}/static/applist.json
+        chmod a+r ${WEB_DEPLOY_DIRECTORY}/static/applist.json
         echo -e "$0 trigger nginx restart"
         /bin/touch /builds/restart_nginx
     fi
