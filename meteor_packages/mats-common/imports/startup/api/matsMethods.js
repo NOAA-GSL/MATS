@@ -514,6 +514,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
+                        stats['auc'] = data[ci].glob_stats.auc;
                         returnData.stats[data[ci].label] = stats;
 
                         var cdata = data[ci].data;

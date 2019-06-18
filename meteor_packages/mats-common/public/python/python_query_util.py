@@ -713,16 +713,6 @@ class QueryUtil:
         total_values = total_values[::-1]
         total_times = total_times[::-1]
 
-        # Calculate AUC (not finished yet, I believe there may be a documentation typo in how MET says it does this)
-        # sum = 0
-
-        # for i in range(0, len(threshold_all) - 1, 1):
-        # sum = ((pody[i + 1] + pody[i]) * (far[i + 1] + far[i]))/2 + sum
-
-        # print(sum)
-        # auc = sum
-        # print(auc)
-
         # Add one final point to allow for the AUC score to be calculated
         pody.append(1)
         far.append(1)
@@ -732,6 +722,15 @@ class QueryUtil:
         total_values.append(-999)
         total_times.append(-999)
 
+
+        # Calculate AUC
+        sum = 0
+
+        for i in range(1, len(threshold_all), 1):
+            sum = ((pody[i] + pody[i-1]) * (far[i] - far[i-1])) + sum
+
+        auc = sum/2
+
         # Since everything is combined already, put it into the data structure
         self.n0 = total_values
         self.n_times = total_times
@@ -740,7 +739,7 @@ class QueryUtil:
         self.data['error_x'] = oy_all
         self.data['x'] = far
         self.data['subLevs'] = on_all
-        # self.data['sum'] = auc
+        self.data['sum'] = auc
         self.data['xmax'] = 1.0
         self.data['xmin'] = 0.0
         self.data['ymax'] = 1.0
