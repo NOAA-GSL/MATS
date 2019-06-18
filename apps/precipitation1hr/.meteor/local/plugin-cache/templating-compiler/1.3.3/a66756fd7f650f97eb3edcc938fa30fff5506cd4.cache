@@ -1,1 +1,0 @@
-{"head":"","body":"","js":"\nTemplate.__checkName(\"version\");\nTemplate[\"version\"] = new Template(\"Template.version\", (function() {\n  var view = this;\n  return HTML.P(\"version \", Blaze.View(\"lookup:version\", function() {\n    return Spacebars.mustache(view.lookup(\"version\"));\n  }));\n}));\n","bodyAttrs":{}}

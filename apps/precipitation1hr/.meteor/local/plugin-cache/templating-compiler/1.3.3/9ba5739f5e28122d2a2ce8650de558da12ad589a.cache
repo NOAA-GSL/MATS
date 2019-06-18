@@ -1,1 +1,0 @@
-{"head":"","body":"","js":"\nTemplate.__checkName(\"jsonView\");\nTemplate[\"jsonView\"] = new Template(\"Template.jsonView\", (function() {\n  var view = this;\n  return HTML.Raw('<div class=\"json-view\"></div>');\n}));\n","bodyAttrs":{}}

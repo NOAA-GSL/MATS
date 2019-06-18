@@ -1,1 +1,0 @@
-{"head":"","body":"","js":"\nTemplate.__checkName(\"dateRange\");\nTemplate[\"dateRange\"] = new Template(\"Template.dateRange\", (function() {\n  var view = this;\n  return \"\";\n}));\n","bodyAttrs":{}}
