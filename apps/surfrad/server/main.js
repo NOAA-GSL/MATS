@@ -378,9 +378,6 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         const statOptionsMap = {
-            //The original RMS query for temp in rucstats ends with 'avg(m0.N_{{variable0}})/1000', not 'sum(m0.N_{{variable0}})/1000'
-            //as is used in MATS. For the added queries, I am using the rucstats syntax.
-
             'MAE': ['avg(abs({{variable0}})) as stat, count({{variable0}}) as N0, group_concat(abs({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
             'Bias (Model - Obs)': ['-1 * avg({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
             'N': ['count({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(count({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
@@ -392,7 +389,7 @@ const doCurveParams = function () {
         };
 
         matsCollections.CurveParams.insert(
-            {// bias and model average are a different formula with wind than with other variables, so element 0 differs from element 1 in statOptionsMap, and different clauses in statAuxMap are needed.
+            {
                 name: 'statistic',
                 type: matsTypes.InputTypes.select,
                 optionsMap: statOptionsMap,
