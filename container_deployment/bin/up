@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
+RED='\033[0;31m'
+GRN='\033[0;32m'
+ORNG='\033[0;33m'
+NC='\033[0m' # No Color
 stack="matsStack"
 if [ $# -eq 1 ]; then
     stack=$1
-fi
-if docker node ls > /dev/null 2>&1; then
-    echo running in swarm node
 else
-    echo "initializing swarm mode"
+    echo -e "${GRN} defaulting to stack named matsStack${NC}"
+fi
+echo -e "${GRN} Bringing up stack ${stacl}${NC}"
+if docker node ls > /dev/null 2>&1; then
+    echo -e "${GRN}running in swarm node${NC}"
+else
+    echo -e "${GRN}initializing swarm mode${NC}"
     docker swarm init
 fi
 docker network create -d overlay web
