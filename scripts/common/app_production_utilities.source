@@ -493,7 +493,7 @@ getDeployedProductionServers() {
     fi
     openTunnel
     unset data
-    data=$(mongo  localhost:27018/appProductionStatus --quiet --eval "db.getCollection('deployment').find({run_environment:'production'},{_id:0,servers:1}).shellPrint()" | jq -r '.servers[]')
+    data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollection('deployment').find({run_environment:'production'},{_id:0,servers:1}).shellPrint()" | jq -r '.servers[]')
     closeTunnel
     echo $data
 }
