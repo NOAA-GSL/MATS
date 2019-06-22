@@ -280,8 +280,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.2.2-2019.06.21.06.00",
-      "buildDate": "2019.06.21.06.00",
+      "version": "2.2.2-2019.06.22.06.00",
+      "buildDate": "2019.06.22.06.00",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
@@ -925,6 +925,32 @@
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
+      "dbroles": [
+        "sums_data",
+        "meta_data"
+      ]
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "5d0d38b6091f22f6412e097d"
+  },
+  "deployment_environment": "blrs",
+  "homePage": "blrs.html",
+  "run_environment": "production",
+  "servers": [
+    "blrs.nws.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "blrs",
+      "title": "Boundary Later Remote Sensing",
+      "version": "2.2.1",
+      "buildDate": "2019.06.18.22.22",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "blrs",
       "dbroles": [
         "sums_data",
         "meta_data"
