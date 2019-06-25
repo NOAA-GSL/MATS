@@ -15,12 +15,12 @@ function finish {
     rm -rf $tmpAppList
 }
 trap finish EXIT
-
+prodRepository="matsapps/production"
 if [ $# -ne 2 ]; then
     echo "$0 - wrong number of params - usage: $0 image app  (e.g. matsapps/production:tagname blrs)"
     exit 1
 fi
-registry=$1
+image=$1
 app=$2
 # are we in an install area (where the tar was unbundled)
 if [[ ! -d "./web"  ]]; then
@@ -227,7 +227,7 @@ echo -e ${GRN}configuring applist...  ${app}${NC}
 # save the stable applist into the web/applist.json
 cp $tmpAppList web/applist.json
 
-appref=${apps}
+appref=${app}
 if [[ ! -d "./settings/${appref}"  ]]; then
     echo -e "${RED}Creating a ./settings/${appref} directory${NC}"
     mkdir settings/${appref}
@@ -240,19 +240,25 @@ if [[ -f  "./settings/${appref}/settings.json" ]]; then
         continue
     fi
 fi
-dbroles=("model_data","meta_data","sums_data","site_data")
+dbroles=("model_data" "meta_data" "sums_data" "site_data")
 # set the settings files
 
 lim=$(( ${#dbroles[@]} - 1 ))
 echo -e ${GRN} creating settings file ./settings/${appref}/settings.json with database role ${dbroles[@]}
 echo '{"private":{"databases": [ ' > $tmpSettingsFile
 # need a databse entry for each database role
+wrote=0
 for (( ri=0; ri<${#dbroles[@]}; ri++ )); do
+    # add a comma if not on the first or last one
+    if [[ $ri -lt ${lim} ]] && [[ $wrote -gt 0 ]] && [[ ${#dbroles[@]} -gt 1 ]]; then
+        echo "," >> $tmpSettingsFile
+    fi
     role=${dbroles[$ri]}
     echo -e ${ORNG}
     read -p "Skip the role ${role} y|n?" -n 1 -r
     echo -e ${NC}
     if [[ $REPLY =~ ^[Yy]$ ]]; then
+        wrote=0
         continue
     fi
 
@@ -348,13 +354,11 @@ for (( ri=0; ri<${#dbroles[@]}; ri++ )); do
           "connectionLimit": 10
     }
 %ENDPOOLS
-    # add a comma if more than one and not on the last one
-    if [[ $ri -lt ${lim} ]] && [[ ${#dbroles[@]} -gt 1 ]]; then
-        echo "," >> $tmpSettingsFile
-    fi
+    wrote=1
 done
 #finish up the document
-echo "], \"process\": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}}" >> $tmpSettingsFile
+echo "], \"process\": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
+
 jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
 #set up the dockerfile
