@@ -11,12 +11,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2019-03-25T16:43:13.687+0000"
-          },
-          "hashedToken": "9Fz98zxwqiplQFyF+b44FTGPU5a4mG+SinZ6uYaWy4k="
-        },
-        {
-          "when": {
             "$date": "2019-04-08T22:32:37.294+0000"
           },
           "hashedToken": "ZEZtW3FLlZTb/G6pkglaHXhGarac7GP991x45p9zib0="
@@ -115,18 +109,6 @@
     },
     "resume": {
       "loginTokens": [
-        {
-          "when": {
-            "$date": "2019-03-26T22:03:42.933+0000"
-          },
-          "hashedToken": "t0C9LysGGyfkpHU6JBpK9ABILirE+nt6mzH+ZsqFams="
-        },
-        {
-          "when": {
-            "$date": "2019-03-26T22:03:43.159+0000"
-          },
-          "hashedToken": "5deWjc4gdnNLlbw/JFtBRk7KJ+ttUKf4RgZqg4Bp4zc="
-        },
         {
           "when": {
             "$date": "2019-03-27T21:58:58.789+0000"
