@@ -6,11 +6,39 @@ export NC='\033[0m'
 export passed='\033[0;32m passed \033[0m'
 export success='\033[0;32m success \033[0m'
 export failed='\033[0;31m failed \033[0m'
-if [ $# -ne 1 ]; then
-    echo $0 - wrong number of params - usage: $0 registry
-    exit 1
-fi
-registry=$1
+usage="USAGE $0 -r registry -u user"
+while getopts "r:u:" o; do
+    case "${o}" in
+        r)
+            registry=(${OPTARG})
+            echo -e "registry is ${registry}"
+        ;;
+        u)
+            user=(${OPTARG})
+            echo -e "registry user is ${user}"
+        ;;
+        *)
+            echo -e "${RED} bad option? ${NC} \n$usage"
+            exit 1
+        ;;
+    esac
+done
+shift $((OPTIND - 1))
+cgood="n"
+resetpassword=""
+while [[ "$cgood" = "n" ]]; do
+    echo -e ${ORNG} ${resetpassword}
+    read -sp "What is the password for registry ${registry} user ${user}?" password
+    echo
+    read -sp "Confirm the password for ${registry} user ${user}." cpassword
+    echo -e ${NC}
+    if [[ "$password" = "$cpassword" ]]; then
+        cgood="y"
+    else
+        echo -e "${RED}passwords do not match!!!"${NC}
+        resetpassword="RE-ENTER"
+    fi
+done
 
 export METEOR_PACKAGE_DIRS=`find $PWD/../.. -name meteor_packages`
 echo -e "$0 - building app ${GRN}${app}${NC}"
@@ -93,6 +121,7 @@ docker system prune -af
 docker build --no-cache --rm -t ${REPO}:${TAG} .
 docker tag ${REPO}:${TAG} ${REPO}:${TAG}
 echo "pushing image ${REPO}:${TAG}"
+echo ${password} | docker login -u ${user} --password-stdin
 docker push ${REPO}:${TAG}
 # example run command
 echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
