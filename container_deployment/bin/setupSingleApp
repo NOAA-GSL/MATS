@@ -131,7 +131,7 @@ echo -e ${NC}
 domain=$(hostname)
 
 runenv="production"
-cp web/mats.html web/index.html
+cp web/custom.html web/index.html
 echo -e ${ORNG}
 read -p "Is '${domain}' the fully qualified hostname for this deployment? y|n" -n 1 -r
 echo -e ${NC}
@@ -207,9 +207,9 @@ defaultEntryPoints = ["http", "https"]
         replacement = "\$1/"
         permanent = true
     [entryPoints.https.tls]
-      [[entryPoints.https.tls.certificates]]
-      certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
-      keyFile = "/etc/ssl/certs/${unqualifiedHostName}.key"
+#      [[entryPoints.https.tls.certificates]]
+#      certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
+#      keyFile = "/etc/ssl/certs/${unqualifiedHostName}.key"
 [api]
   entrypoint="dashboard"
 [docker]
@@ -224,8 +224,7 @@ exposedbydefualt = false
 %ENDTRAEFIK
 
 echo -e ${GRN}configuring applist...  ${app}${NC}
-# save the stable applist into the web/applist.json
-cp $tmpAppList web/applist.json
+echo "[ {\"app\": \"${app}\",\"title\": \"${app}\",\"group\": \"CUSTOM\"}]" > web/applist.json
 
 appref=${app}
 if [[ ! -d "./settings/${appref}"  ]]; then
@@ -357,7 +356,7 @@ for (( ri=0; ri<${#dbroles[@]}; ri++ )); do
     wrote=1
 done
 #finish up the document
-echo "], \"process\": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
+echo "], \"process\": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\",\"custom\":\"true\"}}" >> $tmpSettingsFile
 
 jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
@@ -398,7 +397,7 @@ services:
    - traefik.port=8090
 
  mats-http:
-  image: ${prodRepository}:mats-http
+  image: halverneus/static-file-server:latest
   deploy:
     restart_policy:
       condition: on-failure
@@ -458,5 +457,5 @@ services:
 
 %COMPOSEEND
 mv $tmpDockerFile docker-compose.yml
-
+echo -e ${GRN} "app URL is https://${domain}${proxyPath}/${appref}"
 exit 0

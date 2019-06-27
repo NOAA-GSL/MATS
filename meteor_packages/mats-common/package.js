@@ -142,8 +142,9 @@ Package.onUse(function (api) {
     api.addFiles("templates/spinner/spinner.js", "client");
 
     api.addFiles('templates/Home.html', "client");
-
     api.addFiles('templates/Home.js', "client");
+    api.addFiles('templates/CustomHome.html', "client");
+    api.addFiles('templates/CustomHome.js', "client");
     api.addFiles('templates/underConstruction/underConstruction.html', "client");
     api.addFiles('templates/underConstruction/underConstruction.js', "client");
     api.addFiles('templates/about.html', "client");
