@@ -9,15 +9,17 @@ import { plotParamHandler } from 'meteor/randyp:mats-common';
 
 Template.QCParamGroup.helpers({
     completenessNumber: function () {
-        var appType = matsCollections.Settings.findOne({}).appType;
-        if (appType === 'anomalycor' || appType === matsTypes.AppTypes.metexpress) {
+        const appName = matsCollections.appName.findOne({}).app;
+        const appType = matsCollections.Settings.findOne({}).appType;
+        if (appName === 'anomalycor' || appType === matsTypes.AppTypes.metexpress) {
             return '0';
         } else {
             return '75';
         }
     },
     noQC: function () {
-        var appType = matsCollections.Settings.findOne({}).appType;
+        const appName = matsCollections.appName.findOne({}).app;
+        const appType = matsCollections.Settings.findOne({}).appType;
         return appType === 'anomalycor' || appType === matsTypes.AppTypes.metexpress
     }
 });
