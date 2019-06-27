@@ -51,9 +51,9 @@ dataContourDiff = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic;
-        if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
+        if (variableStr === 'temperature' || variableStr === 'dewpoint') {
             statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr === '10m wind') {
+        } else if (variableStr === 'wind') {
             statistic = statisticOptionsMap[statisticSelect][2];
         } else {
             statistic = statisticOptionsMap[statisticSelect][1];
@@ -192,7 +192,7 @@ dataContourDiff = function (plotParams, plotFunction) {
                 // this is an error returned by the mysql database
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                 if (error.includes('Unknown column')) {
-                    throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                    throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/vgtyp [" + model + " and " + vgtyp + "].");
                 } else {
                     throw new Error(error);
                 }

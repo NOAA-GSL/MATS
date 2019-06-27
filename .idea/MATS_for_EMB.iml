@@ -7,6 +7,7 @@
       <excludeFolder url="file://$MODULE_DIR$/appProductionStatus/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/aircraft/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/anomalycor/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/blrs/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/plugman/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/dev_bundle/lib/node_modules/cordova-lib/templates/platforms" />
