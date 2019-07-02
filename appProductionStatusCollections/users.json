@@ -1,0 +1,191 @@
+{
+  "_id": "ESRFZ7K5QSMRDLeus",
+  "createdAt": {
+    "$date": "2017-11-20T16:31:05.224+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$CB/EVGSW6IKRoDxY8yPlvOpxbQrqzb9/2K4G.9TeVp/TYodM538fm"
+    },
+    "resume": {
+      "loginTokens": [
+        {
+          "when": {
+            "$date": "2019-04-08T22:32:37.294+0000"
+          },
+          "hashedToken": "ZEZtW3FLlZTb/G6pkglaHXhGarac7GP991x45p9zib0="
+        },
+        {
+          "when": {
+            "$date": "2019-04-08T22:32:37.661+0000"
+          },
+          "hashedToken": "iP8MFgzgnRnTcjGeWYqk2r6y1QsPk9lyrwV+R+xCmEA="
+        },
+        {
+          "when": {
+            "$date": "2019-04-10T19:35:59.912+0000"
+          },
+          "hashedToken": "at+P66pe1jkFASijZkBAJqDvqqIlrXbjF4BNyRER7QE="
+        },
+        {
+          "when": {
+            "$date": "2019-04-12T16:41:17.256+0000"
+          },
+          "hashedToken": "fUMQAybjFdkpa/AqVPNkrrqpFMDdXcdZGavLq5lv3d0="
+        },
+        {
+          "when": {
+            "$date": "2019-04-22T17:07:29.175+0000"
+          },
+          "hashedToken": "WGDlJfLbriesFIB5psinlPXuNLZFUTjdTzhxI7yos2k="
+        },
+        {
+          "when": {
+            "$date": "2019-04-22T17:07:29.377+0000"
+          },
+          "hashedToken": "VGQqfCnJdTDGa/VcqaNIf72RmrcVpJ9fBM/W4uFk3rI="
+        },
+        {
+          "when": {
+            "$date": "2019-04-24T21:04:14.804+0000"
+          },
+          "hashedToken": "7bcY5GzkL7gc/YvQJCoWpkuA7/+ZbEx84sPGva+zs5I="
+        },
+        {
+          "when": {
+            "$date": "2019-04-24T21:31:52.752+0000"
+          },
+          "hashedToken": "nsYznfILvblbyTPUyDI6/zdA8+MmjGiDwqOmplmQ4dQ="
+        },
+        {
+          "when": {
+            "$date": "2019-04-24T21:31:53.364+0000"
+          },
+          "hashedToken": "i17F9lxG/ja4sqUcu5v8yXVGXKfrAkaktykO8jRDoso="
+        },
+        {
+          "when": {
+            "$date": "2019-05-06T21:25:48.257+0000"
+          },
+          "hashedToken": "+ekM4pocP0iJB4M/FOjxKjcEIlIAFzcnLD34KNmf4f4="
+        },
+        {
+          "when": {
+            "$date": "2019-05-06T21:25:48.597+0000"
+          },
+          "hashedToken": "L/Pc12la2nAai0aGfjiX95ZkUPQ9G9YsjeyvfEP4kzc="
+        },
+        {
+          "when": {
+            "$date": "2019-05-23T22:31:35.719+0000"
+          },
+          "hashedToken": "UXvZfg4sFZGIvtD5TdczR1kbjoBKJNUysCf6aEQ0iZA="
+        },
+        {
+          "when": {
+            "$date": "2019-05-23T22:31:35.928+0000"
+          },
+          "hashedToken": "TlQugXAwX+0qS4Cb/ErMPyj4v625JtE+tTdtFK+86tM="
+        },
+        {
+          "when": {
+            "$date": "2019-05-24T16:50:35.611+0000"
+          },
+          "hashedToken": "7snc2AIGNAo9RBrXJrSU1vIrSmCq0ohSG5frKIerin0="
+        }
+      ]
+    }
+  },
+  "username": "randy.pierce@noaa.gov"
+}
+{
+  "_id": "GXf6nRFToiLsW5xNG",
+  "createdAt": {
+    "$date": "2017-11-13T22:53:16.114+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$MMIcStDMQ.a9ah3S9exage/5rbSXsXsHKXeSqk0jF4NNEB6Q5HCR."
+    },
+    "resume": {
+      "loginTokens": [
+        {
+          "when": {
+            "$date": "2019-04-03T22:43:29.933+0000"
+          },
+          "hashedToken": "32PzVdYKqdqXbHkiWsow9yIZXenVGW22Z90LM4E9bnQ="
+        },
+        {
+          "when": {
+            "$date": "2019-04-03T22:43:47.655+0000"
+          },
+          "hashedToken": "EqhAQxEg6tbBiMMa5NynXOoY8wTt0YYbJ9yiGqZI5XI="
+        },
+        {
+          "when": {
+            "$date": "2019-04-03T22:44:07.546+0000"
+          },
+          "hashedToken": "vn/Zj3Muj/aI8ZWZ1UTOB+vrQ9ZUK/Khpp2bjmTXeqI="
+        },
+        {
+          "when": {
+            "$date": "2019-06-13T17:51:50.794+0000"
+          },
+          "hashedToken": "u9wyVGkeTvN81P9T1my2Ggy1N41qmJTtLRcz8gZNaqg="
+        },
+        {
+          "when": {
+            "$date": "2019-06-13T17:51:51.065+0000"
+          },
+          "hashedToken": "AmoMmq1h5E15pjsugmMvC65vycZThYOjXcTj/dCMzPM="
+        }
+      ]
+    }
+  },
+  "username": "molly.b.smith@noaa.gov"
+}
+{
+  "_id": "b3LPmRRWa3q44aL34",
+  "createdAt": {
+    "$date": "2017-11-28T21:15:19.298+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$YdohzKtFR0yz7GYPjgymuOhtd5pv9Xlq1SB78NovieFpK/u1YzgLm"
+    },
+    "resume": {
+      "loginTokens": []
+    }
+  },
+  "username": "Dave.turner@noaa.gov"
+}
+{
+  "_id": "nrqM8L4rKSom6yLqx",
+  "createdAt": {
+    "$date": "2017-11-28T21:09:34.508+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$t8s77nnSOXSfft./JZ9D3uAFLLIpOCktxhNit0HU1ntLp7hb4ovgO"
+    },
+    "resume": {
+      "loginTokens": []
+    }
+  },
+  "username": "bonny.strong@noaa.gov"
+}
+{
+  "_id": "zw5gFAgaj5LGgRkjt",
+  "createdAt": {
+    "$date": "2017-11-13T17:14:44.135+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$z3Tfd7LwbbOJ5C.gUcbWGuj7R.p4tYb/CpgNbh0wC5XhaYVOBbLhW"
+    },
+    "resume": {
+      "loginTokens": []
+    }
+  },
+  "username": "Jeffrey.A.Hamilton@noaa.gov"
+}

@@ -1,0 +1,36 @@
+{
+  "_id": {
+    "$oid": "5a03a3f9f925f7aabc9c59d7"
+  },
+  "user": "randy.pierce@noaa.gov"
+}
+{
+  "_id": {
+    "$oid": "5a03a42cf925f7aabc9c59d8"
+  },
+  "user": "molly.b.smith@noaa.gov"
+}
+{
+  "_id": {
+    "$oid": "5a03a458f925f7aabc9c59d9"
+  },
+  "user": "bonny.strong@noaa.gov"
+}
+{
+  "_id": {
+    "$oid": "5a03a47bf925f7aabc9c59da"
+  },
+  "user": "Jeffrey.A.Hamilton@noaa.gov"
+}
+{
+  "_id": {
+    "$oid": "5a03a49ef925f7aabc9c59db"
+  },
+  "user": "kirk.l.holub@noaa.gov"
+}
+{
+  "_id": {
+    "$oid": "5a03a4b9f925f7aabc9c59dc"
+  },
+  "user": "dave.turner@noaa.gov"
+}
