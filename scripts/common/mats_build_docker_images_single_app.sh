@@ -50,6 +50,7 @@ echo "building container in ${BUNDLE_DIRECTORY}"
 APP_DIRECTORY=$(pwd)
 buildVer=$(date +%Y%m%d%H%M%S)
 cd ${BUNDLE_DIRECTORY}
+(cd bundle/programs/server && /usr/local/bin/meteor npm install)
 # stop any running containers....
 docker rm $(docker ps -a -q)
 # prune all stopped containers
@@ -69,6 +70,8 @@ export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
 export METEOR_NPM_VERSION=$(meteor npm -v)
 cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
 chmod +x run_app.sh
+# remove the node_modules to force rebuild in container
+rm -rf bundle/programs/server/node_modules
 #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
 
 cat <<-%EOFdockerfile > Dockerfile
@@ -92,9 +95,9 @@ RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
     pip3 install numpy && \\
-    pip3 install mysqlclient && \\
+    pip3 install pymysql && \\
     chmod +x /usr/app/run_app.sh && \\
-    cd /usr/app/programs/server && npm install --production && \\
+    cd /usr/app/programs/server && npm install && \\
     apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
     rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
 ENV APPNAME=${APPNAME}
@@ -119,6 +122,7 @@ docker push ${REPO}:${TAG}
 echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
 echo "created container in ${BUNDLE_DIRECTORY}"
 rm -rf ${BUNDLE_DIRECTORY}/*
+docker rmi ${REPO}:${TAG}
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
