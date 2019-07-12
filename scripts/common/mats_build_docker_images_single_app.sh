@@ -91,6 +91,7 @@ RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-
     npm cache clean -f && \\
     npm install -g n && \\
     npm install -g node-gyp && \\
+    npm install --save @babel/runtime \\
     node-gyp install && \\
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
