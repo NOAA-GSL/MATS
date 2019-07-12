@@ -13,6 +13,7 @@
         loc=window.location.href;
         function TCtrl($scope, $http) {
             $scope.domain = ".localhost";
+            $scope.ROOT=window.location.href.slice(0,-1);
             $scope.proxy_prefix="";
             $scope.items = {};
             $scope.groups = [];  // used to maintain the order from the applist.json
@@ -145,7 +146,7 @@
                                 <ul class="nav navbar-nav navbar-left">
                                     <h3>{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
-                                        <h2>Embed URL: {{proxy_prefix}}/{{item.app}}</h2>
+                                        <h2>Embed URL: {{ROOT}}{{proxy_prefix}}/{{item.app}}</h2>
                                         <a class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;"href="{{proxy_prefix}}/{{item.app}}">{{item.title}}</a>
                                     </li>
                                 </ul>

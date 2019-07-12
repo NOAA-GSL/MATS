@@ -71,13 +71,38 @@ After once configuring an app you will have to confirm overwriting the old confi
 The reverse proxy interface has a user/password pre-set to user "admin" and password "adminpassword", you should change this by following the instructions in the traefik.toml file.
 This program will create a settings directory here in this directory and a mongodata directory in the $HOME of this user if they do not already exist.
 
-You need to acquire an SSL cert for your domain and put the certificate in /etc/ssl/certs directory of this host. If you have authority over the DNS entry for
+There are two ways to handle ssl. You can let traefik use lets-encrypt automatically to generate and store certs.
+These are requirements for traefik/lets-encrypt certs
+1) You cannot have a firewall blocking outbound traffic  from your server and https://acme-v02.api.letsencrypt.org/directory
+2) You have to follow the comments in the traefik.toml file and properly comment out the externally acquired cert sections
+and uncomment the traefik/lets-encrypt sections.
+Specifically - comment out these lines...
+[entryPoints.https.tls]
+[[entryPoints.https.tls.certificates]]
+certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
+keyFile = "/etc/ssl/certs/${unqualifiedHostName}.key"
+
+and uncomment this line in the entrypoints.https section..
+#[entryPoints.https.tls]
+
+and uncomment these lines...
+#[acme]
+#  caServer = "https://acme-v02.api.letsencrypt.org/directory"
+#  email = "mats.gsd@noaa.gov"
+#  storage = "acme.json"
+#  entryPoint = "https"
+#  [acme.tlsChallenge]
+#[[acme.domains]]
+#  main = "${domain}"
+
+If you want to use externally acquired certs then you need to acquire an SSL cert for your domain and put the certificate in /etc/ssl/certs directory of this host. If you have authority over the DNS entry for
 your server you can use LetsEncrypt for no cost certs. The instructions for doing this are at https://docs.traefik.io/configuration/acme/.
 If you cannot acquire a certificate you can enable the apps temporarily by commenting out
 #        [[entryPoints.https.tls.certificates]]
 #        certFile = "/etc/ssl/certs/mats-meteor.crt"
 #        keyFile = "/etc/ssl/certs/mats-meteor.key"
 in the traefik.toml file.
+Follow the comments in the traefik.toml file to make sure you have commented or uncommented the appropriate sections.
 
 The toolsuite entrypoints are 
 https://yourfullyqualifieddomaini/proxy for the reverse proxy dashboard (look at comments in traefik.toml and docker-compose.yml to enable)
@@ -223,6 +248,7 @@ cat <<- %ENDTRAEFIK > ./traefik.toml
 #htpasswd -nbB admin your_special_password
 #replace "admin:$apr1$GZ23gG9v$8slcUumLt29SsZ9MiL.z30" in the "users =" line of the [entryPoints.dashboard.auth.basic]
 #entrypoint below. The traefik user challenge will then work for the user admin and your_special_password
+#logLevel = "DEBUG"
 logLevel = "INFO"
 defaultEntryPoints = ["http", "https"]
 [entryPoints]
@@ -237,6 +263,8 @@ defaultEntryPoints = ["http", "https"]
         entryPoint = "https"
   [entryPoints.https]
     address = ":443"
+    # uncomment the following to use lets-encrypt automatic certs with tlsChallenge
+    #[entryPoints.https.tls]
 # uncomment the following four lines IF YOUR DOMAIN and PROXY ARE DIFFERENT
 # and you want to use both paths i.e. https://mydomain/myproxypath/anapp
 # AND https://myproxyhost/myproxypath/anapp
@@ -245,17 +273,28 @@ defaultEntryPoints = ["http", "https"]
         regex = "^(https://${domain}${proxyPath})/?$"
         replacement = "\$1/"
         permanent = true
+    # comment out the following four lines to use traefik/lets-encrypt automatic certs with tlsChallenge
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
       certFile = "/etc/ssl/certs/${unqualifiedHostName}.crt"
       keyFile = "/etc/ssl/certs/${unqualifiedHostName}.key"
 [api]
   entrypoint="dashboard"
+# uncomment the following [acme] section to use traefik/lets-encrypt automatic certs with tlsChallenge
+#[acme]
+#  caServer = "https://acme-v02.api.letsencrypt.org/directory"
+#  email = "mats.gsd@noaa.gov"
+#  storage = "acme.json"
+#  entryPoint = "https"
+#  [acme.tlsChallenge]
+#[[acme.domains]]
+#  main = "${domain}"
+
 [docker]
-domain = "${domain}"
-watch = true
-network = "web"
-exposedbydefualt = false
+  domain = "${domain}"
+  watch = true
+  network = "web"
+  exposedbydefualt = false
 [traefikLog]
   filePath = "/logs/traefik.log"
 [accessLog]
@@ -418,10 +457,14 @@ services:
    - web
   ports:
    - "443:443"
+   #- "80:80"
   volumes:
    - /var/run/docker.sock:/var/run/docker.sock
    - ${DEPLOYDIR}/traefik.toml:/traefik.toml
    - ${DEPLOYDIR}/logs:/logs
+   - ${DEPLOYDIR}/acme.json:/acme.json
+# comment out the - /etc/ssl/certs:/etc/ssl/certs line if using lets-encrypt tls challenge instead of an externally acquired cert
+# if using an externally acquired cert, put it in the following directory
    - /etc/ssl/certs:/etc/ssl/certs
   labels:
    - traefik.frontend.rule=Host:${domain};PathPrefixStrip:${proxyPath}/proxy

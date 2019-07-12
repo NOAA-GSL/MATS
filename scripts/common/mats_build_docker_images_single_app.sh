@@ -53,7 +53,7 @@ cd ${BUNDLE_DIRECTORY}
 # stop any running containers....
 docker rm $(docker ps -a -q)
 # prune all stopped containers
-docker container prune -af
+docker system prune -af
 # Create the Dockerfile
 echo "=> Creating Dockerfile..."
 export METEORD_DIR=/opt/meteord

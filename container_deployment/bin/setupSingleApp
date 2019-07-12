@@ -7,14 +7,17 @@ tmpfile=$(mktemp /tmp/setp.XXXXXX)
 tmpSettingsFile=$(mktemp /tmp/settings.XXXXXX)
 tmpDockerFile=$(mktemp /tmp/docker.XXXXXX)
 tmpAppList=$(mktemp /tmp/applist.XXXXXX)
-function finish {
+
+function finish (){
     echo -e ${NC}
-    rm -rf $tmpfile
-    rm -rf $tmpSettingsFile
-    rm -rf tmpDockerFile
-    rm -rf $tmpAppList
+    rm -rf ${tmpfile}
+    rm -rf ${tmpSettingsFile}
+    rm -rf ${tmpDockerFile}
+    rm -rf ${tmpAppList}
 }
+
 trap finish EXIT
+
 prodRepository="matsapps/production"
 if [ $# -ne 2 ]; then
     echo "$0 - wrong number of params - usage: $0 image app  (e.g. matsapps/production:tagname blrs)"
@@ -364,7 +367,7 @@ jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 echo -e ${ORNG} Setting up a dockercompose file for your apps ${NC}
 
 #NOTE: Spacing is important for compose files!!!! They are yaml!!!!
-cat << %COMPOSEEND > $tmpDockerFile
+cat <<- %COMPOSEEND > $tmpDockerFile
 version: "3.2"
 
 networks:
