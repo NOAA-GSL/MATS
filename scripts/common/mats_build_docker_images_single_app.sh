@@ -39,8 +39,10 @@ app=$(basename ${PWD})
 BUNDLE_DIRECTORY=/tmp/${app}
 rm -rf ${BUNDLE_DIRECTORY}/*
 /usr/local/bin/meteor reset
-/usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY}  --architecture=os.linux.x86_64
-#/usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
+# do not know why I have to do these explicitly, but I do.
+meteor npm install --save @babel/runtime
+meteor npm install --save bootstrap
+/usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
 if [ $? -ne 0 ]; then
     echo -e "$0:${app}: ${RED} ${failed} to meteor build - must skip app ${app} ${NC}"
     continue
