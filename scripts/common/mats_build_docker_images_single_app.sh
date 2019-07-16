@@ -39,14 +39,16 @@ app=$(basename ${PWD})
 BUNDLE_DIRECTORY=/tmp/${app}
 rm -rf ${BUNDLE_DIRECTORY}/*
 /usr/local/bin/meteor reset
-#/usr/local/bin/meteor npm install --production
+# do not know why I have to do these explicitly, but I do.
+meteor npm install --save @babel/runtime
+meteor npm install --save bootstrap
 /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
 if [ $? -ne 0 ]; then
     echo -e "${failed} to meteor build - must exit now"
     exit 1
 fi
 # build container....
-echo "building container in ${BUNDLE_DIRECTORY}"
+echo "building image for ${app} in ${BUNDLE_DIRECTORY}"
 APP_DIRECTORY=$(pwd)
 buildVer=$(date +%Y%m%d%H%M%S)
 cd ${BUNDLE_DIRECTORY}
@@ -64,7 +66,7 @@ export MONGO_DB=${app}
 export APPNAME=${app}
 export REPO=${registry}
 export TAG="${app}-${buildVer}"
-
+docker rm -f ${REPO}:${TAG}
 # save and export the meteor node version for the build_app script
 export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
 export METEOR_NPM_VERSION=$(meteor npm -v)
@@ -111,8 +113,6 @@ LABEL version="${buildVer}"
         #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
         #docker push ${REPO}:${APPNAME}-${buildVer}
 %EOFdockerfile
-# clean up old images
-docker system prune -af
 # build container
 docker build --no-cache --rm -t ${REPO}:${TAG} .
 docker tag ${REPO}:${TAG} ${REPO}:${TAG}
