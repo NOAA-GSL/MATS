@@ -4,6 +4,8 @@
 #
 # source the build environment and mongo utilities
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
+
+
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
 logDir="/builds/buildArea/logs"
@@ -117,6 +119,11 @@ if [ $? -ne 0 ]; then
 fi
 /usr/bin/git pull -Xtheirs
 if [ $? -ne 0 ]; then
+    echo -e "${failed} to do git pull - must exit now"
+    exit 1
+fi
+
+if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
 fi
@@ -149,7 +156,9 @@ fi
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
+echo **checking for changes with  *** /usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}***
 diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit})
+echo changes are $diffOut
 ret=$?
 if [ $ret -ne 0 ]; then
     echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}' ... ret $ret - must exit now"
@@ -243,6 +252,10 @@ for app in ${apps[*]}; do
     else
         rm -rf ${BUNDLE_DIRECTORY}/*
     fi
+    # do not know why I have to do these explicitly, but I do.
+    /usr/local/bin/meteor npm install --save @babel/runtime
+    /usr/local/bin/meteor npm install --save bootstrap
+
     /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
         echo -e "${RED} ${failed} to meteor build - must skip app ${app} ${NC}"
@@ -322,7 +335,7 @@ RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
     pip3 install numpy && \\
-    pip3 install mysqlclient && \\
+    pip3 install pymysql && \\
     chmod +x /usr/app/run_app.sh && \\
     cd /usr/app/programs/server && npm install && \\
     apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\

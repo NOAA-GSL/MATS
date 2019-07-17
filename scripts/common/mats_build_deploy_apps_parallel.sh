@@ -310,6 +310,10 @@ buildApp() {
     else
         rm -rf ${BUNDLE_DIRECTORY}/*
     fi
+    # do not know why I have to do these explicitly, but I do.
+    /usr/local/bin/meteor npm install --save @babel/runtime
+    /usr/local/bin/meteor npm install --save bootstrap
+
     /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
         echo -e "$0:${myApp}: ${RED} ${failed} to meteor build - must skip app ${myApp} ${NC}"

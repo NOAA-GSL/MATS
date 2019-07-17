@@ -44,13 +44,6 @@ meteor npm install --save @babel/runtime
 meteor npm install --save bootstrap
 /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
 if [ $? -ne 0 ]; then
-    echo -e "$0:${app}: ${RED} ${failed} to meteor build - must skip app ${app} ${NC}"
-    continue
-fi
-
-cd ${BUNDLE_DIRECTORY}
-(cd bundle/programs/server && /usr/local/bin/meteor npm install)
-if [ $? -ne 0 ]; then
     echo -e "${failed} to meteor build - must exit now"
     exit 1
 fi
