@@ -213,7 +213,7 @@ def build_stats_object(cnx, cursor):
             get_fcsts = 'select distinct ld.fcst_lead ' \
                         'from stat_header h, line_data_sl1l2 ld ' \
                         'where ld.stat_header_id = h.stat_header_id ' \
-                        'and h.model ="' + model + '"' \
+                        'and h.model ="' + model + '" ' \
                         'and h.fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") ' \
                         'and h.fcst_var not regexp "^OZ|^PM25";'
             temp_fcsts = []
@@ -238,7 +238,7 @@ def build_stats_object(cnx, cursor):
             get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs ' \
                         'from stat_header h, line_data_sl1l2 ld ' \
                         'where ld.stat_header_id = h.stat_header_id ' \
-                        'and h.model ="' + model + '"' \
+                        'and h.model ="' + model + '" ' \
                         'and h.fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") ' \
                         'and h.fcst_var not regexp "^OZ|^PM25";'
             print("Getting stats for model " + model)
