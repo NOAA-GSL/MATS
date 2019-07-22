@@ -117,6 +117,7 @@ dataContour = function (plotParams, plotFunction) {
         "avg(ld.oobar) as sub_oobar, " +
         "avg(ld.fobar) as sub_fobar, " +
         "avg(ld.total) as sub_total, " +
+        "avg(ld.mae) as sub_mae, " +
         "avg(ld.fcst_valid_beg) as sub_secs, " +    // this is just a dummy for the common python function -- the actual value doesn't matter
         "count(h.fcst_lev) as sub_levs " +      // this is just a dummy for the common python function -- the actual value doesn't matter
         "from {{database}}.stat_header h, " +

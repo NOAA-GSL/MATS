@@ -85,59 +85,178 @@ class QueryUtil:
             acc = np.empty(len(ffbar))
         return acc
 
-    # function for calculating RMS from MET partial sums
-    def calculate_rms(self, ffbar, oobar, fobar):
+    # function for calculating RMSE from MET partial sums
+    def calculate_rmse(self, ffbar, oobar, fobar):
         try:
-            rms = np.sqrt(ffbar + oobar - 2 * fobar)
+            rmse = np.sqrt(ffbar + oobar - 2 * fobar)
         except TypeError as e:
             self.error = "Error calculating RMS: " + str(e)
-            rms = np.empty(len(ffbar))
+            rmse = np.empty(len(ffbar))
         except ValueError as e:
             self.error = "Error calculating RMS: " + str(e)
-            rms = np.empty(len(ffbar))
-        return rms
+            rmse = np.empty(len(ffbar))
+        return rmse
 
-    # function for calculating bias from MET partial sums
-    def calculate_bias(self, fbar, obar):
+    # function for calculating bias-corrected RMSE from MET partial sums
+    def calculate_bcrmse(self, fbar, obar, ffbar, oobar, fobar):
         try:
-            bias = fbar - obar
+            bcrmse = np.sqrt((ffbar + oobar - 2 * fobar) - (fbar - obar)**2)
+        except TypeError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            bcrmse = np.empty(len(ffbar))
+        except ValueError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            rms = np.empty(len(ffbar))
+        return bcrmse
+
+    # function for calculating MSE from MET partial sums
+    def calculate_mse(self, ffbar, oobar, fobar):
+        try:
+            mse = ffbar + oobar - 2 * fobar
+        except TypeError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            mse = np.empty(len(ffbar))
+        except ValueError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            mse = np.empty(len(ffbar))
+        return mse
+
+    # function for calculating bias-corrected MSE from MET partial sums
+    def calculate_bcmse(self, fbar, obar, ffbar, oobar, fobar):
+        try:
+            bcmse = (ffbar + oobar - 2 * fobar) - (fbar - obar)**2
+        except TypeError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            bcmse = np.empty(len(ffbar))
+        except ValueError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            bcmse = np.empty(len(ffbar))
+        return bcmse
+
+    # function for calculating mae from MET partial sums
+    def calculate_mae(self, mae):
+        return mae
+
+    # function for calculating additive bias from MET partial sums
+    def calculate_me(self, fbar, obar):
+        try:
+            me = fbar - obar
         except TypeError as e:
             self.error = "Error calculating bias: " + str(e)
-            bias = np.empty(len(fbar))
+            me = np.empty(len(fbar))
         except ValueError as e:
             self.error = "Error calculating bias: " + str(e)
-            bias = np.empty(len(fbar))
-        return bias
+            me = np.empty(len(fbar))
+        return me
+
+    # function for calculating multiplicative bias from MET partial sums
+    def calculate_mbias(self, fbar, obar):
+        try:
+            mbias = fbar / obar
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            mbias = np.empty(len(fbar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            mbias = np.empty(len(fbar))
+        return mbias
 
     # function for calculating N from MET partial sums
     def calculate_n(self, total):
         return total
 
-    # function for calculating model average from MET partial sums
-    def calculate_m_avg(self, fbar):
+    # function for calculating forecast mean from MET partial sums
+    def calculate_f_mean(self, fbar):
         return fbar
 
-    # function for calculating obs average from MET partial sums
-    def calculate_o_avg(self, obar):
+    # function for calculating observed mean from MET partial sums
+    def calculate_o_mean(self, obar):
         return obar
 
+    # function for calculating forecast stdev from MET partial sums
+    def calculate_f_stdev(self, fbar, ffbar, total):
+        try:
+            fstdev = np.sqrt(((ffbar*total) - (fbar*total) * (fbar*total) / total) / (total-1))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            fstdev = np.empty(len(fbar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            fstdev = np.empty(len(fbar))
+        return fstdev
+
+    # function for calculating observed stdev from MET partial sums
+    def calculate_o_stdev(self, obar, oobar, total):
+        try:
+            ostdev = np.sqrt(((oobar*total) - (obar*total) * (obar*total) / total) / (total-1))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            ostdev = np.empty(len(obar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            ostdev = np.empty(len(obar))
+        return ostdev
+
+    # function for calculating error stdev from MET partial sums
+    def calculate_e_stdev(self, fbar, obar, ffbar, oobar, fobar, total):
+        try:
+            estdev = np.sqrt((((ffbar+oobar-2*fobar)*total) - ((fbar-obar)*total) * ((fbar-obar)*total) / total) / (total-1))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            estdev = np.empty(len(fbar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            estdev = np.empty(len(fbar))
+        return estdev
+
+    # function for calculating pearson correlation from MET partial sums
+    def calculate_pcc(self, fbar, obar, ffbar, oobar, fobar, total):
+        try:
+            pcc = (total**2 * fobar - total**2 * fbar * obar) / np.sqrt((total**2 * ffbar - total**2 * fbar**2) * (total**2 * oobar - total**2 * obar**2))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            pcc = np.empty(len(fbar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            pcc = np.empty(len(fbar))
+        return pcc
+
     # function for determining and calling the appropriate statistical calculation function
-    def calculate_stat(self, statistic, fbar, obar, ffbar, oobar, fobar, total):
+    def calculate_stat(self, statistic, fbar, obar, ffbar, oobar, fobar, total, mae):
         stat_switch = {  # dispatcher of statistical calculation functions
             'ACC': self.calculate_acc,
-            'RMS': self.calculate_rms,
-            'Bias (Model - Obs)': self.calculate_bias,
+            'RMSE': self.calculate_rmse,
+            'Bias-corrected RMSE': self.calculate_bcrmse,
+            'MSE': self.calculate_mse,
+            'Bias-corrected MSE': self.calculate_bcmse,
+            'MAE': self.calculate_mae,
+            'ME (Additive bias)': self.calculate_me,
+            'Multiplicative bias': self.calculate_mbias,
             'N': self.calculate_n,
-            'Model average': self.calculate_m_avg,
-            'Obs average': self.calculate_o_avg
+            'Forecast mean': self.calculate_f_mean,
+            'Observed mean': self.calculate_o_mean,
+            'Forecast stdev': self.calculate_f_stdev,
+            'Observed stdev': self.calculate_o_stdev,
+            'Error stdev': self.calculate_e_stdev,
+            'Pearson correlation': self.calculate_pcc
         }
         args_switch = {  # dispatcher of arguments for statistical calculation functions
             'ACC': (fbar, obar, ffbar, oobar, fobar, total),
-            'RMS': (ffbar, oobar, fobar),
+            'RMSE': (ffbar, oobar, fobar),
+            'Bias-corrected RMSE': (fbar, obar, ffbar, oobar, fobar),
+            'MSE': (ffbar, oobar, fobar),
+            'Bias-corrected MSE': (fbar, obar, ffbar, oobar, fobar),
             'Bias (Model - Obs)': (fbar, obar),
+            'MAE': (mae,),
+            'ME (Additive bias)': (fbar, obar),
+            'Multiplicative bias': (fbar, obar),
             'N': (total,),
-            'Model average': (fbar,),
-            'Obs average': (obar,)
+            'Forecast mean': (fbar,),
+            'Observed mean': (obar,),
+            'Forecast stdev': (fbar, ffbar, total),
+            'Observed stdev': (obar, oobar, total),
+            'Error stdev': (fbar, obar, ffbar, oobar, fobar, total),
+            'Pearson correlation': (fbar, obar, ffbar, oobar, fobar, total)
         }
         try:
             stat_args = args_switch[statistic]  # get args
@@ -166,6 +285,7 @@ class QueryUtil:
             sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
             sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
             sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
+            sub_mae = np.array([float(i) for i in (str(row['sub_mae']).split(','))])
             sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
             if has_levels:
                 sub_levs_raw = str(row['sub_levs']).split(',')
@@ -181,8 +301,7 @@ class QueryUtil:
             # if we don't have the data we expect just stop now and return empty data objects
             return np.nan, np.empty(0), np.empty(0), np.empty(0)
         # if we do have the data we expect, calculate the requested statistic
-        sub_values, stat = self.calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar,
-                                               sub_total)
+        sub_values, stat = self.calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar, sub_total, sub_mae)
         return stat, sub_levs, sub_secs, sub_values
 
     #  function for calculating the interval between the current time and the next time for models with irregular vts
