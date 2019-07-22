@@ -119,9 +119,9 @@ def strip_level(elem):
 def strip_trsh(elem):
     # helper function for sorting thresholds
     if elem[0] == '>' or elem[0] == '<':
-        return elem[1:]
+        return float(elem[1:])
     else:
-        return elem
+        return 0
 
 
 def build_stats_object(cnx, cursor):
