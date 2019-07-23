@@ -168,7 +168,7 @@ def build_stats_object(cnx, cursor):
         print("\n\nUsing db " + mvdb)
 
         # Get the models in this database
-        get_models = 'select distinct model from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0");'
+        get_models = 'select distinct model from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") and fcst_var not regexp "^OZ|^PM25";'
         cursor.execute(get_models)
         cnx.commit()
         for line in cursor:
@@ -177,7 +177,7 @@ def build_stats_object(cnx, cursor):
             print("\nProcessing model " + model)
 
             # Get the regions for this model in this database
-            get_regions = 'select distinct vx_mask from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") and model ="' + model + '";'
+            get_regions = 'select distinct vx_mask from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") and fcst_var not regexp "^OZ|^PM25" and model ="' + model + '";'
             per_mvdb[mvdb][model]['regions'] = []
             print("Getting regions for model " + model)
             cursor2.execute(get_regions)
@@ -188,7 +188,7 @@ def build_stats_object(cnx, cursor):
             per_mvdb[mvdb][model]['regions'].sort()
 
             # Get the levels for this model in this database
-            get_levels = 'select distinct fcst_lev from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") and model ="' + model + '";'
+            get_levels = 'select distinct fcst_lev from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") and fcst_var not regexp "^OZ|^PM25" and model ="' + model + '";'
             per_mvdb[mvdb][model]['levels'] = []
             print("Getting levels for model " + model)
             cursor2.execute(get_levels)
@@ -199,7 +199,7 @@ def build_stats_object(cnx, cursor):
             per_mvdb[mvdb][model]['levels'].sort(key=strip_level)
 
             # Get the surface variables for this model in this database
-            get_vars = 'select distinct fcst_var from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") and model ="' + model + '";'
+            get_vars = 'select distinct fcst_var from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") and fcst_var not regexp "^OZ|^PM25" and model ="' + model + '";'
             per_mvdb[mvdb][model]['variables'] = []
             print("Getting variables for model " + model)
             cursor2.execute(get_vars)
@@ -212,9 +212,10 @@ def build_stats_object(cnx, cursor):
             # Get the fcst lead times for this model in this database
             get_fcsts = 'select distinct ld.fcst_lead ' \
                         'from stat_header h, line_data_sl1l2 ld ' \
-                        'where h.model ="' + model + '" ' \
+                        'where ld.stat_header_id = h.stat_header_id ' \
+                        'and h.model ="' + model + '" ' \
                         'and h.fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") ' \
-                        'and ld.stat_header_id = h.stat_header_id;'
+                        'and h.fcst_var not regexp "^OZ|^PM25";'
             temp_fcsts = []
             temp_fcsts_orig = []
             print("Getting fcst lens for model " + model)
@@ -236,9 +237,10 @@ def build_stats_object(cnx, cursor):
             # Get the stats for this model in this database
             get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs ' \
                         'from stat_header h, line_data_sl1l2 ld ' \
-                        'where h.model ="' + model + '" ' \
+                        'where ld.stat_header_id = h.stat_header_id ' \
+                        'and h.model ="' + model + '" ' \
                         'and h.fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") ' \
-                        'and ld.stat_header_id = h.stat_header_id;'
+                        'and h.fcst_var not regexp "^OZ|^PM25";'
             print("Getting stats for model " + model)
             cursor2.execute(get_stats)
             cnx2.commit()
