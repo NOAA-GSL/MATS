@@ -213,9 +213,9 @@ class MEUpperair:
                 # Get the fcst lead times for this model in this database
                 get_fcsts = 'select distinct ld.fcst_lead ' \
                             'from stat_header h, line_data_sl1l2 ld ' \
-                            'where h.model ="' + model + '" ' \
-                            'and h.fcst_lev like "P%" ' \
-                            'and ld.stat_header_id = h.stat_header_id;'
+                            'where ld.stat_header_id = h.stat_header_id ' \
+                            'and h.model ="' + model + '" ' \
+                            'and h.fcst_lev like "P%";'
                 temp_fcsts = []
                 temp_fcsts_orig = []
                 print("Getting fcst lens for model " + model)
@@ -237,9 +237,9 @@ class MEUpperair:
                 # Get the stats for this model in this database
                 get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs ' \
                             'from stat_header h, line_data_sl1l2 ld ' \
-                            'where h.model ="' + model + '" ' \
-                            'and h.fcst_lev like "P%" ' \
-                            'and ld.stat_header_id = h.stat_header_id;'
+                            'where ld.stat_header_id = h.stat_header_id ' \
+                            'and h.model ="' + model + '" ' \
+                            'and h.fcst_lev like "P%";'
                 print("Getting stats for model " + model)
                 cursor2.execute(get_stats)
                 cnx2.commit()
@@ -359,13 +359,13 @@ if __name__ == '__main__':
             print("cnf file " + cnf_file + " is not a file - exiting")
             sys.exit(1)
     utc_now = str(datetime.now())
-    msg = 'Upperair MATS FOR MET METADATA START: ' + utc_now
+    msg = 'UPPER AIR MATS FOR MET METADATA START: ' + utc_now
     print(msg)
     me_dbcreator = MEUpperair()
     ret = me_dbcreator.main(cnf_file)
 
     main(cnf_file)
     utc_now = str(datetime.now())
-    msg = 'Upperair MATS FOR MET METADATA END: ' + utc_now
+    msg = 'UPPER AIR MATS FOR MET METADATA END: ' + utc_now
     print(msg)
     sys.exit(0)

@@ -105,6 +105,7 @@ class MEEnsemble:
         cursor.close()
         cnx.close()
 
+
     def strip_level(elem):
         # helper function for sorting levels
         if elem[0] == 'Z':
@@ -146,7 +147,6 @@ class MEEnsemble:
         cursor3.execute('SET GLOBAL interactive_timeout=28800')
         cnx3.commit()
 
-
         # Get list of databases here
         show_mvdbs = 'show databases like "mv_%";'
         cursor.execute(show_mvdbs)
@@ -164,6 +164,7 @@ class MEEnsemble:
             use_db = "use " + mvdb
             cursor.execute(use_db)
             cursor2.execute(use_db)
+            cnx.commit()
             print("\n\nUsing db " + mvdb)
 
             # Get the models in this database
@@ -211,9 +212,9 @@ class MEEnsemble:
                 # Get the fcst lead times for this model in this database
                 get_fcsts = 'select distinct ld.fcst_lead ' \
                             'from stat_header h, line_data_pct ld ' \
-                            'where h.model ="' + model + '" ' \
-                            'and h.fcst_var like "PROB%" ' \
-                            'and ld.stat_header_id = h.stat_header_id;'
+                            'where ld.stat_header_id = h.stat_header_id ' \
+                            'and h.model ="' + model + '" ' \
+                            'and h.fcst_var like "PROB%";'
                 temp_fcsts = []
                 temp_fcsts_orig = []
                 print("Getting fcst lens for model " + model)
@@ -223,7 +224,7 @@ class MEEnsemble:
                     fcst = int(line2.values()[0])
                     if fcst % 10000 == 0:
                         temp_fcsts_orig.append(fcst)
-                        fcst = fcst/10000
+                        fcst = fcst / 10000
                     else:
                         temp_fcsts_orig.append(fcst)
                     temp_fcsts.append(fcst)
@@ -235,9 +236,9 @@ class MEEnsemble:
                 # Get the stats for this model in this database
                 get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs ' \
                             'from stat_header h, line_data_pct ld ' \
-                            'where h.model ="' + model + '" ' \
-                            'and h.fcst_var like "PROB%" ' \
-                            'and ld.stat_header_id = h.stat_header_id;'
+                            'where ld.stat_header_id = h.stat_header_id ' \
+                            'and h.model ="' + model + '" ' \
+                            'and h.fcst_var like "PROB%";'
                 print("Getting stats for model " + model)
                 cursor2.execute(get_stats)
                 cnx2.commit()
@@ -259,7 +260,6 @@ class MEEnsemble:
             if db_has_valid_data:
                 get_groups = 'select category from metadata'
                 cursor.execute(get_groups)
-                cnx.commit()
                 if cursor.rowcount > 0:
                     for line in cursor:
                         group = line.values()[0]
@@ -301,7 +301,8 @@ class MEEnsemble:
         cursor.execute("use mats_metadata;")
         cnx.commit()
 
-        if len(raw_metadata['regions']) > int(0) and len(raw_metadata['levels']) and len(raw_metadata['fcsts']) and len(raw_metadata['variables']) > int(0):
+        if len(raw_metadata['regions']) > int(0) and len(raw_metadata['levels']) and len(raw_metadata['fcsts']) and len(
+                raw_metadata['variables']) > int(0):
             qd = []
             updated_utc = datetime.utcnow().strftime('%s')
             mindate = datetime.strptime(raw_metadata['mindate'], '%Y-%m-%d %H:%M:%S')
@@ -355,13 +356,13 @@ if __name__ == '__main__':
             print("cnf file " + cnf_file + " is not a file - exiting")
             sys.exit(1)
     utc_now = str(datetime.now())
-    msg = 'Ensemble MATS FOR MET METADATA START: ' + utc_now
+    msg = 'ENSEMBLE MATS FOR MET METADATA START: ' + utc_now
     print(msg)
     me_dbcreator = MEEnsemble()
     ret = me_dbcreator.main(cnf_file)
 
     main(cnf_file)
     utc_now = str(datetime.now())
-    msg = 'Ensemble MATS FOR MET METADATA END: ' + utc_now
+    msg = 'ENSEMBLE MATS FOR MET METADATA END: ' + utc_now
     print(msg)
     sys.exit(0)
