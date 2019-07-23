@@ -868,7 +868,7 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.2.1",
+      "version": "./MATS_for_EMB/scripts/common/mats_build_deploy_apps_parallel.sh",
       "buildDate": "2019.06.18.22.21",
       "last_test_run": "",
       "last_test_status": "",
