@@ -10,7 +10,12 @@ import { FlowRouter } from 'meteor/ostrio:flow-router-extra';
 FlowRouter.route('/', {
     name: 'main',
     action() {
-        this.render('Home')
+        if (Meteor.settings.public.custom) {
+            this.render('CustomHome');
+        }
+        else {
+            this.render('Home');
+        }
     }
 });
 
@@ -43,7 +48,12 @@ FlowRouter.route('/preview/:graphFunction/:key/:matching/:appName', {
 FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/', {
     name: 'main',
     action() {
-        this.render('Home')
+        if (Meteor.settings.public.custom) {
+            this.render('CustomHome');
+        }
+        else {
+            this.render('Home');
+        }
     }
 });
 
@@ -77,7 +87,12 @@ FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/preview/:graphFunc
 FlowRouter.route(Meteor.settings.public.proxy_prefix_path + '/:appName', {
     name: 'main',
     action() {
-        this.render('Home')
+        if (Meteor.settings.public.custom) {
+            this.render('CustomHome');
+        }
+        else {
+            this.render('Home');
+        }
     }
 });
 

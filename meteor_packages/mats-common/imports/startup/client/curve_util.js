@@ -330,10 +330,9 @@ const addDiffs = function () {
             var baseIndex = 0; // This will probably not default to curve 0 in the future
             for (var ci = 1; ci < curves.length; ci++) {
                 if (ci % 2 != 0) {  // only diff on odd curves against previous curve
-                    var base_index = ci - 1;
-
+                    baseIndex = ci - 1;
                     var newCurve = $.extend(true, {}, curves[ci]);
-                    newCurve.label = curves[ci].label + "-" + curves[base_index].label;
+                    newCurve.label = curves[ci].label + "-" + curves[baseIndex].label;
                     newCurve.color = getNextCurveColor();
                     newCurve.diffFrom = [ci, baseIndex];
                     // do not create extra diff if it already exists

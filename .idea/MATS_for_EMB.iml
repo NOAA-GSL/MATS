@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/../MATS_DEV/meteor_packages/mats-common/public/python" />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/appProductionStatus/.meteor/local" />
@@ -20,6 +21,7 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/landuse/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/mats4met-ensemble/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/met-airquality/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/met-anomalycor/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/met-surface/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/met-upperair/.meteor/local" />
@@ -60,8 +62,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
-    <content url="file://$MODULE_DIR$/meteor_packages/mats-common/public/python" />
-    <orderEntry type="jdk" jdkName="Python 3.7" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.7 (MATS_for_EMB)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="R User Library" level="project" />
     <orderEntry type="library" name="R Skeletons" level="application" />
