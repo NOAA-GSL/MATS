@@ -49,7 +49,7 @@ dataContour = function (plotParams, plotFunction) {
     }
     const threshold = curve['threshold'];
     var thresholdClause = "";
-    if (threshold !== 'All thresholds'){
+    if (threshold !== 'All thresholds' && xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold'){
         thresholdClause = "and h.fcst_thresh = '" + threshold + "'"
     }
     const variable = curve['variable'];
@@ -201,7 +201,7 @@ dataContour = function (plotParams, plotFunction) {
                 "-l", hasLevels,
                 "-c", 0,
                 "-v", vts,
-                "-L", lineDataType
+                "-L", statLineType
                     ]                };
         var pyError = null;
         const Future = require('fibers/future');

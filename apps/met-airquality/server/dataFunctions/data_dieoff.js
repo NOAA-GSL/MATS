@@ -200,7 +200,7 @@ dataDieOff = function (plotParams, plotFunction) {
                         "-l", hasLevels,
                         "-c", completenessQCParam,
                         "-v", vts,
-                        "-L", lineDataType
+                        "-L", statLineType
                     ]                };
                 var pyError = null;
                 const Future = require('fibers/future');
