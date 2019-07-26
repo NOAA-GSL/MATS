@@ -13,69 +13,39 @@ Author: Molly B Smith
 #  Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
 
 from __future__ import print_function
+
+import getopt
 import sys
-import os.path
+import traceback
 import urllib.request
-import pymysql
-import json
 from datetime import datetime
-import metexpress
+
+import pymysql
+
+import metexpress.MEanomalycor as MEanomalycor
 
 class UpdateMEAnomalycor:
-    def __init__(self, options):
-        self.cnf_file = options.cnf_file
-        self.db_model_input = options.db_model_input
-        self.refresh_urls = options.refresh_urls
+    def __init__(self, cnf_file):
+        self.metadata_database = "tmp_mats_metadata"
+        self.cnf_file = cnf_file
         self.cnx = pymysql.connect(read_default_file=self.cnf_file)
         self.cnx.autocommit = True
-        self.cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        self.cursor = self.cnx.cursor(pymysql.cursors.DictCursor)
 
         self.cnx2 = pymysql.connect(read_default_file=self.cnf_file)
         self.cnx2.autocommit = True
         self.cursor2 = self.cnx2.cursor(pymysql.cursors.DictCursor)
 
-        # see if the metadata database already exists
-        self.cursor.execute('show databases like "mats_metadata";')
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            me = MEAnomalycor()
-            me.main(cnf_file)
-        self.cursor.execute("use mats_metadata;")
-        self.cnx.commit()
-
-        # see if the metadata tables already exist
-        self.cursor.execute('show tables like "anomalycor_mats_metadata_dev";')
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            me = MEAnomalycor()
-            me.main(cnf_file)
-
-        self.cursor.execute('show tables like "anomalycor_mats_metadata";')
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            me = MEAnomalycor()
-            me.main(cnf_file)
-
-        # see if the metadata group tables already exist
-        self.cursor.execute('show tables like "anomalycor_database_groups_dev";')
-        if self.cursor.rowcount == 0:
-            me = MEAnomalycor()
-            me.main(cnf_file)
-
-        self.cursor.execute('show tables like "anomalycor_database_groups";')
-        if self.cursor.rowcount == 0:
-            me = MEAnomalycor()
-            me.main(cnf_file)
 
     def get_app_reference(self):
         return "met-anomalycor"
 
     def get_data_table_pattern_list(self):
-        return ['line_data_sal1l2']
+        return ['line_data_sl1l2']
 
     def update_tables_and_close_cnx(self):
-        print("Publishing metadata")
-        self.cursor.execute("use mats_metadata;")
+        print("selective_MEanomalycor - Publishing metadata")
+        self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
         self.cursor.execute("delete from anomalycor_mats_metadata;")
         self.cnx.commit()
@@ -90,7 +60,7 @@ class UpdateMEAnomalycor:
         self.cursor2.close()
         self.cnx2.close()
 
-    def strip_level(self,elem):
+    def strip_level(self, elem):
         # helper function for sorting levels
         if elem[0] in ['P', 'Z', 'H', 'L']:
             if '-' not in elem:
@@ -99,8 +69,7 @@ class UpdateMEAnomalycor:
                 hyphen_idx = elem.find('-')
                 return int(elem[1:hyphen_idx])
         else:
-            return elem
-
+            return 0
 
     def build_stats_object(self):
         # parse dbs and models to reprocess
@@ -122,19 +91,19 @@ class UpdateMEAnomalycor:
             use_db = "use " + mvdb
             self.cursor.execute(use_db)
             self.cnx.commit()
-            print("\n\nUsing db " + mvdb)
+            print("\n\nselective_MEanomalycor - Using db " + mvdb)
 
             # Update models in this database
             for model in mvdb_map[mvdb]:
                 per_mvdb[mvdb][model] = {}
-                print("\nProcessing model " + model)
+                print("\nselective_MEanomalycor - Processing model " + model)
 
                 # Get the stats for this model in this database
-                get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs ' \
-                            'from stat_header h, line_data_sal1l2 ld ' \
-                            'where ld.stat_header_id = h.stat_header_id ' \
-                            'and h.model ="' + model + '";'
-                print("Getting stats for model " + model)
+                get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs  \
+                             from stat_header h, line_data_sal1l2 ld  \
+                             where ld.stat_header_id = h.stat_header_id  \
+                             and h.model ="' + model + '";'
+                print("selective_MEanomalycor - Getting stats for model " + model)
                 self.cursor.execute(get_stats)
                 self.cnx.commit()
                 for line2 in self.cursor:
@@ -149,48 +118,48 @@ class UpdateMEAnomalycor:
                     # Get the regions for this model in this database
                     get_regions = 'select distinct vx_mask from stat_header where model ="' + model + '";'
                     per_mvdb[mvdb][model]['regions'] = []
-                    print("Getting regions for model " + model)
+                    print("selective_MEanomalycor - Getting regions for model " + model)
                     self.cursor.execute(get_regions)
                     self.cnx.commit()
                     for line2 in self.cursor:
-                        region = line2.values()[0]
+                        region = list(line2.values())[0]
                         per_mvdb[mvdb][model]['regions'].append(region)
                     per_mvdb[mvdb][model]['regions'].sort()
 
                     # Get the levels for this model in this database
                     get_levels = 'select distinct fcst_lev from stat_header where model ="' + model + '";'
                     per_mvdb[mvdb][model]['levels'] = []
-                    print("Getting levels for model " + model)
+                    print("selective_MEanomalycor - Getting levels for model " + model)
                     self.cursor.execute(get_levels)
                     self.cnx.commit()
                     for line2 in self.cursor:
-                        level = line2.values()[0]
+                        level = list(line2.values())[0]
                         per_mvdb[mvdb][model]['levels'].append(level)
-                    per_mvdb[mvdb][model]['levels'].sort(key=strip_level)
+                    per_mvdb[mvdb][model]['levels'].sort(key=self.strip_level)
 
                     # Get the ACC variables for this model in this database
                     get_vars = 'select distinct fcst_var from stat_header where model ="' + model + '";'
                     per_mvdb[mvdb][model]['variables'] = []
-                    print("Getting variables for model " + model)
+                    print("selective_MEanomalycor - Getting variables for model " + model)
                     self.cursor.execute(get_vars)
                     self.cnx.commit()
                     for line2 in self.cursor:
-                        variable = line2.values()[0]
+                        variable = list(line2.values())[0]
                         per_mvdb[mvdb][model]['variables'].append(variable)
                     per_mvdb[mvdb][model]['variables'].sort()
 
                     # Get the fcst lead times for this model in this database
-                    get_fcsts = 'select distinct ld.fcst_lead ' \
-                                'from stat_header h, line_data_sal1l2 ld ' \
-                                'where ld.stat_header_id = h.stat_header_id ' \
-                                'and h.model ="' + model + '";'
+                    get_fcsts = 'select distinct ld.fcst_lead  \
+                                 from stat_header h, line_data_sal1l2 ld  \
+                                 where ld.stat_header_id = h.stat_header_id  \
+                                 and h.model ="' + model + '";'
                     temp_fcsts = []
                     temp_fcsts_orig = []
-                    print("Getting fcst lens for model " + model)
+                    print("selective_MEanomalycor - Getting fcst lens for model " + model)
                     self.cursor.execute(get_fcsts)
                     self.cnx.commit()
                     for line2 in self.cursor:
-                        fcst = int(line2.values()[0])
+                        fcst = int(list(line2.values())[0])
                         if fcst % 10000 == 0:
                             temp_fcsts_orig.append(fcst)
                             fcst = fcst / 10000
@@ -199,13 +168,13 @@ class UpdateMEAnomalycor:
                         temp_fcsts.append(fcst)
                     temp_fcsts_orig_sorted = [x for _, x in sorted(zip(temp_fcsts, temp_fcsts_orig))]
                     temp_fcsts.sort()
-                    per_mvdb[mvdb][model]['fcsts'] = map(str, temp_fcsts)
-                    per_mvdb[mvdb][model]['fcst_orig'] = map(str, temp_fcsts_orig_sorted)
+                    per_mvdb[mvdb][model]['fcsts'] = list(map(str, temp_fcsts))
+                    per_mvdb[mvdb][model]['fcst_orig'] = list(map(str, temp_fcsts_orig_sorted))
 
-                    print("\nStoring metadata for model " + model)
+                    print("\nselective_MEanomalycor - Storing metadata for model " + model)
                     self.update_model_in_metadata_table(mvdb, model, per_mvdb[mvdb][model])
                 else:
-                    print("\nNo valid metadata for model " + model)
+                    print("\nselective_MEanomalycor - No valid metadata for model " + model)
 
             self.update_groups(mvdb)
 
@@ -214,11 +183,12 @@ class UpdateMEAnomalycor:
 
     def update_model_in_metadata_table(self, mvdb, model, raw_metadata):
         # Make sure there's a row for each model/db combo
-        self.cursor.execute("use mats_metadata;")
-        self.cnx.commit()
+        self.cursor2.execute("use  " + self.metadata_database + ";")
+        self.cnx2.commit()
 
         # See if the db/model have previous metadata
-        self.cursor.execute("select * from anomalycor_mats_metadata where db = '" + mvdb + "' and model = '" + model + "';")
+        self.cursor2.execute(
+            "select * from anomalycor_mats_metadata where db = '" + mvdb + "' and model = '" + model + "';")
 
         if len(raw_metadata['regions']) > int(0) and len(raw_metadata['levels']) and len(raw_metadata['fcsts']) and len(
                 raw_metadata['variables']) > int(0):
@@ -229,7 +199,7 @@ class UpdateMEAnomalycor:
             maxdate = datetime.strptime(raw_metadata['maxdate'], '%Y-%m-%d %H:%M:%S')
             maxdate = maxdate.strftime('%s')
             display_text = model.replace('.', '_')
-            if self.cursor.rowcount == 0:
+            if self.cursor2.rowcount == 0:
                 update_statement = "insert into anomalycor_mats_metadata_dev (db, model, display_text, regions, levels, fcst_lens, variables, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
                 qd.append(mvdb)
                 qd.append(model)
@@ -245,8 +215,8 @@ class UpdateMEAnomalycor:
             qd.append(maxdate)
             qd.append(raw_metadata['numrecs'])
             qd.append(updated_utc)
-            self.cursor.execute(update_statement, qd)
-            self.cnx.commit()
+            self.cursor2.execute(update_statement, qd)
+            self.cnx2.commit()
 
     def update_groups(self, mvdb):
         # get mvdb group
@@ -254,19 +224,19 @@ class UpdateMEAnomalycor:
         self.cursor.execute(get_group)
         if self.cursor.rowcount > 0:
             for row in self.cursor:
-                group = row.values()[0]
+                group = list(row.values())[0]
         else:
             group = "NO GROUP"
 
         # see if this mvdb is already in this group. If not, add it.
-        self.cursor.execute("use mats_metadata;")
+        self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
         get_current_dbs_in_group = "select dbs from anomalycor_database_groups_dev where db_group = '" + group + "';"
         self.cursor.execute(get_current_dbs_in_group)
         if self.cursor.rowcount > 0:
             update_needed = True
             for row in self.cursor:
-                current_dbs = row.values()[0].strip('[]')
+                current_dbs = list(row.values())[0].strip('[]')
                 current_dbs = [x.replace(" ", "").strip("'") for x in current_dbs.split(',')]
                 if mvdb not in current_dbs:
                     current_dbs.append(mvdb)
@@ -276,62 +246,114 @@ class UpdateMEAnomalycor:
 
         # store the new group info
         if update_needed:
-            update_group = 'update anomalycor_database_groups_dev set dbs = "' + str(current_dbs) + '" where db_group = "' + group + '";'
+            update_group = 'update anomalycor_database_groups_dev set dbs = "' + str(
+                current_dbs) + '" where db_group = "' + group + '";'
             self.cursor.execute(update_group)
             self.cnx.commit()
         else:
-            insert_group = 'insert into anomalycor_database_groups_dev (db_group, dbs) values("' + str(group) + '", "' + str(current_dbs) + '");'
+            insert_group = 'insert into anomalycor_database_groups_dev (db_group, dbs) values("' + str(
+                group) + '", "' + str(current_dbs) + '");'
             self.cursor.execute(insert_group)
             self.cnx.commit()
 
-    # makes sure all expected options were indeed passed in
-    def validate_options(self, options):
-         assert True, options.cnf_file != None and options.db_model_input != None and options.refresh_urls != None
+    def set_running(self, state):
+        # use its own cursor because the cursor may have been closed
+        runningCnx =  pymysql.connect(read_default_file=self.cnf_file)
+        runningCnx.autocommit = True
+        runningCursor = runningCnx.cursor(pymysql.cursors.DictCursor)
+        runningCursor.execute("use  " + self.metadata_database + ";")
+        runningCnx.commit()
 
-    def set_running(self,state):
-        self.cursor.execute("select app_reference from mats_metadata.metadata_script_info where app_reference = '" + self.get_app_reference() + "'")
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            #insert
-            insert_cmd = 'INSERT INTO mats_metadata.metadata_script_info (apref,  running) VALUES ("' + self.get_app_reference() + '", "' + state  + '";'
-            self.cursor.execute(insert_cmd)
-            self.cnx.commit()
+        runningCursor.execute(
+            "select app_reference from metadata_script_info where app_reference = '" + self.get_app_reference() + "'")
+        runningCnx.commit()
+        if runningCursor.rowcount == 0:
+            # insert
+            insert_cmd = 'insert into metadata_script_info (apref,  running) values ("' + self.get_app_reference() + '", "' + str(int(state)) + '");'
+            runningCursor.execute(insert_cmd)
+            runningCnx.commit()
         else:
-            #update
-            update_cmd = 'update mats_metadata.metadata_script_info set state = "' + state + '" where app_reference = "' + self.get_app_reference() + '";'
-            self.cursor.execute(update_cmd)
+            # update
+            update_cmd = 'update metadata_script_info set running = "' + str(int(state)) + '" where app_reference = "' + self.get_app_reference() + '";'
+            runningCursor.execute(update_cmd)
+            runningCnx.commit()
+        runningCursor.close
+        runningCnx.close()
+
+    def update(self,options):
+        try:
+            self.cursor.execute('show databases like "' + self.metadata_database + '";')
             self.cnx.commit()
+            if self.cursor.rowcount == 0:
+                create_db_query = 'create database ' + self.metadata_database + ';'
+                self.cursor.execute(create_db_query)
+                self.cnx.commit()
+            self.cursor.execute("use  " + self.metadata_database + ";")
+            self.cnx.commit()
+            self.db_model_input = options['db_model_input']
+            self.refresh_url = options['metexpress_base_url']  + "/" + self.get_app_reference() + "/refreshMetadata"
+            utc_now = str(datetime.now())
+            print('ANOMALYCOR MATS FOR MET UPDATE METADATA START: ' + utc_now)
+            self.set_running(True)
+            # see if the metadata database already exists
+            needsUpdate = False
 
+            # see if the metadata tables already exist
+            self.cursor.execute('show tables like "anomalycor_mats_metadata_dev";')
+            self.cnx.commit()
+            if self.cursor.rowcount == 0:
+                needsUpdate = True
 
-    def update(self):
-        db_model_input = self.db_model_input
-        utc_now = str(datetime.now())
-        print('ANOMALYCOR MATS FOR MET UPDATE METADATA START: ' + utc_now)
-        set_running(true)
-        self.build_stats_object()
-        self.update_tables_and_close_cnx()
-        for url in refresh_urls:
-            urllib.request.urlopen(url, data=None, cafile=None, capath=None, cadefault=False, context=None)
-        utc_now = str(datetime.now())
-        print('ANOMALYCOR MATS FOR MET UPDATE METADATA END: ' + utc_now)
-        set_running(false)
-        return 0
+            self.cursor.execute('show tables like "anomalycor_mats_metadata";')
+            self.cnx.commit()
+            if self.cursor.rowcount == 0:
+                needsUpdate = True
+
+            # see if the metadata group tables already exist
+            self.cursor.execute('show tables like "anomalycor_database_groups_dev";')
+            if self.cursor.rowcount == 0:
+                needsUpdate = True
+
+            self.cursor.execute('show tables like "anomalycor_database_groups";')
+            if self.cursor.rowcount == 0:
+                needsUpdate = True
+
+            if needsUpdate:
+                me = MEanomalycor.MEAnomalycor()
+                me.main(self.cnf_file)
+
+            self.build_stats_object()
+            self.update_tables_and_close_cnx()
+            urllib.request.urlopen(self.refresh_url, data=None, cafile=None, capath=None, cadefault=False, context=None)
+            utc_now = str(datetime.now())
+            print('ANOMALYCOR MATS FOR MET UPDATE METADATA END: ' + utc_now)
+        finally:
+            self.set_running(False)
+
+    # makes sure all expected options were indeed passed in
+    @classmethod
+    def validate_options(self, options):
+        assert True, options['cnf_file'] != None and options['db_model_input'] != None and options['metexpress_base_url'] != None
 
     # process 'c' style options - using getopt - usage describes options
-    # options like {'cnf_file':cnf_file, 'db_model_input':db_model_input, 'refresh_urls':refresh_urls}
-    # cnf_file - mysql cnf file, db_model_input - comma-separated list of db/model pairs, refresh_urls - list of refresh_urls
+    # options like {'cnf_file':cnf_file, 'db_model_input':db_model_input, 'metexpress_base_url':metexpress_base_url}
+    # cnf_file - mysql cnf file, db_model_input - comma-separated list of db/model pairs, metexpress_base_url - metexpress address
+    # The db_model_input might be initially an empty string and then set later when calling update. This
+    # allows for instantiating the class before the db_model_inputs are known.
+    @classmethod
     def get_options(self, args):
-        usage = ["(c)nf_file=", "(d)=b_model_input", "(r)=efresh_urls"]
+        usage = ["(c)nf_file=", "(d)=b_model_input", "(u)=metexpress_base_url"]
         cnf_file = None
-        db_model_input= None
+        db_model_input = None
         refresh_urls = None
 
         try:
-            opts, args = getopt.getopt(args[1:], "c:d:r", usage)
+            opts, args = getopt.getopt(args[1:], "c:d:u:", usage)
         except getopt.GetoptError as err:
             # print help information and exit:
             print(str(err))  # will print something like "option -a not recognized"
             print(usage)  # print usage from last param to getopt
+            traceback.print_stack()
             sys.exit(2)
         for o, a in opts:
             if o == "-?":
@@ -340,18 +362,20 @@ class UpdateMEAnomalycor:
             if o == "-c":
                 cnf_file = a
             elif o == "-d":
-                db_model_input = a.split(",")
-            elif o == "-r":
-                refresh_urls = a.split(",")
+                db_model_input = a
+            elif o == "-u":
+                metexpress_base_url = a
             else:
                 assert False, "unhandled option"
         # make sure none were left out...
         assert True, cnf_file != None and db_model_input != None and refresh_urls != None
-        options = {'cnf_file':cnf_file, 'db_model_input':db_model_input, 'refresh_urls':refresh_urls}
-        validate_options(options)
+        options = {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url}
+        UpdateMEAnomalycor.validate_options(options)
         return options
 
+
 if __name__ == '__main__':
-    updater = UpdateMEAnomalycor(get_options(sys.argv))
-    ret = updater.update()
+    options = UpdateMEAnomalycor.get_options(sys.argv)
+    updater = UpdateMEAnomalycor(options['cnf_file']) # constructor needs cnf_file
+    ret = updater.update(options) # update needs other options i.e. db_model_input and metexpress_base_url
     sys.exit(ret)
