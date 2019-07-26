@@ -376,7 +376,7 @@
     },
     {
       "app": "met-airquality",
-      "displayName": "MET Surface",
+      "displayName": "MET Air Quality",
       "displayOrder": 22,
       "group": "METexpress",
       "deploymentStatus": "enabled",
