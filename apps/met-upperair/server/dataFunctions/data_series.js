@@ -69,7 +69,7 @@ dataSeries = function (plotParams, plotFunction) {
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -179,7 +179,8 @@ dataSeries = function (plotParams, plotFunction) {
                         "-l", hasLevels,
                         "-c", completenessQCParam,
                         "-v", vts
-                    ]                };
+                    ]
+                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();

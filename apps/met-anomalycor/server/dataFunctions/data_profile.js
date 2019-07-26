@@ -165,7 +165,8 @@ dataProfile = function (plotParams, plotFunction) {
                         "-l", hasLevels,
                         "-c", completenessQCParam,
                         "-v", vts
-                    ]                };
+                    ]
+                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();

@@ -51,8 +51,37 @@ dataSeries = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
+        const threshold = curve['threshold'];
+        var thresholdClause = "";
+        if (threshold !== 'All thresholds') {
+            thresholdClause = "and h.fcst_thresh = '" + threshold + "'"
+        }
         const variable = curve['variable'];
         const statistic = curve['statistic'];
+        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        const statLineType = statisticOptionsMap[statistic][1];
+        var statisticsClause = "";
+        var lineDataType = "";
+        if (statLineType === 'scalar') {
+            statisticsClause = "avg(ld.fbar) as fbar, " +
+                "avg(ld.obar) as obar, " +
+                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
+                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
+                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
+                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
+                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
+                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
+                "group_concat(ld.mae order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_mae,";
+            lineDataType = "line_data_sl1l2";
+        } else if (statLineType === 'ctc') {
+            statisticsClause = "avg(ld.fy_oy) as fy_oy, " +
+                "group_concat(ld.fy_oy order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fy_oy, " +
+                "group_concat(ld.fy_on order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fy_on, " +
+                "group_concat(ld.fn_oy order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fn_oy, " +
+                "group_concat(ld.fn_on order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fn_on, " +
+                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total,";
+            lineDataType = "line_data_ctc";
+        }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -69,7 +98,7 @@ dataSeries = function (plotParams, plotFunction) {
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -111,19 +140,11 @@ dataSeries = function (plotParams, plotFunction) {
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "avg(ld.fbar) as fbar, " +
-                "avg(ld.obar) as obar, " +
-                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
-                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
-                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
-                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
-                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
-                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
-                "group_concat(ld.mae order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_mae, " +
+                "{{statisticsClause}} " +
                 "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
                 "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
-                "{{database}}.line_data_sl1l2 ld " +
+                "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
                 "{{regionsClause}} " +
@@ -132,6 +153,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
+                "{{thresholdClause}} " +
                 "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
                 "group by avtime " +
@@ -148,7 +170,10 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{thresholdClause}}', thresholdClause);
+            statement = statement.replace('{{statisticsClause}}', statisticsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.replace('{{lineDataType}}', lineDataType);
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
@@ -178,8 +203,10 @@ dataSeries = function (plotParams, plotFunction) {
                         "-t", plotType,
                         "-l", hasLevels,
                         "-c", completenessQCParam,
-                        "-v", vts
-                    ]                };
+                        "-v", vts,
+                        "-L", statLineType
+                    ]
+                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();
