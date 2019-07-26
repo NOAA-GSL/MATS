@@ -161,9 +161,9 @@ dataContour = function (plotParams, plotFunction) {
             mode: 'text',
             pythonPath: Meteor.settings.private.PYTHON_PATH,
             pythonOptions: ['-u'], // get print results in real-time
-                    scriptPath: process.env.NODE_ENV === "development" ?
-                        process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
-                        process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
+            scriptPath: process.env.NODE_ENV === "development" ?
+                process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
+                process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
             args: [
                 "-h", sumPool.config.connectionConfig.host,
                 "-P", sumPool.config.connectionConfig.port,
@@ -176,7 +176,8 @@ dataContour = function (plotParams, plotFunction) {
                 "-l", hasLevels,
                 "-c", 0,
                 "-v", vts
-                    ]                };
+            ]
+        };
         var pyError = null;
         const Future = require('fibers/future');
         var future = new Future();

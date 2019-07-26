@@ -4,6 +4,7 @@ import pymysql
 import pymysql.cursors
 import math
 import numpy as np
+import re
 import json
 from contextlib import closing
 
@@ -1018,9 +1019,10 @@ class QueryUtil:
 
         # loop through the query results and store the returned values
         for row in query_data:
-            # if it's a pressure level get rid of the P in front of the value
-            row_x_val = float(str(row['xVal']).replace('P', ''))
-            row_y_val = float(str(row['yVal']).replace('P', ''))
+            # get rid of any non-numeric characters
+            non_float = re.compile(r'[^\d.]+')
+            row_x_val = float(non_float.sub('', str(row['xVal']))) if str(row['xVal']) != 'NA' else 0.
+            row_y_val = float(non_float.sub('', str(row['yVal']))) if str(row['yVal']) != 'NA' else 0.
             stat_key = str(row_x_val) + '_' + str(row_y_val)
             data_exists = False
             if stat_line_type == 'scalar':

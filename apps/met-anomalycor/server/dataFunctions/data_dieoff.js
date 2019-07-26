@@ -52,7 +52,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const statistic = "ACC";
         const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
         const forecastKeys = Object.keys(forecastValueMap);
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -174,7 +174,8 @@ dataDieOff = function (plotParams, plotFunction) {
                         "-l", hasLevels,
                         "-c", completenessQCParam,
                         "-v", vts
-                    ]                };
+                    ]
+                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();

@@ -50,7 +50,7 @@ dataDieOff = function (plotParams, plotFunction) {
         }
         const threshold = curve['threshold'];
         var thresholdClause = "";
-        if (threshold !== 'All thresholds'){
+        if (threshold !== 'All thresholds') {
             thresholdClause = "and h.fcst_thresh = '" + threshold + "'"
         }
         const variable = curve['variable'];
@@ -78,10 +78,10 @@ dataDieOff = function (plotParams, plotFunction) {
                 "group_concat(ld.fn_on order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fn_on, " +
                 "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total,";
             lineDataType = "line_data_ctc";
-       }
+        }
         const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
         const forecastKeys = Object.keys(forecastValueMap);
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -201,7 +201,8 @@ dataDieOff = function (plotParams, plotFunction) {
                         "-c", completenessQCParam,
                         "-v", vts,
                         "-L", statLineType
-                    ]                };
+                    ]
+                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();

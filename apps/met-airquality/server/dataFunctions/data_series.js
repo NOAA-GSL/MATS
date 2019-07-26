@@ -53,7 +53,7 @@ dataSeries = function (plotParams, plotFunction) {
         }
         const threshold = curve['threshold'];
         var thresholdClause = "";
-        if (threshold !== 'All thresholds'){
+        if (threshold !== 'All thresholds') {
             thresholdClause = "and h.fcst_thresh = '" + threshold + "'"
         }
         const variable = curve['variable'];
@@ -81,7 +81,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "group_concat(ld.fn_on order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fn_on, " +
                 "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total,";
             lineDataType = "line_data_ctc";
-       }
+        }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -98,7 +98,7 @@ dataSeries = function (plotParams, plotFunction) {
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -205,7 +205,8 @@ dataSeries = function (plotParams, plotFunction) {
                         "-c", completenessQCParam,
                         "-v", vts,
                         "-L", statLineType
-                    ]                };
+                    ]
+                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();

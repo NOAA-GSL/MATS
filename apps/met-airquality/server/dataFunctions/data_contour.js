@@ -49,7 +49,7 @@ dataContour = function (plotParams, plotFunction) {
     }
     const threshold = curve['threshold'];
     var thresholdClause = "";
-    if (threshold !== 'All thresholds' && xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold'){
+    if (threshold !== 'All thresholds' && xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         thresholdClause = "and h.fcst_thresh = '" + threshold + "'"
     }
     const variable = curve['variable'];
@@ -76,7 +76,7 @@ dataContour = function (plotParams, plotFunction) {
             "avg(ld.fn_on) as sub_fn_on, " +
             "avg(ld.total) as sub_total,";
         lineDataType = "line_data_ctc";
-   }
+    }
     // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
     // have been sanitized for display purposes in the forecastValueMap.
     // now we have to go get the damn ole unsanitary ones for the database.
@@ -186,9 +186,9 @@ dataContour = function (plotParams, plotFunction) {
             mode: 'text',
             pythonPath: Meteor.settings.private.PYTHON_PATH,
             pythonOptions: ['-u'], // get print results in real-time
-                    scriptPath: process.env.NODE_ENV === "development" ?
-                        process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
-                        process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
+            scriptPath: process.env.NODE_ENV === "development" ?
+                process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
+                process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
             args: [
                 "-h", sumPool.config.connectionConfig.host,
                 "-P", sumPool.config.connectionConfig.port,
@@ -202,7 +202,8 @@ dataContour = function (plotParams, plotFunction) {
                 "-c", 0,
                 "-v", vts,
                 "-L", statLineType
-                    ]                };
+            ]
+        };
         var pyError = null;
         const Future = require('fibers/future');
         var future = new Future();
