@@ -146,7 +146,7 @@
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.2.3-2019.07.26.06.18",
+      "version": "2.2.2-2019.07.26.06.18",
       "buildDate": "2019.07.26.06.18",
       "last_test_run": "",
       "last_test_status": "",
@@ -160,7 +160,7 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.2.3-2019.07.26.06.26",
+      "version": "2.2.2-2019.07.26.06.26",
       "buildDate": "2019.07.26.06.26",
       "last_test_run": "",
       "last_test_status": "",
@@ -173,7 +173,7 @@
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.2.3-2019.07.26.06.22",
+      "version": "2.2.2-2019.07.26.06.22",
       "buildDate": "2019.07.26.06.22",
       "last_test_run": "",
       "last_test_status": "",
@@ -734,7 +734,7 @@
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.2.2",
+      "version": "2.2.1",
       "buildDate": "2019.07.23.21.17",
       "last_test_run": "",
       "last_test_status": "",
@@ -748,7 +748,7 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.2.2",
+      "version": "2.2.1",
       "buildDate": "2019.07.23.21.17",
       "last_test_run": "",
       "last_test_status": "",
@@ -761,7 +761,7 @@
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.2.2",
+      "version": "2.2.1",
       "buildDate": "2019.07.23.21.17",
       "last_test_run": "",
       "last_test_status": "",
@@ -868,8 +868,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "./MATS_for_EMB/scripts/common/mats_build_deploy_apps_parallel.sh",
-      "buildDate": "2019.06.18.22.21",
+      "version": "2.2.2",
+      "buildDate": "2019.07.26.18.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
