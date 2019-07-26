@@ -50,6 +50,30 @@ dataDieOff = function (plotParams, plotFunction) {
         }
         const variable = curve['variable'];
         const statistic = curve['statistic'];
+        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        const statLineType = statisticOptionsMap[statistic][1];
+        var statisticsClause = "";
+        var lineDataType = "";
+        if (statLineType === 'scalar') {
+            statisticsClause = "avg(ld.fbar) as fbar, " +
+                "avg(ld.obar) as obar, " +
+                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
+                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
+                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
+                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
+                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
+                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
+                "group_concat(ld.mae order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_mae,";
+            lineDataType = "line_data_sl1l2";
+        } else if (statLineType === 'ctc') {
+            statisticsClause = "avg(ld.fy_oy) as fy_oy, " +
+                "group_concat(ld.fy_oy order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fy_oy, " +
+                "group_concat(ld.fy_on order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fy_on, " +
+                "group_concat(ld.fn_oy order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fn_oy, " +
+                "group_concat(ld.fn_on order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fn_on, " +
+                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total,";
+            lineDataType = "line_data_ctc";
+        }
         const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
         const forecastKeys = Object.keys(forecastValueMap);
         var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
@@ -110,19 +134,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "avg(ld.fbar) as fbar, " +
-                "avg(ld.obar) as obar, " +
-                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
-                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
-                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
-                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
-                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
-                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
-                "group_concat(ld.mae order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_mae, " +
+                "{{statisticsClause}} " +
                 "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
                 "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
-                "{{database}}.line_data_sl1l2 ld " +
+                "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
                 "{{regionsClause}} " +
@@ -144,7 +160,9 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{statisticsClause}}', statisticsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.replace('{{lineDataType}}', lineDataType);
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
@@ -174,7 +192,8 @@ dataDieOff = function (plotParams, plotFunction) {
                         "-t", plotType,
                         "-l", hasLevels,
                         "-c", completenessQCParam,
-                        "-v", vts
+                        "-v", vts,
+                        "-L", statLineType
                     ]
                 };
                 var pyError = null;

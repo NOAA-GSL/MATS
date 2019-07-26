@@ -415,7 +415,10 @@ class QueryUtil:
                 sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
                 sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
                 sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
-                sub_mae = np.array([float(i) for i in (str(row['sub_mae']).split(','))])
+                if 'sub_mae' in row:
+                    sub_mae = np.array([float(i) for i in (str(row['sub_mae']).split(','))])
+                else:
+                    sub_mae = np.empty(len(sub_fbar))
             elif stat_line_type == 'ctc':
                 sub_fy_oy = np.array([float(i) for i in (str(row['sub_fy_oy']).split(','))])
                 sub_fy_on = np.array([float(i) for i in (str(row['sub_fy_on']).split(','))])

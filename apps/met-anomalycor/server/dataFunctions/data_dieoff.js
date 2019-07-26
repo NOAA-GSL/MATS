@@ -50,6 +50,8 @@ dataDieOff = function (plotParams, plotFunction) {
         }
         const variable = curve['variable'];
         const statistic = "ACC";
+        const statLineType = 'scalar';
+        const lineDataType = 'line_data_sal1l2';
         const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
         const forecastKeys = Object.keys(forecastValueMap);
         var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
@@ -121,7 +123,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
                 "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
-                "{{database}}.line_data_sal1l2 ld " +
+                "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
                 "{{regionsClause}} " +
@@ -144,6 +146,7 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.replace('{{lineDataType}}', lineDataType);
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
@@ -173,7 +176,8 @@ dataDieOff = function (plotParams, plotFunction) {
                         "-t", plotType,
                         "-l", hasLevels,
                         "-c", completenessQCParam,
-                        "-v", vts
+                        "-v", vts,
+                        "-L", statLineType
                     ]
                 };
                 var pyError = null;

@@ -49,6 +49,29 @@ dataContour = function (plotParams, plotFunction) {
     }
     const variable = curve['variable'];
     const statistic = curve['statistic'];
+    const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+    const statLineType = statisticOptionsMap[statistic][1];
+    var statisticsClause = "";
+    var lineDataType = "";
+    if (statLineType === 'scalar') {
+        statisticsClause = "count(ld.fbar) as n, " +
+            "avg(ld.fbar) as sub_fbar, " +
+            "avg(ld.obar) as sub_obar, " +
+            "avg(ld.ffbar) as sub_ffbar, " +
+            "avg(ld.oobar) as sub_oobar, " +
+            "avg(ld.fobar) as sub_fobar, " +
+            "avg(ld.total) as sub_total, " +
+            "avg(ld.mae) as sub_mae,";
+        lineDataType = "line_data_sl1l2";
+    } else if (statLineType === 'ctc') {
+        statisticsClause = "count(ld.fy_oy) as n, " +
+            "avg(ld.fy_oy) as sub_fy_oy, " +
+            "avg(ld.fy_on) as sub_fy_on, " +
+            "avg(ld.fn_oy) as sub_fn_oy, " +
+            "avg(ld.fn_on) as sub_fn_on, " +
+            "avg(ld.total) as sub_total,";
+        lineDataType = "line_data_ctc";
+    }
     // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
     // have been sanitized for display purposes in the forecastValueMap.
     // now we have to go get the damn ole unsanitary ones for the database.
@@ -110,18 +133,11 @@ dataContour = function (plotParams, plotFunction) {
         "{{yValClause}} " +
         "min({{dateClause}}) as min_secs, " +
         "max({{dateClause}}) as max_secs, " +
-        "count(ld.fbar) as n, " +
-        "avg(ld.fbar) as sub_fbar, " +
-        "avg(ld.obar) as sub_obar, " +
-        "avg(ld.ffbar) as sub_ffbar, " +
-        "avg(ld.oobar) as sub_oobar, " +
-        "avg(ld.fobar) as sub_fobar, " +
-        "avg(ld.total) as sub_total, " +
-        "avg(ld.mae) as sub_mae, " +
+        "{{statisticsClause}} " +
         "avg(ld.fcst_valid_beg) as sub_secs, " +    // this is just a dummy for the common python function -- the actual value doesn't matter
         "count(h.fcst_lev) as sub_levs " +      // this is just a dummy for the common python function -- the actual value doesn't matter
         "from {{database}}.stat_header h, " +
-        "{{database}}.line_data_sl1l2 ld " +
+        "{{database}}.{{lineDataType}} ld " +
         "where 1=1 " +
         "and h.model = '{{model}}' " +
         "{{regionsClause}} " +
@@ -147,7 +163,9 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
     statement = statement.replace('{{variable}}', variable);
+    statement = statement.replace('{{statisticsClause}}', statisticsClause);
     statement = statement.replace('{{levelsClause}}', levelsClause);
+    statement = statement.replace('{{lineDataType}}', lineDataType);
     statement = statement.split('{{dateClause}}').join(dateClause);
     dataRequests[curve.label] = statement;
     // console.log(statement);
@@ -175,7 +193,8 @@ dataContour = function (plotParams, plotFunction) {
                 "-t", plotType,
                 "-l", hasLevels,
                 "-c", 0,
-                "-v", vts
+                "-v", vts,
+                "-L", statLineType
             ]
         };
         var pyError = null;
