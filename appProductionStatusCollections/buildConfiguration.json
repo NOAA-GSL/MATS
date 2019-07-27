@@ -373,6 +373,14 @@
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
+    },
+    {
+      "app": "met-airquality",
+      "displayName": "MET Air Quality",
+      "displayOrder": 22,
+      "group": "METexpress",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     }
   ]
 }
