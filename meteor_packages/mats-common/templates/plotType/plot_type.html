@@ -1,5 +1,8 @@
 <template name="plotType">
     <div id="plotType" class="container pull-left" style="display:block;">
+        <div id="loadingMetadataInfo" class="row text-center" style="display:{{loadingMetadataVisibility}}">
+            <span style="align-content:center; margin: 1em 0 1em 0; color:red" class="fa fa-exclamation-circle">&nbsp;Note: App metadata is currently refreshing. Recently added datasets may not appear until this is complete.</span>
+        </div>
         <div class="row text-center">
             <span style="align-content:center;font-size:xx-large; font-weight: bold;">{{title}}</span>
         </div>

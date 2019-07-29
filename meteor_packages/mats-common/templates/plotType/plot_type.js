@@ -25,6 +25,18 @@ Template.plotType.helpers({
         } else {
             return "";
         }
+    },
+    loadingMetadataVisibility: function () {    // let users know if metadata is updating
+        if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {loadingMetadata: 1}}) === undefined) {
+            return "none";
+        } else {
+            const loadingMetadata = matsCollections.Settings.findOne({}, {fields: {loadingMetadata: 1}}).loadingMetadata;
+            if (loadingMetadata) {  // loadingMetadata should be a boolean
+                return "block";
+            } else {
+                return "none";
+            }
+        }
     }
 });
 
@@ -447,7 +459,7 @@ Template.plotType.events({
             }
         }
     },
-        'click .plot-type-ROC': function (event) {
+    'click .plot-type-ROC': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
             // see if the previous plot type also used the 'dates' parameter
