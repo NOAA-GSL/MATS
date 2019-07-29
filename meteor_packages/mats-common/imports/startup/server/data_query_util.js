@@ -518,6 +518,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
                 throw new Error(e.message);
             }
         } else {
+            stat = null;
             sub_values = NaN;
             sub_secs = NaN;
             if (hasLevels) {
@@ -562,7 +563,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             var this_N_times = N_times[d_idx];
             // Make sure that we don't have any points with far less data than the rest of the graph, and that
             // we don't have any points with a smaller completeness value than specified by the user.
-            if (this_N0 < 0.1 * N0_max || this_N_times < completenessQCParam * N_times_max) {
+            if (curveStats[d_idx] === null  || this_N_times < completenessQCParam * N_times_max) {
                 d.x.push(loopTime);
                 d.y.push(null);
                 d.error_y.push(null); //placeholder
@@ -681,6 +682,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
                 throw new Error(e.message);
             }
         } else {
+            stat = null;
             sub_stats = NaN;
             sub_secs = NaN;
             if (hasLevels) {
@@ -723,9 +725,17 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         var this_N_times = N_times[d_idx];
         // Make sure that we don't have any points with far less data than the rest of the graph, and that
         // we don't have any points with a smaller completeness value than specified by the user.
-        if (this_N0 < 0.1 * N0_max || this_N_times < completenessQCParam * N_times_max) {
-            if (plotType !== matsTypes.PlotTypes.profile && plotType !== matsTypes.PlotTypes.dieoff) {
-                // for profiles and dieoffs, we don't want to add a null for missing data. Just don't have a point for that FHR.
+        if (curveStats[d_idx] === null || this_N_times < completenessQCParam * N_times_max) {
+            if (plotType === matsTypes.PlotTypes.profile) {
+                // profile has the stat first, and then the independent var. The others have independent var and then stat.
+                // this is in the pattern of x-plotted-variable, y-plotted-variable.
+                d.x.push(null);
+                d.y.push(curveIndependentVars[d_idx]);
+                d.error_y.push(null);  // placeholder
+                d.subVals.push(NaN);
+                d.subSecs.push(NaN);
+                d.subLevs.push(NaN);
+            } else {
                 d.x.push(curveIndependentVars[d_idx]);
                 d.y.push(null);
                 d.error_y.push(null);  // placeholder
