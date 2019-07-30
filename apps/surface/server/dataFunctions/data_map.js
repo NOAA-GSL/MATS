@@ -45,6 +45,8 @@ dataMap = function (plotParams, plotFunction) {
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         sitesClause = " and s.name in('" + sitesList.join("','") + "')";
+    } else {
+        throw new Error("INFO:  Please add sites in order to plot a map.");
     }
     var variableStr = curve['variable'];
     var variable = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 2})['optionsMap'][variableStr][2];
