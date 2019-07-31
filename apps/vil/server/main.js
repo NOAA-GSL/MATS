@@ -233,7 +233,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT trsh,description FROM threshold_descriptions;");
         var masterDescription;
         var masterTrsh;
         var trshTemp;
@@ -248,7 +248,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT scale,description FROM scale_descriptions;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT scale,description FROM scale_descriptions;");
         var masterDescription;
         var masterScale;
         for (var j = 0; j < rows.length; j++) {
@@ -987,15 +987,6 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
-            role: matsTypes.DatabaseRoles.MODEL_DATA,
-            status: "active",
-            host: 'wolphin.fsl.noaa.gov',
-            user: 'readonly',
-            password: 'ReadOnly@2016!',
-            database: 'vil',
-            connectionLimit: 10
-        });
-        matsCollections.Databases.insert({
             role: matsTypes.DatabaseRoles.META_DATA,
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
@@ -1005,19 +996,6 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
     }
-
-    const modelSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}, {
-        host: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    // the pool is intended to be global
-    modelPool = mysql.createPool(modelSettings);
-    modelPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
 
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
@@ -1039,13 +1017,13 @@ Meteor.startup(function () {
         database: 1,
         connectionLimit: 1
     });
-// the pool is intended to be global
+    // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
 
-    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "vil", ['threshold_descriptions']);
-    mdr.addRecord("sumPool", "vil", ['regions_per_model_mats_all_categories']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vil", ['threshold_descriptions, regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'vil'});});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'vil'});
+});
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
