@@ -725,7 +725,7 @@ const doCurveParams = function () {
         var currentParam = matsCollections.CurveParams.findOne({name: 'threshold'});
         if (!matsDataUtils.areObjectsEqual(thresholdOptionsMap, currentParam.optionsMap)) {
             // have to reload model data
-            matsCollections.CurveParams.update({name: 'variable'}, {
+            matsCollections.CurveParams.update({name: 'threshold'}, {
                 $set: {
                     optionsMap: thresholdOptionsMap,
                     options: thresholdOptionsMap[defaultDB][Object.keys(thresholdOptionsMap[defaultDB])[0]],
