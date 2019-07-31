@@ -1020,7 +1020,7 @@ Meteor.startup(function () {
     // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vil", ['threshold_descriptions, regions_per_model_mats_all_categories']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vil", ['threshold_descriptions', 'regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'vil'});
 });
