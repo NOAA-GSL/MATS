@@ -84,7 +84,6 @@ dataThreshold = function (plotParams, plotFunction) {
             statement = statement.replace('{{data_source}}', data_source + '_' + scale + '_' + region);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{forecastType}}', forecastType);
-
             dataRequests[curve.label] = statement;
 
             var queryResult;

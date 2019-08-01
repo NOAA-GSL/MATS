@@ -38,34 +38,34 @@ dataContour = function (plotParams, plotFunction) {
     var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var regionStr = curve['region'];
     var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-    var scaleStr = curve['scale'];
-    var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
+    var variableStr = curve['variable'];
+    var variable = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][variableStr];
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statistic = statisticOptionsMap[statisticSelect][0];
     var validTimeClause = "";
-    var thresholdClause = "";
+    var scaleClause = "";
     var forecastLengthClause = "";
     var dateClause = "";
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-        var forecastLength = curve['forecast-length'];
+        var forecastLength = curve['forecast-length'] * 60;
         forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
     }
-    if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
-        var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        thresholdClause = "and m0.trsh = " + threshold + " ";
+    if (xAxisParam !== 'Grid scale' && yAxisParam !== 'Grid scale') {
+        var scaleStr = curve['scale'];
+        var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
+        scaleClause = "and m0.scale = " + grid_scale + " ";
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = " and  m0.time%(24*3600)/3600 IN(" + validTimes + ")";
+            validTimeClause = " and m0.valid_secs%(24*3600)/3600 IN(" + validTimes + ")";
         }
     }
     if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-        dateClause = "m0.time-m0.fcst_len*3600";
+        dateClause = "m0.valid_secs-m0.fcst_len*60";
     } else {
-        dateClause = "m0.time";
+        dateClause = "m0.valid_secs";
     }
 
     // For contours, this functions as the colorbar label.
@@ -84,8 +84,7 @@ dataContour = function (plotParams, plotFunction) {
         "where 1=1 " +
         "and {{dateClause}} >= '{{fromSecs}}' " +
         "and {{dateClause}} <= '{{toSecs}}' " +
-        "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-        "{{thresholdClause}} " +
+        "{{scaleClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
         "group by xVal,yVal " +
@@ -94,14 +93,14 @@ dataContour = function (plotParams, plotFunction) {
 
     statement = statement.replace('{{xValClause}}', xValClause);
     statement = statement.replace('{{yValClause}}', yValClause);
-    statement = statement.replace('{{data_source}}', data_source + '_' + grid_scale + '_' + region);
+    statement = statement.replace('{{data_source}}', data_source + '_freq_' + region);
     statement = statement.replace('{{statistic}}', statistic);
-    statement = statement.replace('{{threshold}}', threshold);
     statement = statement.replace('{{fromSecs}}', fromSecs);
     statement = statement.replace('{{toSecs}}', toSecs);
-    statement = statement.replace('{{thresholdClause}}', thresholdClause);
+    statement = statement.replace('{{scaleClause}}', scaleClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
+    statement = statement.split('{{variable}}').join(variable);
     statement = statement.split('{{dateClause}}').join(dateClause);
     dataRequests[curve.label] = statement;
 

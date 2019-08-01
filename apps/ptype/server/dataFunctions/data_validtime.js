@@ -39,8 +39,8 @@ dataValidTime = function (plotParams, plotFunction) {
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var variableStr = curve['variable'];
+        var variable = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][variableStr];
         var scaleStr = curve['scale'];
         var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var statisticSelect = curve['statistic'];
@@ -49,7 +49,7 @@ dataValidTime = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = curve['forecast-length'];
+        var forecastLength = curve['forecast-length'] * 60;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -65,17 +65,16 @@ dataValidTime = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select floor(m0.time%(24*3600)/3600) as hr_of_day, " +
-                "count(distinct m0.time) as N_times, " +
-                "min(m0.time) as min_secs, " +
-                "max(m0.time) as max_secs, " +
+            var statement = "select m0.valid_secs%(24*3600)/3600 as hr_of_day, " +
+                "count(distinct m0.valid_secs) as N_times, " +
+                "min(m0.valid_secs) as min_secs, " +
+                "max(m0.valid_secs) as max_secs, " +
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
-                "and m0.time >= '{{fromSecs}}' " +
-                "and m0.time <= '{{toSecs}}' " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.trsh = '{{threshold}}' " +
+                "and m0.valid_secs >= '{{fromSecs}}' " +
+                "and m0.valid_secs <= '{{toSecs}}' " +
+                "and m0.scale = '{{scale}}' " +
                 "and m0.fcst_len = '{{forecastLength}}' " +
                 "group by hr_of_day " +
                 "order by hr_of_day" +
@@ -83,10 +82,11 @@ dataValidTime = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + '_' + grid_scale + '_' + region);
+            statement = statement.replace('{{data_source}}', data_source + '_freq_' + region);
             statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{threshold}}', threshold);
+            statement = statement.replace('{{scale}}', grid_scale);
             statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.split('{{variable}}').join(variable);
             dataRequests[curve.label] = statement;
 
             var queryResult;

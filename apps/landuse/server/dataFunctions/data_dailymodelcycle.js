@@ -94,7 +94,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{utcCycleStart}}', utcCycleStart);
-
             dataRequests[curve.label] = statement;
 
             var queryResult;

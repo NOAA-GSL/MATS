@@ -250,7 +250,7 @@ const doCurveParams = function () {
         for (var j = 0; j < rows.length; j++) {
             masterVarDescription = rows[j].description.trim();
             masterVariable = rows[j].ptype.trim();
-            masterVariableValuesMap[masterVariable] = masterVarDescription;
+            masterVariableValuesMap[masterVarDescription] = masterVariable;
         }
     } catch (err) {
         console.log(err.message);
@@ -271,7 +271,7 @@ const doCurveParams = function () {
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
             for (var j = 0; j < forecastLengthArr.length; j++) {
-                forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
+                forecastLengthArr[j] = (Number(forecastLengthArr[j].replace(/'|\[|\]/g, "")) / 60).toString();
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
 
@@ -389,8 +389,8 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         var optionsMap = {
-            'Frequency': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.ny)*sum(m0.yn))/((sum(m0.yy)+sum(m0.yn))*(sum(m0.ny)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.ny*m0.yn)/((m0.yy+m0.yn)*(m0.ny+m0.nn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'x100', 100],
-            'Number of stations': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'x100', 100]
+            'Frequency': ['avg(m0.{{variable}}) as stat, group_concat(m0.{{variable}}, ";", m0.valid_secs order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0', 'Frequency', null],
+            'Number of stations': ['avg(m0.{{variable}} * m0.N) as stat, group_concat(m0.{{variable}} * m0.N, ";", m0.valid_secs order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0', 'Number', null]
         };
         matsCollections.CurveParams.insert(
             {
@@ -414,11 +414,10 @@ const doCurveParams = function () {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: masterVariableValuesMap,
-                options: masterVariableValuesMap[Object.keys(masterVariableValuesMap)],   // convenience
-                superiorNames: ['data-source'],
+                options: Object.keys(masterVariableValuesMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: masterVariableValuesMap[Object.keys(masterVariableValuesMap)[0]],
+                default: Object.keys(masterVariableValuesMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
@@ -611,11 +610,12 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {
 
         const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len as xVal, ",
-            'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
-            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select m0.time as xVal, ",
-            'Init Date': "select m0.time-m0.fcst_len*3600 as xVal, "
+            'Fcst lead time': "select m0.fcst_len/60 as xVal, ",
+            'Grid scale': "select m0.scale as xVal, ",
+            'Valid UTC hour': "select m0.valid_secs%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select (m0.valid_secs-m0.fcst_len*60)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select m0.valid_secs as xVal, ",
+            'Init Date': "select m0.valid_secs-m0.fcst_len*60 as xVal, "
         };
 
         matsCollections.CurveParams.insert(
@@ -643,11 +643,12 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.find({name: 'y-axis-parameter'}).count() == 0) {
 
         const optionsMap = {
-            'Fcst lead time': "m0.fcst_len as yVal, ",
-            'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
-            'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
-            'Valid Date': "m0.time as yVal, ",
-            'Init Date': "m0.time-m0.fcst_len*3600 as yVal, "
+            'Fcst lead time': "m0.fcst_len/60 as yVal, ",
+            'Grid scale': "m0.scale as yVal, ",
+            'Valid UTC hour': "m0.valid_secs%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "(m0.valid_secs-m0.fcst_len*60)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "m0.valid_secs as yVal, ",
+            'Init Date': "m0.valid_secs-m0.fcst_len*60 as yVal, "
         };
 
         matsCollections.CurveParams.insert(
@@ -664,7 +665,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[1],
+                default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
@@ -746,13 +747,14 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
-                ['', 'statistic', ', '],
+                ['', 'statistic', ' for '],
+                ['', 'variable', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "scale", "average", "forecast-length", "valid-time"
+                "label", "data-source", "region", "statistic", "variable", "scale", "average", "forecast-length", "valid-time"
             ],
             groupSize: 6
 
@@ -764,14 +766,15 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
-                ['', 'statistic', ', '],
+                ['', 'statistic', ' for '],
+                ['', 'variable', ', '],
                 ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "scale", "dieoff-type", "valid-time", "utc-cycle-start", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "scale", "dieoff-type", "valid-time", "utc-cycle-start", "curve-dates"
             ],
             groupSize: 6
         });
@@ -782,12 +785,13 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
-                ['', 'statistic', ', '],
+                ['', 'statistic', ' for '],
+                ['', 'variable', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "scale", "forecast-length", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "curve-dates"
             ],
             groupSize: 6
         });
@@ -798,11 +802,12 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
-                ['', 'statistic', ', '],
+                ['', 'statistic', ' for '],
+                ['', 'variable', ', '],
                 ['start utc: ', 'utc-cycle-start', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "scale", "utc-cycle-start"
+                "label", "data-source", "region", "statistic", "variable", "scale", "utc-cycle-start"
             ],
             groupSize: 6
 
@@ -814,13 +819,14 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
-                ['', 'statistic', ', '],
+                ['', 'statistic', ' for '],
+                ['', 'variable', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "scale", "forecast-length", "valid-time", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "curve-dates"
             ],
             groupSize: 6
         });
@@ -831,7 +837,8 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
-                ['', 'statistic', ', '],
+                ['', 'statistic', ' for '],
+                ['', 'variable', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['x-axis: ', 'x-axis-parameter', ', '],
@@ -839,7 +846,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 
@@ -851,7 +858,8 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
-                ['', 'statistic', ', '],
+                ['', 'statistic', ' for '],
+                ['', 'variable', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['x-axis: ', 'x-axis-parameter', ', '],
@@ -859,7 +867,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 
