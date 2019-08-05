@@ -215,6 +215,8 @@ class MEAnomalycor:
                 cursor2.execute(get_stat_header_ids)
                 cnx2.commit()
                 stat_header_id_list = cursor2.fetchone()['stat_header_list']
+                if stat_header_id_list is None:
+                    stat_header_id_list = ""  # there is nothing to do here
 
                 get_fcsts_early = "select distinct fcst_lead from \
                 (select fcst_lead, stat_header_id from line_data_sal1l2 order by stat_header_id limit 500000) s \

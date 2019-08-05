@@ -24,6 +24,7 @@ import pymysql
 
 import metexpress.MEairquality as MEairquality
 
+
 class UpdateMEAirquality:
     def __init__(self, cnf_file, metadata_database):
         self.metadata_database = metadata_database
@@ -225,7 +226,7 @@ class UpdateMEAirquality:
                     self.cnx.commit()
                     stat_header_id_list = self.cursor.fetchone()['stat_header_list']
                     if stat_header_id_list is None:
-                        return  # there is nothing to do here
+                        stat_header_id_list = ""  # there is nothing to do here
                     get_fcsts_early = "select distinct fcst_lead from \
                                     (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s \
                                                 where stat_header_id in (" + stat_header_id_list + ");"
@@ -337,7 +338,7 @@ class UpdateMEAirquality:
 
     def set_running(self, state):
         # use its own cursor because the cursor may have been closed
-        runningCnx =  pymysql.connect(read_default_file=self.cnf_file)
+        runningCnx = pymysql.connect(read_default_file=self.cnf_file)
         runningCnx.autocommit = True
         runningCursor = runningCnx.cursor(pymysql.cursors.DictCursor)
         runningCursor.execute("use  " + self.metadata_database + ";")
@@ -348,18 +349,20 @@ class UpdateMEAirquality:
         runningCnx.commit()
         if runningCursor.rowcount == 0:
             # insert
-            insert_cmd = 'insert into metadata_script_info (app_reference,  running) values ("' + self.get_app_reference() + '", "' + str(int(state)) + '");'
+            insert_cmd = 'insert into metadata_script_info (app_reference,  running) values ("' + self.get_app_reference() + '", "' + str(
+                int(state)) + '");'
             runningCursor.execute(insert_cmd)
             runningCnx.commit()
         else:
             # update
-            update_cmd = 'update metadata_script_info set running = "' + str(int(state)) + '" where app_reference = "' + self.get_app_reference() + '";'
+            update_cmd = 'update metadata_script_info set running = "' + str(
+                int(state)) + '" where app_reference = "' + self.get_app_reference() + '";'
             runningCursor.execute(update_cmd)
             runningCnx.commit()
         runningCursor.close
         runningCnx.close()
 
-    def update(self,options):
+    def update(self, options):
         try:
             self.cursor.execute('show databases like "' + self.metadata_database + '";')
             self.cnx.commit()
@@ -422,7 +425,8 @@ class UpdateMEAirquality:
     # makes sure all expected options were indeed passed in
     @classmethod
     def validate_options(self, options):
-        assert True, options['cnf_file'] is not None and options['db_model_input'] is not None and options['metexpress_base_url'] is not None and options['metadata_database'] is not None
+        assert True, options['cnf_file'] is not None and options['db_model_input'] is not None and options[
+            'metexpress_base_url'] is not None and options['metadata_database'] is not None
 
     # process 'c' style options - using getopt - usage describes options
     # options like {'cnf_file':cnf_file, 'db_model_input':db_model_input, 'metexpress_base_url':metexpress_base_url}
@@ -461,13 +465,14 @@ class UpdateMEAirquality:
                 assert False, "unhandled option"
         # make sure none were left out...
         assert True, cnf_file is not None and db_model_input is not None and refresh_urls is not None
-        options = {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url, "metadata_database":metadata_database}
+        options = {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url,
+                   "metadata_database": metadata_database}
         UpdateMEAirquality.validate_options(options)
         return options
 
 
 if __name__ == '__main__':
     options = UpdateMEAirquality.get_options(sys.argv)
-    updater = UpdateMEAirquality(options['cnf_file'],options['metadata_database'])
-    ret = updater.update(options) # update needs other options i.e. db_model_input and metexpress_base_url
+    updater = UpdateMEAirquality(options['cnf_file'], options['metadata_database'])
+    ret = updater.update(options)  # update needs other options i.e. db_model_input and metexpress_base_url
     sys.exit(ret)
