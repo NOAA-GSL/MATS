@@ -24,6 +24,7 @@ import pymysql
 
 import metexpress.MEsurface as MEsurface
 
+
 class UpdateMESurface:
     def __init__(self, cnf_file, metadata_database):
         self.metadata_database = metadata_database
@@ -123,9 +124,9 @@ class UpdateMESurface:
                 #              and fcst_var not regexp "^OZ|^PM25";'
 
                 print("selective_MEsurface - Getting stats for model " + model)
-                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="GFS" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
+                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
                     and fcst_var not regexp "^OZ|^PM25");'
-                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="GFS" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
+                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
                     and fcst_var not regexp "^OZ|^PM25");'
                 get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sl1l2;'
                 self.cursor.execute(get_stats_earliest)
@@ -220,6 +221,8 @@ class UpdateMESurface:
                     self.cursor.execute(get_stat_header_ids)
                     self.cnx.commit()
                     stat_header_id_list = self.cursor.fetchone()['stat_header_list']
+                    per_mvdb[mvdb][model]['fcsts'] = []
+                    per_mvdb[mvdb][model]['fcst_orig'] = []
                     if stat_header_id_list is not None:
                         get_fcsts_early = "select distinct fcst_lead from \
                                         (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s \
@@ -331,7 +334,7 @@ class UpdateMESurface:
 
     def set_running(self, state):
         # use its own cursor because the cursor may have been closed
-        runningCnx =  pymysql.connect(read_default_file=self.cnf_file)
+        runningCnx = pymysql.connect(read_default_file=self.cnf_file)
         runningCnx.autocommit = True
         runningCursor = runningCnx.cursor(pymysql.cursors.DictCursor)
         runningCursor.execute("use  " + self.metadata_database + ";")
@@ -342,18 +345,20 @@ class UpdateMESurface:
         runningCnx.commit()
         if runningCursor.rowcount == 0:
             # insert
-            insert_cmd = 'insert into metadata_script_info (app_reference,  running) values ("' + self.get_app_reference() + '", "' + str(int(state)) + '");'
+            insert_cmd = 'insert into metadata_script_info (app_reference,  running) values ("' + self.get_app_reference() + '", "' + str(
+                int(state)) + '");'
             runningCursor.execute(insert_cmd)
             runningCnx.commit()
         else:
             # update
-            update_cmd = 'update metadata_script_info set running = "' + str(int(state)) + '" where app_reference = "' + self.get_app_reference() + '";'
+            update_cmd = 'update metadata_script_info set running = "' + str(
+                int(state)) + '" where app_reference = "' + self.get_app_reference() + '";'
             runningCursor.execute(update_cmd)
             runningCnx.commit()
         runningCursor.close
         runningCnx.close()
 
-    def update(self,options):
+    def update(self, options):
         try:
             self.cursor.execute('show databases like "' + self.metadata_database + '";')
             self.cnx.commit()
@@ -416,7 +421,8 @@ class UpdateMESurface:
     # makes sure all expected options were indeed passed in
     @classmethod
     def validate_options(self, options):
-        assert True, options['cnf_file'] is not None and options['db_model_input'] is not None and options['metexpress_base_url'] is not None and options['metadata_database'] is not None
+        assert True, options['cnf_file'] is not None and options['db_model_input'] is not None and options[
+            'metexpress_base_url'] is not None and options['metadata_database'] is not None
 
     # process 'c' style options - using getopt - usage describes options
     # options like {'cnf_file':cnf_file, 'db_model_input':db_model_input, 'metexpress_base_url':metexpress_base_url}
@@ -455,13 +461,14 @@ class UpdateMESurface:
                 assert False, "unhandled option"
         # make sure none were left out...
         assert True, cnf_file is not None and db_model_input is not None and refresh_urls is not None
-        options = {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url, "metadata_database":metadata_database}
+        options = {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url,
+                   "metadata_database": metadata_database}
         UpdateMESurface.validate_options(options)
         return options
 
 
 if __name__ == '__main__':
     options = UpdateMESurface.get_options(sys.argv)
-    updater = UpdateMESurface(options['cnf_file'],options['metadata_database'])
-    ret = updater.update(options) # update needs other options i.e. db_model_input and metexpress_base_url
+    updater = UpdateMESurface(options['cnf_file'], options['metadata_database'])
+    ret = updater.update(options)  # update needs other options i.e. db_model_input and metexpress_base_url
     sys.exit(ret)

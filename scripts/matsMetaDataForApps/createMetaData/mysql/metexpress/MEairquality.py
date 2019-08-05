@@ -27,7 +27,7 @@ class MEAirquality:
     def mysql_prep_tables(self):
         try:
             self.cnx = pymysql.connect(read_default_file=self.cnf_file,
-                              cursorclass=pymysql.cursors.DictCursor)
+                                       cursorclass=pymysql.cursors.DictCursor)
             self.cnx.autocommit = True
             self.cursor = self.cnx.cursor()
             self.cursor = self.cnx.cursor(pymysql.cursors.DictCursor)
@@ -56,7 +56,7 @@ class MEAirquality:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(" MEairquality - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table airquality_mats_metadata_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(1023), variables varchar(1023), fcst_orig varchar(1023), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'
+            create_table_query = 'create table airquality_mats_metadata_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(1023), variables varchar(1023), trshs varchar(1023), fcst_orig varchar(1023), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'
             self.cursor.execute(create_table_query)
             self.cnx.commit()
         self.cursor.execute('show tables like "airquality_mats_metadata";')
@@ -229,10 +229,12 @@ class MEAirquality:
                 cursor2.execute(get_stat_header_ids)
                 cnx2.commit()
                 stat_header_id_list = cursor2.fetchone()['stat_header_list']
+                per_mvdb[mvdb][model]['fcsts'] = []
+                per_mvdb[mvdb][model]['fcst_orig'] = []
                 if stat_header_id_list is not None:
                     get_fcsts_early = "select distinct fcst_lead from \
                     (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s \
-                                where stat_header_id in (" + stat_header_id_list +");"
+                                where stat_header_id in (" + stat_header_id_list + ");"
                     cursor2.execute(get_fcsts_early)
                     cnx2.commit()
                     for line2 in cursor2:
@@ -244,7 +246,7 @@ class MEAirquality:
 
                     get_fcsts_late = "select distinct fcst_lead from \
                     (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 500000) s \
-                                where stat_header_id in (" + stat_header_id_list +");"
+                                where stat_header_id in (" + stat_header_id_list + ");"
                     cursor2.execute(get_fcsts_late)
                     cnx2.commit()
                     for line2 in cursor2:
@@ -258,8 +260,8 @@ class MEAirquality:
                     per_mvdb[mvdb][model]['fcst_orig'] = sorted(temp_fcsts_orig)
 
                 print(" MEairquality - Getting stats for model " + model)
-                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="GFS");'
-                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="GFS");'
+                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
+                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
                 get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sl1l2;'
                 cursor2.execute(get_stats_earliest)
                 cnx2.commit()

@@ -107,7 +107,7 @@ class metadatUpdate:
             raise ValueError("cnf file: " + self.cnf_file + " is not a file - exiting")
 
         self.cnx = pymysql.connect(read_default_file=self.cnf_file,
-                              cursorclass=pymysql.cursors.DictCursor)
+                                   cursorclass=pymysql.cursors.DictCursor)
         self.cnx.autocommit = True
         self.cursor = self.cnx.cursor(pymysql.cursors.DictCursor)
 
@@ -161,7 +161,7 @@ class metadatUpdate:
     def _reconcile_metadata_script_info_table(self):
         updaterList = []
         # options are like {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url}
-        options ={'cnf_file': self.cnf_file, 'db_model_input': "", 'metexpress_base_url': self.metexpress_base_url}
+        options = {'cnf_file': self.cnf_file, 'db_model_input': "", 'metexpress_base_url': self.metexpress_base_url}
         for importer, modname, ispkg in pkgutil.iter_modules(metexpress.__path__):
             if modname.startswith('selective'):
                 submod = importlib.import_module('metexpress' + '.' + modname)
@@ -176,7 +176,8 @@ class metadatUpdate:
                             "select app_reference from metadata_script_info where app_reference = '" + appReference + "';")
                         self.cnx.commit()
                         if self.cursor.rowcount == 0:
-                            self.cursor.execute("INSERT INTO metadata_script_info (app_reference, running) VALUES ('" + appReference + "', False );")
+                            self.cursor.execute(
+                                "INSERT INTO metadata_script_info (app_reference, running) VALUES ('" + appReference + "', False );")
                             self.cnx.commit()
         self.updater_list = updaterList
 
@@ -198,9 +199,9 @@ class metadatUpdate:
             cmd = "select distinct model  \
                   from " + self.db_name + ".stat_header  \
                   where stat_header_id in  \
-                        (select stat_header_id from " + self.db_name + "." + dtple + " "\
-                  "where data_file_id in  \
-                      (select distinct data_file_id from " + self.db_name + ".data_file  \
+                        (select stat_header_id from " + self.db_name + "." + dtple + " " \
+                                                                                     "where data_file_id in  \
+                                                                                         (select distinct data_file_id from " + self.db_name + ".data_file  \
                                         where load_date > '" + str(last_run_finish_time) + "') );"
             self.cursor.execute(cmd)
             self.cnx.commit()
@@ -248,14 +249,14 @@ class metadatUpdate:
                         me_updater = elem['updater']
                         me_updater_app_reference = elem['app_reference']
                         me_options = {'db_model_input': db_model_input,
-                                     'metexpress_base_url': self.metexpress_base_url}
+                                      'metexpress_base_url': self.metexpress_base_url}
                         if self.app_reference == None or self.app_reference == me_updater_app_reference:
                             me_updater.update(me_options)
                     except Exception as uex:
-                        print("Exception running update for: " +  elem['app_reference'] + " : " + str(uex))
+                        print("Exception running update for: " + elem['app_reference'] + " : " + str(uex))
                         traceback.print_stack()
         except Exception as ex:
-            print ("Exception: " + str(ex ))
+            print("Exception: " + str(ex))
             traceback.print_stack()
             self.update_status("failed", utc_start, str(datetime.now()))
         utc_end = str(datetime.now())
@@ -289,7 +290,8 @@ class metadatUpdate:
     # (m)ats_metadata_database_name] allows to override the default metadata database name (mats_metadata) with something
     @classmethod
     def get_options(self, args):
-        usage = ["(c)= cnf_file", "(d)= db_name", "(u)= metexpress_base_url", "[(a)=app_reference, (m)= mats_metadata_database_name]"]
+        usage = ["(c)= cnf_file", "(d)= db_name", "(u)= metexpress_base_url",
+                 "[(a)=app_reference, (m)= mats_metadata_database_name]"]
         cnf_file = None
         db_name = None
         metexpress_base_url = None
@@ -321,12 +323,14 @@ class metadatUpdate:
                 assert False, "unhandled option"
         # make sure none were left out...
         assert True, cnf_file is not None and db_name is not None and metexpress_base_url is not None and metadata_database is not None and app_reference is not None
-        options = {'cnf_file': cnf_file, 'db_name': db_name, 'metexpress_base_url': metexpress_base_url, "app_reference":app_reference, "metadata_database":metadata_database}
+        options = {'cnf_file': cnf_file, 'db_name': db_name, 'metexpress_base_url': metexpress_base_url,
+                   "app_reference": app_reference, "metadata_database": metadata_database}
         return options
+
 
 if __name__ == '__main__':
     options = metadatUpdate.get_options(sys.argv)
-    #metadataUpdater = metadatUpdate(cnf_file, mv_database_name, metexpress_base_url)
+    # metadataUpdater = metadatUpdate(cnf_file, mv_database_name, metexpress_base_url)
     metadataUpdater = metadatUpdate(options)
     metadataUpdater._reconcile_metadata_script_info_table()
     metadataUpdater.update()
