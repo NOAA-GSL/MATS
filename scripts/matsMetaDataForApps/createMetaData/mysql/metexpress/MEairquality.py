@@ -24,15 +24,15 @@ import pymysql
 
 
 class MEAirquality:
-    def __init__(self):
-        self.metadata_database = "tmp_mats_metadata"
-
     def mysql_prep_tables(self):
         try:
             self.cnx = pymysql.connect(read_default_file=self.cnf_file,
                               cursorclass=pymysql.cursors.DictCursor)
             self.cnx.autocommit = True
             self.cursor = self.cnx.cursor()
+            self.cursor = self.cnx.cursor(pymysql.cursors.DictCursor)
+            self.cursor.execute('set group_concat_max_len=4294967295;')
+
         except pymysql.Error as e:
             print(" MEairquality - Error: " + str(e))
             traceback.print_stack()
@@ -110,7 +110,7 @@ class MEAirquality:
         if elem[0] in ['Z', 'H', 'L']:
             return int(elem[1:])
         else:
-            return elem
+            return 0
 
     def strip_trsh(self, elem):
         # helper function for sorting thresholds
@@ -126,6 +126,8 @@ class MEAirquality:
             cnx2 = pymysql.connect(read_default_file=self.cnf_file)
             cnx2.autocommit = True
             cursor2 = cnx2.cursor(pymysql.cursors.DictCursor)
+            cursor2.execute('set group_concat_max_len=4294967295;')
+            cnx2.commit()
         except pymysql.Error as e:
             print(" MEairquality - Error: " + str(e))
             traceback.print_stack()
@@ -134,6 +136,8 @@ class MEAirquality:
             cnx3 = pymysql.connect(read_default_file=self.cnf_file)
             cnx3.autocommit = True
             cursor3 = cnx3.cursor(pymysql.cursors.DictCursor)
+            cursor3.execute('set group_concat_max_len=4294967295;')
+            cnx3.commit()
         except pymysql.Error as e:
             print(" MEairquality - Error: " + str(e))
             traceback.print_stack()
@@ -175,7 +179,7 @@ class MEAirquality:
                 cursor2.execute(get_regions)
                 cnx2.commit()
                 for line2 in cursor2:
-                    region = line2.values()[0]
+                    region = list(line2.values())[0]
                     per_mvdb[mvdb][model]['regions'].append(region)
                 per_mvdb[mvdb][model]['regions'].sort()
 
@@ -197,7 +201,7 @@ class MEAirquality:
                 cursor2.execute(get_trshs)
                 cnx2.commit()
                 for line2 in cursor2:
-                    trsh = line2.values()[0]
+                    trsh = list(line2.values())[0]
                     per_mvdb[mvdb][model]['trshs'].append(trsh)
                 per_mvdb[mvdb][model]['trshs'].sort(key=self.strip_trsh)
 
@@ -212,46 +216,92 @@ class MEAirquality:
                     per_mvdb[mvdb][model]['variables'].append(variable)
                 per_mvdb[mvdb][model]['variables'].sort()
 
-                # Get the fcst lead times for this model in this database
-                get_fcsts = 'select distinct ld.fcst_lead  \
-                             from stat_header h, line_data_sl1l2 ld  \
-                             where ld.stat_header_id = h.stat_header_id  \
-                             and h.model ="' + model + '"  \
-                             and h.fcst_var regexp "^OZ|^PM25";'
-                temp_fcsts = []
-                temp_fcsts_orig = []
-                print(" MEairquality - Getting fcst lens for model " + model)
-                cursor2.execute(get_fcsts)
+                print("MEairquality - Getting fcst lens for model " + model)
+                temp_fcsts = set()
+                temp_fcsts_orig = set()
+
+                # Get the fcst lead times for this model in this database (select from the first and last 500000 rows in the line_data table)
+                # We only select from the first and last 500000 rows because some of these tables can have millions and millions of rows
+                # resulting in extremely long query times
+                # and the first and last 500000 entries should get a good sampling of metadata.
+                # a complete query can be done out of band
+                get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_list from stat_header where model='" + model + "' and fcst_lev like 'P%';"
+                cursor2.execute(get_stat_header_ids)
+                cnx2.commit()
+                stat_header_id_list = cursor2.fetchone()['stat_header_list']
+
+                get_fcsts_early = "select distinct fcst_lead from \
+                (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s \
+                            where stat_header_id in (" + stat_header_id_list +");"
+                cursor2.execute(get_fcsts_early)
                 cnx2.commit()
                 for line2 in cursor2:
                     fcst = int(list(line2.values())[0])
+                    temp_fcsts_orig.add(fcst)
                     if fcst % 10000 == 0:
-                        temp_fcsts_orig.append(fcst)
                         fcst = fcst / 10000
-                    else:
-                        temp_fcsts_orig.append(fcst)
-                    temp_fcsts.append(fcst)
-                temp_fcsts_orig_sorted = [x for _, x in sorted(zip(temp_fcsts, temp_fcsts_orig))]
-                temp_fcsts.sort()
-                per_mvdb[mvdb][model]['fcsts'] = list(map(str, temp_fcsts))
-                per_mvdb[mvdb][model]['fcst_orig'] = list(map(str, temp_fcsts_orig_sorted))
+                    temp_fcsts.add(fcst)
 
-                # Get the stats for this model in this database
-                get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs  \
-                            from stat_header h, line_data_sl1l2 ld  \
-                            where ld.stat_header_id = h.stat_header_id  \
-                            and h.model ="' + model + '"  \
-                            and h.fcst_var regexp "^OZ|^PM25";'
-                print(" MEairquality - Getting stats for model " + model)
-                cursor2.execute(get_stats)
+                get_fcsts_late = "select distinct fcst_lead from \
+                (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 500000) s \
+                            where stat_header_id in (" + stat_header_id_list +");"
+                cursor2.execute(get_fcsts_late)
                 cnx2.commit()
                 for line2 in cursor2:
-                    line2keys = line2.keys()
-                    for line2key in line2keys:
-                        val = str(line2[line2key])
-                        per_mvdb[mvdb][model][line2key] = val
+                    fcst = int(list(line2.values())[0])
+                    temp_fcsts_orig.add(fcst)
+                    if fcst % 10000 == 0:
+                        fcst = fcst / 10000
+                    temp_fcsts.add(fcst)
 
-                # Add the info for this model to the metadata table
+                per_mvdb[mvdb][model]['fcsts'] = sorted(temp_fcsts)
+                per_mvdb[mvdb][model]['fcst_orig'] = sorted(temp_fcsts_orig)
+
+                print(" MEairquality - Getting stats for model " + model)
+                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="GFS");'
+                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="GFS");'
+                get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sl1l2;'
+                cursor2.execute(get_stats_earliest)
+                cnx2.commit()
+                self.cursor.execute(get_stats_earliest)
+                self.cnx.commit()
+                data = self.cursor.fetchone()
+                min_earliest = data['mindate']
+                max_earliest = data['maxdate']
+                self.cursor.execute(get_stats_latest)
+                self.cnx.commit()
+                data = self.cursor.fetchone()
+                min_latest = data['mindate']
+                max_latest = data['maxdate']
+                if min_earliest is not None and min_latest is not None:
+                    min_val = min_earliest if min_earliest < min_latest else min_latest
+                elif min_earliest is not None and min_latest == None:
+                    min_val = min_earliest
+                elif min_earliest == None and min_latest is not None:
+                    min_val = min_latest
+                else:
+                    # both are None so choose the initial epoch
+                    min_val = datetime.fromtimestamp(0)
+                if max_earliest is not None and max_latest is not None:
+                    max_val = max_earliest if max_earliest < max_latest else max_latest
+                elif max_earliest is not None and max_latest == None:
+                    max_val = max_earliest
+                elif max_earliest == None and max_latest is not None:
+                    max_val = max_latest
+                else:
+                    # both are None so choose the max epoch
+                    max_val = datetime.strptime('2038-01-19 03:14:08', '%Y-%m-%d %H:%M:%S')
+
+                per_mvdb[mvdb][model]['mindate'] = int(min_val.timestamp())
+                per_mvdb[mvdb][model]['maxdate'] = int(max_val.timestamp())
+                cursor2.execute(get_num_recs)
+                cnx2.commit()
+                data = self.cursor.fetchone()
+                if data is None:
+                    num_recs = 0
+                else:
+                    num_recs = data['numrecs']
+                per_mvdb[mvdb][model]['numrecs'] = num_recs
                 if int(per_mvdb[mvdb][model]['numrecs']) > int(0):
                     db_has_valid_data = True
                     print("\n MEairquality - Storing metadata for model " + model)
@@ -290,7 +340,6 @@ class MEAirquality:
         except pymysql.Error as e:
             print(" MEairquality - Error closing 2nd cursor: " + str(e))
             traceback.print_stack()
-
         try:
             cursor3.close()
             cnx3.close()
@@ -307,10 +356,8 @@ class MEAirquality:
                 raw_metadata['variables']) > int(0):
             qd = []
             updated_utc = datetime.utcnow().strftime('%s')
-            mindate = datetime.strptime(raw_metadata['mindate'], '%Y-%m-%d %H:%M:%S')
-            mindate = mindate.strftime('%s')
-            maxdate = datetime.strptime(raw_metadata['maxdate'], '%Y-%m-%d %H:%M:%S')
-            maxdate = maxdate.strftime('%s')
+            mindate = raw_metadata['mindate']
+            maxdate = raw_metadata['maxdate']
             display_text = model.replace('.', '_')
             insert_row = "insert into airquality_mats_metadata_dev (db, model, display_text, regions, levels, fcst_lens, variables, trshs, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             qd.append(mvdb)
@@ -340,7 +387,8 @@ class MEAirquality:
             self.cursor.execute(insert_row, qd)
             self.cnx.commit()
 
-    def main(self, cnf_file):
+    def main(self, cnf_file, db_name):
+        self.metadata_database = db_name
         self.cnf_file = cnf_file
         self.mysql_prep_tables()
         self.build_stats_object()
@@ -348,6 +396,7 @@ class MEAirquality:
 
 
 if __name__ == '__main__':
+    metadataDatabaseName = "mats_metadata"
     if len(sys.argv) < 2:
         print(" MEairquality - Error -- mysql cnf file needs to be passed in as argument")
         sys.exit(1)
@@ -357,13 +406,24 @@ if __name__ == '__main__':
         if exists:
             print(" MEairquality - using cnf file: " + cnf_file)
         else:
-            print("cnf file " + cnf_file + " is not a file - exiting")
+            print(" MEairquality - cnf file " + cnf_file + " is not a file - exiting")
             sys.exit(1)
+    elif len(sys.argv) == 3:
+        cnf_file = sys.argv[1]
+        exists = os.path.isfile(cnf_file)
+        if exists:
+            print(" MEairquality - using cnf file: " + cnf_file)
+        else:
+            print(" MEairquality - cnf file " + cnf_file + " is not a file - exiting")
+            sys.exit(1)
+        metadataDatabaseName = sys.argv[2]
+        print(" MEairquality - using matadata database: " + metadataDatabaseName)
+
     utc_now = str(datetime.now())
     msg = 'AIR QUALITY MATS FOR MET METADATA START: ' + utc_now
     print(msg)
     me_dbcreator = MEAirquality()
-    me_dbcreator.main(cnf_file)
+    me_dbcreator.main(cnf_file, metadataDatabaseName)
     utc_now = str(datetime.now())
     msg = 'AIR QUALITY MATS FOR MET METADATA END: ' + utc_now
     print(msg)
