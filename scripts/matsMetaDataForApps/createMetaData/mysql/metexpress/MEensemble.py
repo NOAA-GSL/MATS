@@ -211,35 +211,33 @@ class MEEnsemble:
                 cursor2.execute(get_stat_header_ids)
                 cnx2.commit()
                 stat_header_id_list = cursor2.fetchone()['stat_header_list']
-                if stat_header_id_list is None:
-                    stat_header_id_list = ""  # there is nothing to do here
+                if stat_header_id_list is not None:
+                    get_fcsts_early = "select distinct fcst_lead from \
+                    (select fcst_lead, stat_header_id from line_data_pct order by stat_header_id limit 500000) s \
+                                where stat_header_id in (" + stat_header_id_list +");"
+                    cursor2.execute(get_fcsts_early)
+                    cnx2.commit()
+                    for line2 in cursor2:
+                        fcst = int(list(line2.values())[0])
+                        temp_fcsts_orig.add(fcst)
+                        if fcst % 10000 == 0:
+                            fcst = fcst / 10000
+                        temp_fcsts.add(fcst)
 
-                get_fcsts_early = "select distinct fcst_lead from \
-                (select fcst_lead, stat_header_id from line_data_pct order by stat_header_id limit 500000) s \
-                            where stat_header_id in (" + stat_header_id_list +");"
-                cursor2.execute(get_fcsts_early)
-                cnx2.commit()
-                for line2 in cursor2:
-                    fcst = int(list(line2.values())[0])
-                    temp_fcsts_orig.add(fcst)
-                    if fcst % 10000 == 0:
-                        fcst = fcst / 10000
-                    temp_fcsts.add(fcst)
+                    get_fcsts_late = "select distinct fcst_lead from \
+                    (select fcst_lead, stat_header_id from line_data_pct order by stat_header_id desc limit 500000) s \
+                                where stat_header_id in (" + stat_header_id_list +");"
+                    cursor2.execute(get_fcsts_late)
+                    cnx2.commit()
+                    for line2 in cursor2:
+                        fcst = int(list(line2.values())[0])
+                        temp_fcsts_orig.add(fcst)
+                        if fcst % 10000 == 0:
+                            fcst = fcst / 10000
+                        temp_fcsts.add(fcst)
 
-                get_fcsts_late = "select distinct fcst_lead from \
-                (select fcst_lead, stat_header_id from line_data_pct order by stat_header_id desc limit 500000) s \
-                            where stat_header_id in (" + stat_header_id_list +");"
-                cursor2.execute(get_fcsts_late)
-                cnx2.commit()
-                for line2 in cursor2:
-                    fcst = int(list(line2.values())[0])
-                    temp_fcsts_orig.add(fcst)
-                    if fcst % 10000 == 0:
-                        fcst = fcst / 10000
-                    temp_fcsts.add(fcst)
-
-                per_mvdb[mvdb][model]['fcsts'] = sorted(temp_fcsts)
-                per_mvdb[mvdb][model]['fcst_orig'] = sorted(temp_fcsts_orig)
+                    per_mvdb[mvdb][model]['fcsts'] = sorted(temp_fcsts)
+                    per_mvdb[mvdb][model]['fcst_orig'] = sorted(temp_fcsts_orig)
 
                 print("MEsurface - Getting stats for model " + model)
                 get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as max_date from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="GFS");'
