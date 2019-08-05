@@ -657,11 +657,11 @@ const generateMapPlotOptions = function () {
         mapbox: {
             bearing: 0,
             center: {
-                lat: 39.834,
-                lon: -98.604
+                lat: 50,
+                lon: -92.5
             },
             pitch: 0,
-            zoom: 3.25,
+            zoom: 2,
             accesstoken: 'pk.eyJ1IjoibWF0cy1nc2QiLCJhIjoiY2pvN2l1N2MyMG9xdTN3bWR3ODV5a2E2ZiJ9.PtgcGhxaoD43N0OwJSNVMg',
             style: 'light'
         },

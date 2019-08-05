@@ -27,7 +27,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: minDate,
                 stopDate: maxDate,
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -59,7 +59,7 @@ const doPlotParams = function () {
             {
                 name: 'metexpress-mode',
                 type: matsTypes.InputTypes.radioGroup,
-                optionsMap: {'mats':'mats'}, //,'matsmv':'matsmv'},
+                optionsMap: {'mats': 'mats'}, //,'matsmv':'matsmv'},
                 options: ['mats'], //, 'matsmv'],
                 default: 'mats',
                 controlButtonCovered: false,
@@ -462,7 +462,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
                 options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],   // convenience
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0],  // always use the first region for the first model
@@ -494,7 +494,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: variableOptionsMap,
                 options: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]],   // convenience
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -519,17 +519,18 @@ const doCurveParams = function () {
         }
     }
 
-        const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
-        var fhrDefault;
-        if (fhrOptions.indexOf("24") !== -1) {
-            fhrDefault = "24";
-        } else if (fhrOptions.indexOf("12") !== -1) {
-            fhrDefault = "12";
-        } else {
-            fhrDefault = fhrOptions[0];
-        }
+    const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
+    var fhrDefault;
+    if (fhrOptions.indexOf("24") !== -1) {
+        fhrDefault = "24";
+    } else if (fhrOptions.indexOf("12") !== -1) {
+        fhrDefault = "12";
+    } else {
+        fhrDefault = fhrOptions[0];
+    }
 
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
+
         matsCollections.CurveParams.insert(
             {
                 name: 'forecast-length',
@@ -537,7 +538,7 @@ const doCurveParams = function () {
                 optionsMap: forecastLengthOptionsMap,
                 options: fhrOptions,
                 valuesMap: forecastValueOptionsMap,
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -583,7 +584,7 @@ const doCurveParams = function () {
                 controlButtonText: "utc cycle init hour",
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 4
             });
     }
 
@@ -641,7 +642,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: levelOptionsMap,
                 options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],   // convenience
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -669,9 +670,9 @@ const doCurveParams = function () {
     }
 
     // determine date defaults for dates and curveDates
-    var defaultDb = matsCollections.CurveParams.findOne({name:"database"},{default:1}).default;
-    var dbDateRangeMap = matsCollections.CurveParams.findOne({name:"database"},{dates:1}).dates;
-    var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
+    var defaultDb = matsCollections.CurveParams.findOne({name: "database"}, {default: 1}).default;
+    var dbDateRangeMap = matsCollections.CurveParams.findOne({name: "database"}, {dates: 1}).dates;
+    var defaultDataSource = matsCollections.CurveParams.findOne({name: "data-source"}, {default: 1}).default;
     minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
     maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
     var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
@@ -699,7 +700,7 @@ const doCurveTextPatterns = function () {
                 ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'variable', ' '],
+                ['', 'variable', ', '],
                 ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
@@ -717,7 +718,7 @@ const doCurveTextPatterns = function () {
                 ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'variable', ' '],
+                ['', 'variable', ', '],
                 ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
@@ -727,6 +728,7 @@ const doCurveTextPatterns = function () {
                 "label", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
             ],
             groupSize: 6
+
         });
     }
 };
@@ -750,7 +752,7 @@ const doPlotGraph = function () {
             graphFunction: "graphPlotly",
             dataFunction: "dataReliability",
             plotSpecFunction: "plotSpecDataSeries",
-            checked: true
+            checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.roc,
@@ -765,7 +767,7 @@ const doPlotGraph = function () {
 
 Meteor.startup(function () {
     if (Meteor.settings.private == null) {
-        console.log ("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+        console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
         throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
     }
     matsCollections.Databases.remove({});
@@ -791,7 +793,10 @@ Meteor.startup(function () {
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
+    const metadataSettings = matsCollections.Databases.findOne({
+        role: matsTypes.DatabaseRoles.META_DATA,
+        status: "active"
+    }, {
         host: 1,
         user: 1,
         password: 1,
@@ -801,7 +806,7 @@ Meteor.startup(function () {
     // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['ensemble_mats_metadata']);
-    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.metexpress, app:'mats4met-ensemble'});
+    matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'mats4met-ensemble'});
 });
 
 // this object is global so that the reset code can get to it

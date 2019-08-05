@@ -53,6 +53,8 @@ dataROC = function (plotParams, plotFunction) {
         }
         const variable = curve['variable'];
         const statistic = "None";
+        const statLineType = 'pct';
+        const lineDataType = 'line_data_pct';
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -69,7 +71,7 @@ dataROC = function (plotParams, plotFunction) {
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused)  ? [] : curve['level'];
+        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -116,8 +118,8 @@ dataROC = function (plotParams, plotFunction) {
                 "sum(ldt.oy_i) oy_i, " +
                 "sum(ldt.on_i) on_i " +
                 "from {{database}}.stat_header h, " +
-                "{{database}}.line_data_pct ld, " +
-                "{{database}}.line_data_pct_thresh ldt " +
+                "{{database}}.{{lineDataType}} ld, " +
+                "{{database}}.{{lineDataType}}_thresh ldt " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
                 "{{regionsClause}} " +
@@ -145,6 +147,8 @@ dataROC = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.split('{{lineDataType}}').join(lineDataType);
+
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
@@ -174,8 +178,10 @@ dataROC = function (plotParams, plotFunction) {
                         "-t", plotType,
                         "-l", hasLevels,
                         "-c", completenessQCParam,
-                        "-v", vts
-                    ]               };
+                        "-v", vts,
+                        "-L", statLineType
+                    ]
+                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();

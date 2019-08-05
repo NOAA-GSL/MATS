@@ -321,7 +321,9 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
 const generateMapCurveOptions = function (curve, dataSeries, plotType) {
 
     const markerSizes = dataSeries.queryVal.map(function (val) {
-        return Math.ceil(Math.abs(val * 4)) + 2;
+        var size = Math.ceil(Math.abs(val * 4)) + 2;
+        size = size > 50 ? 50 : size; // prevent really massive bad data from obscuring map
+        return size;
     });
 
     const label = curve['label'];
