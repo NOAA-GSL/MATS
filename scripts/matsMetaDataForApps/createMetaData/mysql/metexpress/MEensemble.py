@@ -248,14 +248,12 @@ class MEEnsemble:
                 get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_pct;'
                 cursor2.execute(get_stats_earliest)
                 cnx2.commit()
-                self.cursor.execute(get_stats_earliest)
-                self.cnx.commit()
-                data = self.cursor.fetchone()
+                data = cursor2.fetchone()
                 min_earliest = data['mindate']
                 max_earliest = data['maxdate']
-                self.cursor.execute(get_stats_latest)
-                self.cnx.commit()
-                data = self.cursor.fetchone()
+                cursor2.execute(get_stats_latest)
+                cnx2.commit()
+                data = cursor2.fetchone()
                 min_latest = data['mindate']
                 max_latest = data['maxdate']
                 if min_earliest is not None and min_latest is not None:
