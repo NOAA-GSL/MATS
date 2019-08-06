@@ -274,8 +274,8 @@ class MEEnsemble:
                 elif max_earliest == None and max_latest is not None:
                     max_val = max_latest
                 else:
-                    # both are None so choose the max epoch
-                    max_val = datetime.strptime('2038-01-19 03:14:08', '%Y-%m-%d %H:%M:%S')
+                    # both are None so choose the current date
+                    max_val = datetime.now()
 
                 per_mvdb[mvdb][model]['mindate'] = int(min_val.timestamp())
                 per_mvdb[mvdb][model]['maxdate'] = int(max_val.timestamp())
