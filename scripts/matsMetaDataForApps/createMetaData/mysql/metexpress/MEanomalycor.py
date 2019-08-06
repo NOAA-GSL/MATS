@@ -156,8 +156,9 @@ class MEAnomalycor:
             db_has_valid_data = False
             use_db = "use " + mvdb
             self.cursor.execute(use_db)
-            cursor2.execute(use_db)
             self.cnx.commit()
+            cursor2.execute(use_db)
+            cnx2.commit()
             print("\n\nMEanomalycor - Using db " + mvdb)
 
             # Get the models in this database
@@ -284,7 +285,7 @@ class MEAnomalycor:
                 per_mvdb[mvdb][model]['maxdate'] = int(max_val.timestamp())
                 cursor2.execute(get_num_recs)
                 cnx2.commit()
-                data = self.cursor.fetchone()
+                data = cursor2.fetchone()
                 if data is None:
                     num_recs = 0
                 else:

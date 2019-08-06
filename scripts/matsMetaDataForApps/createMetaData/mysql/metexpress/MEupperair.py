@@ -153,8 +153,9 @@ class MEUpperair:
             db_has_valid_data = False
             use_db = "use " + mvdb
             self.cursor.execute(use_db)
-            cursor2.execute(use_db)
             self.cnx.commit()
+            cursor2.execute(use_db)
+            cnx2.commit()
             print("\n\nMEupper air - Using db " + mvdb)
 
             # Get the models in this database
@@ -281,7 +282,7 @@ class MEUpperair:
                 per_mvdb[mvdb][model]['maxdate'] = int(max_val.timestamp())
                 cursor2.execute(get_num_recs)
                 cnx2.commit()
-                data = self.cursor.fetchone()
+                data = cursor2.fetchone()
                 if data is None:
                     num_recs = 0
                 else:
@@ -380,11 +381,6 @@ class MEUpperair:
 
 
 if __name__ == '__main__':
-    # example
-    # ${HOME} / model_vxtest_3312_met_admin.cnf
-    # mv_gsd
-    # https: // www.esrl.noaa.gov / gsd / mats
-    # tmp_mats_metadata
     metadataDatabaseName = "mats_metadata"
     if len(sys.argv) < 2:
         print("MEupper air - Error -- mysql cnf file needs to be passed in as argument")
