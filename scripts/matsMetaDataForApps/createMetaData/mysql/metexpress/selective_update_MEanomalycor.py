@@ -167,11 +167,7 @@ class UpdateMEAnomalycor:
                 data = self.cursor.fetchone()
                 num_recs = data['numrecs']
                 per_mvdb[mvdb][model]['numrecs'] = num_recs
-                # for line2 in cursor2:
-                #     line2keys = line2.keys()
-                #     for line2key in line2keys:
-                #         val = str(line2[line2key])
-                #         per_mvdb[mvdb][model][line2key] = val
+
 
                 # Get the rest of the metadata only if data actually exists
                 if int(per_mvdb[mvdb][model]['numrecs']) > int(0):

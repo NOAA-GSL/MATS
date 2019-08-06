@@ -226,7 +226,7 @@ class MEAirquality:
                 # resulting in extremely long query times
                 # and the first and last 500000 entries should get a good sampling of metadata.
                 # a complete query can be done out of band
-                get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_list from stat_header where model='" + model + "' and fcst_lev like 'P%';"
+                get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_list from stat_header where model='" + model + "' and fcst_var regexp '^OZ|^PM25';"
                 cursor2.execute(get_stat_header_ids)
                 cnx2.commit()
                 stat_header_id_list = cursor2.fetchone()['stat_header_list']
