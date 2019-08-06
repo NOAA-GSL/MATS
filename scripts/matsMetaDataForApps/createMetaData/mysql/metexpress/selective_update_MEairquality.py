@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-This script updates specified db/model combinations in the metadata tables required for a METexpress anomaly
-correlation app. It parses the required fields from any databases that begin with 'mv_' in a mysql instance.
+This script updates specified db/model combinations in the metadata tables required for a METexpress airquality app.
+It parses the required fields from any databases that begin with 'mv_' in a mysql instance.
 
 Arguments: path to a mysql .cnf file, comma-separated list of db.model pairs to update
 
-Usage: ./selective_update_MEanomalycor.py path_to_file.cnf db1.model1,db2.model2,...
+Usage: ./selective_update_MEairquality.py path_to_file.cnf db1.model1,db2.model2,...
 
 Author: Molly B Smith
 """
@@ -22,10 +22,10 @@ from datetime import datetime
 
 import pymysql
 
-import metexpress.MEanomalycor as MEanomalycor
+import metexpress.MEairquality as MEairquality
 
 
-class UpdateMEAnomalycor:
+class UpdateMEAirquality:
     def __init__(self, cnf_file, metadata_database):
         self.metadata_database = metadata_database
         self.cnf_file = cnf_file
@@ -60,22 +60,22 @@ class UpdateMEAnomalycor:
         self.cnx.commit()
 
     def get_app_reference(self):
-        return "met-anomalycor"
+        return "met-airquality"
 
     def get_data_table_pattern_list(self):
         return ['line_data_sl1l2']
 
     def update_tables_and_close_cnx(self):
-        print("selective_MEanomalycor - Publishing metadata")
+        print("selective_MEairquality - Publishing metadata")
         self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
-        self.cursor.execute("delete from anomalycor_mats_metadata;")
+        self.cursor.execute("delete from airquality_mats_metadata;")
         self.cnx.commit()
-        self.cursor.execute("insert into anomalycor_mats_metadata select * from anomalycor_mats_metadata_dev;")
+        self.cursor.execute("insert into airquality_mats_metadata select * from airquality_mats_metadata_dev;")
         self.cnx.commit()
-        self.cursor.execute("delete from anomalycor_database_groups;")
+        self.cursor.execute("delete from airquality_database_groups;")
         self.cnx.commit()
-        self.cursor.execute("insert into anomalycor_database_groups select * from anomalycor_database_groups_dev;")
+        self.cursor.execute("insert into airquality_database_groups select * from airquality_database_groups_dev;")
         self.cnx.commit()
         self.cursor.close()
         self.cnx.close()
@@ -84,12 +84,15 @@ class UpdateMEAnomalycor:
 
     def strip_level(self, elem):
         # helper function for sorting levels
-        if elem[0] in ['P', 'Z', 'H', 'L']:
-            if '-' not in elem:
-                return int(elem[1:])
-            else:
-                hyphen_idx = elem.find('-')
-                return int(elem[1:hyphen_idx])
+        if elem[0] in ['Z', 'H', 'L']:
+            return int(elem[1:])
+        else:
+            return 0
+
+    def strip_trsh(self, elem):
+        # helper function for sorting thresholds
+        if elem[0] == '>' or elem[0] == '<':
+            return float(elem[1:])
         else:
             return 0
 
@@ -113,24 +116,19 @@ class UpdateMEAnomalycor:
             use_db = "use " + mvdb
             self.cursor.execute(use_db)
             self.cnx.commit()
-            print("\n\nselective_MEanomalycor - Using db " + mvdb)
+            print("\n\nselective_MEairquality - Using db " + mvdb)
 
             # Update models in this database
             for model in mvdb_map[mvdb]:
                 per_mvdb[mvdb][model] = {}
-                print("\nselective_MEanomalycor - Processing model " + model)
+                print("\nselective_MEairquality - Processing model " + model)
+                print("selective_MEairquality - Getting stats for model " + model)
 
-                # Get the stats for this model in this database
-                # get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs  \
-                #              from stat_header h, line_data_sal1l2 ld  \
-                #              where ld.stat_header_id = stat_header_id  \
-                #              and model ="' + model + '";'
-                #
-
-                print("selective_MEanomalycor - Getting stats for model " + model)
-                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sal1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
-                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sal1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
-                get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sal1l2;'
+                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" \
+                    and fcst_var regexp "^OZ|^PM25");'
+                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" \
+                    and fcst_var regexp "^OZ|^PM25");'
+                get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sl1l2;'
                 self.cursor.execute(get_stats_earliest)
                 self.cnx.commit()
                 data = self.cursor.fetchone()
@@ -157,7 +155,7 @@ class UpdateMEAnomalycor:
                 elif max_earliest == None and max_latest is not None:
                     max_val = max_latest
                 else:
-                    # both are None so choose the max epoch
+                    # both are None so choose the current time
                     max_val = datetime.now()
 
                 per_mvdb[mvdb][model]['mindate'] = int(min_val.timestamp())
@@ -167,18 +165,13 @@ class UpdateMEAnomalycor:
                 data = self.cursor.fetchone()
                 num_recs = data['numrecs']
                 per_mvdb[mvdb][model]['numrecs'] = num_recs
-                # for line2 in cursor2:
-                #     line2keys = line2.keys()
-                #     for line2key in line2keys:
-                #         val = str(line2[line2key])
-                #         per_mvdb[mvdb][model][line2key] = val
 
                 # Get the rest of the metadata only if data actually exists
                 if int(per_mvdb[mvdb][model]['numrecs']) > int(0):
                     # Get the regions for this model in this database
-                    get_regions = 'select distinct vx_mask from stat_header where model ="' + model + '";'
+                    get_regions = 'select distinct vx_mask from stat_header where fcst_var regexp "^OZ|^PM25" and model ="' + model + '";'
                     per_mvdb[mvdb][model]['regions'] = []
-                    print("selective_MEanomalycor - Getting regions for model " + model)
+                    print("selective_MEairquality - Getting regions for model " + model)
                     self.cursor.execute(get_regions)
                     self.cnx.commit()
                     for line2 in self.cursor:
@@ -187,9 +180,9 @@ class UpdateMEAnomalycor:
                     per_mvdb[mvdb][model]['regions'].sort()
 
                     # Get the levels for this model in this database
-                    get_levels = 'select distinct fcst_lev from stat_header where model ="' + model + '";'
+                    get_levels = 'select distinct fcst_lev from stat_header where fcst_var regexp "^OZ|^PM25" and model ="' + model + '";'
                     per_mvdb[mvdb][model]['levels'] = []
-                    print("selective_MEanomalycor - Getting levels for model " + model)
+                    print("selective_MEairquality - Getting levels for model " + model)
                     self.cursor.execute(get_levels)
                     self.cnx.commit()
                     for line2 in self.cursor:
@@ -197,10 +190,21 @@ class UpdateMEAnomalycor:
                         per_mvdb[mvdb][model]['levels'].append(level)
                     per_mvdb[mvdb][model]['levels'].sort(key=self.strip_level)
 
-                    # Get the ACC variables for this model in this database
-                    get_vars = 'select distinct fcst_var from stat_header where model ="' + model + '";'
+                    # Get the thresholds for this model in this database
+                    get_trshs = 'select distinct fcst_thresh from stat_header where fcst_var regexp "^OZ|^PM25" and model ="' + model + '";'
+                    per_mvdb[mvdb][model]['trshs'] = []
+                    print(" MEairquality - Getting thresholds for model " + model)
+                    self.cursor.execute(get_trshs)
+                    self.cnx.commit()
+                    for line2 in self.cursor:
+                        trsh = list(line2.values())[0]
+                        per_mvdb[mvdb][model]['trshs'].append(trsh)
+                    per_mvdb[mvdb][model]['trshs'].sort(key=self.strip_trsh)
+
+                    # Get the variables for this model in this database
+                    get_vars = 'select distinct fcst_var from stat_header where fcst_var regexp "^OZ|^PM25" and model ="' + model + '";'
                     per_mvdb[mvdb][model]['variables'] = []
-                    print("selective_MEanomalycor - Getting variables for model " + model)
+                    print("selective_MEairquality - Getting variables for model " + model)
                     self.cursor.execute(get_vars)
                     self.cnx.commit()
                     for line2 in self.cursor:
@@ -208,7 +212,7 @@ class UpdateMEAnomalycor:
                         per_mvdb[mvdb][model]['variables'].append(variable)
                     per_mvdb[mvdb][model]['variables'].sort()
 
-                    print("selective_MEanomalycor air - Getting fcst lens for model " + model)
+                    print("selective_MEupperair air - Getting fcst lens for model " + model)
 
                     temp_fcsts = set()
                     temp_fcsts_orig = set()
@@ -217,7 +221,7 @@ class UpdateMEAnomalycor:
                     # resulting in extremely long query times
                     # and the first and last 500000 entries should get a good sampling of metadata.
                     # a complete query can be done out of band
-                    get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_list from stat_header where model='" + model + "' and fcst_lev like 'P%';"
+                    get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_list from stat_header where model='" + model + "' and fcst_var regexp '^OZ|^PM25';"
                     self.cursor.execute(get_stat_header_ids)
                     self.cnx.commit()
                     stat_header_id_list = self.cursor.fetchone()['stat_header_list']
@@ -225,7 +229,7 @@ class UpdateMEAnomalycor:
                     per_mvdb[mvdb][model]['fcst_orig'] = []
                     if stat_header_id_list is not None:
                         get_fcsts_early = "select distinct fcst_lead from \
-                                        (select fcst_lead, stat_header_id from line_data_sal1l2 order by stat_header_id limit 500000) s \
+                                        (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s \
                                                     where stat_header_id in (" + stat_header_id_list + ");"
                         self.cursor.execute(get_fcsts_early)
                         self.cnx.commit()
@@ -237,7 +241,7 @@ class UpdateMEAnomalycor:
                             temp_fcsts.add(fcst)
 
                         get_fcsts_late = "select distinct fcst_lead from \
-                                        (select fcst_lead, stat_header_id from line_data_sal1l2 order by stat_header_id desc limit 500000) s \
+                                        (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 500000) s \
                                                     where stat_header_id in (" + stat_header_id_list + ");"
                         self.cursor.execute(get_fcsts_late)
                         self.cnx.commit()
@@ -249,10 +253,10 @@ class UpdateMEAnomalycor:
                             temp_fcsts.add(fcst)
                         per_mvdb[mvdb][model]['fcsts'] = sorted(temp_fcsts)
                         per_mvdb[mvdb][model]['fcst_orig'] = sorted(temp_fcsts_orig)
-                        print("\nselective_MEanomalycor - Storing metadata for model " + model)
+                        print("\nselective_MEairquality - Storing metadata for model " + model)
                         self.update_model_in_metadata_table(mvdb, model, per_mvdb[mvdb][model])
                 else:
-                    print("\nselective_MEanomalycor - No valid metadata for model " + model)
+                    print("\nselective_MEairquality - No valid metadata for model " + model)
 
             self.update_groups(mvdb)
 
@@ -266,7 +270,7 @@ class UpdateMEAnomalycor:
 
         # See if the db/model have previous metadata
         self.cursor2.execute(
-            "select * from anomalycor_mats_metadata where db = '" + mvdb + "' and model = '" + model + "';")
+            "select * from airquality_mats_metadata where db = '" + mvdb + "' and model = '" + model + "';")
 
         if len(raw_metadata['regions']) > int(0) and len(raw_metadata['levels']) and len(raw_metadata['fcsts']) and len(
                 raw_metadata['variables']) > int(0):
@@ -276,16 +280,17 @@ class UpdateMEAnomalycor:
             maxdate = raw_metadata['maxdate']
             display_text = model.replace('.', '_')
             if self.cursor2.rowcount == 0:
-                update_statement = "insert into anomalycor_mats_metadata_dev (db, model, display_text, regions, levels, fcst_lens, variables, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                update_statement = "insert into airquality_mats_metadata_dev (db, model, display_text, regions, levels, fcst_lens, variables, trshs, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
                 qd.append(mvdb)
                 qd.append(model)
                 qd.append(display_text)
             else:
-                update_statement = "update anomalycor_mats_metadata_dev set regions = %s, levels = %s, fcst_lens = %s, variables = %s, fcst_orig = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s where db = '" + mvdb + "' and model = '" + model + "';"
+                update_statement = "update airquality_mats_metadata_dev set regions = %s, levels = %s, fcst_lens = %s, variables = %s, trshs = %s, fcst_orig = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s where db = '" + mvdb + "' and model = '" + model + "';"
             qd.append(str(raw_metadata['regions']))
             qd.append(str(raw_metadata['levels']))
             qd.append(str(raw_metadata['fcsts']))
             qd.append(str(raw_metadata['variables']))
+            qd.append(str(raw_metadata['trshs']))
             qd.append(str(raw_metadata['fcst_orig']))
             qd.append(mindate)
             qd.append(maxdate)
@@ -307,7 +312,7 @@ class UpdateMEAnomalycor:
         # see if this mvdb is already in this group. If not, add it.
         self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
-        get_current_dbs_in_group = "select dbs from anomalycor_database_groups_dev where db_group = '" + group + "';"
+        get_current_dbs_in_group = "select dbs from airquality_database_groups_dev where db_group = '" + group + "';"
         self.cursor.execute(get_current_dbs_in_group)
         if self.cursor.rowcount > 0:
             update_needed = True
@@ -322,12 +327,12 @@ class UpdateMEAnomalycor:
 
         # store the new group info
         if update_needed:
-            update_group = 'update anomalycor_database_groups_dev set dbs = "' + str(
+            update_group = 'update airquality_database_groups_dev set dbs = "' + str(
                 current_dbs) + '" where db_group = "' + group + '";'
             self.cursor.execute(update_group)
             self.cnx.commit()
         else:
-            insert_group = 'insert into anomalycor_database_groups_dev (db_group, dbs) values("' + str(
+            insert_group = 'insert into airquality_database_groups_dev (db_group, dbs) values("' + str(
                 group) + '", "' + str(current_dbs) + '");'
             self.cursor.execute(insert_group)
             self.cnx.commit()
@@ -382,32 +387,32 @@ class UpdateMEAnomalycor:
             self.db_model_input = options['db_model_input']
             self.refresh_url = options['metexpress_base_url'] + "/" + self.get_app_reference() + "/refreshMetadata"
             utc_now = str(datetime.now())
-            print('ANOMALYCOR MATS FOR MET UPDATE METADATA START: ' + utc_now)
+            print('AIRQUALITY MATS FOR MET UPDATE METADATA START: ' + utc_now)
             # see if the metadata database already exists
             needsUpdate = False
 
             # see if the metadata tables already exist
-            self.cursor.execute('show tables like "anomalycor_mats_metadata_dev";')
+            self.cursor.execute('show tables like "airquality_mats_metadata_dev";')
             self.cnx.commit()
             if self.cursor.rowcount == 0:
                 needsUpdate = True
 
-            self.cursor.execute('show tables like "anomalycor_mats_metadata";')
+            self.cursor.execute('show tables like "airquality_mats_metadata";')
             self.cnx.commit()
             if self.cursor.rowcount == 0:
                 needsUpdate = True
 
             # see if the metadata group tables already exist
-            self.cursor.execute('show tables like "anomalycor_database_groups_dev";')
+            self.cursor.execute('show tables like "airquality_database_groups_dev";')
             if self.cursor.rowcount == 0:
                 needsUpdate = True
 
-            self.cursor.execute('show tables like "anomalycor_database_groups";')
+            self.cursor.execute('show tables like "airquality_database_groups";')
             if self.cursor.rowcount == 0:
                 needsUpdate = True
 
             if needsUpdate:
-                me = MEanomalycor.MEAnomalycor()
+                me = MEairquality.MEAirquality()
                 me.main(self.cnf_file, self.metadata_database)
             self.set_running(True)
             self.build_stats_object()
@@ -415,7 +420,7 @@ class UpdateMEAnomalycor:
             urllib.request.urlopen(self.refresh_url, data=None, cafile=None, capath=None, cadefault=False, context=None)
             utc_now = str(datetime.now())
         finally:
-            print('ANOMALYCOR MATS FOR MET UPDATE METADATA END: ' + utc_now)
+            print('AIRQUALITY MATS FOR MET UPDATE METADATA END: ' + utc_now)
             self.set_running(False)
 
     # makes sure all expected options were indeed passed in
@@ -463,12 +468,12 @@ class UpdateMEAnomalycor:
         assert True, cnf_file is not None and db_model_input is not None and refresh_urls is not None
         options = {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url,
                    "metadata_database": metadata_database}
-        UpdateMEAnomalycor.validate_options(options)
+        UpdateMEAirquality.validate_options(options)
         return options
 
 
 if __name__ == '__main__':
-    options = UpdateMEAnomalycor.get_options(sys.argv)
-    updater = UpdateMEAnomalycor(options['cnf_file'], options['metadata_database'])  # constructor needs cnf_file
+    options = UpdateMEAirquality.get_options(sys.argv)
+    updater = UpdateMEAirquality(options['cnf_file'], options['metadata_database'])
     ret = updater.update(options)  # update needs other options i.e. db_model_input and metexpress_base_url
     sys.exit(ret)

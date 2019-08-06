@@ -80,6 +80,7 @@ Author: Molly B Smith, Randy Pierce
 
 from __future__ import print_function
 
+import getopt
 import importlib
 import inspect
 import os
@@ -88,7 +89,6 @@ import sys
 import time
 import traceback
 from datetime import datetime
-from multiprocessing import Process
 
 import pymysql
 
@@ -96,17 +96,18 @@ import metexpress
 
 
 class metadatUpdate:
-    def __init__(self, cnf_file, db_name, metexpress_base_url):
-        self.metadata_database = "tmp_mats_metadata"
+    def __init__(self, options):
+        self.metadata_database = options['metadata_database']
         self.updater_list = []
-        self.cnf_file = cnf_file
-        self.db_name = db_name
-        self.metexpress_base_url = metexpress_base_url
-        if not os.path.isfile(cnf_file):
-            raise ValueError("cnf file: " + cnf_file + " is not a file - exiting")
+        self.cnf_file = options['cnf_file']
+        self.db_name = options['db_name']
+        self.metexpress_base_url = options['metexpress_base_url']
+        self.app_reference = options['app_reference'] if options['app_reference'] is not None else None
+        if not os.path.isfile(self.cnf_file):
+            raise ValueError("cnf file: " + self.cnf_file + " is not a file - exiting")
 
         self.cnx = pymysql.connect(read_default_file=self.cnf_file,
-                              cursorclass=pymysql.cursors.DictCursor)
+                                   cursorclass=pymysql.cursors.DictCursor)
         self.cnx.autocommit = True
         self.cursor = self.cnx.cursor(pymysql.cursors.DictCursor)
 
@@ -126,7 +127,6 @@ class metadatUpdate:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             self._create_metadata_script_info_table()
-        #self.updater_list = self._reconcile_metadata_script_info_table()
         self.cursor.execute('show tables like "run_stats";')
         self.cnx.commit()
         if self.cursor.rowcount == 0:
@@ -161,13 +161,13 @@ class metadatUpdate:
     def _reconcile_metadata_script_info_table(self):
         updaterList = []
         # options are like {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url}
-        options ={'cnf_file': self.cnf_file, 'db_model_input': "", 'metexpress_base_url': self.metexpress_base_url}
+        options = {'cnf_file': self.cnf_file, 'db_model_input': "", 'metexpress_base_url': self.metexpress_base_url}
         for importer, modname, ispkg in pkgutil.iter_modules(metexpress.__path__):
             if modname.startswith('selective'):
                 submod = importlib.import_module('metexpress' + '.' + modname)
                 for updateClass in inspect.getmembers(submod, inspect.isclass):
                     if updateClass[0].startswith('Update'):
-                        updater = getattr(submod, updateClass[0])(self.cnf_file)
+                        updater = getattr(submod, updateClass[0])(self.cnf_file, self.metadata_database)
                         appReference = updater.get_app_reference()
                         dtpl = updater.get_data_table_pattern_list()
                         updaterList.append(
@@ -176,7 +176,8 @@ class metadatUpdate:
                             "select app_reference from metadata_script_info where app_reference = '" + appReference + "';")
                         self.cnx.commit()
                         if self.cursor.rowcount == 0:
-                            self.cursor.execute("INSERT INTO metadata_script_info (app_reference, running) VALUES ('" + appReference + "', False );")
+                            self.cursor.execute(
+                                "INSERT INTO metadata_script_info (app_reference, running) VALUES ('" + appReference + "', False );")
                             self.cnx.commit()
         self.updater_list = updaterList
 
@@ -198,9 +199,9 @@ class metadatUpdate:
             cmd = "select distinct model  \
                   from " + self.db_name + ".stat_header  \
                   where stat_header_id in  \
-                        (select stat_header_id from " + self.db_name + "." + dtple + " "\
-                  "where data_file_id in  \
-                      (select distinct data_file_id from " + self.db_name + ".data_file  \
+                        (select stat_header_id from " + self.db_name + "." + dtple + " " \
+                                                                                     "where data_file_id in  \
+                                                                                         (select distinct data_file_id from " + self.db_name + ".data_file  \
                                         where load_date > '" + str(last_run_finish_time) + "') );"
             self.cursor.execute(cmd)
             self.cnx.commit()
@@ -239,25 +240,25 @@ class metadatUpdate:
         self.update_status("started", utc_start, str(datetime.now()))
         print('MATS METADATA UPDATE FOR MET START: ' + utc_start)
         latest_run_finish_time = self.get_latest_run_finish_time()
-        updateProcesses = []
         try:
             for elem in self.updater_list:
                 data_table_pattern_list = elem['data_table_pattern_list']
                 db_model_input = self.get_models_for_database(data_table_pattern_list, latest_run_finish_time)
                 if len(db_model_input) > 0:
-                    me_updater = elem['updater']
-                    me_options = {'db_model_input': db_model_input,
-                                 'metexpress_base_url': self.metexpress_base_url}
-                    me_updater.update(me_options)
-                    # p = Process(target=me_updater.update, args=(me_options,))
-                    # updateProcesses.append(p)
-                    # p.start()
+                    try:
+                        me_updater = elem['updater']
+                        me_updater_app_reference = elem['app_reference']
+                        me_options = {'db_model_input': db_model_input,
+                                      'metexpress_base_url': self.metexpress_base_url}
+                        if self.app_reference == None or self.app_reference == me_updater_app_reference:
+                            me_updater.update(me_options)
+                    except Exception as uex:
+                        print("Exception running update for: " + elem['app_reference'] + " : " + str(uex))
+                        traceback.print_stack()
         except Exception as ex:
-            print ("Exception: " + str(ex ))
+            print("Exception: " + str(ex))
             traceback.print_stack()
             self.update_status("failed", utc_start, str(datetime.now()))
-        # for up in updateProcesses:
-        #     up.join()
         utc_end = str(datetime.now())
         print('MATS METADATA UPDATE FOR MET END: ' + utc_end)
         self.update_status("succeeded", utc_start, utc_end)
@@ -280,15 +281,57 @@ class metadatUpdate:
                 break;
         return False
 
+    # process 'c' style options - using getopt - usage describes options
+    # options like {'cnf_file':cnf_file, 'mv_database_name:mv_database_name', 'metexpress_base_url':metexpress_base_url, ['app_reference':app_reference, 'metadataDatabaseName':metadataDatabaseName]}
+    # cnf_file - mysql cnf file,
+    # mv_database_name - name of mv_something,
+    # metexpress_base_url - metexpress address
+    # app_reference - is optional and is used to limit running to only one app
+    # (m)ats_metadata_database_name] allows to override the default metadata database name (mats_metadata) with something
+    @classmethod
+    def get_options(self, args):
+        usage = ["(c)= cnf_file", "(d)= db_name", "(u)= metexpress_base_url",
+                 "[(a)=app_reference, (m)= mats_metadata_database_name]"]
+        cnf_file = None
+        db_name = None
+        metexpress_base_url = None
+        app_reference = None
+        metadata_database = "mats_metadata"
+        try:
+            opts, args = getopt.getopt(args[1:], "c:d:u:a:m:", usage)
+        except getopt.GetoptError as err:
+            # print help information and exit:
+            print(str(err))  # will print something like "option -a not recognized"
+            print(usage)  # print usage from last param to getopt
+            traceback.print_stack()
+            sys.exit(2)
+        for o, a in opts:
+            if o == "-?":
+                print(usage)
+                sys.exit(2)
+            if o == "-c":
+                cnf_file = a
+            elif o == "-d":
+                db_name = a
+            elif o == "-u":
+                metexpress_base_url = a
+            elif o == "-a":
+                app_reference = a
+            elif o == "-m":
+                metadata_database = a
+            else:
+                assert False, "unhandled option"
+        # make sure none were left out...
+        assert True, cnf_file is not None and db_name is not None and metexpress_base_url is not None and metadata_database is not None and app_reference is not None
+        options = {'cnf_file': cnf_file, 'db_name': db_name, 'metexpress_base_url': metexpress_base_url,
+                   "app_reference": app_reference, "metadata_database": metadata_database}
+        return options
+
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print("Error -- need three arguments: mysql_cnf_file mv_database_name, metexpress_base_url")
-        sys.exit(1)
-    cnf_file = sys.argv[1]
-    mv_database_name = sys.argv[2]
-    metexpress_base_url = sys.argv[3]
-    metadataUpdater = metadatUpdate(cnf_file, mv_database_name, metexpress_base_url)
+    options = metadatUpdate.get_options(sys.argv)
+    # metadataUpdater = metadatUpdate(cnf_file, mv_database_name, metexpress_base_url)
+    metadataUpdater = metadatUpdate(options)
     metadataUpdater._reconcile_metadata_script_info_table()
     metadataUpdater.update()
     sys.exit(0)
