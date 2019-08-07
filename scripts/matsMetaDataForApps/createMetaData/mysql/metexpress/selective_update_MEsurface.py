@@ -116,18 +116,16 @@ class UpdateMESurface:
                 per_mvdb[mvdb][model] = {}
                 print("\nselective_MEsurface - Processing model " + model)
 
-                # get_stats = 'select max(ld.fcst_valid_beg) as maxdate, min(ld.fcst_valid_beg) as mindate, count(ld.fcst_valid_beg) as numrecs  \
-                #              from stat_header h, line_data_sl1l2 ld  \
-                #              where ld.stat_header_id = stat_header_id  \
-                #              and model ="' + model + '"  \
-                #              and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
-                #              and fcst_var not regexp "^OZ|^PM25";'
+                get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_list from stat_header where model='" + model + \
+                                      "' and fcst_lev in('MSL','SFC','Z0','Z2','Z10','H0','H2','H10','L0')  \
+                                            and fcst_var not regexp '^OZ|^PM25';"
+                self.cursor.execute(get_stat_header_ids)
+                self.cnx.commit()
+                stat_header_id_list = self.cursor.fetchone()['stat_header_list']
 
                 print("selective_MEsurface - Getting stats for model " + model)
-                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
-                    and fcst_var not regexp "^OZ|^PM25");'
-                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 500000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
-                    and fcst_var not regexp "^OZ|^PM25");'
+                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s where stat_header_id in (' + stat_header_id_list + ');'
+                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 500000) s where stat_header_id in (' + stat_header_id_list + ');'
                 get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sl1l2;'
                 self.cursor.execute(get_stats_earliest)
                 self.cnx.commit()
@@ -215,12 +213,6 @@ class UpdateMESurface:
                     # resulting in extremely long query times
                     # and the first and last 500000 entries should get a good sampling of metadata.
                     # a complete query can be done out of band
-                    get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_list from stat_header where model='" + model + \
-                                          "' and fcst_lev in('MSL','SFC','Z0','Z2','Z10','H0','H2','H10','L0')  \
-                                                and fcst_var not regexp '^OZ|^PM25';"
-                    self.cursor.execute(get_stat_header_ids)
-                    self.cnx.commit()
-                    stat_header_id_list = self.cursor.fetchone()['stat_header_list']
                     per_mvdb[mvdb][model]['fcsts'] = []
                     per_mvdb[mvdb][model]['fcst_orig'] = []
                     if stat_header_id_list is not None:
