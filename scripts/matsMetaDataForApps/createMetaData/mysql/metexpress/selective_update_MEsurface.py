@@ -124,9 +124,9 @@ class UpdateMESurface:
                 #              and fcst_var not regexp "^OZ|^PM25";'
 
                 print("selective_MEsurface - Getting stats for model " + model)
-                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
+                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
                     and fcst_var not regexp "^OZ|^PM25");'
-                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
+                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 500000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '" and fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0")  \
                     and fcst_var not regexp "^OZ|^PM25");'
                 get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sl1l2;'
                 self.cursor.execute(get_stats_earliest)

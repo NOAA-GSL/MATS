@@ -247,8 +247,8 @@ class MEAnomalycor:
                     per_mvdb[mvdb][model]['fcst_orig'] = list(map(str,sorted(temp_fcsts_orig)))
 
                 print("MEupper air - Getting stats for model " + model)
-                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sal1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
-                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sal1l2 order by stat_header_id desc limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
+                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sal1l2 order by stat_header_id limit 500000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
+                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sal1l2 order by stat_header_id desc limit 500000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
                 get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sal1l2;'
                 cursor2.execute(get_stats_earliest)
                 cnx2.commit()
