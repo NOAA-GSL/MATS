@@ -27,7 +27,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: minDate,
                 stopDate: maxDate,
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -59,7 +59,7 @@ const doPlotParams = function () {
             {
                 name: 'metexpress-mode',
                 type: matsTypes.InputTypes.radioGroup,
-                optionsMap: {'mats':'mats','matsmv':'matsmv'},
+                optionsMap: {'mats': 'mats', 'matsmv': 'matsmv'},
                 options: ['mats', 'matsmv'],
                 default: 'mats',
                 controlButtonCovered: false,
@@ -348,7 +348,7 @@ const doCurveParams = function () {
             {
                 name: 'yaxes',
                 type: matsTypes.InputTypes.selectOrderEnforced,
-                options: ['auto-by-variable','y1', 'y2'],
+                options: ['auto-by-variable', 'y1', 'y2'],
                 selected: ['auto-by-variable'],
                 controlButtonCovered: true,
                 unique: false,
@@ -480,7 +480,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
                 options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],   // convenience
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0],  // always use the first region for the first model
@@ -507,11 +507,19 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const statOptionsMap = {
-            'RMS': ['avg(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar)) as stat, sum(ld.total) as N0, group_concat(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0'],
-            'Bias (Model - Obs)': ['avg(ld.fbar - ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0'],
-            // 'N': ['sum(ld.total) as stat, sum(ld.total) as N0, group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0'],
-            'Model average': ['avg(ld.fbar) as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0'],
-            'Obs average': ['avg(ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0']
+            'RMSE': ['avg(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar)) as stat, sum(ld.total) as N0, group_concat(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Bias-corrected RMSE': ['avg(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2))) as stat, sum(ld.total) as N0, group_concat(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'MSE': ['avg(ld.ffbar+ld.oobar - 2*ld.fobar) as stat, sum(ld.total) as N0, group_concat(ld.ffbar+ld.oobar - 2*ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Bias-corrected MSE': ['avg((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) as stat, sum(ld.total) as N0, group_concat((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'MAE': ['avg(ld.mae) as stat, sum(ld.total) as N0, group_concat(ld.mae order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'ME (Additive bias)': ['avg(ld.fbar - ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Multiplicative bias': ['avg(ld.fbar / ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar / ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Forecast mean': ['avg(ld.fbar) as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Observed mean': ['avg(ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Forecast stdev': ['avg(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Observed stdev': ['avg(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Error stdev': ['avg(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Pearson correlation': ['avg((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2)))) as stat, sum(ld.total) as N0, group_concat((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2))) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar']
         };
 
         matsCollections.CurveParams.insert(
@@ -537,7 +545,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: variableOptionsMap,
                 options: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]],   // convenience
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -562,15 +570,15 @@ const doCurveParams = function () {
         }
     }
 
-        const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
-        var fhrDefault;
-        if (fhrOptions.indexOf("24") !== -1) {
-            fhrDefault = "24";
-        } else if (fhrOptions.indexOf("12") !== -1) {
-            fhrDefault = "12";
-        } else {
-            fhrDefault = fhrOptions[0];
-        }
+    const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
+    var fhrDefault;
+    if (fhrOptions.indexOf("24") !== -1) {
+        fhrDefault = "24";
+    } else if (fhrOptions.indexOf("12") !== -1) {
+        fhrDefault = "12";
+    } else {
+        fhrDefault = fhrOptions[0];
+    }
 
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
 
@@ -581,7 +589,7 @@ const doCurveParams = function () {
                 optionsMap: forecastLengthOptionsMap,
                 options: fhrOptions,
                 valuesMap: forecastValueOptionsMap,
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -713,7 +721,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: levelOptionsMap,
                 options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],   // convenience
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -804,9 +812,9 @@ const doCurveParams = function () {
     }
 
     // determine date defaults for dates and curveDates
-    var defaultDb = matsCollections.CurveParams.findOne({name:"database"},{default:1}).default;
-    var dbDateRangeMap = matsCollections.CurveParams.findOne({name:"database"},{dates:1}).dates;
-    var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
+    var defaultDb = matsCollections.CurveParams.findOne({name: "database"}, {default: 1}).default;
+    var dbDateRangeMap = matsCollections.CurveParams.findOne({name: "database"}, {dates: 1}).dates;
+    var defaultDataSource = matsCollections.CurveParams.findOne({name: "data-source"}, {default: 1}).default;
     minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
     maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
     var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
@@ -830,7 +838,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap).sort(),
                 startDate: minDate,
                 stopDate: maxDate,
-                superiorNames: ['database','data-source'],
+                superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,
@@ -886,7 +894,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable","valid-time", "average", "forecast-length", "pres-level"
+                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "valid-time", "average", "forecast-length", "pres-level"
             ],
             groupSize: 6
         });
@@ -1027,7 +1035,7 @@ const doPlotGraph = function () {
 
 Meteor.startup(function () {
     if (Meteor.settings.private == null) {
-        console.log ("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+        console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
         throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
     }
     matsCollections.Databases.remove({});
@@ -1053,7 +1061,10 @@ Meteor.startup(function () {
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
+    const metadataSettings = matsCollections.Databases.findOne({
+        role: matsTypes.DatabaseRoles.META_DATA,
+        status: "active"
+    }, {
         host: 1,
         user: 1,
         password: 1,
@@ -1063,7 +1074,7 @@ Meteor.startup(function () {
     // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['surface_mats_metadata', 'surface_database_groups']);
-    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.metexpress, app:'met-surface'});
+    matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-surface'});
 });
 
 // this object is global so that the reset code can get to it

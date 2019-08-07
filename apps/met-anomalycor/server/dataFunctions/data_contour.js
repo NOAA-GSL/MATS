@@ -49,6 +49,8 @@ dataContour = function (plotParams, plotFunction) {
     }
     const variable = curve['variable'];
     const statistic = "ACC";
+    const statLineType = 'scalar';
+    const lineDataType = 'line_data_sal1l2';
     // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
     // have been sanitized for display purposes in the forecastValueMap.
     // now we have to go get the damn ole unsanitary ones for the database.
@@ -123,7 +125,7 @@ dataContour = function (plotParams, plotFunction) {
         "avg(ld.fcst_valid_beg) as sub_secs, " +    // this is just a dummy for the common python function -- the actual value doesn't matter
         "count(h.fcst_lev) as sub_levs " +      // this is just a dummy for the common python function -- the actual value doesn't matter
         "from {{database}}.stat_header h, " +
-        "{{database}}.line_data_sal1l2 ld " +
+        "{{database}}.{{lineDataType}} ld " +
         "where 1=1 " +
         "and h.model = '{{model}}' " +
         "{{regionsClause}} " +
@@ -151,6 +153,7 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{variable}}', variable);
     statement = statement.replace('{{levelsClause}}', levelsClause);
     statement = statement.split('{{dateClause}}').join(dateClause);
+    statement = statement.replace('{{lineDataType}}', lineDataType);
     dataRequests[curve.label] = statement;
     // console.log(statement);
 
@@ -163,22 +166,24 @@ dataContour = function (plotParams, plotFunction) {
             mode: 'text',
             pythonPath: Meteor.settings.private.PYTHON_PATH,
             pythonOptions: ['-u'], // get print results in real-time
-                    scriptPath: process.env.NODE_ENV === "development" ?
-                        process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
-                        process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
-                    args: [
-                        "-h", sumPool.config.connectionConfig.host,
-                        "-P", sumPool.config.connectionConfig.port,
-                        "-u", sumPool.config.connectionConfig.user,
-                        "-p", sumPool.config.connectionConfig.password,
-                        "-d", sumPool.config.connectionConfig.database,
-                        "-q", statement,
-                        "-s", statistic,
-                        "-t", plotType,
-                        "-l", hasLevels,
-                        "-c", 0,
-                        "-v", vts
-                    ]                };
+            scriptPath: process.env.NODE_ENV === "development" ?
+                process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
+                process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
+            args: [
+                "-h", sumPool.config.connectionConfig.host,
+                "-P", sumPool.config.connectionConfig.port,
+                "-u", sumPool.config.connectionConfig.user,
+                "-p", sumPool.config.connectionConfig.password,
+                "-d", sumPool.config.connectionConfig.database,
+                "-q", statement,
+                "-s", statistic,
+                "-t", plotType,
+                "-l", hasLevels,
+                "-c", 0,
+                "-v", vts,
+                "-L", statLineType
+            ]
+        };
         var pyError = null;
         const Future = require('fibers/future');
         var future = new Future();

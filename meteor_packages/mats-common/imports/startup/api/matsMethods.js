@@ -30,6 +30,7 @@ if (Meteor.isServer) {
         const _MV_XMLDIR = _MV_OUT + "/xml/";
         const _MV_SCRIPTSDIR = _MV_OUT + "/scripts/";
         const _MV_PLOTSSDIR = _MV_OUT + "/plots/";
+        const METADATA_SCRIPT = Meteor.settings.private.METADATA_SCRIPT;
         process.env.JAVA_HOME = Meteor.settings.private.JAVA_HOME;
         process.env.MV_HOME = Meteor.settings.private.MV_HOME;
 
@@ -113,6 +114,20 @@ if (Meteor.isServer) {
         Picker.middleware(_clearCache(params, req, res, next));
     });
 
+// create picker routes for metadata_script
+    Picker.route('/runMetadata', function (params, req, res, next) {
+        Picker.middleware(_runMetadata(params, req, res, next));
+    });
+
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/runMetadata', function (params, req, res, next) {
+        Picker.middleware(_runMetadata(params, req, res, next));
+    });
+
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/runMetadata', function (params, req, res, next) {
+        Picker.middleware(_runMetadata(params, req, res, next));
+    });
+
+// create picker routes for refreshMetaData
     Picker.route('/refreshMetadata', function (params, req, res, next) {
         Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
     });
@@ -124,6 +139,21 @@ if (Meteor.isServer) {
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/refreshMetadata', function (params, req, res, next) {
         Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
     });
+
+// set loading_metadata show/hide
+    Picker.route('/loadingMetadataIcon', function (params, req, res, next) {
+        Picker.middleware(_loadingMetadataIcon(params, req, res, next));
+    });
+
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/loadingMetadataIcon', function (params, req, res, next) {
+        Picker.middleware(_loadingMetadataIcon(params, req, res, next));
+    });
+
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/loadingMetadataIcon', function (params, req, res, next) {
+        Picker.middleware(_loadingMetadataIcon(params, req, res, next));
+    });
+
+
 
 // create picker routes for metviewer middleware static files
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvdata/:key', function (params, req, res, next) {
@@ -977,6 +1007,53 @@ const _mvGetErr = function(params, req, res, next) {
     }
 }
 
+// private middlewatre for show/hide running metadata process icon
+const _loadingMetadataIcon = function (params, req, res, next) {
+    const cp = require('child_process');
+    const db = params.db
+    const state=params.state;
+    if (state !== "show" && state != "hide") {
+        res.end("<body><h1>Invalid state! " + state + " should be show|hide</h1></body>");
+    }
+    const loadingMetadata = state == "show" ? true : false;
+    const mySettings = matsCollections.Settings.find({}).fetch();
+    // set the "loading metadata" spinner to visible
+    matsCollections.Settings.update(mySettings[0]._id, {$set: {loadingMetadata: loadingMetadata}});
+    res.write("<body><h1>state set to  " + state + "</h1></body>");
+    res.end();
+}
+
+// private middlewatre for running metadata process
+const _runMetadata = function (params, req, res, next) {
+    const meExecutible = Meteor.settings.private.METADATA_SCRIPT;
+    const cp = require('child_process');
+    const db = params.db
+    const mySettings = matsCollections.Settings.find({}).fetch();
+    // set the "loading metadata" spinner to visible
+    matsCollections.Settings.update(myMessages[0]._id, {$set: {important: true}});
+    Messages.update(mySettings[0]._id, {$set: {loadingMetadata: true}});
+    res.setHeader('Content-Type', 'text/plain');
+    try {
+        // exec runMetadata - this should be asynchronous and shpould return the log
+        const { spawn } = require('child_process');
+        const child = spawn(meExecutible,[db,metexpress_base_url,appRef]);
+        child.on('exit', function (code, signal) {
+            res.end('process exited with ' +
+                  `code ${code} and signal ${signal}`);
+        });
+        child.stdout.on('data', (data) => {
+            res.write(`stdout:\n${data}`);
+        });
+        child.stderr.on('data', (data) => {
+            res.write(`stderr:\n${data}`);
+        });
+
+    } finally {
+        res.end("metadata process exited unexpectedly! Check output")
+            // set the "loading metadata" spinner to hidden
+            Messages.update(mySettings[0]._id, {$set: {loadingMetadata: false}});
+    }
+}
 
 // private define a middleware for refreshing the metadata
 const _refreshMetadataMWltData = function (params, req, res, next) {
@@ -2266,13 +2343,15 @@ const setSettings = new ValidatedMethod({
             var lineWidth = settings.lineWidth;
             var nullFillString = settings.nullFillString;
             var resetFromCode = settings.resetFromCode;
+            var displayLoadingMetadata = false;
             matsCollections.Settings.update({}, {
                 $set: {
                     LabelPrefix: labelPrefix,
                     Title: title,
                     LineWidth: lineWidth,
                     NullFillString: nullFillString,
-                    resetFromCode: resetFromCode
+                    resetFromCode: resetFromCode,
+                    displayLoadingMetadata: displayLoadingMetadata
                 }
             });
         }

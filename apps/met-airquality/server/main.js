@@ -1,0 +1,1146 @@
+/*
+ * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
+import {Meteor} from 'meteor/meteor';
+import {mysql} from 'meteor/pcel:mysql';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsParamUtils} from 'meteor/randyp:mats-common';
+
+// determined in doCurveParanms
+var minDate;
+var maxDate;
+var dstr;
+
+const doPlotParams = function () {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.PlotParams.remove({});
+    }
+    if (matsCollections.PlotParams.find().count() == 0) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'dates',
+                type: matsTypes.InputTypes.dateRange,
+                options: [''],
+                startDate: minDate,
+                stopDate: maxDate,
+                superiorNames: ['database', 'data-source'],
+                controlButtonCovered: true,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 1,
+                help: "dateHelp.html"
+            });
+
+        var plotFormats = {};
+        plotFormats[matsTypes.PlotFormats.matching] = 'show matching diffs';
+        plotFormats[matsTypes.PlotFormats.pairwise] = 'pairwise diffs';
+        plotFormats[matsTypes.PlotFormats.none] = 'no diffs';
+        matsCollections.PlotParams.insert(
+            {
+                name: 'plotFormat',
+                type: matsTypes.InputTypes.radioGroup,
+                optionsMap: plotFormats,
+                options: [matsTypes.PlotFormats.matching, matsTypes.PlotFormats.pairwise, matsTypes.PlotFormats.none],
+                default: matsTypes.PlotFormats.none,
+                controlButtonCovered: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'metexpress-mode',
+                type: matsTypes.InputTypes.radioGroup,
+                optionsMap: {'mats': 'mats', 'matsmv': 'matsmv'},
+                options: ['mats', 'matsmv'],
+                default: 'mats',
+                controlButtonCovered: false,
+                controlButtonVisibility: 'block',
+                hidden: true,
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        var yAxisOptionsMap = {
+            "Number": ["number"],
+            "Relative frequency": ["relFreq"]
+        };
+        matsCollections.PlotParams.insert(
+            {
+                name: 'histogram-yaxis-controls',
+                type: matsTypes.InputTypes.select,
+                optionsMap: yAxisOptionsMap,
+                options: Object.keys(yAxisOptionsMap),
+                default: Object.keys(yAxisOptionsMap)[0],
+                controlButtonCovered: true,
+                controlButtonText: 'Y-axis mode',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        var binOptionsMap = {
+            "Default bins": ["default"],
+            "Set number of bins": ["binNumber"],
+            "Make zero a bin bound": ["zeroBound"],
+            "Choose a bin bound": ["chooseBound"],
+            "Set number of bins and make zero a bin bound": ["binNumberWithZero"],
+            "Set number of bins and choose a bin bound": ["binNumberWithChosen"],
+            "Manual bins": ["manual"],
+            "Manual bin start, number, and stride": ["manualStride"]
+        };
+        matsCollections.PlotParams.insert(
+            {
+                name: 'histogram-bin-controls',
+                type: matsTypes.InputTypes.select,
+                optionsMap: binOptionsMap,
+                options: Object.keys(binOptionsMap),
+                hideOtherFor: {
+                    'bin-number': ["Default bins", "Make zero a bin bound", "Manual bins", "Choose a bin bound"],
+                    'bin-pivot': ["Default bins", "Set number of bins", "Make zero a bin bound", "Set number of bins and make zero a bin bound", "Manual bins", "Manual bin start, number, and stride"],
+                    'bin-start': ["Default bins", "Set number of bins", "Make zero a bin bound", "Choose a bin bound", "Set number of bins and make zero a bin bound", "Set number of bins and choose a bin bound", "Manual bins"],
+                    'bin-stride': ["Default bins", "Set number of bins", "Make zero a bin bound", "Choose a bin bound", "Set number of bins and make zero a bin bound", "Set number of bins and choose a bin bound", "Manual bins"],
+                    'bin-bounds': ["Default bins", "Set number of bins", "Make zero a bin bound", "Choose a bin bound", "Set number of bins and make zero a bin bound", "Set number of bins and choose a bin bound", "Manual bin start, number, and stride"],
+                },
+                default: Object.keys(binOptionsMap)[0],
+                controlButtonCovered: true,
+                controlButtonText: 'customize bins',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-number',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '2',
+                max: '100',
+                step: 'any',
+                default: '12',
+                controlButtonCovered: true,
+                controlButtonText: "number of bins",
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-pivot',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '-10000',
+                max: '10000',
+                step: 'any',
+                default: '0',
+                controlButtonCovered: true,
+                controlButtonText: "bin pivot value",
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-start',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '-10000',
+                max: '10000',
+                step: 'any',
+                default: '0',
+                controlButtonCovered: true,
+                controlButtonText: "bin start",
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-stride',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '-10000',
+                max: '10000',
+                step: 'any',
+                default: '0',
+                controlButtonCovered: true,
+                controlButtonText: "bin stride",
+                displayOrder: 6,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-bounds',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],   // convenience
+                default: ' ',
+                controlButtonCovered: true,
+                controlButtonText: "bin bounds (enter numbers separated by commas)",
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    } else {
+        // need to update the dates selector if the metadata has changed
+        var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            // have to reload model data
+            matsCollections.PlotParams.update({name: 'dates'}, {
+                $set: {
+                    startDate: minDate,
+                    stopDate: maxDate,
+                    default: dstr
+                }
+            });
+        }
+    }
+};
+
+const doCurveParams = function () {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.CurveParams.remove({});
+    }
+    var myDBs = [];
+    var dbGroupMap = {};
+    var modelOptionsMap = {};
+    var dbDateRangeMap = {};
+    var regionModelOptionsMap = {};
+    var forecastLengthOptionsMap = {};
+    var forecastValueOptionsMap = {};
+    var levelOptionsMap = {};
+    var variableOptionsMap = {};
+    var thresholdOptionsMap = {};
+
+    var rows;
+    var thisGroup;
+    var dbs;
+    var dbArr;
+    try {
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select * from airquality_database_groups order by db_group;");
+        for (var i = 0; i < rows.length; i++) {
+            thisGroup = rows[i].db_group.trim();
+            dbs = rows[i].dbs;
+            dbArr = dbs.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < dbArr.length; j++) {
+                dbArr[j] = dbArr[j].replace(/'|\[|\]/g, "");
+            }
+            dbGroupMap[thisGroup] = dbArr;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    var thisDB;
+    try {
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT DISTINCT db FROM airquality_mats_metadata;");
+        for (i = 0; i < rows.length; i++) {
+            thisDB = rows[i].db.trim();
+            myDBs.push(thisDB);
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        for (var k = 0; k < myDBs.length; k++) {
+            thisDB = myDBs[k];
+            modelOptionsMap[thisDB] = {};
+            dbDateRangeMap[thisDB] = {};
+            forecastLengthOptionsMap[thisDB] = {};
+            forecastValueOptionsMap[thisDB] = {};
+            levelOptionsMap[thisDB] = {};
+            variableOptionsMap[thisDB] = {};
+            thresholdOptionsMap[thisDB] = {};
+            regionModelOptionsMap[thisDB] = {};
+            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select model,display_text,regions,levels,fcst_lens,fcst_orig,variables,trshs,mindate,maxdate from airquality_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,fcst_orig,variables,trshs,mindate,maxdate order by model;");
+            for (i = 0; i < rows.length; i++) {
+
+                var model_value = rows[i].model.trim();
+                var model = rows[i].display_text.trim();
+                modelOptionsMap[thisDB][model] = [model_value];
+
+                var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+                var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+                dbDateRangeMap[thisDB][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
+
+                var forecastLengths = rows[i].fcst_lens;
+                var forecastValues = rows[i].fcst_orig;
+                var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
+                var forecastValueArr = forecastValues.split(',').map(Function.prototype.call, String.prototype.trim);
+                var forecastValue;
+                var lengthValMap = {};
+                for (var j = 0; j < forecastLengthArr.length; j++) {
+                    forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
+                    forecastValue = forecastValueArr[j].replace(/'|\[|\]/g, "");
+                    lengthValMap[forecastLengthArr[j]] = forecastValue;
+                }
+                forecastLengthOptionsMap[thisDB][model] = forecastLengthArr;
+                forecastValueOptionsMap[thisDB][model] = lengthValMap;
+
+                var levels = rows[i].levels;
+                var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
+                for (var j = 0; j < levelArr.length; j++) {
+                    levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
+                }
+                levelOptionsMap[thisDB][model] = levelArr;
+
+                var variables = rows[i].variables;
+                var variableArr = variables.split(',').map(Function.prototype.call, String.prototype.trim);
+                for (var j = 0; j < variableArr.length; j++) {
+                    variableArr[j] = variableArr[j].replace(/'|\[|\]/g, "");
+                }
+                variableOptionsMap[thisDB][model] = variableArr;
+
+                var trshs = rows[i].trshs;
+                var trshArr = trshs.split(',').map(Function.prototype.call, String.prototype.trim);
+                for (var j = 0; j < trshArr.length; j++) {
+                    trshArr[j] = trshArr[j].replace(/'|\[|\]/g, "");
+                }
+                trshArr.unshift('All thresholds');
+                thresholdOptionsMap[thisDB][model] = trshArr;
+
+                var regions = rows[i].regions;
+                var regionsArr = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+                for (var j = 0; j < regionsArr.length; j++) {
+                    regionsArr[j] = regionsArr[j].replace(/'|\[|\]/g, "");
+                }
+                regionModelOptionsMap[thisDB][model] = regionsArr;
+            }
+        }
+
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'label',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],   // convenience
+                controlButtonCovered: true,
+                default: '',
+                unique: true,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 1,
+                help: 'label.html'
+            }
+        );
+    }
+    if (matsCollections.CurveParams.find({name: 'yaxes'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'yaxes',
+                type: matsTypes.InputTypes.selectOrderEnforced,
+                options: ['auto-by-variable', 'y1', 'y2'],
+                selected: ['auto-by-variable'],
+                controlButtonCovered: true,
+                unique: false,
+                default: 'auto-by-variable',
+                controlButtonVisibility: 'block',
+                controlButtonText: "y axes",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 1,
+                multiple: false
+            });
+    }
+
+    var defaultGroup = (Object.keys(dbGroupMap).indexOf("PROD") !== -1) ? "PROD" : Object.keys(dbGroupMap)[0];
+    var defaultDB = dbGroupMap[defaultGroup][0];
+
+    if (matsCollections.CurveParams.findOne({name: 'group'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'group',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(dbGroupMap),
+                dependentNames: ["database"],
+                controlButtonCovered: true,
+                default: defaultGroup,
+                unique: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'group'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.options, Object.keys(dbGroupMap)))) {
+            // have to reload model data
+            if (process.env.NODE_ENV === "development") {
+                console.log("updating model data")
+            }
+            matsCollections.CurveParams.update({name: 'group'}, {
+                $set: {
+                    options: Object.keys(dbGroupMap),
+                    default: defaultGroup,
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'database'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'database',
+                type: matsTypes.InputTypes.select,
+                optionsMap: dbGroupMap,
+                options: dbGroupMap[defaultGroup],
+                dates: dbDateRangeMap,
+                superiorNames: ["group"],
+                dependentNames: ["data-source"],
+                controlButtonCovered: true,
+                default: defaultDB,
+                unique: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'database'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, dbGroupMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.dates, dbDateRangeMap))) {
+            // have to reload model data
+            if (process.env.NODE_ENV === "development") {
+                console.log("updating model data")
+            }
+            matsCollections.CurveParams.update({name: 'database'}, {
+                $set: {
+                    optionsMap: dbGroupMap,
+                    dates: dbDateRangeMap,
+                    options: dbGroupMap[defaultGroup],
+                    default: defaultDB
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'data-source'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'data-source',
+                type: matsTypes.InputTypes.select,
+                optionsMap: modelOptionsMap,
+                options: Object.keys(modelOptionsMap[defaultDB]),   // convenience
+                levelsMap: levelOptionsMap, // need to know what levels the metadata allows for each model.
+                superiorNames: ["database"],
+                dependentNames: ["region", "variable", "threshold", "forecast-length", "pres-level", "dates", "curve-dates"],
+                controlButtonCovered: true,
+                default: Object.keys(modelOptionsMap[defaultDB])[0],
+                unique: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
+        if ((!matsDataUtils.areObjectsEqual(modelOptionsMap, currentParam.optionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(levelOptionsMap, currentParam.levelsMap))) {
+            // have to reload model data
+            if (process.env.NODE_ENV === "development") {
+                console.log("updating model data")
+            }
+            matsCollections.CurveParams.update({name: 'data-source'}, {
+                $set: {
+                    optionsMap: modelOptionsMap,
+                    levelsMap: levelOptionsMap,
+                    options: Object.keys(modelOptionsMap[defaultDB]),
+                    default: Object.keys(modelOptionsMap[defaultDB])[0]
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'region',
+                type: matsTypes.InputTypes.select,
+                optionsMap: regionModelOptionsMap,
+                options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],   // convenience
+                superiorNames: ['database', 'data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0],  // always use the first region for the first model
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3,
+                help: 'region.html'
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
+        if (!matsDataUtils.areObjectsEqual(regionModelOptionsMap, currentParam.optionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'region'}, {
+                $set: {
+                    optionsMap: regionModelOptionsMap,
+                    options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],
+                    default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0]
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
+        const statOptionsMap = {
+            'RMSE': ['avg(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar)) as stat, sum(ld.total) as N0, group_concat(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Bias-corrected RMSE': ['avg(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2))) as stat, sum(ld.total) as N0, group_concat(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'MSE': ['avg(ld.ffbar+ld.oobar - 2*ld.fobar) as stat, sum(ld.total) as N0, group_concat(ld.ffbar+ld.oobar - 2*ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Bias-corrected MSE': ['avg((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) as stat, sum(ld.total) as N0, group_concat((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'MAE': ['avg(ld.mae) as stat, sum(ld.total) as N0, group_concat(ld.mae order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'ME (Additive bias)': ['avg(ld.fbar - ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Multiplicative bias': ['avg(ld.fbar / ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar / ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Forecast mean': ['avg(ld.fbar) as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Observed mean': ['avg(ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Forecast stdev': ['avg(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Observed stdev': ['avg(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Error stdev': ['avg(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Pearson correlation': ['avg((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2)))) as stat, sum(ld.total) as N0, group_concat((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2))) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'CSI': ['sum(ld.fy_oy) / (sum(ld.fy_oy) + sum(ld.fy_on) + sum(ld.fn_oy)) as stat, sum(ld.total) as N0, group_concat(ld.fy_oy / (ld.fy_oy + ld.fy_on + ld.fn_oy) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
+            'FAR': ['sum(ld.fy_on) / (sum(ld.fy_oy) + sum(ld.fy_on)) as stat, sum(ld.total) as N0, group_concat(ld.fy_on / (ld.fy_oy + ld.fy_on) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
+            'FBIAS': ['(sum(ld.fy_oy) + sum(ld.fy_on)) / (sum(ld.fy_oy) + sum(ld.fn_oy)) as stat, sum(ld.total) as N0, group_concat((ld.fy_oy + ld.fy_on) / (ld.fy_oy + ld.fn_oy) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
+            'GSS': ['(sum(ld.fy_oy) - ((sum(ld.fy_oy) + sum(ld.fy_on)) / sum(ld.total)) * (sum(ld.fy_oy) + sum(ld.fn_oy))) / (sum(ld.fy_oy) + sum(ld.fy_on) + sum(ld.fn_oy) - ((sum(ld.fy_oy) + sum(ld.fy_on)) / sum(ld.total)) * (sum(ld.fy_oy) + sum(ld.fn_oy))) as stat, sum(ld.total) as N0, group_concat((ld.fy_oy - ((ld.fy_oy + ld.fy_on) / ld.total) * (ld.fy_oy + ld.fn_oy)) / (ld.fy_oy + ld.fy_on + ld.fn_oy - ((ld.fy_oy + ld.fy_on) / ld.total) * (ld.fy_oy + ld.fn_oy)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
+            'HSS': ['(sum(ld.fy_oy) + sum(ld.fn_on) - ((sum(ld.fy_oy) + sum(ld.fy_on)) / sum(ld.total)) * (sum(ld.fy_oy) + sum(ld.fn_oy)) + ((sum(ld.fn_oy) + sum(ld.fn_on)) / sum(ld.total)) * (sum(ld.fy_on) + sum(ld.fn_on))) / (sum(ld.total) - ((sum(ld.fy_oy) + sum(ld.fy_on)) / sum(ld.total)) * (sum(ld.fy_oy) + sum(ld.fn_oy)) + ((sum(ld.fn_oy) + sum(ld.fn_on)) / sum(ld.total) * (sum(ld.fy_on) + sum(ld.fn_on))) as stat, sum(ld.total) as N0, group_concat((ld.fy_oy + ld.fn_on - ((ld.fy_oy + ld.fy_on) / ld.total) * (ld.fy_oy + ld.fn_oy) + ((ld.fn_oy + ld.fn_on) / ld.total) * (ld.fy_on + ld.fn_on)) / (ld.total - ((ld.fy_oy + ld.fy_on) / ld.total) * (ld.fy_oy + ld.fn_oy) + ((ld.fn_oy + ld.fn_on) / ld.total) * (ld.fy_on + ld.fn_on)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
+            'PODy': ['sum(ld.fy_oy) / (sum(ld.fy_oy) + sum(ld.fn_oy)) as stat, sum(ld.total) as N0, group_concat(ld.fy_oy / (ld.fy_oy + ld.fn_oy) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
+            'PODn': ['sum(ld.fn_on) / (sum(ld.fy_on) + sum(ld.fn_on)) as stat, sum(ld.total) as N0, group_concat(ld.fn_on / (ld.fy_on + ld.fn_on) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
+            'POFD': ['sum(ld.fy_on) / (sum(ld.fy_on) + sum(ld.fn_on)) as stat, sum(ld.total) as N0, group_concat(ld.fy_on / (ld.fy_on + ld.fn_on) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc']
+        };
+
+        matsCollections.CurveParams.insert(
+            {// bias and model average are a different formula with wind than with other variables, so element 0 differs from element 1 in statOptionsMap, and different clauses in statAuxMap are needed.
+                name: 'statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statOptionsMap,
+                options: Object.keys(statOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'variable',
+                type: matsTypes.InputTypes.select,
+                optionsMap: variableOptionsMap,
+                options: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]],   // convenience
+                superiorNames: ['database', 'data-source'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]][0],  // always use the first region for the first model
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    } else {
+        // it is defined but check for necessary updates to forecastLengthOptionsMap
+        var currentParam = matsCollections.CurveParams.findOne({name: 'variable'});
+        if (!matsDataUtils.areObjectsEqual(variableOptionsMap, currentParam.optionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'variable'}, {
+                $set: {
+                    optionsMap: variableOptionsMap,
+                    options: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]],
+                    default: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]][0]
+                }
+            });
+        }
+    }
+
+    const fhrOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
+    var fhrDefault;
+    if (fhrOptions.indexOf("24") !== -1) {
+        fhrDefault = "24";
+    } else if (fhrOptions.indexOf("12") !== -1) {
+        fhrDefault = "12";
+    } else {
+        fhrDefault = fhrOptions[0];
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: forecastLengthOptionsMap,
+                options: fhrOptions,
+                valuesMap: forecastValueOptionsMap,
+                superiorNames: ['database', 'data-source'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: fhrDefault,
+                controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
+                multiple: true,
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    } else {
+        // it is defined but check for necessary updates to forecastLengthOptionsMap
+        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, forecastValueOptionsMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'forecast-length'}, {
+                $set: {
+                    optionsMap: forecastLengthOptionsMap,
+                    valuesMap: forecastValueOptionsMap,
+                    options: fhrOptions,
+                    default: fhrDefault
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'dieoff-type'}) == undefined) {
+        var dieoffOptionsMap = {
+            "Dieoff": [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast (uses first date in range)": [matsTypes.ForecastTypes.singleCycle]
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'dieoff-type',
+                type: matsTypes.InputTypes.select,
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specified UTC cycle init hour", "Single cycle forecast (uses first date in range)"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast (uses first date in range)"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(dieoffOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                controlButtonText: 'dieoff type',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'valid-time',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '6', '12', '18'],
+                selected: [],
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 4,
+                multiple: true
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
+
+        const optionsArr = ['0', '6', '12', '18'];
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'utc-cycle-start',
+                type: matsTypes.InputTypes.select,
+                options: optionsArr,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 12,
+                controlButtonVisibility: 'block',
+                controlButtonText: "utc cycle init hour",
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 4,
+            });
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'threshold'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'threshold',
+                type: matsTypes.InputTypes.select,
+                optionsMap: thresholdOptionsMap,
+                options: thresholdOptionsMap[defaultDB][Object.keys(thresholdOptionsMap[defaultDB])[0]],   // convenience
+                superiorNames: ['database', 'data-source'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: thresholdOptionsMap[defaultDB][Object.keys(thresholdOptionsMap[defaultDB])[0]][0],  // always use the first region for the first model
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    } else {
+        // it is defined but check for necessary updates to forecastLengthOptionsMap
+        var currentParam = matsCollections.CurveParams.findOne({name: 'threshold'});
+        if (!matsDataUtils.areObjectsEqual(thresholdOptionsMap, currentParam.optionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'threshold'}, {
+                $set: {
+                    optionsMap: thresholdOptionsMap,
+                    options: thresholdOptionsMap[defaultDB][Object.keys(thresholdOptionsMap[defaultDB])[0]],
+                    default: thresholdOptionsMap[defaultDB][Object.keys(thresholdOptionsMap[defaultDB])[0]][0]
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
+        optionsMap = {
+            'None': ['unix_timestamp(ld.fcst_valid_beg)'],
+            '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
+            '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
+            '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
+            '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
+            '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
+            '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
+            '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'average',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: ['None', '1D', '3D', '7D', '30D', '60D', '90D', '180D'],
+                controlButtonCovered: true,
+                unique: false,
+                selected: 'None',
+                default: 'None',
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'pres-level'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'pres-level',
+                type: matsTypes.InputTypes.select,
+                optionsMap: levelOptionsMap,
+                options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],   // convenience
+                superiorNames: ['database', 'data-source'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                controlButtonText: "Ground Level",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 5,
+                multiple: true
+            });
+    } else {
+        // it is defined but check for necessary updates to forecastLengthOptionsMap
+        var currentParam = matsCollections.CurveParams.findOne({name: 'pres-level'});
+        if (!matsDataUtils.areObjectsEqual(levelOptionsMap, currentParam.optionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'pres-level'}, {
+                $set: {
+                    optionsMap: levelOptionsMap,
+                    options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]]
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {
+
+        const optionsMap = {
+            'Fcst lead time': "select ld.fcst_lead as xVal, ",
+            'Threshold': "select h.fcst_thresh as xVal, ",
+            'Valid UTC hour': "select unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select unix_timestamp(ld.fcst_valid_beg) as xVal, ",
+            'Init Date': "select unix_timestamp(ld.fcst_init_beg) as xVal, "
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                // hideOtherFor: {
+                //     'forecast-length': ["Fcst lead time"],
+                //     'valid-time': ["Valid UTC hour"],
+                //     'pres-level': ["Pressure level"],
+                // },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[4],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'y-axis-parameter'}).count() == 0) {
+
+        const optionsMap = {
+            'Fcst lead time': "ld.fcst_lead as yVal, ",
+            'Threshold': "h.fcst_thresh as yVal, ",
+            'Valid UTC hour': "unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "unix_timestamp(ld.fcst_valid_beg) as yVal, ",
+            'Init Date': "unix_timestamp(ld.fcst_init_beg) as yVal, "
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                // hideOtherFor: {
+                //     'forecast-length': ["Fcst lead time"],
+                //     'valid-time': ["Valid UTC hour"],
+                //     'pres-level': ["Pressure level"],
+                // },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
+    // determine date defaults for dates and curveDates
+    var defaultDb = matsCollections.CurveParams.findOne({name: "database"}, {default: 1}).default;
+    var dbDateRangeMap = matsCollections.CurveParams.findOne({name: "database"}, {dates: 1}).dates;
+    var defaultDataSource = matsCollections.CurveParams.findOne({name: "data-source"}, {default: 1}).default;
+    minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
+    maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
+    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minusMonthMinDate + ' - ' + maxDate;
+
+    if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
+        optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: minDate,
+                stopDate: maxDate,
+                superiorNames: ['database', 'data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 7,
+                help: "dateHelp.html"
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'curve-dates'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'curve-dates'}, {
+                $set: {
+                    startDate: minDate,
+                    stopDate: maxDate,
+                    default: dstr
+                }
+            });
+        }
+    }
+};
+
+/* The format of a curveTextPattern is an array of arrays, each sub array has
+ [labelString, localVariableName, delimiterString]  any of which can be null.
+ Each sub array will be joined (the localVariableName is always dereferenced first)
+ and then the sub arrays will be joined maintaining order.
+
+ The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
+ See curve_item.js and standAlone.js.
+ */
+const doCurveTextPatterns = function () {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.CurveTextPatterns.remove({});
+    }
+    if (matsCollections.CurveTextPatterns.find().count() == 0) {
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.timeSeries,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'pres-level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
+            ],
+            displayParams: [
+                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "average", "forecast-length", "pres-level"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'pres-level', ', '],
+                ['', 'dieoff-type', ', '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['start utc: ', 'utc-cycle-start', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "pres-level", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'pres-level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "threshold", "forecast-length", "pres-level", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'pres-level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "forecast-length", "pres-level", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.contour,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'pres-level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['x-axis: ', 'x-axis-parameter', ', '],
+                ['y-axis: ', 'y-axis-parameter', '']
+
+            ],
+            displayParams: [
+                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "forecast-length", "pres-level", "x-axis-parameter", "y-axis-parameter"
+            ],
+            groupSize: 6
+
+        });
+    }
+};
+
+const doSavedCurveParams = function () {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.SavedCurveParams.remove({});
+    }
+    if (matsCollections.SavedCurveParams.find().count() == 0) {
+        matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList: []});
+    }
+};
+
+const doPlotGraph = function () {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.PlotGraphFunctions.remove({});
+    }
+    if (matsCollections.PlotGraphFunctions.find().count() == 0) {
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.timeSeries,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataSeries",
+            plotSpecFunction: "plotSpecDataSeries",
+            checked: true
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataDieOff",
+            plotSpecFunction: "plotSpecDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataValidTime",
+            plotSpecFunction: "plotSpecValidTime",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataHistogram",
+            plotSpecFunction: "plotSpecHistogram",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.contour,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataContour",
+            plotSpecFunction: "plotSpecContour",
+            checked: false
+        });
+    }
+};
+
+
+Meteor.startup(function () {
+    if (Meteor.settings.private == null) {
+        console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+    }
+    matsCollections.Databases.remove({});
+    if (matsCollections.Databases.find({}).count() === 0) {
+        var databases = Meteor.settings.private.databases;
+        if (databases !== null && databases !== undefined && Array.isArray(databases)) {
+            for (var di = 0; di < databases.length; di++) {
+                matsCollections.Databases.insert(databases[di]);
+            }
+        }
+    }
+
+    var sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
+        host: 1,
+        port: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 10
+    });
+    // the pool is intended to be global
+    sumPool = mysql.createPool(sumSettings);
+    sumPool.on('connection', function (connection) {
+        connection.query('set group_concat_max_len = 4294967295')
+    });
+    const metadataSettings = matsCollections.Databases.findOne({
+        role: matsTypes.DatabaseRoles.META_DATA,
+        status: "active"
+    }, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+    // the pool is intended to be global
+    metadataPool = mysql.createPool(metadataSettings);
+    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['airquality_mats_metadata', 'airquality_database_groups']);
+    matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-airquality'});
+});
+
+// this object is global so that the reset code can get to it
+// These are application specific mongo data - like curve params
+// The appSpecificResetRoutines object is a special name,
+// as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+appSpecificResetRoutines = [
+    doPlotGraph,
+    doCurveParams,
+    doSavedCurveParams,
+    doPlotParams,
+    doCurveTextPatterns
+];

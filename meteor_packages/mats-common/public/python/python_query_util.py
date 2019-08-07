@@ -4,6 +4,7 @@ import pymysql
 import pymysql.cursors
 import math
 import numpy as np
+import re
 import json
 from contextlib import closing
 
@@ -85,59 +86,274 @@ class QueryUtil:
             acc = np.empty(len(ffbar))
         return acc
 
-    # function for calculating RMS from MET partial sums
-    def calculate_rms(self, ffbar, oobar, fobar):
+    # function for calculating RMSE from MET partial sums
+    def calculate_rmse(self, ffbar, oobar, fobar):
         try:
-            rms = np.sqrt(ffbar + oobar - 2 * fobar)
+            rmse = np.sqrt(ffbar + oobar - 2 * fobar)
         except TypeError as e:
             self.error = "Error calculating RMS: " + str(e)
-            rms = np.empty(len(ffbar))
+            rmse = np.empty(len(ffbar))
         except ValueError as e:
             self.error = "Error calculating RMS: " + str(e)
-            rms = np.empty(len(ffbar))
-        return rms
+            rmse = np.empty(len(ffbar))
+        return rmse
 
-    # function for calculating bias from MET partial sums
-    def calculate_bias(self, fbar, obar):
+    # function for calculating bias-corrected RMSE from MET partial sums
+    def calculate_bcrmse(self, fbar, obar, ffbar, oobar, fobar):
         try:
-            bias = fbar - obar
+            bcrmse = np.sqrt((ffbar + oobar - 2 * fobar) - (fbar - obar)**2)
+        except TypeError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            bcrmse = np.empty(len(ffbar))
+        except ValueError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            rms = np.empty(len(ffbar))
+        return bcrmse
+
+    # function for calculating MSE from MET partial sums
+    def calculate_mse(self, ffbar, oobar, fobar):
+        try:
+            mse = ffbar + oobar - 2 * fobar
+        except TypeError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            mse = np.empty(len(ffbar))
+        except ValueError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            mse = np.empty(len(ffbar))
+        return mse
+
+    # function for calculating bias-corrected MSE from MET partial sums
+    def calculate_bcmse(self, fbar, obar, ffbar, oobar, fobar):
+        try:
+            bcmse = (ffbar + oobar - 2 * fobar) - (fbar - obar)**2
+        except TypeError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            bcmse = np.empty(len(ffbar))
+        except ValueError as e:
+            self.error = "Error calculating RMS: " + str(e)
+            bcmse = np.empty(len(ffbar))
+        return bcmse
+
+    # function for calculating mae from MET partial sums
+    def calculate_mae(self, mae):
+        return mae
+
+    # function for calculating additive bias from MET partial sums
+    def calculate_me(self, fbar, obar):
+        try:
+            me = fbar - obar
         except TypeError as e:
             self.error = "Error calculating bias: " + str(e)
-            bias = np.empty(len(fbar))
+            me = np.empty(len(fbar))
         except ValueError as e:
             self.error = "Error calculating bias: " + str(e)
-            bias = np.empty(len(fbar))
-        return bias
+            me = np.empty(len(fbar))
+        return me
+
+    # function for calculating multiplicative bias from MET partial sums
+    def calculate_mbias(self, fbar, obar):
+        try:
+            mbias = fbar / obar
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            mbias = np.empty(len(fbar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            mbias = np.empty(len(fbar))
+        return mbias
 
     # function for calculating N from MET partial sums
     def calculate_n(self, total):
         return total
 
-    # function for calculating model average from MET partial sums
-    def calculate_m_avg(self, fbar):
+    # function for calculating forecast mean from MET partial sums
+    def calculate_f_mean(self, fbar):
         return fbar
 
-    # function for calculating obs average from MET partial sums
-    def calculate_o_avg(self, obar):
+    # function for calculating observed mean from MET partial sums
+    def calculate_o_mean(self, obar):
         return obar
 
-    # function for determining and calling the appropriate statistical calculation function
-    def calculate_stat(self, statistic, fbar, obar, ffbar, oobar, fobar, total):
+    # function for calculating forecast stdev from MET partial sums
+    def calculate_f_stdev(self, fbar, ffbar, total):
+        try:
+            fstdev = np.sqrt(((ffbar*total) - (fbar*total) * (fbar*total) / total) / (total-1))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            fstdev = np.empty(len(fbar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            fstdev = np.empty(len(fbar))
+        return fstdev
+
+    # function for calculating observed stdev from MET partial sums
+    def calculate_o_stdev(self, obar, oobar, total):
+        try:
+            ostdev = np.sqrt(((oobar*total) - (obar*total) * (obar*total) / total) / (total-1))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            ostdev = np.empty(len(obar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            ostdev = np.empty(len(obar))
+        return ostdev
+
+    # function for calculating error stdev from MET partial sums
+    def calculate_e_stdev(self, fbar, obar, ffbar, oobar, fobar, total):
+        try:
+            estdev = np.sqrt((((ffbar+oobar-2*fobar)*total) - ((fbar-obar)*total) * ((fbar-obar)*total) / total) / (total-1))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            estdev = np.empty(len(fbar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            estdev = np.empty(len(fbar))
+        return estdev
+
+    # function for calculating pearson correlation from MET partial sums
+    def calculate_pcc(self, fbar, obar, ffbar, oobar, fobar, total):
+        try:
+            pcc = (total**2 * fobar - total**2 * fbar * obar) / np.sqrt((total**2 * ffbar - total**2 * fbar**2) * (total**2 * oobar - total**2 * obar**2))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            pcc = np.empty(len(fbar))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            pcc = np.empty(len(fbar))
+        return pcc
+
+    # function for calculating critical skill index from MET contingency table counts
+    def calculate_csi(self, fy_oy, fy_on, fn_oy):
+        try:
+            csi = fy_oy / (fy_oy + fy_on + fn_oy)
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            csi = np.empty(len(fy_oy))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            csi = np.empty(len(fy_oy))
+        return csi
+
+    # function for calculating false alarm rate from MET contingency table counts
+    def calculate_far(self, fy_oy, fy_on):
+        try:
+            far = fy_on / (fy_oy + fy_on)
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            far = np.empty(len(fy_oy))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            far = np.empty(len(fy_oy))
+        return far
+
+    # function for calculating frequency bias from MET contingency table counts
+    def calculate_fbias(self, fy_oy, fy_on, fn_oy):
+        try:
+            fbias = (fy_oy + fy_on) / (fy_oy + fn_oy)
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            fbias = np.empty(len(fy_oy))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            fbias = np.empty(len(fy_oy))
+        return fbias
+
+    # function for calculating Gilbert skill score from MET contingency table counts
+    def calculate_gss(self, fy_oy, fy_on, fn_oy, total):
+        try:
+            gss = (fy_oy - ((fy_oy + fy_on) / total) * (fy_oy + fn_oy)) / (fy_oy + fy_on + fn_oy - ((fy_oy + fy_on) / total) * (fy_oy + fn_oy))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            gss = np.empty(len(fy_oy))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            gss = np.empty(len(fy_oy))
+        return gss
+
+    # function for calculating Heidke skill score from MET contingency table counts
+    def calculate_hss(self, fy_oy, fy_on, fn_oy, fn_on, total):
+        try:
+            hss = (fy_oy + fn_on - ((fy_oy + fy_on) / total) * (fy_oy + fn_oy) + ((fn_oy + fn_on) / total) * (fy_on + fn_on)) / (total - ((fy_oy + fy_on) / total) * (fy_oy + fn_oy) + ((fn_oy + fn_on) / total) * (fy_on + fn_on))
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            hss = np.empty(len(fy_oy))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            hss = np.empty(len(fy_oy))
+        return hss
+
+    # function for calculating probability of detection (yes) from MET contingency table counts
+    def calculate_pody(self, fy_oy, fn_oy):
+        try:
+            pody = fy_oy / (fy_oy + fn_oy)
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            pody = np.empty(len(fy_oy))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            pody = np.empty(len(fy_oy))
+        return pody
+
+    # function for calculating probability of detection (no) from MET contingency table counts
+    def calculate_podn(self, fy_on, fn_on):
+        try:
+            podn = fn_on / (fy_on + fn_on)
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            podn = np.empty(len(fy_on))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            podn = np.empty(len(fy_on))
+        return podn
+
+    # function for calculating probability of false detection from MET contingency table counts
+    def calculate_pofd(self, fy_on, fn_on):
+        try:
+            pofd = fy_on / (fy_on + fn_on)
+        except TypeError as e:
+            self.error = "Error calculating bias: " + str(e)
+            pofd = np.empty(len(fy_on))
+        except ValueError as e:
+            self.error = "Error calculating bias: " + str(e)
+            pofd = np.empty(len(fy_on))
+        return pofd
+
+    # function for determining and calling the appropriate scalar statistical calculation function
+    def calculate_scalar_stat(self, statistic, fbar, obar, ffbar, oobar, fobar, total, mae):
         stat_switch = {  # dispatcher of statistical calculation functions
             'ACC': self.calculate_acc,
-            'RMS': self.calculate_rms,
-            'Bias (Model - Obs)': self.calculate_bias,
+            'RMSE': self.calculate_rmse,
+            'Bias-corrected RMSE': self.calculate_bcrmse,
+            'MSE': self.calculate_mse,
+            'Bias-corrected MSE': self.calculate_bcmse,
+            'MAE': self.calculate_mae,
+            'ME (Additive bias)': self.calculate_me,
+            'Multiplicative bias': self.calculate_mbias,
             'N': self.calculate_n,
-            'Model average': self.calculate_m_avg,
-            'Obs average': self.calculate_o_avg
+            'Forecast mean': self.calculate_f_mean,
+            'Observed mean': self.calculate_o_mean,
+            'Forecast stdev': self.calculate_f_stdev,
+            'Observed stdev': self.calculate_o_stdev,
+            'Error stdev': self.calculate_e_stdev,
+            'Pearson correlation': self.calculate_pcc
         }
         args_switch = {  # dispatcher of arguments for statistical calculation functions
             'ACC': (fbar, obar, ffbar, oobar, fobar, total),
-            'RMS': (ffbar, oobar, fobar),
+            'RMSE': (ffbar, oobar, fobar),
+            'Bias-corrected RMSE': (fbar, obar, ffbar, oobar, fobar),
+            'MSE': (ffbar, oobar, fobar),
+            'Bias-corrected MSE': (fbar, obar, ffbar, oobar, fobar),
             'Bias (Model - Obs)': (fbar, obar),
+            'MAE': (mae,),
+            'ME (Additive bias)': (fbar, obar),
+            'Multiplicative bias': (fbar, obar),
             'N': (total,),
-            'Model average': (fbar,),
-            'Obs average': (obar,)
+            'Forecast mean': (fbar,),
+            'Observed mean': (obar,),
+            'Forecast stdev': (fbar, ffbar, total),
+            'Observed stdev': (obar, oobar, total),
+            'Error stdev': (fbar, obar, ffbar, oobar, fobar, total),
+            'Pearson correlation': (fbar, obar, ffbar, oobar, fobar, total)
         }
         try:
             stat_args = args_switch[statistic]  # get args
@@ -153,18 +369,61 @@ class QueryUtil:
             stat = 'null'
         return sub_stats, stat
 
-    # function for processing the sub-values from the query and calling calculate_stat
-    def get_scalar_stat(self, has_levels, row, statistic):
+    # function for determining and calling the appropriate contigency table count statistical calculation function
+    def calculate_ctc_stat(self, statistic, fy_oy, fy_on, fn_oy, fn_on, total):
+        stat_switch = {  # dispatcher of statistical calculation functions
+            'CSI': self.calculate_csi,
+            'FAR': self.calculate_far,
+            'Frequency bias': self.calculate_fbias,
+            'GSS': self.calculate_gss,
+            'HSS': self.calculate_hss,
+            'PODy': self.calculate_pody,
+            'PODn': self.calculate_podn,
+            'POFD': self.calculate_pofd
+        }
+        args_switch = {  # dispatcher of arguments for statistical calculation functions
+            'CSI': (fy_oy, fy_on, fn_oy),
+            'FAR': (fy_oy, fy_on),
+            'Frequency bias': (fy_oy, fy_on, fn_oy),
+            'GSS': (fy_oy, fy_on, fn_oy, total),
+            'HSS': (fy_oy, fy_on, fn_oy, fn_on, total),
+            'PODy': (fy_oy, fn_oy),
+            'PODn': (fy_on, fn_on),
+            'POFD': (fy_on, fn_on)
+        }
         try:
-            # get all of the partial sums for each time
-            # fbar, obar, ffbar, fobar, and oobar may have different names in different partial sums tables,
-            # but we're using these names for all scalar sums in order to have common code.
-            # METviewer also does this variable name fudging, I checked.
-            sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
-            sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
-            sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
-            sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
-            sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
+            stat_args = args_switch[statistic]  # get args
+            sub_stats = stat_switch[statistic](*stat_args)  # call stat function
+            stat = np.nanmean(sub_stats)  # calculate overall stat
+        except KeyError as e:
+            self.error = "Error choosing statistic: " + str(e)
+            sub_stats = np.empty(len(fy_oy))
+            stat = 'null'
+        except ValueError as e:
+            self.error = "Error calculating statistic: " + str(e)
+            sub_stats = np.empty(len(fy_oy))
+            stat = 'null'
+        return sub_stats, stat
+
+    # function for processing the sub-values from the query and calling a calculate_stat function
+    def get_stat(self, has_levels, row, statistic, stat_line_type):
+        try:
+            # get all of the sub-values for each time
+            if stat_line_type == 'scalar':
+                sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
+                sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
+                sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
+                sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
+                sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
+                if 'sub_mae' in row:
+                    sub_mae = np.array([float(i) for i in (str(row['sub_mae']).split(','))])
+                else:
+                    sub_mae = np.empty(len(sub_fbar))
+            elif stat_line_type == 'ctc':
+                sub_fy_oy = np.array([float(i) for i in (str(row['sub_fy_oy']).split(','))])
+                sub_fy_on = np.array([float(i) for i in (str(row['sub_fy_on']).split(','))])
+                sub_fn_oy = np.array([float(i) for i in (str(row['sub_fn_oy']).split(','))])
+                sub_fn_on = np.array([float(i) for i in (str(row['sub_fn_on']).split(','))])
             sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
             sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
             if has_levels:
@@ -181,8 +440,10 @@ class QueryUtil:
             # if we don't have the data we expect just stop now and return empty data objects
             return np.nan, np.empty(0), np.empty(0), np.empty(0)
         # if we do have the data we expect, calculate the requested statistic
-        sub_values, stat = self.calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar,
-                                               sub_total)
+        if stat_line_type == 'scalar':
+            sub_values, stat = self.calculate_scalar_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar, sub_total, sub_mae)
+        elif stat_line_type == 'ctc':
+            sub_values, stat = self.calculate_ctc_stat(statistic, sub_fy_oy, sub_fy_on, sub_fn_oy, sub_fn_on, sub_total)
         return stat, sub_levs, sub_secs, sub_values
 
     #  function for calculating the interval between the current time and the next time for models with irregular vts
@@ -209,7 +470,7 @@ class QueryUtil:
         return ti
 
     # function for parsing the data returned by a timeseries query
-    def parse_query_data_timeseries(self, cursor, statistic, has_levels, completeness_qc_param, vts):
+    def parse_query_data_timeseries(self, cursor, statistic, has_levels, completeness_qc_param, vts, stat_line_type):
         # initialize local variables
         xmax = float("-inf")
         xmin = float("inf")
@@ -233,8 +494,11 @@ class QueryUtil:
             av_time = av_seconds * 1000
             xmin = av_time if av_time < xmin else xmin
             xmax = av_time if av_time > xmax else xmax
-            fbar = row['fbar']
-            obar = row['obar']
+            data_exists = False
+            if stat_line_type == 'scalar':
+                data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
+            elif stat_line_type == 'ctc':
+                data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))
 
@@ -242,14 +506,15 @@ class QueryUtil:
                 time_diff = int(query_data[row_idx + 1]['avtime']) - int(row['avtime'])
                 time_interval = time_diff if time_diff < time_interval else time_interval
 
-            if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
-                # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
-                # other functions can be written for other table types
-                stat, sub_levs, sub_secs, sub_values = self.get_scalar_stat(has_levels, row, statistic)
-                # if the previous function failed because we don't have the data we expect,
-                # just stop now and return an empty data object.
+            if data_exists:
+                stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
                 if np.isnan(stat):
-                    return
+                    # there's bad data at this time point
+                    stat = 'null'
+                    sub_values = 'NaN'  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                    sub_secs = 'NaN'
+                    if has_levels:
+                        sub_levs = 'NaN'
             else:
                 # there's no data at this time point
                 stat = 'null'
@@ -294,7 +559,7 @@ class QueryUtil:
                 this_n0 = self.n0[d_idx]
                 this_n_times = self.n_times[d_idx]
                 # add a null if there were too many missing sub-values
-                if this_n0 < 0.1 * n0_max or this_n_times < float(completeness_qc_param) * n_times_max:
+                if curve_stats[d_idx] == 'null' or this_n_times < float(completeness_qc_param) * n_times_max:
                     self.data['x'].append(loop_time)
                     self.data['y'].append('null')
                     self.data['error_y'].append('null')
@@ -340,7 +605,7 @@ class QueryUtil:
         self.data['sum'] = loop_sum
 
     # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
-    def parse_query_data_specialty_curve(self, cursor, statistic, plot_type, has_levels, completeness_qc_param):
+    def parse_query_data_specialty_curve(self, cursor, statistic, plot_type, has_levels, completeness_qc_param, stat_line_type):
         # initialize local variables
         ind_var_min = sys.float_info.max
         ind_var_max = -1 * sys.float_info.max
@@ -364,21 +629,25 @@ class QueryUtil:
                 ind_var = int(row['avtime']) * 1000
             else:
                 ind_var = int(row['avtime'])
-            fbar = row['fbar']
-            obar = row['obar']
+            data_exists = False
+            if stat_line_type == 'scalar':
+                data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
+            elif stat_line_type == 'ctc':
+                data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))
 
-            if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
+            if data_exists:
                 ind_var_min = ind_var if ind_var < ind_var_min else ind_var_min
                 ind_var_max = ind_var if ind_var > ind_var_max else ind_var_max
-                # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
-                # other functions can be written for other table types
-                stat, sub_levs, sub_secs, sub_values = self.get_scalar_stat(has_levels, row, statistic)
-                # if the previous function failed because we don't have the data we expect,
-                # just stop now and return an empty data object.
+                stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
                 if np.isnan(stat):
-                    return
+                    # there's bad data at this time point
+                    stat = 'null'
+                    sub_values = 'NaN'  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                    sub_secs = 'NaN'
+                    if has_levels:
+                        sub_levs = 'NaN'
             else:
                 # there's no data at this time point
                 stat = 'null'
@@ -429,7 +698,7 @@ class QueryUtil:
             this_n0 = self.n0[d_idx]
             this_n_times = self.n_times[d_idx]
             # add a null if there were too many missing sub-values
-            if this_n0 < 0.1 * n0_max or this_n_times < float(completeness_qc_param) * n_times_max:
+            if curve_stats[d_idx] == 'null' or this_n_times < float(completeness_qc_param) * n_times_max:
                 if plot_type == 'Profile':
                     # profile has the stat first, and then the ind_var. The others have ind_var and then stat.
                     # this is in the pattern of x-plotted-variable, y-plotted-variable.
@@ -497,7 +766,7 @@ class QueryUtil:
         self.data['sum'] = loop_sum
 
     # function for parsing the data returned by a histogram query
-    def parse_query_data_histogram(self, cursor, statistic, has_levels):
+    def parse_query_data_histogram(self, cursor, statistic, has_levels, stat_line_type):
         # initialize local variables
         sub_vals_all = []
         sub_secs_all = []
@@ -508,19 +777,19 @@ class QueryUtil:
 
         # loop through the query results and store the returned values
         for row in query_data:
-            fbar = row['fbar']
-            obar = row['obar']
+            data_exists = False
+            if stat_line_type == 'scalar':
+                data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
+            elif stat_line_type == 'ctc':
+                data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))
 
-            if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
-                # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
-                # other functions can be written for other table types
-                stat, sub_levs, sub_secs, sub_values = self.get_scalar_stat(has_levels, row, statistic)
-                # if the previous function failed because we don't have the data we expect,
-                # just stop now and return an empty data object.
+            if data_exists:
+                stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
                 if np.isnan(stat):
-                    return
+                    # there's bad data at this time point
+                    continue
                 # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
                 if np.isnan(sub_values).any():
                     bad_value_indices = np.argwhere(np.isnan(sub_values))
@@ -720,7 +989,6 @@ class QueryUtil:
         total_values.append(-999)
         total_times.append(-999)
 
-
         # Calculate AUC
         sum = 0
 
@@ -744,7 +1012,7 @@ class QueryUtil:
         self.data['ymin'] = 0.0
 
     # function for parsing the data returned by a contour query
-    def parse_query_data_contour(self, cursor, statistic, has_levels):
+    def parse_query_data_contour(self, cursor, statistic, has_levels, stat_line_type):
         # initialize local variables
         curve_stat_lookup = {}
         curve_n_lookup = {}
@@ -754,20 +1022,22 @@ class QueryUtil:
 
         # loop through the query results and store the returned values
         for row in query_data:
-            # if it's a pressure level get rid of the P in front of the value
-            row_x_val = float(str(row['xVal']).replace('P', ''))
-            row_y_val = float(str(row['yVal']).replace('P', ''))
+            # get rid of any non-numeric characters
+            non_float = re.compile(r'[^\d.]+')
+            row_x_val = float(non_float.sub('', str(row['xVal']))) if str(row['xVal']) != 'NA' else 0.
+            row_y_val = float(non_float.sub('', str(row['yVal']))) if str(row['yVal']) != 'NA' else 0.
             stat_key = str(row_x_val) + '_' + str(row_y_val)
-            fbar = row['sub_fbar']
-            obar = row['sub_obar']
-            if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
-                # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
-                # other functions can be written for other table types
-                stat, sub_levs, sub_secs, sub_values = self.get_scalar_stat(has_levels, row, statistic)
-                # if the previous function failed because we don't have the data we expect,
-                # just stop now and return an empty data object.
+            data_exists = False
+            if stat_line_type == 'scalar':
+                data_exists = row['sub_fbar'] != "null" and row['sub_fbar'] != "NULL" and row['sub_obar'] != "null" and row['sub_obar'] != "NULL"
+            elif stat_line_type == 'ctc':
+                data_exists = row['sub_fy_oy'] != "null" and row['sub_fy_oy'] != "NULL"
+
+            if data_exists:
+                stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
                 if np.isnan(stat):
-                    return
+                    # there's bad data at this time point
+                    continue
                 n = row['n']
                 min_date = row['min_secs']
                 max_date = row['max_secs']
@@ -829,7 +1099,7 @@ class QueryUtil:
         self.data['glob_stats']['n'] = n_points
 
     # function for querying the database and sending the returned data to the parser
-    def query_db(self, cursor, statement, statistic, plot_type, has_levels, completeness_qc_param, vts):
+    def query_db(self, cursor, statement, statistic, plot_type, has_levels, completeness_qc_param, vts, stat_line_type):
         try:
             cursor.execute(statement)
         except pymysql.Error as e:
@@ -850,25 +1120,25 @@ class QueryUtil:
                         vts = sorted(vts)
                     else:
                         vts = []
-                    self.parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param, vts)
+                    self.parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param, vts, stat_line_type)
                 elif plot_type == 'Histogram':
-                    self.parse_query_data_histogram(cursor, statistic, has_levels)
+                    self.parse_query_data_histogram(cursor, statistic, has_levels, stat_line_type)
                 elif plot_type == 'Contour':
-                    self.parse_query_data_contour(cursor, statistic, has_levels)
+                    self.parse_query_data_contour(cursor, statistic, has_levels, stat_line_type)
                 elif plot_type == 'Reliability':
                     self.parse_query_data_reliability(cursor)
                 elif plot_type == 'ROC':
                     self.parse_query_data_roc(cursor)
                 else:
                     self.parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels,
-                                                          completeness_qc_param)
+                                                          completeness_qc_param, stat_line_type)
 
     # makes sure all expected options were indeed passed in
     def validate_options(self, options):
         assert True, options.host != None and options.port != None and options.user != None and \
                      options.password != None and options.database != None and options.statement != None and \
                      options.statistic != None and options.plotType != None and options.hasLevels != None and \
-                     options.completenessQCParam != None and options.vts != None
+                     options.completenessQCParam != None and options.vts != None and options.statLineType != None
 
     # process 'c' style options - using getopt - usage describes options
     def get_options(self, args):
@@ -885,9 +1155,10 @@ class QueryUtil:
         hasLevels = None
         completenessQCParam = None
         vts = None
+        statLineType = None
 
         try:
-            opts, args = getopt.getopt(args[1:], "h:p:u:P:d:q:s:t:l:c:v:", usage)
+            opts, args = getopt.getopt(args[1:], "h:p:u:P:d:q:s:t:l:c:v:L:", usage)
         except getopt.GetoptError as err:
             # print help information and exit:
             print(str(err))  # will print something like "option -a not recognized"
@@ -919,13 +1190,15 @@ class QueryUtil:
                 completenessQCParam = a
             elif o == "-v":
                 vts = a
+            elif o == "-L":
+                statLineType = a
             else:
                 assert False, "unhandled option"
         # make sure none were left out...
         assert True, host != None and port != None and user != None and password != None \
                      and database != None and statement != None and statistic != None \
                      and plotType != None and hasLevels != None and completenessQCParam != None \
-                     and vts != None
+                     and vts != None and statLineType != None
         options = {
             "host": host,
             "port": port,
@@ -937,7 +1210,8 @@ class QueryUtil:
             "plotType": plotType,
             "hasLevels": hasLevels,
             "completenessQCParam": completenessQCParam,
-            "vts": vts
+            "vts": vts,
+            "statLineType": statLineType
         }
         return options
 
@@ -950,7 +1224,7 @@ class QueryUtil:
         with closing(cnx.cursor()) as cursor:
             cursor.execute('set group_concat_max_len = 4294967295')
             self.query_db(cursor, options["statement"], options["statistic"], options["plotType"], options["hasLevels"],
-                          options["completenessQCParam"], options["vts"])
+                          options["completenessQCParam"], options["vts"], options["statLineType"])
         cnx.close()
 
 

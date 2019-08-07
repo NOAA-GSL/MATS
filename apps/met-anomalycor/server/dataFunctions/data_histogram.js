@@ -52,6 +52,8 @@ dataHistogram = function (plotParams, plotFunction) {
         }
         const variable = curve['variable'];
         const statistic = "ACC";
+        const statLineType = 'scalar';
+        const lineDataType = 'line_data_sal1l2';
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -65,7 +67,7 @@ dataHistogram = function (plotParams, plotFunction) {
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -125,7 +127,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
                 "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
-                "{{database}}.line_data_sal1l2 ld " +
+                "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
                 "{{regionsClause}} " +
@@ -150,6 +152,7 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.replace('{{lineDataType}}', lineDataType);
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
@@ -179,8 +182,10 @@ dataHistogram = function (plotParams, plotFunction) {
                         "-t", plotType,
                         "-l", hasLevels,
                         "-c", completenessQCParam,
-                        "-v", vts
-                    ]                };
+                        "-v", vts,
+                        "-L", statLineType
+                    ]
+                };
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();
