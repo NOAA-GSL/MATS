@@ -63,7 +63,7 @@ class UpdateMEAnomalycor:
         return "met-anomalycor"
 
     def get_data_table_pattern_list(self):
-        return ['line_data_sl1l2']
+        return ['line_data_sal1l2']
 
     def update_tables_and_close_cnx(self):
         print("selective_MEanomalycor - Publishing metadata")
