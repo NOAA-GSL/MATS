@@ -56,7 +56,7 @@ class MEEnsemble:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print("MEensemble - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table ensemble_mats_metadata_dev (db varchar(80), model varchar(80), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(1023), variables varchar(1023), fcst_orig varchar(1023), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'
+            create_table_query = 'create table ensemble_mats_metadata_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(1023), variables varchar(1023), fcst_orig varchar(1023), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'
             self.cursor.execute(create_table_query)
             self.cnx.commit()
         self.cursor.execute('show tables like "ensemble_mats_metadata";')
