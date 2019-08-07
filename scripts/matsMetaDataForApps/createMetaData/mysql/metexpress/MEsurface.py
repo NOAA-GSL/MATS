@@ -226,7 +226,7 @@ class MESurface:
                         fcst = int(list(line2.values())[0])
                         temp_fcsts_orig.add(fcst)
                         if fcst % 10000 == 0:
-                            fcst = fcst / 10000
+                            fcst = int(fcst / 10000)
                         temp_fcsts.add(fcst)
 
                     get_fcsts_late = "select distinct fcst_lead from \
@@ -238,7 +238,7 @@ class MESurface:
                         fcst = int(list(line2.values())[0])
                         temp_fcsts_orig.add(fcst)
                         if fcst % 10000 == 0:
-                            fcst = fcst / 10000
+                            fcst = int(fcst / 10000)
                         temp_fcsts.add(fcst)
 
                     per_mvdb[mvdb][model]['fcsts'] = list(map(str,sorted(temp_fcsts)))
