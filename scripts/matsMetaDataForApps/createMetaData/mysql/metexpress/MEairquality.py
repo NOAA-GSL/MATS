@@ -56,7 +56,7 @@ class MEAirquality:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(" MEairquality - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table airquality_mats_metadata_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(1023), variables varchar(1023), trshs varchar(1023), fcst_orig varchar(1023), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'
+            create_table_query = 'create table airquality_mats_metadata_dev (db varchar(80), model varchar(80), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(1023), variables varchar(1023), trshs varchar(1023), fcst_orig varchar(1023), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'
             self.cursor.execute(create_table_query)
             self.cnx.commit()
         self.cursor.execute('show tables like "airquality_mats_metadata";')
@@ -202,7 +202,7 @@ class MEAirquality:
                 cursor2.execute(get_trshs)
                 cnx2.commit()
                 for line2 in cursor2:
-                    trsh = list(line2.values())[0]
+                    trsh = str(list(line2.values())[0])
                     per_mvdb[mvdb][model]['trshs'].append(trsh)
                 per_mvdb[mvdb][model]['trshs'].sort(key=self.strip_trsh)
 
@@ -257,8 +257,8 @@ class MEAirquality:
                             fcst = fcst / 10000
                         temp_fcsts.add(fcst)
 
-                    per_mvdb[mvdb][model]['fcsts'] = sorted(temp_fcsts)
-                    per_mvdb[mvdb][model]['fcst_orig'] = sorted(temp_fcsts_orig)
+                    per_mvdb[mvdb][model]['fcsts'] = list(map(str,sorted(temp_fcsts)))
+                    per_mvdb[mvdb][model]['fcst_orig'] = list(map(str,sorted(temp_fcsts_orig)))
 
                 print(" MEairquality - Getting stats for model " + model)
                 get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'

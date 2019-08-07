@@ -244,8 +244,8 @@ class UpdateMEUpperair:
                             if fcst % 10000 == 0:
                                 fcst = fcst / 10000
                             temp_fcsts.add(fcst)
-                        per_mvdb[mvdb][model]['fcsts'] = sorted(temp_fcsts)
-                        per_mvdb[mvdb][model]['fcst_orig'] = sorted(temp_fcsts_orig)
+                        per_mvdb[mvdb][model]['fcsts'] = list(map(str,sorted(temp_fcsts)))
+                        per_mvdb[mvdb][model]['fcst_orig'] = list(map(str,sorted(temp_fcsts_orig)))
                         print("\nselective_MEupperair - Storing metadata for model " + model)
                         self.update_model_in_metadata_table(mvdb, model, per_mvdb[mvdb][model])
                 else:

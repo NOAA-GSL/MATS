@@ -243,8 +243,8 @@ class MEAnomalycor:
                             fcst = fcst / 10000
                         temp_fcsts.add(fcst)
 
-                    per_mvdb[mvdb][model]['fcsts'] = sorted(temp_fcsts)
-                    per_mvdb[mvdb][model]['fcst_orig'] = sorted(temp_fcsts_orig)
+                    per_mvdb[mvdb][model]['fcsts'] = list(map(str,sorted(temp_fcsts)))
+                    per_mvdb[mvdb][model]['fcst_orig'] = list(map(str,sorted(temp_fcsts_orig)))
 
                 print("MEupper air - Getting stats for model " + model)
                 get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 10000) s where stat_header_id in (select stat_header_id from stat_header where model="' + model + '");'
