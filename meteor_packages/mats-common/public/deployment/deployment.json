@@ -186,8 +186,8 @@
     {
       "app": "precipitation1hr",
       "title": "1 Hour Precipitation",
-      "version": "2.2.3-2019.08.07.06.18",
-      "buildDate": "2019.08.07.06.18",
+      "version": "2.2.4-2019.08.08.06.20",
+      "buildDate": "2019.08.08.06.20",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
