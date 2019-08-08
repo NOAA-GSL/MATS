@@ -195,25 +195,26 @@ class metadatUpdate:
     def get_models_for_database(self, data_table_pattern_list, last_run_finish_time):
         # db_models is a comma seperated list of db.model
         db_models = ""
-        for dtple in data_table_pattern_list:
-            cmd = "select distinct model  \
-                  from " + self.db_name + ".stat_header  \
-                  where stat_header_id in  \
-                        (select stat_header_id from " + self.db_name + "." + dtple + " " \
-                                                                                     "where data_file_id in  \
-                                                                                         (select distinct data_file_id from " + self.db_name + ".data_file  \
-                                        where load_date > '" + str(last_run_finish_time) + "') );"
-            self.cursor.execute(cmd)
-            self.cnx.commit()
-            firstRow = True
-            for row in self.cursor:
-                model = row['model']
-                if not model in db_models:
-                    if not firstRow:
-                        db_models += ","
-                    db_models += self.db_name + "." + row['model']
-                    if firstRow:
-                        firstRow = False
+        # for dtple in data_table_pattern_list:
+        #     cmd = "select distinct model  \
+        #           from " + self.db_name + ".stat_header  \
+        #           where stat_header_id in  \
+        #                 (select stat_header_id from " + self.db_name + "." + dtple + " " \
+        #                                                                              "where data_file_id in  \
+        #                                                                                  (select distinct data_file_id from " + self.db_name + ".data_file  \
+        #                                 where load_date > '" + str(last_run_finish_time) + "') );"
+        cmd = "select distinct model from " + self.db_name + ".stat_header;"
+        self.cursor.execute(cmd)
+        self.cnx.commit()
+        firstRow = True
+        for row in self.cursor:
+            model = row['model']
+            if not model in db_models:
+                if not firstRow:
+                    db_models += ","
+                db_models += self.db_name + "." + row['model']
+                if firstRow:
+                    firstRow = False
         return db_models
 
     def update_status(self, status, utc_start, utc_end):

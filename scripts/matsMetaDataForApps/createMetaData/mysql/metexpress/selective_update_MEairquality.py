@@ -122,53 +122,32 @@ class UpdateMEAirquality:
             for model in mvdb_map[mvdb]:
                 per_mvdb[mvdb][model] = {}
                 print("\nselective_MEairquality - Processing model " + model)
-                print("selective_MEairquality - Getting stats for model " + model)
-
-                get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_list from stat_header where model='" + model + "' and fcst_var regexp '^OZ|^PM25';"
+                get_stat_header_ids = "select stat_header_id from stat_header where model='" + model + "' and fcst_var regexp '^OZ|^PM25';"
                 self.cursor.execute(get_stat_header_ids)
                 self.cnx.commit()
-                stat_header_id_list = self.cursor.fetchone()['stat_header_list']
+                stat_header_id_values = self.cursor.fetchall()
+                stat_header_id_list = [d['stat_header_id'] for d in stat_header_id_values if 'stat_header_id' in d]
 
-                get_stats_earliest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s where stat_header_id in (' + stat_header_id_list + ');'
-                get_stats_latest = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate from (select fcst_valid_beg,stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 500000) s where stat_header_id in (' + stat_header_id_list + ');'
-                get_num_recs = 'select count(fcst_valid_beg) as numrecs from line_data_sl1l2 where stat_header_id in (' + stat_header_id_list + ');'
-                self.cursor.execute(get_stats_earliest)
-                self.cnx.commit()
-                data = self.cursor.fetchone()
-                min_earliest = data['mindate']
-                max_earliest = data['maxdate']
-                self.cursor.execute(get_stats_latest)
-                self.cnx.commit()
-                data = self.cursor.fetchone()
-                min_latest = data['mindate']
-                max_latest = data['maxdate']
-                if min_earliest is not None and min_latest is not None:
-                    min_val = min_earliest if min_earliest < min_latest else min_latest
-                elif min_earliest is not None and min_latest == None:
-                    min_val = min_earliest
-                elif min_earliest == None and min_latest is not None:
-                    min_val = min_latest
-                else:
-                    # both are None so choose the initial epoch
-                    min_val = datetime.fromtimestamp(0)
-                if max_earliest is not None and max_latest is not None:
-                    max_val = max_earliest if max_earliest < max_latest else max_latest
-                elif max_earliest is not None and max_latest == None:
-                    max_val = max_earliest
-                elif max_earliest == None and max_latest is not None:
-                    max_val = max_latest
-                else:
-                    # both are None so choose the current time
-                    max_val = datetime.now()
-
-                per_mvdb[mvdb][model]['mindate'] = int(min_val.timestamp())
-                per_mvdb[mvdb][model]['maxdate'] = int(max_val.timestamp())
-                self.cursor.execute(get_num_recs)
-                self.cnx.commit()
-                data = self.cursor.fetchone()
-                num_recs = data['numrecs']
+                print("selective_MEairquality air - Getting stats for model " + model)
+                num_recs = 0
+                min = datetime.max
+                max = datetime.utcfromtimestamp(0)   # earliest epoch?
+                for stat_header_id in stat_header_id_list:
+                    get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from line_data_sl1l2 where stat_header_id  = "' + str(stat_header_id) + '";'
+                    self.cursor.execute(get_stats)
+                    self.cnx.commit()
+                    data = self.cursor.fetchone()
+                    if data is not None:
+                        min = min if data['mindate'] is None or min < data['mindate'] else data['mindate']
+                        max = max if data['maxdate'] is None or max > data['maxdate'] else data['maxdate']
+                        num_recs = num_recs + data['numrecs']
+                if (min is None or min is datetime.max):
+                    min = datetime.now()
+                if (max is None is max is datetime.min):
+                    max = datetime.now()
+                per_mvdb[mvdb][model]['mindate'] = int(min.timestamp())
+                per_mvdb[mvdb][model]['maxdate'] = int(max.timestamp())
                 per_mvdb[mvdb][model]['numrecs'] = num_recs
-
                 # Get the rest of the metadata only if data actually exists
                 if int(per_mvdb[mvdb][model]['numrecs']) > int(0):
                     # Get the regions for this model in this database
@@ -216,40 +195,22 @@ class UpdateMEAirquality:
                     per_mvdb[mvdb][model]['variables'].sort()
 
                     print("selective_MEupperair air - Getting fcst lens for model " + model)
-
                     temp_fcsts = set()
                     temp_fcsts_orig = set()
-                    # Get the fcst lead times for this model in this database (select from the first and last 500000 rows in the line_data table)
-                    # We only select from the first and last 500000 rows because some of these tables can have millions and millions of rows
-                    # resulting in extremely long query times
-                    # and the first and last 500000 entries should get a good sampling of metadata.
-                    # a complete query can be done out of band
                     per_mvdb[mvdb][model]['fcsts'] = []
                     per_mvdb[mvdb][model]['fcst_orig'] = []
                     if stat_header_id_list is not None:
-                        get_fcsts_early = "select distinct fcst_lead from \
-                                        (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id limit 500000) s \
-                                                    where stat_header_id in (" + stat_header_id_list + ");"
-                        self.cursor.execute(get_fcsts_early)
-                        self.cnx.commit()
-                        for line2 in self.cursor:
-                            fcst = int(list(line2.values())[0])
-                            temp_fcsts_orig.add(fcst)
-                            if fcst % 10000 == 0:
-                                fcst = int(fcst / 10000)
-                            temp_fcsts.add(fcst)
-
-                        get_fcsts_late = "select distinct fcst_lead from \
-                                        (select fcst_lead, stat_header_id from line_data_sl1l2 order by stat_header_id desc limit 500000) s \
-                                                    where stat_header_id in (" + stat_header_id_list + ");"
-                        self.cursor.execute(get_fcsts_late)
-                        self.cnx.commit()
-                        for line2 in self.cursor:
-                            fcst = int(list(line2.values())[0])
-                            temp_fcsts_orig.add(fcst)
-                            if fcst % 10000 == 0:
-                                fcst = int(fcst / 10000)
-                            temp_fcsts.add(fcst)
+                        for stat_header_id in stat_header_id_list:
+                            get_fcsts = "select distinct fcst_lead from  line_data_sl1l2 where stat_header_id = '" + str(
+                                stat_header_id) + "';"
+                            self.cursor.execute(get_fcsts)
+                            self.cnx.commit()
+                            for line2 in self.cursor:
+                                fcst = int(list(line2.values())[0])
+                                temp_fcsts_orig.add(fcst)
+                                if fcst % 10000 == 0:
+                                    fcst = int(fcst / 10000)
+                                temp_fcsts.add(fcst)
                         per_mvdb[mvdb][model]['fcsts'] = list(map(str,sorted(temp_fcsts)))
                         per_mvdb[mvdb][model]['fcst_orig'] = list(map(str,sorted(temp_fcsts_orig)))
                         print("\nselective_MEairquality - Storing metadata for model " + model)
