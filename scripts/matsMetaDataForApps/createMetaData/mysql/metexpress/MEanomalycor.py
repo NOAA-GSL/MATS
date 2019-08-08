@@ -221,7 +221,7 @@ class MEAnomalycor:
                 per_mvdb[mvdb][model]['fcst_orig'] = []
                 if stat_header_id_list is not None:
                     for stat_header_id in stat_header_id_list:
-                        get_fcsts = "select distinct fcst_lead from  line_data_sl1l2 where stat_header_id = '" + str(stat_header_id) + "';"
+                        get_fcsts = "select distinct fcst_lead from  line_data_sal1l2 where stat_header_id = '" + str(stat_header_id) + "';"
                         cursor2.execute(get_fcsts)
                         cnx2.commit()
                         for line2 in cursor2:
@@ -239,7 +239,7 @@ class MEAnomalycor:
                 min = datetime.max
                 max = datetime.utcfromtimestamp(0)   # earliest epoch?
                 for stat_header_id in stat_header_id_list:
-                    get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from line_data_sl1l2 where stat_header_id  = "' + str(stat_header_id) + '";'
+                    get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from line_data_sal1l2 where stat_header_id  = "' + str(stat_header_id) + '";'
                     cursor2.execute(get_stats)
                     cnx2.commit()
                     data = cursor2.fetchone()
