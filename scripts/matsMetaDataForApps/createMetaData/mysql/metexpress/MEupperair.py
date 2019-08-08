@@ -361,7 +361,7 @@ if __name__ == '__main__':
             sys.exit(1)
         metadataDatabaseName = sys.argv[2]
         print(" MEupper air - using matadata database: " + metadataDatabaseName)
-        utc_now = str(datetime.now())
+    utc_now = str(datetime.now())
     msg = 'UPPER AIR MATS FOR MET METADATA START: ' + utc_now
     print(msg)
     me_dbcreator = MEUpperair()
