@@ -94,7 +94,6 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{yValClause}}', yValClause);
     statement = statement.replace('{{data_source}}', data_source + '_' + region);
     statement = statement.replace('{{statistic}}', statistic);
-    statement = statement.replace('{{threshold}}', threshold);
     statement = statement.replace('{{fromSecs}}', fromSecs);
     statement = statement.replace('{{toSecs}}', toSecs);
     statement = statement.replace('{{thresholdClause}}', thresholdClause);
