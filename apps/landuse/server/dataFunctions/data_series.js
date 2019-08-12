@@ -103,7 +103,6 @@ dataSeries = function (plotParams, plotFunction) {
                 validTimeClause = " and  m0.hour IN(" + validTimes + ")";
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-
             dataRequests[curve.label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0

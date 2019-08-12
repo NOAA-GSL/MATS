@@ -101,7 +101,6 @@ dataSeries = function (plotParams, plotFunction) {
                 validTimeClause = " and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-
             dataRequests[curve.label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
