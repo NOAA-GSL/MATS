@@ -587,7 +587,7 @@ const generateReliabilityPlotOptions = function () {
         tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
-        range: [xmin, xmax]
+        range: [xmin, xmax + 0.05]
     };
 
     // y-axis options
@@ -597,7 +597,7 @@ const generateReliabilityPlotOptions = function () {
         tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
-        range: [ymin, ymax]
+        range: [ymin, ymax + 0.05]
     };
 
     return layout;
@@ -633,7 +633,7 @@ const generateROCPlotOptions = function (dataset) {
         tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
-        range: [xmin, xmax]
+        range: [xmin, xmax + 0.05]
     };
 
     // y-axis options
@@ -643,7 +643,7 @@ const generateROCPlotOptions = function (dataset) {
         tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
-        range: [ymin, ymax]
+        range: [ymin, ymax + 0.05]
     };
 
     return layout;
