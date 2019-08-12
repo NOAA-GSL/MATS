@@ -327,9 +327,17 @@
       "buildStatus": "enabled"
     },
     {
+      "app": "ptype",
+      "displayName": "Precipitation Type",
+      "displayOrder": 15,
+      "group": "Precipitation",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
-      "displayOrder": 15,
+      "displayOrder": 16,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -337,7 +345,7 @@
     {
       "app": "echotop",
       "displayName": "Echo Top",
-      "displayOrder": 16,
+      "displayOrder": 17,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -345,7 +353,7 @@
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
-      "displayOrder": 17,
+      "displayOrder": 18,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -353,7 +361,7 @@
     {
       "app": "mats4met-ensemble",
       "displayName": "Ensemble",
-      "displayOrder": 18,
+      "displayOrder": 19,
       "group": "Experimental",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -361,7 +369,7 @@
     {
       "app": "met-upperair",
       "displayName": "MET Upper Air",
-      "displayOrder": 19,
+      "displayOrder": 20,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -369,7 +377,7 @@
     {
       "app": "met-anomalycor",
       "displayName": "MET Anomaly Correlation",
-      "displayOrder": 20,
+      "displayOrder": 21,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -377,7 +385,7 @@
     {
       "app": "met-surface",
       "displayName": "MET Surface",
-      "displayOrder": 21,
+      "displayOrder": 22,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -385,7 +393,7 @@
     {
       "app": "met-airquality",
       "displayName": "MET Air Quality",
-      "displayOrder": 22,
+      "displayOrder": 23,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
