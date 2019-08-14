@@ -306,8 +306,8 @@
     {
       "app": "met-airquality",
       "title": "MET Air Quality",
-      "version": "2.2.4-2019.08.13.06.00",
-      "buildDate": "2019.08.13.06.00",
+      "version": "2.2.4-2019.08.14.06.00",
+      "buildDate": "2019.08.14.06.00",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
