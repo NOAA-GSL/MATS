@@ -293,6 +293,11 @@ const doCurveParams = function () {
                 for (var j = 0; j < forecastLengthArr.length; j++) {
                     forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
                     forecastValue = forecastValueArr[j].replace(/'|\[|\]/g, "");
+                    if (forecastValue === 'dflt') {
+                        // we couldn't parse the forecast lengths in the metadata script,
+                        // so we need to check for multiple formats in our query.
+                        forecastValue = forecastLengthArr[j] + ',' + (Number(forecastLengthArr[j]) * 10000).toString();
+                    }
                     lengthValMap[forecastLengthArr[j]] = forecastValue;
                 }
                 forecastLengthOptionsMap[thisDB][model] = forecastLengthArr;

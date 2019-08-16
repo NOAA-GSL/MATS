@@ -114,7 +114,6 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-
             dataRequests[curve.label] = statement;
 
             var queryResult;

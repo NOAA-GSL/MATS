@@ -31,6 +31,11 @@
         // success callback
         success(function (data) {
             for (var di=0; di < data.length;di++) {
+                var itemColor = '#3366bb';
+                if (data[di].group.startsWith("MET")) {
+                    itemColor = 'darkorchid';
+                }
+                data[di].itemColor = itemColor;
                 if ($scope.items[data[di].group] == null) {
                     $scope.items[data[di].group] = [data[di]];
                     $scope.groups.push(data[di].group);
@@ -45,7 +50,6 @@
         });
     }
     </script>
-
 </head>
 <body style="background-image: url('img/bg.png')">
 <div ng-app ng-controller="TCtrl">
@@ -127,7 +131,7 @@
                                 <ul class="nav navbar-nav navbar-left">
                                     <h3>{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
-                                        <a class="btn-sm btn-primary" style="font-size:medium;font-weight: bold; border-radius:10px;"href="/{{item.app}}">{{item.displayName}}</a>
+                                        <a class="btn-sm btn-primary" type="button" style="font-size:medium; background-color: {{item.itemColor}}; font-weight: bold; border-radius:10px;"href="/{{item.app}}">{{item.displayName}}</a>
                                     </li>
                                 </ul>
 				            </div>
