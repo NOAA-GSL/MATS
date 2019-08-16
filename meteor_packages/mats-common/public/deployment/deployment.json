@@ -280,8 +280,8 @@
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "2.2.4-2019.08.15.07.14",
-      "buildDate": "2019.08.15.07.14",
+      "version": "2.2.4-2019.08.16.07.20",
+      "buildDate": "2019.08.16.07.20",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
