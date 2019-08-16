@@ -13,7 +13,7 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../MATS_DEV/scripts/matsMetaDataForApps/createMetaData/mysql/metexpress/MEsurface.py" />
-    <option name="PARAMETERS" value="${HOME}/model_vxtest_3312_met_admin.cnf tmp_mats_metadata" />
+    <option name="PARAMETERS" value="-c ${HOME}/model_vxtest_3312_met_admin.cnf -m tmp_mats_metadata" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

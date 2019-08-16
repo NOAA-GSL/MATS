@@ -24,6 +24,10 @@ import pymysql
 
 
 class MESurface:
+
+    line_data_limit = 10000000000
+#    line_data_limit = 1000000
+    dbs_too_large = {}
     def mysql_prep_tables(self):
         try:
             self.cnx = pymysql.connect(read_default_file=self.cnf_file,
@@ -93,12 +97,12 @@ class MESurface:
         print("MEsurface - Publishing metadata")
         self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
-        self.cursor.execute("delete from surface_mats_metadata;")
-        self.cnx.commit()
+        #self.cursor.execute("delete from surface_mats_metadata;")
+        #self.cnx.commit()
         self.cursor.execute("insert into surface_mats_metadata select * from surface_mats_metadata_dev;")
         self.cnx.commit()
-        self.cursor.execute("delete from surface_database_groups;")
-        self.cnx.commit()
+        #self.cursor.execute("delete from surface_database_groups;")
+        #self.cnx.commit()
         self.cursor.execute("insert into surface_database_groups select * from surface_database_groups_dev;")
         self.cnx.commit()
 
@@ -157,6 +161,20 @@ class MESurface:
             cnx2.commit()
             print("\n\nMEsurface - Using db " + mvdb)
 
+            self.cursor.execute("select count(*) as count from line_data_sl1l2;")
+            self.cnx.commit()
+            line_count = self.cursor.fetchone()['count']
+            self.cursor.execute("select count(distinct stat_header_id) as header_id_count from stat_header where model='" + model + \
+                                  "' and fcst_lev in('MSL','SFC','Z0','Z2','Z10','H0','H2','H10','L0')  \
+                                        and fcst_var not regexp '^OZ|^PM25';")
+            self.cnx.commit()
+            static_header_id_count = self.cursor.fetchone()['header_id_count']
+            compound_size = int(static_header_id_count) * int(line_count)
+            if (int(line_count) > self.line_data_limit):
+                print ("MEsurface - Using db: " + mvdb + " number of iterations is too large, line_data: " + str(line_count) +
+                       " stat_header_ids: " + str(static_header_id_count) + " compund iterations: " + str(compound_size) + " skipping this database: " + mvdb)
+                self.dbs_too_large[mvdb] = {"compound_size":str(compound_size), "header_id_count":str(static_header_id_count), "line_count":line_count}
+                continue
             # Get the models in this database
             get_models = 'select distinct model from stat_header where fcst_lev in("MSL","SFC","Z0","Z2","Z10","H0","H2","H10","L0") and fcst_var not regexp "^OZ|^PM25";'
             self.cursor.execute(get_models)
@@ -202,12 +220,6 @@ class MESurface:
                 print("MEsurface - Getting fcst lens for model " + model)
                 temp_fcsts = set()
                 temp_fcsts_orig = set()
-
-                # Get the fcst lead times for this model in this database (select from the first and last 500000 rows in the line_data table)
-                # We only select from the first and last 500000 rows because some of these tables can have millions and millions of rows
-                # resulting in extremely long query times
-                # and the first and last 500000 entries should get a good sampling of metadata.
-                # a complete query can be done out of band
                 get_stat_header_ids = "select stat_header_id from stat_header where model='" + model + \
                                       "' and fcst_lev in('MSL','SFC','Z0','Z2','Z10','H0','H2','H10','L0')  \
                                             and fcst_var not regexp '^OZ|^PM25';"
@@ -343,6 +355,7 @@ class MESurface:
         self.mysql_prep_tables()
         self.build_stats_object()
         self.deploy_dev_table_and_close_cnx()
+        return self.dbs_too_large
 
 
 if __name__ == '__main__':
@@ -368,12 +381,13 @@ if __name__ == '__main__':
             sys.exit(1)
         metadataDatabaseName = sys.argv[2]
         print(" MEsurface - using matadata database: " + metadataDatabaseName)
-
     utc_now = str(datetime.now())
     msg = 'SURFACE MATS FOR MET METADATA START: ' + utc_now
     print(msg)
     me_dbcreator = MESurface()
     me_dbcreator.main(cnf_file, metadataDatabaseName)
+    if me_dbcreator.dbs_too_large: # if there are any too large
+        print ("Did not process these databases due to being to large -- " + json.dumps(me_dbcreator.dbs_too_large))
     utc_now = str(datetime.now())
     msg = 'SURFACE MATS FOR MET METADATA END: ' + utc_now
     print(msg)
