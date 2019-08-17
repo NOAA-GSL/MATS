@@ -390,7 +390,7 @@ class UpdateMEAirquality:
             'metexpress_base_url'] is not None and options['metadata_database'] is not None
 
     # process 'c' style options - using getopt - usage describes options
-    # options like {'cnf_file':cnf_file, 'db_model_input':db_model_input, 'metexpress_base_url':metexpress_base_url}
+    # options like {'cnf_file':cnf_file, 'db_model_input':db_model_input, l}
     # cnf_file - mysql cnf file, db_model_input - comma-separated list of db/model pairs, metexpress_base_url - metexpress address
     # The db_model_input might be initially an empty string and then set later when calling update. This
     # allows for instantiating the class before the db_model_inputs are known.

@@ -55,46 +55,48 @@ class MEUpperair:
         self.cnx.commit()
 
         # see if the metadata tables already exist
-        print(self.script_name + " - Checking for upperair metadata tables")
-        self.cursor.execute('show tables like "upperair_mats_metadata_dev";')
+        print(self.script_name + " - Checking for metadata tables")
+        self.cursor.execute('show tables like "{}_dev";'.format(self.metadata_table))
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table upperair_mats_metadata_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(2047), variables varchar(1023), fcst_orig varchar(2047), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'
+            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(2047), variables varchar(1023), fcst_orig varchar(2047), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
-        self.cursor.execute('show tables like "upperair_mats_metadata";')
+        self.cursor.execute('show tables like "{}";'.format(self.metadata_table))
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata prod table does not exist--creating it")
-            create_table_query = 'create table upperair_mats_metadata like upperair_mats_metadata_dev;'
+            create_table_query = 'create table {} like {}_dev;'.format(self.metadata_table,self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
         print(self.script_name + " - Deleting from metadata dev table")
-        self.cursor.execute("delete from upperair_mats_metadata_dev;")
+        self.cursor.execute("delete from {}_dev;".format(self.metadata_table))
         self.cnx.commit()
 
         # see if the metadata group tables already exist
-        self.cursor.execute('show tables like "upperair_database_groups_dev";')
+        self.cursor.execute('show tables like "{}_dev";'.format(self.database_groups))
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Database group dev table does not exist--creating it")
-            create_table_query = 'create table upperair_database_groups_dev (db_group varchar(255), dbs varchar(32767));'
+            create_table_query = 'create table {}_dev (db_group varchar(255), dbs varchar(32767));'.format(self.database_groups)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
-        self.cursor.execute('show tables like "upperair_database_groups";')
+        self.cursor.execute('show tables like "{}";'.format(self.database_groups))
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Database group prod table does not exist--creating it")
-            create_table_query = 'create table upperair_database_groups like upperair_database_groups_dev;'
+            create_table_query = 'create table {} like {}_dev;'.format(self.database_groups,self.database_groups)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
         print(self.script_name + " - Deleting from group dev table")
-        self.cursor.execute("delete from upperair_database_groups_dev;")
+        self.cursor.execute("delete from {}_dev;".format(self.database_groups))
         self.cnx.commit()
 
-    def deploy_dev_table_and_close_cnx(self, metadata_table, string_fields, int_fields):
+    def deploy_dev_table_and_close_cnx(self):
+        groups_table = self.database_groups
+        metadata_table = self.metadata_table
         metadata_table_tmp = metadata_table + "_tmp"
         tmp_metadata_table = "tmp_" + metadata_table
         metadata_table_dev = metadata_table + "_dev"
@@ -133,27 +135,35 @@ class MEUpperair:
         # ....mats_metadata possibly has more rows than ...mats_metadata_dev
 
         self.cursor.execute(
-            'select db, model, ' + ",".join(int_fields) + ' from ' + metadata_table + ' order by db, model;')
+            'select db, model, ' + ",".join(self.int_fields) + ' from ' + metadata_table + ' order by db, model;')
         self.cnx.commit()
         int_metadata = self.cursor.fetchall()
-        self.reconcile_ints(int_fields, metadata_table_dev, int_metadata, devcursor, devcnx)
+        self.reconcile_ints(int_metadata, devcursor, devcnx)
 
         self.cursor.execute(
-            'select db, model, ' + ",".join(string_fields) + ' from ' + metadata_table + ' order by db, model;')
+            'select db, model, ' + ",".join(self.string_fields) + ' from ' + metadata_table + ' order by db, model;')
         self.cnx.commit()
         string_metadata = self.cursor.fetchall()
-        self.reconcile_strings(string_fields, metadata_table_dev, string_metadata, devcursor, devcnx)
+        self.reconcile_strings(string_metadata, devcursor, devcnx)
 
-    def reconcile_strings(self, string_fields, md_table, string_metadata, devcursor, devcnx):
+        # finally copy the groups
+        gd = {'database_groups': groups_table, 'database_groups_dev': groups_table + "_dev"}
+        self.cursor.execute("delete from {database_groups};".format(**gd))
+        self.cnx.commit()
+        self.cursor.execute("insert into {database_groups} select * from {database_groups_dev};".format(**gd))
+        self.cnx.commit()
+
+    def reconcile_strings(self,  string_metadata, devcursor, devcnx):
+        md_table = self.metadata_table
         for d in range(0, len(string_metadata), 1):
             devcursor.execute(
-                'select ' + ','.join(string_fields) + ' from ' + md_table + ' where db = "' + string_metadata[d][
+                'select ' + ','.join(self.string_fields) + ' from ' + md_table + ' where db = "' + string_metadata[d][
                     'db'] + '" and model = "' + string_metadata[d]['model'] + '";')
             devcnx.commit()
             needsWrite = False
             reconcile_vals = {}
             dev_vals = devcursor.fetchone()
-            for field in string_fields:
+            for field in self.string_fields:
                 if dev_vals[field] != string_metadata[d][field]:
                     needsWrite = True
                     reconcile_vals[field] = str(sorted(list(
@@ -163,7 +173,7 @@ class MEUpperair:
             if needsWrite:
                 update_command = 'update ' + md_table
                 first = True
-                for field in string_fields:
+                for field in self.string_fields:
                     if first:
                         first = False
                     else:
@@ -174,10 +184,11 @@ class MEUpperair:
                 devcursor.execute(update_command)
                 devcnx.commit()
 
-    def reconcile_ints(self, int_fields, md_table, int_metadata, devcursor, devcnx):
+    def reconcile_ints(self, int_metadata, devcursor, devcnx):
+        md_table = self.metadata_table
         for d in range(0, len(int_metadata), 1):
             devcursor.execute(
-                'select ' + ','.join(int_fields) + ' from ' + md_table + ' where db = "' + int_metadata[d][
+                'select ' + ','.join(self.int_fields) + ' from ' + md_table + ' where db = "' + int_metadata[d][
                     'db'] + '" and model = "' + int_metadata[d]['model'] + '";')
             devcnx.commit()
             needsWrite = False
@@ -414,7 +425,7 @@ class MEUpperair:
                     per_mvdb[mvdb][model]['levels'].append(level)
                 per_mvdb[mvdb][model]['levels'].sort(key=self.strip_level)
 
-                # Get the UA variables for this model in this database
+                # Get the variables for this model in this database
                 get_vars = 'select distinct fcst_var from stat_header where fcst_lev like "P%" and model ="' + model + '";'
                 per_mvdb[mvdb][model]['variables'] = []
                 print(self.script_name + " - Getting variables for model " + model)
@@ -545,7 +556,7 @@ class MEUpperair:
             mindate = raw_metadata['mindate']
             maxdate = raw_metadata['maxdate']
             display_text = model.replace('.', '_')
-            insert_row = "insert into upperair_mats_metadata_dev (db, model, display_text, regions, levels, fcst_lens, variables, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            insert_row = "insert into {}_dev (db, model, display_text, regions, levels, fcst_lens, variables, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(self.metadata_table)
             qd.append(mvdb)
             qd.append(model)
             qd.append(display_text)
@@ -564,9 +575,11 @@ class MEUpperair:
     def populate_db_group_tables(self, db_groups):
         self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
+        groups_table=self.database_groups + "_dev"
         for group in db_groups:
+            gd={"groups_table":groups_table}
             qd = []
-            insert_row = "insert into upperair_database_groups_dev (db_group, dbs) values(%s, %s)"
+            insert_row = "insert into {groups_table} (db_group, dbs) values(%s, %s)".format(**gd)
             qd.append(group)
             qd.append(str(db_groups[group]))
             self.cursor.execute(insert_row, qd)
@@ -577,9 +590,7 @@ class MEUpperair:
         self.cnf_file = cnf_file
         self.mysql_prep_tables()
         self.build_stats_object()
-        string_fields = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
-        int_fields = ["mindate", "maxdate", "numrecs", "updated"]
-        self.deploy_dev_table_and_close_cnx("upperair_mats_metadata", string_fields, int_fields)
+        self.deploy_dev_table_and_close_cnx()
         return self.dbs_too_large
 
     # makes sure all expected options were indeed passed in
@@ -589,21 +600,24 @@ class MEUpperair:
                      options['metadata_database'] is not None
 
     # process 'c' style options - using getopt - usage describes options
-    # options like {'cnf_file':cnf_file, 'db_model_input':db_model_input, 'metexpress_base_url':metexpress_base_url}
-    # cnf_file - mysql cnf file, db_model_input - comma-separated list of db/model pairs, metexpress_base_url - metexpress address
+    # options like {'cnf_file':cnf_file, 'db':db, 'metexpress_base_url':metexpress_base_url}
+    # cnf_file - mysql cnf file, db - prescribed db to process, metexpress_base_url - metexpress address
     # The db_model_input might be initially an empty string and then set later when calling update. This
     # allows for instantiating the class before the db_model_inputs are known.
     # (m)ats_metadata_database_name] allows to override the default metadata databasename (mats_metadata) with something
+    # db is a prescribed database to process (selective mode) used by mv_load
+    # (D)ata_table_stat_header_id_limit, (d)atabase name, (u)=metexpress_base_url are all optional for selective mode
     @classmethod
     def get_options(self, args):
-        usage = ["(c)nf_file=", "[(m)ats_metadata_database_name]",
-                 "[(d)ata_table_stat_header_id_limit - default is 10,000,000,000]"]
+        usage = ["(c)nf_file=", "[(m)ats_metadata_database_name]","[(D)ata_table_stat_header_id_limit - default is 10,000,000,000]", "[(d)atabase name]" "(u)=metexpress_base_url"]
         cnf_file = None
+        db = None
+        metexpress_base_url = None
         metadata_database = "mats_metadata"
         # data_table_stat_header_id_limit is the limit for
         data_table_stat_header_id_limit = 10000000000
         try:
-            opts, args = getopt.getopt(args[1:], "c:d:u:m:", usage)
+            opts, args = getopt.getopt(args[1:], "c:d:u:m:D:u:", usage)
         except getopt.GetoptError as err:
             # print help information and exit:
             print(str(err))  # will print something like "option -a not recognized"
@@ -616,16 +630,20 @@ class MEUpperair:
                 sys.exit(2)
             if o == "-c":
                 cnf_file = a
-            elif o == "-d":
+            elif o == "-D":
                 data_table_stat_header_id_limit = a
+            elif o == "-d":
+                db = a
             elif o == "-m":
                 metadata_database = a
+            elif o == "-u":
+                metexpress_base_url = a
             else:
                 assert False, "unhandled option"
         # make sure none were left out...
         assert True, cnf_file is not None and data_table_stat_header_id_limit is not None and metadata_database is not None
         options = {'cnf_file': cnf_file, 'data_table_stat_header_id_limit': data_table_stat_header_id_limit,
-                   "metadata_database": metadata_database}
+                   "metadata_database": metadata_database, "metexpress_base_url":metexpress_base_url}
         MEUpperair.validate_options(options)
         return options
 
@@ -637,6 +655,10 @@ if __name__ == '__main__':
     me_dbcreator.data_table_stat_header_id_limit = int(options['data_table_stat_header_id_limit'])
     me_dbcreator.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
     me_dbcreator.line_data_table = "line_data_sl1l2"
+    me_dbcreator.metadata_table = "upperair_mats_metadata"
+    me_dbcreator.string_fields = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
+    me_dbcreator.int_fields = ["mindate", "maxdate", "numrecs", "updated"]
+    me_dbcreator.database_groups = "upperair_database_groups"
     me_dbcreator.main(options['cnf_file'], options['metadata_database'])
     if me_dbcreator.dbs_too_large:  # if there are any too large
         print("Did not process these databases due to being to large -- " + json.dumps(me_dbcreator.dbs_too_large))
