@@ -120,17 +120,18 @@ class metadatUpdate:
         self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
 
-        if not self.db_name.startswith('mv_'):
-            raise ValueError('Supplied database ' + self.db_name + 'does not start with mv_  - exiting')
-        self.cursor.execute('show databases like "' + self.db_name + '";')
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            raise ValueError("database: " + self.db_name + " does not exist - exiting")
+        if self.db_name is not None:
+            if not self.db_name.startswith('mv_'):
+                raise ValueError('Supplied database ' + self.db_name + 'does not start with mv_  - exiting')
+            self.cursor.execute('show databases like "' + self.db_name + '";')
+            self.cnx.commit()
+            if self.cursor.rowcount == 0:
+                raise ValueError("database: " + self.db_name + " does not exist - exiting")
 
     def _reconcile_metadata_script_info_table(self):
         updaterList = []
         for importer, modname, ispkg in pkgutil.iter_modules(metexpress.__path__):
-            if modname.startswith('selective'):
+            if modname.startswith('ME'):
                 submod = importlib.import_module('metexpress' + '.' + modname)
                 for updateClass in inspect.getmembers(submod, inspect.isclass):
                     if updateClass[0].startswith('ME'):
@@ -139,30 +140,22 @@ class metadatUpdate:
                         dtpl = updater.get_data_table_pattern_list()
                         updaterList.append(
                             {'app_reference': appReference, 'data_table_pattern_list': dtpl, 'updater': updater})
-                        self.cursor.execute(
-                            "select app_reference from metadata_script_info where app_reference = '" + appReference + "';")
-                        self.cnx.commit()
-                        if self.cursor.rowcount == 0:
-                            self.cursor.execute(
-                                "INSERT INTO metadata_script_info (app_reference, running) VALUES ('" + appReference + "', False );")
-                            self.cnx.commit()
         self.updater_list = updaterList
 
     def update(self):
         print('MATS METADATA UPDATE FOR MET START: ' + str(datetime.utcnow()))
         for elem in self.updater_list:
-            data_table_pattern_list = elem['data_table_pattern_list']
             try:
                 me_updater = elem['updater']
                 me_updater_app_reference = elem['app_reference']
                 #        options are like {'cnf_file': cnf_file, , 'mv_database':mvdb, 'data_table_stat_header_id_limit': data_table_stat_header_id_limit,
                 #         "metadata_database": metadata_database, "metexpress_base_url": metexpress_base_url}
                 #         "data_table_stat_header_id_limit" is are optional
-                me_options = {'cnf_file': self.cnf_file, 'mv_database': self.db_name,
+                me_options = {'cnf_file': self.cnf_file, 'mvdb': self.db_name,
                               'metadata_database': self.metadata_database,
                               'metexpress_base_url': self.metexpress_base_url}
                 if self.app_reference == None or self.app_reference == me_updater_app_reference:
-                    me_updater.update(me_options)
+                    me_updater.main(me_options)
             except Exception as uex:
                 print("Exception running update for: " + elem['app_reference'] + " : " + str(uex))
                 traceback.print_stack()

@@ -20,6 +20,7 @@ import ast
 import getopt
 import json
 import os
+import ssl
 import sys
 import time as tm
 import traceback
@@ -38,6 +39,7 @@ class MEAirquality:
         self.string_fields = ["regions", "levels", "fcst_lens", "variables", "trshs", "fcst_orig"]
         self.int_fields = ["mindate", "maxdate", "numrecs", "updated"]
         self.database_groups = "upperair_database_groups"
+        self.data_table_stat_header_id_limit = 10000000000  # default value - might be overridden by options
         self.dbs_too_large = {}
 
     def _create_run_stats_table(self):
@@ -56,7 +58,7 @@ class MEAirquality:
                (
                  app_reference          varchar(50)  null,
                  running                BOOLEAN        
-               ) comment 'keep track of run status';""")
+               ) comment 'keep track of update metadata run status';""")
         self.cnx.commit()
 
     def set_running(self, state):
@@ -726,7 +728,8 @@ class MEAirquality:
         return False
 
     def main(self, options):
-        self.data_table_stat_header_id_limit = int(options['data_table_stat_header_id_limit'])
+        self.validate_options(options)
+        self.data_table_stat_header_id_limit = options.get('data_table_stat_header_id_limit',self.data_table_stat_header_id_limit)
         self.metadata_database = options['metadata_database']
         self.cnf_file = options['cnf_file']
         if options['mvdb'] is None:
@@ -743,9 +746,12 @@ class MEAirquality:
         try:
             self.build_stats_object()
             self.deploy_dev_table_and_close_cnx()
-            urllib.request.urlopen(self.refresh_url, data=None, cafile=None, capath=None, cadefault=False, context=None)
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            urllib.request.urlopen(self.refresh_url, data=None, cafile=None, capath=None, cadefault=False, context=ctx)
         except Exception as ex:
-            print("Exception: " + str(ex))
+            print(self.script_name + ": Exception: " + str(ex))
             traceback.print_stack()
             self.update_status("failed", self.utc_start, str(datetime.utcnow()))
         finally:
@@ -756,8 +762,7 @@ class MEAirquality:
     # makes sure all expected options were indeed passed in
     @classmethod
     def validate_options(self, options):
-        assert True, options['cnf_file'] is not None and options['data_table_stat_header_id_limit'] is not None and \
-                     options['metadata_database'] is not None
+        assert True, options['cnf_file'] is not None and options['metadata_database'] is not None
 
     # process 'c' style options - using getopt - usage describes options
     # cnf_file - mysql cnf file, db - prescribed db to process, metexpress_base_url - metexpress address
@@ -773,8 +778,6 @@ class MEAirquality:
         db = None
         metexpress_base_url = None
         metadata_database = "mats_metadata"
-        # data_table_stat_header_id_limit is the limit for
-        data_table_stat_header_id_limit = 10000000000
         try:
             opts, args = getopt.getopt(args[1:], "c:d:u:m:D:u:", usage)
         except getopt.GetoptError as err:
@@ -800,19 +803,19 @@ class MEAirquality:
             else:
                 assert False, "unhandled option"
         # make sure none were left out...
-        assert cnf_file is not None and data_table_stat_header_id_limit is not None and metadata_database is not None and metexpress_base_url is not None
+        assert cnf_file is not None and metadata_database is not None and metexpress_base_url is not None
         options = {'cnf_file': cnf_file, 'data_table_stat_header_id_limit': data_table_stat_header_id_limit,
                    "metadata_database": metadata_database, "metexpress_base_url": metexpress_base_url, "mvdb": db}
-        MEAirquality.validate_options(options)
         return options
 
 
 if __name__ == '__main__':
-    print('AIRQUALITY MATS FOR MET METADATA START: ' + str(datetime.now()))
+    start = str(datetime.now())
+    print('AIRQUALITY MATS FOR MET METADATA START: ' + start)
     options = MEAirquality.get_options(sys.argv)
     me_dbcreator = MEAirquality()
     me_dbcreator.main(options)
     if me_dbcreator.dbs_too_large:  # if there are any too large
         print("Did not process these databases due to being to large -- " + json.dumps(me_dbcreator.dbs_too_large))
-    print('AIRQUALITY MATS FOR MET METADATA END: ' + str(datetime.now()))
+    print('AIRQUALITY MATS FOR MET METADATA END: ' + str(datetime.now()) + " started at: " + start)
     sys.exit(0)
