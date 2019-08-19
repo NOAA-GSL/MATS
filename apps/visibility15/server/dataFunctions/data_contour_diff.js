@@ -159,7 +159,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{truth}}', truth);
         statement = statement.replace('{{matchTruthClause}}', matchTruthClause);
         statement = statement.replace('{{statistic}}', statistic);
-        statement = statement.replace('{{threshold}}', threshold);
         statement = statement.replace('{{fromSecs}}', fromSecs);
         statement = statement.replace('{{toSecs}}', toSecs);
         statement = statement.replace('{{matchDates}}', matchDates);

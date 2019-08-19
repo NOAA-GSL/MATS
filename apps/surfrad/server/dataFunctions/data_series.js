@@ -113,12 +113,11 @@ dataSeries = function (plotParams, plotFunction) {
                 validTimeClause = " and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            dataRequests[curve.label] = statement;
 
             if (data_source !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
                 throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is only available for the HRRR data-source.");
             }
-
-            dataRequests[curve.label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
             if (forecastLength === "-99") {

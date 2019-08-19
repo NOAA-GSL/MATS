@@ -102,7 +102,6 @@ dataHistogram = function (plotParams, plotFunction) {
                 validTimeClause = " and  m0.hour IN(" + validTimes + ")";
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-
             dataRequests[curve.label] = statement;
 
             var queryResult;

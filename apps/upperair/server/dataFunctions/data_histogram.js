@@ -110,7 +110,6 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-
             dataRequests[curve.label] = statement;
 
             var queryResult;

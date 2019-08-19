@@ -94,7 +94,6 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{threshold}}', threshold);
             statement = statement.replace('{{forecastType}}', forecastType);
-
             dataRequests[curve.label] = statement;
 
             var queryResult;
