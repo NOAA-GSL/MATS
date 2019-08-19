@@ -148,7 +148,6 @@ dataReliability = function (plotParams, plotFunction) {
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.split('{{lineDataType}}').join(lineDataType);
-
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
