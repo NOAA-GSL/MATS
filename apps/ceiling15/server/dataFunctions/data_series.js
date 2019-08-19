@@ -13,9 +13,14 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
-    const plotType = matsTypes.PlotTypes.timeSeries;
-    const hasLevels = false;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.timeSeries,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": false
+    };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -113,7 +118,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, validTimes, hasLevels, false);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, validTimes, appParams, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -149,7 +154,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -167,7 +172,7 @@ dataSeries = function (plotParams, plotFunction) {
         curve['ymin'] = d.ymin;
         curve['ymax'] = d.ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -178,7 +183,6 @@ dataSeries = function (plotParams, plotFunction) {
     }  // end for curves
 
     // process the data returned by the query
-    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
