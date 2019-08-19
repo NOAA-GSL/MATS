@@ -34,11 +34,11 @@ class MEAirquality:
     def __init__(self):
         self.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
         self.line_data_table = "line_data_sl1l2"
-        self.metadata_table = "upperair_mats_metadata"
+        self.metadata_table = "airquality_mats_metadata"
         self.app_reference = "met-airquality"
         self.string_fields = ["regions", "levels", "fcst_lens", "variables", "trshs", "fcst_orig"]
         self.int_fields = ["mindate", "maxdate", "numrecs", "updated"]
-        self.database_groups = "upperair_database_groups"
+        self.database_groups = "airquality_database_groups"
         self.data_table_stat_header_id_limit = 10000000000  # default value - might be overridden by options
         self.dbs_too_large = {}
 
