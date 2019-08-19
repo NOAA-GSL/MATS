@@ -86,7 +86,6 @@ import inspect
 import os
 import pkgutil
 import sys
-import time
 import traceback
 from datetime import datetime
 
@@ -121,17 +120,6 @@ class metadatUpdate:
         self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
 
-        # see if the metadata tables already exist
-        print("Checking for metadata_script_info tables")
-        self.cursor.execute('show tables like "metadata_script_info";')
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            self._create_metadata_script_info_table()
-        self.cursor.execute('show tables like "run_stats";')
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            self._create_run_stats_table()
-
         if not self.db_name.startswith('mv_'):
             raise ValueError('Supplied database ' + self.db_name + 'does not start with mv_  - exiting')
         self.cursor.execute('show databases like "' + self.db_name + '";')
@@ -139,35 +127,14 @@ class metadatUpdate:
         if self.cursor.rowcount == 0:
             raise ValueError("database: " + self.db_name + " does not exist - exiting")
 
-    # __init__ helper methods
-    def _create_run_stats_table(self):
-        self.cursor.execute("""create table run_stats
-        (
-          run_start_time  datetime    null,
-          run_finish_time datetime    null,
-          database_name   varchar(50) null,
-          status          varchar(30)
-        ) comment 'keep track of matadata_upate stats - status one of started|waiting|succeeded|failed';""")
-        self.cnx.commit()
-
-    def _create_metadata_script_info_table(self):
-        self.cursor.execute("""create table metadata_script_info
-               (
-                 app_reference          varchar(50)  null,
-                 running                BOOLEAN        
-               ) comment 'keep track of selective update metadata run status';""")
-        self.cnx.commit()
-
     def _reconcile_metadata_script_info_table(self):
         updaterList = []
-        # options are like {'cnf_file': cnf_file, 'db_model_input': db_model_input, 'metexpress_base_url': metexpress_base_url}
-        options = {'cnf_file': self.cnf_file, 'db_model_input': "", 'metexpress_base_url': self.metexpress_base_url}
         for importer, modname, ispkg in pkgutil.iter_modules(metexpress.__path__):
             if modname.startswith('selective'):
                 submod = importlib.import_module('metexpress' + '.' + modname)
                 for updateClass in inspect.getmembers(submod, inspect.isclass):
-                    if updateClass[0].startswith('Update'):
-                        updater = getattr(submod, updateClass[0])(self.cnf_file, self.metadata_database)
+                    if updateClass[0].startswith('ME'):
+                        updater = getattr(submod, updateClass[0])()
                         appReference = updater.get_app_reference()
                         dtpl = updater.get_data_table_pattern_list()
                         updaterList.append(
@@ -181,106 +148,25 @@ class metadatUpdate:
                             self.cnx.commit()
         self.updater_list = updaterList
 
-    # instance methods
-    def get_latest_run_finish_time(self):
-        self.cursor.execute(
-            "select distinct run_finish_time from run_stats where database_name = '" + self.db_name + "' and status = 'succeeded' order by run_finish_time desc limit 1;")
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            run_finish_time = str(datetime.utcfromtimestamp(0))
-        else:
-            run_finish_time = self.cursor.values()[0]
-        return run_finish_time
-
-    def get_models_for_database(self, data_table_pattern_list, last_run_finish_time):
-        # db_models is a comma seperated list of db.model
-        db_models = ""
-        # for dtple in data_table_pattern_list:
-        #     cmd = "select distinct model  \
-        #           from " + self.db_name + ".stat_header  \
-        #           where stat_header_id in  \
-        #                 (select stat_header_id from " + self.db_name + "." + dtple + " " \
-        #                                                                              "where data_file_id in  \
-        #                                                                                  (select distinct data_file_id from " + self.db_name + ".data_file  \
-        #                                 where load_date > '" + str(last_run_finish_time) + "') );"
-        cmd = "select distinct model from " + self.db_name + ".stat_header;"
-        self.cursor.execute(cmd)
-        self.cnx.commit()
-        firstRow = True
-        for row in self.cursor:
-            model = row['model']
-            if not model in db_models:
-                if not firstRow:
-                    db_models += ","
-                db_models += self.db_name + "." + row['model']
-                if firstRow:
-                    firstRow = False
-        return db_models
-
-    def update_status(self, status, utc_start, utc_end):
-        db_name = self.db_name
-        assert status == "started" or status == "waiting" or status == "succeeded" or status == "failed", "Attempt to update run_stats where status is not one of started | waiting | succeeded | failed: " + status
-        self.cursor.execute("select database_name from run_stats where database_name = '" + db_name + "'")
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            # insert
-            insert_cmd = 'INSERT INTO run_stats (run_start_time, run_finish_time, database_name, status) VALUES ("' + utc_start + '","' + utc_end + '","' + db_name + '", "' + status + '");'
-            self.cursor.execute(insert_cmd)
-            self.cnx.commit()
-        else:
-            # update
-            qd = [utc_start, utc_end, status]
-            update_cmd = 'update run_stats set run_start_time=%s, run_finish_time=%s, status=%s where database_name = "' + db_name + '";'
-            self.cursor.execute(update_cmd, qd)
-            self.cnx.commit()
-
     def update(self):
-        utc_start = str(datetime.now())
-        self.update_status("waiting", utc_start, str(datetime.now()))
-        self.wait_on_other_updates(2 * 3600, 5)  # max three hours?
-        self.update_status("started", utc_start, str(datetime.now()))
-        print('MATS METADATA UPDATE FOR MET START: ' + utc_start)
-        latest_run_finish_time = self.get_latest_run_finish_time()
-        try:
-            for elem in self.updater_list:
-                data_table_pattern_list = elem['data_table_pattern_list']
-                db_model_input = self.get_models_for_database(data_table_pattern_list, latest_run_finish_time)
-                if len(db_model_input) > 0:
-                    try:
-                        me_updater = elem['updater']
-                        me_updater_app_reference = elem['app_reference']
-                        me_options = {'db_model_input': db_model_input,
-                                      'metexpress_base_url': self.metexpress_base_url}
-                        if self.app_reference == None or self.app_reference == me_updater_app_reference:
-                            me_updater.update(me_options)
-                    except Exception as uex:
-                        print("Exception running update for: " + elem['app_reference'] + " : " + str(uex))
-                        traceback.print_stack()
-        except Exception as ex:
-            print("Exception: " + str(ex))
-            traceback.print_stack()
-            self.update_status("failed", utc_start, str(datetime.now()))
-        utc_end = str(datetime.now())
-        print('MATS METADATA UPDATE FOR MET END: ' + utc_end)
-        self.update_status("succeeded", utc_start, utc_end)
-
-    # have to wait for other instantiations of selective updaters to finish before we can continue.
-    def wait_on_other_updates(self, timeout, period=1):
-        mustend = time.time() + timeout
-        self.cursor.execute("select * from metadata_script_info")
-        self.cnx.commit()
-        if self.cursor.rowcount == 0:
-            return False
-        while time.time() < mustend:
-            # some sort of check for running updates
-            self.cursor.execute("select app_reference from metadata_script_info where running != 0")
-            self.cnx.commit()
-            if self.cursor.rowcount > 0:
-                waiting = True
-                time.sleep(period)
-            else:
-                break;
-        return False
+        print('MATS METADATA UPDATE FOR MET START: ' + str(datetime.utcnow()))
+        for elem in self.updater_list:
+            data_table_pattern_list = elem['data_table_pattern_list']
+            try:
+                me_updater = elem['updater']
+                me_updater_app_reference = elem['app_reference']
+                #        options are like {'cnf_file': cnf_file, , 'mv_database':mvdb, 'data_table_stat_header_id_limit': data_table_stat_header_id_limit,
+                #         "metadata_database": metadata_database, "metexpress_base_url": metexpress_base_url}
+                #         "data_table_stat_header_id_limit" is are optional
+                me_options = {'cnf_file': self.cnf_file, 'mv_database': self.db_name,
+                              'metadata_database': self.metadata_database,
+                              'metexpress_base_url': self.metexpress_base_url}
+                if self.app_reference == None or self.app_reference == me_updater_app_reference:
+                    me_updater.update(me_options)
+            except Exception as uex:
+                print("Exception running update for: " + elem['app_reference'] + " : " + str(uex))
+                traceback.print_stack()
+        print('MATS METADATA UPDATE FOR MET END: ' + str(datetime.utcnow()))
 
     # process 'c' style options - using getopt - usage describes options
     # options like {'cnf_file':cnf_file, 'mv_database_name:mv_database_name', 'metexpress_base_url':metexpress_base_url, ['app_reference':app_reference, 'metadataDatabaseName':metadataDatabaseName]}
@@ -331,7 +217,6 @@ class metadatUpdate:
 
 if __name__ == '__main__':
     options = metadatUpdate.get_options(sys.argv)
-    # metadataUpdater = metadatUpdate(cnf_file, mv_database_name, metexpress_base_url)
     metadataUpdater = metadatUpdate(options)
     metadataUpdater._reconcile_metadata_script_info_table()
     metadataUpdater.update()

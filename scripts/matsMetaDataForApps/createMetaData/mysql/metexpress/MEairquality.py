@@ -3,10 +3,12 @@
 This script creates the metadata tables required for a METexpress air quality app. It parses the required fields from any
 databases that begin with 'mv_' in a mysql instance.
 
-Arguments: path to a mysql .cnf file
+Arguments: see Usage
 
-Usage: ./MEairquality.py path_to_file.cnf
-
+Usage: ["(c)nf_file=", "[(m)ats_metadata_database_name]",
+                 "[(D)ata_table_stat_header_id_limit - default is 10,000,000,000]",
+                 "[(d)atabase name]" "(u)=metexpress_base_url"]
+        cnf_file = None
 Author: Molly B Smith
 """
 
@@ -19,14 +21,91 @@ import getopt
 import json
 import os
 import sys
+import time as tm
 import traceback
+import urllib.request
 from datetime import datetime, timedelta, timezone
 
 import pymysql
 
 
 class MEAirquality:
-    dbs_too_large = {}
+    def __init__(self):
+        self.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
+        self.line_data_table = "line_data_sl1l2"
+        self.metadata_table = "upperair_mats_metadata"
+        self.app_reference = "met-airquality"
+        self.string_fields = ["regions", "levels", "fcst_lens", "variables", "trshs", "fcst_orig"]
+        self.int_fields = ["mindate", "maxdate", "numrecs", "updated"]
+        self.database_groups = "upperair_database_groups"
+        self.dbs_too_large = {}
+
+    def _create_run_stats_table(self):
+        self.cursor.execute("""create table run_stats
+        (
+          script_name   varchar(50) null,
+          run_start_time  datetime    null,
+          run_finish_time datetime    null,
+          database_name   varchar(50) null,
+          status          varchar(30)
+        ) comment 'keep track of matadata_upate stats - status one of started|waiting|succeeded|failed';""")
+        self.cnx.commit()
+
+    def _create_metadata_script_info_table(self):
+        self.cursor.execute("""create table metadata_script_info
+               (
+                 app_reference          varchar(50)  null,
+                 running                BOOLEAN        
+               ) comment 'keep track of run status';""")
+        self.cnx.commit()
+
+    def set_running(self, state):
+        # use its own cursor because the cursor may have been closed
+        runningCnx = pymysql.connect(read_default_file=self.cnf_file)
+        runningCnx.autocommit = True
+        runningCursor = runningCnx.cursor(pymysql.cursors.DictCursor)
+        runningCursor.execute("use  " + self.metadata_database + ";")
+        runningCnx.commit()
+
+        runningCursor.execute(
+            "select app_reference from metadata_script_info where app_reference = '" + self.get_app_reference() + "'")
+        runningCnx.commit()
+        if runningCursor.rowcount == 0:
+            # insert
+            insert_cmd = 'insert into metadata_script_info (app_reference,  running) values ("' + self.get_app_reference() + '", "' + str(
+                int(state)) + '");'
+            runningCursor.execute(insert_cmd)
+            runningCnx.commit()
+        else:
+            # update
+            update_cmd = 'update metadata_script_info set running = "' + str(
+                int(state)) + '" where app_reference = "' + self.get_app_reference() + '";'
+            runningCursor.execute(update_cmd)
+            runningCnx.commit()
+        runningCursor.close
+        runningCnx.close()
+
+    def update_status(self, status, utc_start, utc_end):
+        assert status == "started" or status == "waiting" or status == "succeeded" or status == "failed", "Attempt to update run_stats where status is not one of started | waiting | succeeded | failed: " + status
+        self.cursor.execute("select database_name from run_stats where database_name = '" + self.mvdb + "'")
+        self.cnx.commit()
+        if self.cursor.rowcount == 0:
+            # insert
+            insert_cmd = 'INSERT INTO run_stats (script_name, run_start_time, run_finish_time, database_name, status) VALUES ("' + self.script_name + '", "' + utc_start + '","' + utc_end + '","' + self.mvdb + '", "' + status + '");'
+            self.cursor.execute(insert_cmd)
+            self.cnx.commit()
+        else:
+            # update
+            qd = [utc_start, utc_end, status]
+            update_cmd = 'update run_stats set run_start_time=%s, run_finish_time=%s, status=%s where database_name = "' + self.mvdb + '" and script_name = "' + self.script_name + '";'
+            self.cursor.execute(update_cmd, qd)
+            self.cnx.commit()
+
+    def get_app_reference(self):
+        return self.app_reference
+
+    def get_data_table_pattern_list(self):
+        return self.line_data_table
 
     def mysql_prep_tables(self):
         try:
@@ -42,7 +121,7 @@ class MEAirquality:
             traceback.print_stack()
             sys.exit(1)
 
-        # see if the metadata database already exists
+        # see if the metadata database already exists - create it if it does not
         print(self.script_name + " - Checking for " + self.metadata_database)
         self.cursor.execute('show databases like "' + self.metadata_database + '";')
         self.cnx.commit()
@@ -54,13 +133,14 @@ class MEAirquality:
         self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
 
-        # see if the metadata tables already exist
+        # see if the metadata tables already exist - create them if they do not
         print(self.script_name + " - Checking for metadata tables")
         self.cursor.execute('show tables like "{}_dev";'.format(self.metadata_table))
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(2047), variables varchar(1023), trshs varchar(1023), fcst_orig varchar(2047), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(self.metadata_table)
+            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(2047), variables varchar(1023), trshs varchar(1023), fcst_orig varchar(2047), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
+                self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
@@ -68,7 +148,7 @@ class MEAirquality:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata prod table does not exist--creating it")
-            create_table_query = 'create table {} like {}_dev;'.format(self.metadata_table,self.metadata_table)
+            create_table_query = 'create table {} like {}_dev;'.format(self.metadata_table, self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
@@ -76,23 +156,36 @@ class MEAirquality:
         self.cursor.execute("delete from {}_dev;".format(self.metadata_table))
         self.cnx.commit()
 
-        # see if the metadata group tables already exist
+        # see if the metadata group tables already exist - create them if they do not
         self.cursor.execute('show tables like "{}_dev";'.format(self.database_groups))
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Database group dev table does not exist--creating it")
-            create_table_query = 'create table {}_dev (db_group varchar(255), dbs varchar(32767));'.format(self.database_groups)
+            create_table_query = 'create table {}_dev (db_group varchar(255), dbs varchar(32767));'.format(
+                self.database_groups)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
         self.cursor.execute('show tables like "{}";'.format(self.database_groups))
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Database group prod table does not exist--creating it")
-            create_table_query = 'create table {} like {}_dev;'.format(self.database_groups,self.database_groups)
+            create_table_query = 'create table {} like {}_dev;'.format(self.database_groups, self.database_groups)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
         print(self.script_name + " - Deleting from group dev table")
         self.cursor.execute("delete from {}_dev;".format(self.database_groups))
         self.cnx.commit()
+
+        # see if the metadata_script_info tables already exist
+        print("Checking for metadata_script_info tables")
+        self.cursor.execute('show tables like "metadata_script_info";')
+        self.cnx.commit()
+        if self.cursor.rowcount == 0:
+            self._create_metadata_script_info_table()
+        # run stats is used by MEupdate_update.py - because it has to wait for completion
+        self.cursor.execute('show tables like "run_stats";')
+        self.cnx.commit()
+        if self.cursor.rowcount == 0:
+            self._create_run_stats_table()
 
     def deploy_dev_table_and_close_cnx(self):
         groups_table = self.database_groups
@@ -153,7 +246,7 @@ class MEAirquality:
         self.cursor.execute("insert into {database_groups} select * from {database_groups_dev};".format(**gd))
         self.cnx.commit()
 
-    def reconcile_strings(self,  string_metadata, devcursor, devcnx):
+    def reconcile_strings(self, string_metadata, devcursor, devcnx):
         md_table = self.metadata_table
         for d in range(0, len(string_metadata), 1):
             devcursor.execute(
@@ -360,13 +453,19 @@ class MEAirquality:
             sys.exit(1)
 
         # Get list of databases here
+        # if a database name was supplied AND that database exists it will be the only mvdb in the list
+        # if there were no database name supplied all of the existing ones will be added
+        mvdbs = []
         show_mvdbs = 'show databases like "mv_%";'
         self.cursor.execute(show_mvdbs)
         self.cnx.commit()
-        mvdbs = []
         rows = self.cursor.fetchall()
         for row in rows:
-            mvdbs.append(list(row.values())[0])
+            if self.mvdb == "all":
+                mvdbs.append(list(row.values())[0])
+            else:
+                if self.mvdb == list(row.values())[0]:
+                    mvdbs.append(self.mvdb)
         # Find the metadata for each database
         per_mvdb = {}
         db_groups = {}
@@ -573,7 +672,8 @@ class MEAirquality:
             mindate = raw_metadata['mindate']
             maxdate = raw_metadata['maxdate']
             display_text = model.replace('.', '_')
-            insert_row = "insert into {}_dev (db, model, display_text, regions, levels, fcst_lens, variables, trshs, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(self.metadata_table)
+            insert_row = "insert into {}_dev (db, model, display_text, regions, levels, fcst_lens, variables, trshs, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(
+                self.metadata_table)
             qd.append(mvdb)
             qd.append(model)
             qd.append(display_text)
@@ -593,9 +693,9 @@ class MEAirquality:
     def populate_db_group_tables(self, db_groups):
         self.cursor.execute("use  " + self.metadata_database + ";")
         self.cnx.commit()
-        groups_table=self.database_groups + "_dev"
+        groups_table = self.database_groups + "_dev"
         for group in db_groups:
-            gd={"groups_table":groups_table}
+            gd = {"groups_table": groups_table}
             qd = []
             insert_row = "insert into {groups_table} (db_group, dbs) values(%s, %s)".format(**gd)
             qd.append(group)
@@ -603,12 +703,54 @@ class MEAirquality:
             self.cursor.execute(insert_row, qd)
             self.cnx.commit()
 
-    def main(self, cnf_file, db_name):
-        self.metadata_database = db_name
-        self.cnf_file = cnf_file
+    # have to wait for other instantiations updaters to finish before we can continue.
+    def wait_on_other_updates(self, timeout, period=1):
+        print(self.script_name + " waiting on other process")
+        mustend = tm.time() + timeout
+        self.cursor.execute("select * from metadata_script_info")
+        self.cnx.commit()
+        if self.cursor.rowcount == 0:
+            return False
+        waiting = True
+        while tm.time() < mustend and not waiting:
+            # some sort of check for running updates
+            self.cursor.execute("select app_reference from metadata_script_info where running != 0")
+            self.cnx.commit()
+            if self.cursor.rowcount > 0:
+                tm.sleep(period)
+            else:
+                print(self.script_name + " clear to go")
+                waiting = False
+                break;
+
+        return False
+
+    def main(self, options):
+        self.data_table_stat_header_id_limit = int(options['data_table_stat_header_id_limit'])
+        self.metadata_database = options['metadata_database']
+        self.cnf_file = options['cnf_file']
+        if options['mvdb'] is None:
+            self.mvdb = "all"
+        else:
+            self.mvdb = options['mvdb']
+        self.refresh_url = options['metexpress_base_url'] + "/" + self.get_app_reference() + "/refreshMetadata"
         self.mysql_prep_tables()
-        self.build_stats_object()
-        self.deploy_dev_table_and_close_cnx()
+        self.set_running(True)
+        self.utc_start = str(datetime.utcnow())
+        self.update_status("waiting", self.utc_start, str(datetime.utcnow()))
+        self.wait_on_other_updates(2 * 3600, 5)  # max three hours?
+        self.update_status("started", self.utc_start, str(datetime.utcnow()))
+        try:
+            self.build_stats_object()
+            self.deploy_dev_table_and_close_cnx()
+            urllib.request.urlopen(self.refresh_url, data=None, cafile=None, capath=None, cadefault=False, context=None)
+        except Exception as ex:
+            print("Exception: " + str(ex))
+            traceback.print_stack()
+            self.update_status("failed", self.utc_start, str(datetime.utcnow()))
+        finally:
+            self.set_running(False)
+            self.update_status("succeeded", self.utc_start, str(datetime.utcnow()))
         return self.dbs_too_large
 
     # makes sure all expected options were indeed passed in
@@ -618,16 +760,15 @@ class MEAirquality:
                      options['metadata_database'] is not None
 
     # process 'c' style options - using getopt - usage describes options
-    # options like {'cnf_file':cnf_file, 'db':db, 'metexpress_base_url':metexpress_base_url}
     # cnf_file - mysql cnf file, db - prescribed db to process, metexpress_base_url - metexpress address
-    # The db_model_input might be initially an empty string and then set later when calling update. This
-    # allows for instantiating the class before the db_model_inputs are known.
     # (m)ats_metadata_database_name] allows to override the default metadata databasename (mats_metadata) with something
-    # db is a prescribed database to process (selective mode) used by mv_load
+    # db is a prescribed database to process (selective mode) used by mv_load, if it is missing then all databases will be processed
     # (D)ata_table_stat_header_id_limit, (d)atabase name, (u)=metexpress_base_url are all optional for selective mode
     @classmethod
     def get_options(self, args):
-        usage = ["(c)nf_file=", "[(m)ats_metadata_database_name]","[(D)ata_table_stat_header_id_limit - default is 10,000,000,000]", "[(d)atabase name]" "(u)=metexpress_base_url"]
+        usage = ["(c)nf_file=", "[(m)ats_metadata_database_name]",
+                 "[(D)ata_table_stat_header_id_limit - default is 10,000,000,000]",
+                 "[(d)atabase name]" "(u)=metexpress_base_url"]
         cnf_file = None
         db = None
         metexpress_base_url = None
@@ -659,9 +800,9 @@ class MEAirquality:
             else:
                 assert False, "unhandled option"
         # make sure none were left out...
-        assert True, cnf_file is not None and data_table_stat_header_id_limit is not None and metadata_database is not None
+        assert cnf_file is not None and data_table_stat_header_id_limit is not None and metadata_database is not None and metexpress_base_url is not None
         options = {'cnf_file': cnf_file, 'data_table_stat_header_id_limit': data_table_stat_header_id_limit,
-                   "metadata_database": metadata_database, "metexpress_base_url":metexpress_base_url}
+                   "metadata_database": metadata_database, "metexpress_base_url": metexpress_base_url, "mvdb": db}
         MEAirquality.validate_options(options)
         return options
 
@@ -670,14 +811,7 @@ if __name__ == '__main__':
     print('AIRQUALITY MATS FOR MET METADATA START: ' + str(datetime.now()))
     options = MEAirquality.get_options(sys.argv)
     me_dbcreator = MEAirquality()
-    me_dbcreator.data_table_stat_header_id_limit = int(options['data_table_stat_header_id_limit'])
-    me_dbcreator.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
-    me_dbcreator.line_data_table = "line_data_sl1l2"
-    me_dbcreator.metadata_table = "airquality_mats_metadata"
-    me_dbcreator.string_fields = ["regions", "levels", "fcst_lens", "variables", "trshs", "fcst_orig"]
-    me_dbcreator.int_fields = ["mindate", "maxdate", "numrecs", "updated"]
-    me_dbcreator.database_groups = "airquality_database_groups"
-    me_dbcreator.main(options['cnf_file'], options['metadata_database'])
+    me_dbcreator.main(options)
     if me_dbcreator.dbs_too_large:  # if there are any too large
         print("Did not process these databases due to being to large -- " + json.dumps(me_dbcreator.dbs_too_large))
     print('AIRQUALITY MATS FOR MET METADATA END: ' + str(datetime.now()))
