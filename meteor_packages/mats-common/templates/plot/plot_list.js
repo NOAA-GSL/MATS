@@ -148,6 +148,7 @@ Template.plotList.events({
         });
         p['completeness'] = document.getElementById("completeness").value;
         p['outliers'] = document.getElementById("outliers").value;
+        p['noGapsCheck'] = document.getElementById("noGapsCheck").checked;
         Session.set("PlotParams", p);
 
         switch (action) {

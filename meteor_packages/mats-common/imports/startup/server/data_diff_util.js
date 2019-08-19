@@ -31,7 +31,7 @@ const getLargeIntervalCurveData = function (dataset, diffFrom, independentVarNam
 };
 
 // generates diff curves for all plot types that have diff curves.
-const getDataForDiffCurve = function (dataset, diffFrom, plotType, hasLevels) {
+const getDataForDiffCurve = function (dataset, diffFrom, appParams) {
     /*
      DATASET ELEMENTS:
         series: [data,data,data ...... ]   each data is itself an object
@@ -73,6 +73,9 @@ const getDataForDiffCurve = function (dataset, diffFrom, plotType, hasLevels) {
         };
 
      */
+
+    const plotType = appParams.plotType;
+    const hasLevels = appParams.hasLevels;
 
     // determine whether data[0] or data[1] is the independent variable, and which is the stat value
     var independentVarName;

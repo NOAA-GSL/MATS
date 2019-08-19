@@ -190,6 +190,14 @@ Template.curveList.events({
         document.getElementById("plot-curves").click();
         return false;
     },
+    'click .no-gaps-check': function (event) {
+        // make the Interpolate Over Nulls option on the colorbar modal match up with this.
+        if (document.getElementById("noGapsCheck").checked) {
+            document.getElementById("nullSmooth").checked = true;
+        } else {
+            document.getElementById("nullSmooth").checked = false;
+        }
+    },
     'click .save-settings': function (event) {
         event.preventDefault();
         document.getElementById("save-settings").click();

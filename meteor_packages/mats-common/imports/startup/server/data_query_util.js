@@ -134,13 +134,11 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
 };
 
 //this method queries the database for timeseries plots
-const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, validTimes, hasLevels, forceRegularCadence) {
+const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, validTimes, appParams, forceRegularCadence) {
     //upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
     const Future = require('fibers/future');
-    if (Meteor.isServer) {
-        const plotParams = matsDataUtils.getPlotParamsFromStack();
-        const completenessQCParam = Number(plotParams["completeness"]) / 100;
 
+    if (Meteor.isServer) {
         var cycles = getModelCadence(pool, dataSource, startDate, endDate); // if irregular model cadence, get cycle times. If regular, get empty array.
         if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
             var vtCycles = validTimes.map(function (x) {
@@ -184,7 +182,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
             } else if (rows === undefined || rows === null || rows.length === 0) {
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
-                const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, forecastOffset, cycles, regular);
+                const parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, forecastOffset, cycles, regular);
                 d = parsedData.d;
                 N0 = parsedData.N0;
                 N_times = parsedData.N_times;
@@ -208,12 +206,9 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
 };
 
 //this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, and histograms
-const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
+const queryDBSpecialtyCurve = function (pool, statement, appParams) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
-        const plotParams = matsDataUtils.getPlotParamsFromStack();
-        const completenessQCParam = Number(plotParams["completeness"]) / 100;
-        const appType = matsCollections.Settings.findOne({}).appType;
 
         var dFuture = new Future();
         var d = {// d will contain the curve data
@@ -245,10 +240,10 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
                 var parsedData;
-                if (plotType !== matsTypes.PlotTypes.histogram) {
-                    parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, appType, hasLevels);
+                if (appParams.plotType !== matsTypes.PlotTypes.histogram) {
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
                 } else {
-                    parsedData = parseQueryDataHistogram(d, rows, hasLevels);
+                    parsedData = parseQueryDataHistogram(rows, d, appParams);
                 }
                 d = parsedData.d;
                 N0 = parsedData.N0;
@@ -440,7 +435,7 @@ const queryDBContour = function (pool, statement) {
 };
 
 //this method parses the returned query data for timeseries plots
-const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular) {
+const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr, foreCastOffset, cycles, regular) {
     /*
         var d = {// d will contain the curve data
             x: [],
@@ -460,6 +455,10 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             sum: 0
         };
     */
+    const hasLevels = appParams.hasLevels;
+    const hideGaps = appParams.hideGaps;
+    const completenessQCParam = Number(appParams.completeness) / 100;
+
     // initialize local variables
     d.error_x = null;  // time series doesn't use x errorbars
     var N0 = [];
@@ -550,13 +549,15 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
         // timeseries. The query only returns the data that it actually has.
         var d_idx = curveTime.indexOf(loopTime);
         if (d_idx < 0) {
-            d.x.push(loopTime);
-            d.y.push(null);
-            d.error_y.push(null);   //placeholder
-            d.subVals.push(NaN);
-            d.subSecs.push(NaN);
-            if (hasLevels) {
-                d.subLevs.push(NaN);
+            if (!hideGaps) {
+                d.x.push(loopTime);
+                d.y.push(null);
+                d.error_y.push(null);   //placeholder
+                d.subVals.push(NaN);
+                d.subSecs.push(NaN);
+                if (hasLevels) {
+                    d.subLevs.push(NaN);
+                }
             }
         } else {
             var this_N0 = N0[d_idx];
@@ -564,13 +565,15 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             // Make sure that we don't have any points with far less data than the rest of the graph, and that
             // we don't have any points with a smaller completeness value than specified by the user.
             if (curveStats[d_idx] === null  || this_N_times < completenessQCParam * N_times_max) {
-                d.x.push(loopTime);
-                d.y.push(null);
-                d.error_y.push(null); //placeholder
-                d.subVals.push(NaN);
-                d.subSecs.push(NaN);
-                if (hasLevels) {
-                    d.subLevs.push(NaN);
+                if (!hideGaps) {
+                    d.x.push(loopTime);
+                    d.y.push(null);
+                    d.error_y.push(null); //placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
+                    if (hasLevels) {
+                        d.subLevs.push(NaN);
+                    }
                 }
             } else {
                 // there's valid data at this point, so store it
@@ -614,7 +617,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
 };
 
 //this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
-const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plotType, appType, hasLevels) {
+const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
     /*
         var d = {// d will contain the curve data
             x: [],
@@ -634,6 +637,11 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             sum: 0
         };
     */
+    const plotType = appParams.plotType;
+    const hasLevels = appParams.hasLevels;
+    const completenessQCParam = Number(appParams.completeness) / 100;
+    const hideGaps = appParams.hideGaps;
+
     // initialize local variables
     var N0 = [];
     var N_times = [];
@@ -726,23 +734,25 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         // Make sure that we don't have any points with far less data than the rest of the graph, and that
         // we don't have any points with a smaller completeness value than specified by the user.
         if (curveStats[d_idx] === null || this_N_times < completenessQCParam * N_times_max) {
-            if (plotType === matsTypes.PlotTypes.profile) {
-                // profile has the stat first, and then the independent var. The others have independent var and then stat.
-                // this is in the pattern of x-plotted-variable, y-plotted-variable.
-                d.x.push(null);
-                d.y.push(curveIndependentVars[d_idx]);
-                d.error_y.push(null);  // placeholder
-                d.subVals.push(NaN);
-                d.subSecs.push(NaN);
-                d.subLevs.push(NaN);
-            } else {
-                d.x.push(curveIndependentVars[d_idx]);
-                d.y.push(null);
-                d.error_y.push(null);  // placeholder
-                d.subVals.push(NaN);
-                d.subSecs.push(NaN);
-                if (hasLevels) {
+            if (!hideGaps) {
+                if (plotType === matsTypes.PlotTypes.profile) {
+                    // profile has the stat first, and then the independent var. The others have independent var and then stat.
+                    // this is in the pattern of x-plotted-variable, y-plotted-variable.
+                    d.x.push(null);
+                    d.y.push(curveIndependentVars[d_idx]);
+                    d.error_y.push(null);  // placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
                     d.subLevs.push(NaN);
+                } else {
+                    d.x.push(curveIndependentVars[d_idx]);
+                    d.y.push(null);
+                    d.error_y.push(null);  // placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
+                    if (hasLevels) {
+                        d.subLevs.push(NaN);
+                    }
                 }
             }
         } else {
@@ -795,7 +805,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
 };
 
 // this method parses the returned query data for histograms
-const parseQueryDataHistogram = function (d, rows, hasLevels) {
+const parseQueryDataHistogram = function (rows, d, appParams) {
     /*
         var d = {// d will contain the curve data
             x: [], //placeholder
@@ -814,6 +824,7 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
             ymax:num
         };
     */
+    const hasLevels = appParams.hasLevels;
 
     // these arrays hold all the sub values and seconds (and levels) until they are sorted into bins
     var curveSubStatsRaw = [];

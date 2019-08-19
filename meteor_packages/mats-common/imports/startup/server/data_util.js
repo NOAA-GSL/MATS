@@ -310,40 +310,17 @@ const doSettings = function (title, version, buildDate, appType, deployment_envi
     matsCollections.Settings.update(settingsId, {$set: settings});
 };
 
-//Utility for transferring client-side parameters to the server-side methods via the "PlotParams" object in the stack.
-//Add values to this object in the 'click .submit-params' event handler in plot_list.js
-const getPlotParamsFromStack = function () {
-    var params = {};
-    const err = new Error;
-    Error.captureStackTrace(err, arguments.callee.arguments.callee);
-    const stack = err.stack;
-    const stackElems = stack.split("\n");
-    for (si = 0; si < stackElems.length; si++) {
-        const sElem = stackElems[si].trim();
-        if (sElem.indexOf('dataFunctions') !== -1 && sElem.startsWith("at data")) {
-            const dataFunctionName = sElem.split('at ')[1];
-            try {
-                params = global[sElem.split('at ')[1].split(' ')[0]].arguments[0]
-            } catch (noJoy) {
-            }
-            break;
-        }
-    }
-    return params;
-};
-
 //calculates mean, stdev, and other statistics for curve data points in all apps and plot types
-const get_err = function (sVals, sSecs, sLevs) {
+const get_err = function (sVals, sSecs, sLevs, appParams) {
     /* refer to perl error_library.pl sub  get_stats
      to see the perl implementation of these statics calculations.
      These should match exactly those, except that they are processed in reverse order.
      */
     const autocorr_limit = 0.95;
-    const hasLevels = sLevs.length > 0;
-    const plotParams = getPlotParamsFromStack();
+    const hasLevels = appParams.hasLevels;
     var outlierQCParam;
-    if (plotParams["outliers"] !== "all") {
-        outlierQCParam = Number(plotParams["outliers"]);
+    if (appParams.outliers !== "all") {
+        outlierQCParam = Number(appParams.outliers);
     } else {
         outlierQCParam = 100;
     }
@@ -359,6 +336,7 @@ const get_err = function (sVals, sSecs, sLevs) {
     var i;
     for (i = 0; i < n; i++) {
         if (sVals[i] !== null && !isNaN(sVals[i])) {
+            sVals[i] = Number(sVals[i]);
             n_good = n_good + 1;
             sum_d = sum_d + sVals[i];
             sum2_d = sum2_d + sVals[i] * sVals[i];
@@ -686,7 +664,7 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binParams)
     var binMeans = [];
 
     // calculate the global stats across all of the data
-    const globalStats = get_err(curveSubStats, curveSubSecs, []);   // we don't need levels for the mean or sd calculations, so just pass in an empty array
+    const globalStats = get_err(curveSubStats, curveSubSecs, [], {hasLevels: false, outliers: 'all'});   // we don't need levels for the mean or sd calculations, so just pass in an empty array
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
 
@@ -770,7 +748,7 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams)
     var binStats = {};
 
     // calculate the global stats across all of the data
-    const globalStats = get_err(curveSubStats, curveSubSecs, []);   // we don't need levels for the mean or sd calculations, so just pass in an empty array
+    const globalStats = get_err(curveSubStats, curveSubSecs, [], {hasLevels: false, outliers: 'all'});   // we don't need levels for the mean or sd calculations, so just pass in an empty array
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
 
@@ -826,7 +804,7 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams)
 
 // utility that takes arrays of seconds, values, and optionally levels, and produces a data structure for histogram data
 // processing. Used in the initial histogram DB query and in matching.
-const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, binNum, masterBinStats, hasLevels, d) {
+const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, binNum, masterBinStats, appParams, d) {
 
     // need maps to hold the sub values and seconds (and levels) for each bin, after the bin bounds are calculated.
     var binSubStats = {};
@@ -841,11 +819,7 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
 
     // calculate the global stats across all of the data
     var globalStats;
-    if (hasLevels) {
-        globalStats = get_err(curveSubStats, curveSubSecs, curveSubLevs);
-    } else {
-        globalStats = get_err(curveSubStats, curveSubSecs, []);
-    }
+    globalStats = get_err(curveSubStats, curveSubSecs, curveSubLevs, appParams);
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
     const glob_n = globalStats.n_good;
@@ -864,7 +838,7 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
             if (curveSubStats[d_idx] <= binUpBounds[b_idx]) {
                 binSubStats[b_idx].push(curveSubStats[d_idx]);
                 binSubSecs[b_idx].push(curveSubSecs[d_idx]);
-                if (hasLevels) {
+                if (appParams.hasLevels) {
                     binSubLevs[b_idx].push(curveSubLevs[d_idx]);
                 }
                 break;
@@ -883,11 +857,7 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
     var sum = 0;
     var count = 0;
     for (b_idx = 0; b_idx < binNum; b_idx++) {
-        if (hasLevels) {
-            binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx]);
-        } else {
-            binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx], []);
-        }
+        binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx], appParams);
         bin_mean = binStats.d_mean;
         bin_sd = binStats.sd;
         bin_n = binStats.n_good;
@@ -927,7 +897,7 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         });
         d.text.push(null);
 
-        if (hasLevels) {
+        if (appParams.hasLevels) {
             d.subLevs.push(binSubLevs[b_idx]);
         }
 
@@ -1001,7 +971,6 @@ export default matsDataUtils = {
     doCredentials: doCredentials,
     doRoles: doRoles,
     doSettings: doSettings,
-    getPlotParamsFromStack: getPlotParamsFromStack,
     get_err: get_err,
     setHistogramParameters: setHistogramParameters,
     calculateHistogramBins: calculateHistogramBins,

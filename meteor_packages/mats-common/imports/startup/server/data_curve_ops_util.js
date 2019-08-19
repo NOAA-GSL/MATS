@@ -121,10 +121,10 @@ const getLinearValueLine = function (xmax, xmin, ymax, ymin, cLabel) {
 };
 
 // provides curve options for all plot types with an independent x axis and a dependent y axis
-const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries, plotType) {
+const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries, appParams) {
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveText(plotType, curve);
+    const longLabel = matsPlotUtils.getCurveText(appParams.plotType, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -194,10 +194,10 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
 };
 
 // provides curve options for all plot types with an independent y axis and a dependent x axis
-const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataProfile, plotType) {
+const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataProfile, appParams) {
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveTextWrapping(plotType, curve);
+    const longLabel = matsPlotUtils.getCurveTextWrapping(appParams.plotType, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -267,10 +267,10 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
 };
 
 // provides curve options for all plot types with an independent x axis and a dependent y axis
-const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataBars, plotType) {
+const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataBars, appParams) {
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveText(plotType, curve);
+    const longLabel = matsPlotUtils.getCurveText(appParams.plotType, curve);
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
@@ -318,7 +318,7 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
     return curveOptions;
 };
 
-const generateMapCurveOptions = function (curve, dataSeries, plotType) {
+const generateMapCurveOptions = function (curve, dataSeries, appParams) {
 
     const markerSizes = dataSeries.queryVal.map(function (val) {
         var size = Math.ceil(Math.abs(val * 4)) + 2;
@@ -327,7 +327,7 @@ const generateMapCurveOptions = function (curve, dataSeries, plotType) {
     });
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveText(plotType, curve);
+    const longLabel = matsPlotUtils.getCurveText(appParams.plotType, curve);
 
     const curveOptions = {
         ...{
@@ -378,10 +378,10 @@ const generateMapColorTextOptions = function (label, dataSeries) {
     return curveOptions;
 };
 
-const generateContourCurveOptions = function (curve, axisMap, dataset, plotType) {
+const generateContourCurveOptions = function (curve, axisMap, dataset, appParams) {
 
     const label = curve['label'];
-    const longLabel = matsPlotUtils.getCurveText(plotType, curve);
+    const longLabel = matsPlotUtils.getCurveText(appParams.plotType, curve);
     const annotation = curve['annotation'];
     const unitKey = curve['unitKey'];
 
@@ -417,7 +417,7 @@ const generateContourCurveOptions = function (curve, axisMap, dataset, plotType)
                     family: 'Arial, sans-serif'
                 }
             },
-            connectgaps: false,   // this option will interpolate to fill in nulls
+            connectgaps: appParams.hideGaps,   // this option will interpolate to fill in nulls
             visible: true,
             showlegend: true
         }, ...dataset

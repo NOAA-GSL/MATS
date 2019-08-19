@@ -248,7 +248,7 @@ const getMatchedDataSetWithLevels = function (dataset, curvesLength, plotType) {
 // function for removing unmatched data from a dataset containing multiple curves for a histogram *without* levels.
 // separate matching functions are needed for histograms because you have to take all of the data out of the bins, then
 // match it, then recalculate the bins. For other plot types, you can just leave the data in its already-sorted fhr, level, etc.
-const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats) {
+const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats, appParams) {
 
     var subStatsRaw = {};
     var subSecsRaw = {};
@@ -316,7 +316,7 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats) {
                 ymin: Number.MAX_VALUE,
                 ymax: Number.MIN_VALUE,
             };
-            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], [], data.x.length, binStats, false, d);
+            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], [], data.x.length, binStats, appParams, d);
             var newCurveDataKeys = Object.keys(newCurveData.d);
             for (var didx = 0; didx < newCurveDataKeys.length; didx++) {
                 dataset[curveIndex][newCurveDataKeys[didx]] = newCurveData.d[newCurveDataKeys[didx]];
@@ -347,7 +347,7 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats) {
 // function for removing unmatched data from a dataset containing multiple curves for a histogram *with* levels.
 // separate matching functions are needed for histograms because you have to take all of the data out of the bins, then
 // match it, then recalculate the bins. For other plot types, you can just leave the data in its already-sorted fhr, level, etc.
-const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength, binStats) {
+const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength, binStats, appParams) {
 
     var subStatsRaw = {};
     var subSecsRaw = {};
@@ -437,7 +437,7 @@ const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength, bi
                 ymin: Number.MAX_VALUE,
                 ymax: Number.MIN_VALUE,
             };
-            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], newSubLevs[curveIndex], data.x.length, binStats, true, d);
+            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], newSubLevs[curveIndex], data.x.length, binStats, appParams, d);
             var newCurveDataKeys = Object.keys(newCurveData.d);
             for (var didx = 0; didx < newCurveDataKeys.length; didx++) {
                 dataset[curveIndex][newCurveDataKeys[didx]] = newCurveData.d[newCurveDataKeys[didx]];

@@ -26,6 +26,8 @@
             <button type="button" class="btn spacebutton" id="cl-spacer"></button>
             <button type="button" name="plotUnMatched" id="plotUnmatched"  class="plot-curves-unmatched btn btn-success  fa fa-area-chart" style="display:{{displayPlotUnMatched}};"  {{identicalContourDisabled}} {{mismatchContourDiffDisabled}}>&nbsp;&nbsp;Plot Unmatched</button>
             <button type="button" name="plotMatched" id="plotMatched"  class="plot-curves-matched btn btn-success  fa fa-area-chart" style="display:{{displayPlotMatched}};" {{averagesDisabled}} {{identicalContourDisabled}} {{mismatchContourDiffDisabled}}>  Plot Matched</button>
+            <button type="button" class="btn spacebutton" id="cl-spacer"></button>
+            <span><input id="noGapsCheck" class="no-gaps-check data-input checkboxInput" type="checkbox" value="" name="noGapsCheck" style="margin: 10px 0 0 0;"/>&nbsp;<b>Hide Gaps</b></span>
             <div id="disabledPlots" style="display:{{disabledPlotsHidden}}"><span style="color: red;">Matched plotting is disabled because curve averages are disparate</span></div>
             <div id="identicalContour" style="display:{{identicalContourHidden}}"><span style="color: red;">Making contour plots with the same parameter on both axes is not recommended</span></div>
             <div id="identicalContour" style="display:{{mismatchContourDiffHidden}}"><span style="color: red;">The x-axis-parameter and y-axis-parameter must be consistent across both curves</span></div>
