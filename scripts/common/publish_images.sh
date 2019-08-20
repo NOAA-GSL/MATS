@@ -7,7 +7,11 @@ NC='\033[0m' # No Color
 tmpIntegrationFile=$(mktemp /tmp/intapps.XXXXXX)
 tmpProductionFile=$(mktemp /tmp/prodapps.XXXXXX)
 #serverUrl="https://www.esrl.noaa.gov/gsd/mats/appProductionStatus"
+<<<<<<< HEAD
+serverUrl="https://mats.gsd.esrl.noaa.gov/appProductionStatus"
+=======
 serverUrl="https://mats.gsd.esrl.noaa.gov/gsd/mats/appProductionStatus"
+>>>>>>> 84000dd33a287eda7a4cd6221d628ccc62dfac2d
 
 function finish {
     echo -e ${NC}
@@ -51,7 +55,11 @@ echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
 
 echo -e "${GRN} get production applist ${NC}"
 curl -k ${serverUrl}/getStableDeployment/production 2>/dev/null > $tmpProductionFile
+<<<<<<< HEAD
+echo -e "${GRN} get integration applist ${NC}"
+=======
 echo -k -e "${GRN} get integration applist ${NC}"
+>>>>>>> 84000dd33a287eda7a4cd6221d628ccc62dfac2d
 curl -k ${serverUrl}/getStableDeployment/integration 2>/dev/null > $tmpIntegrationFile
 #get production versions
 
