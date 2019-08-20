@@ -115,11 +115,6 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.split('{{dateClause}}').join(dateClause);
     dataRequests[curve.label] = statement;
 
-    // math is done on forecastLength later on -- set all analyses to 0
-    if (forecastLength === "-99") {
-        forecastLength = "0";
-    }
-
     var queryResult;
     var startMoment = moment();
     var finishMoment;

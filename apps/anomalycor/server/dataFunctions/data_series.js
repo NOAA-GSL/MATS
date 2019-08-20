@@ -49,12 +49,12 @@ dataSeries = function (plotParams, plotFunction) {
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var dbtable = data_source + "_anomcorr_" + region;
         const variable = curve['variable'];
+        curves[curveIndex]['statistic'] = "Correlation";
         var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         var levelClause = " ";
         if (levels.length > 0) {
             levelClause = " and  m0.level IN(" + levels + ")";
         }
-        curves[curveIndex]['statistic'] = "Correlation";
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         const validTimes = validTimeOptionsMap[validTimeStr][0];
@@ -179,7 +179,7 @@ dataSeries = function (plotParams, plotFunction) {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
-        }
+        };
     }  // end for curves
 
     // process the data returned by the query

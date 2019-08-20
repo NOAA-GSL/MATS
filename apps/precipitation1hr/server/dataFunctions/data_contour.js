@@ -46,10 +46,7 @@ dataContour = function (plotParams, plotFunction) {
     var regionStr = curve['region'];
     var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
     var source = curve['truth'];
-    var sourceStr = "";
-    if (source !== "All") {
-        sourceStr = "_" + source;
-    }
+        var sourceStr = source !== "All" ? "_" + source : "";
     var scaleStr = curve['scale'];
     var scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
     var statisticSelect = curve['statistic'];
@@ -61,13 +58,13 @@ dataContour = function (plotParams, plotFunction) {
     var dateClause = "";
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'];
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+        forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         threshold = threshold * 0.01;
-        thresholdClause = "and m0.trsh = " + threshold + " ";
+        thresholdClause = "and m0.trsh = " + threshold;
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];

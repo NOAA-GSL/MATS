@@ -70,7 +70,7 @@ dataHistogram = function (plotParams, plotFunction) {
         const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = "";
         if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+            validTimeClause = " and m0.hour IN(" + validTimes + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;

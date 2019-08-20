@@ -46,16 +46,13 @@ dataDieOff = function (plotParams, plotFunction) {
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var dbtable = data_source + "_anomcorr_" + region;
         const variable = curve['variable'];
+        curves[curveIndex]['statistic'] = "Correlation";
         var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         var levelClause = " ";
         if (levels.length > 0) {
             levelClause = " and  m0.level IN(" + levels + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromDate = dateRange.fromDate;
-        var toDate = dateRange.toDate;
-        fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-        toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
         var forecastLengthStr = curve['dieoff-type'];
@@ -184,7 +181,7 @@ dataDieOff = function (plotParams, plotFunction) {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
-        }
+        };
     }  // end for curves
 
     // process the data returned by the query

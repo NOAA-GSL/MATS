@@ -72,7 +72,7 @@ dataContour = function (plotParams, plotFunction) {
     var dateClause = "";
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = Number(curve['forecast-length']) * 60;
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+        forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -127,11 +127,6 @@ dataContour = function (plotParams, plotFunction) {
 
     if (data_source !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
         throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is only available for the HRRR data-source.");
-    }
-
-    // math is done on forecastLength later on -- set all analyses to 0
-    if (forecastLength === "-99") {
-        forecastLength = "0";
     }
 
     var queryResult;

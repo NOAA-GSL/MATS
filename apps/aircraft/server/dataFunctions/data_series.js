@@ -73,7 +73,7 @@ dataSeries = function (plotParams, plotFunction) {
         const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = " ";
         if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+            validTimeClause = " and m0.hour IN(" + validTimes + ")";
         }
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
@@ -196,7 +196,7 @@ dataSeries = function (plotParams, plotFunction) {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
-        }
+        };
     }  // end for curves
 
     // process the data returned by the query

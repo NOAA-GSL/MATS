@@ -57,7 +57,7 @@ dataContour = function (plotParams, plotFunction) {
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         threshold = threshold * 0.01;
-        thresholdClause = "and m0.trsh = " + threshold + " ";
+        thresholdClause = "and m0.trsh = " + threshold;
     }
 
     // For contours, this functions as the colorbar label.

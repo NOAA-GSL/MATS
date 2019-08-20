@@ -110,11 +110,6 @@ dataValidTime = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             dataRequests[curve.label] = statement;
 
-            // math is done on forecastLength later on -- set all analyses to 0
-            if (forecastLength === "-99") {
-                forecastLength = "0";
-            }
-
             var queryResult;
             var startMoment = moment();
             var finishMoment;
@@ -185,7 +180,7 @@ dataValidTime = function (plotParams, plotFunction) {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
-        }
+        };
     }  // end for curves
 
     // process the data returned by the query

@@ -78,13 +78,13 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+                validTimeClause = " and m0.hour IN(" + validTimes + ")";
             }
         }
         if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
             const top = curve['top'];
             const bottom = curve['bottom'];
-            levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10"
+        levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10"
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
             dateClause = "unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600";
@@ -177,11 +177,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{matchDates}}', matchDates);
         statement = statement.replace('{{matchClause}}', matchClause);
         dataRequests[curve.label] = statement;
-
-        // math is done on forecastLength later on -- set all analyses to 0
-        if (forecastLength === "-99") {
-            forecastLength = "0";
-        }
 
         var queryResult;
         var startMoment = moment();

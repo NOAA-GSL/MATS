@@ -57,12 +57,12 @@ dataContour = function (plotParams, plotFunction) {
         var forecastLength = Number(curve['forecast-length']);
         var forecastHour = Math.floor(forecastLength);
         var forecastMinute = (forecastLength - forecastHour) * 60;
-        forecastLengthClause = "and m0.fcst_len = " + forecastHour + " and m0.fcst_min = " + forecastMinute + " ";
+        forecastLengthClause = "and m0.fcst_len = " + forecastHour + " and m0.fcst_min = " + forecastMinute;
     }
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        thresholdClause = "and m0.trsh = " + threshold + " ";
+        thresholdClause = "and m0.trsh = " + threshold;
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];

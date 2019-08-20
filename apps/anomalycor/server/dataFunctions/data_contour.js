@@ -53,7 +53,7 @@ dataContour = function (plotParams, plotFunction) {
     var dateClause = "";
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'];
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+        forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         const validTimeStr = curve['valid-time'];
