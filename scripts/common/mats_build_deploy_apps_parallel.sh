@@ -62,12 +62,12 @@ while getopts "alisr:e:t:b:" o; do
             if [ "${build_env}" == "dev" ]; then
                 setBuildConfigVarsForDevelopmentServer
             elif [ "${build_env}" == "int" ]; then
-                    setBuildConfigVarsForIntegrationServer
+                setBuildConfigVarsForIntegrationServer
             elif [ "${build_env}" == "prod" ]; then
-                  setBuildConfigVarsForProductionServer
+                setBuildConfigVarsForProductionServer
             else
-                  echo -e "${RED}invalid environment '${build_env}' - should be 'int', 'dev', or prod exiting${NC} \n$usage"
-                  exit 1
+                echo -e "${RED}invalid environment '${build_env}' - should be 'int', 'dev', or prod exiting${NC} \n$usage"
+                exit 1
             fi
         ;;
         *)
@@ -291,9 +291,9 @@ buildApp() {
         if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
             rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
         elif [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
-                rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
+            rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
         elif [ "${DEPLOYMENT_ENVIRONMENT}" == "production" ]; then
-                promoteApp ${myApp}
+            promoteApp ${myApp}
         fi
     fi
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
@@ -443,7 +443,7 @@ done
 for pid in ${pids[*]}; do
     wait $pid
 done
-# only need to check in deployment.json if the versions rolled
+# only need to check-in deployment.json if the versions rolled
 if [[ "${roll_versions}" == "yes" ]]; then
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
