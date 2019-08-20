@@ -183,7 +183,7 @@ if [ "${build_env}" == "int" ] | [ "${build_env}" == "prod" ]; then
     cv=$(date +%Y.%m.%d)
     echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
     /usr/bin/sed -i -e "s/\(<x-bd>\).*\(<\/x-bd>\)/$cv/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
-    git commit -a -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
 fi
@@ -297,10 +297,10 @@ buildApp() {
         fi
     fi
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    /usr/bin/git commit -a -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
     ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    /usr/bin/git commit -a -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
     /usr/bin/git pull
     git push origin ${BUILD_CODE_BRANCH}
 
@@ -446,10 +446,10 @@ done
 # only need to check-in deployment.json if the versions rolled
 if [[ "${roll_versions}" == "yes" ]]; then
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    /usr/bin/git commit -a -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
     ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    /usr/bin/git commit -a -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
     /usr/bin/git pull
     git push origin ${BUILD_CODE_BRANCH}
 fi
