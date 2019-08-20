@@ -62,7 +62,7 @@ class QueryUtil:
     # function to check if a certain value is a float or int
     def is_number(self, s):
         try:
-            if np.isnan(s):
+            if np.isnan(s) or np.isinf(s):
                 return False
         except TypeError:
             return False
@@ -374,7 +374,7 @@ class QueryUtil:
         stat_switch = {  # dispatcher of statistical calculation functions
             'CSI': self.calculate_csi,
             'FAR': self.calculate_far,
-            'Frequency bias': self.calculate_fbias,
+            'FBIAS': self.calculate_fbias,
             'GSS': self.calculate_gss,
             'HSS': self.calculate_hss,
             'PODy': self.calculate_pody,
@@ -384,7 +384,7 @@ class QueryUtil:
         args_switch = {  # dispatcher of arguments for statistical calculation functions
             'CSI': (fy_oy, fy_on, fn_oy),
             'FAR': (fy_oy, fy_on),
-            'Frequency bias': (fy_oy, fy_on, fn_oy),
+            'FBIAS': (fy_oy, fy_on, fn_oy),
             'GSS': (fy_oy, fy_on, fn_oy, total),
             'HSS': (fy_oy, fy_on, fn_oy, fn_on, total),
             'PODy': (fy_oy, fn_oy),
@@ -513,7 +513,7 @@ class QueryUtil:
 
             if data_exists:
                 stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
-                if np.isnan(stat):
+                if stat == 'null' or not self.is_number(stat):
                     # there's bad data at this time point
                     stat = 'null'
                     sub_values = 'NaN'  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
@@ -646,7 +646,7 @@ class QueryUtil:
                 ind_var_min = ind_var if ind_var < ind_var_min else ind_var_min
                 ind_var_max = ind_var if ind_var > ind_var_max else ind_var_max
                 stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
-                if np.isnan(stat):
+                if stat == 'null' or not self.is_number(stat):
                     # there's bad data at this time point
                     stat = 'null'
                     sub_values = 'NaN'  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
@@ -792,7 +792,7 @@ class QueryUtil:
 
             if data_exists:
                 stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
-                if np.isnan(stat):
+                if stat == 'null' or not self.is_number(stat):
                     # there's bad data at this time point
                     continue
                 # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
@@ -1040,7 +1040,7 @@ class QueryUtil:
 
             if data_exists:
                 stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
-                if np.isnan(stat):
+                if stat == 'null' or not self.is_number(stat):
                     # there's bad data at this time point
                     continue
                 n = row['n']
