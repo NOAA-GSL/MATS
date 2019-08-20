@@ -14,10 +14,10 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
+usage="USAGE $0 -e dev|int|prod [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
-	default is build changed apps, e is build environment (dev or int), and i is build images also"
+	default is build changed apps, e is build environment (dev, int, or prod), and i is build images also"
 requestedApp=""
 requestedTag=""
 requestedBranch=""
@@ -61,13 +61,13 @@ while getopts "alisr:e:t:b:" o; do
             build_env="${OPTARG}"
             if [ "${build_env}" == "dev" ]; then
                 setBuildConfigVarsForDevelopmentServer
+            elif [ "${build_env}" == "int" ]; then
+                setBuildConfigVarsForIntegrationServer
+            elif [ "${build_env}" == "prod" ]; then
+                setBuildConfigVarsForProductionServer
             else
-                if [ "${build_env}" == "int" ]; then
-                    setBuildConfigVarsForIntegrationServer
-                else
-                    echo -e "${RED}invalid environment '${build_env}' - should be 'int' or 'dev' exiting${NC} \n$usage"
-                    exit 1
-                fi
+                echo -e "${RED}invalid environment '${build_env}' - should be 'int', 'dev', or prod exiting${NC} \n$usage"
+                exit 1
             fi
         ;;
         *)
@@ -78,7 +78,7 @@ while getopts "alisr:e:t:b:" o; do
 done
 shift $((OPTIND - 1))
 if [ "X${build_env}" == "X" ]; then
-	echo -e "${RED}You did not specify a build environment (-e dev|int)${NC}"
+	echo -e "${RED}You did not specify a build environment (-e dev|int|prod)${NC}"
 	echo -e $usage
 	echo "${RED}Must exit now${NC}"
 	exit 1
@@ -179,7 +179,7 @@ changedApps=( $(echo -e ${diffs} | grep apps | cut -f2 -d'/') )
 echo -e changedApps are ${GRN}${changedApps}${NC}
 meteor_package_changed=$(echo -e ${diffs} | grep meteor_packages | cut -f2 -d'/')
 
-if [ "${build_env}" == "int" ]; then
+if [ "${build_env}" == "int" ] | [ "${build_env}" == "prod" ]; then
     cv=$(date +%Y.%m.%d)
     echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
     /usr/bin/sed -i -e "s/\(<x-bd>\).*\(<\/x-bd>\)/$cv/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
@@ -290,10 +290,10 @@ buildApp() {
     if [[ "${roll_versions}" == "yes" ]]; then
         if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
             rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
-        else
-            if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
-                rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
-            fi
+        elif [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
+            rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
+        elif [ "${DEPLOYMENT_ENVIRONMENT}" == "production" ]; then
+            promoteApp ${myApp}
         fi
     fi
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
@@ -443,7 +443,7 @@ done
 for pid in ${pids[*]}; do
     wait $pid
 done
-# only need to check in deployment.json if the versions rolled
+# only need to check-in deployment.json if the versions rolled
 if [[ "${roll_versions}" == "yes" ]]; then
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
