@@ -73,7 +73,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and  m0.valid_secs%(24*3600)/3600 IN(" + validTimes + ")";
+                validTimeClause = " and m0.valid_secs%(24*3600)/3600 IN(" + validTimes + ")";
             }
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {

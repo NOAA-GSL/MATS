@@ -56,7 +56,7 @@ dataContour = function (plotParams, plotFunction) {
     var dateClause = "";
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'] * 60;
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
     if (xAxisParam !== 'Grid scale' && yAxisParam !== 'Grid scale') {
         var scaleStr = curve['scale'];
