@@ -5,25 +5,25 @@
 import {matsDataUtils, matsTypes, matsCollections} from 'meteor/randyp:mats-common';
 import {Meteor} from "meteor/meteor";
 
-//const Future = require('fibers/future');
+// const Future = require('fibers/future');
 
-//utility to get the cadence for a particular model, so that the query function
-//knows where to include null points for missing data.
+// utility to get the cadence for a particular model, so that the query function
+// knows where to include null points for missing data.
 const getModelCadence = function (pool, dataSource, startDate, endDate) {
     var rows = [];
     var cycles;
     try {
-        //this query should only return data if the model cadence is irregular.
-        //otherwise, the cadence will be calculated later by the query function.
+        // this query should only return data if the model cadence is irregular.
+        // otherwise, the cadence will be calculated later by the query function.
         rows = simplePoolQueryWrapSynchronous(pool, "select cycle_seconds " +
             "from mats_common.primary_model_orders " +
             "where model = " +
             "(select new_model as display_text from mats_common.standardized_model_list where old_model = '" + dataSource + "');");
         var cycles_raw = JSON.parse(rows[0].cycle_seconds);
         var cycles_keys = Object.keys(cycles_raw).sort();
-        //there can be difference cadences for different time periods (each time period is a key in cycles_keys,
-        //with the cadences for that period represented as values in cycles_raw), so this section identifies all
-        //time periods relevant to the requested date range, and returns the union of their cadences.
+        // there can be difference cadences for different time periods (each time period is a key in cycles_keys,
+        // with the cadences for that period represented as values in cycles_raw), so this section identifies all
+        // time periods relevant to the requested date range, and returns the union of their cadences.
         if (cycles_keys.length !== 0) {
             var newTime;
             var chosenStartTime;
@@ -69,50 +69,50 @@ const getModelCadence = function (pool, dataSource, startDate, endDate) {
             }
         }
     } catch (e) {
-        //ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
-        //if there isn't a cycles_per_model entry, it just means that the model has a regular cadence
+        // ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
+        // if there isn't a cycles_per_model entry, it just means that the model has a regular cadence
     }
     if (cycles !== null && cycles !== undefined && cycles.length > 0) {
         for (var c = 0; c < cycles.length; c++) {
             cycles[c] = cycles[c] * 1000;         // convert to milliseconds
         }
     } else {
-        cycles = []; //regular cadence model--cycles will be calculated later by the query function
+        cycles = []; // regular cadence model--cycles will be calculated later by the query function
     }
     return cycles;
 };
 
-//this function calculates the interval between the current time and the next time for irregular cadence models.
+// this function calculates the interval between the current time and the next time for irregular cadence models.
 const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles) {
-    //have to calculate the time_interval
+    // have to calculate the time_interval
     var ti;
     var dayInMilliSeconds = 24 * 3600 * 1000;
     var minCycleTime = Math.min(...cycles);
 
-    var thisCadence = (avTime % dayInMilliSeconds); //current hour of day (valid time)
-    if (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) < 0) { //check to see if cycle time was on a previous day -- if so, need to wrap around 00Z to get current hour of day (cycle time)
+    var thisCadence = (avTime % dayInMilliSeconds); // current hour of day (valid time)
+    if (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) < 0) { // check to see if cycle time was on a previous day -- if so, need to wrap around 00Z to get current hour of day (cycle time)
         var numberOfDaysBack = Math.ceil(-1 * (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000)) / dayInMilliSeconds);
-        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) + numberOfDaysBack * dayInMilliSeconds); //current hour of day (cycle time)
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) + numberOfDaysBack * dayInMilliSeconds); // current hour of day (cycle time)
     } else {
-        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000)); //current hour of day (cycle time)
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000)); // current hour of day (cycle time)
     }
 
-    var thisCadenceIdx = cycles.indexOf(thisCadence); //fnd our where the current hour of day is in the cycles array
+    var thisCadenceIdx = cycles.indexOf(thisCadence); // find out where the current hour of day is in the cycles array
     if (thisCadenceIdx !== -1) {
-        var nextCadenceIdx = thisCadenceIdx + 1; //choose the next hour of the day
+        var nextCadenceIdx = thisCadenceIdx + 1; // choose the next hour of the day
         if (nextCadenceIdx >= cycles.length) {
-            ti = (dayInMilliSeconds - thisCadence) + minCycleTime; //if we were at the last cycle cadence, wrap back around to the first cycle cadence
+            ti = (dayInMilliSeconds - thisCadence) + minCycleTime; // if we were at the last cycle cadence, wrap back around to the first cycle cadence
         } else {
-            ti = cycles[nextCadenceIdx] - cycles[thisCadenceIdx]; //otherwise take the difference between the current and next hours of the day.
+            ti = cycles[nextCadenceIdx] - cycles[thisCadenceIdx]; // otherwise take the difference between the current and next hours of the day.
         }
     } else {
-        ti = time_interval; //if for some reason the current hour of the day isn't in the cycles array, default to the regular cadence interval
+        ti = time_interval; // if for some reason the current hour of the day isn't in the cycles array, default to the regular cadence interval
     }
 
     return ti;
 };
 
-//utility for querying the DB
+// utility for querying the DB
 const simplePoolQueryWrapSynchronous = function (pool, statement) {
     /*
      simple synchronous query of statement to the specified pool.
@@ -134,9 +134,9 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
     }
 };
 
-//this method queries the database for timeseries plots
+// this method queries the database for timeseries plots
 const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, validTimes, appParams, forceRegularCadence) {
-    //upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
+    // upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
     const Future = require('fibers/future');
 
     if (Meteor.isServer) {
@@ -150,7 +150,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
             }); // make sure no cycles are negative
             vtCycles = vtCycles.sort(function (a, b) {
                 return Number(a) - Number(b);
-            }); //sort 'em
+            }); // sort 'em
             cycles = cycles.length > 0 ? _.intersection(cycles, vtCycles) : vtCycles; // if we already had cycles get the ones that correspond to valid times
         }
         const regular = (forceRegularCadence || averageStr !== "None" || !(cycles !== null && cycles.length > 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
@@ -206,7 +206,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
     }
 };
 
-//this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, and histograms
+// this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, and histograms
 const queryDBSpecialtyCurve = function (pool, statement, appParams) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
@@ -264,7 +264,7 @@ const queryDBSpecialtyCurve = function (pool, statement, appParams) {
     }
 };
 
-//this method queries the database for map plots
+// this method queries the database for map plots
 const queryMapDB = function (pool, statement, dataSource, variable, varUnits, siteMap) {
     if (Meteor.isServer) {
         // d will contain the curve data
@@ -383,7 +383,7 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
     }
 };
 
-//this method queries the database for contour plots
+// this method queries the database for contour plots
 const queryDBContour = function (pool, statement) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
@@ -435,7 +435,7 @@ const queryDBContour = function (pool, statement) {
     }
 };
 
-//this method parses the returned query data for timeseries plots
+// this method parses the returned query data for timeseries plots
 const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr, foreCastOffset, cycles, regular) {
     /*
         var d = {// d will contain the curve data
@@ -443,12 +443,12 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
             y: [],
             error_x: [],   // curveTime
             error_y: [],   // values
-            subVals: [],   //subVals
-            subSecs: [],   //subSecs
-            subLevs: [],   //subLevs
-            stats: [],     //pointStats
+            subVals: [],   // subVals
+            subSecs: [],   // subSecs
+            subLevs: [],   // subLevs
+            stats: [],     // pointStats
             text: [],
-            glob_stats: {},     //curveStats
+            glob_stats: {},     // curveStats
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
             ymin: Number.MAX_VALUE,
@@ -553,7 +553,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
             if (!hideGaps) {
                 d.x.push(loopTime);
                 d.y.push(null);
-                d.error_y.push(null);   //placeholder
+                d.error_y.push(null);   // placeholder
                 d.subVals.push(NaN);
                 d.subSecs.push(NaN);
                 if (hasLevels) {
@@ -569,7 +569,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
                 if (!hideGaps) {
                     d.x.push(loopTime);
                     d.y.push(null);
-                    d.error_y.push(null); //placeholder
+                    d.error_y.push(null); // placeholder
                     d.subVals.push(NaN);
                     d.subSecs.push(NaN);
                     if (hasLevels) {
@@ -617,7 +617,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
     };
 };
 
-//this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
+// this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
 const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
     /*
         var d = {// d will contain the curve data
@@ -625,12 +625,12 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
             y: [],
             error_x: [],   // curveTime
             error_y: [],   // values
-            subVals: [],   //subVals
-            subSecs: [],   //subSecs
-            subLevs: [],   //subLevs
-            stats: [],     //pointStats
+            subVals: [],   // subVals
+            subSecs: [],   // subSecs
+            subLevs: [],   // subLevs
+            stats: [],     // pointStats
             text: [],
-            glob_stats: {},     //curveStats
+            glob_stats: {},     // curveStats
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
             ymin: Number.MAX_VALUE,
@@ -809,8 +809,8 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
 const parseQueryDataHistogram = function (rows, d, appParams) {
     /*
         var d = {// d will contain the curve data
-            x: [], //placeholder
-            y: [], //placeholder
+            x: [], // placeholder
+            y: [], // placeholder
             error_x: [], // unused
             error_y: [], // unused
             subVals: [],
@@ -818,7 +818,7 @@ const parseQueryDataHistogram = function (rows, d, appParams) {
             subLevs: [],
             glob_stats: [], // placeholder
             bin_stats: [], // placeholder
-            text: [] //placeholder
+            text: [] // placeholder
             xmin:num,
             xmax:num,
             ymin:num,
@@ -884,7 +884,7 @@ const parseQueryDataHistogram = function (rows, d, appParams) {
     };
 };
 
-//this method parses the returned query data for contour plots
+// this method parses the returned query data for contour plots
 const parseQueryDataContour = function (rows, d) {
     /*
         var d = {// d will contain the curve data
