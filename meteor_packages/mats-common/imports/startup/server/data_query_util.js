@@ -90,8 +90,9 @@ const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles)
     var minCycleTime = Math.min(...cycles);
 
     var thisCadence = (avTime % dayInMilliSeconds); //current hour of day (valid time)
-    if (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) < 0) { //check to see if cycle time was on previous day -- if so, need to wrap around 00Z to get current hour of day (cycle time)
-        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) + dayInMilliSeconds); //current hour of day (cycle time)
+    if (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) < 0) { //check to see if cycle time was on a previous day -- if so, need to wrap around 00Z to get current hour of day (cycle time)
+        var numberOfDaysBack = Math.ceil(-1 * (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000)) / dayInMilliSeconds);
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) + numberOfDaysBack * dayInMilliSeconds); //current hour of day (cycle time)
     } else {
         thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000)); //current hour of day (cycle time)
     }
@@ -564,7 +565,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
             var this_N_times = N_times[d_idx];
             // Make sure that we don't have any points with far less data than the rest of the graph, and that
             // we don't have any points with a smaller completeness value than specified by the user.
-            if (curveStats[d_idx] === null  || this_N_times < completenessQCParam * N_times_max) {
+            if (curveStats[d_idx] === null || this_N_times < completenessQCParam * N_times_max) {
                 if (!hideGaps) {
                     d.x.push(loopTime);
                     d.y.push(null);
