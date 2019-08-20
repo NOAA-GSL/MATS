@@ -409,7 +409,9 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
         #docker push ${REPO}:${APPNAME}-${buildVer}
 %EOFdockerfile
+        echo "$0:${myApp}: docker build --no-cache --rm -t ${REPO}:${TAG} ."
         docker build --no-cache --rm -t ${REPO}:${TAG} .
+        echo "$0:${myApp}: docker tag ${REPO}:${TAG} ${REPO}:${TAG}"
         docker tag ${REPO}:${TAG} ${REPO}:${TAG}
         if [ "${pushImage}" == "yes" ]; then
             echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
