@@ -20,11 +20,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
 
     // if matching, pare down dataset to only matching data
     if (curveInfoParams.curvesLength > 1 && appParams.matching) {
-        if (appParams.hasLevels) {
-            dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curveInfoParams.curvesLength, appParams.plotType);
-        } else {
-            dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curveInfoParams.curvesLength);
-        }
+        dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curveInfoParams.curvesLength, appParams);
     }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed
@@ -247,7 +243,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
     // if matching, pare down dataset to only matching data
     if (curveInfoParams.curvesLength > 1 && appParams.matching) {
-        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curveInfoParams.curvesLength, appParams.plotType);
+        dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curveInfoParams.curvesLength, appParams);
     }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed
@@ -560,9 +556,9 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 
     var binStats;
     if (binParams.binBounds.length === 0) {
-        binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binParams).binStats;
+        binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binParams, appParams).binStats;
     } else {
-        binStats = matsDataUtils.prescribeHistogramBins(curveSubStats, curveSubSecs, binParams).binStats;
+        binStats = matsDataUtils.prescribeHistogramBins(curveSubStats, curveSubSecs, binParams, appParams).binStats;
     }
 
     // store bin labels and x-axis positions of those labels for later when we set up the plot options
@@ -612,11 +608,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
             // this is a difference curve, so we're done with regular curves.
             // do any matching that needs to be done.
             if (appParams.matching && !bookkeepingParams.alreadyMatched) {
-                if (appParams.hasLevels) {
-                    dataset = matsDataMatchUtils.getMatchedDataSetHistogramWithLevels(dataset, curvesLengthSoFar, binStats, appParams);
-                } else {
-                    dataset = matsDataMatchUtils.getMatchedDataSetHistogram(dataset, curvesLengthSoFar, binStats, appParams);
-                }
+                dataset = matsDataMatchUtils.getMatchedDataSetHistogram(dataset, curvesLengthSoFar, binStats, appParams);
                 bookkeepingParams.alreadyMatched = true;
             }
 
@@ -650,11 +642,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 
     // if matching, pare down dataset to only matching data. Only do this if we didn't already do it while calculating diffs.
     if (curveInfoParams.curvesLength > 1 && (appParams.matching && !bookkeepingParams.alreadyMatched)) {
-        if (appParams.hasLevels) {
-            dataset = matsDataMatchUtils.getMatchedDataSetHistogramWithLevels(dataset, curveInfoParams.curvesLength, binStats, appParams);
-        } else {
-            dataset = matsDataMatchUtils.getMatchedDataSetHistogram(dataset, curveInfoParams.curvesLength, binStats, appParams);
-        }
+        dataset = matsDataMatchUtils.getMatchedDataSetHistogram(dataset, curveInfoParams.curvesLength, binStats, appParams);
     }
 
     // calculate data statistics (including error bars) for each curve

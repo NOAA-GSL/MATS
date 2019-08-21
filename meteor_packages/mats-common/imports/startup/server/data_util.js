@@ -650,7 +650,7 @@ const setHistogramParameters = function (plotParams) {
 };
 
 // utility that takes arrays of seconds and values and produces a data structure containing bin information for histogram plotting
-const calculateHistogramBins = function (curveSubStats, curveSubSecs, binParams) {
+const calculateHistogramBins = function (curveSubStats, curveSubSecs, binParams, appParams) {
 
     // binStart and binStride will only be defined if the user wants to specify the bin spacing.
     // otherwise, we'll use the mean and standard deviation of the data to space the bins.
@@ -664,7 +664,7 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binParams)
     var binMeans = [];
 
     // calculate the global stats across all of the data
-    const globalStats = get_err(curveSubStats, curveSubSecs, [], {hasLevels: false, outliers: 'all'});   // we don't need levels for the mean or sd calculations, so just pass in an empty array
+    const globalStats = get_err(curveSubStats, curveSubSecs, [], {hasLevels: false, outliers: appParams.outliers});   // we don't need levels for the mean or sd calculations, so just pass in an empty array
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
 
@@ -743,12 +743,12 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binParams)
 };
 
 // utility that takes an array of user-defined bin bounds and produces a data structure containing bin information for histogram plotting
-const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams) {
+const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams, appParams) {
 
     var binStats = {};
 
     // calculate the global stats across all of the data
-    const globalStats = get_err(curveSubStats, curveSubSecs, [], {hasLevels: false, outliers: 'all'});   // we don't need levels for the mean or sd calculations, so just pass in an empty array
+    const globalStats = get_err(curveSubStats, curveSubSecs, [], {hasLevels: false, outliers: appParams.outliers});   // we don't need levels for the mean or sd calculations, so just pass in an empty array
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
 
