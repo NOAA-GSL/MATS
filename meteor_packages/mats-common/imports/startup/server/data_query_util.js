@@ -183,11 +183,17 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
             } else if (rows === undefined || rows === null || rows.length === 0) {
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
-                const parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, forecastOffset, cycles, regular);
+                var parsedData;
+                if (appParams.hideGaps) {
+                    // if we don't care about gaps, use the general purpose curve parsing function.
+                    // the only reason to use the timeseries one is to correctly insert gaps for missing forecast cycles
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
+                } else {
+                    parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, forecastOffset, cycles, regular);
+                }
                 d = parsedData.d;
                 N0 = parsedData.N0;
                 N_times = parsedData.N_times;
-                cycles = parsedData.cycles;
             }
             // done waiting - have results
             dFuture['return']();
@@ -199,9 +205,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
             data: d,
             error: error,
             N0: N0,
-            N_times: N_times,
-            averageStr: averageStr,
-            cycles: cycles,
+            N_times: N_times
         };
     }
 };
@@ -250,6 +254,7 @@ const queryDBSpecialtyCurve = function (pool, statement, appParams) {
                 N0 = parsedData.N0;
                 N_times = parsedData.N_times;
             }
+            // done waiting - have results
             dFuture['return']();
         });
 
@@ -423,6 +428,7 @@ const queryDBContour = function (pool, statement) {
                 const parsedData = parseQueryDataContour(rows, d);
                 d = parsedData.d;
             }
+            // done waiting - have results
             dFuture['return']();
         });
 
@@ -457,7 +463,6 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
         };
     */
     const hasLevels = appParams.hasLevels;
-    const hideGaps = appParams.hideGaps;
     const completenessQCParam = Number(appParams.completeness) / 100;
 
     // initialize local variables
@@ -550,15 +555,13 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
         // timeseries. The query only returns the data that it actually has.
         var d_idx = curveTime.indexOf(loopTime);
         if (d_idx < 0) {
-            if (!hideGaps) {
-                d.x.push(loopTime);
-                d.y.push(null);
-                d.error_y.push(null);   // placeholder
-                d.subVals.push(NaN);
-                d.subSecs.push(NaN);
-                if (hasLevels) {
-                    d.subLevs.push(NaN);
-                }
+            d.x.push(loopTime);
+            d.y.push(null);
+            d.error_y.push(null);   // placeholder
+            d.subVals.push(NaN);
+            d.subSecs.push(NaN);
+            if (hasLevels) {
+                d.subLevs.push(NaN);
             }
         } else {
             var this_N0 = N0[d_idx];
@@ -566,15 +569,13 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
             // Make sure that we don't have any points with far less data than the rest of the graph, and that
             // we don't have any points with a smaller completeness value than specified by the user.
             if (curveStats[d_idx] === null || this_N_times < completenessQCParam * N_times_max) {
-                if (!hideGaps) {
-                    d.x.push(loopTime);
-                    d.y.push(null);
-                    d.error_y.push(null); // placeholder
-                    d.subVals.push(NaN);
-                    d.subSecs.push(NaN);
-                    if (hasLevels) {
-                        d.subLevs.push(NaN);
-                    }
+                d.x.push(loopTime);
+                d.y.push(null);
+                d.error_y.push(null); // placeholder
+                d.subVals.push(NaN);
+                d.subSecs.push(NaN);
+                if (hasLevels) {
+                    d.subLevs.push(NaN);
                 }
             } else {
                 // there's valid data at this point, so store it
@@ -657,7 +658,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
             independentVar = Number(rows[rowIndex].hr_of_day);
         } else if (plotType === matsTypes.PlotTypes.profile) {
             independentVar = Number((rows[rowIndex].avVal).toString().replace('P', ''));
-        } else if (plotType === matsTypes.PlotTypes.dailyModelCycle) {
+        } else if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
             independentVar = Number(rows[rowIndex].avtime) * 1000;
         } else {
             independentVar = Number(rows[rowIndex].avtime);
