@@ -148,7 +148,7 @@ const getMatchedDataSet = function (dataset, curvesLength, appParams) {
                     if (hasLevels) {
                         tempPair = [subSecs[si], subLevs[si]]; //create sec-lev pair for each sub value
                     }
-                    if ((!hasLevels && subSecIntersection[currIndependentVar].indexOf(subSecs[si]) !== -1) || (hasLevels && matsDataUtils.arrayContainsSubArray(subIntersections[currIndependentVar], tempPair))) { // keep the subValue only if its associated subSec is common to all curves for this independentVar
+                    if ((!hasLevels && subSecIntersection[currIndependentVar].indexOf(subSecs[si]) !== -1) || (hasLevels && matsDataUtils.arrayContainsSubArray(subIntersections[currIndependentVar], tempPair))) { // keep the subValue only if its associated subSec/subLev is common to all curves for this independentVar
                         var newVal = subValues[si];
                         var newSec = subSecs[si];
                         if (hasLevels) {
