@@ -33,7 +33,7 @@
                 for (var di=0; di < data.length;di++) {
                     <!-- skip the non net-express apps -->
                     if (data[di].group.startsWith("MET")) {
-                        data[di].itemColor = 'darkorchid';
+                        data[di].itemColor = '#3366bb';
                         if ($scope.items[data[di].group] == null) {
                             $scope.items[data[di].group] = [data[di]];
                             $scope.groups.push(data[di].group);

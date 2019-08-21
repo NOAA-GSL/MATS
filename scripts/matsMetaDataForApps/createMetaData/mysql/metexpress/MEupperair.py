@@ -482,7 +482,7 @@ class MEUpperair:
             self.cnx.commit()
             static_header_id_count = self.cursor.fetchone()['header_id_count']
             compound_size = int(static_header_id_count) * int(line_count)
-            if (compound_size > self.data_table_stat_header_id_limit):
+            if (compound_size > int(self.data_table_stat_header_id_limit)):
                 print(
                     self.script_name + " - Using db: " + mvdb + " number of iterations is too large, line_data: " + str(
                         line_count) +
