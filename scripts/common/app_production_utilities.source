@@ -42,6 +42,14 @@ export passed='\033[0;32m passed \033[0m'
 export success='\033[0;32m success \033[0m'
 export failed='\033[0;31m failed \033[0m'
 
+# This function can tell you if the docker daemon is a swarm manager
+function isSwarmNode(){
+     if [ "$(docker info 2> /dev/null | grep Swarm | sed 's/Swarm: //g')" == "inactive" ]; then
+              echo false
+     else
+              echo true;
+     fi
+}
 
 # close the ssh tunnel to the server where the mongo db lives ...
 #PARAMETERS: none
