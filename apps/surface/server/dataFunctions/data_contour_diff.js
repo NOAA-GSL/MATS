@@ -14,8 +14,14 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
-    const plotType = matsTypes.PlotTypes.contourDiff;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.contourDiff,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": false
+    };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -89,7 +95,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var matchValidTimeClause = "";
         var matchForecastLengthClause = "";
         var matchClause = "";
-        if (matching) {
+        if (appParams.matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
             const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
             const otherMetar = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === curves[otherCurveIndex]['truth']);
@@ -156,11 +162,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.split('{{dateClause}}').join(dateClause);
         dataRequests[curve.label] = statement;
 
-        // math is done on forecastLength later on -- set all analyses to 0
-        if (forecastLength === "-99") {
-            forecastLength = "0";
-        }
-
         var queryResult;
         var startMoment = moment();
         var finishMoment;
@@ -211,7 +212,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         curve['zmax'] = d.zmax;
         curve['xAxisKey'] = xAxisParam;
         curve['yAxisKey'] = yAxisParam;
-        const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {

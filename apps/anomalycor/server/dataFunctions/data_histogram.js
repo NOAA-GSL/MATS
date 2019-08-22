@@ -11,9 +11,14 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const plotType = matsTypes.PlotTypes.histogram;
-    const hasLevels = true;
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.histogram,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": true
+    };
     var alreadyMatched = false;
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = [];
@@ -43,12 +48,12 @@ dataHistogram = function (plotParams, plotFunction) {
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var dbtable = data_source + "_anomcorr_" + region;
         const variable = curve['variable'];
+        curves[curveIndex]['statistic'] = "Correlation";
         var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         var levelClause = " ";
         if (levels.length > 0) {
             levelClause = " and  m0.level IN(" + levels + ")";
         }
-        var statisticSelect = "Correlation";
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         const validTimes = validTimeOptionsMap[validTimeStr][0];
@@ -108,7 +113,7 @@ dataHistogram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, plotType, hasLevels);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -138,7 +143,6 @@ dataHistogram = function (plotParams, plotFunction) {
             }
         }
     }
-    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,

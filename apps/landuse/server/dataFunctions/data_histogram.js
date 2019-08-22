@@ -11,9 +11,14 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const plotType = matsTypes.PlotTypes.histogram;
-    const hasLevels = false;
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.histogram,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": false
+    };
     var alreadyMatched = false;
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = [];
@@ -110,13 +115,13 @@ dataHistogram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, plotType, hasLevels);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                    recordCount: queryResult.data.x.length
                 };
                 // get the data back from the query
                 d = queryResult.data;
@@ -143,7 +148,6 @@ dataHistogram = function (plotParams, plotFunction) {
             }
         }
     }
-    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,

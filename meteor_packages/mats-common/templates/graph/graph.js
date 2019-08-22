@@ -61,8 +61,8 @@ Template.graph.helpers({
                         'contours.start': dataset[0].contours.start,
                         'contours.end': dataset[0].contours.end,
                         'contours.size': dataset[0].contours.size,
-                        'reversescale': false,
-                        'connectgaps': false,
+                        'reversescale': dataset[0].reversescale,
+                        'connectgaps': dataset[0].connectgaps,
                         'colorscale': JSON.stringify(dataset[0].colorscale)
                     });
                     break;

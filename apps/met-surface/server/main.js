@@ -1003,35 +1003,30 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
-            plotSpecFunction: "plotSpecDataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
-            plotSpecFunction: "plotSpecDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphPlotly",
             dataFunction: "dataValidTime",
-            plotSpecFunction: "plotSpecValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
             graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
-            plotSpecFunction: "plotSpecHistogram",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.contour,
             graphFunction: "graphPlotly",
             dataFunction: "dataContour",
-            plotSpecFunction: "plotSpecContour",
             checked: false
         });
     }

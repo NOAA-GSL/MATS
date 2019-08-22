@@ -14,8 +14,14 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
-    const plotType = matsTypes.PlotTypes.contourDiff;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.contourDiff,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": true
+    };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -72,13 +78,13 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+                validTimeClause = " and m0.hour IN(" + validTimes + ")";
             }
         }
         if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
             const top = curve['top'];
             const bottom = curve['bottom'];
-            levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10"
+        levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10"
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
             dateClause = "unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600";
@@ -97,7 +103,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var matchLevelClause = "";
         var matchPhase = "";
         var matchClause = "";
-        if (matching) {
+        if (appParams.matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
             const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
             const otherFHR = curves[otherCurveIndex]['forecast-length'];
@@ -172,11 +178,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{matchClause}}', matchClause);
         dataRequests[curve.label] = statement;
 
-        // math is done on forecastLength later on -- set all analyses to 0
-        if (forecastLength === "-99") {
-            forecastLength = "0";
-        }
-
         var queryResult;
         var startMoment = moment();
         var finishMoment;
@@ -223,7 +224,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         curve['zmax'] = d.zmax;
         curve['xAxisKey'] = xAxisParam;
         curve['yAxisKey'] = yAxisParam;
-        const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
