@@ -110,36 +110,39 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     cd ${DEPLOYMENT_DIRECTORY}
     /usr/bin/git clone ${BUILD_GIT_REPO}
     if [ $? -ne 0 ]; then
-        echo -e "${failed} to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now"
+        echo -e "${RED} ${failed} to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now ${NC}"
         exit 1
     fi
 fi
 cd ${DEPLOYMENT_DIRECTORY}
+# throw away any local changes - after all, you are building
+echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
+git reset --hard
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
-    echo -e "${failed} to git the current HEAD commit - must exit now"
+    echo -e "${RED} ${failed} to git the current HEAD commit - must exit now ${NC}"
     exit 1
 fi
 /usr/bin/git pull -Xtheirs
 if [ $? -ne 0 ]; then
-    echo -e "${failed} to do git pull - must exit now"
+    echo -e "${RED} ${failed} to do git pull - must exit now ${NC}"
     exit 1
 fi
 
 if [ $? -ne 0 ]; then
-    echo -e "${failed} to /usr/bin/git fetch - must exit now"
+    echo -e "${RED} ${failed} to /usr/bin/git fetch - must exit now ${NC}"
     exit 1
 fi
 newCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
-    echo -e "${failed} to git the new HEAD commit - must exit now"
+    echo -e "${RED} ${failed} to git the new HEAD commit - must exit now ${NC}"
     exit 1
 fi
 if [ "X${requestedTag}" == "X" ]; then
     /usr/bin/git  rev-parse ${tag}
     if [ $? -ne 0  ]; then
-        echo -e ${failed} You requested a tag that does not exist ${tag} - can not continue
+        echo -e "${RED} ${failed} You requested a tag that does not exist ${tag} - can not continue ${NC}"
         echo These tags exist...
         /usr/bin/git show-ref --tags
         exit 1
@@ -152,7 +155,7 @@ else
      echo "building to ${requestedTag}"
     /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
     if [ $? -ne 0 ]; then
-        echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
+        echo -e "${RED} ${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now ${NC}"
         exit 1
     fi
 fi
@@ -165,14 +168,14 @@ diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newC
 echo changes are $diffOut
 ret=$?
 if [ $ret -ne 0 ]; then
-    echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}' ... ret $ret - must exit now"
+    echo -e "${RED} ${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCodeCommit}...${newCodeCommit}' ... ret $ret - must exit now ${NC}"
     exit 1
 fi
 
 diffs=$(echo $diffOut | grep -v 'appProductionStatus')
 ret=$?
 if [ "X${requestedApp}" == "X" -a ${ret} -ne 0 ]; then
-    echo -e "${failed} no modified apps to build - ret $ret - must exit now"
+    echo -e "${RED} ${failed} no modified apps to build - ret $ret - must exit now ${NC}"
     exit 1
 fi
 changedApps=( $(echo -e ${diffs} | grep apps | cut -f2 -d'/') )
@@ -234,37 +237,36 @@ if [ "${build_images}" == "yes" ]; then
     #wait for stacks to drain
     docker stack ls | grep -v NAME | awk '{print $1}' | while read stack
     do
-        echo $stack
-        docker stack rm ${stack}
-        docker network rm web
-        limit=20
-        until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=${stack} -q)" ] || [ "$limit" -lt 0 ]; do
-            sleep 1;
-            limit="$((limit-1))"
-            printf "."
-        done
-        limit=20
-        until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q)" ] || [ "$limit" -lt 0 ]; do
-            sleep 1;
-            limit="$((limit-1))"
-            printf "."
-        done
-        limit=20
-        until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
-            sleep 1;
-            limit="$((limit-1))"
-            printf "."
-        done
+        if [[ isSwarmMode == "true"  ]]; then
+            echo $stack
+            docker stack rm ${stack}
+            docker network rm web
+            limit=20
+            until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=${stack} -q)" ] || [ "$limit" -lt 0 ]; do
+                sleep 1;
+                limit="$((limit-1))"
+                printf "."
+            done
+            limit=20
+            until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q)" ] || [ "$limit" -lt 0 ]; do
+                sleep 1;
+                limit="$((limit-1))"
+                printf "."
+            done
+            limit=20
+            until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
+                sleep 1;
+                limit="$((limit-1))"
+                printf "."
+            done
+        else
+            docker stop $(docker ps -a -q)
+            docker rm $(docker ps -a -q)
+        fi
     done
     docker system prune -af
 fi
 
-# go ahead and merge changes
-#/usr/bin/git pull -Xtheirs
-#if [ $? -ne 0 ]; then
-#    echo -e "${failed} to do git pull - must exit now"
-#    exit 1
-#fi
 export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
@@ -289,10 +291,13 @@ buildApp() {
     /usr/local/bin/meteor reset
     if [[ "${roll_versions}" == "yes" ]]; then
         if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
+            echo -e "rolling versions for development"
             rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
         elif [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
+            echo -e "rolling versions for integration"
             rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
         elif [ "${DEPLOYMENT_ENVIRONMENT}" == "production" ]; then
+            echo -e "promoting versions for production"
             promoteApp ${myApp}
         fi
     fi
@@ -313,6 +318,7 @@ buildApp() {
     # do not know why I have to do these explicitly, but I do.
     /usr/local/bin/meteor npm install --save @babel/runtime
     /usr/local/bin/meteor npm install --save bootstrap
+    /usr/local/bin/meteor npm audit fix
 
     /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
@@ -321,7 +327,7 @@ buildApp() {
     fi
 
     cd ${BUNDLE_DIRECTORY}
-    (cd bundle/programs/server && /usr/local/bin/meteor npm install)
+    (cd bundle/programs/server && /usr/local/bin/meteor npm install && /usr/local/bin/meteor npm audit fix)
 
     if [[ "${deploy_build}" == "yes" ]]; then
         if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
@@ -395,7 +401,7 @@ RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-
     pip3 install numpy && \\
     pip3 install pymysql && \\
     chmod +x /usr/app/run_app.sh && \\
-    cd /usr/app/programs/server && npm install && \\
+    cd /usr/app/programs/server && npm install && npm audit fix && \\
     apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
     rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
 ENV APPNAME=${APPNAME}
