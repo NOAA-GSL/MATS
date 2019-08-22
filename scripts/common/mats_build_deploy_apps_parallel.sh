@@ -272,43 +272,12 @@ APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 
-
 buildApp() {
     local myApp=$1
-    local logDir="/builds/buildArea/logs"
-    local logName="$logDir/"`basename $0 | cut -f1 -d"."`-${myApp}.log
-    if [ -f "${logName}" ]; then
-        echo "" > ${logName}  # truncate log file
-    else
-        touch $logName
-    fi
-    exec > >( tee -i $logName )
-    exec 2>&1
-
     cd ${APP_DIRECTORY}/${myApp}
     echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
     /usr/local/bin/meteor reset
-    if [[ "${roll_versions}" == "yes" ]]; then
-        if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
-            echo -e "rolling versions for development"
-            rollDevelopmentVersionAndDateForAppForServer ${myApp} ${SERVER}
-        elif [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
-            echo -e "rolling versions for integration"
-            rollIntegrationVersionAndDateForAppForServer ${myApp} ${SERVER}
-        elif [ "${DEPLOYMENT_ENVIRONMENT}" == "production" ]; then
-            echo -e "promoting versions for production"
-            promoteApp ${myApp}
-        fi
-    fi
-    exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
-    ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    /usr/bin/git pull
-    git push origin ${BUILD_CODE_BRANCH}
-
     BUNDLE_DIRECTORY=/builds/deployments/${myApp}
     if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
         mkdir -p ${BUNDLE_DIRECTORY}
@@ -328,19 +297,6 @@ buildApp() {
 
     cd ${BUNDLE_DIRECTORY}
     (cd bundle/programs/server && /usr/local/bin/meteor npm install && /usr/local/bin/meteor npm audit fix)
-
-    if [[ "${deploy_build}" == "yes" ]]; then
-        if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
-            echo -e "$0:${myApp}: ${RED} Cannot deploy ${myApp} to missing directory: ${WEB_DEPLOY_DIRECTORY} ${NC}"
-        else
-            if [ ! -d "${WEB_DEPLOY_DIRECTORY}/${myApp}" ]; then
-                mkdir ${WEB_DEPLOY_DIRECTORY}/${myApp}
-            else
-                rm -rf ${WEB_DEPLOY_DIRECTORY}/${myApp}/*
-            fi
-            cp -a * /web/${myApp}
-        fi
-    fi
 
     if [[ "${build_images}" == "yes" ]]; then
         echo -e "$0:${myApp}: Building image for ${myApp}"
@@ -440,6 +396,35 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
     docker rmi ${REPO}:${TAG}
 }
 
+# roll or promote versions
+i=0
+for app in ${apps[*]}; do
+    theApp=${app}
+    echo -e "$0:${theApp}: - rolling/promoting app ${GRN}${theApp}${NC}"
+    if [[ "${roll_versions}" == "yes" ]]; then
+        if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
+            echo -e "rolling versions for development"
+            rollDevelopmentVersionAndDateForAppForServer ${theApp} ${SERVER}
+        elif [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
+            echo -e "rolling versions for integration"
+            rollIntegrationVersionAndDateForAppForServer ${theApp} ${SERVER}
+        elif [ "${DEPLOYMENT_ENVIRONMENT}" == "production" ]; then
+            echo -e "promoting versions for production"
+            promoteApp ${theApp}
+        fi
+    fi
+    i=$((i+1))
+done
+# persist and checkin new versions
+exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
+${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+/usr/bin/git pull
+git push origin ${BUILD_CODE_BRANCH}
+
+# build all the apps
 i=0
 for app in ${apps[*]}; do
     (buildApp ${app})&
@@ -447,41 +432,15 @@ for app in ${apps[*]}; do
     i=$((i+1))
     sleep 10
 done
+
 # wait for all pids
 for pid in ${pids[*]}; do
     wait $pid
 done
-# only need to check-in deployment.json if the versions rolled
-if [[ "${roll_versions}" == "yes" ]]; then
-    exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
-    ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    /usr/bin/git pull
-    git push origin ${BUILD_CODE_BRANCH}
-fi
+
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
 
-# build the applist.json
-if [[ "${deploy_build}" == "yes" ]]; then
-    if [ ! -d "${WEB_DEPLOY_DIRECTORY}" ]; then
-        echo -e "${RED} Cannot deploy applist to missing directory: ${WEB_DEPLOY_DIRECTORY} ${NC}"
-    else
-        if [ ! -d "${WEB_DEPLOY_DIRECTORY}/static" ]; then
-            mkdir ${WEB_DEPLOY_DIRECTORY}/static
-        fi
-        applistFile=`mktemp`
-        echo $(getApplistJSONForServer ${SERVER}) > $applistFile
-        mv $applistFile static/applist.json
-        chmod a+r static/applist.json
-        echo -e "$0 trigger nginx restart"
-        /bin/touch /builds/restart_nginx
-    fi
-fi
-
 echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
-
 exit 0
