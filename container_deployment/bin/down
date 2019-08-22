@@ -8,7 +8,10 @@ if [ $# -eq 1 ]; then
     stack=$1
 fi
 stacks=($(docker stack ls | grep -v NAME | awk '{print $1}'))
-if [[ " ${stacks[*]} " == *" $stack "* ]]; then
+if [[ $# -eq 0 ]] && [[ ${#stacks[@]} -eq 1 ]]; then
+    echo using the only stack - ${stacks[0]}
+    stack=${stacks[0]}
+elif [[ " ${stacks[*]} " == *" $stack "* ]]; then
     echo -e "${GRN}bringing down stack $stack ${NC}"
 else
     echo -e "${RED}stack ${stack} doesn't exist. These stacks currently exist... \"${stacks[@]}\"?${NC}"
