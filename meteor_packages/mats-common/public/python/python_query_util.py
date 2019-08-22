@@ -33,6 +33,11 @@ class QueryUtil:
         "nTextOutput": [],
         "minDateTextOutput": [],
         "maxDateTextOutput": [],
+        "threshold_all": [],
+        "oy_all": [],
+        "on_all": [],
+        "sample_climo": 0,
+        "auc": 0,
         "glob_stats": {
             "mean": 0,
             "minDate": 0,

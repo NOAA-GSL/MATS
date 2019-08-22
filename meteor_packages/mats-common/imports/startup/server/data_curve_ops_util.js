@@ -384,6 +384,16 @@ const generateContourCurveOptions = function (curve, axisMap, dataset, appParams
     const longLabel = matsPlotUtils.getCurveText(appParams.plotType, curve);
     const annotation = curve['annotation'];
     const unitKey = curve['unitKey'];
+    const statistic = curve['statistic'];
+    const RdWhBu = [[0,"rgb(5,10,172)"],[0.35,"rgb(106,137,247)"],[0.45,"rgb(255,255,255)"],[0.55,"rgb(255,255,255)"],[0.6,"rgb(220,170,132)"],[0.7,"rgb(230,145,90)"],[1,"rgb(178,10,28)"]];
+    const maxZ = Math.abs(dataset.zmax) > Math.abs(dataset.zmin) ? Math.abs(dataset.zmax) : Math.abs(dataset.zmin);
+    const defaultStart = dataset.zmin + (dataset.zmax - dataset.zmin) / 16;
+    const defaultEnd = dataset.zmax - (dataset.zmax - dataset.zmin) / 16;
+    const defaultSize = (dataset.zmax - dataset.zmin) / 16;
+    const symmetricStart = -1 * maxZ + (2 * maxZ) / 16;
+    const symmetricEnd = maxZ - (2 * maxZ) / 16;
+    const symmetricSize = (2 * maxZ) / 16;
+
 
     const curveOptions = {
         ...{
@@ -402,12 +412,12 @@ const generateContourCurveOptions = function (curve, axisMap, dataset, appParams
             ncontours: 15,   // apparently plotly regards this as a "less than or equal to" field
             contours: {
                 // these are only used if autocontour is set to false and ncontour is disregarded
-                start: dataset.zmin + (dataset.zmax - dataset.zmin) / 16,
-                end: dataset.zmax - (dataset.zmax - dataset.zmin) / 16,
-                size:  (dataset.zmax - dataset.zmin) / 16,
+                start: statistic !== 'Bias (Model - Obs)' ? defaultStart : symmetricStart,  // bias is symmetric about zero
+                end: statistic !== 'Bias (Model - Obs)' ? defaultEnd : symmetricEnd,
+                size:  statistic !== 'Bias (Model - Obs)' ? defaultSize : symmetricSize,
                 showlabels: false
             },
-            colorscale: 'RdBu',
+            colorscale: statistic !== 'Bias (Model - Obs)' ? 'RdBu' : RdWhBu,       // bias uses the diff colormap
             reversescale: false,
             colorbar:{
                 title: unitKey,
