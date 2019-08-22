@@ -192,10 +192,12 @@ Template.curveList.events({
     },
     'click .no-gaps-check': function (event) {
         // make the Interpolate Over Nulls option on the colorbar modal match up with this.
-        if (document.getElementById("noGapsCheck").checked) {
-            document.getElementById("nullSmooth").checked = true;
-        } else {
-            document.getElementById("nullSmooth").checked = false;
+        if (document.getElementById("nullSmooth")) {
+            if (document.getElementById("noGapsCheck").checked) {
+                document.getElementById("nullSmooth").checked = true;
+            } else {
+                document.getElementById("nullSmooth").checked = false;
+            }
         }
     },
     'click .save-settings': function (event) {

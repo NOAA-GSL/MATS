@@ -24,7 +24,8 @@ Package.onUse(function (api) {
         "url": "0.11.0",
         "jquery-ui": "1.12.1",
         "csv-stringify": "4.3.1",
-        "node-file-cache" : "1.0.2"
+        "node-file-cache" : "1.0.2",
+        "python-shell": "1.0.8"
     });
     api.mainModule("server/main.js", "server");
     api.mainModule("client/main.js", "client");

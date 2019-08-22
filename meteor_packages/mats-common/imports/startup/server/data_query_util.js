@@ -2,10 +2,8 @@
  * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {matsDataUtils, matsTypes, matsCollections} from 'meteor/randyp:mats-common';
+import {matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {Meteor} from "meteor/meteor";
-
-// const Future = require('fibers/future');
 
 // utility to get the cadence for a particular model, so that the query function
 // knows where to include null points for missing data.
@@ -131,6 +129,102 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
             });
         });
         return queryWrap(pool, statement).wait();
+    }
+};
+
+// utility for querying the DB via Python
+const queryDBPython = function (pool, statement, statLineType, statistic, appParams, vts) {
+    if (Meteor.isServer) {
+        // send the query statement to the python query function
+        const pyOptions = {
+            mode: 'text',
+            pythonPath: Meteor.settings.private.PYTHON_PATH,
+            pythonOptions: ['-u'], // get print results in real-time
+            scriptPath: process.env.NODE_ENV === "development" ?
+                process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
+                process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
+            args: [
+                "-h", pool.config.connectionConfig.host,
+                "-P", pool.config.connectionConfig.port,
+                "-u", pool.config.connectionConfig.user,
+                "-p", pool.config.connectionConfig.password,
+                "-d", pool.config.connectionConfig.database,
+                "-q", statement,
+                "-L", statLineType,
+                "-s", statistic,
+                "-t", appParams.plotType,
+                "-l", appParams.hasLevels,
+                "-g", appParams.hideGaps,
+                "-c", appParams.completeness,
+                "-v", vts
+            ]
+        };
+        const pyShell = require('python-shell');
+        const Future = require('fibers/future');
+
+        var future = new Future();
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            z: [],
+            n: [],
+            error_x: [],
+            error_y: [],
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            stats: [],
+            text: [],
+            xTextOutput: [],
+            yTextOutput: [],
+            zTextOutput: [],
+            nTextOutput: [],
+            minDateTextOutput: [],
+            maxDateTextOutput: [],
+            glob_stats: {
+                mean: 0,
+                minDate: 0,
+                maxDate: 0,
+                n: 0
+            },
+            xmin: Number.MAX_VALUE,
+            xmax: -1 * Number.MAX_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: -1 * Number.MAX_VALUE,
+            zmin: Number.MAX_VALUE,
+            zmax: -1 * Number.MAX_VALUE,
+            sum: 0
+        };
+        var error = "";
+        var N0 = [];
+        var N_times = [];
+
+        pyShell.PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
+            // query callback - build the curve data from the results - or set an error
+            if (err !== undefined && err !== null) {
+                error = err.message === undefined ? err : err.message;
+            } else if (results === undefined || results === "undefined") {
+                error = "Error thrown by python_query_util.py. Please write down exactly how you produced this error, and submit a ticket at mats.gsd@noaa.gov."
+            } else {
+                // get the data back from the query
+                const parsedData = JSON.parse(results);
+                d = parsedData.data;
+                N0 = parsedData.N0;
+                N_times = parsedData.N_times;
+                error = parsedData.error;
+            }
+            // done waiting - have results
+            future['return']();
+        });
+
+        // wait for future to finish
+        future.wait();
+        return {
+            data: d,
+            error: error,
+            N0: N0,
+            N_times: N_times,
+        };
     }
 };
 
@@ -1011,6 +1105,7 @@ const parseQueryDataContour = function (rows, d) {
 export default matsDataQueryUtils = {
 
     simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
+    queryDBPython: queryDBPython,
     queryDBTimeSeries: queryDBTimeSeries,
     queryDBSpecialtyCurve: queryDBSpecialtyCurve,
     queryMapDB: queryMapDB,

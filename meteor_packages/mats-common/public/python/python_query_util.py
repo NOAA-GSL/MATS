@@ -475,7 +475,7 @@ class QueryUtil:
         return ti
 
     # function for parsing the data returned by a timeseries query
-    def parse_query_data_timeseries(self, cursor, statistic, has_levels, completeness_qc_param, vts, stat_line_type):
+    def parse_query_data_timeseries(self, cursor, stat_line_type, statistic, has_levels, completeness_qc_param, vts):
         # initialize local variables
         xmax = float("-inf")
         xmin = float("inf")
@@ -564,7 +564,7 @@ class QueryUtil:
                 this_n0 = self.n0[d_idx]
                 this_n_times = self.n_times[d_idx]
                 # add a null if there were too many missing sub-values
-                if curve_stats[d_idx] == 'null' or this_n_times < float(completeness_qc_param) * n_times_max:
+                if curve_stats[d_idx] == 'null' or this_n_times < completeness_qc_param * n_times_max:
                     self.data['x'].append(loop_time)
                     self.data['y'].append('null')
                     self.data['error_y'].append('null')
@@ -610,7 +610,7 @@ class QueryUtil:
         self.data['sum'] = loop_sum
 
     # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
-    def parse_query_data_specialty_curve(self, cursor, statistic, plot_type, has_levels, completeness_qc_param, stat_line_type):
+    def parse_query_data_specialty_curve(self, cursor, stat_line_type, statistic, plot_type, has_levels, hide_gaps, completeness_qc_param):
         # initialize local variables
         ind_var_min = sys.float_info.max
         ind_var_max = -1 * sys.float_info.max
@@ -630,7 +630,7 @@ class QueryUtil:
                 ind_var = float(row['hr_of_day'])
             elif plot_type == 'Profile':
                 ind_var = float(str(row['avVal']).replace('P', ''))
-            elif plot_type == 'DailyModelCycle':
+            elif plot_type == 'DailyModelCycle' or plot_type == 'TimeSeries':
                 ind_var = int(row['avtime']) * 1000
             else:
                 ind_var = int(row['avtime'])
@@ -703,26 +703,27 @@ class QueryUtil:
             this_n0 = self.n0[d_idx]
             this_n_times = self.n_times[d_idx]
             # add a null if there were too many missing sub-values
-            if curve_stats[d_idx] == 'null' or this_n_times < float(completeness_qc_param) * n_times_max:
-                if plot_type == 'Profile':
-                    # profile has the stat first, and then the ind_var. The others have ind_var and then stat.
-                    # this is in the pattern of x-plotted-variable, y-plotted-variable.
-                    self.data['x'].append('null')
-                    self.data['y'].append(ind_var)
-                    self.data['error_x'].append('null')
-                    self.data['subVals'].append('NaN')
-                    self.data['subSecs'].append('NaN')
-                    self.data['subLevs'].append('NaN')
-                    # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
-                else:
-                    self.data['x'].append(ind_var)
-                    self.data['y'].append('null')
-                    self.data['error_y'].append('null')
-                    self.data['subVals'].append('NaN')
-                    self.data['subSecs'].append('NaN')
-                    if has_levels:
+            if curve_stats[d_idx] == 'null' or this_n_times < completeness_qc_param * n_times_max:
+                if not hide_gaps:
+                    if plot_type == 'Profile':
+                        # profile has the stat first, and then the ind_var. The others have ind_var and then stat.
+                        # this is in the pattern of x-plotted-variable, y-plotted-variable.
+                        self.data['x'].append('null')
+                        self.data['y'].append(ind_var)
+                        self.data['error_x'].append('null')
+                        self.data['subVals'].append('NaN')
+                        self.data['subSecs'].append('NaN')
                         self.data['subLevs'].append('NaN')
-                    # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                        # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                    else:
+                        self.data['x'].append(ind_var)
+                        self.data['y'].append('null')
+                        self.data['error_y'].append('null')
+                        self.data['subVals'].append('NaN')
+                        self.data['subSecs'].append('NaN')
+                        if has_levels:
+                            self.data['subLevs'].append('NaN')
+                        # We use string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
             else:
                 # put the data in our final data dictionary, converting the numpy arrays to lists so we can jsonify
                 loop_sum += curve_stats[d_idx]
@@ -771,7 +772,7 @@ class QueryUtil:
         self.data['sum'] = loop_sum
 
     # function for parsing the data returned by a histogram query
-    def parse_query_data_histogram(self, cursor, statistic, has_levels, stat_line_type):
+    def parse_query_data_histogram(self, cursor, stat_line_type, statistic, has_levels):
         # initialize local variables
         sub_vals_all = []
         sub_secs_all = []
@@ -1017,7 +1018,7 @@ class QueryUtil:
         self.data['ymin'] = 0.0
 
     # function for parsing the data returned by a contour query
-    def parse_query_data_contour(self, cursor, statistic, has_levels, stat_line_type):
+    def parse_query_data_contour(self, cursor, stat_line_type, statistic, has_levels):
         # initialize local variables
         curve_stat_lookup = {}
         curve_n_lookup = {}
@@ -1104,7 +1105,7 @@ class QueryUtil:
         self.data['glob_stats']['n'] = n_points
 
     # function for querying the database and sending the returned data to the parser
-    def query_db(self, cursor, statement, statistic, plot_type, has_levels, completeness_qc_param, vts, stat_line_type):
+    def query_db(self, cursor, statement, stat_line_type, statistic, plot_type, has_levels, hide_gaps, completeness_qc_param, vts):
         try:
             cursor.execute(statement)
         except pymysql.Error as e:
@@ -1113,7 +1114,7 @@ class QueryUtil:
             if cursor.rowcount == 0:
                 self.error = "INFO:0 data records found"
             else:
-                if plot_type == 'TimeSeries':
+                if plot_type == 'TimeSeries' and not hide_gaps:
                     if len(vts) > 0:
                         # selecting valid_times makes the cadence irregular
                         vts = vts.replace("'", "")
@@ -1125,45 +1126,49 @@ class QueryUtil:
                         vts = sorted(vts)
                     else:
                         vts = []
-                    self.parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param, vts, stat_line_type)
+                    self.parse_query_data_timeseries(cursor, stat_line_type, statistic, has_levels,
+                                                     completeness_qc_param, vts)
                 elif plot_type == 'Histogram':
-                    self.parse_query_data_histogram(cursor, statistic, has_levels, stat_line_type)
+                    self.parse_query_data_histogram(cursor, stat_line_type, statistic, has_levels)
                 elif plot_type == 'Contour':
-                    self.parse_query_data_contour(cursor, statistic, has_levels, stat_line_type)
+                    self.parse_query_data_contour(cursor, stat_line_type, statistic, has_levels)
                 elif plot_type == 'Reliability':
                     self.parse_query_data_reliability(cursor)
                 elif plot_type == 'ROC':
                     self.parse_query_data_roc(cursor)
                 else:
-                    self.parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels,
-                                                          completeness_qc_param, stat_line_type)
+                    self.parse_query_data_specialty_curve(cursor, stat_line_type, statistic, plot_type, has_levels,
+                                                          hide_gaps, completeness_qc_param)
 
     # makes sure all expected options were indeed passed in
     def validate_options(self, options):
         assert True, options.host != None and options.port != None and options.user != None and \
                      options.password != None and options.database != None and options.statement != None and \
-                     options.statistic != None and options.plotType != None and options.hasLevels != None and \
-                     options.completenessQCParam != None and options.vts != None and options.statLineType != None
+                     options.statLineType != None and options.statistic != None and options.plotType != None and \
+                     options.hasLevels != None and options.hideGaps != None and \
+                     options.completenessQCParam != None and options.vts != None
 
     # process 'c' style options - using getopt - usage describes options
     def get_options(self, args):
         usage = ["(h)ost=", "(P)ort=", "(u)ser=", "(p)assword=", "(d)atabase=", "(q)uery=",
-                 "(s)tatistic=", "plot(t)ype=", "has(l)evels=", "(c)ompletenessQCParam=", "(v)ts="]
+                 "stat(L)ineType=", "(s)tatistic=", "plot(t)ype=", "has(l)evels=", "hide(g)aps=",
+                 "(c)ompletenessQCParam=", "(v)ts="]
         host = None
         port = None
         user = None
         password = None
         database = None
         statement = None
+        statLineType = None
         statistic = None
         plotType = None
         hasLevels = None
+        hideGaps = None
         completenessQCParam = None
         vts = None
-        statLineType = None
 
         try:
-            opts, args = getopt.getopt(args[1:], "h:p:u:P:d:q:s:t:l:c:v:L:", usage)
+            opts, args = getopt.getopt(args[1:], "h:p:u:P:d:q:L:s:t:l:g:c:v:", usage)
         except getopt.GetoptError as err:
             # print help information and exit:
             print(str(err))  # will print something like "option -a not recognized"
@@ -1185,25 +1190,27 @@ class QueryUtil:
                 database = a
             elif o == "-q":
                 statement = a
+            elif o == "-L":
+                statLineType = a
             elif o == "-s":
                 statistic = a
             elif o == "-t":
                 plotType = a
             elif o == "-l":
                 hasLevels = a
+            elif o == "-g":
+                hideGaps = a
             elif o == "-c":
                 completenessQCParam = a
             elif o == "-v":
                 vts = a
-            elif o == "-L":
-                statLineType = a
             else:
                 assert False, "unhandled option"
         # make sure none were left out...
         assert True, host != None and port != None and user != None and password != None \
-                     and database != None and statement != None and statistic != None \
-                     and plotType != None and hasLevels != None and completenessQCParam != None \
-                     and vts != None and statLineType != None
+                     and database != None and statement != None and statLineType != None and statistic != None \
+                     and plotType != None and hasLevels != None and hideGaps != None and completenessQCParam != None \
+                     and vts != None
         options = {
             "host": host,
             "port": port,
@@ -1211,12 +1218,13 @@ class QueryUtil:
             "password": password,
             "database": database,
             "statement": statement,
+            "statLineType": statLineType,
             "statistic": statistic,
             "plotType": plotType,
-            "hasLevels": hasLevels,
-            "completenessQCParam": completenessQCParam,
-            "vts": vts,
-            "statLineType": statLineType
+            "hasLevels": True if hasLevels == 'true' else False,
+            "hideGaps": True if hideGaps == 'true' else False,
+            "completenessQCParam": float(completenessQCParam),
+            "vts": vts
         }
         return options
 
@@ -1228,8 +1236,9 @@ class QueryUtil:
                               cursorclass=pymysql.cursors.DictCursor)
         with closing(cnx.cursor()) as cursor:
             cursor.execute('set group_concat_max_len = 4294967295')
-            self.query_db(cursor, options["statement"], options["statistic"], options["plotType"], options["hasLevels"],
-                          options["completenessQCParam"], options["vts"], options["statLineType"])
+            self.query_db(cursor, options["statement"], options["statLineType"], options["statistic"],
+                          options["plotType"], options["hasLevels"], options["hideGaps"],
+                          options["completenessQCParam"], options["vts"])
         cnx.close()
 
 
