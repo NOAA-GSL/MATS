@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 This script creates the metadata tables required for a METexpress ensemble app. It parses the required fields from any
 databases that begin with 'mv_' in a mysql instance.
@@ -264,16 +264,15 @@ class MEEnsemble:
                 else:
                     reconcile_vals[field] = string_metadata[d][field]
             if needsWrite:
-                update_command = 'update ' + md_table
+                update_command = 'update ' + md_table + ' set '
                 first = True
                 for field in self.string_fields:
                     if first:
                         first = False
                     else:
-                        update_command += ','
-                    update_command += ' set ' + field + ' = ' + reconcile_vals[field]
-                update_command += ' where db = "' + string_metadata[d]['db'] + "' and model = '" + string_metadata[d][
-                    'model'] + '";'
+                        update_command += ', '
+                    update_command += field + ' = "' + reconcile_vals[field] + '"'
+                update_command += ' where db = "' + string_metadata[d]['db'] + "' and model = '" + string_metadata[d]['model'] + '";'
                 devcursor.execute(update_command)
                 devcnx.commit()
 
@@ -708,7 +707,7 @@ class MEEnsemble:
 
     def main(self, options):
         self.validate_options(options)
-        self.data_table_stat_header_id_limit = options.get('data_table_stat_header_id_limit',self.data_table_stat_header_id_limit)
+        self.data_table_stat_header_id_limit = options.get('data_table_stat_header_id_limit', self.data_table_stat_header_id_limit)
         self.metadata_database = options['metadata_database']
         self.cnf_file = options['cnf_file']
         if options['mvdb'] is None:
@@ -757,6 +756,8 @@ class MEEnsemble:
         db = None
         metexpress_base_url = None
         metadata_database = "mats_metadata"
+        data_table_stat_header_id_limit = 10000000000
+
         try:
             opts, args = getopt.getopt(args[1:], "c:d:u:m:D:u:", usage)
         except getopt.GetoptError as err:
