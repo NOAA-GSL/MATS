@@ -117,10 +117,10 @@ dataReliability = function (plotParams, plotFunction) {
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "ldt.i_value bin_number, " +
-                "ldt.thresh_i threshold, " +
-                "sum(ldt.oy_i) oy_i, " +
-                "sum(ldt.on_i) on_i " +
+                "ldt.i_value as bin_number, " +
+                "ldt.thresh_i as threshold, " +
+                "sum(ldt.oy_i) as oy_i, " +
+                "sum(ldt.on_i) as on_i " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld, " +
                 "{{database}}.{{lineDataType}}_thresh ldt " +

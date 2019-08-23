@@ -397,25 +397,23 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
 
         var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
-        var sample_climo = data.subVals;
+        var sample_climo = data.sample_climo;
 
         var di = 0;
         while (di < data.x.length) {
-
             // store statistics for this di datapoint
             data.stats[di] = {
                 prob_bin: data.x[di],
                 hit_rate: data.y[di],
-                obs_y: data.error_x[di],
-                obs_n: data.subLevs[di]
+                obs_y: data.oy_all[di],
+                obs_n: data.on_all[di]
             };
-
             // the tooltip is stored in data.text
             data.text[di] = label;
             data.text[di] = data.text[di] + "<br>probability bin: " + data.x[di];
             data.text[di] = data.text[di] + "<br>hit rate: " + data.y[di];
-            data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
-            data.text[di] = data.text[di] + "<br>on: " + data.subLevs[di];
+            data.text[di] = data.text[di] + "<br>oy: " + data.oy_all[di];
+            data.text[di] = data.text[di] + "<br>on: " + data.on_all[di];
 
             di++;
         }
@@ -480,27 +478,23 @@ const processDataROC = function (dataset, appParams, curveInfoParams, plotParams
 
         var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
-        var auc = data.sum;
+        var auc = data.auc;
 
         var di = 0;
         while (di < data.x.length) {
-
             // store statistics for this di datapoint
             data.stats[di] = {
-                threshold: data.subVals[di],
+                threshold: data.threshold_all[di],
                 pody: data.y[di],
                 fa: data.x[di],
-                obs_y: data.error_x[di],
-                obs_n: data.subLevs[di]
+                obs_y: data.oy_all[di],
+                obs_n: data.on_all[di]
             };
-
             // the tooltip is stored in data.text
             data.text[di] = label;
-            data.text[di] = data.text[di] + "<br>threshold: " + data.subVals[di];
+            data.text[di] = data.text[di] + "<br>threshold: " + data.threshold_all[di];
             data.text[di] = data.text[di] + "<br>probability of detection: " + data.y[di];
             data.text[di] = data.text[di] + "<br>false alarm rate: " + data.x[di];
-            //data.text[di] = data.text[di] + "<br>oy: " + data.error_x[di];
-            //data.text[di] = data.text[di] + "<br>on: " + data.subLevs[di];
 
             di++;
         }
