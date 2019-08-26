@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 This script determines the the models for a databse that has been updated as a result
 of an mv_load operation. It then passes a list of database model pairs to the selective_update_metadata
