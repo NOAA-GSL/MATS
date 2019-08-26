@@ -118,7 +118,8 @@ Package.onUse(function (api) {
     api.addFiles('imports/startup/server/cache.js');
 
     // top level
-    api.addFiles('footer.html', "client");
+    // api.addFiles('footer.html', "client");
+    // api.addFiles('footer.js', "client");
 
     //client
     api.addFiles('client/main.html', "client");
@@ -142,6 +143,8 @@ Package.onUse(function (api) {
     api.addFiles("templates/spinner/spinner.html", "client");
     api.addFiles("templates/spinner/spinner.js", "client");
 
+    api.addFiles('templates/footer.html', "client");
+    api.addFiles('templates/footer.js', "client");
     api.addFiles('templates/Home.html', "client");
     api.addFiles('templates/Home.js', "client");
     api.addFiles('templates/CustomHome.html', "client");
