@@ -316,11 +316,12 @@
                                     <select id="colormapSelect">
                                         {{#if isContourDiff}}
                                             <option value='RdBu'>RedBlue</option>
-                                            <option value='[[0,"rgb(5,10,172)"],[0.35,"rgb(106,137,247)"],[0.45,"rgb(255,255,255)"],[0.55,"rgb(255,255,255)"],[0.6,"rgb(220,170,132)"],[0.7,"rgb(230,145,90)"],[1,"rgb(178,10,28)"]]' selected="selected">RedWhiteBlue</option>
+                                            <option value={{RdWhBuTriplet}} selected="selected">RedWhiteBlue</option>
                                         {{else}}
                                             <option value='RdBu' selected="selected">RedBlue</option>
-                                            <option value='[[0,"rgb(5,10,172)"],[0.35,"rgb(106,137,247)"],[0.45,"rgb(255,255,255)"],[0.55,"rgb(255,255,255)"],[0.6,"rgb(220,170,132)"],[0.7,"rgb(230,145,90)"],[1,"rgb(178,10,28)"]]'>RedWhiteBlue</option>
+                                            <option value={{RdWhBuTriplet}}>RedWhiteBlue</option>
                                         {{/if}}
+                                        <option value={{MPL_BrBGTriplet}}>MPL_BrBG</option>
                                         <option value='Jet'>Jet</option>
                                         <option value='Portland'>Portland</option>
                                         <option value='Rainbow'>Rainbow</option>
