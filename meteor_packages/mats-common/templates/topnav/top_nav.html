@@ -21,8 +21,10 @@
                                 style="color:white">U.S. Department of Commerce</span></a></li>
                         <li><a href="http://www.noaa.gov/"><span style="color:white">National Oceanic and Atmospheric Administration</span></a>
                         </li>
+                        {{#unless isMetexpress}}
                         <li><a href="http://www.research.noaa.gov/"><span style="color:white">NOAA Research</span></a>
                         </li>
+                        {{/unless}}
                     </ul>
                     <span class="navbar-right" style="font-size: small">{{>loginButtons}}</span>
 
@@ -65,10 +67,12 @@
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
+        {{#unless isMetexpress}}
         <div style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right: 0"
              class="container-fluid">
             <a style="font-size:large;font-weight: bold" href="http://esrl.noaa.gov/gsd/">GSD Modeling</a>
         </div>
+        {{/unless}}
     </div>
 </template>
 

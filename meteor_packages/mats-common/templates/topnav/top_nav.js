@@ -46,6 +46,10 @@ Template.topNav.helpers({
             default:
                 return "";
         }
+    },
+    isMetexpress: function () {
+       const appType = matsCollections.Settings.findOne({}).appType;
+       return appType === matsTypes.AppTypes.metexpress;
     }
 });
 
