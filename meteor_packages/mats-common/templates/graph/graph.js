@@ -668,7 +668,7 @@ Template.graph.events({
         var wind = window.open(window.location + "/preview/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h + ",width=" + w);
         setTimeout(function () {
             wind.resizeTo(w, h);
-        }, 500);
+        }, 100);
         openWindows.push(wind);
     },
     'click .closeapp': function () {
