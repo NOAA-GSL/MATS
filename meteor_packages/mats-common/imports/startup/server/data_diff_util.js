@@ -501,7 +501,7 @@ const getDataForDiffContour = function (dataset) {
     diffDataset['ncontours'] = 15;
     diffDataset['colorbar'] = dataset[0].colorbar;
     diffDataset['colorbar']['title'] = dataset[0].colorbar.title === dataset[1].colorbar.title ? dataset[0].colorbar.title : dataset[1].colorbar.title + " - " + dataset[0].colorbar.title;
-    diffDataset['colorscale'] = [[0,"rgb(5,10,172)"],[0.35,"rgb(106,137,247)"],[0.45,"rgb(255,255,255)"],[0.55,"rgb(255,255,255)"],[0.6,"rgb(220,170,132)"],[0.7,"rgb(230,145,90)"],[1,"rgb(178,10,28)"]];
+    diffDataset['colorscale'] = dataset[0].colorscale;
     diffDataset['reversescale'] = dataset[0].reversescale;
     diffDataset['contours'] = dataset[0].contours;
     const maxZ = Math.abs(diffDataset.zmax) > Math.abs(diffDataset.zmin) ? Math.abs(diffDataset.zmax) : Math.abs(diffDataset.zmin);

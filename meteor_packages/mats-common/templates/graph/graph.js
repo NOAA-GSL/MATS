@@ -1326,8 +1326,8 @@ Template.graph.events({
                 update['ncontours'] = elem.value;   // sadly plotly regards this as a "less than or equal to" value, so we have to manually set contour size
                 const isStartDefined = update['contours.start'] !== undefined;
                 const isEndDefined = update['contours.end'] !== undefined;
-                const startVal = isStartDefined ? update['contours.start'] : dataset[0].zmin+(dataset[0].zmax-dataset[0].zmin)/16;
-                const endVal = isEndDefined ? update['contours.end'] : dataset[0].zmax-(dataset[0].zmax-dataset[0].zmin)/16;
+                const startVal = isStartDefined ? update['contours.start'] : dataset[0].zmin + (dataset[0].zmax - dataset[0].zmin) / 16;
+                const endVal = isEndDefined ? update['contours.end'] : dataset[0].zmax - (dataset[0].zmax - dataset[0].zmin) / 16;
                 update['contours.size'] = (endVal - startVal) / (Number(update['ncontours']) - 1);
             }
         });
