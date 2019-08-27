@@ -182,10 +182,17 @@ changedApps=( $(echo -e ${diffs} | grep apps | cut -f2 -d'/') )
 echo -e changedApps are ${GRN}${changedApps}${NC}
 meteor_package_changed=$(echo -e ${diffs} | grep meteor_packages | cut -f2 -d'/')
 
-if [ "${build_env}" == "int" ] | [ "${build_env}" == "prod" ]; then
+if [ "${build_env}" == "int" ]; then
     cv=$(date +%Y.%m.%d)
     echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
-    /usr/bin/sed -i -e "s/\(<x-bd>\).*\(<\/x-bd>\)/$cv/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/git pull
+    /usr/bin/git push
+elif [ "${build_env}" == "prod" ]; then
+    cv=$(date +%Y.%m.%d)
+    echo -e "${GRN}setting pub date to $cv for /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
+    /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/<x-cr>$cv<\/x-cr>/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
     git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push

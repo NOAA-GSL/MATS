@@ -16,8 +16,12 @@
             <span><a href="http://esrl.noaa.gov/gsd/accessibility.html" class="navbar-link">Web Accessibility Statement</a> - </span>
             <span><a href="http://www.noaa.gov/disclaimer.html" class="navbar-link">Disclaimer for External Links</a> - </span>
             <span><a href="http://www.noaa.gov/" class="navbar-link">NOAA</a> - </span>
-            <span><a href="http://www.commerce.gov/" class="navbar-link">U.S. Department of Commerce</a> - </span>
-            <span><a href="http://research.noaa.gov/" class="navbar-link">NOAA Research</a></span>
+            {{#if isMetexpress}}
+                <span><a href="http://www.commerce.gov/" class="navbar-link">U.S. Department of Commerce</a></span>
+            {{else}}
+                <span><a href="http://www.commerce.gov/" class="navbar-link">U.S. Department of Commerce</a> - </span>
+                <span><a href="http://research.noaa.gov/" class="navbar-link">NOAA Research</a></span>
+            {{/if}}
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>
