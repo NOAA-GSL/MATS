@@ -24,6 +24,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
+    var showSignificance = false;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
@@ -229,7 +230,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     // turn the two contours into one difference contour
-    dataset = matsDataDiffUtils.getDataForDiffContour(dataset);
+    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, showSignificance);
     plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
     curves = plotParams.curves;
     dataset[0]['name'] = matsPlotUtils.getCurveText(matsTypes.PlotTypes.contourDiff, curves[0]);
