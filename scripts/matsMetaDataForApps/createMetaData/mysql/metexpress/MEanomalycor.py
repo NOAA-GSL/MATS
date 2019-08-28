@@ -5,8 +5,10 @@ databases that begin with 'mv_' in a mysql instance.
 
 Arguments: path to a mysql .cnf file
 
-Usage: ./MEanomalycor.py path_to_file.cnf
-
+Usage: ["(c)nf_file=", "[(m)ats_metadata_database_name]",
+                 "[(D)ata_table_stat_header_id_limit - default is 10,000,000,000]",
+                 "[(d)atabase name]" "(u)=metexpress_base_url"]
+        cnf_file = None
 Author: Molly B Smith
 """
 
@@ -30,7 +32,8 @@ import pymysql
 
 class MEAnomalycor:
     def __init__(self):
-        self.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
+        #self.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
+        self.script_name = __name__
         self.line_data_table = "line_data_sal1l2"
         self.metadata_table = "anomalycor_mats_metadata"
         self.app_reference = "met-anomalycor"
@@ -56,7 +59,7 @@ class MEAnomalycor:
                (
                  app_reference          varchar(50)  null,
                  running                BOOLEAN        
-               ) comment 'keep track of selective update metadata run status';""")
+               ) comment 'keep track of update metadata run status';""")
         self.cnx.commit()
 
     def set_running(self, state):
@@ -239,12 +242,57 @@ class MEAnomalycor:
         string_metadata = self.cursor.fetchall()
         self.reconcile_strings(string_metadata, devcursor, devcnx)
 
-        # finally copy the groups
+        # finally reconcile the groups
+        self.reconcile_groups(groups_table)
+
+    def reconcile_groups(self, groups_table):
         gd = {'database_groups': groups_table, 'database_groups_dev': groups_table + "_dev"}
-        self.cursor.execute("delete from {database_groups};".format(**gd))
+        #if this is an "all" databases run clear out the groups table to remove possible
+        #double entries in the event that a database had no groups and was changed
+        #to have a group
+        if self.mvdb == "all":
+            print("clearing the groups table")
+            self.cursor.execute("delete from {database_groups};".format(**gd))
+            self.cnx.commit()
+        # get the new groups
+        self.cursor.execute("select db_group, dbs from {database_groups_dev};".format(**gd))
         self.cnx.commit()
-        self.cursor.execute("insert into {database_groups} select * from {database_groups_dev};".format(**gd))
+        dev_groups = list(self.cursor.fetchall())
+        # get the old groups
+        self.cursor.execute("select db_group, dbs from {database_groups};".format(**gd))
         self.cnx.commit()
+        existing_groups = list(self.cursor.fetchall())
+        existing_group_names = set()
+        # get the existing group db names
+        for eg in existing_groups:
+            # get the group
+            existing_group_names.add(eg['db_group'])
+        for dg in dev_groups:
+            # get the group
+            dev_group_name = dg['db_group']
+            # get a list of the dbs for this group
+            dev_dbs = set(ast.literal_eval(dg['dbs']))
+            # does this group exist in the old groups....
+            gd.update({"group": dev_group_name})
+            if dev_group_name in existing_group_names:
+                # do a union and an update
+                # get the existing group db names
+                for eg in existing_groups:
+                    existing_dbs = []
+                    if eg['db_group'] == dev_group_name:
+                        existing_dbs = set(ast.literal_eval(eg['dbs']))
+                        break
+                # union the existing and new ones
+                new_dbs = list(existing_dbs | dev_dbs)
+                gd.update({"new_dbs": new_dbs})
+                self.cursor.execute(
+                    "update {database_groups} set dbs = \"{new_dbs}\" where db_group = \"{group}\";".format(**gd))
+                self.cnx.commit()
+            else:
+                # do an insert
+                self.cursor.execute(
+                    "insert into {database_groups} select * from {database_groups_dev} where db_group = \"{group}\";".format(**gd))
+                self.cnx.commit()
 
     def reconcile_strings(self, string_metadata, devcursor, devcnx):
         md_table = self.metadata_table

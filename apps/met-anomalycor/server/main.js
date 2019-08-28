@@ -686,18 +686,28 @@ const doCurveParams = function () {
             });
     }
 
+    const levelOptions = levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]];
+    var levelDefault;
+    if (levelOptions.indexOf("P500") !== -1) {
+        levelDefault = "P500";
+    } else if (levelOptions.indexOf("SFC") !== -1) {
+        levelDefault = "SFC";
+    } else {
+        levelDefault = levelOptions[0];
+    }
+
     if (matsCollections.CurveParams.find({name: 'pres-level'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'pres-level',
                 type: matsTypes.InputTypes.select,
                 optionsMap: levelOptionsMap,
-                options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],   // convenience
+                options: levelOptions,   // convenience
                 superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.InputTypes.unused,
+                default: levelDefault,
                 controlButtonVisibility: 'block',
                 controlButtonText: "Pressure Level",
                 displayOrder: 2,
