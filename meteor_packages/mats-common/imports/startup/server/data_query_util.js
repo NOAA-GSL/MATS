@@ -500,6 +500,7 @@ const queryDBContour = function (pool, statement) {
             nTextOutput: [],
             minDateTextOutput: [],
             maxDateTextOutput: [],
+            stdev: [],
             stats: [],
             glob_stats: {},
             xmin: Number.MAX_VALUE,
@@ -994,7 +995,8 @@ const parseQueryDataContour = function (rows, d) {
             nTextOutput: [],
             minDateTextOutput: [],
             maxDateTextOutput: [],
-            stats: []],
+            stdev: [],
+            stats: [],
             glob_stats: {},
             xmin:num,
             ymin:num,
@@ -1007,6 +1009,7 @@ const parseQueryDataContour = function (rows, d) {
     */
     // initialize local variables
     var curveStatLookup = {};
+    var curveStdevLookup = {};
     var curveNLookup = {};
 
     // get all the data out of the query array
@@ -1015,11 +1018,13 @@ const parseQueryDataContour = function (rows, d) {
         var rowYVal = rows[rowIndex].yVal;
         var statKey = rowXVal.toString() + '_' + rowYVal.toString();
         var stat = rows[rowIndex].stat;
+        var stdev = rows[rowIndex].stdev !== undefined ? rows[rowIndex].stdev : null;
         var n = rows[rowIndex].sub_data !== null ? rows[rowIndex].sub_data.toString().split(',').length : 0;
         var minDate = rows[rowIndex].min_secs;
         var maxDate = rows[rowIndex].max_secs;
         if (stat === undefined || stat === null || stat === 'NULL') {
             stat = null;
+            stdev = 0;
             n = 0;
             minDate = null;
             maxDate = null;
@@ -1032,6 +1037,7 @@ const parseQueryDataContour = function (rows, d) {
         d.minDateTextOutput.push(minDate);
         d.maxDateTextOutput.push(maxDate);
         curveStatLookup[statKey] = stat;
+        curveStdevLookup[statKey] = stdev;
         curveNLookup[statKey] = n;
     }
     // get the unique x and y values and sort the stats into the 2D z array accordingly
@@ -1047,9 +1053,11 @@ const parseQueryDataContour = function (rows, d) {
     var currX;
     var currY;
     var currStat;
+    var currStdev;
     var currN;
     var currStatKey;
     var currYStatArray;
+    var currYStdevArray;
     var currYNArray;
     var sum = 0;
     var nPoints = 0;
@@ -1059,25 +1067,30 @@ const parseQueryDataContour = function (rows, d) {
     for (j = 0; j < d.y.length; j++) {
         currY = d.y[j];
         currYStatArray = [];
+        currYStdevArray = [];
         currYNArray = [];
         for (i = 0; i < d.x.length; i++) {
             currX = d.x[i];
             currStatKey = currX.toString() + '_' + currY.toString();
             currStat = curveStatLookup[currStatKey];
+            currStdev = curveStdevLookup[currStatKey];
             currN = curveNLookup[currStatKey];
             if (currStat === undefined) {
                 currYStatArray.push(null);
+                currYStdevArray.push(null);
                 currYNArray.push(0);
             } else {
                 sum += currStat;
                 nPoints = nPoints + 1;
                 currYStatArray.push(currStat);
+                currYStdevArray.push(currStdev);
                 currYNArray.push(currN);
-                zmin = currStat < zmin ? currStat : zmin
-                zmax = currStat > zmax ? currStat : zmax
+                zmin = currStat < zmin ? currStat : zmin;
+                zmax = currStat > zmax ? currStat : zmax;
             }
         }
         d.z.push(currYStatArray);
+        d.stdev.push(currYStdevArray);
         d.n.push(currYNArray);
     }
 

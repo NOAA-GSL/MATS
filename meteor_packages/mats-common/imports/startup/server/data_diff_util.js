@@ -3,8 +3,7 @@
  */
 
 import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsPlotUtils} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 // returns the data for whichever curve has the larger interval in its independent variable
 const getLargeIntervalCurveData = function (dataset, diffFrom, independentVarName) {
@@ -283,7 +282,7 @@ const getDataForDiffCurve = function (dataset, diffFrom, appParams) {
 };
 
 // generates diff of two contours.
-const getDataForDiffContour = function (dataset) {
+const getDataForDiffContour = function (dataset, showSignificance) {
     /*
      DATASET ELEMENTS:
         d[i] = {
@@ -297,6 +296,7 @@ const getDataForDiffContour = function (dataset) {
             z: [[]],                        *****
             n: [[]],                        *****
             text: [],
+            stdev: [[]],                    *****
             stats: [],
             glob_stats: object,             -----
             type: string,
@@ -305,6 +305,7 @@ const getDataForDiffContour = function (dataset) {
             colorbar: object,
             colorscale: string,
             reversescale: boolean,
+            connectgaps: connectgaps,
             contours: object,
             marker: object,
             xAxisKey: [],
@@ -355,6 +356,7 @@ const getDataForDiffContour = function (dataset) {
     diffDataset['maxDateTextOutput'] = [];
     diffDataset['minDateTextOutput'] = [];
     diffDataset['stats'] = [];
+    diffDataset['stdev'] = [];
     diffDataset['glob_stats'] = {};
     diffDataset['xmax'] = -1 * Number.MAX_VALUE;
     diffDataset['xmin'] = Number.MAX_VALUE;
@@ -411,6 +413,7 @@ const getDataForDiffContour = function (dataset) {
 
         // initialize n and z arrays for this Y
         diffDataset.z[diffDataYIndex] = [];
+        diffDataset.stdev[diffDataYIndex] = [];
         diffDataset.n[diffDataYIndex] = [];
 
         var minuendXIndex = 0;
@@ -435,18 +438,23 @@ const getDataForDiffContour = function (dataset) {
             var diffNumber = 0;
             var diffMinDate = null;
             var diffMaxDate = null;
+            var isDiffSignificant = null;
             if ((minuendData.z[minuendYIndex][minuendXIndex] !== undefined && subtrahendData.z[subtrahendYIndex][subtrahendXIndex] !== undefined)
                 && (minuendData.z[minuendYIndex][minuendXIndex] !== null && subtrahendData.z[subtrahendYIndex][subtrahendXIndex] !== null)
                 && minuendX === subtrahendX && minuendY === subtrahendY) { // make sure both contours actually have data at these indices, data is not null at this point, and the x and y actually match
                 // calculate the difference values
                 diffValue = minuendData.z[minuendYIndex][minuendXIndex] - subtrahendData.z[subtrahendYIndex][subtrahendXIndex];
                 diffNumber = minuendData.n[minuendYIndex][minuendXIndex] <= subtrahendData.n[subtrahendYIndex][subtrahendXIndex] ? minuendData.n[minuendYIndex][minuendXIndex] : subtrahendData.n[subtrahendYIndex][subtrahendXIndex];
+                if (showSignificance && diffNumber > 1 && minuendData.stdev[minuendYIndex][minuendXIndex] !== null && subtrahendData.stdev[subtrahendYIndex][subtrahendXIndex] !== null) {
+                    isDiffSignificant = matsDataUtils.checkDiffContourSignificance(minuendData.z[minuendYIndex][minuendXIndex], subtrahendData.z[subtrahendYIndex][subtrahendXIndex], minuendData.stdev[minuendYIndex][minuendXIndex], subtrahendData.stdev[subtrahendYIndex][subtrahendXIndex], minuendData.n[minuendYIndex][minuendXIndex], subtrahendData.n[subtrahendYIndex][subtrahendXIndex]) ? 1 : null;
+                }
                 diffMinDate = minuendData.minDateTextOutput[minuendYIndex * minuendData.x.length + minuendXIndex] <= subtrahendData.minDateTextOutput[subtrahendYIndex * subtrahendData.x.length + subtrahendXIndex] ? minuendData.minDateTextOutput[minuendYIndex * minuendData.x.length + minuendXIndex] : subtrahendData.minDateTextOutput[subtrahendYIndex * subtrahendData.x.length + subtrahendXIndex];
                 diffMaxDate = minuendData.maxDateTextOutput[minuendYIndex * minuendData.x.length + minuendXIndex] >= subtrahendData.maxDateTextOutput[subtrahendYIndex * subtrahendData.x.length + subtrahendXIndex] ? minuendData.maxDateTextOutput[minuendYIndex * minuendData.x.length + minuendXIndex] : subtrahendData.maxDateTextOutput[subtrahendYIndex * subtrahendData.x.length + subtrahendXIndex];
                 diffDataset['sum'] += diffValue;
                 nPoints = nPoints + 1;
             }
             diffDataset.z[diffDataYIndex].push(diffValue);
+            diffDataset.stdev[diffDataYIndex].push(isDiffSignificant);
             diffDataset.n[diffDataYIndex].push(diffNumber);
             diffDataset.xTextOutput.push(diffDataX);
             diffDataset.yTextOutput.push(diffDataY);
@@ -503,6 +511,7 @@ const getDataForDiffContour = function (dataset) {
     diffDataset['colorbar']['title'] = dataset[0].colorbar.title === dataset[1].colorbar.title ? dataset[0].colorbar.title : dataset[1].colorbar.title + " - " + dataset[0].colorbar.title;
     diffDataset['colorscale'] = dataset[0].colorscale;
     diffDataset['reversescale'] = dataset[0].reversescale;
+    diffDataset['connectgaps'] = dataset[0].connectgaps;
     diffDataset['contours'] = dataset[0].contours;
     const maxZ = Math.abs(diffDataset.zmax) > Math.abs(diffDataset.zmin) ? Math.abs(diffDataset.zmax) : Math.abs(diffDataset.zmin);
     diffDataset['contours']['start'] = -1 * maxZ + (2 * maxZ) / 16;

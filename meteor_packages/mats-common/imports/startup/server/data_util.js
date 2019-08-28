@@ -6,7 +6,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 
-//this function checks if two JSON objects are identical
+// this function checks if two JSON objects are identical
 const areObjectsEqual = function (o, p) {
     if ((o && !p) || (p && !o)) {
         return false;
@@ -18,7 +18,7 @@ const areObjectsEqual = function (o, p) {
     }
 };
 
-//this function checks if values of subArray are also in superArray
+// this function checks if values of subArray are also in superArray
 const arrayContainsArray = function (superArray, subArray) {
     superArray.sort(function (a, b) {
         return Number(a) - Number(b);
@@ -42,7 +42,7 @@ const arrayContainsArray = function (superArray, subArray) {
     return j === subArray.length;
 };
 
-//this function checks if the entire array subArray is contained in superArray
+// this function checks if the entire array subArray is contained in superArray
 const arrayContainsSubArray = function (superArray, subArray) {
     var i, j, current;
     for (i = 0; i < superArray.length; ++i) {
@@ -56,7 +56,7 @@ const arrayContainsSubArray = function (superArray, subArray) {
     return false;
 };
 
-//this function checks if two arrays are identical
+// this function checks if two arrays are identical
 const arraysEqual = function (a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
@@ -67,17 +67,17 @@ const arraysEqual = function (a, b) {
     return true;
 };
 
-const arrayUnique = function(a) {
+const arrayUnique = function (a) {
     var arr = [];
-    for(var i = 0; i < a.length; i++) {
-        if(!arr.includes(a[i])) {
+    for (var i = 0; i < a.length; i++) {
+        if (!arr.includes(a[i])) {
             arr.push(a[i]);
         }
     }
     return arr;
 };
 
-//this function finds the position of the array subArray in superArray
+// this function finds the position of the array subArray in superArray
 const findArrayInSubArray = function (superArray, subArray) {
     var i, j, current;
     for (i = 0; i < superArray.length; ++i) {
@@ -91,13 +91,13 @@ const findArrayInSubArray = function (superArray, subArray) {
     return -1;
 };
 
-//this function checks if an object is a value in another object
+// this function checks if an object is a value in another object
 const objectContainsObject = function (superObject, subObject) {
     const superObjectKeys = Object.keys(superObject);
     var currentObject;
     for (var i = 0; i < superObjectKeys.length; i++) {
         currentObject = superObject[superObjectKeys[i]];
-        if (areObjectsEqual(subObject,currentObject)) {
+        if (areObjectsEqual(subObject, currentObject)) {
             return true;
         }
     }
@@ -105,7 +105,7 @@ const objectContainsObject = function (superObject, subObject) {
     return false;
 };
 
-//utility for calculating the average of an array
+// utility for calculating the average of an array
 const average = function (data) {
     var sum = data.reduce(function (sum, value) {
         return value == null ? sum : sum + value;
@@ -114,10 +114,10 @@ const average = function (data) {
     return avg;
 };
 
-//utility for calculating the stdev of an array
+// utility for calculating the stdev of an array
 const stdev = function (data) {
     var avg = average(data);
-    var squareDiffs = data.map(function(value){
+    var squareDiffs = data.map(function (value) {
         var diff = value - avg;
         return diff * diff;
     });
@@ -126,7 +126,7 @@ const stdev = function (data) {
     return stdDev;
 };
 
-//this function makes sure date strings are in the correct format
+// this function makes sure date strings are in the correct format
 const dateConvert = function (dStr) {
     if (dStr === undefined || dStr === " ") {
         var now = new Date();
@@ -153,8 +153,8 @@ const dateConvert = function (dStr) {
     return month + "/" + day + '/' + yr + ' ' + hour + ":" + minute;
 };
 
-//splits the date range string from the date selector into standardized fromDate/toDate strings,
-// plus the epochs for the fromDate and toDate
+// splits the date range string from the date selector into standardized fromDate/toDate strings,
+//  plus the epochs for the fromDate and toDate
 const getDateRange = function (dateRange) {
     var dates = dateRange.split(' - ');
     var fromDateStr = dates[0];
@@ -171,13 +171,12 @@ const getDateRange = function (dateRange) {
     }
 };
 
-//this function converts a date string into an epoch
+// this function converts a date string into an epoch
 const secsConvert = function (dStr) {
     if (dStr === undefined || dStr === " ") {
         var now = new Date();
         return now.getTime() / 1000;
-    }
-    else {
+    } else {
         var dateParts = dStr.split(' ');
         var dateArray = dateParts[0].split(/[\-\/]/);  // split on - or /    01-01-2017 OR 01/01/2017
         var month = dateArray[0];
@@ -195,11 +194,11 @@ const secsConvert = function (dStr) {
         var date_in_secs = my_date.getTime();
     }
     // to UTC time, not local time
-    //return date_in_secs/1000 -3600*6;
+    // return date_in_secs/1000 -3600*6;
     return date_in_secs / 1000;
 };
 
-//function to manage authorized logins for MATS
+// function to manage authorized logins for MATS
 const doAuthorization = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Authorization.remove({});
@@ -214,7 +213,7 @@ const doAuthorization = function () {
     }
 };
 
-//master list of colors for MATS curves
+// master list of colors for MATS curves
 const doColorScheme = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.ColorScheme.remove({});
@@ -250,7 +249,7 @@ const doColorScheme = function () {
     }
 };
 
-//utility for google login capabilities in MATS -- broken for esrl.noaa.gov/gsd/mats?
+// utility for google login capabilities in MATS -- broken for esrl.noaa.gov/gsd/mats?
 const doCredentials = function () {
 // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -266,7 +265,7 @@ const doCredentials = function () {
     }
 };
 
-//another utility to assist at logging into MATS
+// another utility to assist at logging into MATS
 const doRoles = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Roles.remove({});
@@ -276,7 +275,7 @@ const doRoles = function () {
     }
 };
 
-//for use in matsMethods.resetApp() to establish default settings
+// for use in matsMethods.resetApp() to establish default settings
 const doSettings = function (title, version, buildDate, appType, deployment_environment) {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Settings.remove({});
@@ -310,7 +309,7 @@ const doSettings = function (title, version, buildDate, appType, deployment_envi
     matsCollections.Settings.update(settingsId, {$set: settings});
 };
 
-//calculates mean, stdev, and other statistics for curve data points in all apps and plot types
+// calculates mean, stdev, and other statistics for curve data points in all apps and plot types
 const get_err = function (sVals, sSecs, sLevs, appParams) {
     /* refer to perl error_library.pl sub  get_stats
      to see the perl implementation of these statics calculations.
@@ -351,7 +350,7 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
     var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
     var sd_limit = outlierQCParam * sd;
-    //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
+    // console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
 
     // find minimum delta_time, if any value missing, set null
     var last_secs = 0;
@@ -412,7 +411,7 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
     if (sd2 > 0) {
         sd = Math.sqrt(sd2);
     }
-    //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
+    // console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
 
     // look for gaps
     var lastSecond = -1 * Number.MAX_VALUE;
@@ -445,11 +444,11 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
             }
         }
         if (lastSecond >= 0) {
-            if(lag1_t === 0 && sec !== lastSecond) {
+            if (lag1_t === 0 && sec !== lastSecond) {
                 lag1_t = j;
             }
             if (Math.abs(sec - lastSecond) > minDelta) {
-                n_deltas = (Math.abs(sec - lastSecond)/minDelta - 1) * n_pressures;
+                n_deltas = (Math.abs(sec - lastSecond) / minDelta - 1) * n_pressures;
                 // for the Autocorrelation at lag 1, it doesn't matter how many missing
                 // data we put in within gaps! (But for the other AC's it does.)
                 // since we're using only the AC at lag 1 for calculating std err, let's
@@ -458,7 +457,7 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
                 // but if we're using a different lag, which could happen, we'll need
                 // to insert all the missing data in each gap. WRM 2/22/2019
                 // $n_deltas=1;
-                for(var count = 0; count < n_deltas; count++) {
+                for (var count = 0; count < n_deltas; count++) {
                     data_wg.push(null);
                     n_gaps++;
                     j++;
@@ -473,7 +472,7 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
         j++;
     }
 
-    //from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
+    // from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
     var r = [];
     var lag_by_r = {};
     var lag1_max = lag1_p > lag1_t ? lag1_p : lag1_t;
@@ -498,7 +497,7 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
         } else {
             r[lag] = null;
         }
-        if(lag >= 1 && lag < (n + n_gaps) / 2) {
+        if (lag >= 1 && lag < (n + n_gaps) / 2) {
             lag_by_r[r[lag]] = lag;
         }
     }
@@ -514,11 +513,11 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
     if (r1_p >= autocorr_limit) {
         r1_p = autocorr_limit;
     }
-    if(r1_t >= autocorr_limit) {
+    if (r1_t >= autocorr_limit) {
         r1_t = autocorr_limit;
     }
 
-    const betsy = Math.sqrt((n_good-1)*(1. - r1_p)*(1. - r1_t));
+    const betsy = Math.sqrt((n_good - 1) * (1. - r1_p) * (1. - r1_t));
     var stde_betsy;
     if (betsy !== 0) {
         stde_betsy = sd / betsy;
@@ -538,10 +537,78 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
         sum: sum_d,
         qaCorrected: qaCorrected
     };
-    //console.log("stats are " + JSON.stringify(stats));
+    // console.log("stats are " + JSON.stringify(stats));
     // stde_betsy is standard error with auto correlation
-    //console.log("---------\n\n");
+    // console.log("---------\n\n");
     return stats;
+};
+
+// use a student's t-test to see if a point on a contour diff is statistically significant
+const checkDiffContourSignificance = function (x1, x2, s1, s2, n1, n2) {
+    const t = getTValue(x1, x2, s1, s2, n1, n2);
+    const df = getDfValue(x1, x2, s1, s2, n1, n2);
+    return isStudentTTestValueSignificant(t, df);
+};
+
+// calculate the t value for a student's t-test
+const getTValue = function (x1, x2, s1, s2, n1, n2) {
+    return Math.abs(x1 - x2) / Math.sqrt((Math.pow(s1, 2) / n1) + (Math.pow(s2, 2) / n2));
+};
+
+// calculate the degrees of freedom for a student's t-test
+const getDfValue = function (x1, x2, s1, s2, n1, n2) {
+    return Math.pow(((Math.pow(s1, 2) / n1) + (Math.pow(s2, 2) / n2)), 2) / ((1 / (n1 - 1)) * Math.pow((Math.pow(s1, 2) / n1), 2) + (1 / (n2 - 1)) * Math.pow((Math.pow(s2, 2) / n2), 2));
+};
+
+// checks if a t value an degrees of freedom combo is significant
+const isStudentTTestValueSignificant = function (t, df) {
+    const sigThreshs = {
+        1: 12.706,
+        2: 4.303,
+        3: 3.182,
+        4: 2.776,
+        5: 2.571,
+        6: 2.477,
+        7: 2.365,
+        8: 2.306,
+        9: 2.262,
+        10: 2.228,
+        11: 2.201,
+        12: 2.179,
+        13: 2.160,
+        14: 2.145,
+        15: 2.131,
+        16: 2.120,
+        17: 2.110,
+        18: 2.101,
+        19: 2.093,
+        20: 2.086,
+        21: 2.080,
+        22: 2.074,
+        23: 2.069,
+        24: 2.064,
+        25: 2.060,
+        26: 2.056,
+        27: 2.052,
+        28: 2.048,
+        29: 2.043,
+        30: 2.042
+    };
+
+    var sigThresh;
+    if (df <= 30) {
+        sigThresh = sigThreshs[df];
+    } else if (df <= 40) {
+        sigThresh = 2.021;
+    } else if (df <= 60) {
+        sigThresh = 2.000
+    } else if (df <= 120) {
+        sigThresh = 1.980
+    } else {
+        sigThresh = 1.960
+    }
+
+    return t > sigThresh
 };
 
 // utility to process the user-input histogram customization controls
@@ -865,8 +932,8 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
 
         /*
         var d = {// d will contain the curve data
-            x: [], //placeholder
-            y: [], //placeholder
+            x: [], // placeholder
+            y: [], // placeholder
             error_x: [], // unused
             error_y: [], // unused
             subVals: [],
@@ -874,7 +941,7 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
             subLevs: [],
             glob_stats: {}, // placeholder
             bin_stats: [], // placeholder
-            text: [], //placeholder
+            text: [], // placeholder
             xmax: Number.MIN_VALUE,
             xmin: Number.MAX_VALUE,
             ymax: Number.MIN_VALUE,
@@ -942,12 +1009,11 @@ const getDiffContourCurveParams = function (curves) {
     return [newCurve];
 };
 
-//used for sorting arrays
+// used for sorting arrays
 const sortFunction = function (a, b) {
     if (a[0] === b[0]) {
         return 0;
-    }
-    else {
+    } else {
         return (a[0] < b[0]) ? -1 : 1;
     }
 };
@@ -972,6 +1038,7 @@ export default matsDataUtils = {
     doRoles: doRoles,
     doSettings: doSettings,
     get_err: get_err,
+    checkDiffContourSignificance: checkDiffContourSignificance,
     setHistogramParameters: setHistogramParameters,
     calculateHistogramBins: calculateHistogramBins,
     prescribeHistogramBins: prescribeHistogramBins,

@@ -444,11 +444,56 @@ const generateContourCurveOptions = function (curve, axisMap, dataset, appParams
     return curveOptions;
 };
 
+const getContourSignificanceLayer = function (dataset) {
+
+    const label = "Curve1-Curve0 Significance";
+    var curveOptions = {
+        label: label,
+        curveId: label,
+        annotation: "",
+        name: label,
+        x: [],
+        y: [],
+        type: "scatter",
+        mode: "markers",
+        marker: {
+            symbol: "circle",
+            color: "black",
+            size: 6
+        },
+        hoverinfo: 'skip',
+        visible: true,
+        showlegend: true
+    };
+
+    const xs = dataset[0].x;
+    const ys = dataset[0].y;
+    const sigMask = dataset[0].stdev;
+
+    var xidx;
+    var yidx;
+    var currX;
+    var currY;
+    for (xidx= 0; xidx < xs.length; xidx++) {
+        currX = xs[xidx];
+        for (yidx= 0; yidx < ys.length; yidx++) {
+            currY = ys[yidx];
+            if (sigMask[yidx][xidx] === 1) {
+                curveOptions.x.push(currX);
+                curveOptions.y.push(currY);
+            }
+        }
+    }
+
+    return curveOptions;
+};
+
 export default matsDataCurveOpsUtils = {
 
     getHorizontalValueLine: getHorizontalValueLine,
     getVerticalValueLine: getVerticalValueLine,
     getLinearValueLine: getLinearValueLine,
+    getContourSignificanceLayer: getContourSignificanceLayer,
 
     generateSeriesCurveOptions: generateSeriesCurveOptions,
     generateProfileCurveOptions: generateProfileCurveOptions,

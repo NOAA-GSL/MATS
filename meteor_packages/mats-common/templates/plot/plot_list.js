@@ -426,16 +426,6 @@ Template.plotList.events({
 });
 Template.plotList.onRendered( function() {
     // last bit of stuff that needs to be done when the page finally renders
-
-    // hide selectors that don't belong to timeseries
-    var elem;
-    for (var sidx = 0; sidx < matsTypes.selectorsToHide.length; sidx++) {
-        elem = document.getElementById(matsTypes.selectorsToHide[sidx] + '-item');
-        if (elem && elem.style) {
-            elem.style.display = 'none';
-        }
-    }
-
     // need to display correct selectors on page load if default plot type is not timeseries
     const plotType = matsPlotUtils.getPlotType();
     Session.set('plotType', plotType);  // need to make sure plotType is in the Session this early
@@ -476,6 +466,7 @@ Template.plotList.onRendered( function() {
             break;
         case matsTypes.PlotTypes.timeSeries:
         default:
+            matsCurveUtils.showTimeseriesFace();
             break;
     }
 
