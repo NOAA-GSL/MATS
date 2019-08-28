@@ -13,7 +13,7 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/matsMetaDataForApps/createMetaData/mysql/metexpress/MEmetadata_update.py" />
-    <option name="PARAMETERS" value="-c ${HOME}/model_vxtest_3312_met_admin.cnf -u https://www.esrl.noaa.gov/gsd/mats" />
+    <option name="PARAMETERS" value="-c ${HOME}/model_vxtest_3312_met_admin.cnf -u https://www.esrl.noaa.gov/gsd/mats -m tmp_mats_metadata" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />
