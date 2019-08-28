@@ -314,14 +314,10 @@
                                 <div class="row">
                                     <label class="col-sm-5">Select colormap: </label>
                                     <select id="colormapSelect">
-                                        {{#if isContourDiff}}
-                                            <option value='RdBu'>RedBlue</option>
-                                            <option value={{RdWhBuTriplet}} selected="selected">RedWhiteBlue</option>
-                                        {{else}}
-                                            <option value='RdBu' selected="selected">RedBlue</option>
-                                            <option value={{RdWhBuTriplet}}>RedWhiteBlue</option>
-                                        {{/if}}
-                                        <option value={{MPL_BrBGTriplet}}>Wet/Dry (MPL_BrBG)</option>
+                                        <option value='RdBu' selected="selected">RedBlue</option>
+                                        <option value={{RdWhBuTriplet}}>RedWhiteBlue</option>
+                                        <option value={{MPL_BrBGTriplet}}>Wet/Dry (No White)</option>
+                                        <option value={{MPL_BrBWGTriplet}}>Wet/Dry (Center White)</option>
                                         <option value='Jet'>Jet</option>
                                         <option value='Portland'>Portland</option>
                                         <option value='Rainbow'>Rainbow</option>
