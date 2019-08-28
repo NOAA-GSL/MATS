@@ -741,7 +741,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['unix_timestamp(ld.fcst_valid_beg)'],
             '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
             '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
