@@ -112,7 +112,7 @@ Template.GraphStandAlone.helpers({
                                 Plotly.restyle($("#placeholder")[0], curveOpsUpdate, uidx);
                             }
                         }, mapLoadPause);
-                    }, 100);
+                    }, 1000);
 
                     // append annotations
                     $("#legendContainer").append(ret.annotation);

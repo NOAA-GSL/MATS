@@ -412,12 +412,16 @@ const showTimeseriesFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -456,12 +460,16 @@ const showProfileFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -500,12 +508,16 @@ const showDieOffFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -548,12 +560,16 @@ const showThresholdFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -592,12 +608,16 @@ const showValidTimeFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -636,12 +656,16 @@ const showDailyModelCycleFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -680,12 +704,16 @@ const showReliabilityFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'none',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -724,12 +752,16 @@ const showROCFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'none',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -769,12 +801,16 @@ const showMapFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'none',
             'sites': 'block',
             'sitesMap': 'block',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -813,12 +849,16 @@ const showHistogramFace = function () {
             'histogram-bin-controls': 'block',
             'histogram-yaxis-controls': 'block',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -859,13 +899,20 @@ const showContourFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',
             'sitesMap' : 'none',
             'x-axis-parameter': 'block',
-            'y-axis-parameter': 'block'
+            'y-axis-parameter': 'block',
+            'significance': 'none'
         };
+        if (isContourDiff) {
+            faceOptions['significance'] = 'block';
+        }
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -927,6 +974,9 @@ const showScatterFace = function () {
             'histogram-bin-controls': 'none',
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
             'sites' : 'none',

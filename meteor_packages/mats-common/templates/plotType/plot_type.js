@@ -610,6 +610,9 @@ Template.plotType.events({
                     if (!curves[ci]['histogram-yaxis-controls'] && matsCollections.CurveParams.findOne({name: 'histogram-yaxis-controls'}) && matsCollections.CurveParams.findOne({name: 'histogram-yaxis-controls'}).default) {
                         curves[ci]['histogram-yaxis-controls'] = matsCollections.CurveParams.findOne({name: 'histogram-yaxis-controls'}).default;
                     }
+                    if (!curves[ci]['significance'] && matsCollections.CurveParams.findOne({name: 'significance'}) && matsCollections.CurveParams.findOne({name: 'significance'}).default) {
+                        curves[ci]['significance'] = matsCollections.CurveParams.findOne({name: 'significance'}).default;
+                    }
                 }
                 Session.set('Curves', curves);
             }

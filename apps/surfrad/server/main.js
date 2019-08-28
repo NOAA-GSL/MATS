@@ -378,11 +378,11 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         const statOptionsMap = {
-            'MAE': ['avg(abs({{variable0}})) as stat, count({{variable0}}) as N0, group_concat(abs({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'Bias (Model - Obs)': ['-1 * avg({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'N': ['count({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(count({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'Model average': ['avg({{variable1}}) as stat, count({{variable1}}) as N0, group_concat(({{variable1}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'Obs average': ['avg({{variable2}}) as stat, count({{variable2}}) as N0, group_concat(({{variable2}}), ";", m0.secs order by m0.secs) as sub_data'],
+            'MAE': ['avg(abs({{variable0}})) as stat, stddev(abs({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(abs({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
+            'Bias (Model - Obs)': ['-1 * avg({{variable0}}) as stat, stddev(-1 * ({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
+            'N': ['count({{variable0}}) as stat, stddev(count({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(count({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
+            'Model average': ['avg({{variable1}}) as stat, stddev({{variable1}}) as stdev, count({{variable1}}) as N0, group_concat(({{variable1}}), ";", m0.secs order by m0.secs) as sub_data'],
+            'Obs average': ['avg({{variable2}}) as stat, stddev({{variable2}}) as stdev, count({{variable2}}) as N0, group_concat(({{variable2}}), ";", m0.secs order by m0.secs) as sub_data'],
             'Std deviation (do not plot matched)': ['std(-1*{{variable0}}) as stat, count({{variable0}}) as N0'],
             'RMS (do not plot matched)': ['sqrt(avg(pow({{variable0}},2))) as stat, count({{variable0}}) as N0']
 
@@ -692,6 +692,25 @@ const doCurveParams = function () {
             });
     }
 
+   if (matsCollections.CurveParams.find({name: 'significance'}).count() == 0) {
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'significance',
+                type: matsTypes.InputTypes.select,
+                options: ['false', 'true'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 'false',
+                controlButtonVisibility: 'block',
+                controlButtonText: "overlay student's t-test",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
     // determine date defaults for dates and curveDates
     var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
     modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
@@ -867,7 +886,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter", "significance"
             ],
             groupSize: 6
 
