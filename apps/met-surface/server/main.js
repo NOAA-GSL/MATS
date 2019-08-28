@@ -692,7 +692,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['unix_timestamp(ld.fcst_valid_beg)'],
             '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
             '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
@@ -719,18 +719,28 @@ const doCurveParams = function () {
             });
     }
 
+    const levelOptions = levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]];
+    var levelDefault;
+    if (levelOptions.indexOf("P500") !== -1) {
+        levelDefault = "P500";
+    } else if (levelOptions.indexOf("SFC") !== -1) {
+        levelDefault = "SFC";
+    } else {
+        levelDefault = levelOptions[0];
+    }
+
     if (matsCollections.CurveParams.find({name: 'pres-level'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'pres-level',
                 type: matsTypes.InputTypes.select,
                 optionsMap: levelOptionsMap,
-                options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],   // convenience
+                options: levelOptions,   // convenience
                 superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.InputTypes.unused,
+                default: levelDefault,
                 controlButtonVisibility: 'block',
                 controlButtonText: "Ground Level",
                 displayOrder: 2,
