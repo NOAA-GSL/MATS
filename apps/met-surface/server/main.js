@@ -655,7 +655,7 @@ const doCurveParams = function () {
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['0', '6', '12', '18'],
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: [],
                 controlButtonCovered: true,
                 unique: false,
@@ -671,13 +671,11 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
 
-        const optionsArr = ['0', '6', '12', '18'];
-
         matsCollections.CurveParams.insert(
             {
                 name: 'utc-cycle-start',
                 type: matsTypes.InputTypes.select,
-                options: optionsArr,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
