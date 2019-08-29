@@ -70,8 +70,7 @@ dataContour = function (plotParams, plotFunction) {
             "avg(ld.ffbar) as sub_ffbar, " +
             "avg(ld.oobar) as sub_oobar, " +
             "avg(ld.fobar) as sub_fobar, " +
-            "avg(ld.total) as sub_total, " +
-            "avg(ld.mae) as sub_mae,";
+            "avg(ld.total) as sub_total,";
         lineDataType = "line_data_sl1l2";
     } else if (statLineType === 'ctc') {
         statisticsClause = "count(ld.fy_oy) as n, " +

@@ -139,10 +139,6 @@ class QueryUtil:
             bcmse = np.empty(len(ffbar))
         return bcmse
 
-    # function for calculating mae from MET partial sums
-    def calculate_mae(self, mae):
-        return mae
-
     # function for calculating additive bias from MET partial sums
     def calculate_me(self, fbar, obar):
         try:
@@ -324,14 +320,13 @@ class QueryUtil:
         return pofd
 
     # function for determining and calling the appropriate scalar statistical calculation function
-    def calculate_scalar_stat(self, statistic, fbar, obar, ffbar, oobar, fobar, total, mae):
+    def calculate_scalar_stat(self, statistic, fbar, obar, ffbar, oobar, fobar, total):
         stat_switch = {  # dispatcher of statistical calculation functions
             'ACC': self.calculate_acc,
             'RMSE': self.calculate_rmse,
             'Bias-corrected RMSE': self.calculate_bcrmse,
             'MSE': self.calculate_mse,
             'Bias-corrected MSE': self.calculate_bcmse,
-            'MAE': self.calculate_mae,
             'ME (Additive bias)': self.calculate_me,
             'Multiplicative bias': self.calculate_mbias,
             'N': self.calculate_n,
@@ -348,7 +343,6 @@ class QueryUtil:
             'Bias-corrected RMSE': (fbar, obar, ffbar, oobar, fobar),
             'MSE': (ffbar, oobar, fobar),
             'Bias-corrected MSE': (fbar, obar, ffbar, oobar, fobar),
-            'MAE': (mae,),
             'ME (Additive bias)': (fbar, obar),
             'Multiplicative bias': (fbar, obar),
             'N': (total,),
@@ -413,40 +407,123 @@ class QueryUtil:
     def get_stat(self, has_levels, row, statistic, stat_line_type):
         try:
             # get all of the sub-values for each time
-            sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
-            sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
-            sub_values = np.empty(len(sub_secs))
-            stat = 'null'
-            if has_levels:
-                sub_levs_raw = str(row['sub_levs']).split(',')
-                if self.is_number(sub_levs_raw[0]):
-                    sub_levs = np.array([int(i) for i in sub_levs_raw])
-                else:
-                    sub_levs = np.array(sub_levs_raw)
-            else:
-                sub_levs = np.empty(len(sub_secs))
-
             if stat_line_type == 'scalar':
-                sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
-                sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
-                sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
-                sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
-                sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
-                if 'sub_mae' in row:
-                    sub_mae = np.array([float(i) for i in (str(row['sub_mae']).split(','))])
+                if 'sub_data' in row:
+                    # everything except contour plots should be in this format
+                    sub_data = str(row['sub_data']).split(',')
+                    sub_fbar = []
+                    sub_obar = []
+                    sub_ffbar = []
+                    sub_oobar = []
+                    sub_fobar = []
+                    sub_total = []
+                    sub_secs = []
+                    sub_levs = []
+                    for sub_datum in sub_data:
+                        sub_datum = sub_datum.split(';')
+                        sub_fbar.append(float(sub_datum[0]))
+                        sub_obar.append(float(sub_datum[1]))
+                        sub_ffbar.append(float(sub_datum[2]))
+                        sub_oobar.append(float(sub_datum[3]))
+                        sub_fobar.append(float(sub_datum[4]))
+                        sub_total.append(float(sub_datum[5]))
+                        sub_secs.append(float(sub_datum[6]))
+                        if len(sub_datum) > 7:
+                            if self.is_number(sub_datum[7]):
+                                sub_levs.append(int(sub_datum[7]))
+                            else:
+                                sub_levs.append(sub_datum[7])
+                    sub_fbar = np.asarray(sub_fbar)
+                    sub_obar = np.asarray(sub_obar)
+                    sub_ffbar = np.asarray(sub_ffbar)
+                    sub_oobar = np.asarray(sub_oobar)
+                    sub_fobar = np.asarray(sub_fobar)
+                    sub_total = np.asarray(sub_total)
+                    sub_secs = np.asarray(sub_secs)
+                    if len(sub_levs) == 0:
+                        sub_levs = np.empty(len(sub_secs))
+                    else:
+                        sub_levs = np.asarray(sub_levs)
                 else:
-                    sub_mae = np.empty(len(sub_fbar))
+                    # contour plot data
+                    sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
+                    sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
+                    sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
+                    sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
+                    sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
+                    sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
+                    sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
+                    if has_levels:
+                        sub_levs_raw = str(row['sub_levs']).split(',')
+                        if self.is_number(sub_levs_raw[0]):
+                            sub_levs = np.array([int(i) for i in sub_levs_raw])
+                        else:
+                            sub_levs = np.array(sub_levs_raw)
+                    else:
+                        sub_levs = np.empty(len(sub_secs))
+
                 # calculate the scalar statistic
                 sub_values, stat = self.calculate_scalar_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar,
-                                                              sub_fobar, sub_total, sub_mae)
+                                                              sub_fobar, sub_total)
             elif stat_line_type == 'ctc':
-                sub_fy_oy = np.array([float(i) for i in (str(row['sub_fy_oy']).split(','))])
-                sub_fy_on = np.array([float(i) for i in (str(row['sub_fy_on']).split(','))])
-                sub_fn_oy = np.array([float(i) for i in (str(row['sub_fn_oy']).split(','))])
-                sub_fn_on = np.array([float(i) for i in (str(row['sub_fn_on']).split(','))])
+                if 'sub_data' in row:
+                    # everything except contour plots should be in this format
+                    sub_data = str(row['sub_data']).split(',')
+                    sub_fy_oy = []
+                    sub_fy_on = []
+                    sub_fn_oy = []
+                    sub_fn_on = []
+                    sub_total = []
+                    sub_secs = []
+                    sub_levs = []
+                    for sub_datum in sub_data:
+                        sub_datum = sub_datum.split(';')
+                        sub_fy_oy.append(float(sub_datum[0]))
+                        sub_fy_on.append(float(sub_datum[1]))
+                        sub_fn_oy.append(float(sub_datum[2]))
+                        sub_fn_on.append(float(sub_datum[3]))
+                        sub_total.append(float(sub_datum[4]))
+                        sub_secs.append(float(sub_datum[5]))
+                        if len(sub_datum) > 6:
+                            if self.is_number(sub_datum[6]):
+                                sub_levs.append(int(sub_datum[6]))
+                            else:
+                                sub_levs.append(sub_datum[6])
+                    sub_fy_oy = np.asarray(sub_fy_oy)
+                    sub_fy_on = np.asarray(sub_fy_on)
+                    sub_fn_oy = np.asarray(sub_fn_oy)
+                    sub_fn_on = np.asarray(sub_fn_on)
+                    sub_total = np.asarray(sub_total)
+                    sub_secs = np.asarray(sub_secs)
+                    if len(sub_levs) == 0:
+                        sub_levs = np.empty(len(sub_secs))
+                    else:
+                        sub_levs = np.asarray(sub_levs)
+                else:
+                    # contour plot data
+                    sub_fy_oy = np.array([float(i) for i in (str(row['sub_fy_oy']).split(','))])
+                    sub_fy_on = np.array([float(i) for i in (str(row['sub_fy_on']).split(','))])
+                    sub_fn_oy = np.array([float(i) for i in (str(row['sub_fn_oy']).split(','))])
+                    sub_fn_on = np.array([float(i) for i in (str(row['sub_fn_on']).split(','))])
+                    sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
+                    sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
+                    if has_levels:
+                        sub_levs_raw = str(row['sub_levs']).split(',')
+                        if self.is_number(sub_levs_raw[0]):
+                            sub_levs = np.array([int(i) for i in sub_levs_raw])
+                        else:
+                            sub_levs = np.array(sub_levs_raw)
+                    else:
+                        sub_levs = np.empty(len(sub_secs))
+
                 # calculate the ctc statistic
                 sub_values, stat = self.calculate_ctc_stat(statistic, sub_fy_oy, sub_fy_on, sub_fn_oy, sub_fn_on,
                                                            sub_total)
+            else:
+                stat = 'null'
+                sub_secs = np.empty(0)
+                sub_levs = np.empty(0)
+                sub_values = np.empty(0)
 
         except KeyError as e:
             self.error = "Error parsing query data. The expected fields don't seem to be present " \
