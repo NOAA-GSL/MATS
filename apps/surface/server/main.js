@@ -430,34 +430,34 @@ const doCurveParams = function () {
             //The original RMS query for temp in rucstats ends with 'avg(m0.N_{{variable0}})/1000', not 'sum(m0.N_{{variable0}})/1000'
             //as is used in MATS. For the added queries, I am using the rucstats syntax.
 
-            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}), ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
+            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/1.8 as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/1.8) as stdev, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})) as stdev, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}), ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/2.23693629 as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/2.23693629) as stdev, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
             ],
-            'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                '-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
+            'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, stddev(-m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8) as stdev, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                '-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, stddev(-m0.sum_{{variable0}}/m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, stddev((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629) as stdev, sum(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
             ],
-            'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
+            'N': ['sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
             ],
             'Model average': [
-                '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}-32.)/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})) as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_model_{{variable1}}/m0.N_{{variable0}}/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
+                '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, stddev(((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}-32.)/1.8) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat(((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}-32.)/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})) as stat, stddev((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, stddev(m0.sum_model_{{variable1}}/m0.N_{{variable0}}/2.23693629) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_model_{{variable1}}/m0.N_{{variable0}}/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
             ],
-            'Obs average': ['(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_ob_{{variable1}}/m0.N_{{variable0}}-32.)/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                '(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}))/ as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
+            'Obs average': ['(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, stddev((m0.sum_ob_{{variable1}}/m0.N_{{variable0}}-32.)/1.8) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_ob_{{variable1}}/m0.N_{{variable0}}-32.)/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                '(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}))/ as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}/2.23693629) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
             ],
-            'Std deviation': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)), ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
+            'Std deviation': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/1.8 as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/1.8) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)), ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/2.23693629 as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/2.23693629) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data'
             ],
-            'MAE': ['sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}})) as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}})), ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
-                'sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data']
+            'MAE': ['sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8 as stat, stddev((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}})) as stat, stddev((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}})), ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data',
+                'sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629 as stat, stddev((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629) as stdev, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629, ";", (m0.valid_day) + 3600 * m0.hour order by (m0.valid_day) + 3600 * m0.hour) as sub_data']
 
         };
 
@@ -558,7 +558,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['(m0.valid_day)+3600*m0.hour'],
             '3hr': ['ceil(' + 60 * 60 * 3 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 3 + ')+' + 60 * 60 * 3 + '/2)'],
             '6hr': ['ceil(' + 60 * 60 * 6 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 6 + ')+' + 60 * 60 * 6 + '/2)'],
@@ -669,7 +669,7 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
 
-        optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+        const optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
 
         matsCollections.CurveParams.insert(
             {
@@ -854,6 +854,25 @@ const doCurveParams = function () {
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 5,
+            });
+    }
+
+   if (matsCollections.CurveParams.find({name: 'significance'}).count() == 0) {
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'significance',
+                type: matsTypes.InputTypes.select,
+                options: ['false', 'true'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 'false',
+                controlButtonVisibility: 'block',
+                controlButtonText: "overlay student's t-test",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 6,
             });
     }
 
@@ -1064,7 +1083,7 @@ var doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter", "significance"
             ],
             groupSize: 6
 

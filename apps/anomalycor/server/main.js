@@ -623,6 +623,25 @@ const doCurveParams = function () {
             });
     }
 
+   if (matsCollections.CurveParams.find({name: 'significance'}).count() == 0) {
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'significance',
+                type: matsTypes.InputTypes.select,
+                options: ['false', 'true'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 'false',
+                controlButtonVisibility: 'block',
+                controlButtonText: "overlay student's t-test",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
     // determine date defaults for dates and curveDates
     var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
     modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
@@ -794,7 +813,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "pres-level", "forecast-length", "valid-time", "utc-cycle-start", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "variable", "pres-level", "forecast-length", "valid-time", "utc-cycle-start", "x-axis-parameter", "y-axis-parameter", "significance"
             ],
             groupSize: 6
 

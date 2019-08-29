@@ -756,14 +756,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.reliability,
             graphFunction: "graphPlotly",
             dataFunction: "dataReliability",
-            plotSpecFunction: "plotSpecDataSeries",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.roc,
             graphFunction: "graphPlotly",
             dataFunction: "dataROC",
-            plotSpecFunction: "plotSpecDataSeries",
             checked: true
         });
     }

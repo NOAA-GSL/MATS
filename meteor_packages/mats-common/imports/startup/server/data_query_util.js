@@ -2,28 +2,26 @@
  * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {matsDataUtils, matsTypes, matsCollections} from 'meteor/randyp:mats-common';
+import {matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {Meteor} from "meteor/meteor";
 
-//const Future = require('fibers/future');
-
-//utility to get the cadence for a particular model, so that the query function
-//knows where to include null points for missing data.
+// utility to get the cadence for a particular model, so that the query function
+// knows where to include null points for missing data.
 const getModelCadence = function (pool, dataSource, startDate, endDate) {
     var rows = [];
     var cycles;
     try {
-        //this query should only return data if the model cadence is irregular.
-        //otherwise, the cadence will be calculated later by the query function.
+        // this query should only return data if the model cadence is irregular.
+        // otherwise, the cadence will be calculated later by the query function.
         rows = simplePoolQueryWrapSynchronous(pool, "select cycle_seconds " +
             "from mats_common.primary_model_orders " +
             "where model = " +
             "(select new_model as display_text from mats_common.standardized_model_list where old_model = '" + dataSource + "');");
         var cycles_raw = JSON.parse(rows[0].cycle_seconds);
         var cycles_keys = Object.keys(cycles_raw).sort();
-        //there can be difference cadences for different time periods (each time period is a key in cycles_keys,
-        //with the cadences for that period represented as values in cycles_raw), so this section identifies all
-        //time periods relevant to the requested date range, and returns the union of their cadences.
+        // there can be difference cadences for different time periods (each time period is a key in cycles_keys,
+        // with the cadences for that period represented as values in cycles_raw), so this section identifies all
+        // time periods relevant to the requested date range, and returns the union of their cadences.
         if (cycles_keys.length !== 0) {
             var newTime;
             var chosenStartTime;
@@ -69,49 +67,50 @@ const getModelCadence = function (pool, dataSource, startDate, endDate) {
             }
         }
     } catch (e) {
-        //ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
-        //if there isn't a cycles_per_model entry, it just means that the model has a regular cadence
+        // ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
+        // if there isn't a cycles_per_model entry, it just means that the model has a regular cadence
     }
     if (cycles !== null && cycles !== undefined && cycles.length > 0) {
         for (var c = 0; c < cycles.length; c++) {
             cycles[c] = cycles[c] * 1000;         // convert to milliseconds
         }
     } else {
-        cycles = []; //regular cadence model--cycles will be calculated later by the query function
+        cycles = []; // regular cadence model--cycles will be calculated later by the query function
     }
     return cycles;
 };
 
-//this function calculates the interval between the current time and the next time for irregular cadence models.
+// this function calculates the interval between the current time and the next time for irregular cadence models.
 const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles) {
-    //have to calculate the time_interval
+    // have to calculate the time_interval
     var ti;
     var dayInMilliSeconds = 24 * 3600 * 1000;
     var minCycleTime = Math.min(...cycles);
 
-    var thisCadence = (avTime % dayInMilliSeconds); //current hour of day (valid time)
-    if (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) < 0) { //check to see if cycle time was on previous day -- if so, need to wrap around 00Z to get current hour of day (cycle time)
-        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) + dayInMilliSeconds); //current hour of day (cycle time)
+    var thisCadence = (avTime % dayInMilliSeconds); // current hour of day (valid time)
+    if (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) < 0) { // check to see if cycle time was on a previous day -- if so, need to wrap around 00Z to get current hour of day (cycle time)
+        var numberOfDaysBack = Math.ceil(-1 * (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000)) / dayInMilliSeconds);
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) + numberOfDaysBack * dayInMilliSeconds); // current hour of day (cycle time)
     } else {
-        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000)); //current hour of day (cycle time)
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000)); // current hour of day (cycle time)
     }
 
-    var thisCadenceIdx = cycles.indexOf(thisCadence); //fnd our where the current hour of day is in the cycles array
+    var thisCadenceIdx = cycles.indexOf(thisCadence); // find out where the current hour of day is in the cycles array
     if (thisCadenceIdx !== -1) {
-        var nextCadenceIdx = thisCadenceIdx + 1; //choose the next hour of the day
+        var nextCadenceIdx = thisCadenceIdx + 1; // choose the next hour of the day
         if (nextCadenceIdx >= cycles.length) {
-            ti = (dayInMilliSeconds - thisCadence) + minCycleTime; //if we were at the last cycle cadence, wrap back around to the first cycle cadence
+            ti = (dayInMilliSeconds - thisCadence) + minCycleTime; // if we were at the last cycle cadence, wrap back around to the first cycle cadence
         } else {
-            ti = cycles[nextCadenceIdx] - cycles[thisCadenceIdx]; //otherwise take the difference between the current and next hours of the day.
+            ti = cycles[nextCadenceIdx] - cycles[thisCadenceIdx]; // otherwise take the difference between the current and next hours of the day.
         }
     } else {
-        ti = time_interval; //if for some reason the current hour of the day isn't in the cycles array, default to the regular cadence interval
+        ti = time_interval; // if for some reason the current hour of the day isn't in the cycles array, default to the regular cadence interval
     }
 
     return ti;
 };
 
-//utility for querying the DB
+// utility for querying the DB
 const simplePoolQueryWrapSynchronous = function (pool, statement) {
     /*
      simple synchronous query of statement to the specified pool.
@@ -133,14 +132,108 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
     }
 };
 
-//this method queries the database for timeseries plots
-const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, validTimes, hasLevels, forceRegularCadence) {
-    //upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
-    const Future = require('fibers/future');
+// utility for querying the DB via Python
+const queryDBPython = function (pool, statement, statLineType, statistic, appParams, vts) {
     if (Meteor.isServer) {
-        const plotParams = matsDataUtils.getPlotParamsFromStack();
-        const completenessQCParam = Number(plotParams["completeness"]) / 100;
+        // send the query statement to the python query function
+        const pyOptions = {
+            mode: 'text',
+            pythonPath: Meteor.settings.private.PYTHON_PATH,
+            pythonOptions: ['-u'], // get print results in real-time
+            scriptPath: process.env.NODE_ENV === "development" ?
+                process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
+                process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
+            args: [
+                "-h", pool.config.connectionConfig.host,
+                "-P", pool.config.connectionConfig.port,
+                "-u", pool.config.connectionConfig.user,
+                "-p", pool.config.connectionConfig.password,
+                "-d", pool.config.connectionConfig.database,
+                "-q", statement,
+                "-L", statLineType,
+                "-s", statistic,
+                "-t", appParams.plotType,
+                "-l", appParams.hasLevels,
+                "-g", appParams.hideGaps,
+                "-c", appParams.completeness,
+                "-v", vts
+            ]
+        };
+        const pyShell = require('python-shell');
+        const Future = require('fibers/future');
 
+        var future = new Future();
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            z: [],
+            n: [],
+            error_x: [],
+            error_y: [],
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            stats: [],
+            text: [],
+            xTextOutput: [],
+            yTextOutput: [],
+            zTextOutput: [],
+            nTextOutput: [],
+            minDateTextOutput: [],
+            maxDateTextOutput: [],
+            glob_stats: {
+                mean: 0,
+                minDate: 0,
+                maxDate: 0,
+                n: 0
+            },
+            xmin: Number.MAX_VALUE,
+            xmax: -1 * Number.MAX_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: -1 * Number.MAX_VALUE,
+            zmin: Number.MAX_VALUE,
+            zmax: -1 * Number.MAX_VALUE,
+            sum: 0
+        };
+        var error = "";
+        var N0 = [];
+        var N_times = [];
+
+        pyShell.PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
+            // query callback - build the curve data from the results - or set an error
+            if (err !== undefined && err !== null) {
+                error = err.message === undefined ? err : err.message;
+            } else if (results === undefined || results === "undefined") {
+                error = "Error thrown by python_query_util.py. Please write down exactly how you produced this error, and submit a ticket at mats.gsd@noaa.gov."
+            } else {
+                // get the data back from the query
+                const parsedData = JSON.parse(results);
+                d = parsedData.data;
+                N0 = parsedData.N0;
+                N_times = parsedData.N_times;
+                error = parsedData.error;
+            }
+            // done waiting - have results
+            future['return']();
+        });
+
+        // wait for future to finish
+        future.wait();
+        return {
+            data: d,
+            error: error,
+            N0: N0,
+            N_times: N_times,
+        };
+    }
+};
+
+// this method queries the database for timeseries plots
+const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, validTimes, appParams, forceRegularCadence) {
+    // upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
+    const Future = require('fibers/future');
+
+    if (Meteor.isServer) {
         var cycles = getModelCadence(pool, dataSource, startDate, endDate); // if irregular model cadence, get cycle times. If regular, get empty array.
         if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
             var vtCycles = validTimes.map(function (x) {
@@ -151,7 +244,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
             }); // make sure no cycles are negative
             vtCycles = vtCycles.sort(function (a, b) {
                 return Number(a) - Number(b);
-            }); //sort 'em
+            }); // sort 'em
             cycles = cycles.length > 0 ? _.intersection(cycles, vtCycles) : vtCycles; // if we already had cycles get the ones that correspond to valid times
         }
         const regular = (forceRegularCadence || averageStr !== "None" || !(cycles !== null && cycles.length > 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
@@ -184,11 +277,17 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
             } else if (rows === undefined || rows === null || rows.length === 0) {
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
-                const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, forecastOffset, cycles, regular);
+                var parsedData;
+                if (appParams.hideGaps) {
+                    // if we don't care about gaps, use the general purpose curve parsing function.
+                    // the only reason to use the timeseries one is to correctly insert gaps for missing forecast cycles
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
+                } else {
+                    parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, forecastOffset, cycles, regular);
+                }
                 d = parsedData.d;
                 N0 = parsedData.N0;
                 N_times = parsedData.N_times;
-                cycles = parsedData.cycles;
             }
             // done waiting - have results
             dFuture['return']();
@@ -200,20 +299,15 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
             data: d,
             error: error,
             N0: N0,
-            N_times: N_times,
-            averageStr: averageStr,
-            cycles: cycles,
+            N_times: N_times
         };
     }
 };
 
-//this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, and histograms
-const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
+// this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, and histograms
+const queryDBSpecialtyCurve = function (pool, statement, appParams) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
-        const plotParams = matsDataUtils.getPlotParamsFromStack();
-        const completenessQCParam = Number(plotParams["completeness"]) / 100;
-        const appType = matsCollections.Settings.findOne({}).appType;
 
         var dFuture = new Future();
         var d = {// d will contain the curve data
@@ -245,15 +339,16 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
                 var parsedData;
-                if (plotType !== matsTypes.PlotTypes.histogram) {
-                    parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, appType, hasLevels);
+                if (appParams.plotType !== matsTypes.PlotTypes.histogram) {
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
                 } else {
-                    parsedData = parseQueryDataHistogram(d, rows, hasLevels);
+                    parsedData = parseQueryDataHistogram(rows, d, appParams);
                 }
                 d = parsedData.d;
                 N0 = parsedData.N0;
                 N_times = parsedData.N_times;
             }
+            // done waiting - have results
             dFuture['return']();
         });
 
@@ -268,7 +363,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
     }
 };
 
-//this method queries the database for map plots
+// this method queries the database for map plots
 const queryMapDB = function (pool, statement, dataSource, variable, varUnits, siteMap) {
     if (Meteor.isServer) {
         // d will contain the curve data
@@ -387,7 +482,7 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
     }
 };
 
-//this method queries the database for contour plots
+// this method queries the database for contour plots
 const queryDBContour = function (pool, statement) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
@@ -405,6 +500,7 @@ const queryDBContour = function (pool, statement) {
             nTextOutput: [],
             minDateTextOutput: [],
             maxDateTextOutput: [],
+            stdev: [],
             stats: [],
             glob_stats: {},
             xmin: Number.MAX_VALUE,
@@ -427,6 +523,7 @@ const queryDBContour = function (pool, statement) {
                 const parsedData = parseQueryDataContour(rows, d);
                 d = parsedData.d;
             }
+            // done waiting - have results
             dFuture['return']();
         });
 
@@ -439,20 +536,20 @@ const queryDBContour = function (pool, statement) {
     }
 };
 
-//this method parses the returned query data for timeseries plots
-const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular) {
+// this method parses the returned query data for timeseries plots
+const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr, foreCastOffset, cycles, regular) {
     /*
         var d = {// d will contain the curve data
             x: [],
             y: [],
             error_x: [],   // curveTime
             error_y: [],   // values
-            subVals: [],   //subVals
-            subSecs: [],   //subSecs
-            subLevs: [],   //subLevs
-            stats: [],     //pointStats
+            subVals: [],   // subVals
+            subSecs: [],   // subSecs
+            subLevs: [],   // subLevs
+            stats: [],     // pointStats
             text: [],
-            glob_stats: {},     //curveStats
+            glob_stats: {},     // curveStats
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
             ymin: Number.MAX_VALUE,
@@ -460,6 +557,9 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             sum: 0
         };
     */
+    const hasLevels = appParams.hasLevels;
+    const completenessQCParam = Number(appParams.completeness) / 100;
+
     // initialize local variables
     d.error_x = null;  // time series doesn't use x errorbars
     var N0 = [];
@@ -552,7 +652,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
         if (d_idx < 0) {
             d.x.push(loopTime);
             d.y.push(null);
-            d.error_y.push(null);   //placeholder
+            d.error_y.push(null);   // placeholder
             d.subVals.push(NaN);
             d.subSecs.push(NaN);
             if (hasLevels) {
@@ -563,10 +663,10 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             var this_N_times = N_times[d_idx];
             // Make sure that we don't have any points with far less data than the rest of the graph, and that
             // we don't have any points with a smaller completeness value than specified by the user.
-            if (curveStats[d_idx] === null  || this_N_times < completenessQCParam * N_times_max) {
+            if (curveStats[d_idx] === null || this_N_times < completenessQCParam * N_times_max) {
                 d.x.push(loopTime);
                 d.y.push(null);
-                d.error_y.push(null); //placeholder
+                d.error_y.push(null); // placeholder
                 d.subVals.push(NaN);
                 d.subSecs.push(NaN);
                 if (hasLevels) {
@@ -613,20 +713,20 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
     };
 };
 
-//this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
-const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plotType, appType, hasLevels) {
+// this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
+const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
     /*
         var d = {// d will contain the curve data
             x: [],
             y: [],
             error_x: [],   // curveTime
             error_y: [],   // values
-            subVals: [],   //subVals
-            subSecs: [],   //subSecs
-            subLevs: [],   //subLevs
-            stats: [],     //pointStats
+            subVals: [],   // subVals
+            subSecs: [],   // subSecs
+            subLevs: [],   // subLevs
+            stats: [],     // pointStats
             text: [],
-            glob_stats: {},     //curveStats
+            glob_stats: {},     // curveStats
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
             ymin: Number.MAX_VALUE,
@@ -634,6 +734,11 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             sum: 0
         };
     */
+    const plotType = appParams.plotType;
+    const hasLevels = appParams.hasLevels;
+    const completenessQCParam = Number(appParams.completeness) / 100;
+    const hideGaps = appParams.hideGaps;
+
     // initialize local variables
     var N0 = [];
     var N_times = [];
@@ -648,7 +753,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             independentVar = Number(rows[rowIndex].hr_of_day);
         } else if (plotType === matsTypes.PlotTypes.profile) {
             independentVar = Number((rows[rowIndex].avVal).toString().replace('P', ''));
-        } else if (plotType === matsTypes.PlotTypes.dailyModelCycle) {
+        } else if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
             independentVar = Number(rows[rowIndex].avtime) * 1000;
         } else {
             independentVar = Number(rows[rowIndex].avtime);
@@ -726,23 +831,25 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         // Make sure that we don't have any points with far less data than the rest of the graph, and that
         // we don't have any points with a smaller completeness value than specified by the user.
         if (curveStats[d_idx] === null || this_N_times < completenessQCParam * N_times_max) {
-            if (plotType === matsTypes.PlotTypes.profile) {
-                // profile has the stat first, and then the independent var. The others have independent var and then stat.
-                // this is in the pattern of x-plotted-variable, y-plotted-variable.
-                d.x.push(null);
-                d.y.push(curveIndependentVars[d_idx]);
-                d.error_y.push(null);  // placeholder
-                d.subVals.push(NaN);
-                d.subSecs.push(NaN);
-                d.subLevs.push(NaN);
-            } else {
-                d.x.push(curveIndependentVars[d_idx]);
-                d.y.push(null);
-                d.error_y.push(null);  // placeholder
-                d.subVals.push(NaN);
-                d.subSecs.push(NaN);
-                if (hasLevels) {
+            if (!hideGaps) {
+                if (plotType === matsTypes.PlotTypes.profile) {
+                    // profile has the stat first, and then the independent var. The others have independent var and then stat.
+                    // this is in the pattern of x-plotted-variable, y-plotted-variable.
+                    d.x.push(null);
+                    d.y.push(curveIndependentVars[d_idx]);
+                    d.error_y.push(null);  // placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
                     d.subLevs.push(NaN);
+                } else {
+                    d.x.push(curveIndependentVars[d_idx]);
+                    d.y.push(null);
+                    d.error_y.push(null);  // placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
+                    if (hasLevels) {
+                        d.subLevs.push(NaN);
+                    }
                 }
             }
         } else {
@@ -795,11 +902,11 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
 };
 
 // this method parses the returned query data for histograms
-const parseQueryDataHistogram = function (d, rows, hasLevels) {
+const parseQueryDataHistogram = function (rows, d, appParams) {
     /*
         var d = {// d will contain the curve data
-            x: [], //placeholder
-            y: [], //placeholder
+            x: [], // placeholder
+            y: [], // placeholder
             error_x: [], // unused
             error_y: [], // unused
             subVals: [],
@@ -807,13 +914,14 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
             subLevs: [],
             glob_stats: [], // placeholder
             bin_stats: [], // placeholder
-            text: [] //placeholder
+            text: [] // placeholder
             xmin:num,
             xmax:num,
             ymin:num,
             ymax:num
         };
     */
+    const hasLevels = appParams.hasLevels;
 
     // these arrays hold all the sub values and seconds (and levels) until they are sorted into bins
     var curveSubStatsRaw = [];
@@ -872,7 +980,7 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
     };
 };
 
-//this method parses the returned query data for contour plots
+// this method parses the returned query data for contour plots
 const parseQueryDataContour = function (rows, d) {
     /*
         var d = {// d will contain the curve data
@@ -887,7 +995,8 @@ const parseQueryDataContour = function (rows, d) {
             nTextOutput: [],
             minDateTextOutput: [],
             maxDateTextOutput: [],
-            stats: []],
+            stdev: [],
+            stats: [],
             glob_stats: {},
             xmin:num,
             ymin:num,
@@ -900,6 +1009,7 @@ const parseQueryDataContour = function (rows, d) {
     */
     // initialize local variables
     var curveStatLookup = {};
+    var curveStdevLookup = {};
     var curveNLookup = {};
 
     // get all the data out of the query array
@@ -908,11 +1018,13 @@ const parseQueryDataContour = function (rows, d) {
         var rowYVal = rows[rowIndex].yVal;
         var statKey = rowXVal.toString() + '_' + rowYVal.toString();
         var stat = rows[rowIndex].stat;
-        var n = rows[rowIndex].sub_data !== null ? rows[rowIndex].sub_data.toString().split(',').length : 0;
+        var stdev = rows[rowIndex].stdev !== undefined ? rows[rowIndex].stdev : null;
+        var n = rows[rowIndex].sub_data !== undefined && rows[rowIndex].sub_data !== null ? rows[rowIndex].sub_data.toString().split(',').length : 0;
         var minDate = rows[rowIndex].min_secs;
         var maxDate = rows[rowIndex].max_secs;
         if (stat === undefined || stat === null || stat === 'NULL') {
             stat = null;
+            stdev = 0;
             n = 0;
             minDate = null;
             maxDate = null;
@@ -925,6 +1037,7 @@ const parseQueryDataContour = function (rows, d) {
         d.minDateTextOutput.push(minDate);
         d.maxDateTextOutput.push(maxDate);
         curveStatLookup[statKey] = stat;
+        curveStdevLookup[statKey] = stdev;
         curveNLookup[statKey] = n;
     }
     // get the unique x and y values and sort the stats into the 2D z array accordingly
@@ -940,9 +1053,11 @@ const parseQueryDataContour = function (rows, d) {
     var currX;
     var currY;
     var currStat;
+    var currStdev;
     var currN;
     var currStatKey;
     var currYStatArray;
+    var currYStdevArray;
     var currYNArray;
     var sum = 0;
     var nPoints = 0;
@@ -952,25 +1067,30 @@ const parseQueryDataContour = function (rows, d) {
     for (j = 0; j < d.y.length; j++) {
         currY = d.y[j];
         currYStatArray = [];
+        currYStdevArray = [];
         currYNArray = [];
         for (i = 0; i < d.x.length; i++) {
             currX = d.x[i];
             currStatKey = currX.toString() + '_' + currY.toString();
             currStat = curveStatLookup[currStatKey];
+            currStdev = curveStdevLookup[currStatKey];
             currN = curveNLookup[currStatKey];
             if (currStat === undefined) {
                 currYStatArray.push(null);
+                currYStdevArray.push(null);
                 currYNArray.push(0);
             } else {
                 sum += currStat;
                 nPoints = nPoints + 1;
                 currYStatArray.push(currStat);
+                currYStdevArray.push(currStdev);
                 currYNArray.push(currN);
-                zmin = currStat < zmin ? currStat : zmin
-                zmax = currStat > zmax ? currStat : zmax
+                zmin = currStat < zmin ? currStat : zmin;
+                zmax = currStat > zmax ? currStat : zmax;
             }
         }
         d.z.push(currYStatArray);
+        d.stdev.push(currYStdevArray);
         d.n.push(currYNArray);
     }
 
@@ -998,6 +1118,7 @@ const parseQueryDataContour = function (rows, d) {
 export default matsDataQueryUtils = {
 
     simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
+    queryDBPython: queryDBPython,
     queryDBTimeSeries: queryDBTimeSeries,
     queryDBSpecialtyCurve: queryDBSpecialtyCurve,
     queryMapDB: queryMapDB,

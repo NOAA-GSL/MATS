@@ -623,7 +623,7 @@ const doCurveParams = function () {
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['0', '6', '12', '18'],
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: [],
                 controlButtonCovered: true,
                 unique: false,
@@ -639,13 +639,11 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
 
-        const optionsArr = ['0', '6', '12', '18'];
-
         matsCollections.CurveParams.insert(
             {
                 name: 'utc-cycle-start',
                 type: matsTypes.InputTypes.select,
-                options: optionsArr,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -659,7 +657,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['unix_timestamp(ld.fcst_valid_beg)'],
             '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
             '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
@@ -994,42 +992,36 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
-            plotSpecFunction: "plotSpecDataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
             graphFunction: "graphPlotly",
             dataFunction: "dataProfile",
-            plotSpecFunction: "plotSpecProfile",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
-            plotSpecFunction: "plotSpecDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphPlotly",
             dataFunction: "dataValidTime",
-            plotSpecFunction: "plotSpecValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
             graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
-            plotSpecFunction: "plotSpecHistogram",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.contour,
             graphFunction: "graphPlotly",
             dataFunction: "dataContour",
-            plotSpecFunction: "plotSpecContour",
             checked: false
         });
     }

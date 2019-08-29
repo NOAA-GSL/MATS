@@ -5,16 +5,21 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment'
-import {PythonShell} from 'python-shell';
-import {Meteor} from "meteor/meteor";
 
 dataContour = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const plotType = matsTypes.PlotTypes.contour;
-    const hasLevels = true;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.contour,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": true
+    };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -65,8 +70,7 @@ dataContour = function (plotParams, plotFunction) {
             "avg(ld.ffbar) as sub_ffbar, " +
             "avg(ld.oobar) as sub_oobar, " +
             "avg(ld.fobar) as sub_fobar, " +
-            "avg(ld.total) as sub_total, " +
-            "avg(ld.mae) as sub_mae,";
+            "avg(ld.total) as sub_total,";
         lineDataType = "line_data_sl1l2";
     } else if (statLineType === 'ctc') {
         statisticsClause = "count(ld.fy_oy) as n, " +
@@ -174,53 +178,17 @@ dataContour = function (plotParams, plotFunction) {
     var startMoment = moment();
     var finishMoment;
     try {
-        // send the query statement to the python query function
-        const pyOptions = {
-            mode: 'text',
-            pythonPath: Meteor.settings.private.PYTHON_PATH,
-            pythonOptions: ['-u'], // get print results in real-time
-            scriptPath: process.env.NODE_ENV === "development" ?
-                process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
-                process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
-            args: [
-                "-h", sumPool.config.connectionConfig.host,
-                "-P", sumPool.config.connectionConfig.port,
-                "-u", sumPool.config.connectionConfig.user,
-                "-p", sumPool.config.connectionConfig.password,
-                "-d", sumPool.config.connectionConfig.database,
-                "-q", statement,
-                "-s", statistic,
-                "-t", plotType,
-                "-l", hasLevels,
-                "-c", 0,
-                "-v", vts,
-                "-L", statLineType
-            ]
+        // send the query statement to the query function
+        queryResult = matsDataQueryUtils.queryDBPython(sumPool, statement, statLineType, statistic, appParams, vts);
+        finishMoment = moment();
+        dataRequests["data retrieval (query) time - " + curve.label] = {
+            begin: startMoment.format(),
+            finish: finishMoment.format(),
+            duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+            recordCount: queryResult.data.xTextOutput.length
         };
-        var pyError = null;
-        const Future = require('fibers/future');
-        var future = new Future();
-        PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
-            if (err) {
-                pyError = err;
-                future["return"]();
-            }
-            queryResult = JSON.parse(results);
-            // get the data back from the query
-            d = queryResult.data;
-            finishMoment = moment();
-            dataRequests["data retrieval (query) time - " + curve.label] = {
-                begin: startMoment.format(),
-                finish: finishMoment.format(),
-                duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                recordCount: queryResult.data.x.length
-            };
-            future["return"]();
-        });
-        future.wait();
-        if (pyError != null) {
-            throw new Error(pyError);
-        }
+        // get the data back from the query
+        d = queryResult.data;
     } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -256,7 +224,7 @@ dataContour = function (plotParams, plotFunction) {
     curve['zmax'] = d.zmax;
     curve['xAxisKey'] = xAxisParam;
     curve['yAxisKey'] = yAxisParam;
-    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
+    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
     dataset.push(cOptions);
     var postQueryFinishMoment = moment();
     dataRequests["post data retrieval (query) process time - " + curve.label] = {

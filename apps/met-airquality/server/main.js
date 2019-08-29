@@ -525,7 +525,6 @@ const doCurveParams = function () {
             'Bias-corrected RMSE': ['avg(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2))) as stat, sum(ld.total) as N0, group_concat(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
             'MSE': ['avg(ld.ffbar+ld.oobar - 2*ld.fobar) as stat, sum(ld.total) as N0, group_concat(ld.ffbar+ld.oobar - 2*ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
             'Bias-corrected MSE': ['avg((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) as stat, sum(ld.total) as N0, group_concat((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'MAE': ['avg(ld.mae) as stat, sum(ld.total) as N0, group_concat(ld.mae order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
             'ME (Additive bias)': ['avg(ld.fbar - ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
             'Multiplicative bias': ['avg(ld.fbar / ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar / ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
             'Forecast mean': ['avg(ld.fbar) as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
@@ -673,7 +672,7 @@ const doCurveParams = function () {
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['0', '6', '12', '18'],
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: [],
                 controlButtonCovered: true,
                 unique: false,
@@ -689,13 +688,11 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
 
-        const optionsArr = ['0', '6', '12', '18'];
-
         matsCollections.CurveParams.insert(
             {
                 name: 'utc-cycle-start',
                 type: matsTypes.InputTypes.select,
-                options: optionsArr,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -741,7 +738,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['unix_timestamp(ld.fcst_valid_beg)'],
             '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
             '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
@@ -1069,35 +1066,30 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
-            plotSpecFunction: "plotSpecDataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
-            plotSpecFunction: "plotSpecDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphPlotly",
             dataFunction: "dataValidTime",
-            plotSpecFunction: "plotSpecValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
             graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
-            plotSpecFunction: "plotSpecHistogram",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.contour,
             graphFunction: "graphPlotly",
             dataFunction: "dataContour",
-            plotSpecFunction: "plotSpecContour",
             checked: false
         });
     }

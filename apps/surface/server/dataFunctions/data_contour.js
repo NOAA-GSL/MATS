@@ -12,7 +12,14 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataContour = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const plotType = matsTypes.PlotTypes.contour;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.contour,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": false
+    };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -61,7 +68,7 @@ dataContour = function (plotParams, plotFunction) {
     var dateClause = "";
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'];
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
+        forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -107,11 +114,6 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.split('{{dateClause}}').join(dateClause);
     dataRequests[curve.label] = statement;
-
-    // math is done on forecastLength later on -- set all analyses to 0
-    if (forecastLength === "-99") {
-        forecastLength = "0";
-    }
 
     var queryResult;
     var startMoment = moment();
@@ -163,7 +165,7 @@ dataContour = function (plotParams, plotFunction) {
     curve['zmax'] = d.zmax;
     curve['xAxisKey'] = xAxisParam;
     curve['yAxisKey'] = yAxisParam;
-    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
+    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
     dataset.push(cOptions);
     var postQueryFinishMoment = moment();
     dataRequests["post data retrieval (query) process time - " + curve.label] = {

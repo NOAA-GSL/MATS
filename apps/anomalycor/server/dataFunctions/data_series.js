@@ -13,9 +13,14 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
-    const plotType = matsTypes.PlotTypes.timeSeries;
-    const hasLevels = true;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.timeSeries,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": true
+    };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -44,12 +49,12 @@ dataSeries = function (plotParams, plotFunction) {
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var dbtable = data_source + "_anomcorr_" + region;
         const variable = curve['variable'];
+        curves[curveIndex]['statistic'] = "Correlation";
         var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         var levelClause = " ";
         if (levels.length > 0) {
             levelClause = " and  m0.level IN(" + levels + ")";
         }
-        curves[curveIndex]['statistic'] = "Correlation";
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         const validTimes = validTimeOptionsMap[validTimeStr][0];
@@ -113,7 +118,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, data_source, forecastLength, fromSecs, toSecs, averageStr, validTimes, hasLevels, false);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, data_source, forecastLength, fromSecs, toSecs, averageStr, validTimes, appParams, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -149,7 +154,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -167,18 +172,17 @@ dataSeries = function (plotParams, plotFunction) {
         curve['ymin'] = d.ymin;
         curve['ymax'] = d.ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
-        }
+        };
     }  // end for curves
 
     // process the data returned by the query
-    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,

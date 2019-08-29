@@ -349,16 +349,16 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const statOptionsMap = {
-            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0'],
-            'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
-            'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
-            'Model average': ['sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat,m0.N_{{variable0}} as N0'],
-            'Obs average': ['sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-                'sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0']
+            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})) as stdev, sum(m0.N_{{variable0}}) as N0',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})) as stdev, sum(m0.N_{{variable0}}) as N0'],
+            'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, stddev(-m0.sum_{{variable0}}/m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0',
+                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}) as stat, stddev(m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0'],
+            'N': ['sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0',
+                'sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0'],
+            'Model average': ['sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
+                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat, stddev(m0.sum_model_{{variable1}}/m0.N_{{variable0}}) as stdev, m0.N_{{variable0}} as N0'],
+            'Obs average': ['sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
+                'sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0']
         };
 
         const statAuxMap = {
@@ -463,7 +463,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['ceil(3600*floor((unix_timestamp(m0.date)+3600*m0.hour)/3600))'],
             '3hr': ['ceil(10800*floor((unix_timestamp(m0.date)+3600*m0.hour)/10800)+10800/2)'],
             '6hr': ['ceil(21600*floor((unix_timestamp(m0.date)+3600*m0.hour)/21600)+21600/2)'],
@@ -525,7 +525,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'phase'}) == undefined) {
-        optionsMap = {
+        const optionsMap = {
             "All": "and m0.up_dn = 2 ",
             "EnR": "and m0.up_dn = 0 ",
             "Up": "and m0.up_dn = 1 ",
@@ -649,6 +649,25 @@ const doCurveParams = function () {
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 5,
+            });
+    }
+
+   if (matsCollections.CurveParams.find({name: 'significance'}).count() == 0) {
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'significance',
+                type: matsTypes.InputTypes.select,
+                options: ['false', 'true'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 'false',
+                controlButtonVisibility: 'block',
+                controlButtonText: "overlay student's t-test",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 6,
             });
     }
 
@@ -839,7 +858,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "x-axis-parameter", "y-axis-parameter", "significance"
             ],
             groupSize: 6
 

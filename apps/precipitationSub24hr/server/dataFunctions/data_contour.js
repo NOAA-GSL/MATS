@@ -12,7 +12,14 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataContour = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const plotType = matsTypes.PlotTypes.contour;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.contour,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": false
+    };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -50,7 +57,7 @@ dataContour = function (plotParams, plotFunction) {
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         threshold = threshold * 0.01;
-        thresholdClause = "and m0.trsh = " + threshold + " ";
+        thresholdClause = "and m0.trsh = " + threshold;
     }
 
     // For contours, this functions as the colorbar label.
@@ -133,7 +140,7 @@ dataContour = function (plotParams, plotFunction) {
     curve['zmax'] = d.zmax;
     curve['xAxisKey'] = xAxisParam;
     curve['yAxisKey'] = yAxisParam;
-    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
+    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
     dataset.push(cOptions);
     var postQueryFinishMoment = moment();
     dataRequests["post data retrieval (query) process time - " + curve.label] = {

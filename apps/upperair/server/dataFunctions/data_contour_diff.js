@@ -14,10 +14,17 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataContourDiff = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
-    const plotType = matsTypes.PlotTypes.contourDiff;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.contourDiff,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": true
+    };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
+    var showSignificance = false;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
@@ -90,6 +97,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         } else {
             dateClause = "unix_timestamp(m0.date)+3600*m0.hour";
         }
+        showSignificance = curve['significance'] === 'true' || showSignificance;
 
         // for two contours it's faster to just take care of matching in the query
         var matchModel = "";
@@ -98,7 +106,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var matchForecastLengthClause = "";
         var matchLevelClause = "";
         var matchClause = "";
-        if (matching) {
+        if (appParams.matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
             const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curves[otherCurveIndex]['data-source']];
             const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
@@ -174,11 +182,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{matchClause}}', matchClause);
         dataRequests[curve.label] = statement;
 
-        // math is done on forecastLength later on -- set all analyses to 0
-        if (forecastLength === "-99") {
-            forecastLength = "0";
-        }
-
         var queryResult;
         var startMoment = moment();
         var finishMoment;
@@ -225,7 +228,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         curve['zmax'] = d.zmax;
         curve['xAxisKey'] = xAxisParam;
         curve['yAxisKey'] = yAxisParam;
-        const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, plotType);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -236,10 +239,11 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     // turn the two contours into one difference contour
-    dataset = matsDataDiffUtils.getDataForDiffContour(dataset);
+    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, showSignificance);
     plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
     curves = plotParams.curves;
     dataset[0]['name'] = matsPlotUtils.getCurveText(matsTypes.PlotTypes.contourDiff, curves[0]);
+    dataset[1] = matsDataCurveOpsUtils.getContourSignificanceLayer(dataset);
 
     // process the data returned by the query
     const curveInfoParams = {"curve": curves, "axisMap": axisMap};

@@ -122,9 +122,6 @@ var Messages = {
     NO_DATA_FOUND: "INFO:0 data records found"
 };
 
-//hide non-timeseries selectors at startup
-var selectorsToHide = ['dieoff-type', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-pivot', 'bin-start', 'bin-stride', 'bin-bounds', 'x-axis-parameter', 'y-axis-parameter'];
-
 /*
 Class for holding metaData records. These are stored in an array. An app can have multiple metadata databases and each database has a pool for connections.
 These pools are global (although for future reference the access might be from this collection.). They are refenced in this script via the pool name.
@@ -178,7 +175,6 @@ export default matsTypes = {
     Messages: Messages,
     ForecastTypes: ForecastTypes,
     ReservedWords: ReservedWords,
-    selectorsToHide: selectorsToHide,
     MetaDataDBRecord: MetaDataDBRecord,
     AppTypes: AppTypes,
     DatabaseRoles: DatabaseRoles

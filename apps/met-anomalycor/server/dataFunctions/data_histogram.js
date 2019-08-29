@@ -5,16 +5,20 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
-import {PythonShell} from 'python-shell';
-import {Meteor} from "meteor/meteor";
 
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
-    const plotType = matsTypes.PlotTypes.histogram;
-    const hasLevels = true;
+    const appParams = {
+        "plotType": matsTypes.PlotTypes.histogram,
+        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
+        "completeness": plotParams['completeness'],
+        "outliers": plotParams['outliers'],
+        "hideGaps": plotParams['noGapsCheck'],
+        "hasLevels": true
+    };
     var alreadyMatched = false;
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = [];
@@ -118,14 +122,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 "sum(ld.total) as N0, " +
                 "avg(ld.fabar) as fbar, " +
                 "avg(ld.oabar) as obar, " +
-                "group_concat(ld.fabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
-                "group_concat(ld.oabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
-                "group_concat(ld.ffabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
-                "group_concat(ld.ooabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
-                "group_concat(ld.foabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
-                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
-                "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
-                "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
+                "group_concat(ld.fabar, ';', ld.oabar, ';', ld.ffabar, ';', ld.ooabar, ';', ld.foabar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +
@@ -156,63 +153,24 @@ dataHistogram = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
-            const QCParams = matsDataUtils.getPlotParamsFromStack();
-            const completenessQCParam = Number(QCParams["completeness"]) / 100;
-
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                // send the query statement to the python query function
-                const pyOptions = {
-                    mode: 'text',
-                    pythonPath: Meteor.settings.private.PYTHON_PATH,
-                    pythonOptions: ['-u'], // get print results in real-time
-                    scriptPath: process.env.NODE_ENV === "development" ?
-                        process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
-                        process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
-                    args: [
-                        "-h", sumPool.config.connectionConfig.host,
-                        "-P", sumPool.config.connectionConfig.port,
-                        "-u", sumPool.config.connectionConfig.user,
-                        "-p", sumPool.config.connectionConfig.password,
-                        "-d", sumPool.config.connectionConfig.database,
-                        "-q", statement,
-                        "-s", statistic,
-                        "-t", plotType,
-                        "-l", hasLevels,
-                        "-c", completenessQCParam,
-                        "-v", vts,
-                        "-L", statLineType
-                    ]
+                // send the query statement to the query function
+                queryResult = matsDataQueryUtils.queryDBPython(sumPool, statement, statLineType, statistic, appParams, vts);
+                finishMoment = moment();
+                dataRequests["data retrieval (query) time - " + curve.label] = {
+                    begin: startMoment.format(),
+                    finish: finishMoment.format(),
+                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                    recordCount: queryResult.data.x.length
                 };
-                var pyError = null;
-                const Future = require('fibers/future');
-                var future = new Future();
-                PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
-                    if (err) {
-                        pyError = err;
-                        future["return"]();
-                    }
-                    queryResult = JSON.parse(results);
-                    // get the data back from the query
-                    d = queryResult.data;
-                    allReturnedSubStats.push(d.subVals); // save returned data so that we can calculate histogram stats once all the queries are done
-                    allReturnedSubSecs.push(d.subSecs);
-                    allReturnedSubLevs.push(d.subLevs);
-                    finishMoment = moment();
-                    dataRequests["data retrieval (query) time - " + curve.label] = {
-                        begin: startMoment.format(),
-                        finish: finishMoment.format(),
-                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                        recordCount: queryResult.data.x.length
-                    };
-                    future["return"]();
-                });
-                future.wait();
-                if (pyError != null) {
-                    throw new Error(pyError);
-                }
+                // get the data back from the query
+                d = queryResult.data;
+                allReturnedSubStats.push(d.subVals); // save returned data so that we can calculate histogram stats once all the queries are done
+                allReturnedSubSecs.push(d.subSecs);
+                allReturnedSubLevs.push(d.subLevs);
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -234,7 +192,6 @@ dataHistogram = function (plotParams, plotFunction) {
             }
         }
     }
-    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
