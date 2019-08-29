@@ -118,6 +118,9 @@ cd ${DEPLOYMENT_DIRECTORY}
 # throw away any local changes - after all, you are building
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
+# checkout proper branch
+git checkout ${BUILD_CODE_BRANCH}
+
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
@@ -242,35 +245,34 @@ echo -e "$0 ${GRN} clean and remove existing images ${NC}"
 if [ "${build_images}" == "yes" ]; then
     # clean up and remove existing images images
     #wait for stacks to drain
-    docker stack ls | grep -v NAME | awk '{print $1}' | while read stack
-    do
-        if [[ isSwarmMode == "true"  ]]; then
-            echo $stack
-            docker stack rm ${stack}
-            docker network rm web
-            limit=20
-            until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=${stack} -q)" ] || [ "$limit" -lt 0 ]; do
-                sleep 1;
-                limit="$((limit-1))"
-                printf "."
-            done
-            limit=20
-            until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q)" ] || [ "$limit" -lt 0 ]; do
-                sleep 1;
-                limit="$((limit-1))"
-                printf "."
-            done
-            limit=20
-            until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
-                sleep 1;
-                limit="$((limit-1))"
-                printf "."
-            done
-        else
-            docker stop $(docker ps -a -q)
-            docker rm $(docker ps -a -q)
-        fi
-    done
+    if [[ isSwarmNode == "true" ]];then
+        docker stack ls | grep -v NAME | awk '{print $1}' | while read stack
+        do
+                echo $stack
+                docker stack rm ${stack}
+                docker network rm web
+                limit=20
+                until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=${stack} -q)" ] || [ "$limit" -lt 0 ]; do
+                    sleep 1;
+                    limit="$((limit-1))"
+                    printf "."
+                done
+                limit=20
+                until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q)" ] || [ "$limit" -lt 0 ]; do
+                    sleep 1;
+                    limit="$((limit-1))"
+                    printf "."
+                done
+                limit=20
+                until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
+                    sleep 1;
+                    limit="$((limit-1))"
+                    printf "."
+                done
+        done
+    fi
+    docker stop $(docker ps -a -q)
+    docker rm $(docker ps -a -q)
     docker system prune -af
 fi
 
