@@ -433,7 +433,7 @@
       "displayName": "Upper Air (RAOBS)",
       "displayOrder": 1,
       "group": "Upper Air",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -441,7 +441,7 @@
       "displayName": "Upper Air (AMDAR)",
       "displayOrder": 2,
       "group": "Upper Air",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -449,7 +449,7 @@
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
       "group": "Upper Air",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -457,7 +457,7 @@
       "displayName": "Ceiling",
       "displayOrder": 4,
       "group": "Ceiling and Visibility",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -465,7 +465,7 @@
       "displayName": "Ceiling 15 Min",
       "displayOrder": 5,
       "group": "Ceiling and Visibility",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -473,7 +473,7 @@
       "displayName": "Visibility",
       "displayOrder": 6,
       "group": "Ceiling and Visibility",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -481,7 +481,7 @@
       "displayName": "Visibility 15 Min",
       "displayOrder": 7,
       "group": "Ceiling and Visibility",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -489,7 +489,7 @@
       "displayName": "Surface",
       "displayOrder": 8,
       "group": "Surface",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -497,7 +497,7 @@
       "displayName": "Surface Land Use",
       "displayOrder": 9,
       "group": "Surface",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -505,7 +505,7 @@
       "displayName": "Surface Radiation",
       "displayOrder": 10,
       "group": "Surface",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -513,7 +513,7 @@
       "displayName": "AQPI Precipitation",
       "displayOrder": 11,
       "group": "Precipitation",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -521,7 +521,7 @@
       "displayName": "24 Hour Precipitation",
       "displayOrder": 12,
       "group": "Precipitation",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -529,7 +529,7 @@
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 13,
       "group": "Precipitation",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -537,7 +537,7 @@
       "displayName": "1 Hour Precipitation",
       "displayOrder": 14,
       "group": "Precipitation",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -545,7 +545,7 @@
       "displayName": "Precipitation Type",
       "displayOrder": 15,
       "group": "Precipitation",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -553,7 +553,7 @@
       "displayName": "Composite Reflectivity",
       "displayOrder": 16,
       "group": "Radar",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -561,7 +561,7 @@
       "displayName": "Echo Top",
       "displayOrder": 17,
       "group": "Radar",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -569,7 +569,7 @@
       "displayName": "Vertically Integrated Liquid",
       "displayOrder": 18,
       "group": "Radar",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -577,7 +577,7 @@
       "displayName": "Ensemble",
       "displayOrder": 19,
       "group": "Experimental",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -585,7 +585,7 @@
       "displayName": "MET Upper Air",
       "displayOrder": 20,
       "group": "MET Express",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -593,7 +593,7 @@
       "displayName": "MET Anomaly Correlation",
       "displayOrder": 21,
       "group": "MET Express",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -601,7 +601,7 @@
       "displayName": "MET Surface",
       "displayOrder": 22,
       "group": "MET Express",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
@@ -609,7 +609,7 @@
       "displayName": "MET Air Quality",
       "displayOrder": 23,
       "group": "MET Express",
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     }
   ]
