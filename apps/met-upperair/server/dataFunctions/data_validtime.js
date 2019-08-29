@@ -61,21 +61,11 @@ dataValidTime = function (plotParams, plotFunction) {
         if (statLineType === 'scalar') {
             statisticsClause = "avg(ld.fbar) as fbar, " +
                 "avg(ld.obar) as obar, " +
-                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
-                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
-                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
-                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
-                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
-                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
-                "group_concat(ld.mae order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_mae,";
+                "group_concat(ld.fbar, ';', ld.obar, ';', ld.ffbar, ';', ld.oobar, ';', ld.fobar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
             lineDataType = "line_data_sl1l2";
         } else if (statLineType === 'ctc') {
             statisticsClause = "avg(ld.fy_oy) as fy_oy, " +
-                "group_concat(ld.fy_oy order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fy_oy, " +
-                "group_concat(ld.fy_on order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fy_on, " +
-                "group_concat(ld.fn_oy order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fn_oy, " +
-                "group_concat(ld.fn_on order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fn_on, " +
-                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total,";
+                "group_concat(ld.fy_oy, ';', ld.fy_on, ';', ld.fn_oy, ';', ld.fn_on, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
             lineDataType = "line_data_ctc";
         }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
@@ -128,8 +118,6 @@ dataValidTime = function (plotParams, plotFunction) {
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
                 "{{statisticsClause}} " +
-                "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
-                "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +

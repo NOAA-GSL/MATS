@@ -107,14 +107,7 @@ dataProfile = function (plotParams, plotFunction) {
                 "sum(ld.total) as N0, " +
                 "avg(ld.fabar) as fbar, " +
                 "avg(ld.oabar) as obar, " +
-                "group_concat(ld.fabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
-                "group_concat(ld.oabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
-                "group_concat(ld.ffabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
-                "group_concat(ld.ooabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
-                "group_concat(ld.foabar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
-                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
-                "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
-                "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
+                "group_concat(ld.fabar, ';', ld.oabar, ';', ld.ffabar, ';', ld.ooabar, ';', ld.foabar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +
