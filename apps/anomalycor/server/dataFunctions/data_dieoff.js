@@ -47,7 +47,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var dbtable = data_source + "_anomcorr_" + region;
         const variable = curve['variable'];
         curves[curveIndex]['statistic'] = "Correlation";
-        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        var levels = curve['level'] === undefined ? [] : curve['level'];
         var levelClause = " ";
         if (levels.length > 0) {
             levelClause = " and  m0.level IN(" + levels + ")";

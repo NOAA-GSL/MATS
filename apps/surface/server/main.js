@@ -812,7 +812,7 @@ const doCurveParams = function () {
                 // hideOtherFor: {
                 //     'forecast-length': ["Fcst lead time"],
                 //     'valid-time': ["Valid UTC hour"],
-                //     'pres-level': ["Pressure level"],
+                //     'level': ["Pressure level"],
                 // },
                 selected: '',
                 controlButtonCovered: true,
@@ -844,7 +844,7 @@ const doCurveParams = function () {
                 // hideOtherFor: {
                 //     'forecast-length': ["Fcst lead time"],
                 //     'valid-time': ["Valid UTC hour"],
-                //     'pres-level': ["Pressure level"],
+                //     'level': ["Pressure level"],
                 // },
                 selected: '',
                 controlButtonCovered: true,

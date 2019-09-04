@@ -55,21 +55,6 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
 
-        matsCollections.PlotParams.insert(
-            {
-                name: 'metexpress-mode',
-                type: matsTypes.InputTypes.radioGroup,
-                optionsMap: {'mats': 'mats', 'matsmv': 'matsmv'},
-                options: ['mats', 'matsmv'],
-                default: 'mats',
-                controlButtonCovered: false,
-                controlButtonVisibility: 'block',
-                hidden: true,
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-
         var yAxisOptionsMap = {
             "Number": ["number"],
             "Relative frequency": ["relFreq"]
@@ -449,7 +434,7 @@ const doCurveParams = function () {
                 options: Object.keys(modelOptionsMap[defaultDB]),   // convenience
                 levelsMap: levelOptionsMap, // need to know what levels the metadata allows for each model.
                 superiorNames: ["database"],
-                dependentNames: ["region", "variable", "forecast-length", "pres-level", "dates", "curve-dates"],
+                dependentNames: ["region", "variable", "forecast-length", "level", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap[defaultDB])[0],
                 unique: false,
@@ -652,7 +637,7 @@ const doCurveParams = function () {
                 controlButtonText: "utc cycle init hour",
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 4
             });
     }
 
@@ -694,10 +679,10 @@ const doCurveParams = function () {
         levelDefault = levelOptions[0];
     }
 
-    if (matsCollections.CurveParams.find({name: 'pres-level'}).count() == 0) {
+    if (matsCollections.CurveParams.find({name: 'level'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
-                name: 'pres-level',
+                name: 'level',
                 type: matsTypes.InputTypes.select,
                 optionsMap: levelOptionsMap,
                 options: levelOptions,   // convenience
@@ -715,13 +700,14 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary updates to forecastLengthOptionsMap
-        var currentParam = matsCollections.CurveParams.findOne({name: 'pres-level'});
+        var currentParam = matsCollections.CurveParams.findOne({name: 'level'});
         if (!matsDataUtils.areObjectsEqual(levelOptionsMap, currentParam.optionsMap)) {
             // have to reload model data
-            matsCollections.CurveParams.update({name: 'pres-level'}, {
+            matsCollections.CurveParams.update({name: 'level'}, {
                 $set: {
                     optionsMap: levelOptionsMap,
-                    options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]]
+                    options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],
+                    default: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]][0]
                 }
             });
         }
@@ -747,7 +733,7 @@ const doCurveParams = function () {
                 // hideOtherFor: {
                 //     'forecast-length': ["Fcst lead time"],
                 //     'valid-time': ["Valid UTC hour"],
-                //     'pres-level': ["Pressure level"],
+                //     'level': ["Pressure level"],
                 // },
                 selected: '',
                 controlButtonCovered: true,
@@ -780,7 +766,7 @@ const doCurveParams = function () {
                 // hideOtherFor: {
                 //     'forecast-length': ["Fcst lead time"],
                 //     'valid-time': ["Valid UTC hour"],
-                //     'pres-level': ["Pressure level"],
+                //     'level': ["Pressure level"],
                 // },
                 selected: '',
                 controlButtonCovered: true,
@@ -803,7 +789,7 @@ const doCurveParams = function () {
     dstr = minusMonthMinDate + ' - ' + maxDate;
 
     if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
-        optionsMap = {
+        const optionsMap = {
             '1 day': ['1 day'],
             '3 days': ['3 days'],
             '7 days': ['7 days'],
@@ -869,13 +855,13 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' ACC, '],
-                ['level: ', 'pres-level', ', '],
+                ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "pres-level"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
             ],
             groupSize: 6
         });
@@ -904,14 +890,14 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' ACC, '],
-                ['level: ', 'pres-level', ', '],
+                ['level: ', 'level', ', '],
                 ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "pres-level", "curve-dates"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -923,12 +909,12 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' ACC, '],
-                ['level: ', 'pres-level', ', '],
+                ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "forecast-length", "pres-level", "curve-dates"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "forecast-length", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -940,13 +926,13 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' ACC, '],
-                ['level: ', 'pres-level', ', '],
+                ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "pres-level", "curve-dates"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -958,7 +944,7 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' ACC, '],
-                ['level: ', 'pres-level', ', '],
+                ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['x-axis: ', 'x-axis-parameter', ', '],
@@ -966,7 +952,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "pres-level", "x-axis-parameter", "y-axis-parameter"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 

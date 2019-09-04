@@ -55,21 +55,6 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
 
-        matsCollections.PlotParams.insert(
-            {
-                name: 'metexpress-mode',
-                type: matsTypes.InputTypes.radioGroup,
-                optionsMap: {'mats': 'mats'}, //,'matsmv':'matsmv'},
-                options: ['mats'], //, 'matsmv'],
-                default: 'mats',
-                controlButtonCovered: false,
-                controlButtonVisibility: 'block',
-                hidden: true,
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-
         var yAxisOptionsMap = {
             "Number": ["number"],
             "Relative frequency": ["relFreq"]
@@ -254,8 +239,8 @@ const doCurveParams = function () {
     var thisDB;
     try {
         rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT DISTINCT db FROM ensemble_mats_metadata;");
-        for (var j = 0; j < rows.length; j++) {
-            thisDB = rows[j].db.trim();
+        for (i = 0; i < rows.length; i++) {
+            thisDB = rows[i].db.trim();
             myDBs.push(thisDB);
         }
     } catch (err) {
@@ -274,7 +259,7 @@ const doCurveParams = function () {
             regionModelOptionsMap[thisDB] = {};
 
             rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate from ensemble_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate order by model;");
-            for (var i = 0; i < rows.length; i++) {
+            for (i = 0; i < rows.length; i++) {
 
                 var model_value = rows[i].model.trim();
                 var model = rows[i].display_text.trim();
@@ -347,6 +332,24 @@ const doCurveParams = function () {
                 help: 'label.html'
             }
         );
+    }
+    if (matsCollections.CurveParams.find({name: 'yaxes'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'yaxes',
+                type: matsTypes.InputTypes.selectOrderEnforced,
+                options: ['auto-by-variable', 'y1', 'y2'],
+                selected: ['auto-by-variable'],
+                controlButtonCovered: true,
+                unique: false,
+                default: 'auto-by-variable',
+                controlButtonVisibility: 'block',
+                controlButtonText: "y axes",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 1,
+                multiple: false
+            });
     }
 
     var defaultGroup = (Object.keys(dbGroupMap).indexOf("EnsembleTest") !== -1) ? "EnsembleTest" : Object.keys(dbGroupMap)[0];
@@ -431,7 +434,7 @@ const doCurveParams = function () {
                 options: Object.keys(modelOptionsMap[defaultDB]),   // convenience
                 levelsMap: levelOptionsMap, // need to know what levels the metadata allows for each model.
                 superiorNames: ["database"],
-                dependentNames: ["region", "variable", "forecast-length", "level", "dates"],
+                dependentNames: ["region", "variable", "forecast-length", "level", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap[defaultDB])[0],
                 unique: false,
@@ -492,6 +495,38 @@ const doCurveParams = function () {
         }
     }
 
+    if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
+        const statOptionsMap = {
+            'RMSE': ['avg(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar)) as stat, sum(ld.total) as N0, group_concat(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Bias-corrected RMSE': ['avg(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2))) as stat, sum(ld.total) as N0, group_concat(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'MSE': ['avg(ld.ffbar+ld.oobar - 2*ld.fobar) as stat, sum(ld.total) as N0, group_concat(ld.ffbar+ld.oobar - 2*ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Bias-corrected MSE': ['avg((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) as stat, sum(ld.total) as N0, group_concat((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'ME (Additive bias)': ['avg(ld.fbar - ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Multiplicative bias': ['avg(ld.fbar / ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar / ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Forecast mean': ['avg(ld.fbar) as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Observed mean': ['avg(ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Forecast stdev': ['avg(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Observed stdev': ['avg(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Error stdev': ['avg(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
+            'Pearson correlation': ['avg((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2)))) as stat, sum(ld.total) as N0, group_concat((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2))) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar']
+        };
+
+        matsCollections.CurveParams.insert(
+            {// bias and model average are a different formula with wind than with other variables, so element 0 differs from element 1 in statOptionsMap, and different clauses in statAuxMap are needed.
+                name: 'statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statOptionsMap,
+                options: Object.keys(statOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -505,7 +540,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: variableOptionsMap[defaultDB][Object.keys(variableOptionsMap[defaultDB])[0]][0],  // always use the first region for the first model
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -572,21 +607,28 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
-
-        const optionsArr = ['0', '6', '12', '18'];
-
+    if (matsCollections.CurveParams.findOne({name: 'dieoff-type'}) == undefined) {
+        var dieoffOptionsMap = {
+            "Dieoff": [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast (uses first date in range)": [matsTypes.ForecastTypes.singleCycle]
+        };
         matsCollections.CurveParams.insert(
             {
-                name: 'utc-cycle-start',
+                name: 'dieoff-type',
                 type: matsTypes.InputTypes.select,
-                options: optionsArr,
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specified UTC cycle init hour", "Single cycle forecast (uses first date in range)"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast (uses first date in range)"],
+                },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: 12,
+                default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                controlButtonText: "utc cycle init hour",
+                controlButtonText: 'dieoff type',
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4
@@ -598,7 +640,7 @@ const doCurveParams = function () {
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['0', '6', '12', '18'],
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: [],
                 controlButtonCovered: true,
                 unique: false,
@@ -612,8 +654,27 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'utc-cycle-start',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 12,
+                controlButtonVisibility: 'block',
+                controlButtonText: "utc cycle init hour",
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+
     if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['unix_timestamp(ld.fcst_valid_beg)'],
             '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
             '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
@@ -640,18 +701,28 @@ const doCurveParams = function () {
             });
     }
 
+    const levelOptions = levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]];
+    var levelDefault;
+    if (levelOptions.indexOf("P500") !== -1) {
+        levelDefault = "P500";
+    } else if (levelOptions.indexOf("SFC") !== -1) {
+        levelDefault = "SFC";
+    } else {
+        levelDefault = levelOptions[0];
+    }
+
     if (matsCollections.CurveParams.find({name: 'level'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'level',
                 type: matsTypes.InputTypes.select,
                 optionsMap: levelOptionsMap,
-                options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],   // convenience
+                options: levelOptions,   // convenience
                 superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]][0],
+                default: levelDefault,
                 controlButtonVisibility: 'block',
                 controlButtonText: "Level",
                 displayOrder: 2,
@@ -667,7 +738,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'level'}, {
                 $set: {
                     optionsMap: levelOptionsMap,
-                    options: levelOptionsMap[Object.keys(levelOptionsMap[defaultDB])[0]],
+                    options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],
                     default: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]][0]
                 }
             });
@@ -683,6 +754,50 @@ const doCurveParams = function () {
     var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
     dstr = minusMonthMinDate + ' - ' + maxDate;
 
+    if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
+        const optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: minDate,
+                stopDate: maxDate,
+                superiorNames: ['database', 'data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 7,
+                help: "dateHelp.html"
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'curve-dates'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'curve-dates'}, {
+                $set: {
+                    startDate: minDate,
+                    stopDate: maxDate,
+                    default: dstr
+                }
+            });
+        }
+    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -699,6 +814,25 @@ const doCurveTextPatterns = function () {
     }
     if (matsCollections.CurveTextPatterns.find().count() == 0) {
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.timeSeries,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
+            ],
+            displayParams: [
+                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "valid-time", "average", "forecast-length", "level"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.reliability,
             textPattern: [
                 ['', 'label', ': '],
@@ -712,7 +846,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
             ],
             groupSize: 6
         });
@@ -730,7 +864,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
+                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
             ],
             groupSize: 6
 
@@ -752,6 +886,12 @@ const doPlotGraph = function () {
         matsCollections.PlotGraphFunctions.remove({});
     }
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.timeSeries,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataSeries",
+            checked: false
+        });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.reliability,
             graphFunction: "graphPlotly",
@@ -808,7 +948,7 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
-    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['ensemble_mats_metadata']);
+    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['ensemble_mats_metadata', 'ensemble_database_groups']);
     matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'mats4met-ensemble'});
 });
 

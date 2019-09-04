@@ -72,7 +72,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             }
         }
         if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
-            var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+            var levels = curve['level'] === undefined ? [] : curve['level'];
             if (levels.length > 0 && levels !== matsTypes.InputTypes.unused) {
                 levelClause = " and m0.level IN(" + levels + ")";
             }
@@ -116,7 +116,7 @@ dataContourDiff = function (plotParams, plotFunction) {
                 matchValidTimeClause = matchValidTimeClause.split('m0').join('a0');
             }
             if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
-                var matchLevels = curves[otherCurveIndex]['pres-level'] === undefined ? [] : curves[otherCurveIndex]['pres-level'];
+                var matchLevels = curves[otherCurveIndex]['level'] === undefined ? [] : curves[otherCurveIndex]['level'];
                 if (matchLevels.length > 0 && matchLevels !== matsTypes.InputTypes.unused) {
                     matchLevelClause = "and m0.level = a0.level and a0.level IN(" + matchLevels + ")";    // multiselects always need an additional straight match clause
                 }
