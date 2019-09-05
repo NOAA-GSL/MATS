@@ -524,7 +524,7 @@ class MEEnsemble:
             self.cnx.commit()
             line_count = self.cursor.fetchone()['count']
             self.cursor.execute(
-                "select count(distinct stat_header_id) as header_id_count from stat_header where fcst_lev like 'PROB%';")
+                "select count(distinct stat_header_id) as header_id_count from stat_header where fcst_var like 'PROB%';")
             self.cnx.commit()
             static_header_id_count = self.cursor.fetchone()['header_id_count']
             compound_size = int(static_header_id_count) * int(line_count)
