@@ -333,24 +333,6 @@ const doCurveParams = function () {
             }
         );
     }
-    if (matsCollections.CurveParams.find({name: 'yaxes'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'yaxes',
-                type: matsTypes.InputTypes.selectOrderEnforced,
-                options: ['auto-by-variable', 'y1', 'y2'],
-                selected: ['auto-by-variable'],
-                controlButtonCovered: true,
-                unique: false,
-                default: 'auto-by-variable',
-                controlButtonVisibility: 'block',
-                controlButtonText: "y axes",
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 1,
-                multiple: false
-            });
-    }
 
     var defaultGroup = (Object.keys(dbGroupMap).indexOf("EnsembleTest") !== -1) ? "EnsembleTest" : Object.keys(dbGroupMap)[0];
     var defaultDB = dbGroupMap[defaultGroup][0];
@@ -497,18 +479,26 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const statOptionsMap = {
-            'RMSE': ['avg(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar)) as stat, sum(ld.total) as N0, group_concat(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Bias-corrected RMSE': ['avg(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2))) as stat, sum(ld.total) as N0, group_concat(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'MSE': ['avg(ld.ffbar+ld.oobar - 2*ld.fobar) as stat, sum(ld.total) as N0, group_concat(ld.ffbar+ld.oobar - 2*ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Bias-corrected MSE': ['avg((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) as stat, sum(ld.total) as N0, group_concat((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'ME (Additive bias)': ['avg(ld.fbar - ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Multiplicative bias': ['avg(ld.fbar / ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar / ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Forecast mean': ['avg(ld.fbar) as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Observed mean': ['avg(ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Forecast stdev': ['avg(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Observed stdev': ['avg(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Error stdev': ['avg(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Pearson correlation': ['avg((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2)))) as stat, sum(ld.total) as N0, group_concat((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2))) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar']
+            'RMSE': ['ensemble', 'line_data_ecnt', 'ld.rmse'],
+            'RMSE with obs error': ['ensemble', 'line_data_ecnt', 'ld.rmse_oerr'],
+            'Spread': ['ensemble', 'line_data_ecnt', 'ld.spread'],
+            'Spread with obs error': ['ensemble', 'line_data_ecnt', 'ld.spread_oerr'],
+            'ME (Additive bias)': ['ensemble', 'line_data_ecnt', 'ld.me'],
+            'ME with obs error': ['ensemble', 'line_data_ecnt', 'ld.me_oerr'],
+            'MAE': ['ensemble', 'line_data_cnt', 'ld.mae'],
+            'ACC': ['ensemble', 'line_data_cnt', 'ld.anom_corr'],
+            'CRPS': ['ensemble', 'line_data_ecnt', 'ld.crps'],
+            'CRPSS': ['ensemble', 'line_data_ecnt', 'ld.crpss'],
+            'BS': ['ensemble', 'line_data_pstd', 'ld.brier'],
+            'BSS': ['ensemble', 'line_data_pstd', 'ld.bss'],
+            'BS reliability': ['ensemble', 'line_data_pstd', 'ld.reliability'],
+            'BS resolution': ['ensemble', 'line_data_pstd', 'ld.resolution'],
+            'BS uncertainty': ['ensemble', 'line_data_pstd', 'ld.uncertainty'],
+            'BS lower confidence limit': ['ensemble', 'line_data_pstd', 'ld.brier_ncl'],
+            'BS upper confidence limit': ['ensemble', 'line_data_pstd', 'ld.brier_ncu'],
+            'EV': ['ensemble', 'line_data_eclv', 'ld.value_baser'],
+            'FSS': ['ensemble', 'line_data_nbrcnt', 'ld.fss'],
+            'ROC AUC': ['ensemble', 'line_data_pstd', 'ld.roc_auc']
         };
 
         matsCollections.CurveParams.insert(
@@ -828,7 +818,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "valid-time", "average", "forecast-length", "level"
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "valid-time", "average", "forecast-length", "level"
             ],
             groupSize: 6
         });
@@ -842,11 +832,10 @@ const doCurveTextPatterns = function () {
                 ['', 'variable', ', '],
                 ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ', '],
-                ['avg: ', 'average', ' ']
+                ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level"
             ],
             groupSize: 6
         });
@@ -860,11 +849,10 @@ const doCurveTextPatterns = function () {
                 ['', 'variable', ', '],
                 ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ', '],
-                ['avg: ', 'average', ' ']
+                ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level"
             ],
             groupSize: 6
 
@@ -890,7 +878,7 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
-            checked: false
+            checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.reliability,
@@ -902,7 +890,7 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.roc,
             graphFunction: "graphPlotly",
             dataFunction: "dataROC",
-            checked: true
+            checked: false
         });
     }
 };

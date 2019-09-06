@@ -519,6 +519,32 @@ class QueryUtil:
                 # calculate the ctc statistic
                 sub_values, stat = self.calculate_ctc_stat(statistic, sub_fy_oy, sub_fy_on, sub_fn_oy, sub_fn_on,
                                                            sub_total)
+            elif stat_line_type == 'ensemble':
+                # ensemble app currently has no contour plots
+                stat = float(row['stat'])
+                sub_data = str(row['sub_data']).split(',')
+                sub_values = []
+                sub_total = []
+                sub_secs = []
+                sub_levs = []
+                for sub_datum in sub_data:
+                    sub_datum = sub_datum.split(';')
+                    sub_values.append(float(sub_datum[0]))
+                    sub_total.append(float(sub_datum[1]))
+                    sub_secs.append(float(sub_datum[2]))
+                    if len(sub_datum) > 3:
+                        if self.is_number(sub_datum[3]):
+                            sub_levs.append(int(sub_datum[3]))
+                        else:
+                            sub_levs.append(sub_datum[3])
+                sub_values = np.asarray(sub_values)
+                sub_total = np.asarray(sub_total)
+                sub_secs = np.asarray(sub_secs)
+                if len(sub_levs) == 0:
+                    sub_levs = np.empty(len(sub_secs))
+                else:
+                    sub_levs = np.asarray(sub_levs)
+
             else:
                 stat = 'null'
                 sub_secs = np.empty(0)
@@ -696,6 +722,8 @@ class QueryUtil:
                 data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
             elif stat_line_type == 'ctc':
                 data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
+            elif stat_line_type == 'ensemble':
+                data_exists = row['stat'] != "null" and row['stat'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))
 
@@ -832,6 +860,8 @@ class QueryUtil:
                 data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
             elif stat_line_type == 'ctc':
                 data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
+            elif stat_line_type == 'ensemble':
+                data_exists = row['stat'] != "null" and row['stat'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))
 
@@ -981,6 +1011,8 @@ class QueryUtil:
                 data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
             elif stat_line_type == 'ctc':
                 data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
+            elif stat_line_type == 'ensemble':
+                data_exists = row['stat'] != "null" and row['stat'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))
 

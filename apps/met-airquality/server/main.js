@@ -343,24 +343,6 @@ const doCurveParams = function () {
             }
         );
     }
-    if (matsCollections.CurveParams.find({name: 'yaxes'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'yaxes',
-                type: matsTypes.InputTypes.selectOrderEnforced,
-                options: ['auto-by-variable', 'y1', 'y2'],
-                selected: ['auto-by-variable'],
-                controlButtonCovered: true,
-                unique: false,
-                default: 'auto-by-variable',
-                controlButtonVisibility: 'block',
-                controlButtonText: "y axes",
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 1,
-                multiple: false
-            });
-    }
 
     var defaultGroup = (Object.keys(dbGroupMap).indexOf("PROD") !== -1) ? "PROD" : Object.keys(dbGroupMap)[0];
     var defaultDB = dbGroupMap[defaultGroup][0];
@@ -507,26 +489,26 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const statOptionsMap = {
-            'RMSE': ['avg(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar)) as stat, sum(ld.total) as N0, group_concat(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Bias-corrected RMSE': ['avg(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2))) as stat, sum(ld.total) as N0, group_concat(sqrt((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'MSE': ['avg(ld.ffbar+ld.oobar - 2*ld.fobar) as stat, sum(ld.total) as N0, group_concat(ld.ffbar+ld.oobar - 2*ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Bias-corrected MSE': ['avg((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2)) as stat, sum(ld.total) as N0, group_concat((ld.ffbar+ld.oobar - 2*ld.fobar) - pow(ld.fbar-ld.obar,2) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'ME (Additive bias)': ['avg(ld.fbar - ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Multiplicative bias': ['avg(ld.fbar / ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar / ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Forecast mean': ['avg(ld.fbar) as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Observed mean': ['avg(ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Forecast stdev': ['avg(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.ffbar*ld.total) - (ld.fbar*ld.total) * (ld.fbar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Observed stdev': ['avg(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt(((ld.oobar*ld.total) - (ld.obar*ld.total) * (ld.obar*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Error stdev': ['avg(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1))) as stat, sum(ld.total) as N0, group_concat(sqrt((((ld.ffbar+ld.oobar-2*ld.fobar)*ld.total) - ((ld.fbar-ld.obar)*ld.total) * ((ld.fbar-ld.obar)*ld.total) / ld.total) / (ld.total-1)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'Pearson correlation': ['avg((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2)))) as stat, sum(ld.total) as N0, group_concat((pow(ld.total,2) * ld.fobar - pow(ld.total,2) * ld.fbar * ld.obar) / sqrt((pow(ld.total,2) * ld.ffbar - pow(ld.total,2) * pow(ld.fbar,2)) * (pow(ld.total,2) * ld.oobar - pow(ld.total,2) * pow(ld.obar,2))) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'scalar'],
-            'CSI': ['sum(ld.fy_oy) / (sum(ld.fy_oy) + sum(ld.fy_on) + sum(ld.fn_oy)) as stat, sum(ld.total) as N0, group_concat(ld.fy_oy / (ld.fy_oy + ld.fy_on + ld.fn_oy) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
-            'FAR': ['sum(ld.fy_on) / (sum(ld.fy_oy) + sum(ld.fy_on)) as stat, sum(ld.total) as N0, group_concat(ld.fy_on / (ld.fy_oy + ld.fy_on) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
-            'FBIAS': ['(sum(ld.fy_oy) + sum(ld.fy_on)) / (sum(ld.fy_oy) + sum(ld.fn_oy)) as stat, sum(ld.total) as N0, group_concat((ld.fy_oy + ld.fy_on) / (ld.fy_oy + ld.fn_oy) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
-            'GSS': ['(sum(ld.fy_oy) - ((sum(ld.fy_oy) + sum(ld.fy_on)) / sum(ld.total)) * (sum(ld.fy_oy) + sum(ld.fn_oy))) / (sum(ld.fy_oy) + sum(ld.fy_on) + sum(ld.fn_oy) - ((sum(ld.fy_oy) + sum(ld.fy_on)) / sum(ld.total)) * (sum(ld.fy_oy) + sum(ld.fn_oy))) as stat, sum(ld.total) as N0, group_concat((ld.fy_oy - ((ld.fy_oy + ld.fy_on) / ld.total) * (ld.fy_oy + ld.fn_oy)) / (ld.fy_oy + ld.fy_on + ld.fn_oy - ((ld.fy_oy + ld.fy_on) / ld.total) * (ld.fy_oy + ld.fn_oy)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
-            'HSS': ['(sum(ld.fy_oy) + sum(ld.fn_on) - ((sum(ld.fy_oy) + sum(ld.fy_on)) / sum(ld.total)) * (sum(ld.fy_oy) + sum(ld.fn_oy)) + ((sum(ld.fn_oy) + sum(ld.fn_on)) / sum(ld.total)) * (sum(ld.fy_on) + sum(ld.fn_on))) / (sum(ld.total) - ((sum(ld.fy_oy) + sum(ld.fy_on)) / sum(ld.total)) * (sum(ld.fy_oy) + sum(ld.fn_oy)) + ((sum(ld.fn_oy) + sum(ld.fn_on)) / sum(ld.total) * (sum(ld.fy_on) + sum(ld.fn_on))) as stat, sum(ld.total) as N0, group_concat((ld.fy_oy + ld.fn_on - ((ld.fy_oy + ld.fy_on) / ld.total) * (ld.fy_oy + ld.fn_oy) + ((ld.fn_oy + ld.fn_on) / ld.total) * (ld.fy_on + ld.fn_on)) / (ld.total - ((ld.fy_oy + ld.fy_on) / ld.total) * (ld.fy_oy + ld.fn_oy) + ((ld.fn_oy + ld.fn_on) / ld.total) * (ld.fy_on + ld.fn_on)) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
-            'PODy': ['sum(ld.fy_oy) / (sum(ld.fy_oy) + sum(ld.fn_oy)) as stat, sum(ld.total) as N0, group_concat(ld.fy_oy / (ld.fy_oy + ld.fn_oy) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
-            'PODn': ['sum(ld.fn_on) / (sum(ld.fy_on) + sum(ld.fn_on)) as stat, sum(ld.total) as N0, group_concat(ld.fn_on / (ld.fy_on + ld.fn_on) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc'],
-            'POFD': ['sum(ld.fy_on) / (sum(ld.fy_on) + sum(ld.fn_on)) as stat, sum(ld.total) as N0, group_concat(ld.fy_on / (ld.fy_on + ld.fn_on) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs0', 'ctc']
+            'RMSE': ['scalar'],
+            'Bias-corrected RMSE': ['scalar'],
+            'MSE': ['scalar'],
+            'Bias-corrected MSE': ['scalar'],
+            'ME (Additive bias)': ['scalar'],
+            'Multiplicative bias': ['scalar'],
+            'Forecast mean': ['scalar'],
+            'Observed mean': ['scalar'],
+            'Forecast stdev': ['scalar'],
+            'Observed stdev': ['scalar'],
+            'Error stdev': ['scalar'],
+            'Pearson correlation': ['scalar'],
+            'CSI': ['ctc'],
+            'FAR': ['ctc'],
+            'FBIAS': ['ctc'],
+            'GSS': ['ctc'],
+            'HSS': ['ctc'],
+            'PODy': ['ctc'],
+            'PODn': ['ctc'],
+            'POFD': ['ctc']
         };
 
         matsCollections.CurveParams.insert(
@@ -945,7 +927,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "average", "forecast-length", "level"
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "average", "forecast-length", "level"
             ],
             groupSize: 6
         });
@@ -966,7 +948,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "level", "curve-dates"
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -985,7 +967,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "threshold", "forecast-length", "level", "curve-dates"
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "forecast-length", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1005,7 +987,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "forecast-length", "level", "curve-dates"
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "forecast-length", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1027,7 +1009,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "forecast-length", "level", "x-axis-parameter", "y-axis-parameter"
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "forecast-length", "level", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 

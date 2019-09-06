@@ -63,7 +63,7 @@ dataSeries = function (plotParams, plotFunction) {
         const variable = curve['variable'];
         const statistic = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        const statLineType = statisticOptionsMap[statistic][1];
+        const statLineType = statisticOptionsMap[statistic][0];
         var statisticsClause = "";
         var lineDataType = "";
         if (statLineType === 'scalar') {

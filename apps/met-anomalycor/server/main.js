@@ -333,24 +333,6 @@ const doCurveParams = function () {
             }
         );
     }
-    if (matsCollections.CurveParams.find({name: 'yaxes'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'yaxes',
-                type: matsTypes.InputTypes.selectOrderEnforced,
-                options: ['auto-by-variable', 'y1', 'y2'],
-                selected: ['auto-by-variable'],
-                controlButtonCovered: true,
-                unique: false,
-                default: 'auto-by-variable',
-                controlButtonVisibility: 'block',
-                controlButtonText: "y axes",
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 1,
-                multiple: false
-            });
-    }
 
     var defaultGroup = (Object.keys(dbGroupMap).indexOf("PROD") !== -1) ? "PROD" : Object.keys(dbGroupMap)[0];
     var defaultDB = dbGroupMap[defaultGroup][0];
@@ -861,7 +843,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "level"
             ],
             groupSize: 6
         });
@@ -878,7 +860,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "curve-dates"
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "curve-dates"
             ],
             groupSize: 6
         });
@@ -897,7 +879,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "level", "curve-dates"
+                "label", "group", "database", "data-source", "region", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -914,7 +896,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "forecast-length", "level", "curve-dates"
+                "label", "group", "database", "data-source", "region", "variable", "forecast-length", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -932,7 +914,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "curve-dates"
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -952,7 +934,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "yaxes", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "x-axis-parameter", "y-axis-parameter"
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 

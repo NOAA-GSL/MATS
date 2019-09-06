@@ -57,7 +57,7 @@ dataReliability = function (plotParams, plotFunction) {
         }
         const variable = curve['variable'];
         const statistic = "None";
-        const statLineType = 'pct';
+        const statLineType = 'ensemble';
         const lineDataType = 'line_data_pct';
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
@@ -112,7 +112,7 @@ dataReliability = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select {{average}} as avtime, " +
+            var statement = "select unix_timestamp(ld.fcst_valid_beg) as avtime, " +
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
@@ -139,7 +139,6 @@ dataReliability = function (plotParams, plotFunction) {
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);

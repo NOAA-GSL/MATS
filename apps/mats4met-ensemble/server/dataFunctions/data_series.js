@@ -6,43 +6,44 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
-dataHistogram = function (plotParams, plotFunction) {
+dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appParams = {
-        "plotType": matsTypes.PlotTypes.histogram,
+        "plotType": matsTypes.PlotTypes.timeSeries,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
         "hideGaps": plotParams['noGapsCheck'],
         "hasLevels": true
     };
-    var alreadyMatched = false;
     var dataRequests = {}; // used to store data queries
-    var dataFoundForCurve = [];
+    var dataFoundForCurve = true;
     var totalProcessingStart = moment();
+    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
+    var fromSecs = dateRange.fromSeconds;
+    var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
-    var allReturnedSubStats = [];
-    var allReturnedSubSecs = [];
-    var allReturnedSubLevs = [];
+    var utcCycleStarts = [];
     var axisMap = Object.create(null);
-
-    // process user bin customizations
-    const binParams = matsDataUtils.setHistogramParameters(plotParams);
-    const yAxisFormat = binParams.yAxisFormat;
-    const binNum = binParams.binNum;
+    var xmax = -1 * Number.MAX_VALUE;
+    var ymax = -1 * Number.MAX_VALUE;
+    var xmin = Number.MAX_VALUE;
+    var ymin = Number.MAX_VALUE;
+    var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        dataFoundForCurve[curveIndex] = true;
-        var label = curve['label'];
+        const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
         var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
@@ -54,26 +55,15 @@ dataHistogram = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-        const threshold = curve['threshold'];
-        var thresholdClause = "";
-        if (threshold !== 'All thresholds') {
-            thresholdClause = "and h.fcst_thresh = '" + threshold + "'"
-        }
         const variable = curve['variable'];
         const statistic = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         const statLineType = statisticOptionsMap[statistic][0];
         var statisticsClause = "";
         var lineDataType = "";
-        if (statLineType === 'scalar') {
-            statisticsClause = "avg(ld.fbar) as fbar, " +
-                "avg(ld.obar) as obar, " +
-                "group_concat(ld.fbar, ';', ld.obar, ';', ld.ffbar, ';', ld.oobar, ';', ld.fobar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
-            lineDataType = "line_data_sl1l2";
-        } else if (statLineType === 'ctc') {
-            statisticsClause = "avg(ld.fy_oy) as fy_oy, " +
-                "group_concat(ld.fy_oy, ';', ld.fy_on, ';', ld.fn_oy, ';', ld.fn_on, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
-            lineDataType = "line_data_ctc";
+        if (statLineType === 'ensemble') {
+            statisticsClause = "avg(" + statisticOptionsMap[statistic][2] + ") as stat, group_concat(" + statisticOptionsMap[statistic][2] + ", ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
+            lineDataType = statisticOptionsMap[statistic][1];
         }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
@@ -88,10 +78,20 @@ dataHistogram = function (plotParams, plotFunction) {
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
+        const averageStr = curve['average'];
+        const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        const average = averageOptionsMap[averageStr][0];
         var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        } else {
+            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
             }).join(',');
@@ -107,25 +107,18 @@ dataHistogram = function (plotParams, plotFunction) {
             }).join(',');
             validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
         }
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
-        // units (axisKey) it will use the same axis.
-        // Histograms should have everything under the same axisKey.
-        var axisKey = yAxisFormat;
-        if (yAxisFormat === 'Relative frequency') {
-            axisKey = axisKey + " (x100)"
-        }
+        // variable (axisKey) it will use the same axis.
+        // The axis number is assigned to the axisKeySet value, which is the axisKey.
+        var axisKey = variable;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
 
         var d;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select unix_timestamp(ld.fcst_valid_beg) as avtime, " +
+            var statement = "select {{average}} as avtime, " +
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
@@ -141,13 +134,13 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
-                "{{thresholdClause}} " +
                 "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
+            statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{model}}', model);
@@ -157,7 +150,6 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{statisticsClause}}', statisticsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{lineDataType}}', lineDataType);
@@ -179,9 +171,6 @@ dataHistogram = function (plotParams, plotFunction) {
                 };
                 // get the data back from the query
                 d = queryResult.data;
-                allReturnedSubStats.push(d.subVals); // save returned data so that we can calculate histogram stats once all the queries are done
-                allReturnedSubSecs.push(d.subSecs);
-                allReturnedSubLevs.push(d.subLevs);
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -190,7 +179,7 @@ dataHistogram = function (plotParams, plotFunction) {
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
                     // this is NOT an error just a no data condition
-                    dataFoundForCurve[curveIndex] = false;
+                    dataFoundForCurve = false;
                 } else {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
@@ -201,20 +190,56 @@ dataHistogram = function (plotParams, plotFunction) {
                     }
                 }
             }
+
+            // set axis limits based on returned data
+            var postQueryStartMoment = moment();
+            if (dataFoundForCurve) {
+                xmin = xmin < d.xmin ? xmin : d.xmin;
+                xmax = xmax > d.xmax ? xmax : d.xmax;
+                ymin = ymin < d.ymin ? ymin : d.ymin;
+                ymax = ymax > d.ymax ? ymax : d.ymax;
+            }
+        } else {
+            // this is a difference curve
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
+            d = diffResult.dataset;
+            xmin = xmin < d.xmin ? xmin : d.xmin;
+            xmax = xmax > d.xmax ? xmax : d.xmax;
+            ymin = ymin < d.ymin ? ymin : d.ymin;
+            ymax = ymax > d.ymax ? ymax : d.ymax;
         }
-    }
+
+        // set curve annotation to be the curve mean -- may be recalculated later
+        // also pass previously calculated axis stats to curve options
+        const mean = d.sum / d.x.length;
+        const annotation = mean === undefined ? label + "- mean = NaN" : label + "- mean = " + mean.toPrecision(4);
+        curve['annotation'] = annotation;
+        curve['xmin'] = d.xmin;
+        curve['xmax'] = d.xmax;
+        curve['ymin'] = d.ymin;
+        curve['ymax'] = d.ymax;
+        curve['axisKey'] = axisKey;
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
+        dataset.push(cOptions);
+        var postQueryFinishMoment = moment();
+        dataRequests["post data retrieval (query) process time - " + curve.label] = {
+            begin: postQueryStartMoment.format(),
+            finish: postQueryFinishMoment.format(),
+            duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
+        };
+    }  // end for curves
+
+    // process the data returned by the query
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
-        "dataFoundForCurve": dataFoundForCurve,
+        "idealValues": idealValues,
+        "utcCycleStarts": utcCycleStarts,
         "axisMap": axisMap,
-        "yAxisFormat": yAxisFormat
+        "xmax": xmax,
+        "xmin": xmin
     };
-    const bookkeepingParams = {
-        "alreadyMatched": alreadyMatched,
-        "dataRequests": dataRequests,
-        "totalProcessingStart": totalProcessingStart
-    };
-    var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
+    const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    var result = matsDataProcessUtils.processDataXYCurve(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
 };
