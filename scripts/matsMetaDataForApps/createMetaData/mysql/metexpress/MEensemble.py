@@ -3,13 +3,12 @@
 This script creates the metadata tables required for a METexpress ensemble app. It parses the required fields from any
 databases that begin with 'mv_' in a mysql instance.
 
-Arguments: path to a mysql .cnf file
-
 Usage: ["(c)nf_file=", "[(m)ats_metadata_database_name]",
                  "[(D)ata_table_stat_header_id_limit - default is 10,000,000,000]",
                  "[(d)atabase name]" "(u)=metexpress_base_url"]
         cnf_file = None
-Author: Molly B Smith
+
+Author: Molly B Smith, heavily modified by Randy Pierce
 """
 
 #  Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
@@ -34,7 +33,7 @@ class MEEnsemble:
     def __init__(self):
         #self.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
         self.script_name = __name__
-        self.line_data_table = "line_data_pct"
+        self.line_data_table = ["line_data_pct", "line_data_ecnt", "line_data_cnt", "line_data_pstd"]
         self.metadata_table = "ensemble_mats_metadata"
         self.app_reference = "mats4met-ensemble"
         self.string_fields = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
@@ -380,10 +379,14 @@ class MEEnsemble:
 
     def strip_level(self, elem):
         # helper function for sorting levels
-        if elem[0] == 'Z':
-            return int(elem[1:])
+        if elem[0] in ['P', 'Z', 'H', 'L', 'A']:
+            if '-' not in elem:
+                return int(elem[1:])
+            else:
+                hyphen_idx = elem.find('-')
+                return int(elem[1:hyphen_idx])
         else:
-            return elem
+            return 0
 
     def get_default_fcsts(self, mvdb, model):
         # get the default fcst_leads from the table if there is a match on the model name, otherwise get the default
@@ -392,11 +395,11 @@ class MEEnsemble:
         #     search for an entry like this model among the defaults
         # if there is no default entry like this model use the overall default set
 
-        default_fcst_Cnx = pymysql.connect(read_default_file=self.cnf_file)
-        default_fcst_Cnx.autocommit = True
-        default_fcst_cursor = default_fcst_Cnx.cursor(pymysql.cursors.DictCursor)
+        default_fcst_cnx = pymysql.connect(read_default_file=self.cnf_file)
+        default_fcst_cnx.autocommit = True
+        default_fcst_cursor = default_fcst_cnx.cursor(pymysql.cursors.DictCursor)
         default_fcst_cursor.execute("use  " + self.metadata_database + ";")
-        default_fcst_Cnx.commit()
+        default_fcst_cnx.commit()
         # if there is no default_fcst_length table, create it and populate it
         default_fcst_cursor.execute('show tables like "default_fcst_leads";')
         if default_fcst_cursor.rowcount == 0:
@@ -407,17 +410,18 @@ class MEEnsemble:
         # search for this model by exact match - maybe it has already been processed
         default_fcst_cursor.execute(
             "select fcst_leads,fcst_leads_orig, mindate, maxdate from default_fcst_leads where db = '" + mvdb + "' and model = '" + model + "';")
-        default_fcst_Cnx.commit()
+        default_fcst_cnx.commit()
         if default_fcst_cursor.rowcount == 0:
             # this model needs default data which is just the distinct fcst_leads for all the line_data unqualified by region, model, level etc.
             # record the default data so that it could be corrected in the table, if need be
-            default_fcst_cursor.execute("select distinct fcst_lead from " + mvdb + "." + self.line_data_table + ";")
-            default_fcst_Cnx.commit()
             fcst_leads_array = set()
-            tmp_fcst_leads_array = list(default_fcst_cursor.fetchall())
-            for d in tmp_fcst_leads_array:
-                fcst_lead = d['fcst_lead'] if int(d['fcst_lead']) % 10000 != 0 else int(d['fcst_lead']) / 10000
-                fcst_leads_array.add(int(fcst_lead))
+            for line_data_table in self.line_data_table:
+                default_fcst_cursor.execute("select distinct fcst_lead from " + mvdb + "." + line_data_table + ";")
+                default_fcst_cnx.commit()
+                tmp_fcst_leads_array = list(default_fcst_cursor.fetchall())
+                for d in tmp_fcst_leads_array:
+                    fcst_lead = d['fcst_lead'] if int(d['fcst_lead']) % 10000 != 0 else int(d['fcst_lead']) / 10000
+                    fcst_leads_array.add(int(fcst_lead))
             fcst_leads = str(list(map(str, sorted(fcst_leads_array))))
             fcst_leads_orig_array = ["dflt"] * len(fcst_leads_array)
             fcst_leads_orig = str(fcst_leads_orig_array)
@@ -433,7 +437,7 @@ class MEEnsemble:
             qd.append(mindate)
             qd.append(maxdate)
             default_fcst_cursor.execute(insert_row, qd)
-            default_fcst_Cnx.commit()
+            default_fcst_cnx.commit()
             default_vals = {"fcst_leads": fcst_leads, "fcst_leads_orig": fcst_leads_orig, "mindate": mindate,
                             "maxdate": maxdate}
         else:
@@ -520,11 +524,13 @@ class MEEnsemble:
             cnx2.commit()
             print("\n\n" + self.script_name + "- Using db " + mvdb)
 
-            self.cursor.execute("select count(*) as count from " + self.line_data_table + ";")
-            self.cnx.commit()
-            line_count = self.cursor.fetchone()['count']
+            line_count = 0
+            for line_data_table in self.line_data_table:
+                self.cursor.execute("select count(*) as count from " + line_data_table + ";")
+                self.cnx.commit()
+                line_count = line_count + int(self.cursor.fetchone()['count'])
             self.cursor.execute(
-                "select count(distinct stat_header_id) as header_id_count from stat_header where fcst_var like 'PROB%';")
+                'select count(distinct stat_header_id) as header_id_count from stat_header;')
             self.cnx.commit()
             static_header_id_count = self.cursor.fetchone()['header_id_count']
             compound_size = int(static_header_id_count) * int(line_count)
@@ -540,7 +546,7 @@ class MEEnsemble:
                                             "line_count": line_count}
                 needs_default_metadata = True
             # Get the models in this database
-            get_models = 'select distinct model from stat_header where fcst_var like "PROB%";'
+            get_models = 'select distinct model from stat_header;'
             self.cursor.execute(get_models)
             self.cnx.commit()
             for line in self.cursor:
@@ -549,7 +555,7 @@ class MEEnsemble:
                 print("\n" + self.script_name + " - Processing model " + model)
 
                 # Get the regions for this model in this database
-                get_regions = 'select distinct vx_mask from stat_header where fcst_var like "PROB%" and model ="' + model + '";'
+                get_regions = 'select distinct vx_mask from stat_header where model ="' + model + '";'
                 per_mvdb[mvdb][model]['regions'] = []
                 print(self.script_name + " - Getting regions for model " + model)
                 cursor2.execute(get_regions)
@@ -560,7 +566,7 @@ class MEEnsemble:
                 per_mvdb[mvdb][model]['regions'].sort()
 
                 # Get the levels for this model in this database
-                get_levels = 'select distinct fcst_lev from stat_header where fcst_var like "PROB%" and model ="' + model + '";'
+                get_levels = 'select distinct fcst_lev from stat_header where model ="' + model + '";'
                 per_mvdb[mvdb][model]['levels'] = []
                 print(self.script_name + " - Getting levels for model " + model)
                 cursor2.execute(get_levels)
@@ -571,7 +577,7 @@ class MEEnsemble:
                 per_mvdb[mvdb][model]['levels'].sort(key=self.strip_level)
 
                 # Get the variables for this model in this database
-                get_vars = 'select distinct fcst_var from stat_header where fcst_var like "PROB%" and model ="' + model + '";'
+                get_vars = 'select distinct fcst_var from stat_header where model ="' + model + '";'
                 per_mvdb[mvdb][model]['variables'] = []
                 print(self.script_name + " - Getting variables for model " + model)
                 cursor2.execute(get_vars)
@@ -584,7 +590,7 @@ class MEEnsemble:
                 print(self.script_name + " - Getting fcst lens for model " + model)
                 temp_fcsts = set()
                 temp_fcsts_orig = set()
-                get_stat_header_ids = "select stat_header_id from stat_header where model='" + model + "' and fcst_var like 'PROB%';"
+                get_stat_header_ids = 'select stat_header_id from stat_header where model ="' + model + '";'
                 cursor2.execute(get_stat_header_ids)
                 cnx2.commit()
                 stat_header_id_values = cursor2.fetchall()
@@ -601,23 +607,24 @@ class MEEnsemble:
                     per_mvdb[mvdb][model]['maxdate'] = default_metadata['maxdate']
                     # numrecs is one - just a positive number - wrong but sufficient for defaults
                     cursor2.execute(
-                        "select count(stat_header_id) as count from " + mvdb + "." + self.line_data_table + ";")
+                        "select count(stat_header_id) as count from " + mvdb + "." + self.line_data_table[0] + ";")
                     cnx2.commit()
                     numrecs = cursor2.fetchone()['count']
                     per_mvdb[mvdb][model]['numrecs'] = numrecs
                 else:
                     if stat_header_id_list is not None:
                         for stat_header_id in stat_header_id_list:
-                            get_fcsts = "select distinct fcst_lead from  " + self.line_data_table + " where stat_header_id = '" + str(
-                                stat_header_id) + "';"
-                            cursor2.execute(get_fcsts)
-                            cnx2.commit()
-                            for line2 in cursor2:
-                                fcst = int(list(line2.values())[0])
-                                temp_fcsts_orig.add(fcst)
-                                if fcst % 10000 == 0:
-                                    fcst = int(fcst / 10000)
-                                temp_fcsts.add(fcst)
+                            for line_data_table in self.line_data_table:
+                                get_fcsts = 'select distinct fcst_lead from ' + line_data_table + ' where stat_header_id = "' + str(
+                                    stat_header_id) + '";'
+                                cursor2.execute(get_fcsts)
+                                cnx2.commit()
+                                for line2 in cursor2:
+                                    fcst = int(list(line2.values())[0])
+                                    temp_fcsts_orig.add(fcst)
+                                    if fcst % 10000 == 0:
+                                        fcst = int(fcst / 10000)
+                                    temp_fcsts.add(fcst)
 
                         per_mvdb[mvdb][model]['fcsts'] = list(map(str, sorted(temp_fcsts)))
                         per_mvdb[mvdb][model]['fcst_orig'] = list(map(str, sorted(temp_fcsts_orig)))
@@ -627,15 +634,16 @@ class MEEnsemble:
                         min = datetime.max
                         max = datetime.min  # earliest epoch?
                         for stat_header_id in stat_header_id_list:
-                            get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from ' + self.line_data_table + ' where stat_header_id  = "' + str(
-                                stat_header_id) + '";'
-                            cursor2.execute(get_stats)
-                            cnx2.commit()
-                            data = cursor2.fetchone()
-                            if data is not None:
-                                min = min if data['mindate'] is None or min < data['mindate'] else data['mindate']
-                                max = max if data['maxdate'] is None or max > data['maxdate'] else data['maxdate']
-                                num_recs = num_recs + data['numrecs']
+                            for line_data_table in self.line_data_table:
+                                get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from ' + line_data_table + ' where stat_header_id  = "' + str(
+                                    stat_header_id) + '";'
+                                cursor2.execute(get_stats)
+                                cnx2.commit()
+                                data = cursor2.fetchone()
+                                if data is not None:
+                                    min = min if data['mindate'] is None or min < data['mindate'] else data['mindate']
+                                    max = max if data['maxdate'] is None or max > data['maxdate'] else data['maxdate']
+                                    num_recs = num_recs + data['numrecs']
                         if (min is None or min is datetime.max):
                             min = datetime.utcnow()
                         if (max is None is max is datetime.min):
