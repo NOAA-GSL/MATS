@@ -72,9 +72,6 @@ dataROC = function (plotParams, plotFunction) {
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
-        const averageStr = curve['average'];
-        const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        const average = averageOptionsMap[averageStr][0];
         var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
