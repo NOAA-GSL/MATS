@@ -852,6 +852,9 @@ class QueryUtil:
                 ind_var = float(str(row['avVal']).replace('P', ''))
             elif plot_type == 'DailyModelCycle' or plot_type == 'TimeSeries':
                 ind_var = int(row['avtime']) * 1000
+            elif plot_type == 'DieOff':
+                ind_var = int(row['avtime'])
+                ind_var = ind_var if ind_var % 10000 != 0 else ind_var / 10000
             else:
                 ind_var = int(row['avtime'])
 

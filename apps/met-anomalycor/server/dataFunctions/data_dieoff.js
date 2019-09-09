@@ -56,8 +56,6 @@ dataDieOff = function (plotParams, plotFunction) {
         const statistic = "ACC";
         const statLineType = 'scalar';
         const lineDataType = 'line_data_sal1l2';
-        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-        const forecastKeys = Object.keys(forecastValueMap);
         var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];

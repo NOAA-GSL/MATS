@@ -52,26 +52,15 @@ dataDieOff = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-        const threshold = curve['threshold'];
-        var thresholdClause = "";
-        if (threshold !== 'All thresholds') {
-            thresholdClause = "and h.fcst_thresh = '" + threshold + "'"
-        }
         const variable = curve['variable'];
         const statistic = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         const statLineType = statisticOptionsMap[statistic][0];
         var statisticsClause = "";
         var lineDataType = "";
-        if (statLineType === 'scalar') {
-            statisticsClause = "avg(ld.fbar) as fbar, " +
-                "avg(ld.obar) as obar, " +
-                "group_concat(ld.fbar, ';', ld.obar, ';', ld.ffbar, ';', ld.oobar, ';', ld.fobar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
-            lineDataType = "line_data_sl1l2";
-        } else if (statLineType === 'ctc') {
-            statisticsClause = "avg(ld.fy_oy) as fy_oy, " +
-                "group_concat(ld.fy_oy, ';', ld.fy_on, ';', ld.fn_oy, ';', ld.fn_on, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
-            lineDataType = "line_data_ctc";
+        if (statLineType === 'ensemble') {
+            statisticsClause = "avg(" + statisticOptionsMap[statistic][2] + ") as stat, group_concat(" + statisticOptionsMap[statistic][2] + ", ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
+            lineDataType = statisticOptionsMap[statistic][1];
         }
         var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
@@ -134,7 +123,6 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
-                "{{thresholdClause}} " +
                 "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
                 "group by avtime " +
@@ -149,7 +137,6 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{statisticsClause}}', statisticsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{lineDataType}}', lineDataType);
