@@ -17,4 +17,6 @@ else
     docker swarm init
 fi
 docker network create -d overlay web
+env=$(jq -r '.environment' $(find ~ -type f -name environment.json 2>/dev/null))
+docker pull -a --disable-content-trust matsapps/${env}
 docker stack deploy -c docker-compose.yml ${stack}
