@@ -17,6 +17,15 @@ else
     docker swarm init
 fi
 docker network create -d overlay web
-env=$(jq -r '.environment' $(find ~ -type f -name environment.json 2>/dev/null))
-docker pull -a --disable-content-trust matsapps/${env}
+dockercompose=$(find ~ -type f -name docker-compose.yml 2>/dev/null)
+echo -e "${GRN}Retrieving images - be patient ${NC}"
+grep image ${dockercompose} | awk '{print $2}' | while read i
+do
+  if [[ $i == "matsapps"* ]]; then
+    echo -e "${ORNG} pulling $i ${NC}"
+    docker pull --disable-content-trust ${i}
+  fi
+done
+# deploy stack
+echo -e "${GRN}deploying stack ${stack}${NC}"
 docker stack deploy -c docker-compose.yml ${stack}
