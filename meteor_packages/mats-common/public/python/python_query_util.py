@@ -421,16 +421,16 @@ class QueryUtil:
                     sub_levs = []
                     for sub_datum in sub_data:
                         sub_datum = sub_datum.split(';')
-                        sub_fbar.append(float(sub_datum[0]))
-                        sub_obar.append(float(sub_datum[1]))
-                        sub_ffbar.append(float(sub_datum[2]))
-                        sub_oobar.append(float(sub_datum[3]))
-                        sub_fobar.append(float(sub_datum[4]))
-                        sub_total.append(float(sub_datum[5]))
-                        sub_secs.append(float(sub_datum[6]))
+                        sub_fbar.append(float(sub_datum[0]) if float(sub_datum[0]) != -9999 else np.nan)
+                        sub_obar.append(float(sub_datum[1]) if float(sub_datum[1]) != -9999 else np.nan)
+                        sub_ffbar.append(float(sub_datum[2]) if float(sub_datum[2]) != -9999 else np.nan)
+                        sub_oobar.append(float(sub_datum[3]) if float(sub_datum[3]) != -9999 else np.nan)
+                        sub_fobar.append(float(sub_datum[4]) if float(sub_datum[4]) != -9999 else np.nan)
+                        sub_total.append(float(sub_datum[5]) if float(sub_datum[5]) != -9999 else np.nan)
+                        sub_secs.append(float(sub_datum[6]) if float(sub_datum[6]) != -9999 else np.nan)
                         if len(sub_datum) > 7:
                             if self.is_number(sub_datum[7]):
-                                sub_levs.append(int(sub_datum[7]))
+                                sub_levs.append(int(sub_datum[7]) if float(sub_datum[7]) != -9999 else np.nan)
                             else:
                                 sub_levs.append(sub_datum[7])
                     sub_fbar = np.asarray(sub_fbar)
@@ -446,17 +446,17 @@ class QueryUtil:
                         sub_levs = np.asarray(sub_levs)
                 else:
                     # contour plot data
-                    sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
-                    sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
-                    sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
-                    sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
-                    sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
-                    sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
-                    sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
+                    sub_fbar = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_fbar']).split(','))])
+                    sub_obar = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_obar']).split(','))])
+                    sub_ffbar = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_ffbar']).split(','))])
+                    sub_oobar = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_oobar']).split(','))])
+                    sub_fobar = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_fobar']).split(','))])
+                    sub_total = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_total']).split(','))])
+                    sub_secs = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_secs']).split(','))])
                     if has_levels:
                         sub_levs_raw = str(row['sub_levs']).split(',')
                         if self.is_number(sub_levs_raw[0]):
-                            sub_levs = np.array([int(i) for i in sub_levs_raw])
+                            sub_levs = np.array([int(i) if float(i) != -9999 else np.nan for i in sub_levs_raw])
                         else:
                             sub_levs = np.array(sub_levs_raw)
                     else:
@@ -478,15 +478,15 @@ class QueryUtil:
                     sub_levs = []
                     for sub_datum in sub_data:
                         sub_datum = sub_datum.split(';')
-                        sub_fy_oy.append(float(sub_datum[0]))
-                        sub_fy_on.append(float(sub_datum[1]))
-                        sub_fn_oy.append(float(sub_datum[2]))
-                        sub_fn_on.append(float(sub_datum[3]))
-                        sub_total.append(float(sub_datum[4]))
-                        sub_secs.append(float(sub_datum[5]))
+                        sub_fy_oy.append(float(sub_datum[0]) if float(sub_datum[0]) != -9999 else np.nan)
+                        sub_fy_on.append(float(sub_datum[1]) if float(sub_datum[1]) != -9999 else np.nan)
+                        sub_fn_oy.append(float(sub_datum[2]) if float(sub_datum[2]) != -9999 else np.nan)
+                        sub_fn_on.append(float(sub_datum[3]) if float(sub_datum[3]) != -9999 else np.nan)
+                        sub_total.append(float(sub_datum[4]) if float(sub_datum[4]) != -9999 else np.nan)
+                        sub_secs.append(float(sub_datum[5]) if float(sub_datum[5]) != -9999 else np.nan)
                         if len(sub_datum) > 6:
                             if self.is_number(sub_datum[6]):
-                                sub_levs.append(int(sub_datum[6]))
+                                sub_levs.append(int(sub_datum[6]) if float(sub_datum[6]) != -9999 else np.nan)
                             else:
                                 sub_levs.append(sub_datum[6])
                     sub_fy_oy = np.asarray(sub_fy_oy)
@@ -501,16 +501,16 @@ class QueryUtil:
                         sub_levs = np.asarray(sub_levs)
                 else:
                     # contour plot data
-                    sub_fy_oy = np.array([float(i) for i in (str(row['sub_fy_oy']).split(','))])
-                    sub_fy_on = np.array([float(i) for i in (str(row['sub_fy_on']).split(','))])
-                    sub_fn_oy = np.array([float(i) for i in (str(row['sub_fn_oy']).split(','))])
-                    sub_fn_on = np.array([float(i) for i in (str(row['sub_fn_on']).split(','))])
-                    sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
-                    sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
+                    sub_fy_oy = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_fy_oy']).split(','))])
+                    sub_fy_on = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_fy_on']).split(','))])
+                    sub_fn_oy = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_fn_oy']).split(','))])
+                    sub_fn_on = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_fn_on']).split(','))])
+                    sub_total = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_total']).split(','))])
+                    sub_secs = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_secs']).split(','))])
                     if has_levels:
                         sub_levs_raw = str(row['sub_levs']).split(',')
                         if self.is_number(sub_levs_raw[0]):
-                            sub_levs = np.array([int(i) for i in sub_levs_raw])
+                            sub_levs = np.array([int(i) if float(i) != -9999 else np.nan for i in sub_levs_raw])
                         else:
                             sub_levs = np.array(sub_levs_raw)
                     else:
@@ -521,7 +521,7 @@ class QueryUtil:
                                                            sub_total)
             elif stat_line_type == 'ensemble':
                 # ensemble app currently has no contour plots
-                stat = float(row['stat'])
+                stat = float(row['stat']) if float(row['stat']) != -9999 else 'null'
                 sub_data = str(row['sub_data']).split(',')
                 sub_values = []
                 sub_total = []
@@ -529,12 +529,12 @@ class QueryUtil:
                 sub_levs = []
                 for sub_datum in sub_data:
                     sub_datum = sub_datum.split(';')
-                    sub_values.append(float(sub_datum[0]))
-                    sub_total.append(float(sub_datum[1]))
-                    sub_secs.append(float(sub_datum[2]))
+                    sub_values.append(float(sub_datum[0]) if float(sub_datum[0]) != -9999 else np.nan)
+                    sub_total.append(float(sub_datum[1]) if float(sub_datum[1]) != -9999 else np.nan)
+                    sub_secs.append(float(sub_datum[2]) if float(sub_datum[2]) != -9999 else np.nan)
                     if len(sub_datum) > 3:
                         if self.is_number(sub_datum[3]):
-                            sub_levs.append(int(sub_datum[3]))
+                            sub_levs.append(int(sub_datum[3]) if float(sub_datum[0]) != -9999 else np.nan)
                         else:
                             sub_levs.append(sub_datum[3])
                 sub_values = np.asarray(sub_values)
