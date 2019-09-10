@@ -73,7 +73,7 @@ with the usage: ./selective_update_MEanomalycor.py path_to_file.cnf refresh_meta
 The refresh_metadata_url is derived from the metexpress_base_url and the appref. e.g. https://metexpress.nws.noaa.gov/met-upperair/refreshMetadata
 7) Finally the script will update the run_stats table with the completion time and status. Staus 0 success, 1 error.
 
-Author: Molly B Smith, Randy Pierce
+Author: Randy Pierce
 """
 
 #  Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.

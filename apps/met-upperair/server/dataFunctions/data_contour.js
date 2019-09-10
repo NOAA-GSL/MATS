@@ -55,7 +55,7 @@ dataContour = function (plotParams, plotFunction) {
     const variable = curve['variable'];
     const statistic = curve['statistic'];
     const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-    const statLineType = statisticOptionsMap[statistic][1];
+    const statLineType = statisticOptionsMap[statistic][0];
     var statisticsClause = "";
     var lineDataType = "";
     if (statLineType === 'scalar') {
@@ -92,7 +92,7 @@ dataContour = function (plotParams, plotFunction) {
         }
     }
     var levelsClause = "";
-    var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
+    var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
     levels = Array.isArray(levels) ? levels : [levels];
     if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level' && levels.length > 0) {
         levels = levels.map(function (l) {

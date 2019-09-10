@@ -72,7 +72,7 @@ dataContour = function (plotParams, plotFunction) {
         }
     }
     var levelsClause = "";
-    var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
+    var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
     levels = Array.isArray(levels) ? levels : [levels];
     if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level' && levels.length > 0) {
         levels = levels.map(function (l) {

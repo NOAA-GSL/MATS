@@ -57,7 +57,7 @@ dataHistogram = function (plotParams, plotFunction) {
         const variable = curve['variable'];
         const statistic = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        const statLineType = statisticOptionsMap[statistic][1];
+        const statLineType = statisticOptionsMap[statistic][0];
         var statisticsClause = "";
         var lineDataType = "";
         if (statLineType === 'scalar') {
@@ -83,7 +83,7 @@ dataHistogram = function (plotParams, plotFunction) {
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
+        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {

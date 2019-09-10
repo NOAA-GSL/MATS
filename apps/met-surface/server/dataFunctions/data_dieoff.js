@@ -55,7 +55,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const variable = curve['variable'];
         const statistic = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        const statLineType = statisticOptionsMap[statistic][1];
+        const statLineType = statisticOptionsMap[statistic][0];
         var statisticsClause = "";
         var lineDataType = "";
         if (statLineType === 'scalar') {
@@ -68,9 +68,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "group_concat(ld.fy_oy, ';', ld.fy_on, ';', ld.fn_oy, ';', ld.fn_on, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
             lineDataType = "line_data_ctc";
         }
-        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-        const forecastKeys = Object.keys(forecastValueMap);
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
+        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {

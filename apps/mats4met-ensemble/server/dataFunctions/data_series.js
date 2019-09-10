@@ -11,10 +11,10 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
-dataValidTime = function (plotParams, plotFunction) {
+dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appParams = {
-        "plotType": matsTypes.PlotTypes.validtime,
+        "plotType": matsTypes.PlotTypes.timeSeries,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
@@ -24,6 +24,9 @@ dataValidTime = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
+    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
+    var fromSecs = dateRange.fromSeconds;
+    var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
@@ -53,9 +56,15 @@ dataValidTime = function (plotParams, plotFunction) {
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
         const variable = curve['variable'];
-        const statistic = "ACC";
-        const statLineType = 'scalar';
-        const lineDataType = 'line_data_sal1l2';
+        const statistic = curve['statistic'];
+        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        const statLineType = statisticOptionsMap[statistic][0];
+        var statisticsClause = "";
+        var lineDataType = "";
+        if (statLineType === 'ensemble') {
+            statisticsClause = "avg(" + statisticOptionsMap[statistic][2] + ") as stat, group_concat(" + statisticOptionsMap[statistic][2] + ", ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
+            lineDataType = statisticOptionsMap[statistic][1];
+        }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -69,9 +78,9 @@ dataValidTime = function (plotParams, plotFunction) {
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
+        const averageStr = curve['average'];
+        const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        const average = averageOptionsMap[averageStr][0];
         var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
@@ -81,14 +90,23 @@ dataValidTime = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
-            // we can't just leave the level clause out, because we might end up with some weird levels in the mix
+            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
             levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
-        var vts = "";   // have an empty string that we can pass to the python script.
+        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
+        var validTimeClause = "";
+        if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
+            vts = curve['valid-time'];
+            vts = Array.isArray(vts) ? vts : [vts];
+            vts = vts.map(function (vt) {
+                return "'" + vt + "'";
+            }).join(',');
+            validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
+        }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable (axisKey) it will use the same axis.
@@ -100,14 +118,12 @@ dataValidTime = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) as hr_of_day, " +
+            var statement = "select {{average}} as avtime, " +
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "avg(ld.fabar) as fbar, " +
-                "avg(ld.oabar) as obar, " +
-                "group_concat(ld.fabar, ';', ld.oabar, ';', ld.ffabar, ';', ld.ooabar, ';', ld.foabar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
+                "{{statisticsClause}} " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +
@@ -115,22 +131,26 @@ dataValidTime = function (plotParams, plotFunction) {
                 "{{regionsClause}} " +
                 "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
                 "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
+                "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
                 "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
-                "group by hr_of_day " +
-                "order by hr_of_day" +
+                "group by avtime " +
+                "order by avtime" +
                 ";";
 
+            statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{regionsClause}}', regionsClause);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{statisticsClause}}', statisticsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{lineDataType}}', lineDataType);
             dataRequests[curve.label] = statement;

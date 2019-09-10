@@ -53,9 +53,15 @@ dataValidTime = function (plotParams, plotFunction) {
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
         const variable = curve['variable'];
-        const statistic = "ACC";
-        const statLineType = 'scalar';
-        const lineDataType = 'line_data_sal1l2';
+        const statistic = curve['statistic'];
+        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        const statLineType = statisticOptionsMap[statistic][0];
+        var statisticsClause = "";
+        var lineDataType = "";
+        if (statLineType === 'ensemble') {
+            statisticsClause = "avg(" + statisticOptionsMap[statistic][2] + ") as stat, group_concat(" + statisticOptionsMap[statistic][2] + ", ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
+            lineDataType = statisticOptionsMap[statistic][1];
+        }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -81,7 +87,7 @@ dataValidTime = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
-            // we can't just leave the level clause out, because we might end up with some weird levels in the mix
+            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
             levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
@@ -105,9 +111,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "avg(ld.fabar) as fbar, " +
-                "avg(ld.oabar) as obar, " +
-                "group_concat(ld.fabar, ';', ld.oabar, ';', ld.ffabar, ';', ld.ooabar, ';', ld.foabar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
+                "{{statisticsClause}} " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld " +
                 "where 1=1 " +
@@ -131,6 +135,7 @@ dataValidTime = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{statisticsClause}}', statisticsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{lineDataType}}', lineDataType);
             dataRequests[curve.label] = statement;

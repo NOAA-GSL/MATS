@@ -517,7 +517,7 @@ const addLegend = function(element,plotParams){
 
 const addSeries = function(plot, dependentAxes, plotParams) {
     /***
-     data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)
+     data-source(models), region(vx_mask),forecast_length (fcst_lead), and level(fcst_lev)
      are series variables. Multiple selections for a given curve are MV grouped (join'd)
      Multiple selections associated with different curves are seperate <val> tags.
 
@@ -538,7 +538,7 @@ const addSeries = function(plot, dependentAxes, plotParams) {
      Curves that were assigned to different axis were figured out and assigned in getDependents and are assigned in the dependentAxes structure.
      ***/
     var hiddenCurves = [];
-    var sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
+    var sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev'};
     const type = (_.invert(plotParams.plotTypes))[true];
     const seriesAxisMap = {'series1':'y1', 'series2':'y2'};
     Object.keys(seriesAxisMap).forEach(function (series) {
@@ -551,16 +551,16 @@ const addSeries = function(plot, dependentAxes, plotParams) {
         var initHours = new Set();
         switch (type) {
             case matsTypes.PlotTypes.timeSeries:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev'};
                 break;
             case matsTypes.PlotTypes.dailyModelCycle:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev'};
                 break;
             case matsTypes.PlotTypes.profile:
                 sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','curve-dates':'fcst_valid_beg'};
                 break;
             case matsTypes.PlotTypes.dieoff:
-                sVars = {'data-source': 'model', 'region': 'vx_mask', 'pres-level': 'fcst_lev', 'curve-dates': 'fcst_valid_beg'};
+                sVars = {'data-source': 'model', 'region': 'vx_mask', 'level': 'fcst_lev', 'curve-dates': 'fcst_valid_beg'};
                 for (var ci=0; ci < plotParams.curves.length;ci++) {
                     if (curves[ci]['diffFrom']) {
                         // currrently we do not do mv differencing
@@ -578,29 +578,29 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                }
                 break;
             case matsTypes.PlotTypes.threshold:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
             case matsTypes.PlotTypes.validtime:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
             case matsTypes.PlotTypes.reliability:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
             case matsTypes.PlotTypes.roc:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
             case matsTypes.PlotTypes.histogram:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev','curve-dates':'fcst_valid_beg'};
                 break;
             default:
-                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','level':'fcst_lev'};
         }
 
         if (type === matsTypes.PlotTypes.profile) {
-            delete sVars['pres-level'];
+            delete sVars['level'];
         } else {
             // we only consider pressure levels when it isn't a profile
-            sVars['pres-level'] = 'fcst_lev';
+            sVars['level'] = 'fcst_lev';
         }
         var seriesElements = {};
         var seriesElementValues = {};
@@ -850,7 +850,7 @@ const addIndepLevels = function(plot, plotParams) {
         const levelVals = matsCollections.CurveParams.findOne({name: 'data-source'})['levelsMap'][database][dataSource];
         lvlSet.add(levelVals);
     }
-    // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
+    // only add the fcst_lev tag if there are levels requested - leaving it out will get them all
     const lvls = Array.from(lvlSet)[0];
     for (var li=0; li<lvls.length;li++) {
         var val = indep.ele('val',lvls[li]);
