@@ -419,12 +419,15 @@ class MEAirquality:
             # record the default data so that it could be corrected in the table, if need be
             fcst_leads_array = set()
             for line_data_table in self.line_data_table:
-                default_fcst_cursor.execute("select distinct fcst_lead from " + mvdb + "." + line_data_table + ";")
-                default_fcst_cnx.commit()
-                tmp_fcst_leads_array = list(default_fcst_cursor.fetchall())
-                for d in tmp_fcst_leads_array:
-                    fcst_lead = d['fcst_lead'] if int(d['fcst_lead']) % 10000 != 0 else int(d['fcst_lead']) / 10000
-                    fcst_leads_array.add(int(fcst_lead))
+                try:
+                    default_fcst_cursor.execute("select distinct fcst_lead from " + mvdb + "." + line_data_table + ";")
+                    default_fcst_cnx.commit()
+                    tmp_fcst_leads_array = list(default_fcst_cursor.fetchall())
+                    for d in tmp_fcst_leads_array:
+                        fcst_lead = d['fcst_lead'] if int(d['fcst_lead']) % 10000 != 0 else int(d['fcst_lead']) / 10000
+                        fcst_leads_array.add(int(fcst_lead))
+                except pymysql.Error as e:
+                    continue
             fcst_leads = str(list(map(str, sorted(fcst_leads_array))))
             fcst_leads_orig_array = ["dflt"] * len(fcst_leads_array)
             fcst_leads_orig = str(fcst_leads_orig_array)
@@ -529,9 +532,12 @@ class MEAirquality:
 
             line_count = 0
             for line_data_table in self.line_data_table:
-                self.cursor.execute("select count(*) as count from " + line_data_table + ";")
-                self.cnx.commit()
-                line_count = line_count + int(self.cursor.fetchone()['count'])
+                try:
+                    self.cursor.execute("select count(*) as count from " + line_data_table + ";")
+                    self.cnx.commit()
+                    line_count = line_count + int(self.cursor.fetchone()['count'])
+                except pymysql.Error as e:
+                    continue
             self.cursor.execute(
                 'select count(distinct stat_header_id) as header_id_count from stat_header where fcst_var regexp "^OZ|^PM25";')
             self.cnx.commit()
@@ -620,25 +626,25 @@ class MEAirquality:
                     per_mvdb[mvdb][model]['mindate'] = default_metadata['mindate']
                     per_mvdb[mvdb][model]['maxdate'] = default_metadata['maxdate']
                     # numrecs is one - just a positive number - wrong but sufficient for defaults
-                    cursor2.execute(
-                        "select count(stat_header_id) as count from " + mvdb + "." + self.line_data_table[0] + ";")
-                    cnx2.commit()
-                    numrecs = cursor2.fetchone()['count']
+                    numrecs = line_count
                     per_mvdb[mvdb][model]['numrecs'] = numrecs
                 else:
                     if stat_header_id_list is not None:
                         for stat_header_id in stat_header_id_list:
                             for line_data_table in self.line_data_table:
-                                get_fcsts = 'select distinct fcst_lead from ' + line_data_table + ' where stat_header_id = "' + str(
-                                    stat_header_id) + '";'
-                                cursor2.execute(get_fcsts)
-                                cnx2.commit()
-                                for line2 in cursor2:
-                                    fcst = int(list(line2.values())[0])
-                                    temp_fcsts_orig.add(fcst)
-                                    if fcst % 10000 == 0:
-                                        fcst = int(fcst / 10000)
-                                    temp_fcsts.add(fcst)
+                                try:
+                                    get_fcsts = 'select distinct fcst_lead from ' + line_data_table + ' where stat_header_id = "' + str(
+                                        stat_header_id) + '";'
+                                    cursor2.execute(get_fcsts)
+                                    cnx2.commit()
+                                    for line2 in cursor2:
+                                        fcst = int(list(line2.values())[0])
+                                        temp_fcsts_orig.add(fcst)
+                                        if fcst % 10000 == 0:
+                                            fcst = int(fcst / 10000)
+                                        temp_fcsts.add(fcst)
+                                except pymysql.Error as e:
+                                    continue
 
                         per_mvdb[mvdb][model]['fcsts'] = list(map(str, sorted(temp_fcsts)))
                         per_mvdb[mvdb][model]['fcst_orig'] = list(map(str, sorted(temp_fcsts_orig)))
@@ -649,15 +655,18 @@ class MEAirquality:
                         max = datetime.min  # earliest epoch?
                         for stat_header_id in stat_header_id_list:
                             for line_data_table in self.line_data_table:
-                                get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from ' + line_data_table + ' where stat_header_id  = "' + str(
-                                    stat_header_id) + '";'
-                                cursor2.execute(get_stats)
-                                cnx2.commit()
-                                data = cursor2.fetchone()
-                                if data is not None:
-                                    min = min if data['mindate'] is None or min < data['mindate'] else data['mindate']
-                                    max = max if data['maxdate'] is None or max > data['maxdate'] else data['maxdate']
-                                    num_recs = num_recs + data['numrecs']
+                                try:
+                                    get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from ' + line_data_table + ' where stat_header_id  = "' + str(
+                                        stat_header_id) + '";'
+                                    cursor2.execute(get_stats)
+                                    cnx2.commit()
+                                    data = cursor2.fetchone()
+                                    if data is not None:
+                                        min = min if data['mindate'] is None or min < data['mindate'] else data['mindate']
+                                        max = max if data['maxdate'] is None or max > data['maxdate'] else data['maxdate']
+                                        num_recs = num_recs + data['numrecs']
+                                except pymysql.Error as e:
+                                    continue
                         if (min is None or min is datetime.max):
                             min = datetime.utcnow()
                         if (max is None is max is datetime.min):
