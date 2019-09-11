@@ -334,7 +334,7 @@ const doCurveParams = function () {
         );
     }
 
-    var defaultGroup = (Object.keys(dbGroupMap).indexOf("EnsembleTest") !== -1) ? "EnsembleTest" : Object.keys(dbGroupMap)[0];
+    var defaultGroup = (Object.keys(dbGroupMap).indexOf("NO GROUP") !== -1) ? "NO GROUP" : Object.keys(dbGroupMap)[0];
     var defaultDB = dbGroupMap[defaultGroup][0];
 
     if (matsCollections.CurveParams.findOne({name: 'group'}) == undefined) {
