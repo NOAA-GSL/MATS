@@ -219,7 +219,7 @@ class MEAnomalycor:
         self.cnx.commit()
         self.cursor.execute("create table {mdt_tmp} like {mdt_dev};".format(**d))
         self.cnx.commit()
-        self.cursor.execute("insert into {mdt_tmp} select * from {mdt} union select * from {mdt_dev};".format(**d))
+        self.cursor.execute("insert into {mdt_tmp} select md.* from {mdt_dev} md  left join {mdt} m on md.db = m.db and md.model = m.model;".format(**d))
         self.cnx.commit()
         self.cursor.execute("rename table {mdt} to {tmp_mdt}, {mdt_tmp} to {mdt};".format(**d))
         self.cnx.commit()
