@@ -88,6 +88,7 @@ Template.GraphStandAlone.helpers({
                         options.mapbox.zoom = 2.75;
                         mapLoadPause = 1000;
                     }
+                    options.hovermode = false;
                     resizeOptions = options;
 
                     // initial plot
@@ -96,7 +97,7 @@ Template.GraphStandAlone.helpers({
 
                     // need a slight delay for plotly to load
                     setTimeout(function () {
-                        Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: false});
+                        Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: false, displayModeBar: false});
                         // update changes to the curve ops -- need to pause if we're doing a map so the map can finish loading before we try to edit it
                         setTimeout(function() {
                             const updates = ret.curveOpsUpdate.curveOpsUpdate;
@@ -112,7 +113,7 @@ Template.GraphStandAlone.helpers({
                                 Plotly.restyle($("#placeholder")[0], curveOpsUpdate, uidx);
                             }
                         }, mapLoadPause);
-                    }, 1000);
+                    }, 500);
 
                     // append annotations
                     $("#legendContainer").append(ret.annotation);
