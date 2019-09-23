@@ -22,6 +22,7 @@ dataHistogram = function (plotParams, plotFunction) {
     var alreadyMatched = false;
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = [];
+    var dataFoundForAnyCurve = false;
     var totalProcessingStart = moment();
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
@@ -200,9 +201,17 @@ dataHistogram = function (plotParams, plotFunction) {
                         throw new Error(error);
                     }
                 }
+            } else {
+                dataFoundForAnyCurve = true;
             }
         }
     }
+
+    if (!dataFoundForAnyCurve) {
+        // we found no data for any curves so don't bother proceeding
+        throw new Error("INFO:  No valid data for any curves.");
+    }
+
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
