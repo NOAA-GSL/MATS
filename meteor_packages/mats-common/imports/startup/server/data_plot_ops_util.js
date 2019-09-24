@@ -604,7 +604,7 @@ const generateReliabilityPlotOptions = function () {
 };
 
 // sets plot options for ROC plots
-const generateROCPlotOptions = function (dataset) {
+const generateROCPlotOptions = function () {
     var xmin = 0;
     var xmax = 1;
     var ymin = 0;
