@@ -23,6 +23,7 @@ dataSeries = function (plotParams, plotFunction) {
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
+    var dataFoundForAnyCurve = false;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
@@ -189,6 +190,8 @@ dataSeries = function (plotParams, plotFunction) {
                         throw new Error(error);
                     }
                 }
+            } else {
+                dataFoundForAnyCurve = true;
             }
 
             // set axis limits based on returned data
@@ -212,7 +215,7 @@ dataSeries = function (plotParams, plotFunction) {
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         const mean = d.sum / d.x.length;
-        const annotation = mean === undefined ? label + "- mean = NaN" : label + "- mean = " + mean.toPrecision(4);
+        const annotation = mean === undefined ? label + "- mean = NoData" : label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
         curve['xmax'] = d.xmax;
@@ -228,6 +231,11 @@ dataSeries = function (plotParams, plotFunction) {
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
         };
     }  // end for curves
+
+    if (!dataFoundForAnyCurve) {
+        // we found no data for any curves so don't bother proceeding
+        throw new Error("INFO:  No valid data for any curves.");
+    }
 
     // process the data returned by the query
     const curveInfoParams = {

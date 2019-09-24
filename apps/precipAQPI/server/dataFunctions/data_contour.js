@@ -147,12 +147,17 @@ dataContour = function (plotParams, plotFunction) {
         }
     }
 
+    if (!dataFoundForCurve) {
+        // we found no data for any curves so don't bother proceeding
+        throw new Error("INFO:  No valid data for any curves.");
+    }
+
     var postQueryStartMoment = moment();
 
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
     const mean = d.glob_stats.mean;
-    const annotation = mean === undefined ? label + "- mean = NaN" : label + "- mean = " + mean.toPrecision(4);
+    const annotation = mean === undefined ? label + "- mean = NoData" : label + "- mean = " + mean.toPrecision(4);
     curve['annotation'] = annotation;
     curve['xmin'] = d.xmin;
     curve['xmax'] = d.xmax;
