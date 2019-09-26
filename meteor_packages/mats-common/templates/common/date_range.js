@@ -220,7 +220,7 @@ Template.dateRange.onRendered(function () {
             // now reset the DSR with the evaluated date range
             const jqIdRef = "#" + idref;
             $(jqIdRef).data('daterangepicker').setStartDate(startDsr);
-            $(jqIdRef).data('daterangepicker').setStartDate(endDsr);
+            $(jqIdRef).data('daterangepicker').setEndDate(endDsr);
             const newDateStr = startDsr.format('MM/DD/YYYY HH:mm') + ' - ' + endDsr.format('MM/DD/YYYY HH:mm');
             matsParamUtils.setValueTextForParamName(name, newDateStr);
         } catch (error) {
