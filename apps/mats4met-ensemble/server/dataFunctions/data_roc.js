@@ -198,13 +198,8 @@ dataROC = function (plotParams, plotFunction) {
                 ymax = ymax > d.ymax ? ymax : d.ymax;
             }
         } else {
-            // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
-            d = diffResult.dataset;
-            xmin = xmin < d.xmin ? xmin : d.xmin;
-            xmax = xmax > d.xmax ? xmax : d.xmax;
-            ymin = ymin < d.ymin ? ymin : d.ymin;
-            ymax = ymax > d.ymax ? ymax : d.ymax;
+            // this is a difference curve -- not supported for ROC plots
+            throw new Error("INFO:  Difference curves are not supported for ROC curves, as they do not feature consistent x or y values across all curves.");
         }
 
         // set curve annotation to be the curve mean -- may be recalculated later

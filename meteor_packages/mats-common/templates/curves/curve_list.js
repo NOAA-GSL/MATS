@@ -24,9 +24,10 @@ Template.curveList.helpers({
         }
     },
     displayPlotMatched: function() {
-        // don't allow plotting when editing
+        // don't allow plotting when editing, or for ROC curves
         const mode = Session.get("editMode");
-        if (mode === undefined || mode === "") {
+        const plotType = Session.get('plotType');
+        if ((mode === undefined || mode === "") && plotType !== matsTypes.PlotTypes.roc) {
             return "block";
         } else {
             return "none";
