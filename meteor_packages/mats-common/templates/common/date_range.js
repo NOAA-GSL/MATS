@@ -10,26 +10,6 @@ Template.dateRange.onRendered(function () {
     // but profile plots have a date range for each curve.
     // The decision to hide or show a dataRange is made here in the dateRange template
 
-    // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
-    // in that event we test for undefined and block the curve-dates-item anyway
-    if ((document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) ||
-        (document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle).checked === true) ||
-        (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true)) {
-        if (document.getElementById('curve-dates-item')) {
-            document.getElementById('curve-dates-item').style.display = "none";
-        }
-        if (document.getElementById('dates-item')) {
-            document.getElementById('dates-item').style.display = "block";
-        }
-    } else {
-        if (document.getElementById('curve-dates-item')) {
-            document.getElementById('curve-dates-item').style.display = "block";
-        }
-        if (document.getElementById('dates-item')) {
-            document.getElementById('dates-item').style.display = "none";
-        }
-    }
-
     const name = this.data.name;
     const idref = name + "-item";
     const elem = document.getElementById('element-' + name);
@@ -39,7 +19,7 @@ Template.dateRange.onRendered(function () {
     const stopInit = defaultDateRange.stopDate;
     const dstr = defaultDateRange.dstr;
 
-        $(function () {
+    $(function () {
         $('#' + idref).daterangepicker({
             "autoApply": true,
             "parentEL": $('#' + idref),
@@ -50,19 +30,19 @@ Template.dateRange.onRendered(function () {
             "endDate": stopInit,
             "showDropdowns": true,
             "drops": "up",
-
-            locale: {
+            "locale": {
                 format: 'MM/DD/YYYY HH:mm'
             },
-            ranges: {
-                'Today': [moment().startOf('day'), moment().endOf('day')],
-                'Yesterday': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
-                'Last 7 Full Days': [moment().subtract(7, 'days').startOf('day'), moment().startOf('day')],
-                'Last 30 Full Days': [moment().subtract(30, 'days').startOf('day'), moment().startOf('day')],
-                'Last 60 Full Days': [moment().subtract(60, 'days').startOf('day'), moment().startOf('day')],
-                'Last 90 Full Days': [moment().subtract(90, 'days').startOf('day'), moment().startOf('day')],
-                'Last 180 Full Days': [moment().subtract(180, 'days').startOf('day'), moment().startOf('day')],
-            }, "alwaysShowCalendars": true,
+            "ranges": {
+                'Today': [moment.utc().startOf('day'), moment.utc().endOf('day')],
+                'Yesterday': [moment.utc().subtract(1, 'days').startOf('day'), moment.utc().subtract(1, 'days').endOf('day')],
+                'Last 7 Full Days': [moment.utc().subtract(7, 'days').startOf('day'), moment.utc().startOf('day')],
+                'Last 30 Full Days': [moment.utc().subtract(30, 'days').startOf('day'), moment.utc().startOf('day')],
+                'Last 60 Full Days': [moment.utc().subtract(60, 'days').startOf('day'), moment.utc().startOf('day')],
+                'Last 90 Full Days': [moment.utc().subtract(90, 'days').startOf('day'), moment.utc().startOf('day')],
+                'Last 180 Full Days': [moment.utc().subtract(180, 'days').startOf('day'), moment.utc().startOf('day')],
+            },
+            "alwaysShowCalendars": true
         });
         matsParamUtils.setValueTextForParamName(name, dstr);
     });
@@ -92,8 +72,8 @@ Template.dateRange.onRendered(function () {
         try {
             // get the current values from the element and check for invalid
             const curVals = matsParamUtils.getValueForParamName(name).split(" - "); // it is a date object values are "someFromDate - someToDate"
-            var startDsr = moment(curVals[0], "MM/DD/YYYY HH:mm");
-            var endDsr = moment(curVals[1], "MM/DD/YYYY HH:mm");
+            var startDsr = moment.utc(curVals[0], "MM/DD/YYYY HH:mm");
+            var endDsr = moment.utc(curVals[1], "MM/DD/YYYY HH:mm");
             if (!startDsr.isValid()) {
                 // error
                 setError("date_range refresh error: Your date range selector has an invalid start date-time: " + curVals[0]);
@@ -137,7 +117,7 @@ Template.dateRange.onRendered(function () {
                         datesMap = datesMap[sval];
                     }
                     const superiorMinimumDateStr = datesMap.minDate;
-                    const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM/DD/YYYY HH:mm");
+                    const superiorMinimumMoment = moment.utc(superiorMinimumDateStr, "MM/DD/YYYY HH:mm");
                     if (superiorMinimumMoment.isValid()) {
                         superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                         superiorVals[si].min = superiorMinimumMoment;
@@ -146,7 +126,7 @@ Template.dateRange.onRendered(function () {
                         return false;
                     }
                     const superiorMaximumDateStr = datesMap.maxDate;
-                    const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM/DD/YYYY HH:mm");
+                    const superiorMaximumMoment = moment.utc(superiorMaximumDateStr, "MM/DD/YYYY HH:mm");
                     if (superiorMaximumMoment.isValid()) {
                         superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                         superiorVals[si].max = superiorMaximumMoment;
@@ -202,7 +182,7 @@ Template.dateRange.onRendered(function () {
                 // the current user setting and the valid range do not overlap so just set the DSR to the most recent 30 days of the valid range
                 endDsr = dataEnd;
                 // set startDsr to the endDsr less 30 days or less the startDsr whichever is later
-                var endDsrLess30 = moment(endDsr).subtract(30, "days");
+                var endDsrLess30 = moment.utc(endDsr).subtract(30, "days");
                 if (endDsrLess30.isAfter(dataStart)) {
                     startDsr = endDsrLess30;
                 } else {

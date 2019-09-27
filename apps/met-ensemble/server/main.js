@@ -1012,7 +1012,7 @@ Meteor.startup(function () {
     // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['ensemble_mats_metadata', 'ensemble_database_groups']);
-    matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'mats4met-ensemble'});
+    matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-ensemble'});
 });
 
 // this object is global so that the reset code can get to it

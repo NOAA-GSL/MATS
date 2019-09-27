@@ -162,7 +162,7 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "mats4met-ensemble",
+      "app": "met-ensemble",
       "displayName": "Ensemble",
       "displayOrder": 19,
       "group": "Experimental",
@@ -367,7 +367,7 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "mats4met-ensemble",
+      "app": "met-ensemble",
       "displayName": "Ensemble",
       "displayOrder": 19,
       "group": "Experimental",
@@ -573,7 +573,7 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "mats4met-ensemble",
+      "app": "met-ensemble",
       "displayName": "Ensemble",
       "displayOrder": 19,
       "group": "Experimental",

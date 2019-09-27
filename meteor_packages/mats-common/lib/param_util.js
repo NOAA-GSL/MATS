@@ -370,10 +370,10 @@ const getDefaultDateRange = function(name) {
 };
 
 const getMinMaxDates = function(minDate, maxDate) {
-    var minMoment = moment(minDate,"MM/DD/YYYY HH:mm");
-    var maxMoment = moment(maxDate, "MM/DD/YYYY HH:mm");
+    var minMoment = moment.utc(minDate,"MM/DD/YYYY HH:mm");
+    var maxMoment = moment.utc(maxDate, "MM/DD/YYYY HH:mm");
     if (maxMoment.diff(minMoment, 'days') > 30) {
-        minDate = moment(maxMoment.subtract(30, 'days')).format("MM/DD/YYYY HH:mm");
+        minDate = moment.utc(maxMoment.subtract(30, 'days')).format("MM/DD/YYYY HH:mm");
     }
     return {minDate:minDate,maxDate:maxDate};
 };

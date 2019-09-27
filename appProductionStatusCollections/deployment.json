@@ -249,7 +249,7 @@
       ]
     },
     {
-      "app": "mats4met-ensemble",
+      "app": "met-ensemble",
       "title": "Ensemble",
       "version": "2.3.2-2019.09.27.09.00",
       "buildDate": "2019.09.27.09.00",
@@ -566,7 +566,7 @@
       ]
     },
     {
-      "app": "mats4met-ensemble",
+      "app": "met-ensemble",
       "title": "Ensemble",
       "version": "2.3.1",
       "buildDate": "2019.09.12.20.52",
@@ -883,7 +883,7 @@
       ]
     },
     {
-      "app": "mats4met-ensemble",
+      "app": "met-ensemble",
       "title": "Ensemble",
       "version": "2.3.1",
       "buildDate": "2019.09.12.20.52",

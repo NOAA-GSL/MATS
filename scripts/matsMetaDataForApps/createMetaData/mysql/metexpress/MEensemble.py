@@ -35,7 +35,7 @@ class MEEnsemble:
         self.script_name = __name__
         self.line_data_table = ["line_data_pct", "line_data_ecnt", "line_data_cnt", "line_data_pstd"]
         self.metadata_table = "ensemble_mats_metadata"
-        self.app_reference = "mats4met-ensemble"
+        self.app_reference = "met-ensemble"
         self.string_fields = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
         self.int_fields = ["mindate", "maxdate", "numrecs", "updated"]
         self.database_groups = "ensemble_database_groups"

@@ -124,8 +124,8 @@ const setParamsToAxis = function(newAxis, currentParams) {
             const from = dateArr[0];
             const to = dateArr[1];
             const idref = "#" + plotParam.name + "-item";
-            $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
-            $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+            $(idref).data('daterangepicker').setStartDate(moment.utc(from, 'MM-DD-YYYY HH:mm'));
+            $(idref).data('daterangepicker').setEndDate(moment.utc(to, 'MM-DD-YYYY HH:mm'));
             matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
         } else {
             currentParamName = currentParams[newAxis + "-" + plotParam.name] === undefined ?  plotParam.name : newAxis + "-" + plotParam.name;
@@ -148,8 +148,8 @@ const setParamsToAxis = function(newAxis, currentParams) {
             const from = dateArr[0];
             const to = dateArr[1];
             const idref = "#" + plotParam.name + "-item";
-            $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
-            $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+            $(idref).data('daterangepicker').setStartDate(moment.utc(from, 'MM-DD-YYYY HH:mm'));
+            $(idref).data('daterangepicker').setEndDate(moment.utc(to, 'MM-DD-YYYY HH:mm'));
             matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[currentParamName]);
         } else {
             const val =  currentParams[currentParamName] === null ||
@@ -257,8 +257,8 @@ Template.curveItem.events({
                 const from = dateArr[0];
                 const to = dateArr[1];
                 const idref = "#" + plotParam.name + "-item";
-                $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
-                $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                $(idref).data('daterangepicker').setStartDate(moment.utc(from, 'MM-DD-YYYY HH:mm'));
+                $(idref).data('daterangepicker').setEndDate(moment.utc(to, 'MM-DD-YYYY HH:mm'));
                 matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
             } else {
                 var val =  currentParams[plotParam.name] === null ||
@@ -281,8 +281,8 @@ Template.curveItem.events({
                 const from = dateArr[0];
                 const to = dateArr[1];
                 const idref = "#" + plotParam.name + "-item";
-                $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
-                $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                $(idref).data('daterangepicker').setStartDate(moment.utc(from, 'MM-DD-YYYY HH:mm'));
+                $(idref).data('daterangepicker').setEndDate(moment.utc(to, 'MM-DD-YYYY HH:mm'));
                 matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
             } else {
                 var val =  currentParams[plotParam.name] === null ||
@@ -303,8 +303,8 @@ Template.curveItem.events({
                 const from = dateArr[0];
                 const to = dateArr[1];
                 const idref = "#" + plotParam.name + "-item";
-                $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
-                $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                $(idref).data('daterangepicker').setStartDate(moment.utc(from, 'MM-DD-YYYY HH:mm'));
+                $(idref).data('daterangepicker').setEndDate(moment.utc(to, 'MM-DD-YYYY HH:mm'));
                 matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
             } else {
                 var val =  currentParams[plotParam.name] === null ||
