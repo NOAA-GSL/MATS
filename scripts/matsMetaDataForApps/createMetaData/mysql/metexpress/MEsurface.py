@@ -380,7 +380,10 @@ class MESurface:
     def strip_level(self, elem):
         # helper function for sorting levels
         if elem[0] in ['Z', 'H', 'L']:
-            return int(elem[1:])
+            try:
+                return int(elem[1:])
+            except ValueError:
+                return 0
         else:
             return 0
 

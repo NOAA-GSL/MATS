@@ -380,14 +380,20 @@ class MEAirquality:
     def strip_level(self, elem):
         # helper function for sorting levels
         if elem[0] in ['Z', 'H', 'L']:
-            return int(elem[1:])
+            try:
+                return int(elem[1:])
+            except ValueError:
+                return 0
         else:
             return 0
 
     def strip_trsh(self, elem):
         # helper function for sorting thresholds
         if elem[0] == '>' or elem[0] == '<':
-            return float(elem[1:])
+            try:
+                return float(elem[1:])
+            except ValueError:
+                return 0
         else:
             return 0
 

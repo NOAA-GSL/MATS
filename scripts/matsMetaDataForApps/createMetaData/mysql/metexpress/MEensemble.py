@@ -381,10 +381,16 @@ class MEEnsemble:
         # helper function for sorting levels
         if elem[0] in ['P', 'Z', 'H', 'L', 'A']:
             if '-' not in elem:
-                return int(elem[1:])
+                try:
+                    return int(elem[1:])
+                except ValueError:
+                    return 0
             else:
                 hyphen_idx = elem.find('-')
-                return int(elem[1:hyphen_idx])
+                try:
+                    return int(elem[1:hyphen_idx])
+                except ValueError:
+                    return 0
         else:
             return 0
 

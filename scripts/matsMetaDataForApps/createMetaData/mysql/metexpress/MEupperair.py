@@ -380,10 +380,16 @@ class MEUpperair:
     def strip_level(self, elem):
         # helper function for sorting levels
         if '-' not in elem:
-            return int(elem[1:])
+            try:
+                return int(elem[1:])
+            except ValueError:
+                return 0
         else:
             hyphen_idx = elem.find('-')
-            return int(elem[1:hyphen_idx])
+            try:
+                return int(elem[1:hyphen_idx])
+            except ValueError:
+                return 0
 
     def get_default_fcsts(self, mvdb, model):
         # get the default fcst_leads from the table if there is a match on the model name, otherwise get the default
