@@ -573,17 +573,9 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "mats4met-ensemble",
-      "displayName": "Ensemble",
-      "displayOrder": 19,
-      "group": "Experimental",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
       "app": "met-upperair",
       "displayName": "MET Upper Air",
-      "displayOrder": 20,
+      "displayOrder": 19,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -591,7 +583,7 @@
     {
       "app": "met-anomalycor",
       "displayName": "MET Anomaly Correlation",
-      "displayOrder": 21,
+      "displayOrder": 20,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -599,7 +591,7 @@
     {
       "app": "met-surface",
       "displayName": "MET Surface",
-      "displayOrder": 22,
+      "displayOrder": 21,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -607,6 +599,14 @@
     {
       "app": "met-airquality",
       "displayName": "MET Air Quality",
+      "displayOrder": 22,
+      "group": "MET Express",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "met-ensemble",
+      "displayName": "MET Ensemble",
       "displayOrder": 23,
       "group": "MET Express",
       "deploymentStatus": "enabled",
