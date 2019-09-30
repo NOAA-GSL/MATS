@@ -566,19 +566,6 @@
       ]
     },
     {
-      "app": "mats4met-ensemble",
-      "title": "Ensemble",
-      "version": "2.3.1",
-      "buildDate": "2019.09.12.20.52",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Experimental",
-      "dbroles": [
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
       "app": "met-upperair",
       "title": "MET Upper Air",
       "version": "2.3.2",
@@ -620,6 +607,19 @@
     {
       "app": "met-airquality",
       "title": "MET Air Quality",
+      "version": "2.3.2",
+      "buildDate": "2019.09.30.18.27",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "METexpress",
+      "dbroles": [
+        "sums_data",
+        "meta_data"
+      ]
+    },
+    {
+      "app": "met-ensemble",
+      "title": "MET Ensemble",
       "version": "2.3.2",
       "buildDate": "2019.09.30.18.27",
       "last_test_run": "",
