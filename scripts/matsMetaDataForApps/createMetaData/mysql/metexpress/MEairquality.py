@@ -141,7 +141,7 @@ class MEAirquality:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1023), levels varchar(1023), fcst_lens varchar(2047), variables varchar(1023), trshs varchar(1023), fcst_orig varchar(2047), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
+            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(2047), levels varchar(2047), fcst_lens varchar(4095), variables varchar(2047), trshs varchar(2047), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
                 self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
