@@ -141,7 +141,7 @@ class MESurface:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(2047), levels varchar(2047), fcst_lens varchar(4095), variables varchar(2047), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
+            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), variables varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
                 self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
@@ -385,7 +385,10 @@ class MESurface:
             except ValueError:
                 return 0
         else:
-            return 0
+            try:
+                return int(elem) + 10000
+            except ValueError:
+                return 0
 
     def get_default_fcsts(self, mvdb, model):
         # get the default fcst_leads from the table if there is a match on the model name, otherwise get the default
@@ -403,7 +406,7 @@ class MESurface:
         default_fcst_cursor.execute('show tables like "default_fcst_leads";')
         if default_fcst_cursor.rowcount == 0:
             print(self.script_name + " - default_fcst_leads table does not exist--creating it")
-            create_table_query = 'create table default_fcst_leads (id int NOT NULL AUTO_INCREMENT, db varchar(255), model varchar(255), fcst_leads varchar(2047), fcst_leads_orig varchar(2047), mindate int(11), maxdate int(11), PRIMARY KEY (id));'
+            create_table_query = 'create table default_fcst_leads (id int NOT NULL AUTO_INCREMENT, db varchar(255), model varchar(255), fcst_leads varchar(4095), fcst_leads_orig varchar(4095), mindate int(11), maxdate int(11), PRIMARY KEY (id));'
             default_fcst_cursor.execute(create_table_query)
             self.cnx.commit()
         # search for this model by exact match - maybe it has already been processed
