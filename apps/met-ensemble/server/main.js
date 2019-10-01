@@ -728,8 +728,8 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'level'}, {
                 $set: {
                     optionsMap: levelOptionsMap,
-                    options: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]],
-                    default: levelOptionsMap[defaultDB][Object.keys(levelOptionsMap[defaultDB])[0]][0]
+                    options: levelOptions,
+                    default: levelDefault
                 }
             });
         }
