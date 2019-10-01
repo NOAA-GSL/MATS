@@ -393,7 +393,7 @@ class MEEnsemble:
                     return 0
         else:
             try:
-                return int(elem) + 10000
+                return int(float(elem) + 10000)
             except ValueError:
                 return 0
 

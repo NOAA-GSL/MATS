@@ -379,14 +379,14 @@ class MEAirquality:
 
     def strip_level(self, elem):
         # helper function for sorting levels
-        if elem[0] in ['Z', 'H', 'L']:
+        if elem[0] in ['Z', 'H', 'L', 'A']:
             try:
                 return int(elem[1:])
             except ValueError:
                 return 0
         else:
             try:
-                return int(elem) + 10000
+                return int(float(elem) + 10000)
             except ValueError:
                 return 0
 
@@ -394,11 +394,14 @@ class MEAirquality:
         # helper function for sorting thresholds
         if elem[0] == '>' or elem[0] == '<':
             try:
-                return float(elem[1:])
+                return int(float(elem[1:]))
             except ValueError:
                 return 0
         else:
-            return 0
+            try:
+                return int(float(elem))
+            except ValueError:
+                return 0
 
     def get_default_fcsts(self, mvdb, model):
         # get the default fcst_leads from the table if there is a match on the model name, otherwise get the default
