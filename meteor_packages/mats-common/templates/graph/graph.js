@@ -76,21 +76,17 @@ Template.graph.helpers({
                     // saved curve options for line graphs
                     var lineTypeResetOpts = [];
                     for (var lidx = 0; lidx < dataset.length; lidx++) {
-                        if (Object.values(matsTypes.ReservedWords).indexOf(dataset[lidx].label) === -1) {
-                            lineTypeResetOpts.push({
-                                'name': dataset[lidx].name,
-                                'visible': dataset[lidx].visible,
-                                'mode': dataset[lidx].mode,
-                                'x': [dataset[lidx].x],
-                                'error_y': dataset[lidx].error_y,
-                                'error_x': dataset[lidx].error_x,
-                                'line.dash': dataset[lidx].line.dash,
-                                'line.width': dataset[lidx].line.width,
-                                'marker.symbol': dataset[lidx].marker.symbol,
-                            });
-                        } else {
-                            break;
-                        }
+                        lineTypeResetOpts.push({
+                            'name': dataset[lidx].name,
+                            'visible': dataset[lidx].visible,
+                            'mode': dataset[lidx].mode,
+                            'x': [dataset[lidx].x],
+                            'error_y': dataset[lidx].error_y,
+                            'error_x': dataset[lidx].error_x,
+                            'line.dash': dataset[lidx].line.dash,
+                            'line.width': dataset[lidx].line.width,
+                            'marker.symbol': dataset[lidx].marker.symbol,
+                        });
                     }
                     Session.set('lineTypeResetOpts', lineTypeResetOpts);
                     break;
@@ -1210,9 +1206,11 @@ Template.graph.events({
                     const lineTypeResetOpts = Session.get('lineTypeResetOpts');
                     for (var lidx = 0; lidx < lineTypeResetOpts.length; lidx++) {
                         Plotly.restyle($("#placeholder")[0], lineTypeResetOpts[lidx], lidx);
-                        $('#' + dataset[lidx].label + "-curve-show-hide")[0].value = "hide curve";
-                        $('#' + dataset[lidx].label + "-curve-show-hide-points")[0].value = "hide points";
-                        $('#' + dataset[lidx].label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+                        if (Object.values(matsTypes.ReservedWords).indexOf(dataset[lidx].label) === -1) {
+                            $('#' + dataset[lidx].label + "-curve-show-hide")[0].value = "hide curve";
+                            $('#' + dataset[lidx].label + "-curve-show-hide-points")[0].value = "hide points";
+                            $('#' + dataset[lidx].label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+                        }
                     }
                     break;
                 case matsTypes.PlotTypes.histogram:
