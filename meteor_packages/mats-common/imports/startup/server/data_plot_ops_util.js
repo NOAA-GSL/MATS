@@ -350,7 +350,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         xLabel = "Threshold (in)";
     } else if (matsCollections.appName.findOne({}).app.includes("Reflectivity") || matsCollections.appName.findOne({}).app.includes("reflectivity")) {
         xLabel = "Threshold (dBZ)";
-    } else if (matsCollections.appName.findOne({}).app === "echotop") {
+    } else if (matsCollections.appName.findOne({}).app === "echotop" || matsCollections.appName.findOne({}).app.includes("ceiling")) {
         xLabel = "Threshold (kft)";
     }  else if (matsCollections.appName.findOne({}).app === "vil") {
         xLabel = "Threshold (kg/m2)";
