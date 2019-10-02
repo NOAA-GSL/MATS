@@ -354,6 +354,8 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         xLabel = "Threshold (kft)";
     }  else if (matsCollections.appName.findOne({}).app === "vil") {
         xLabel = "Threshold (kg/m2)";
+    }  else if (matsCollections.appName.findOne({}).app.includes("visibility")) {
+        xLabel = "Threshold (mi)";
     } else {
         xLabel = "Threshold";
     }
