@@ -30,6 +30,9 @@
                         {{#if isProfile}}
                             <button id="axisYScale" type="button" class="axisYScale btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="toggle linear/log Y axis">&nbsp;&nbsp;<strong>Y Linear/Log</strong></button>
                         {{/if}}
+                        {{#if isThreshold}}
+                            <button id="axisXSpace" type="button" class="axisXSpace btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="toggle equi-spaced X axis">&nbsp;&nbsp;<strong>Equi-space X</strong></button>
+                        {{/if}}
                         {{#if isContour}}
                             <button id="colorbarButton" type="button" class="colorbarButton btn btn-primary fa fa-paint-brush" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify colorbar">&nbsp;&nbsp;<strong>Colorbar</strong></button>
                         {{else}}

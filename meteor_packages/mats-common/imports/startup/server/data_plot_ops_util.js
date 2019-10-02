@@ -146,7 +146,7 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
         tickText = ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'];
     }
     layout['yaxis'] = {
-        title: 'Pressure Level',
+        title: 'Pressure Level (hPa)',
         titlefont: {color: '#000000', size: 24},
         tickfont: {color: '#000000', size: 18},
         tickvals: tickVals,
@@ -343,8 +343,27 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
 
 // sets plot options for threshold plots
 const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
-    var xmin = 0;
-    var xmax = 3;
+    var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
+    var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
+    var xLabel;
+    if (matsCollections.appName.findOne({}).app.includes("Precip") || matsCollections.appName.findOne({}).app.includes("precip")){
+        xLabel = "Threshold (in)";
+    } else if (matsCollections.appName.findOne({}).app.includes("Reflectivity") || matsCollections.appName.findOne({}).app.includes("reflectivity")) {
+        xLabel = "Threshold (dBZ)";
+    } else if (matsCollections.appName.findOne({}).app === "echotop") {
+        xLabel = "Threshold (kft)";
+    }  else if (matsCollections.appName.findOne({}).app === "vil") {
+        xLabel = "Threshold (kg/m2)";
+    } else {
+        xLabel = "Threshold";
+    }
+
+    // get actual thresholds from the query to place on the x-axis
+    var tickvals = [];
+    for (var didx = 0; didx < dataset.length; didx++) {
+         tickvals = _.union(tickvals, dataset[didx].x);
+    }
+    tickvals = tickvals.sort(function(a, b){return a - b});
 
     // overall plot options
     var layout = {
@@ -363,11 +382,11 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
 
     // x-axis options
     layout['xaxis'] = {
-        title: 'Threshold',
+        title: xLabel,
         titlefont: {color: '#000000', size: 24},
         tickfont: {color: '#000000', size: 18},
-        tickvals: [0.01, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0],
-        ticktext: ["0.01", "0.10", "0.25", "0.50", "1.00", "1.50", "2.00", "3.00"],
+        tickvals: tickvals,
+        ticktext: tickvals.map(String),
         linecolor: 'black',
         linewidth: 2,
         mirror: true
@@ -391,6 +410,8 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
+        xmin = axisMap[axisKey].xmin < xmin ? axisMap[axisKey].xmin : xmin;
+        xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {

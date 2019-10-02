@@ -112,7 +112,7 @@ class QueryUtil:
             bcrmse = np.empty(len(ffbar))
         except ValueError as e:
             self.error = "Error calculating RMS: " + str(e)
-            rms = np.empty(len(ffbar))
+            bcrmse = np.empty(len(ffbar))
         return bcrmse
 
     # function for calculating MSE from MET partial sums

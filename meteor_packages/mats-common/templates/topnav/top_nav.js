@@ -1,8 +1,7 @@
-
 /*
  * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
-const getDeploymentEnvironment = function(){
+const getDeploymentEnvironment = function () {
     if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {deployment_environment: 1}}) === undefined) {
         return "";
     } else {
@@ -11,19 +10,19 @@ const getDeploymentEnvironment = function(){
 }
 
 Template.topNav.helpers({
-   agencyText: function () {
-       switch (getDeploymentEnvironment()) {
-           case "metexpress":
+    agencyText: function () {
+        switch (getDeploymentEnvironment()) {
+            case "metexpress":
                 return "National Weather Service";
-               break;
-           default:
-               return "Earth System Research Laboratory";
-       }
-   },
+                break;
+            default:
+                return "Earth System Research Laboratory";
+        }
+    },
     agencyLink: function () {
         switch (getDeploymentEnvironment()) {
             case "metexpress":
-                return "https://www.weather.gov/"
+                return "https://www.weather.gov/";
                 break;
             default:
                 return "http://esrl.noaa.gov/gsd/mdb";
@@ -41,20 +40,24 @@ Template.topNav.helpers({
     productLink: function () {
         switch (getDeploymentEnvironment()) {
             case "metexpress":
-                return ""
+                return "";
                 break;
             default:
                 return "";
         }
     },
     isMetexpress: function () {
-       const appType = matsCollections.Settings.findOne({}).appType;
-       return appType === matsTypes.AppTypes.metexpress;
+        if (matsCollections.Settings.findOne({}) !== undefined && matsCollections.Settings.findOne({}).appType !== undefined) {
+            const appType = matsCollections.Settings.findOne({}).appType;
+            return appType === matsTypes.AppTypes.metexpress;
+        } else {
+            return false;
+        }
     }
 });
 
 Template.topNav.events({
-    'click .matshome' : function(event) {
+    'click .matshome': function (event) {
         event.preventDefault();
         var homeref = document.referrer;
         if (typeof Meteor.settings.public !== "undefined" && typeof Meteor.settings.public.home != "undefined") {
@@ -77,7 +80,7 @@ Template.topNav.events({
         window.location.replace(homeref);
         return false;
     },
-    'click .about' : function() {
+    'click .about': function () {
         $("#modal-display-about").modal();
         return false;
     }

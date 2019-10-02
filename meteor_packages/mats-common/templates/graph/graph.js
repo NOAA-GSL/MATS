@@ -81,6 +81,7 @@ Template.graph.helpers({
                                 'name': dataset[lidx].name,
                                 'visible': dataset[lidx].visible,
                                 'mode': dataset[lidx].mode,
+                                'x': [dataset[lidx].x],
                                 'error_y': dataset[lidx].error_y,
                                 'error_x': dataset[lidx].error_x,
                                 'line.dash': dataset[lidx].line.dash,
@@ -127,6 +128,7 @@ Template.graph.helpers({
                     break;
             }
             curveOpsUpdate = [];
+            Session.set('thresholdEquiX', false);
 
             // initial plot
             $("#placeholder").empty();
@@ -338,6 +340,9 @@ Template.graph.helpers({
     },
     isProfile: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile)
+    },
+    isThreshold: function () {
+        return (Session.get('plotType') === matsTypes.PlotTypes.threshold)
     },
     isLinePlot: function () {
         var plotType = Session.get('plotType');
@@ -756,6 +761,88 @@ Template.graph.events({
         }
         Plotly.relayout($("#placeholder")[0], newOpts);
     },
+    'click .axisXSpace': function (event) {
+        // equally space the x values, or restore them.
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        const thresholdEquiX = Session.get('thresholdEquiX');   // boolean that has the current state of the axes
+        var newOpts = {};
+        var updates = [];
+        var origX = [];
+        var tickvals = [];
+        var ticktext = [];
+        var didx;
+        newOpts['xaxis.range[0]'] = Number.MAX_VALUE;      // placeholder xmin
+        newOpts['xaxis.range[1]'] = -1 * Number.MAX_VALUE;      // placeholder xmax
+        const reservedWords = Object.values(matsTypes.ReservedWords);
+        if (!thresholdEquiX) {
+            // axes are not equally spaced, so make them so
+            for (didx = 0; didx < dataset.length; didx++) {
+                // save the original x values
+                origX.push(dataset[didx].x);
+
+                // create new array of equally-space x values
+                var newX = [];
+                if (reservedWords.indexOf(dataset[didx].label) >= 0) {
+                    // for zero or max curves, the two x points should be the axis min and max
+                    newX.push(newOpts['xaxis.range[0]']);
+                    newX.push(newOpts['xaxis.range[1]']);
+                } else {
+                    // otherwise just use the first n integers
+                    for (var xidx = 0; xidx < dataset[didx].x.length; xidx++) {
+                        newX.push(xidx);
+                    }
+                }
+
+                // redraw the curves with equally-spaced x values
+                updates[didx] = updates[didx] === undefined ? {} : updates[didx];
+                updates[didx]['x'] = [newX];
+                Plotly.restyle($("#placeholder")[0], updates[didx], didx);
+
+                // save the updates in case we want to pass them to a pop-out window.
+                curveOpsUpdate[didx] = curveOpsUpdate[didx] === undefined ? {} : curveOpsUpdate[didx];
+                curveOpsUpdate[didx]['x'] = [newX];
+
+                // store the new xmax and xmin from this curve
+                newOpts['xaxis.range[0]'] = newOpts['xaxis.range[0]'] < newX[0] ? newOpts['xaxis.range[0]'] : newX[0];
+                newOpts['xaxis.range[1]'] = newOpts['xaxis.range[1]'] > newX[newX.length-1] ? newOpts['xaxis.range[1]'] : newX[newX.length-1];
+
+                // store previous and new x values to craft consistent tick marks
+                tickvals = _.union(tickvals, newX);
+                ticktext = _.union(ticktext, origX[didx]);
+            }
+            Session.set('thresholdEquiX', true);
+            Session.set('origX', origX);
+        } else {
+            // axes not equally spaced, so make them not
+            origX = Session.get('origX');   // get the original x values back out of the session
+            for (didx = 0; didx < dataset.length; didx++) {
+                // redraw the curves with the original x values
+                updates[didx] = updates[didx] === undefined ? {} : updates[didx];
+                updates[didx]['x'] = [origX[didx]];
+                Plotly.restyle($("#placeholder")[0], updates[didx], didx);
+
+                // store the new xmax and xmin from this curve
+                newOpts['xaxis.range[0]'] = newOpts['xaxis.range[0]'] < origX[didx][0] ? newOpts['xaxis.range[0]'] : origX[didx][0];
+                newOpts['xaxis.range[1]'] = newOpts['xaxis.range[1]'] > origX[didx][origX[didx].length-1] ? newOpts['xaxis.range[1]'] : origX[didx][origX[didx].length-1];
+
+                // store previous and new x values to craft consistent tick marks
+                tickvals = _.union(tickvals, origX[didx]);
+                ticktext = _.union(ticktext, origX[didx]);
+
+                // remove new formatting that would have been passed to pop-out windows
+                delete(curveOpsUpdate[didx]['x']);
+            }
+            Session.set('thresholdEquiX', false);
+        }
+        // redraw the plot with the new axis options
+        newOpts['xaxis.tickvals'] = tickvals.sort(function(a, b){return a - b});
+        newOpts['xaxis.ticktext'] = ticktext.sort(function(a, b){return a - b}).map(String);
+        const xPad = ((newOpts['xaxis.range[1]'] - newOpts['xaxis.range[0]']) * 0.025) !== 0 ? (newOpts['xaxis.range[1]'] - newOpts['xaxis.range[0]']) * 0.025 : 0.025;
+        newOpts['xaxis.range[0]'] = newOpts['xaxis.range[0]'] - xPad;
+        newOpts['xaxis.range[1]'] = newOpts['xaxis.range[1]'] + xPad;
+        Plotly.relayout($("#placeholder")[0], newOpts);
+    },
     'click .firstPageButton': function () {
         var pageIndex = Session.get("pageIndex");
         // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
@@ -1098,6 +1185,7 @@ Template.graph.events({
         var plotType = Session.get('plotType');
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = Session.get('options');
+        Session.set('thresholdEquiX', false);
         if (curveOpsUpdate.length === 0) {
             // we just need a relayout
             Plotly.relayout($("#placeholder")[0], options);

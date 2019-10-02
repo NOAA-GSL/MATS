@@ -7,7 +7,11 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 
 Template.footer.helpers({
     isMetexpress: function () {
-       const appType = matsCollections.Settings.findOne({}).appType;
-       return appType === matsTypes.AppTypes.metexpress;
+        if (matsCollections.Settings.findOne({}) !== undefined && matsCollections.Settings.findOne({}).appType !== undefined) {
+            const appType = matsCollections.Settings.findOne({}).appType;
+            return appType === matsTypes.AppTypes.metexpress;
+        } else {
+            return false;
+        }
     }
 });
