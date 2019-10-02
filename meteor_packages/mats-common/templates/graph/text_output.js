@@ -158,7 +158,7 @@ Template.textOutput.helpers({
                         <th>n</th>";
                 break;
             case matsTypes.PlotTypes.threshold:
-                header += "<th>" + curve.label + " threshold (in)</th>\
+                header += "<th>" + curve.label + " threshold</th>\
                         <th>raw stat from query</th>\
                         <th>plotted stat</th>\
                         <th>std dev</th>\
@@ -279,7 +279,7 @@ Template.textOutput.helpers({
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.threshold:
-                line += "<td>" + element[labelKey += " threshold (in)"] + "</td>" +
+                line += "<td>" + element[labelKey += " threshold"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +

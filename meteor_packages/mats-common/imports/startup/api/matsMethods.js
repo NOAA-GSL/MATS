@@ -472,7 +472,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                             labelSuffix = " hour of day";
                             break;
                         case matsTypes.PlotTypes.threshold:
-                            labelSuffix = " threshold (in)";
+                            labelSuffix = " threshold";
                             break;
                     }
                     var returnData = {};

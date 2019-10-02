@@ -1034,7 +1034,7 @@ Meteor.startup(function () {
         database: 1,
         connectionLimit: 1
     });
-// the pool is intended to be global
+    // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
 
 
