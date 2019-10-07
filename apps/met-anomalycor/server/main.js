@@ -55,7 +55,7 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
 
-        var yAxisOptionsMap = {
+        const yAxisOptionsMap = {
             "Number": ["number"],
             "Relative frequency": ["relFreq"]
         };
@@ -73,7 +73,7 @@ const doPlotParams = function () {
                 displayGroup: 2
             });
 
-        var binOptionsMap = {
+        const binOptionsMap = {
             "Default bins": ["default"],
             "Set number of bins": ["binNumber"],
             "Make zero a bin bound": ["zeroBound"],
@@ -767,8 +767,12 @@ const doCurveParams = function () {
     var defaultDataSource = matsCollections.CurveParams.findOne({name: "data-source"}, {default: 1}).default;
     minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
     maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
-    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minusMonthMinDate + ' - ' + maxDate;
+
+    // need to turn the raw max and min from the metadata into the last valid month of data
+    const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
+    const minusMonthMinDate = newDateRange.minDate;
+    maxDate = newDateRange.maxDate;
+    dstr = minusMonthMinDate.format("MM/DD/YYYY HH:mm") + ' - ' + maxDate.format("MM/DD/YYYY HH:mm");
 
     if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
         const optionsMap = {
