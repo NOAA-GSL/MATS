@@ -219,7 +219,7 @@ class MESurface:
         self.cnx.commit()
         self.cursor.execute("create table {mdt_tmp} like {mdt_dev};".format(**d))
         self.cnx.commit()
-        self.cursor.execute("insert into {mdt_tmp} select md.* from {mdt_dev} md  left join {mdt} m on md.db = m.db and md.model = m.model;".format(**d))
+        self.cursor.execute("insert into {mdt_tmp} select m.* from {mdt} m  left join {mdt_dev} md on m.db = md.db and m.model = md.model;".format(**d))
         self.cnx.commit()
         self.cursor.execute("rename table {mdt} to {tmp_mdt}, {mdt_tmp} to {mdt};".format(**d))
         self.cnx.commit()

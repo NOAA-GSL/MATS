@@ -96,6 +96,7 @@ import metexpress
 
 class metadatUpdate:
     def __init__(self, options):
+        print('MATS METADATA UPDATE FOR MET OPTIONS: ' + str(options))
         self.metadata_database = options['metadata_database']
         self.updater_list = []
         self.cnf_file = options['cnf_file']
@@ -127,6 +128,27 @@ class metadatUpdate:
             self.cnx.commit()
             if self.cursor.rowcount == 0:
                 raise ValueError("database: " + self.db_name + " does not exist - exiting")
+
+    def _print_table_counts(self):
+        cnx1 = pymysql.connect(read_default_file=self.cnf_file, cursorclass=pymysql.cursors.DictCursor)
+        cnx1.autocommit = True
+        cursor1 = cnx1.cursor(pymysql.cursors.DictCursor)
+
+        cnx2 = pymysql.connect(read_default_file=self.cnf_file, cursorclass=pymysql.cursors.DictCursor)
+        cnx2.autocommit = True
+        cursor2 = cnx2.cursor(pymysql.cursors.DictCursor)
+        use_db_query = 'use ' + self.metadata_database + ';'
+        cursor1.execute(use_db_query)
+        cnx1.commit()
+        cursor2.execute(use_db_query)
+        cnx2.commit()
+        cursor1.execute('show tables;')
+        cnx1.commit()
+        for line in cursor1:
+            table = list(line.values())[0]
+            cursor2.execute("select count(*) from " + table + ";")
+            cnx2.commit()
+            print ("table " + table + ":" + str(cursor2.fetchone()['count(*)']))
 
     def _reconcile_metadata_script_info_table(self):
         updaterList = []
@@ -211,6 +233,10 @@ class metadatUpdate:
 if __name__ == '__main__':
     options = metadatUpdate.get_options(sys.argv)
     metadataUpdater = metadatUpdate(options)
+    print("prior metadata table counts")
+    metadataUpdater._print_table_counts()
     metadataUpdater._reconcile_metadata_script_info_table()
     metadataUpdater.update()
+    print("post metadata table counts")
+    metadataUpdater._print_table_counts()
     sys.exit(0)
