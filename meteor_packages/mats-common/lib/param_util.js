@@ -372,8 +372,12 @@ const getDefaultDateRange = function(name) {
 const getMinMaxDates = function(minDate, maxDate) {
     var minMoment = moment.utc(minDate,"MM/DD/YYYY HH:mm");
     var maxMoment = moment.utc(maxDate, "MM/DD/YYYY HH:mm");
+    // There's a bug in daterangepicker that causes odd behavior if the startDsr includes 00 UTC,
+    // so subtract 30 minutes from the maxDate and add 30 minutes to the minDate to prevent
+    // that circumstance from occurring.
+    maxDate = moment.utc(maxMoment).add(30, 'minutes');
     if (maxMoment.diff(minMoment, 'days') > 30) {
-        minDate = moment.utc(maxMoment.subtract(30, 'days')).format("MM/DD/YYYY HH:mm");
+        minDate = moment.utc(maxMoment).subtract(30, 'days').subtract(30, 'minutes');
     }
     return {minDate:minDate,maxDate:maxDate};
 };

@@ -55,7 +55,7 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
 
-        var yAxisOptionsMap = {
+        const yAxisOptionsMap = {
             "Number": ["number"],
             "Relative frequency": ["relFreq"]
         };
@@ -73,7 +73,7 @@ const doPlotParams = function () {
                 displayGroup: 2
             });
 
-        var binOptionsMap = {
+        const binOptionsMap = {
             "Default bins": ["default"],
             "Set number of bins": ["binNumber"],
             "Make zero a bin bound": ["zeroBound"],
@@ -518,7 +518,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['m0.secs'],
             '15m': ['ceil(900*floor(m0.secs/900)+900/2)'],
             '30m': ['ceil(1800*floor(m0.secs/1800)+1800/2)'],
@@ -609,7 +609,7 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
 
-        optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+        const optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
 
         matsCollections.CurveParams.insert(
             {
@@ -712,12 +712,16 @@ const doCurveParams = function () {
     }
 
     // determine date defaults for dates and curveDates
-    var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
+    const defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
     modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
-    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minusMonthMinDate + ' - ' + maxDate;
+
+    // need to turn the raw max and min from the metadata into the last valid month of data
+    const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
+    const minusMonthMinDate = newDateRange.minDate;
+    maxDate = newDateRange.maxDate;
+    dstr = minusMonthMinDate.format("MM/DD/YYYY HH:mm") + ' - ' + maxDate.format("MM/DD/YYYY HH:mm");
 
     if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
         const optionsMap = {

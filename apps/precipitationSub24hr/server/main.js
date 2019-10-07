@@ -55,7 +55,7 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
 
-        var yAxisOptionsMap = {
+        const yAxisOptionsMap = {
             "Number": ["number"],
             "Relative frequency": ["relFreq"]
         };
@@ -73,7 +73,7 @@ const doPlotParams = function () {
                 displayGroup: 2
             });
 
-        var binOptionsMap = {
+        const binOptionsMap = {
             "Default bins": ["default"],
             "Set number of bins": ["binNumber"],
             "Make zero a bin bound": ["zeroBound"],
@@ -415,7 +415,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
-        var optionsMap = {
+        const optionsMap = {
             'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.ny)*sum(m0.yn))/((sum(m0.yy)+sum(m0.yn))*(sum(m0.ny)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.ny*m0.yn)/((m0.yy+m0.yn)*(m0.ny+m0.nn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'x100', 100],
 
             'PODy (POD of precip > threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'x100', 100],
@@ -495,7 +495,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
-        optionsMap = {
+        const optionsMap = {
             'None': ['m0.time'],
             '3hr': ['ceil(10800*floor(m0.time/10800)+10800/2)'],
             '6hr': ['ceil(21600*floor(m0.time/21600)+21600/2)'],
@@ -590,7 +590,6 @@ const doCurveParams = function () {
                 }
             });
         }
-
     }
 
     if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {
@@ -652,15 +651,19 @@ const doCurveParams = function () {
     }
 
     // determine date defaults for dates and curveDates
-    var defaultDataSource = matsCollections.CurveParams.findOne({name: "data-source"}, {default: 1}).default;
-    modelDateRangeMap = matsCollections.CurveParams.findOne({name: "data-source"}, {dates: 1}).dates;
+    const defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
+    modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
-    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minusMonthMinDate + ' - ' + maxDate;
+
+    // need to turn the raw max and min from the metadata into the last valid month of data
+    const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
+    const minusMonthMinDate = newDateRange.minDate;
+    maxDate = newDateRange.maxDate;
+    dstr = minusMonthMinDate.format("MM/DD/YYYY HH:mm") + ' - ' + maxDate.format("MM/DD/YYYY HH:mm");
 
     if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
-        optionsMap = {
+        const optionsMap = {
             '1 day': ['1 day'],
             '3 days': ['3 days'],
             '7 days': ['7 days'],

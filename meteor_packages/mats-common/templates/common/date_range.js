@@ -203,8 +203,6 @@ Template.dateRange.onRendered(function () {
             $(jqIdRef).data('daterangepicker').setEndDate(endDsr);
             const newDateStr = startDsr.format('MM/DD/YYYY HH:mm') + ' - ' + endDsr.format('MM/DD/YYYY HH:mm');
             matsParamUtils.setValueTextForParamName(name, newDateStr);
-            // This is a hack - please fix
-            $(jqIdRef).data('daterangepicker').container.prevObject["0"].firstChild.firstElementChild.childNodes[7].click()
         } catch (error) {
             console.log("Error in date_range.js.refresh : " + error.message);
         }
