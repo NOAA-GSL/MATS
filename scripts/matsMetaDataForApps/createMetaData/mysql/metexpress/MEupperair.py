@@ -14,15 +14,29 @@ Author: Molly B Smith, heavily modified by Randy Pierce
 #  Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
 
 from __future__ import print_function
+
 import sys
 from datetime import datetime
-from metexpress.MEmetadata import MEMetadata
 
-class MEUpperair(MEMetadata):
+from metexpress.MEmetadata import ParentMetadata
+
+
+class MEUpperair(ParentMetadata):
     def __init__(self, options):
+        options['name'] = __name__
         options['needsTrshs'] = False  # upperair does not have thresholds
         options['fcstWhereClause'] = 'fcst_lev like "P%"'
+        options['line_data_table'] = ["line_data_sl1l2"]
+        options['metadata_table'] = "upperair_mats_metadata"
+        options['app_reference'] = "met-upperair"
+        options['string_fields'] = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
+        options['int_fields'] = ["mindate", "maxdate", "numrecs", "updated"]
+        options['database_groups'] = "upperair_database_groups"
         super().__init__(options)
+
+    @staticmethod
+    def get_app_reference():
+        return "met-upperair"
 
     def strip_level(self, elem):
         # helper function for sorting levels
@@ -33,16 +47,8 @@ class MEUpperair(MEMetadata):
             return int(elem[1:hyphen_idx])
 
 
-
 if __name__ == '__main__':
     options = MEMetadata.get_options(sys.argv)
-    options['name'] = __name__
-    options['line_data_table'] = ["line_data_sl1l2"]
-    options['metadata_table'] = "upperair_mats_metadata"
-    options['app_reference'] = "met-upperair"
-    options['string_fields'] = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
-    options['int_fields'] = ["mindate", "maxdate", "numrecs", "updated"]
-    options['database_groups'] = "upperair_database_groups"
     start = str(datetime.now())
     print('UPPER AIR MATS FOR MET METADATA START: ' + start)
     me_dbcreator = MEUpperair(options)

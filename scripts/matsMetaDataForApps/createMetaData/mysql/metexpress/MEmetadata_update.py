@@ -148,7 +148,7 @@ class metadatUpdate:
             table = list(line.values())[0]
             cursor2.execute("select count(*) from " + table + ";")
             cnx2.commit()
-            print ("table " + table + ":" + str(cursor2.fetchone()['count(*)']))
+            print("table " + table + ":" + str(cursor2.fetchone()['count(*)']))
 
     def _reconcile_metadata_script_info_table(self):
         updaterList = []
@@ -157,8 +157,10 @@ class metadatUpdate:
                 submod = importlib.import_module('metexpress' + '.' + modname)
                 for updateClass in inspect.getmembers(submod, inspect.isclass):
                     if updateClass[0].startswith('ME'):
-                        updater = getattr(submod, updateClass[0])()
-                        appReference = updater.get_app_reference()
+                        appReference = getattr(submod, updateClass[0]).get_app_reference()
+                        options = {'cnf_file': self.cnf_file, "metadata_database": self.metadata_database,
+                                   "metexpress_base_url": self.metexpress_base_url, "mvdb": self.db_name}
+                        updater = getattr(submod, updateClass[0])(options)
                         dtpl = updater.get_data_table_pattern_list()
                         updaterList.append(
                             {'app_reference': appReference, 'data_table_pattern_list': dtpl, 'updater': updater})
@@ -177,7 +179,7 @@ class metadatUpdate:
                               'metadata_database': self.metadata_database,
                               'metexpress_base_url': self.metexpress_base_url}
                 if self.app_reference == None or self.app_reference == me_updater_app_reference:
-                    me_updater.main(me_options)
+                    me_updater.main()
             except Exception as uex:
                 print("Exception running update for: " + elem['app_reference'] + " : " + str(uex))
                 traceback.print_stack()

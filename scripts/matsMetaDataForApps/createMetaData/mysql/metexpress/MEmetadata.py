@@ -3,21 +3,22 @@ from __future__ import print_function
 import ast
 import getopt
 import json
-import os
 import ssl
 import sys
 import time as tm
 import traceback
 import urllib.request
+from abc import abstractmethod
 from datetime import datetime, timedelta, timezone
-from abc import ABC, abstractmethod
 
 import pymysql
+
+
 #  Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
 
-class MEMetadata:
-    def __init__(self, options, data_table_stat_header_id_limit = 10000000000 ):
-        #self.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
+class ParentMetadata:
+    def __init__(self, options, data_table_stat_header_id_limit=10000000000):
+        # self.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
         self.utc_start = str(datetime.utcnow())
         self.refresh_url = options['metexpress_base_url'] + "/" + options['app_reference'] + "/refreshMetadata"
         self.metadata_database = options['metadata_database']
@@ -191,9 +192,9 @@ class MEMetadata:
 
     def reconcile_groups(self, groups_table):
         gd = {'database_groups': groups_table, 'database_groups_dev': groups_table + "_dev"}
-        #if this is an "all" databases run clear out the groups table to remove possible
-        #double entries in the event that a database had no groups and was changed
-        #to have a group
+        # if this is an "all" databases run clear out the groups table to remove possible
+        # double entries in the event that a database had no groups and was changed
+        # to have a group
         if self.mvdb == "all":
             print("clearing the groups table")
             self.cursor.execute("delete from {database_groups};".format(**gd))
@@ -235,7 +236,8 @@ class MEMetadata:
             else:
                 # do an insert
                 self.cursor.execute(
-                    "insert into {database_groups} select * from {database_groups_dev} where db_group = \"{group}\";".format(**gd))
+                    "insert into {database_groups} select * from {database_groups_dev} where db_group = \"{group}\";".format(
+                        **gd))
                 self.cnx.commit()
 
     def reconcile_strings(self, string_metadata, devcursor, devcnx):
@@ -264,7 +266,8 @@ class MEMetadata:
                     else:
                         update_command += ', '
                     update_command += field + ' = "' + reconcile_vals[field] + '"'
-                update_command += ' where db = "' + string_metadata[d]['db'] + "' and model = '" + string_metadata[d]['model'] + '";'
+                update_command += ' where db = "' + string_metadata[d]['db'] + "' and model = '" + string_metadata[d][
+                    'model'] + '";'
                 devcursor.execute(update_command)
                 devcnx.commit()
 
@@ -352,7 +355,9 @@ class MEMetadata:
         self.cnx.commit()
         self.cursor.execute("create table {mdt_tmp} like {mdt_dev};".format(**d))
         self.cnx.commit()
-        self.cursor.execute("insert into {mdt_tmp} select m.* from {mdt} m  left join {mdt_dev} md on m.db = md.db and m.model = md.model;".format(**d))
+        self.cursor.execute(
+            "insert into {mdt_tmp} select m.* from {mdt} m  left join {mdt_dev} md on m.db = md.db and m.model = md.model;".format(
+                **d))
         self.cnx.commit()
         self.cursor.execute("rename table {mdt} to {tmp_mdt}, {mdt_tmp} to {mdt};".format(**d))
         self.cnx.commit()
@@ -380,6 +385,7 @@ class MEMetadata:
     @abstractmethod
     def strip_level(self, elem):
         pass
+
     @abstractmethod
     def strip_trsh(self, elem):
         pass
@@ -587,7 +593,7 @@ class MEMetadata:
                 per_mvdb[mvdb][model]['levels'].sort(key=self.strip_level)
 
                 # If we need threshholds Get the thresholds for this model in this database
-                if (self.needsTrshs) :
+                if (self.needsTrshs):
                     get_trshs = 'select distinct fcst_thresh from stat_header where model = "' + model + '" and ' + self.fcstWhereClause + ';'
                     per_mvdb[mvdb][model]['trshs'] = []
                     print(self.script_name + " - Getting thresholds for model " + model)
@@ -597,7 +603,6 @@ class MEMetadata:
                         trsh = str(list(line2.values())[0])
                         per_mvdb[mvdb][model]['trshs'].append(trsh)
                     per_mvdb[mvdb][model]['trshs'].sort(key=self.strip_trsh)
-
 
                 # Get the variables for this model in this database
                 get_vars = 'select distinct fcst_var from stat_header where model = "' + model + '" and ' + self.fcstWhereClause + ';'
@@ -665,8 +670,10 @@ class MEMetadata:
                                     cnx2.commit()
                                     data = cursor2.fetchone()
                                     if data is not None:
-                                        min = min if data['mindate'] is None or min < data['mindate'] else data['mindate']
-                                        max = max if data['maxdate'] is None or max > data['maxdate'] else data['maxdate']
+                                        min = min if data['mindate'] is None or min < data['mindate'] else data[
+                                            'mindate']
+                                        max = max if data['maxdate'] is None or max > data['maxdate'] else data[
+                                            'maxdate']
                                         num_recs = num_recs + data['numrecs']
                                 except pymysql.Error as e:
                                     continue
@@ -728,7 +735,8 @@ class MEMetadata:
         cursor_tmp.execute("use  " + self.metadata_database + ";")
         cnx_tmp.commit()
         #
-        if len(raw_metadata['regions']) > 0 and len(raw_metadata['levels']) > 0 and len(raw_metadata['fcsts']) > 0 and len(raw_metadata['variables']) > 0:
+        if len(raw_metadata['regions']) > 0 and len(raw_metadata['levels']) > 0 and len(
+                raw_metadata['fcsts']) > 0 and len(raw_metadata['variables']) > 0:
             qd = []
             updated_utc = datetime.utcnow().strftime('%s')
             mindate = raw_metadata['mindate']
@@ -837,7 +845,8 @@ class MEMetadata:
                 assert False, "unhandled option"
         # make sure none were left out...
         assert cnf_file is not None and metadata_database is not None and metexpress_base_url is not None
-        options = {'cnf_file': cnf_file, "metadata_database": metadata_database, "metexpress_base_url": metexpress_base_url, "mvdb": db}
+        options = {'cnf_file': cnf_file, "metadata_database": metadata_database,
+                   "metexpress_base_url": metexpress_base_url, "mvdb": db}
         if data_table_stat_header_id_limit is not None:
             options['data_table_stat_header_id_limit'] = data_table_stat_header_id_limit
         return options

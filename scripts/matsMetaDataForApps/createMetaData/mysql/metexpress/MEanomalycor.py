@@ -14,15 +14,29 @@ Author: Molly B Smith, heavily modified by Randy Pierce
 #  Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
 
 from __future__ import print_function
+
 import sys
 from datetime import datetime
-from metexpress.MEmetadata import MEMetadata
 
-class MEAnomalycor(MEMetadata):
+from metexpress.MEmetadata import ParentMetadata
+
+
+class MEAnomalycor(ParentMetadata):
     def __init__(self, options):
-        options['needsTrshs'] = True  # anomalycor does have thresholds
+        options['name'] = __name__
+        options['needsTrshs'] = False  # anomalycor does not have thresholds
         options['fcstWhereClause'] = ''
+        options['line_data_table'] = ["line_data_sl1l2"]
+        options['metadata_table'] = "airquality_mats_metadata"
+        options['app_reference'] = "met-anomalycor"
+        options['string_fields'] = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
+        options['int_fields'] = ["mindate", "maxdate", "numrecs", "updated"]
+        options['database_groups'] = "airquality_database_groups"
         super().__init__(options)
+
+    @staticmethod
+    def get_app_reference():
+        return "met-anomalycor"
 
     def strip_level(self, elem):
         # helper function for sorting levels
@@ -59,13 +73,6 @@ class MEAnomalycor(MEMetadata):
 
 if __name__ == '__main__':
     options = MEMetadata.get_options(sys.argv)
-    options['name'] = __name__
-    options['line_data_table'] = ["line_data_sl1l2"]
-    options['metadata_table'] = "airquality_mats_metadata"
-    options['app_reference'] = "met-airquality"
-    options['string_fields'] = ["regions", "levels", "fcst_lens", "variables", "trshs", "fcst_orig"]
-    options['int_fields'] = ["mindate", "maxdate", "numrecs", "updated"]
-    options['database_groups'] = "airquality_database_groups"
     start = str(datetime.now())
     print('ANOMALYCOR MATS FOR MET METADATA START: ' + start)
     me_dbcreator = MEAnomalycor(options)
