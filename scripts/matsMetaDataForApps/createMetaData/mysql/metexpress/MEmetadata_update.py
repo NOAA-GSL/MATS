@@ -133,10 +133,11 @@ class metadatUpdate:
         cnx1 = pymysql.connect(read_default_file=self.cnf_file, cursorclass=pymysql.cursors.DictCursor)
         cnx1.autocommit = True
         cursor1 = cnx1.cursor(pymysql.cursors.DictCursor)
-
+        cursor1.execute('set session sql_mode="NO_AUTO_CREATE_USER";')
         cnx2 = pymysql.connect(read_default_file=self.cnf_file, cursorclass=pymysql.cursors.DictCursor)
         cnx2.autocommit = True
         cursor2 = cnx2.cursor(pymysql.cursors.DictCursor)
+        cursor2.execute('set session sql_mode="NO_AUTO_CREATE_USER";')
         use_db_query = 'use ' + self.metadata_database + ';'
         cursor1.execute(use_db_query)
         cnx1.commit()
@@ -178,7 +179,7 @@ class metadatUpdate:
                 me_options = {'cnf_file': self.cnf_file, 'mvdb': self.db_name,
                               'metadata_database': self.metadata_database,
                               'metexpress_base_url': self.metexpress_base_url}
-                if self.app_reference == None or self.app_reference == me_updater_app_reference:
+                if self.app_reference is None or self.app_reference == me_updater_app_reference:
                     me_updater.main()
             except Exception as uex:
                 print("Exception running update for: " + elem['app_reference'] + " : " + str(uex))

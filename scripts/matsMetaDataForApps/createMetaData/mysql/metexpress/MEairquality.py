@@ -29,8 +29,6 @@ class MEAirquality(ParentMetadata):
         options['line_data_table'] = ["line_data_sl1l2", "line_data_ctc"]
         options['metadata_table'] = "airquality_mats_metadata"
         options['app_reference'] = "met-airquality"
-        options['string_fields'] = ["regions", "levels", "fcst_lens", "variables", "trshs", "fcst_orig"]
-        options['int_fields'] = ["mindate", "maxdate", "numrecs", "updated"]
         options['database_groups'] = "airquality_database_groups"
         super().__init__(options)
 
@@ -51,9 +49,21 @@ class MEAirquality(ParentMetadata):
             except ValueError:
                 return 0
 
+    def strip_trsh(self, elem):
+        # helper function for sorting thresholds
+        if elem[0] == '>' or elem[0] == '<':
+            try:
+                return int(float(elem[1:]))
+            except ValueError:
+                return 0
+        else:
+            try:
+                return int(float(elem))
+            except ValueError:
+                return 0
 
 if __name__ == '__main__':
-    options = MEMetadata.get_options(sys.argv)
+    options = MEAirquality.get_options(sys.argv)
     start = str(datetime.now())
     print('AIR QUALITY MATS FOR MET METADATA START: ' + start)
     me_dbcreator = MEAirquality(options)

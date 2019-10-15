@@ -26,12 +26,10 @@ class MEAnomalycor(ParentMetadata):
         options['name'] = __name__
         options['needsTrshs'] = False  # anomalycor does not have thresholds
         options['fcstWhereClause'] = ''
-        options['line_data_table'] = ["line_data_sl1l2"]
-        options['metadata_table'] = "airquality_mats_metadata"
+        options['line_data_table'] = ["line_data_sal1l2"]
+        options['metadata_table'] = "anomalycor_mats_metadata"
         options['app_reference'] = "met-anomalycor"
-        options['string_fields'] = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
-        options['int_fields'] = ["mindate", "maxdate", "numrecs", "updated"]
-        options['database_groups'] = "airquality_database_groups"
+        options['database_groups'] = "anomalycor_database_groups"
         super().__init__(options)
 
     @staticmethod
@@ -58,21 +56,8 @@ class MEAnomalycor(ParentMetadata):
             except ValueError:
                 return 0
 
-    def strip_trsh(self, elem):
-        # helper function for sorting thresholds
-        if elem[0] == '>' or elem[0] == '<':
-            try:
-                return int(float(elem[1:]))
-            except ValueError:
-                return 0
-        else:
-            try:
-                return int(float(elem))
-            except ValueError:
-                return 0
-
 if __name__ == '__main__':
-    options = MEMetadata.get_options(sys.argv)
+    options = MEAnomalycor.get_options(sys.argv)
     start = str(datetime.now())
     print('ANOMALYCOR MATS FOR MET METADATA START: ' + start)
     me_dbcreator = MEAnomalycor(options)

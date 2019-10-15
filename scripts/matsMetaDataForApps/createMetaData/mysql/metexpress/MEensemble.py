@@ -29,8 +29,6 @@ class MEEnsemble(ParentMetadata):
         options['line_data_table'] = ["line_data_pct", "line_data_ecnt", "line_data_cnt", "line_data_pstd"]
         options['metadata_table'] = "ensemble_mats_metadata"
         options['app_reference'] = "met-ensemble"
-        options['string_fields'] = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
-        options['int_fields'] = ["mindate", "maxdate", "numrecs", "updated"]
         options['database_groups'] = "ensemble_database_groups"
         super().__init__(options)
 
@@ -59,7 +57,7 @@ class MEEnsemble(ParentMetadata):
                 return 0
 
 if __name__ == '__main__':
-    options = MEMetadata.get_options(sys.argv)
+    options = MEEnsemble.get_options(sys.argv)
     start = str(datetime.now())
     print('ENSEMBLE MATS FOR MET METADATA START: ' + start)
     me_dbcreator = MEEnsemble(options)

@@ -29,8 +29,6 @@ class MESurface(ParentMetadata):
         options['line_data_table'] = ["line_data_sl1l2"]
         options['metadata_table'] = "surface_mats_metadata"
         options['app_reference'] = "met-surface"
-        options['string_fields'] = ["regions", "levels", "fcst_lens", "variables", "fcst_orig"]
-        options['int_fields'] = ["mindate", "maxdate", "numrecs", "updated"]
         options['database_groups'] = "surface_database_groups"
         super().__init__(options)
 
@@ -52,7 +50,7 @@ class MESurface(ParentMetadata):
                 return 0
 
 if __name__ == '__main__':
-    options = MEMetadata.get_options(sys.argv)
+    options = MESurface.get_options(sys.argv)
     start = str(datetime.now())
     print('SURFACE MATS FOR MET METADATA START: ' + start)
     me_dbcreator = MESurface(options)
