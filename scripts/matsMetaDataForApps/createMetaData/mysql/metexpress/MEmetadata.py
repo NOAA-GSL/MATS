@@ -431,10 +431,10 @@ class ParentMetadata:
                 per_mvdb[mvdb][model]['fcsts'] = []
                 per_mvdb[mvdb][model]['fcst_orig'] = []
                 for line_data_table in self.line_data_table:
-                    get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_id from stat_header where  stat_header_id in (select distinct stat_header_id from " + line_data_table + " order by stat_header_id)"
+                    get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_id from stat_header where  stat_header_id in (select distinct stat_header_id from " + line_data_table + " where model = '" + model + "' order by stat_header_id)"
                     if self.fcstWhereClause is not None and self.fcstWhereClause != "":
                         get_stat_header_ids += ' and ' + self.fcstWhereClause
-                    get_stat_header_ids += ' group by model, fcst_lev, fcst_var limit 1;'
+                    get_stat_header_ids += ' group by model, vx_mask limit 1;'
                     if debug:
                         print(
                             self.script_name + " - Getting get_stat_header_ids lens for model " + model + " sql: " + get_stat_header_ids)
