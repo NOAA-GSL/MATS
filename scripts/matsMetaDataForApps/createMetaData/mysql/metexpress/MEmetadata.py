@@ -430,6 +430,9 @@ class ParentMetadata:
                 temp_fcsts_orig = set()
                 per_mvdb[mvdb][model]['fcsts'] = []
                 per_mvdb[mvdb][model]['fcst_orig'] = []
+                num_recs = 0
+                min = datetime.max
+                max = datetime.min  # earliest epoch?
                 for line_data_table in self.line_data_table:
                     get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_id from stat_header where  stat_header_id in (select distinct stat_header_id from " + line_data_table + " where model = '" + model + "' order by stat_header_id)"
                     if self.fcstWhereClause is not None and self.fcstWhereClause != "":
@@ -459,16 +462,10 @@ class ParentMetadata:
                         except pymysql.Error as e:
                             print(self.script_name + " - " + e)
                             continue
-                    per_mvdb[mvdb][model]['fcsts'] = list(map(str, sorted(temp_fcsts)))
-                    per_mvdb[mvdb][model]['fcst_orig'] = list(map(str, sorted(temp_fcsts_orig)))
-
-                    if debug:
-                        print(self.script_name + " - Getting stats for model " + model)
-                    num_recs = 0
-                    min = datetime.max
-                    max = datetime.min  # earliest epoch?
-                    if stat_header_id_list is not None and len(stat_header_id_list) > 0:
-                        get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from ' + line_data_table + " where stat_header_id in (" + ','.join(stat_header_id_list) + ");"
+                        if debug:
+                            print(self.script_name + " - Getting stats for model " + model)
+                        get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from ' + line_data_table + " where stat_header_id in (" + ','.join(
+                            stat_header_id_list) + ");"
                         try:
                             cursor2.execute(get_stats)
                             cnx2.commit()
@@ -481,13 +478,15 @@ class ParentMetadata:
                                 num_recs = num_recs + data['numrecs']
                         except pymysql.Error as e:
                             continue
-                    if (min is None or min is datetime.max):
-                        min = datetime.utcnow()
-                    if (max is None is max is datetime.min):
-                        max = datetime.utcnow()
-                    per_mvdb[mvdb][model]['mindate'] = int(min.replace(tzinfo=timezone.utc).timestamp())
-                    per_mvdb[mvdb][model]['maxdate'] = int(max.replace(tzinfo=timezone.utc).timestamp())
-                    per_mvdb[mvdb][model]['numrecs'] = num_recs
+                per_mvdb[mvdb][model]['fcsts'] = list(map(str, sorted(temp_fcsts)))
+                per_mvdb[mvdb][model]['fcst_orig'] = list(map(str, sorted(temp_fcsts_orig)))
+                if (min is None or min is datetime.max):
+                    min = datetime.utcnow()
+                if (max is None is max is datetime.min):
+                    max = datetime.utcnow()
+                per_mvdb[mvdb][model]['mindate'] = int(min.replace(tzinfo=timezone.utc).timestamp())
+                per_mvdb[mvdb][model]['maxdate'] = int(max.replace(tzinfo=timezone.utc).timestamp())
+                per_mvdb[mvdb][model]['numrecs'] = num_recs
                 if int(per_mvdb[mvdb][model]['numrecs']) > 0:
                     db_has_valid_data = True
                     print("\n" + self.script_name + " - Storing metadata for model " + model)
