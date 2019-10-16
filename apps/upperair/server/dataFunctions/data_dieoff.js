@@ -101,8 +101,6 @@ dataDieOff = function (plotParams, plotFunction) {
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;
-        var sum = 0;
-        var count = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters

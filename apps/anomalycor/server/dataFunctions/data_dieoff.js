@@ -66,11 +66,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             const validTimeStr = curve['valid-time'];
             const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-            const validTimes = validTimeOptionsMap[validTimeStr][0];
-            var validTimeClause = " ";
-            if (validTimes.length > 0) {
-                validTimeClause = validTimes;
-            }
+            validTimeClause = validTimeOptionsMap[validTimeStr][0];
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
             utcCycleStartClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";

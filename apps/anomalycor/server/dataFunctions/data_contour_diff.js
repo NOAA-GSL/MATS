@@ -67,10 +67,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             const validTimeStr = curve['valid-time'];
             const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-            const validTimes = validTimeOptionsMap[validTimeStr][0];
-            if (validTimes.length > 0) {
-                validTimeClause = validTimes;
-            }
+            validTimeClause = validTimeOptionsMap[validTimeStr][0];
         }
         if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
             var levels = curve['level'] === undefined ? [] : curve['level'];
