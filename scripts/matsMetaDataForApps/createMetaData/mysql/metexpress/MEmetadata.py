@@ -16,7 +16,9 @@ import pymysql
 #  Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
 # set to False to limit print output
 debug = True
-#debug = False
+
+
+# debug = False
 class ParentMetadata:
     def __init__(self, options, data_table_stat_header_id_limit=10000000000):
         # self.script_name = os.path.basename(sys.argv[0]).replace('.py', '')
@@ -284,7 +286,8 @@ class ParentMetadata:
                 self.cursor.execute('delete from {mdt_tmp} where db = "{db}" and model = "{model}";'.format(**d))
                 self.cnx.commit()
             # insert the dev data into the tmp_metadata table
-            self.cursor.execute('insert into {mdt_tmp} select * from {mdt_dev} where db = "{db}" and model = "{model}";'.format(**d))
+            self.cursor.execute(
+                'insert into {mdt_tmp} select * from {mdt_dev} where db = "{db}" and model = "{model}";'.format(**d))
             self.cnx.commit()
             d['db'] = ""
             d['model'] = ""
@@ -434,10 +437,20 @@ class ParentMetadata:
                 min = datetime.max
                 max = datetime.min  # earliest epoch?
                 for line_data_table in self.line_data_table:
-                    get_stat_header_ids = "select group_concat(stat_header_id) as stat_header_id from stat_header where  stat_header_id in (select distinct stat_header_id from " + line_data_table + " where model = '" + model + "' order by stat_header_id)"
+                    # select stat_header_id from (select group_concat(stat_header_id) as stat_header_id from stat_header where stat_header_id in (select distinct stat_header_id from line_data_sl1l2 where model = 'GFS'order by stat_header_id) and fcst_lev like "P%" group by model, vx_mask) as stat_header_id order by length(stat_header_id) limit 1;
+                    fcst_clause = ''
                     if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                        get_stat_header_ids += ' and ' + self.fcstWhereClause
-                    get_stat_header_ids += ' group by model, vx_mask limit 1;'
+                        fcst_clause = ' and ' + self.fcstWhereClause
+
+                    # select the minimum length set of stat_header_ids from the line_data_table that are unique with respect to model and vx_mask.
+                    # these will be used to qualify the distinct set of fcst_leads from the line data table.
+                    get_stat_header_ids = "select stat_header_id from " +\
+                                          "(select group_concat(stat_header_id) as stat_header_id from stat_header where stat_header_id in (select distinct stat_header_id from " +\
+                                          line_data_table + \
+                                          " where model = '" + model +\
+                                          "' order by stat_header_id)" + \
+                                          fcst_clause + \
+                                          " group by model, vx_mask) as stat_header_id order by length(stat_header_id) limit 1;"
                     if debug:
                         print(
                             self.script_name + " - Getting get_stat_header_ids lens for model " + model + " sql: " + get_stat_header_ids)
@@ -447,7 +460,8 @@ class ParentMetadata:
                     stat_header_id_list = [d['stat_header_id'] for d in stat_header_id_values if
                                            'stat_header_id' in d]
                     if stat_header_id_list is not None and len(stat_header_id_list) > 0:
-                        get_fcsts =  "select distinct fcst_lead from " + line_data_table + " where stat_header_id in (" + ','.join(stat_header_id_list) + ");"
+                        get_fcsts = "select distinct fcst_lead from " + line_data_table + " where stat_header_id in (" + ','.join(
+                            stat_header_id_list) + ");"
                         if debug:
                             print(self.script_name + " - Getting fcsts lens for model " + model + " sql: " + get_fcsts)
                         try:
