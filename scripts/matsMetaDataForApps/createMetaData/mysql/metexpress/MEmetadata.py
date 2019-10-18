@@ -437,7 +437,6 @@ class ParentMetadata:
                 min = datetime.max
                 max = datetime.min  # earliest epoch?
                 for line_data_table in self.line_data_table:
-                    # select stat_header_id from (select group_concat(stat_header_id) as stat_header_id from stat_header where stat_header_id in (select distinct stat_header_id from line_data_sl1l2 where model = 'GFS'order by stat_header_id) and fcst_lev like "P%" group by model, vx_mask) as stat_header_id order by length(stat_header_id) limit 1;
                     fcst_clause = ''
                     if self.fcstWhereClause is not None and self.fcstWhereClause != "":
                         fcst_clause = ' and ' + self.fcstWhereClause
@@ -454,11 +453,14 @@ class ParentMetadata:
                     if debug:
                         print(
                             self.script_name + " - Getting get_stat_header_ids lens for model " + model + " sql: " + get_stat_header_ids)
-                    cursor2.execute(get_stat_header_ids)
-                    cnx2.commit()
-                    stat_header_id_values = cursor2.fetchall()
-                    stat_header_id_list = [d['stat_header_id'] for d in stat_header_id_values if
-                                           'stat_header_id' in d]
+                    try:
+                        cursor2.execute(get_stat_header_ids)
+                        cnx2.commit()
+                        stat_header_id_values = cursor2.fetchall()
+                        stat_header_id_list = [d['stat_header_id'] for d in stat_header_id_values if 'stat_header_id' in d]
+                    except pymysql.Error as e:
+                        print(self.script_name + " - " + e)
+                        continue
                     if stat_header_id_list is not None and len(stat_header_id_list) > 0:
                         get_fcsts = "select distinct fcst_lead from " + line_data_table + " where stat_header_id in (" + ','.join(
                             stat_header_id_list) + ");"
