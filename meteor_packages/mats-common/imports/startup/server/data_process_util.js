@@ -200,13 +200,13 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
     switch (appParams.plotType) {
         case matsTypes.PlotTypes.timeSeries:
         case matsTypes.PlotTypes.dailyModelCycle:
-            resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curveInfoParams.axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.dieoff:
-            resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curveInfoParams.axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.validtime:
-            resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curveInfoParams.axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.threshold:
             resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curveInfoParams.axisMap, errorMax);
@@ -536,6 +536,142 @@ const processDataROC = function (dataset, appParams, curveInfoParams, plotParams
     };
 };
 
+const processDataEnsembleHistogram = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
+    var error = "";
+
+    // if matching, pare down dataset to only matching data
+    if (curveInfoParams.curvesLength > 1 && appParams.matching) {
+        dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curveInfoParams.curvesLength, appParams);
+    }
+
+    // we may need to recalculate the axis limits after unmatched data and outliers are removed
+    var axisLimitReprocessed = {};
+
+    // calculate data statistics (including error bars) for each curve
+    for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
+        var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
+        var data = dataset[curveIndex];
+        const label = dataset[curveIndex].label;
+
+        var di = 0;
+        var values = [];
+        var indVars = [];
+        var rawStat;
+
+        while (di < data.x.length) {
+
+            // errorResult holds all the calculated curve stats like mean, sd, etc.
+            var errorResult;
+            if (appParams.hasLevels) {
+                errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], data.subLevs[di], appParams);
+            } else {
+                errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], [], appParams);
+            }
+
+            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
+            rawStat = data.y[di];
+            if (diffFrom === null || diffFrom === undefined || !appParams.matching) {
+                // assign recalculated statistic to data[di][1], which is the value to be plotted
+                data.y[di] = errorResult.sum;
+            } else {
+                if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
+                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                    data.y[di] = dataset[diffFrom[0]].y[di] - dataset[diffFrom[1]].y[di];
+                } else {
+                    // keep the null for no data at this point
+                    data.y[di] = null;
+                }
+            }
+            values.push(data.y[di]);
+            indVars.push(data.x[di]);
+
+            // remove sub values and times to save space
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
+
+            // store statistics for this di datapoint
+            data.bin_stats[di] = {
+                bin: data.x[di],
+                bin_n: data.y[di],
+                bin_rf: data.y[di] // placeholder
+            };
+
+            // the tooltip is stored in data.text
+            data.text[di] = label +
+                "<br>" + "bin: " + (data.x[di] === null ? null : data.x[di]) +
+                "<br>" + "number in bin for this curve: " + (data.y[di] === null ? null : data.y[di]);
+
+            di++;
+        }
+
+        const valueTotal = values.reduce((a,b) => a + b, 0);
+
+        for (var d_idx = 0; d_idx < data.y.length; d_idx++) {
+            data.bin_stats[d_idx].bin_rf = data.bin_stats[d_idx].bin_rf / valueTotal;
+            if (curveInfoParams.yAxisFormat === 'Relative frequency') {
+                // replace the bin number with the bin relative frequency for the plotted statistic
+                data.y[d_idx] = data.bin_stats[d_idx].bin_rf * 100;
+                values[d_idx] = data.y[d_idx];
+            }
+        }
+
+        // get the overall stats for the text output - this uses the means not the stats.
+        const stats = matsDataUtils.get_err(values, indVars, [], appParams);
+        const filteredValues = values.filter(x => x);
+        var miny = Math.min(...filteredValues);
+        var maxy = Math.max(...filteredValues);
+        if (values.indexOf(0) !== -1 && 0 < miny) {
+            miny = 0;
+        }
+        if (values.indexOf(0) !== -1 && 0 > maxy) {
+            maxy = 0;
+        }
+        stats.miny = miny;
+        stats.maxy = maxy;
+        dataset[curveIndex]['glob_stats'] = stats;
+
+        // recalculate axis options after QC and matching
+        const minx = Math.min(...indVars);
+        const maxx = Math.max(...indVars);
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxy : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'];
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'];
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? minx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'];
+
+
+        // recalculate curve annotation after QC and matching
+        if (stats.d_mean !== undefined && stats.d_mean !== null) {
+            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        }
+
+    } // end curves
+
+    // add black 0 line curve
+    // need to define the minimum and maximum x value for making the zero curve
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
+    dataset.push(zeroLine);
+
+    const resultOptions = matsDataPlotOpsUtils.generateEnsembleHistogramPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap);
+    var totalProcessingFinish = moment();
+    bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
+        begin: bookkeepingParams.totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(bookkeepingParams.totalProcessingStart)).asSeconds() + ' seconds'
+    };
+
+    // pass result to client-side plotting functions
+    return {
+        error: error,
+        data: dataset,
+        options: resultOptions,
+        basis: {
+            plotParams: plotParams,
+            queries: bookkeepingParams.dataRequests
+        }
+    };
+};
+
 const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams) {
     var error = "";
     var curvesLengthSoFar = 0;
@@ -675,7 +811,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
     curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['xmax'] = xmax;
     curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['ymin'] = ymin;
     curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['ymax'] = ymax;
-    const resultOptions = matsDataPlotOpsUtils.generateHistogramPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, plotBins);
+    const resultOptions = matsDataPlotOpsUtils.generateHistogramPlotOptions(curveInfoParams.curves, curveInfoParams.axisMap, plotBins);
     var totalProcessingFinish = moment();
     bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
         begin: bookkeepingParams.totalProcessingStart.format(),
@@ -765,6 +901,7 @@ export default matsDataProcessUtils = {
     processDataReliability: processDataReliability,
     processDataROC: processDataROC,
     processDataHistogram: processDataHistogram,
+    processDataEnsembleHistogram: processDataEnsembleHistogram,
     processDataContour: processDataContour
 
 }

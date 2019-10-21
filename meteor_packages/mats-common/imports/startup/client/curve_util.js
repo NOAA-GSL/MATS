@@ -878,6 +878,54 @@ const showHistogramFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a histogram
+const showEnsembleHistogramFace = function () {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.ensembleHistogram).checked === true) {
+        var faceOptions = {
+            'curve-dates': 'block',
+            'dates': 'none',
+            'region': 'block',
+            'statistic': 'none',
+            'threshold': 'block',
+            'level': 'block',
+            'forecast-length': 'block',
+            'dieoff-type': 'none',
+            'average': 'none',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'block',
+            'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none',
+            'significance': 'none'
+        };
+        const faceSelectors = Object.keys(faceOptions);
+        var elem;
+        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
+            elem = document.getElementById(faceSelectors[fidx] + '-item');
+            if (elem && elem.style) {
+                elem.style.display = faceOptions[faceSelectors[fidx]];
+            }
+        }
+        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.ensembleHistogram);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
 // method to display the appropriate selectors for a contour plot
 const showContourFace = function () {
     // move dates selector to plot parameters - one date range for all curves
@@ -1172,6 +1220,7 @@ export default matsCurveUtils = {
     showROCFace: showROCFace,
     showMapFace: showMapFace,
     showHistogramFace: showHistogramFace,
+    showEnsembleHistogramFace: showEnsembleHistogramFace,
     showContourFace: showContourFace,
     get_err: get_err,
     getPlotResultData: getPlotResultData,

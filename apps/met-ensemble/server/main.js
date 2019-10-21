@@ -884,6 +884,24 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.ensembleHistogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ', '],
+                ['level: ', 'level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.reliability,
             textPattern: [
                 ['', 'label', ': '],
@@ -957,6 +975,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.histogram,
             graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.ensembleHistogram,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataEnsembleHistogram",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({

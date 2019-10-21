@@ -44,6 +44,7 @@ class QueryUtil:
             "maxDate": 0,
             "n": 0
         },
+        "bin_stats": [],
         "xmin": sys.float_info.max,
         "xmax": -1 * sys.float_info.max,
         "ymin": sys.float_info.max,
@@ -560,6 +561,42 @@ class QueryUtil:
         # if we do have the data we expect, return the requested statistic
         return stat, sub_levs, sub_secs, sub_values
 
+    def get_ens_hist_stat(self, row, has_levels):
+        try:
+            # get all of the sub-values for each time
+            stat = float(row['bin_count']) if float(row['bin_count']) > -1 else 'null'
+            sub_data = str(row['sub_data']).split(',')
+            sub_values = []
+            sub_total = []
+            sub_secs = []
+            sub_levs = []
+            for sub_datum in sub_data:
+                sub_datum = sub_datum.split(';')
+                sub_values.append(float(sub_datum[0]) if float(sub_datum[0]) != -9999 else np.nan)
+                sub_total.append(float(sub_datum[1]) if float(sub_datum[1]) != -9999 else np.nan)
+                sub_secs.append(float(sub_datum[2]) if float(sub_datum[2]) != -9999 else np.nan)
+                if len(sub_datum) > 3:
+                    if self.is_number(sub_datum[3]):
+                        sub_levs.append(int(sub_datum[3]) if float(sub_datum[0]) != -9999 else np.nan)
+                    else:
+                        sub_levs.append(sub_datum[3])
+            sub_values = np.asarray(sub_values)
+            sub_total = np.asarray(sub_total)
+            sub_secs = np.asarray(sub_secs)
+            if len(sub_levs) == 0:
+                sub_levs = np.empty(len(sub_secs))
+            else:
+                sub_levs = np.asarray(sub_levs)
+
+        except KeyError as e:
+            self.error = "Error parsing query data. The expected fields don't seem to be present " \
+                         "in the results cache: " + str(e)
+            # if we don't have the data we expect just stop now and return empty data objects
+            return np.nan, np.empty(0), np.empty(0), np.empty(0)
+
+        # if we do have the data we expect, return the requested statistic
+        return stat, sub_levs, sub_secs, sub_values
+
     def get_ens_stat(self, plot_type, forecast_total, observed_total, on_all, oy_all, threshold_all, total_times,
                      total_values):
         # initialize return variables
@@ -853,8 +890,10 @@ class QueryUtil:
             elif plot_type == 'DailyModelCycle' or plot_type == 'TimeSeries':
                 ind_var = int(row['avtime']) * 1000
             elif plot_type == 'DieOff':
-                ind_var = int(row['avtime'])
+                ind_var = int(row['fcst_lead'])
                 ind_var = ind_var if ind_var % 10000 != 0 else ind_var / 10000
+            elif plot_type == 'Threshold':
+                ind_var = float(row['thresh'])
             else:
                 ind_var = int(row['avtime'])
 
@@ -1046,6 +1085,73 @@ class QueryUtil:
         if has_levels:
             self.data['subLevs'] = [item for sublist in sub_levs_all for item in sublist]
 
+    # function for parsing the data returned by an ensemble histogram query
+    def parse_query_data_ensemble_histogram(self, cursor, has_levels):
+        # initialize local variables
+        bins = []
+        bin_counts = []
+        sub_vals_all = []
+        sub_secs_all = []
+        sub_levs_all = []
+
+        # get query data
+        query_data = cursor.fetchall()
+
+        # loop through the query results and store the returned values
+        for row in query_data:
+            data_exists = row['bin'] != "null" and row['bin'] != "NULL" and row['bin_count'] != "null" and row['bin_count'] != "NULL"
+
+            if data_exists:
+                bin_number = int(row['bin'])
+                bin_count = int(row['bin_count'])
+                self.n0.append(int(row['N0']))
+                self.n_times.append(int(row['N_times']))
+
+                # this function deals with rhist/phist/relp and rhist_rank/phist_bin/relp_ens tables
+                stat, sub_levs, sub_secs, sub_values = self.get_ens_hist_stat(row, has_levels)
+                if stat == 'null' or not self.is_number(stat):
+                    # there's bad data at this point
+                    bins.append(bin_number)
+                    bin_counts.append(0)
+                    sub_vals_all.append([])
+                    sub_secs_all.append([])
+                    if has_levels:
+                        sub_levs_all.append([])
+
+                else:
+                    list_vals = sub_values.tolist()
+                    list_secs = sub_secs.tolist()
+                    if has_levels:
+                        list_levs = sub_levs.tolist()
+
+                    # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
+                    bad_value_indices = [index for index, value in enumerate(list_vals) if not self.is_number(value)]
+                    for bad_value_index in sorted(bad_value_indices, reverse=True):
+                        del list_vals[bad_value_index]
+                        del list_secs[bad_value_index]
+                        if has_levels:
+                            del list_levs[bad_value_index]
+
+                    # store parsed data
+                    bins.append(bin_number)
+                    bin_counts.append(bin_count)
+                    sub_vals_all.append(list_vals)
+                    sub_secs_all.append(list_secs)
+                    if has_levels:
+                        sub_levs_all.append(list_levs)
+
+        # Finalize data structure
+        if len(bins) > 0:
+            self.data['x'] = bins
+            self.data['y'] = bin_counts
+            self.data['subVals'] = sub_vals_all
+            self.data['subSecs'] = sub_secs_all
+            self.data['subLevs'] = sub_levs_all
+            self.data['xmax'] = max(bins)
+            self.data['xmin'] = min(bins)
+            self.data['ymax'] = max(bin_counts)
+            self.data['ymin'] = 0
+
     # function for parsing the data returned by an ensemble query
     def parse_query_data_ensemble(self, cursor, plot_type):
         # initialize local variables
@@ -1222,35 +1328,38 @@ class QueryUtil:
                     self.parse_query_data_contour(cursor, stat_line_type, statistic, has_levels)
                 elif plot_type == 'Reliability' or plot_type == 'ROC':
                     self.parse_query_data_ensemble(cursor, plot_type)
+                elif plot_type == 'EnsembleHistogram':
+                    self.parse_query_data_ensemble_histogram(cursor, has_levels)
                 else:
                     self.parse_query_data_specialty_curve(cursor, stat_line_type, statistic, plot_type, has_levels,
                                                           hide_gaps, completeness_qc_param)
 
     # makes sure all expected options were indeed passed in
     def validate_options(self, options):
-        assert True, options.host != None and options.port != None and options.user != None and \
-                     options.password != None and options.database != None and options.statement != None and \
-                     options.statLineType != None and options.statistic != None and options.plotType != None and \
-                     options.hasLevels != None and options.hideGaps != None and \
-                     options.completenessQCParam != None and options.vts != None
+        assert True, options.host is not None and options.port is not None and options.user is not None \
+                     and options.password is not None and options.database is not None \
+                     and options.statement is not None and options.stat_line_type is not None \
+                     and options.statistic is not None and options.plot_type is not None \
+                     and options.has_levels is not None and options.hide_gaps is not None \
+                     and options.completeness_qc_param is not None and options.vts is not None
 
     # process 'c' style options - using getopt - usage describes options
     def get_options(self, args):
         usage = ["(h)ost=", "(P)ort=", "(u)ser=", "(p)assword=", "(d)atabase=", "(q)uery=",
-                 "stat(L)ineType=", "(s)tatistic=", "plot(t)ype=", "has(l)evels=", "hide(g)aps=",
-                 "(c)ompletenessQCParam=", "(v)ts="]
+                 "stat_(L)ine_type=", "(s)tatistic=", "plot_(t)ype=", "has_(l)evels=", "hide_(g)aps=",
+                 "(c)ompleteness_qc_param=", "(v)ts="]
         host = None
         port = None
         user = None
         password = None
         database = None
         statement = None
-        statLineType = None
+        stat_line_type = None
         statistic = None
-        plotType = None
-        hasLevels = None
-        hideGaps = None
-        completenessQCParam = None
+        plot_type = None
+        has_levels = None
+        hide_gaps = None
+        completeness_qc_param = None
         vts = None
 
         try:
@@ -1277,26 +1386,26 @@ class QueryUtil:
             elif o == "-q":
                 statement = a
             elif o == "-L":
-                statLineType = a
+                stat_line_type = a
             elif o == "-s":
                 statistic = a
             elif o == "-t":
-                plotType = a
+                plot_type = a
             elif o == "-l":
-                hasLevels = a
+                has_levels = a
             elif o == "-g":
-                hideGaps = a
+                hide_gaps = a
             elif o == "-c":
-                completenessQCParam = a
+                completeness_qc_param = a
             elif o == "-v":
                 vts = a
             else:
                 assert False, "unhandled option"
         # make sure none were left out...
-        assert True, host != None and port != None and user != None and password != None \
-                     and database != None and statement != None and statLineType != None and statistic != None \
-                     and plotType != None and hasLevels != None and hideGaps != None and completenessQCParam != None \
-                     and vts != None
+        assert True, host is not None and port is not None and user is not None and password is not None \
+                     and database is not None and statement is not None and stat_line_type is not None \
+                     and statistic is not None and plot_type is not None and has_levels is not None \
+                     and hide_gaps is not None and completeness_qc_param is not None and vts is not None
         options = {
             "host": host,
             "port": port,
@@ -1304,12 +1413,12 @@ class QueryUtil:
             "password": password,
             "database": database,
             "statement": statement,
-            "statLineType": statLineType,
+            "stat_line_type": stat_line_type,
             "statistic": statistic,
-            "plotType": plotType,
-            "hasLevels": True if hasLevels == 'true' else False,
-            "hideGaps": True if hideGaps == 'true' else False,
-            "completenessQCParam": float(completenessQCParam),
+            "plot_type": plot_type,
+            "has_levels": True if has_levels == 'true' else False,
+            "hide_gaps": True if hide_gaps == 'true' else False,
+            "completeness_qc_param": float(completeness_qc_param),
             "vts": vts
         }
         return options
@@ -1322,9 +1431,9 @@ class QueryUtil:
                               cursorclass=pymysql.cursors.DictCursor)
         with closing(cnx.cursor()) as cursor:
             cursor.execute('set group_concat_max_len = 4294967295')
-            self.query_db(cursor, options["statement"], options["statLineType"], options["statistic"],
-                          options["plotType"], options["hasLevels"], options["hideGaps"],
-                          options["completenessQCParam"], options["vts"])
+            self.query_db(cursor, options["statement"], options["stat_line_type"], options["statistic"],
+                          options["plot_type"], options["has_levels"], options["hide_gaps"],
+                          options["completeness_qc_param"], options["vts"])
         cnx.close()
 
 

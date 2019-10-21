@@ -19,7 +19,7 @@ dataROC = function (plotParams, plotFunction) {
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
         "hideGaps": plotParams['noGapsCheck'],
-        "hasLevels": false
+        "hasLevels": true
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
@@ -137,9 +137,7 @@ dataROC = function (plotParams, plotFunction) {
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{database}}', database);
-            statement = statement.replace('{{database}}', database);
-            statement = statement.replace('{{database}}', database);
+            statement = statement.split('{{database}}').join(database);
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{regionsClause}}', regionsClause);
             statement = statement.replace('{{fromSecs}}', fromSecs);

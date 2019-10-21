@@ -76,7 +76,7 @@ dataThreshold = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.trsh as avtime, " +
+            var statement = "SELECT m0.trsh as thresh, " +
                 "count(distinct m0.time) as N_times, " +
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +
@@ -88,8 +88,8 @@ dataThreshold = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "and m0.hit+m0.fa+m0.miss+m0.cn > 0 " +
                 "and m0.fcst_len = '{{forecastLength}}' " +
-                "group by avtime " +
-                "order by avtime" +
+                "group by thresh " +
+                "order by thresh" +
                 ";";
 
             statement = statement.replace('{{fromSecs}}', fromSecs);

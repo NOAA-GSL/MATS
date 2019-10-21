@@ -19,7 +19,7 @@ dataReliability = function (plotParams, plotFunction) {
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
         "hideGaps": plotParams['noGapsCheck'],
-        "hasLevels": false
+        "hasLevels": true
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
@@ -32,13 +32,11 @@ dataReliability = function (plotParams, plotFunction) {
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
-    var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = -1 * Number.MAX_VALUE;
     var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -137,9 +135,7 @@ dataReliability = function (plotParams, plotFunction) {
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{database}}', database);
-            statement = statement.replace('{{database}}', database);
-            statement = statement.replace('{{database}}', database);
+            statement = statement.split('{{database}}').join(database);
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{regionsClause}}', regionsClause);
             statement = statement.replace('{{fromSecs}}', fromSecs);
@@ -236,8 +232,6 @@ dataReliability = function (plotParams, plotFunction) {
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
-        "idealValues": idealValues,
-        "utcCycleStarts": utcCycleStarts,
         "axisMap": axisMap,
         "xmax": xmax,
         "xmin": xmin

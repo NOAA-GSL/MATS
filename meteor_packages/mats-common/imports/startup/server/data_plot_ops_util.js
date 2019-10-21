@@ -7,7 +7,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment'
 
 // sets plot options for timeseries plots
-const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
+const generateSeriesPlotOptions = function (axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
 
@@ -115,7 +115,7 @@ const generateSeriesPlotOptions = function (dataset, axisMap, errorMax) {
 };
 
 // sets plot options for profile plots
-const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
+const generateProfilePlotOptions = function (axisMap, errorMax) {
     var ymin = axisMap[Object.keys(axisMap)[0]].ymin;
     var ymax = axisMap[Object.keys(axisMap)[0]].ymax;
     const xAxisNumber = Object.keys(axisMap).length;
@@ -234,7 +234,7 @@ const generateProfilePlotOptions = function (dataset, axisMap, errorMax) {
 };
 
 // sets plot options for dieoff plots
-const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
+const generateDieoffPlotOptions = function (axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
 
@@ -345,16 +345,17 @@ const generateDieoffPlotOptions = function (dataset, axisMap, errorMax) {
 const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
+    const appName = matsCollections.appName.findOne({}).app;
     var xLabel;
-    if (matsCollections.appName.findOne({}).app.includes("Precip") || matsCollections.appName.findOne({}).app.includes("precip")){
+    if (appName.includes("Precip") || appName.includes("precip")){
         xLabel = "Threshold (in)";
-    } else if (matsCollections.appName.findOne({}).app.includes("Reflectivity") || matsCollections.appName.findOne({}).app.includes("reflectivity")) {
+    } else if (appName.includes("Reflectivity") || appName.includes("reflectivity")) {
         xLabel = "Threshold (dBZ)";
-    } else if (matsCollections.appName.findOne({}).app === "echotop" || matsCollections.appName.findOne({}).app.includes("ceiling")) {
+    } else if (appName === "echotop" || appName.includes("ceiling")) {
         xLabel = "Threshold (kft)";
-    }  else if (matsCollections.appName.findOne({}).app === "vil") {
+    }  else if (appName === "vil") {
         xLabel = "Threshold (kg/m2)";
-    }  else if (matsCollections.appName.findOne({}).app.includes("visibility")) {
+    }  else if (appName.includes("visibility")) {
         xLabel = "Threshold (mi)";
     } else {
         xLabel = "Threshold";
@@ -473,7 +474,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
 };
 
 // sets plot options for valid time plots
-const generateValidTimePlotOptions = function (dataset, axisMap, errorMax) {
+const generateValidTimePlotOptions = function (axisMap, errorMax) {
     var xmin = 0;
     var xmax = 23;
 
@@ -701,7 +702,7 @@ const generateMapPlotOptions = function () {
 };
 
 // sets plot options for histograms
-const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBins) {
+const generateHistogramPlotOptions = function (curves, axisMap, plotBins) {
     const axisKey = curves[0].axisKey;
     const axisLabel = axisMap[axisKey].axisLabel;
     var ymin = axisMap[axisKey].ymin;
@@ -735,6 +736,65 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         mirror: true,
         tickvals: plotBins.binMeans,
         ticktext: plotBins.binLabels,
+    };
+
+    // y-axis options
+    layout['yaxis'] = {
+        title: axisLabel,
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        range: [ymin - yPad, ymax + 8 * yPad]  // need to allow room at the top for the legend
+    };
+
+    return layout;
+};
+
+// sets plot options for histograms
+const generateEnsembleHistogramPlotOptions = function (dataset, curves, axisMap) {
+    const axisKey = curves[0].axisKey;
+    const axisLabel = axisMap[axisKey].axisLabel;
+    var ymin = axisMap[axisKey].ymin;
+    var ymax = axisMap[axisKey].ymax;
+    const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
+
+    // get actual bins from the query to place on the x-axis
+    var tickvals = [];
+    for (var didx = 0; didx < dataset.length; didx++) {
+         tickvals = _.union(tickvals, dataset[didx].x);
+    }
+    tickvals = tickvals.sort(function(a, b){return a - b});
+
+
+    // overall plot options
+    var layout = {
+        margin: {
+            l: 80,
+            r: 80,
+            b: 80,
+            t: 20,
+            pad: 4
+        },
+        zeroline: false,
+        bargap: 0.25,
+        barmode: 'group',
+        hovermode: 'closest',
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1}
+    };
+
+    // x-axis options
+    layout['xaxis'] = {
+        title: 'Bin',
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 14},
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        tickvals: tickvals,
+        ticktext: tickvals.map(String),
     };
 
     // y-axis options
@@ -811,6 +871,7 @@ export default matsDataPlotOpsUtils = {
     generateROCPlotOptions: generateROCPlotOptions,
     generateMapPlotOptions: generateMapPlotOptions,
     generateHistogramPlotOptions: generateHistogramPlotOptions,
+    generateEnsembleHistogramPlotOptions: generateEnsembleHistogramPlotOptions,
     generateContourPlotOptions: generateContourPlotOptions
 
 }

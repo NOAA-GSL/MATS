@@ -101,6 +101,13 @@ dataSeries = function (plotParams, plotFunction) {
                 return "'" + l + "'";
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        } else {
+            // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
+            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
         var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
@@ -141,14 +148,13 @@ dataSeries = function (plotParams, plotFunction) {
                 "and h.fcst_var = '{{variable}}' " +
                 "{{thresholdClause}} " +
                 "{{levelsClause}} " +
-                "and ld.stat_header_id = h.stat_header_id " +
+                "and h.stat_header_id = ld.stat_header_id " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
             statement = statement.replace('{{average}}', average);
-            statement = statement.replace('{{database}}', database);
-            statement = statement.replace('{{database}}', database);
+            statement = statement.split('{{database}}').join(database);
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{regionsClause}}', regionsClause);
             statement = statement.replace('{{fromSecs}}', fromSecs);
@@ -159,7 +165,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{statisticsClause}}', statisticsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
-            statement = statement.replace('{{lineDataType}}', lineDataType);
+            statement = statement.split('{{lineDataType}}').join(lineDataType);
             dataRequests[curve.label] = statement;
             // console.log(statement);
 

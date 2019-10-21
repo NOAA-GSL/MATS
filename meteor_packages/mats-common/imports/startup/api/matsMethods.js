@@ -630,6 +630,36 @@ const _getFlattenedResultData = function (rk, p, np) {
                         returnData.data[data[ci].label] = curveData;
                     }
                     break;
+                case matsTypes.PlotTypes.ensembleHistogram:
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = {};  // map of arrays of maps
+
+                    for (var ci = 0; ci < data.length; ci++) { // for each curve
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
+                        }
+                        var stats = {};
+                        stats['label'] = data[ci].label;
+                        stats['mean'] = data[ci].glob_stats.d_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.sd;
+                        stats['n'] = data[ci].glob_stats.n_good;
+                        stats['minimum'] = data[ci].glob_stats.minVal;
+                        stats['maximum'] = data[ci].glob_stats.maxVal;
+                        returnData.stats[data[ci].label] = stats;
+
+                        var curveData = [];  // map of maps
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) {   // for each datapoint
+                            var curveDataElement = {};
+                            curveDataElement[data[ci].label + ' bin'] = data[ci].x[cdi];
+                            curveDataElement['n'] = data[ci].bin_stats[cdi].bin_n;
+                            curveDataElement['bin rel freq'] = data[ci].bin_stats[cdi].bin_rf;
+                            curveData.push(curveDataElement);
+                        }
+                        returnData.data[data[ci].label] = curveData;
+                    }
+                    break;
                 case matsTypes.PlotTypes.contour:
                 case matsTypes.PlotTypes.contourDiff:
                     var returnData = {};

@@ -95,7 +95,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.fcst_len AS avtime, " +
+            var statement = "SELECT m0.fcst_len AS fcst_lead, " +
                 "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
                 "min(m0.valid_day+3600*m0.hour) as min_secs, " +
                 "max(m0.valid_day+3600*m0.hour) as max_secs, " +
@@ -106,8 +106,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "and m0.vgtyp IN({{vgtyp}}) " +
                 "{{utcCycleStartClause}} " +
-                "group by avtime " +
-                "order by avtime;";
+                "group by fcst_lead " +
+                "order by fcst_lead;";
 
             statement = statement.replace('{{vgtyp}}', vgtyp);
             statement = statement.replace('{{model}}', model);

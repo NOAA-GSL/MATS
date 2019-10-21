@@ -755,6 +755,10 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
             independentVar = Number((rows[rowIndex].avVal).toString().replace('P', ''));
         } else if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
             independentVar = Number(rows[rowIndex].avtime) * 1000;
+        } else if (plotType === matsTypes.PlotTypes.dieoff) {
+            independentVar = Number(rows[rowIndex].fcst_lead);
+        } else if (plotType === matsTypes.PlotTypes.threshold) {
+            independentVar = Number(rows[rowIndex].thresh);
         } else {
             independentVar = Number(rows[rowIndex].avtime);
         }

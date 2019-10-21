@@ -252,6 +252,9 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.histogram:
                                 matsCurveUtils.showHistogramFace();
                                 break;
+                            case matsTypes.PlotTypes.ensembleHistogram:
+                                matsCurveUtils.showEnsembleHistogramFace();
+                                break;
                             case matsTypes.PlotTypes.contour:
                             case matsTypes.PlotTypes.contourDiff:
                                 matsCurveUtils.showContourFace();
@@ -456,6 +459,9 @@ Template.plotList.onRendered( function() {
             break;
         case matsTypes.PlotTypes.histogram:
             matsCurveUtils.showHistogramFace();
+            break;
+        case matsTypes.PlotTypes.ensembleHistogram:
+            matsCurveUtils.showEnsembleHistogramFace();
             break;
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
