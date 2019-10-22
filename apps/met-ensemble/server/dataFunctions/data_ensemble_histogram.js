@@ -36,7 +36,8 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
 
     // process user axis customizations
-    const yAxisFormat = matsDataUtils.setHistogramParameters(plotParams).yAxisFormat;
+    const yAxisFormat = plotParams['histogram-yaxis-controls'];
+    const histogramType = plotParams['histogram-type-controls'];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -55,9 +56,22 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
         const variable = curve['variable'];
-        const statistic = "None";
+        const statistic = histogramType;    // histogramType isn't really a statistic, but it's a good way to pass the type of histogram to the query function.
         const statLineType = 'ensemble';
-        const lineDataType = 'line_data_rhist';
+        var lineDataType;
+        var lineDataSuffix;
+        if (histogramType === 'Rank Histogram') {
+            lineDataType = 'line_data_rhist';
+            lineDataSuffix = 'rank';
+        } else if (histogramType === 'Probability Integral Transform Histogram') {
+            lineDataType = 'line_data_phist';
+            lineDataSuffix = 'bin';
+        } else if (histogramType === 'Relative Position Histogram') {
+            lineDataType = 'line_data_relp';
+            lineDataSuffix = 'ens';
+        } else {
+            throw new Error("Unrecognized histogram type.");
+        }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -105,9 +119,6 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
         // units (axisKey) it will use the same axis.
         // Histograms should have everything under the same axisKey.
         var axisKey = yAxisFormat;
-        if (yAxisFormat === 'Relative frequency') {
-            axisKey = axisKey + " (x100)"
-        }
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;
@@ -119,11 +130,11 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "sum(ldr.rank_i) as bin_count, " +
-                "group_concat(ldr.rank_i, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
+                "sum(ldr.{{lineDataSuffix}}_i) as bin_count, " +
+                "group_concat(ldr.{{lineDataSuffix}}_i, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld, " +
-                "{{database}}.{{lineDataType}}_rank ldr " +
+                "{{database}}.{{lineDataType}}_{{lineDataSuffix}} ldr " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
                 "{{regionsClause}} " +
@@ -149,6 +160,7 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.split('{{lineDataType}}').join(lineDataType);
+            statement = statement.split('{{lineDataSuffix}}').join(lineDataSuffix);
             dataRequests[curve.label] = statement;
             // console.log(statement);
 

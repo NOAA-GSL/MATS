@@ -1086,7 +1086,7 @@ class QueryUtil:
             self.data['subLevs'] = [item for sublist in sub_levs_all for item in sublist]
 
     # function for parsing the data returned by an ensemble histogram query
-    def parse_query_data_ensemble_histogram(self, cursor, has_levels):
+    def parse_query_data_ensemble_histogram(self, cursor, statistic, has_levels):
         # initialize local variables
         bins = []
         bin_counts = []
@@ -1139,6 +1139,10 @@ class QueryUtil:
                     sub_secs_all.append(list_secs)
                     if has_levels:
                         sub_levs_all.append(list_levs)
+
+        if statistic == "Probability Integral Transform Histogram":
+            bin_num = len(bins)
+            bins[:] = [x / bin_num for x in bins]
 
         # Finalize data structure
         if len(bins) > 0:
@@ -1329,7 +1333,7 @@ class QueryUtil:
                 elif plot_type == 'Reliability' or plot_type == 'ROC':
                     self.parse_query_data_ensemble(cursor, plot_type)
                 elif plot_type == 'EnsembleHistogram':
-                    self.parse_query_data_ensemble_histogram(cursor, has_levels)
+                    self.parse_query_data_ensemble_histogram(cursor, statistic, has_levels)
                 else:
                     self.parse_query_data_specialty_curve(cursor, stat_line_type, statistic, plot_type, has_levels,
                                                           hide_gaps, completeness_qc_param)

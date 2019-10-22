@@ -611,7 +611,7 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
             data.bin_stats[d_idx].bin_rf = data.bin_stats[d_idx].bin_rf / valueTotal;
             if (curveInfoParams.yAxisFormat === 'Relative frequency') {
                 // replace the bin number with the bin relative frequency for the plotted statistic
-                data.y[d_idx] = data.bin_stats[d_idx].bin_rf * 100;
+                data.y[d_idx] = data.bin_stats[d_idx].bin_rf;
                 values[d_idx] = data.y[d_idx];
             }
         }
