@@ -580,7 +580,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
         var avTime = avSeconds * 1000;
         xmin = avTime < xmin ? avTime : xmin;
         xmax = avTime > xmax ? avTime : xmax;
-        var stat = rows[rowIndex].stat;
+        var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
         N0.push(rows[rowIndex].N0);             // number of values that go into a time series point
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a time series point
 
@@ -596,7 +596,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
         var sub_values = [];
         var sub_secs = [];
         var sub_levs = [];
-        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_data !== undefined) {
+        if (stat !== null && rows[rowIndex].sub_data !== undefined) {
             try {
                 var sub_data = rows[rowIndex].sub_data.toString().split(',');
                 var curr_sub_data;
@@ -618,7 +618,6 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
                 throw new Error(e.message);
             }
         } else {
-            stat = null;
             sub_values = NaN;
             sub_secs = NaN;
             if (hasLevels) {
@@ -762,14 +761,14 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
         } else {
             independentVar = Number(rows[rowIndex].avtime);
         }
-        var stat = rows[rowIndex].stat;
+        var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
         N0.push(rows[rowIndex].N0);             // number of values that go into a point on the graph
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a point on the graph
 
         var sub_stats = [];
         var sub_secs = [];
         var sub_levs = [];
-        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_data !== undefined) {
+        if (stat !== null && rows[rowIndex].sub_data !== undefined) {
             try {
                 var sub_data = rows[rowIndex].sub_data.toString().split(',');
                 var curr_sub_data;
@@ -791,7 +790,6 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
                 throw new Error(e.message);
             }
         } else {
-            stat = null;
             sub_stats = NaN;
             sub_secs = NaN;
             if (hasLevels) {
@@ -934,11 +932,11 @@ const parseQueryDataHistogram = function (rows, d, appParams) {
 
     // parse the data returned from the query
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-        var stat = rows[rowIndex].stat;
+        var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
         var sub_stats = [];
         var sub_secs = [];
         var sub_levs = [];
-        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_data !== undefined) {
+        if (stat !== null && rows[rowIndex].sub_data !== undefined) {
             try {
                 var sub_data = rows[rowIndex].sub_data.toString().split(',');
                 var curr_sub_data;
@@ -1021,12 +1019,12 @@ const parseQueryDataContour = function (rows, d) {
         var rowXVal = rows[rowIndex].xVal;
         var rowYVal = rows[rowIndex].yVal;
         var statKey = rowXVal.toString() + '_' + rowYVal.toString();
-        var stat = rows[rowIndex].stat;
+        var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
         var stdev = rows[rowIndex].stdev !== undefined ? rows[rowIndex].stdev : null;
         var n = rows[rowIndex].sub_data !== undefined && rows[rowIndex].sub_data !== null ? rows[rowIndex].sub_data.toString().split(',').length : 0;
         var minDate = rows[rowIndex].min_secs;
         var maxDate = rows[rowIndex].max_secs;
-        if (stat === undefined || stat === null || stat === 'NULL') {
+        if (stat === undefined || stat === null) {
             stat = null;
             stdev = 0;
             n = 0;

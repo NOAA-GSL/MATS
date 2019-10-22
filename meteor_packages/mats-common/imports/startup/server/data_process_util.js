@@ -57,14 +57,13 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
             if (appName !== "surfrad" ||
                 !(appName === "surfrad" &&
-                    (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') &&
-                    !appParams.matching)) {
-                if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
+                    (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)'))) {
+                if (diffFrom === null || diffFrom === undefined) {
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
                     data.y[di] = errorResult.d_mean;
                 } else {
                     if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
-                        // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                        // make sure that the diff curve actually shows the difference. Otherwise outlier filtering etc. can make it slightly off.
                         data.y[di] = dataset[diffFrom[0]].y[di] - dataset[diffFrom[1]].y[di];
                     } else {
                         // keep the null for no data at this point
@@ -270,12 +269,12 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.x[di];
-            if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
+            if (diffFrom === null || diffFrom === undefined) {
                 // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data.x[di] = errorResult.d_mean;
             } else {
                 if (dataset[diffFrom[0]].x[di] !== null && dataset[diffFrom[1]].x[di] !== null) {
-                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                    // make sure that the diff curve actually shows the difference. Otherwise outlier filtering etc. can make it slightly off.
                     data.x[di] = dataset[diffFrom[0]].x[di] - dataset[diffFrom[1]].x[di];
                 } else {
                     // keep the null for no data at this point
@@ -549,6 +548,7 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
 
     // calculate data statistics (including error bars) for each curve
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
+        axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
         var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
         var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
@@ -570,12 +570,12 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.y[di];
-            if (diffFrom === null || diffFrom === undefined || !appParams.matching) {
+            if (diffFrom === null || diffFrom === undefined) {
                 // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data.y[di] = errorResult.sum;
             } else {
                 if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
-                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                    // make sure that the diff curve actually shows the difference. Otherwise outlier filtering etc. can make it slightly off.
                     data.y[di] = dataset[diffFrom[0]].y[di] - dataset[diffFrom[1]].y[di];
                 } else {
                     // keep the null for no data at this point
@@ -638,7 +638,6 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'];
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? minx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'];
-
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
@@ -811,6 +810,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
     curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['xmax'] = xmax;
     curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['ymin'] = ymin;
     curveInfoParams.axisMap[curveInfoParams.curves[0].axisKey]['ymax'] = ymax;
+
     const resultOptions = matsDataPlotOpsUtils.generateHistogramPlotOptions(curveInfoParams.curves, curveInfoParams.axisMap, plotBins);
     var totalProcessingFinish = moment();
     bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
