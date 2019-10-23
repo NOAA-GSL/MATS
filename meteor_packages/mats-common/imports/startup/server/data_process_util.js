@@ -57,13 +57,14 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
             if (appName !== "surfrad" ||
                 !(appName === "surfrad" &&
-                    (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)'))) {
-                if (diffFrom === null || diffFrom === undefined) {
+                    (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') &&
+                    !appParams.matching)) {
+                if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
                     data.y[di] = errorResult.d_mean;
                 } else {
                     if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
-                        // make sure that the diff curve actually shows the difference. Otherwise outlier filtering etc. can make it slightly off.
+                        // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
                         data.y[di] = dataset[diffFrom[0]].y[di] - dataset[diffFrom[1]].y[di];
                     } else {
                         // keep the null for no data at this point
@@ -269,12 +270,12 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.x[di];
-            if (diffFrom === null || diffFrom === undefined) {
+            if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
                 // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data.x[di] = errorResult.d_mean;
             } else {
                 if (dataset[diffFrom[0]].x[di] !== null && dataset[diffFrom[1]].x[di] !== null) {
-                    // make sure that the diff curve actually shows the difference. Otherwise outlier filtering etc. can make it slightly off.
+                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
                     data.x[di] = dataset[diffFrom[0]].x[di] - dataset[diffFrom[1]].x[di];
                 } else {
                     // keep the null for no data at this point
@@ -557,7 +558,7 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
         var values = [];
         var indVars = [];
         var rawStat;
-
+debugger;
         while (di < data.x.length) {
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
@@ -570,7 +571,7 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.y[di];
-            if (diffFrom === null || diffFrom === undefined) {
+            if (diffFrom === null || diffFrom === undefined || !appParams.matching) {
                 // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data.y[di] = errorResult.sum;
             } else {
@@ -605,7 +606,7 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
             di++;
         }
 
-        const valueTotal = values.reduce((a,b) => a + b, 0);
+        const valueTotal = values.reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
 
         for (var d_idx = 0; d_idx < data.y.length; d_idx++) {
             data.bin_stats[d_idx].bin_rf = data.bin_stats[d_idx].bin_rf / valueTotal;
