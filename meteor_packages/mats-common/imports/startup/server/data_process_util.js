@@ -369,7 +369,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     }
 
     // generate plot options
-    const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curveInfoParams.axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(curveInfoParams.axisMap, errorMax);
     var totalProcessingFinish = moment();
     bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
         begin: bookkeepingParams.totalProcessingStart.format(),
