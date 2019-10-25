@@ -131,7 +131,7 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
                 "sum(ldr.{{lineDataSuffix}}_i) as bin_count, " +
-                "group_concat(ldr.{{lineDataSuffix}}_i, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
+                "group_concat(distinct ldr.{{lineDataSuffix}}_i, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld, " +
                 "{{database}}.{{lineDataType}}_{{lineDataSuffix}} ldr " +

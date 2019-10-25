@@ -558,7 +558,7 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
         var values = [];
         var indVars = [];
         var rawStat;
-debugger;
+
         while (di < data.x.length) {
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
@@ -577,7 +577,7 @@ debugger;
             } else {
                 if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
                     // make sure that the diff curve actually shows the difference. Otherwise outlier filtering etc. can make it slightly off.
-                    data.y[di] = dataset[diffFrom[0]].y[di] - dataset[diffFrom[1]].y[di];
+                    data.y[di] = dataset[diffFrom[0]].bin_stats[di].bin_n - dataset[diffFrom[1]].bin_stats[di].bin_n;
                 } else {
                     // keep the null for no data at this point
                     data.y[di] = null;
@@ -601,20 +601,39 @@ debugger;
             // the tooltip is stored in data.text
             data.text[di] = label +
                 "<br>" + "bin: " + (data.x[di] === null ? null : data.x[di]) +
-                "<br>" + "number in bin for this curve: " + (data.y[di] === null ? null : data.y[di]);
+                "<br>" + "number in bin for this curve: " + (data.y[di] === null ? null : Math.round(data.y[di]));
 
             di++;
         }
 
-        const valueTotal = values.reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
+        const valueTotal = values.reduce((a, b) => Math.abs(a) + Math.abs(b), 0);
 
+        // calculate the relative frequency for all the bins.
+        // for diff curves, there's no good way to produce a diff of only matching data, so just diff the two parent curves.
+        var diffIndexVal = 0;
         for (var d_idx = 0; d_idx < data.y.length; d_idx++) {
-            data.bin_stats[d_idx].bin_rf = data.bin_stats[d_idx].bin_rf / valueTotal;
+            if (data.y[d_idx] !== null) {
+                if (diffFrom === null || diffFrom === undefined) {
+                    data.bin_stats[d_idx].bin_rf = data.bin_stats[d_idx].bin_rf / valueTotal;
+                } else {
+                    for (var diffIndex = diffIndexVal; diffIndex < data.x.length; diffIndex++) {
+                        if (dataset[diffFrom[0]].x[d_idx] === dataset[diffFrom[1]].x[diffIndex]) {
+                            data.bin_stats[d_idx].bin_rf = dataset[diffFrom[0]].bin_stats[d_idx].bin_rf - dataset[diffFrom[1]].bin_stats[diffIndex].bin_rf;
+                            diffIndexVal = diffIndex;
+                            break;
+                        }
+                        data.bin_stats[d_idx].bin_rf = null;
+                    }
+                }
+            } else {
+                data.bin_stats[d_idx].bin_rf = null;
+            }
             if (curveInfoParams.yAxisFormat === 'Relative frequency') {
                 // replace the bin number with the bin relative frequency for the plotted statistic
                 data.y[d_idx] = data.bin_stats[d_idx].bin_rf;
                 values[d_idx] = data.y[d_idx];
             }
+            data.text[d_idx] = data.text[d_idx] + "<br>" + "bin rel freq for this curve: " + (data.bin_stats[d_idx].bin_rf === null ? null : data.bin_stats[d_idx].bin_rf.toPrecision(4));
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
