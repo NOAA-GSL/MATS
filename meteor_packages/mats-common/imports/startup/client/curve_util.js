@@ -400,7 +400,6 @@ const showTimeseriesFace = function () {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'block',
             'level': 'block',
@@ -418,8 +417,7 @@ const showTimeseriesFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -449,7 +447,6 @@ const showProfileFace = function () {
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'block',
             'level': 'none',
@@ -467,8 +464,7 @@ const showProfileFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -498,7 +494,6 @@ const showDieOffFace = function () {
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'block',
             'level': 'block',
@@ -516,8 +511,7 @@ const showDieOffFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -551,7 +545,6 @@ const showThresholdFace = function () {
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'none',
             'level': 'block',
@@ -569,8 +562,7 @@ const showThresholdFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -600,7 +592,6 @@ const showValidTimeFace = function () {
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'block',
             'level': 'block',
@@ -618,8 +609,7 @@ const showValidTimeFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -649,7 +639,6 @@ const showDailyModelCycleFace = function () {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'block',
             'level': 'block',
@@ -667,8 +656,7 @@ const showDailyModelCycleFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -698,7 +686,6 @@ const showReliabilityFace = function () {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'region': 'block',
             'statistic': 'none',
             'threshold': 'block',
             'level': 'block',
@@ -715,9 +702,8 @@ const showReliabilityFace = function () {
             'bin-stride': 'none',
             'bin-pivot': 'none',
             'bin-bounds': 'none',
-            'truth': 'none',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'truth': 'block',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -747,7 +733,6 @@ const showROCFace = function () {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'region': 'block',
             'statistic': 'none',
             'threshold': 'block',
             'level': 'block',
@@ -764,9 +749,8 @@ const showROCFace = function () {
             'bin-stride': 'none',
             'bin-pivot': 'none',
             'bin-bounds': 'none',
-            'truth': 'none',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'truth': 'block',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -797,7 +781,6 @@ const showMapFace = function () {
         faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'region': 'none',
             'statistic': 'none',
             'threshold': 'none',
             'level': 'block',
@@ -815,8 +798,7 @@ const showMapFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'none',
-            'sites': 'block',
-            'sitesMap': 'block',
+            'region-type' : 'none',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -846,7 +828,6 @@ const showHistogramFace = function () {
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'block',
             'level': 'block',
@@ -864,8 +845,7 @@ const showHistogramFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -895,7 +875,6 @@ const showEnsembleHistogramFace = function () {
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
-            'region': 'block',
             'statistic': 'none',
             'threshold': 'block',
             'level': 'block',
@@ -913,8 +892,7 @@ const showEnsembleHistogramFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none',
             'significance': 'none'
@@ -946,7 +924,6 @@ const showContourFace = function () {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'block',
             'level': 'block',
@@ -964,8 +941,7 @@ const showContourFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'block',
             'y-axis-parameter': 'block',
             'significance': 'none'
@@ -981,27 +957,6 @@ const showContourFace = function () {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
-        // //need to be consistent with the x and y axis 'hideOtherFor' settings
-        // const xAxisVal = matsParamUtils.getValueForParamName('x-axis-parameter');
-        // const yAxisVal = matsParamUtils.getValueForParamName('y-axis-parameter');
-        // if (xAxisVal === 'Fcst lead time' || yAxisVal === 'Fcst lead time') {
-        //     elem = document.getElementById('forecast-length-item');
-        //     if (elem && elem.style) {
-        //         elem.style.display = 'none';
-        //     }
-        // }
-        // if (xAxisVal === 'Valid UTC hour' || yAxisVal === 'Valid UTC hour') {
-        //     elem = document.getElementById('valid-time-item');
-        //     if (elem && elem.style) {
-        //         elem.style.display = 'none';
-        //     }
-        // }
-        // if (xAxisVal === 'Pressure level' || yAxisVal === 'Pressure level') {
-        //     elem = document.getElementById('level-item');
-        //     if (elem && elem.style) {
-        //         elem.style.display = 'none';
-        //     }
-        // }
         elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "none";
@@ -1022,7 +977,6 @@ const showScatterFace = function () {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'region': 'block',
             'statistic': 'block',
             'threshold': 'block',
             'level': 'block',
@@ -1040,8 +994,7 @@ const showScatterFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'sites' : 'none',
-            'sitesMap' : 'none',
+            'region-type' : 'block',
             'x-axis-parameter': 'none',
             'y-axis-parameter': 'none'
         };
@@ -1076,19 +1029,25 @@ const hideSpinner = function () {
 };
 
 export default matsCurveUtils = {
-    resetScatterApply: resetScatterApply,
-    getUsedLabels: getUsedLabels,
-    getNextCurveLabel: getNextCurveLabel,
-    getNextCurveColor: getNextCurveColor,
-    clearAllUsed: clearAllUsed,
-    clearUsedLabel: clearUsedLabel,
-    clearUsedColor: clearUsedColor,
-    setUsedLabels: setUsedLabels,
-    setUsedColorsAndLabels: setUsedColorsAndLabels,
     addDiffs: addDiffs,
-    removeDiffs: removeDiffs,
     checkDiffs: checkDiffs,
-    showScatterFace: showScatterFace,
+    clearAllUsed: clearAllUsed,
+    clearUsedColor: clearUsedColor,
+    clearUsedLabel: clearUsedLabel,
+    getGraphResult: getGraphResult,
+    getNextCurveColor: getNextCurveColor,
+    getNextCurveLabel: getNextCurveLabel,
+    getPlotResultData: getPlotResultData,
+    getUsedLabels: getUsedLabels,
+    hideSpinner: hideSpinner,
+    removeDiffs: removeDiffs,
+    resetGraphResult: resetGraphResult,
+    resetPlotResultData: resetPlotResultData,
+    resetScatterApply: resetScatterApply,
+    setGraphResult: setGraphResult,
+    setUsedColorsAndLabels: setUsedColorsAndLabels,
+    setUsedLabels: setUsedLabels,
+    showSpinner: showSpinner,
     showTimeseriesFace: showTimeseriesFace,
     showProfileFace: showProfileFace,
     showDieOffFace: showDieOffFace,
@@ -1101,14 +1060,7 @@ export default matsCurveUtils = {
     showHistogramFace: showHistogramFace,
     showEnsembleHistogramFace: showEnsembleHistogramFace,
     showContourFace: showContourFace,
-    getPlotResultData: getPlotResultData,
-    //setPlotResultData: setPlotResultData,
-    resetPlotResultData: resetPlotResultData,
-    getGraphResult: getGraphResult,
-    setGraphResult: setGraphResult,
-    resetGraphResult: resetGraphResult,
-    showSpinner: showSpinner,
-    hideSpinner: hideSpinner,
+    showScatterFace: showScatterFace,
 };
 
             

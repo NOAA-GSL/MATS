@@ -45,12 +45,13 @@ Template.plotType.events({
     'click .plot-type-TimeSeries': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'dates' parameter
+            // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
+            // display appropriate selectors for timeseries
             matsCurveUtils.showTimeseriesFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
+            // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
             if (!oldDatesExist) {
                 const curveDate = $('#controlButton-curve-dates-value').text();
                 matsParamUtils.setValueTextForParamName('dates', curveDate)
@@ -58,27 +59,32 @@ Template.plotType.events({
             if (curves.length > 0) {
                 // initialize parameters that may not have been used yet
                 for (var ci = 0; ci < curves.length; ci++) {
-                    // the average may not have been carried over from other curve types so let it default
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
+                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
+                    }
+                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
+                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
+                    }
                     if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name: 'average'}) && matsCollections.CurveParams.findOne({name: 'average'}).default) {
                         curves[ci]['average'] = matsCollections.CurveParams.findOne({name: 'average'}).default;
                     }
                     if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
                         curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
-                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
-                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
+                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
                     }
-                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
-                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
                     }
                     if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
                         curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
-                    }
-                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
-                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -92,12 +98,12 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the timeseries face
-                // see if the previous plot type also used the 'dates' parameter
+                // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
+                // display appropriate selectors for timeseries
                 matsCurveUtils.showTimeseriesFace();
-                // if a 'dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
                 if (!oldDatesExist) {
+                    // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
                     const curveDate = $('#controlButton-curve-dates-value').text();
                     matsParamUtils.setValueTextForParamName('dates', curveDate)
                 }
@@ -107,12 +113,13 @@ Template.plotType.events({
     'click .plot-type-Profile': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'curve-dates' parameter
+            // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+            // display appropriate selectors for profiles
             matsCurveUtils.showProfileFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'curve-dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+            // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
             const tsDate = $('#controlButton-dates-value').text();
             if (!oldCurveDatesExist) {
                 matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -123,8 +130,8 @@ Template.plotType.events({
                     if (tsDate !== undefined && tsDate !== "" && !oldCurveDatesExist) {
                         curves[ci]['curve-dates'] = tsDate;
                     }
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
                     }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
@@ -132,14 +139,17 @@ Template.plotType.events({
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -153,11 +163,11 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the profile face
-                // see if the previous plot type also used the 'curve-dates' parameter
+                // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+                // display appropriate selectors for profiles
                 matsCurveUtils.showProfileFace();
-                // if a 'curve-dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+                // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
                 if (!oldCurveDatesExist) {
                     const tsDate = $('#controlButton-dates-value').text();
                     matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -168,12 +178,13 @@ Template.plotType.events({
     'click .plot-type-DieOff': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'curve-dates' parameter
+            // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+            // display appropriate selectors for dieoffs
             matsCurveUtils.showDieOffFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'curve-dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+            // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
             const tsDate = $('#controlButton-dates-value').text();
             if (!oldCurveDatesExist) {
                 matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -184,23 +195,29 @@ Template.plotType.events({
                     if (tsDate !== undefined && tsDate !== "" && !oldCurveDatesExist) {
                         curves[ci]['curve-dates'] = tsDate;
                     }
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
                     }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
                     }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
+                    }
                     if (!curves[ci]['dieoff-type'] && matsCollections.CurveParams.findOne({name: 'dieoff-type'}) && matsCollections.CurveParams.findOne({name: 'dieoff-type'}).default) {
                         curves[ci]['dieoff-type'] = matsCollections.CurveParams.findOne({name: 'dieoff-type'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -214,11 +231,11 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the dieoff face
-                // see if the previous plot type also used the 'curve-dates' parameter
+                // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+                // display appropriate selectors for dieoffs
                 matsCurveUtils.showDieOffFace();
-                // if a 'curve-dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+                // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
                 if (!oldCurveDatesExist) {
                     const tsDate = $('#controlButton-dates-value').text();
                     matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -229,12 +246,13 @@ Template.plotType.events({
     'click .plot-type-Threshold': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'curve-dates' parameter
+            // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+            // display appropriate selectors for thresholds
             matsCurveUtils.showThresholdFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'curve-dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+            // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
             const tsDate = $('#controlButton-dates-value').text();
             if (!oldCurveDatesExist) {
                 matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -245,20 +263,26 @@ Template.plotType.events({
                     if (tsDate !== undefined && tsDate !== "" && !oldCurveDatesExist) {
                         curves[ci]['curve-dates'] = tsDate;
                     }
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -272,11 +296,11 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the threshold face
-                // see if the previous plot type also used the 'curve-dates' parameter
+                // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+                // display appropriate selectors for thresholds
                 matsCurveUtils.showThresholdFace();
-                // if a 'curve-dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+                // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
                 if (!oldCurveDatesExist) {
                     const tsDate = $('#controlButton-dates-value').text();
                     matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -287,12 +311,13 @@ Template.plotType.events({
     'click .plot-type-ValidTime': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'curve-dates' parameter
+            // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+            // display appropriate selectors for validtimes
             matsCurveUtils.showValidTimeFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'curve-dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+            // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
             const tsDate = $('#controlButton-dates-value').text();
             if (!oldCurveDatesExist) {
                 matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -303,20 +328,26 @@ Template.plotType.events({
                     if (tsDate !== undefined && tsDate !== "" && !oldCurveDatesExist) {
                         curves[ci]['curve-dates'] = tsDate;
                     }
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
-                    }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -329,12 +360,12 @@ Template.plotType.events({
                 Session.set('plotChangeType', matsTypes.PlotTypes.validtime);
                 $("#modal-change-plot-type").modal();
             } else {
-                // no curves - just set the valid time face
-                // see if the previous plot type also used the 'curve-dates' parameter
+                // no curves - just set the validtime face
+                // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+                // display appropriate selectors for validtimes
                 matsCurveUtils.showValidTimeFace();
-                // if a 'curve-dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+                // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
                 if (!oldCurveDatesExist) {
                     const tsDate = $('#controlButton-dates-value').text();
                     matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -345,12 +376,13 @@ Template.plotType.events({
     'click .plot-type-DailyModelCycle': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'dates' parameter
+            // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
+            // display appropriate selectors for dailymodelcycle
             matsCurveUtils.showDailyModelCycleFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
+            // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
             if (!oldDatesExist) {
                 const curveDate = $('#controlButton-curve-dates-value').text();
                 matsParamUtils.setValueTextForParamName('dates', curveDate)
@@ -358,20 +390,26 @@ Template.plotType.events({
             if (curves.length > 0) {
                 // initialize parameters that may not have been used yet
                 for (var ci = 0; ci < curves.length; ci++) {
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
                     }
                     if (!curves[ci]['utc-cycle-start'] && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}) && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default) {
                         curves[ci]['utc-cycle-start'] = matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
-                    }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -384,13 +422,13 @@ Template.plotType.events({
                 Session.set('plotChangeType', matsTypes.PlotTypes.dailyModelCycle);
                 $("#modal-change-plot-type").modal();
             } else {
-                // no curves - just set the daily model cycle face
-                // see if the previous plot type also used the 'dates' parameter
+                // no curves - just set the dailymodelcycle face
+                // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
+                // display appropriate selectors for dailymodelcycle
                 matsCurveUtils.showDailyModelCycleFace();
-                // if a 'dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
                 if (!oldDatesExist) {
+                    // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
                     const curveDate = $('#controlButton-curve-dates-value').text();
                     matsParamUtils.setValueTextForParamName('dates', curveDate)
                 }
@@ -400,12 +438,13 @@ Template.plotType.events({
     'click .plot-type-Reliability': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'dates' parameter
+            // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
+            // display appropriate selectors for reliability
             matsCurveUtils.showReliabilityFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
+            // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
             if (!oldDatesExist) {
                 const curveDate = $('#controlButton-curve-dates-value').text();
                 matsParamUtils.setValueTextForParamName('dates', curveDate)
@@ -413,27 +452,26 @@ Template.plotType.events({
             if (curves.length > 0) {
                 // initialize parameters that may not have been used yet
                 for (var ci = 0; ci < curves.length; ci++) {
-                    // the average may not have been carried over from other curve types so let it default
-                    if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name: 'average'}) && matsCollections.CurveParams.findOne({name: 'average'}).default) {
-                        curves[ci]['average'] = matsCollections.CurveParams.findOne({name: 'average'}).default;
-                    }
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
-                    }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -447,12 +485,12 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the reliability face
-                // see if the previous plot type also used the 'dates' parameter
+                // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
+                // display appropriate selectors for reliability
                 matsCurveUtils.showReliabilityFace();
-                // if a 'dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
                 if (!oldDatesExist) {
+                    // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
                     const curveDate = $('#controlButton-curve-dates-value').text();
                     matsParamUtils.setValueTextForParamName('dates', curveDate)
                 }
@@ -462,12 +500,13 @@ Template.plotType.events({
     'click .plot-type-ROC': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'dates' parameter
+            // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
+            // display appropriate selectors for ROC
             matsCurveUtils.showROCFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
+            // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
             if (!oldDatesExist) {
                 const curveDate = $('#controlButton-curve-dates-value').text();
                 matsParamUtils.setValueTextForParamName('dates', curveDate)
@@ -475,27 +514,26 @@ Template.plotType.events({
             if (curves.length > 0) {
                 // initialize parameters that may not have been used yet
                 for (var ci = 0; ci < curves.length; ci++) {
-                    // the average may not have been carried over from other curve types so let it default
-                    if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name: 'average'}) && matsCollections.CurveParams.findOne({name: 'average'}).default) {
-                        curves[ci]['average'] = matsCollections.CurveParams.findOne({name: 'average'}).default;
-                    }
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
-                    }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -508,13 +546,13 @@ Template.plotType.events({
                 Session.set('plotChangeType', matsTypes.PlotTypes.roc);
                 $("#modal-change-plot-type").modal();
             } else {
-                // no curves - just set the roc face
-                // see if the previous plot type also used the 'dates' parameter
+                // no curves - just set the ROC face
+                // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
+                // display appropriate selectors for ROC
                 matsCurveUtils.showROCFace();
-                // if a 'dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
                 if (!oldDatesExist) {
+                    // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
                     const curveDate = $('#controlButton-curve-dates-value').text();
                     matsParamUtils.setValueTextForParamName('dates', curveDate)
                 }
@@ -524,12 +562,15 @@ Template.plotType.events({
     'click .plot-type-Map': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'dates' parameter
+            // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
+            // maps need to have the region be station-select mode
+            matsParamUtils.setInputValueForParamAndtriggerChange('region-type','Select stations');
+            // display appropriate selectors for maps
             matsCurveUtils.showMapFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
+            // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
             if (!oldDatesExist) {
                 const curveDate = $('#controlButton-curve-dates-value').text();
                 matsParamUtils.setValueTextForParamName('dates', curveDate)
@@ -537,11 +578,14 @@ Template.plotType.events({
             if (curves.length > 0) {
                 // initialize parameters that may not have been used yet
                 for (var ci = 0; ci < curves.length; ci++) {
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
+                    }
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -555,12 +599,14 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the map face
-                // see if the previous plot type also used the 'dates' parameter
+                // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
+                // maps need to have the region be station-select mode
+                matsParamUtils.setInputValueForParamAndtriggerChange('region-type','Select stations');
+                // display appropriate selectors for maps
                 matsCurveUtils.showMapFace();
-                // if a 'dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
                 if (!oldDatesExist) {
+                    // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
                     const curveDate = $('#controlButton-curve-dates-value').text();
                     matsParamUtils.setValueTextForParamName('dates', curveDate)
                 }
@@ -570,12 +616,13 @@ Template.plotType.events({
     'click .plot-type-Histogram': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'curve-dates' parameter
+            // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+            // display appropriate selectors for histograms
             matsCurveUtils.showHistogramFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'curve-dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+            // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
             const tsDate = $('#controlButton-dates-value').text();
             if (!oldCurveDatesExist) {
                 matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -586,23 +633,29 @@ Template.plotType.events({
                     if (tsDate !== undefined && tsDate !== "" && !oldCurveDatesExist) {
                         curves[ci]['curve-dates'] = tsDate;
                     }
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
                     }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
                     }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
+                    }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -616,11 +669,11 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the histogram face
-                // see if the previous plot type also used the 'curve-dates' parameter
+                // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+                // display appropriate selectors for histograms
                 matsCurveUtils.showHistogramFace();
-                // if a 'curve-dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+                // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
                 if (!oldCurveDatesExist) {
                     const tsDate = $('#controlButton-dates-value').text();
                     matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -631,12 +684,13 @@ Template.plotType.events({
     'click .plot-type-EnsembleHistogram': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'curve-dates' parameter
+            // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+            // display appropriate selectors for ensemble histograms
             matsCurveUtils.showEnsembleHistogramFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'curve-dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+            // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
             const tsDate = $('#controlButton-dates-value').text();
             if (!oldCurveDatesExist) {
                 matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -647,20 +701,26 @@ Template.plotType.events({
                     if (tsDate !== undefined && tsDate !== "" && !oldCurveDatesExist) {
                         curves[ci]['curve-dates'] = tsDate;
                     }
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
-                    }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -674,11 +734,11 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the histogram face
-                // see if the previous plot type also used the 'curve-dates' parameter
+                // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
+                // display appropriate selectors for ensemble histograms
                 matsCurveUtils.showEnsembleHistogramFace();
-                // if a 'curve-dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'curve-dates' parameter to whatever 'dates' was set to.
+                // If a 'curve-dates' parameter was not already in use, set the 'curve-dates' parameter to whatever 'dates' was set to.
                 if (!oldCurveDatesExist) {
                     const tsDate = $('#controlButton-dates-value').text();
                     matsParamUtils.setValueTextForParamName('curve-dates', tsDate)
@@ -689,12 +749,13 @@ Template.plotType.events({
     'click .plot-type-Contour': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'dates' parameter
+            // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
+            // display appropriate selectors for contours
             matsCurveUtils.showContourFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
+            // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
             if (!oldDatesExist) {
                 const curveDate = $('#controlButton-curve-dates-value').text();
                 matsParamUtils.setValueTextForParamName('dates', curveDate)
@@ -702,33 +763,38 @@ Template.plotType.events({
             if (curves.length > 0) {
                 // initialize parameters that may not have been used yet
                 for (var ci = 0; ci < curves.length; ci++) {
-                    // the average may not have been carried over from other curve types so let it default
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
-                    }
-                    if (!curves[ci]['utc-cycle-start'] && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}) && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default) {
-                        curves[ci]['utc-cycle-start'] = matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default;
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
                     }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
                     }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
+                    }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region-type'] && matsCollections.CurveParams.findOne({name: 'region-type'}) && matsCollections.CurveParams.findOne({name: 'region-type'}).default) {
+                        curves[ci]['region-type'] = matsCollections.CurveParams.findOne({name: 'region-type'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                     if (!curves[ci]['x-axis-parameter'] && matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}) && matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).default) {
                         curves[ci]['x-axis-parameter'] = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).default;
                     }
                     if (!curves[ci]['y-axis-parameter'] && matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}) && matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).default) {
                         curves[ci]['y-axis-parameter'] = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).default;
+                    }
+                    if (!curves[ci]['significance'] && matsCollections.CurveParams.findOne({name: 'significance'}) && matsCollections.CurveParams.findOne({name: 'significance'}).default) {
+                        curves[ci]['significance'] = matsCollections.CurveParams.findOne({name: 'significance'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -742,12 +808,12 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the contour face
-                // see if the previous plot type also used the 'dates' parameter
+                // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
+                // display appropriate selectors for contours
                 matsCurveUtils.showContourFace();
-                // if a 'dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
                 if (!oldDatesExist) {
+                    // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
                     const curveDate = $('#controlButton-curve-dates-value').text();
                     matsParamUtils.setValueTextForParamName('dates', curveDate)
                 }
