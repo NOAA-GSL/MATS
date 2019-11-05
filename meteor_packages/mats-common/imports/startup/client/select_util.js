@@ -97,7 +97,6 @@ const checkDisableOther = function (param, firstRender) {
                     (param.disableOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
                     $.inArray(selectedText, param.disableOtherFor[controlledSelectors[i]]) !== -1) {
                     matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = true;
-                    // matsParamUtils.setValueTextForParamName(controlledSelectors[i], matsTypes.InputTypes.unused);
                 } else {
                     matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = false;
                 }
@@ -132,18 +131,19 @@ const checkHideOther = function (param, firstRender) {
                     selectorControlElem = document.getElementById(controlledSelectors[i] + '-item');
                     if (selectorControlElem && selectorControlElem.style) {
                         selectorControlElem.style.display = "none";
+                        selectorControlElem.purposelyHidden = true;
                     }
-                    // matsParamUtils.setValueTextForParamName(controlledSelectors[i], matsTypes.InputTypes.unused);
                 } else {
                     selectorControlElem = document.getElementById(controlledSelectors[i] + '-item');
                     if (selectorControlElem && selectorControlElem.style) {
                         selectorControlElem.style.display = "block";
+                        selectorControlElem.purposelyHidden = false;
                     }
                     otherInputElement && otherInputElement.options && otherInputElement.selectedIndex >= 0 &&
                     otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();
                 }
             }
-            checkDisableOther(param), firstRender;
+            checkDisableOther(param, firstRender);
         }
     } catch (e) {
         e.message = "INFO: Error in select.js checkHideOther: " + e.message;

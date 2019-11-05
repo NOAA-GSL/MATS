@@ -362,11 +362,12 @@ const doCurveParams = function () {
             {
                 name: 'region-type',
                 type: matsTypes.InputTypes.select,
-                options: ['Predefined region', 'Select stations'],
+                options: ['Predefined region', 'Select stations (bias only)'],
                 default: 'Predefined region',
                 hideOtherFor: {
-                    'region': ["Select stations"],
-                    'truth': ["Select stations"],
+                    'region': ["Select stations (bias only)"],
+                    'truth': ["Select stations (bias only)"],
+                    'statistic': ["Select stations (bias only)"],
                     'sites': ["Predefined region"],
                     'sitesMap': ["Predefined region"]
                 },

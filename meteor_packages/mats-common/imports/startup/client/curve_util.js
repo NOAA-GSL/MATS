@@ -426,7 +426,7 @@ const showTimeseriesFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -473,7 +473,7 @@ const showProfileFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -520,7 +520,7 @@ const showDieOffFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -571,7 +571,7 @@ const showThresholdFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -618,7 +618,7 @@ const showValidTimeFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -665,7 +665,7 @@ const showDailyModelCycleFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -712,7 +712,7 @@ const showReliabilityFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -759,7 +759,7 @@ const showROCFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -777,11 +777,10 @@ const showROCFace = function () {
 const showMapFace = function () {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
-        var faceOptions;
-        faceOptions = {
+        var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'statistic': 'none',
+            'statistic': 'block',
             'threshold': 'none',
             'level': 'block',
             'forecast-length': 'block',
@@ -807,7 +806,7 @@ const showMapFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -854,7 +853,7 @@ const showHistogramFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -901,7 +900,7 @@ const showEnsembleHistogramFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -953,7 +952,7 @@ const showContourFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
@@ -1002,7 +1001,7 @@ const showScatterFace = function () {
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style) {
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
