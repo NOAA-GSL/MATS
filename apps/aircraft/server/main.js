@@ -925,33 +925,27 @@ const doPlotGraph = function () {
 
 
 Meteor.startup(function () {
-    matsCollections.Databases.remove({});
-    if (matsCollections.Databases.find().count() == 0) {
-        matsCollections.Databases.insert({
-            role: matsTypes.DatabaseRoles.SUMS_DATA,
-            status: "active",
-            host: 'wolphin.fsl.noaa.gov',
-            user: 'readonly',
-            password: 'ReadOnly@2016!',
-            database: 'acars_RR',
-            connectionLimit: 10
-        });
-        matsCollections.Databases.insert({
-            role: matsTypes.DatabaseRoles.META_DATA,
-            status: "active",
-            host: 'wolphin.fsl.noaa.gov',
-            user: 'readonly',
-            password: 'ReadOnly@2016!',
-            database: 'mats_common',
-            connectionLimit: 10
-        });
+    if (Meteor.settings.private == null) {
+        console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
     }
-    var sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
+    matsCollections.Databases.remove({});
+    if (matsCollections.Databases.find({}).count() === 0) {
+        var databases = Meteor.settings.private.databases;
+        if (databases !== null && databases !== undefined && Array.isArray(databases)) {
+            for (var di = 0; di < databases.length; di++) {
+                matsCollections.Databases.insert(databases[di]);
+            }
+        }
+    }
+
+    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
-        connectionLimit: 10
+        connectionLimit: 1
     });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);

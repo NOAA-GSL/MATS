@@ -952,7 +952,7 @@ Meteor.startup(function () {
             user: 'readonly',
             password: 'ReadOnly@2016!',
             database: 'vgtyp_sums',
-            connectionLimit: 10
+            connectionLimit: 4
         });
     }
 

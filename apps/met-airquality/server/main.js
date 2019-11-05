@@ -223,7 +223,7 @@ const doCurveParams = function () {
     var dbs;
     var dbArr;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select * from airquality_database_groups order by db_group;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select * from airquality_database_groups order by db_group;");
         for (var i = 0; i < rows.length; i++) {
             thisGroup = rows[i].db_group.trim();
             dbs = rows[i].dbs;
@@ -239,7 +239,7 @@ const doCurveParams = function () {
 
     var thisDB;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT DISTINCT db FROM airquality_mats_metadata;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT DISTINCT db FROM airquality_mats_metadata;");
         for (i = 0; i < rows.length; i++) {
             thisDB = rows[i].db.trim();
             myDBs.push(thisDB);
@@ -260,7 +260,7 @@ const doCurveParams = function () {
             thresholdOptionsMap[thisDB] = {};
             regionModelOptionsMap[thisDB] = {};
 
-            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select model,display_text,regions,levels,fcst_lens,fcst_orig,variables,trshs,mindate,maxdate from airquality_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,fcst_orig,variables,trshs,mindate,maxdate order by model;");
+            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,display_text,regions,levels,fcst_lens,fcst_orig,variables,trshs,mindate,maxdate from airquality_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,fcst_orig,variables,trshs,mindate,maxdate order by model;");
             for (i = 0; i < rows.length; i++) {
 
                 var model_value = rows[i].model.trim();
@@ -1090,26 +1090,14 @@ Meteor.startup(function () {
         user: 1,
         password: 1,
         database: 1,
-        connectionLimit: 10
+        connectionLimit: 1
     });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    const metadataSettings = matsCollections.Databases.findOne({
-        role: matsTypes.DatabaseRoles.META_DATA,
-        status: "active"
-    }, {
-        host: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    // the pool is intended to be global
-    metadataPool = mysql.createPool(metadataSettings);
-    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['airquality_mats_metadata', 'airquality_database_groups']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "mats_metadata", ['airquality_mats_metadata', 'airquality_database_groups']);
     matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-airquality'});
 });
 
