@@ -804,7 +804,7 @@ const doCurveParams = function () {
     const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
     const minusMonthMinDate = newDateRange.minDate;
     maxDate = newDateRange.maxDate;
-    dstr = minusMonthMinDate.format("MM/DD/YYYY HH:mm") + ' - ' + maxDate.format("MM/DD/YYYY HH:mm");
+    dstr = moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm") + ' - ' + moment.utc(maxDate).format("MM/DD/YYYY HH:mm");
 
     if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
         const optionsMap = {

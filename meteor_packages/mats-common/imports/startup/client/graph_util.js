@@ -134,6 +134,7 @@ const width = function (plotType) {
         case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
+        case matsTypes.PlotTypes.ensembleHistogram:
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
         default:
@@ -160,6 +161,7 @@ const height = function (plotType) {
         case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
+        case matsTypes.PlotTypes.ensembleHistogram:
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
         default:

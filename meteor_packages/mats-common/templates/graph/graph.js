@@ -91,17 +91,14 @@ Template.graph.helpers({
                     Session.set('lineTypeResetOpts', lineTypeResetOpts);
                     break;
                 case matsTypes.PlotTypes.histogram:
-                    // saved curve options for maps
+                case matsTypes.PlotTypes.ensembleHistogram:
+                    // saved curve options for histograms
                     var barTypeResetOpts = [];
                     for (var bidx = 0; bidx < dataset.length; bidx++) {
-                        if (Object.values(matsTypes.ReservedWords).indexOf(dataset[bidx].label) === -1) {
-                            barTypeResetOpts.push({
-                                'name': dataset[bidx].name,
-                                'visible': dataset[bidx].visible,
-                            });
-                        } else {
-                            break;
-                        }
+                        barTypeResetOpts.push({
+                            'name': dataset[bidx].name,
+                            'visible': dataset[bidx].visible,
+                        });
                     }
                     Session.set('barTypeResetOpts', barTypeResetOpts);
                     break;
@@ -153,6 +150,7 @@ Template.graph.helpers({
                     case matsTypes.PlotTypes.reliability:
                     case matsTypes.PlotTypes.roc:
                     case matsTypes.PlotTypes.histogram:
+                    case matsTypes.PlotTypes.ensembleHistogram:
                     case matsTypes.PlotTypes.contour:
                     case matsTypes.PlotTypes.contourDiff:
                     default:
@@ -231,6 +229,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.roc:
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.ensembleHistogram:
                 case matsTypes.PlotTypes.scatter2d:
                 case matsTypes.PlotTypes.contour:
                 case matsTypes.PlotTypes.contourDiff:
@@ -284,6 +283,8 @@ Template.graph.helpers({
                     return "Map " + p.dates + " ";
                 case matsTypes.PlotTypes.histogram:
                     return "Histogram: " + format;
+                case matsTypes.PlotTypes.ensembleHistogram:
+                    return "Ensemble Histogram: " + format;
                 case matsTypes.PlotTypes.contour:
                     return "Contour " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contourDiff:
@@ -354,6 +355,7 @@ Template.graph.helpers({
                 return true;
             case matsTypes.PlotTypes.map:
             case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.ensembleHistogram:
             case matsTypes.PlotTypes.scatter2d:
             case matsTypes.PlotTypes.contour:
             case matsTypes.PlotTypes.contourDiff:
@@ -391,6 +393,7 @@ Template.graph.helpers({
                 return "col-sm-2";
             case matsTypes.PlotTypes.map:
             case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.ensembleHistogram:
             case matsTypes.PlotTypes.scatter2d:
             case matsTypes.PlotTypes.contour:
             case matsTypes.PlotTypes.contourDiff:
@@ -455,6 +458,7 @@ Template.graph.helpers({
                 return "block";
             case matsTypes.PlotTypes.map:
             case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.ensembleHistogram:
             case matsTypes.PlotTypes.contour:
             case matsTypes.PlotTypes.contourDiff:
             default:
@@ -476,6 +480,7 @@ Template.graph.helpers({
                 return "block";
             case matsTypes.PlotTypes.map:
             case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.ensembleHistogram:
             case matsTypes.PlotTypes.contour:
             case matsTypes.PlotTypes.contourDiff:
             default:
@@ -498,6 +503,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.roc:
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.ensembleHistogram:
                 case matsTypes.PlotTypes.scatter2d:
                 case matsTypes.PlotTypes.contour:
                 case matsTypes.PlotTypes.contourDiff:
@@ -510,7 +516,7 @@ Template.graph.helpers({
     },
     barsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.histogram) {
+        if (plotType.includes("Histogram") || plotType.includes("histogram")) {
             return 'block';
         } else {
             return 'none';
@@ -518,10 +524,26 @@ Template.graph.helpers({
     },
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.scatter2d:
+                return 'block';
+                break;
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.roc:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.ensembleHistogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return 'none';
+                break;
         }
     },
     heatMapShowHideDisplay: function () {
@@ -1214,11 +1236,14 @@ Template.graph.events({
                     }
                     break;
                 case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.ensembleHistogram:
                     // restyle for bar plots
                     const barTypeResetOpts = Session.get('barTypeResetOpts');
                     for (var bidx = 0; bidx < barTypeResetOpts.length; bidx++) {
                         Plotly.restyle($("#placeholder")[0], barTypeResetOpts[bidx], bidx);
-                        $('#' + dataset[bidx].label + "-curve-show-hide-bars")[0].value = "hide bars";
+                        if (Object.values(matsTypes.ReservedWords).indexOf(dataset[bidx].label) === -1) {
+                            $('#' + dataset[bidx].label + "-curve-show-hide-bars")[0].value = "hide bars";
+                        }
                     }
                     break;
                 case matsTypes.PlotTypes.map:

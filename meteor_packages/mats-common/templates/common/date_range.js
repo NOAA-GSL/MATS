@@ -201,7 +201,7 @@ Template.dateRange.onRendered(function () {
             const jqIdRef = "#" + idref;
             $(jqIdRef).data('daterangepicker').setStartDate(startDsr);
             $(jqIdRef).data('daterangepicker').setEndDate(endDsr);
-            const newDateStr = startDsr.format('MM/DD/YYYY HH:mm') + ' - ' + endDsr.format('MM/DD/YYYY HH:mm');
+            const newDateStr = moment.utc(startDsr).format('MM/DD/YYYY HH:mm') + ' - ' + moment.utc(endDsr).format('MM/DD/YYYY HH:mm');
             matsParamUtils.setValueTextForParamName(name, newDateStr);
         } catch (error) {
             console.log("Error in date_range.js.refresh : " + error.message);

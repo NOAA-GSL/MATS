@@ -47,6 +47,7 @@ var PlotTypes = {
     roc: "ROC",
     map: "Map",
     histogram: "Histogram",
+    ensembleHistogram: "EnsembleHistogram",
     contour: "Contour",
     contourDiff: "ContourDiff",
     scatter2d: "Scatter2d"

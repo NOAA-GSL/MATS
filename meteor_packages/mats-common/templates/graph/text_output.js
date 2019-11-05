@@ -97,6 +97,7 @@ Template.textOutput.helpers({
                     <th>maximum time</th>";
                 break;
             case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.ensembleHistogram:
                 header += "<th>label</th>\
                     <th>mean</th>\
                     <th>standard deviation</th>\
@@ -198,6 +199,11 @@ Template.textOutput.helpers({
                         <th>bin upper bound</th>\
                         <th>bin mean</th>\
                         <th>bin std dev</th>";
+                break;
+            case matsTypes.PlotTypes.ensembleHistogram:
+                header += "<th>" + curve.label + "  bin number</th>\
+                        <th>bin n</th>\
+                        <th>bin rel freq</th>";
                 break;
             case matsTypes.PlotTypes.contour:
             case matsTypes.PlotTypes.contourDiff:
@@ -326,6 +332,11 @@ Template.textOutput.helpers({
                     "<td>" + (element['bin mean'] != undefined && element['bin mean'] !== null ? element['bin mean'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['bin std dev'] != undefined && element['bin std dev'] !== null ? element['bin std dev'].toPrecision(4) : fillStr) + "</td>";
                 break;
+            case matsTypes.PlotTypes.ensembleHistogram:
+                line += "<td>" + element[labelKey += " bin"] + "</td>" +
+                    "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>" +
+                    "<td>" + (element['bin rel freq'] != undefined && element['bin rel freq'] !== null ? element['bin rel freq'].toPrecision(4) : fillStr) + "</td>";
+                break;
             case matsTypes.PlotTypes.contour:
             case matsTypes.PlotTypes.contourDiff:
                 line += "<td>" + element["xVal"] + "</td>" +
@@ -410,6 +421,7 @@ Template.textOutput.helpers({
                     "<td>" + (stats['maximum time'] != undefined && stats['maximum time'] != null ? stats['maximum time'] : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.ensembleHistogram:
                 line += "<td>" + curve['label'] + "</td>" +
                     "<td>" + (stats['mean'] != undefined && stats['mean'] !== null ? stats['mean'].toPrecision(4) : "undefined").toString() + "</td>" +
                     "<td>" + (stats['standard deviation'] != undefined && stats['standard deviation'] != null ? stats['standard deviation'].toPrecision(4) : "undefined").toString() + "</td>" +

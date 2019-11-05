@@ -113,7 +113,9 @@ const getMatchedDataSet = function (dataset, curvesLength, appParams) {
                 if (matchingIndependentHasPoint.indexOf(data[independentVarName][di]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value (beacause of the cadence), just drop this independentVar
                     data.x.splice(di, 1);
                     data.y.splice(di, 1);
-                    data[('error_' + statVarName)].array.splice(di, 1);
+                    if (data[('error_' + statVarName)].array !== undefined) {
+                        data[('error_' + statVarName)].array.splice(di, 1);
+                    }
                     data.subVals.splice(di, 1);
                     data.subSecs.splice(di, 1);
                     if (hasLevels) {

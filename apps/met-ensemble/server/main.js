@@ -55,6 +55,25 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
 
+        const histogramOptionsMap = {
+            "Rank Histogram": ["rhist"],
+            "Probability Integral Transform Histogram": ["phist"],
+            "Relative Position Histogram": ["relp"]
+        };
+        matsCollections.PlotParams.insert(
+            {
+                name: 'histogram-type-controls',
+                type: matsTypes.InputTypes.select,
+                optionsMap: histogramOptionsMap,
+                options: Object.keys(histogramOptionsMap),
+                default: Object.keys(histogramOptionsMap)[0],
+                controlButtonCovered: true,
+                controlButtonText: 'Histogram Type',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
         const yAxisOptionsMap = {
             "Number": ["number"],
             "Relative frequency": ["relFreq"]
@@ -68,7 +87,7 @@ const doPlotParams = function () {
                 default: Object.keys(yAxisOptionsMap)[0],
                 controlButtonCovered: true,
                 controlButtonText: 'Y-axis mode',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -99,7 +118,7 @@ const doPlotParams = function () {
                 default: Object.keys(binOptionsMap)[0],
                 controlButtonCovered: true,
                 controlButtonText: 'customize bins',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -116,7 +135,7 @@ const doPlotParams = function () {
                 default: '12',
                 controlButtonCovered: true,
                 controlButtonText: "number of bins",
-                displayOrder: 3,
+                displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -133,7 +152,7 @@ const doPlotParams = function () {
                 default: '0',
                 controlButtonCovered: true,
                 controlButtonText: "bin pivot value",
-                displayOrder: 4,
+                displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -150,7 +169,7 @@ const doPlotParams = function () {
                 default: '0',
                 controlButtonCovered: true,
                 controlButtonText: "bin start",
-                displayOrder: 5,
+                displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -167,7 +186,7 @@ const doPlotParams = function () {
                 default: '0',
                 controlButtonCovered: true,
                 controlButtonText: "bin stride",
-                displayOrder: 6,
+                displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -181,7 +200,7 @@ const doPlotParams = function () {
                 default: ' ',
                 controlButtonCovered: true,
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
-                displayOrder: 7,
+                displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -746,7 +765,7 @@ const doCurveParams = function () {
     const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
     const minusMonthMinDate = newDateRange.minDate;
     maxDate = newDateRange.maxDate;
-    dstr = minusMonthMinDate.format("MM/DD/YYYY HH:mm") + ' - ' + maxDate.format("MM/DD/YYYY HH:mm");
+    dstr = moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm") + ' - ' + moment.utc(maxDate).format("MM/DD/YYYY HH:mm");
 
     if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
         const optionsMap = {
@@ -884,6 +903,24 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.ensembleHistogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ', '],
+                ['level: ', 'level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.reliability,
             textPattern: [
                 ['', 'label', ': '],
@@ -957,6 +994,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.histogram,
             graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.ensembleHistogram,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataEnsembleHistogram",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
