@@ -463,7 +463,7 @@ const isControlButtonVisible = function (paramName) {
     return $(paramRef).is(':visible');
 };
 
-const setInputValueForParamAndtriggerChange = function (paramName, value) {
+const setInputValueForParamAndTriggerChange = function (paramName, value) {
     const elem = getInputElementForParamName(paramName);
     elem.value = value;
     setValueTextForParamName(paramName, elem.value);
@@ -537,7 +537,7 @@ export default matsParamUtils = {
     isInputElementVisible: isInputElementVisible,
     isParamVisible: isParamVisible,
     isControlButtonVisible: isControlButtonVisible,
-    setInputValueForParamAndtriggerChange: setInputValueForParamAndtriggerChange,
+    setInputValueForParamAndTriggerChange: setInputValueForParamAndTriggerChange,
     getOptionsForParam: getOptionsForParam,
     getOptionsMapForParam: getOptionsMapForParam,
     getCurveItemValueForParamName: getCurveItemValueForParamName,
