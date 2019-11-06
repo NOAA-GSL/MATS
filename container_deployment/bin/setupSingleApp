@@ -353,7 +353,7 @@ for (( ri=0; ri<${#dbroles[@]}; ri++ )); do
           "user": "${userName}",
           "password": "${password}",
           "database": "${database}",
-          "connectionLimit": 10
+          "connectionLimit": 4
     }
 %ENDPOOLS
     wrote=1

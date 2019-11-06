@@ -54,7 +54,7 @@ This is an example of a settings.json file with dummy credentials.
         "user": "some_user",
         "password": "some_password",
         "database": "some_database",
-        "connectionLimit": 10
+        "connectionLimit": 4
       },
       {
         "role": "metadata",
@@ -64,7 +64,7 @@ This is an example of a settings.json file with dummy credentials.
         "user": "some_user",
         "password": "some_password",
         "database": "some_database",
-        "connectionLimit": 10
+        "connectionLimit": 1
       }
     ],
     "PYTHON_PATH": "/usr/bin/python3"
