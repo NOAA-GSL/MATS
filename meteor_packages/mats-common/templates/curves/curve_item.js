@@ -7,6 +7,8 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
+import { matsSelectUtils } from 'meteor/randyp:mats-common';
+
 label;
 Template.curveItem.onRendered(function() {
     // the value used for the colorpicker (l) MUST match the returned value in the colorpick helper
@@ -172,6 +174,32 @@ const setParamsToAxis = function(newAxis, currentParams) {
 
 };
 
+const correlateEditPanelToCurveItems = function(params, currentParams, doCheckHideOther) {
+    for (var p = 0; p < params.length; p++) {
+        var plotParam = params[p];
+        // do any plot date parameters
+        if (plotParam.type === matsTypes.InputTypes.dateRange) {
+            if (currentParams[plotParam.name] === undefined) {
+                continue;   // just like continue
+            }
+            const dateArr = currentParams[plotParam.name].split(' - ');
+            const from = dateArr[0];
+            const to = dateArr[1];
+            const idref = "#" + plotParam.name + "-item";
+            $(idref).data('daterangepicker').setStartDate(moment.utc(from, 'MM-DD-YYYY HH:mm'));
+            $(idref).data('daterangepicker').setEndDate(moment.utc(to, 'MM-DD-YYYY HH:mm'));
+            matsParamUtils.setValueTextForParamName(plotParam.name, currentParams[plotParam.name]);
+        } else {
+            var val = currentParams[plotParam.name] === null ||
+            currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
+            matsParamUtils.setInputForParamName(plotParam.name, val);
+        }
+        if (doCheckHideOther) {
+            matsSelectUtils.checkHideOther(plotParam, false);
+        }
+    }
+};
+
 var curveListEditNode;  // used to pass the edit button to the modal continue
 Template.curveItem.events({
     'click .save-changes' : function() {
@@ -270,48 +298,12 @@ Template.curveItem.events({
         }
         // now reset the form parameters for anything with hide/disable controls
         params = matsCollections.CurveParams.find({"$and" : [{ "dependentNames" : { "$exists" : false }}, {"$or" : [{ "hideOtherFor" : { "$exists" : true }}, { "disableOtherFor" : { "$exists" : true }}]}]}).fetch();
-        for (var p  = 0; p < params.length; p++) {
-            var plotParam = params[p];
-            // do any plot date parameters
-            if (plotParam.type === matsTypes.InputTypes.dateRange) {
-                if (currentParams[plotParam.name] === undefined) {
-                    continue;   // just like continue
-                }
-                const dateArr = currentParams[plotParam.name].split(' - ');
-                const from = dateArr[0];
-                const to = dateArr[1];
-                const idref = "#" + plotParam.name + "-item";
-                $(idref).data('daterangepicker').setStartDate(moment.utc(from, 'MM-DD-YYYY HH:mm'));
-                $(idref).data('daterangepicker').setEndDate(moment.utc(to, 'MM-DD-YYYY HH:mm'));
-                matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
-            } else {
-                var val =  currentParams[plotParam.name] === null ||
-                currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
-                matsParamUtils.setInputForParamName(plotParam.name, val);
-            }
-        }
+        correlateEditPanelToCurveItems(params, currentParams, true);
+
         // now reset the form parameters for everything else
         params = matsCollections.CurveParams.find({"$and" : [{ "dependentNames" : { "$exists" : false }}, {"$and" : [{ "hideOtherFor" : { "$exists" : false }}, { "disableOtherFor" : { "$exists" : false }}]}]}).fetch();
-        for (var p  = 0; p < params.length; p++) {
-            var plotParam = params[p];
-            // do any plot date parameters
-            if (plotParam.type === matsTypes.InputTypes.dateRange) {
-                if (currentParams[plotParam.name] === undefined) {
-                    continue;   // just like continue
-                }
-                const dateArr = currentParams[plotParam.name].split(' - ');
-                const from = dateArr[0];
-                const to = dateArr[1];
-                const idref = "#" + plotParam.name + "-item";
-                $(idref).data('daterangepicker').setStartDate(moment.utc(from, 'MM-DD-YYYY HH:mm'));
-                $(idref).data('daterangepicker').setEndDate(moment.utc(to, 'MM-DD-YYYY HH:mm'));
-                matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
-            } else {
-                var val =  currentParams[plotParam.name] === null ||
-                currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
-                matsParamUtils.setInputForParamName(plotParam.name, val);
-            }
-        }
+        correlateEditPanelToCurveItems(params, currentParams, false);
+
         // reset the scatter parameters
         params = matsCollections.Scatter2dParams.find({}).fetch();
         for (var p  = 0; p < params.length; p++) {
