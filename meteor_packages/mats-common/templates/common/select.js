@@ -127,8 +127,7 @@ const setValue = function(pName) {
             matsParamUtils.setValueTextForParamName(pName, text);
         }
     }
-}
-
+};
 
 Template.select.events({
     'change .data-input': function (event) {

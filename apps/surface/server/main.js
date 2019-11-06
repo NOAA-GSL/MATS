@@ -581,7 +581,7 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         const optionsMap = {
-            'None': ['{{timeVar}}'],
+            'None': ['ceil(' + 60 * 60 + '*floor(({{timeVar}})/' + 60 * 60 + ')+' + 60 * 60 + '/2)'],
             '3hr': ['ceil(' + 60 * 60 * 3 + '*floor(({{timeVar}})/' + 60 * 60 * 3 + ')+' + 60 * 60 * 3 + '/2)'],
             '6hr': ['ceil(' + 60 * 60 * 6 + '*floor(({{timeVar}})/' + 60 * 60 * 6 + ')+' + 60 * 60 * 6 + '/2)'],
             '12hr': ['ceil(' + 60 * 60 * 12 + '*floor(({{timeVar}})/' + 60 * 60 * 12 + ')+' + 60 * 60 * 12 + '/2)'],

@@ -513,7 +513,7 @@ const visibilityControllerForParam = function (paramName) {
         }
     });
     return found;
-}
+};
 
 export default matsParamUtils = {
     getDisabledOptionsForParamName: getDisabledOptionsForParamName,
