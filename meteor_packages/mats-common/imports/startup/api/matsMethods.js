@@ -2083,8 +2083,6 @@ const resetApp = function (appRef) {
     }
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
-    if (deploymentText == null) {  // equivilent to deploymentText === null || deploymentText === undefined
-    }
     deployment = JSON.parse(deploymentText);
     var app = {};
     for (var ai = 0; ai < deployment.length; ai++) {

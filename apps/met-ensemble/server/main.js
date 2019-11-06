@@ -241,7 +241,7 @@ const doCurveParams = function () {
     var dbs;
     var dbArr;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select * from ensemble_database_groups order by db_group;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select * from ensemble_database_groups order by db_group;");
         for (var i = 0; i < rows.length; i++) {
             thisGroup = rows[i].db_group.trim();
             dbs = rows[i].dbs;
@@ -257,7 +257,7 @@ const doCurveParams = function () {
 
     var thisDB;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT DISTINCT db FROM ensemble_mats_metadata;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT DISTINCT db FROM ensemble_mats_metadata;");
         for (i = 0; i < rows.length; i++) {
             thisDB = rows[i].db.trim();
             myDBs.push(thisDB);
@@ -277,7 +277,7 @@ const doCurveParams = function () {
             variableOptionsMap[thisDB] = {};
             regionModelOptionsMap[thisDB] = {};
 
-            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate from ensemble_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate order by model;");
+            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate from ensemble_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate order by model;");
             for (i = 0; i < rows.length; i++) {
 
                 var model_value = rows[i].model.trim();
@@ -1033,32 +1033,20 @@ Meteor.startup(function () {
         }
     }
 
-    var sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
+    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         port: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 10
-    });
-    // the pool is intended to be global
-    sumPool = mysql.createPool(sumSettings);
-    sumPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
-    const metadataSettings = matsCollections.Databases.findOne({
-        role: matsTypes.DatabaseRoles.META_DATA,
-        status: "active"
-    }, {
-        host: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    metadataPool = mysql.createPool(metadataSettings);
-    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['ensemble_mats_metadata', 'ensemble_database_groups']);
+    sumPool = mysql.createPool(sumSettings);
+    sumPool.on('connection', function (connection) {
+        connection.query('set group_concat_max_len = 4294967295')
+    });
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "mats_metadata", ['ensemble_mats_metadata', 'ensemble_database_groups']);
     matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-ensemble'});
 });
 

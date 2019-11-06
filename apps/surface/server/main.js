@@ -1161,39 +1161,19 @@ var doPlotGraph = function () {
 };
 
 Meteor.startup(function () {
-    matsCollections.Databases.remove({});
-    if (matsCollections.Databases.find().count() == 0) {
-        matsCollections.Databases.insert({
-            role: matsTypes.DatabaseRoles.SUMS_DATA,
-            status: "active",
-            host: 'wolphin.fsl.noaa.gov',
-            user: 'readonly',
-            password: 'ReadOnly@2016!',
-            database: 'surface_sums2',
-            connectionLimit: 10
-        });
+    if (Meteor.settings.private == null) {
+        console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
     }
-
-    matsCollections.Databases.insert({
-        role: matsTypes.DatabaseRoles.META_DATA,
-        status: "active",
-        host: 'wolphin.fsl.noaa.gov',
-        user: 'readonly',
-        password: 'ReadOnly@2016!',
-        database: 'mats_common',
-        connectionLimit: 10
-    });
-
-    matsCollections.Databases.insert({
-        name: "siteSetting",
-        role: matsTypes.DatabaseRoles.SITE_DATA,
-        status: "active",
-        host: 'wolphin.fsl.noaa.gov',
-        user: 'readonly',
-        password: 'ReadOnly@2016!',
-        database: 'madis3',
-        connectionLimit: 10
-    });
+    matsCollections.Databases.remove({});
+    if (matsCollections.Databases.find({}).count() === 0) {
+        var databases = Meteor.settings.private.databases;
+        if (databases !== null && databases !== undefined && Array.isArray(databases)) {
+            for (var di = 0; di < databases.length; di++) {
+                matsCollections.Databases.insert(databases[di]);
+            }
+        }
+    }
 
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
