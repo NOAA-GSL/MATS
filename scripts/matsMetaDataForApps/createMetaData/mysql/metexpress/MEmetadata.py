@@ -140,10 +140,10 @@ class ParentMetadata:
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata dev table does not exist--creating it")
             if self.needsTrshs == False:
-                create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1024), levels varchar(1024), fcst_lens varchar(1024), variables varchar(1024), fcst_orig varchar(1024), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
+                create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), variables varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
                     self.metadata_table)
             else:
-                create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(1024), levels varchar(1024), fcst_lens varchar(1024), variables varchar(1024), trshs varchar(1024), fcst_orig varchar(1024), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
+                create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), variables varchar(4095), trshs varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(
                     self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
