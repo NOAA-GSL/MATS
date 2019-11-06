@@ -88,12 +88,6 @@ dataSeries = function (plotParams, plotFunction) {
             varUnits = statVarUnitMap[statisticSelect][variableStr];
             queryPool = sumPool;
         } else {
-            var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
-            if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-                sitesClause = " and s.name in('" + sitesList.join("','") + "')";
-            } else {
-                throw new Error("INFO:  Please add sites in order to plot a map.");
-            }
             timeVar = "m0.time";
             var modelTable;
             if (forecastLength === 1) {
@@ -120,8 +114,14 @@ dataSeries = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600 * floor((m0.time) / 3600) + 3600 / 2) order by ceil(3600 * floor((m0.time) / 3600) + 3600 / 2)) as sub_data';
+            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600 * floor((m0.time + 3600 / 2) / 3600)) order by ceil(3600 * floor((m0.time + 3600 / 2) / 3600))) as sub_data';
             statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
+            var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+            if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
+                sitesClause = " and s.name in('" + sitesList.join("','") + "')";
+            } else {
+                throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
+            }
             siteDateClause = "and o.time >= '{{fromSecs}}' and o.time <= '{{toSecs}}'";
             siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
             queryPool = sitePool;

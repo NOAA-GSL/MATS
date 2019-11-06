@@ -581,17 +581,17 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         const optionsMap = {
-            'None': ['ceil(' + 60 * 60 + '*floor(({{timeVar}})/' + 60 * 60 + ')+' + 60 * 60 + '/2)'],
-            '3hr': ['ceil(' + 60 * 60 * 3 + '*floor(({{timeVar}})/' + 60 * 60 * 3 + ')+' + 60 * 60 * 3 + '/2)'],
-            '6hr': ['ceil(' + 60 * 60 * 6 + '*floor(({{timeVar}})/' + 60 * 60 * 6 + ')+' + 60 * 60 * 6 + '/2)'],
-            '12hr': ['ceil(' + 60 * 60 * 12 + '*floor(({{timeVar}})/' + 60 * 60 * 12 + ')+' + 60 * 60 * 12 + '/2)'],
-            '1D': ['ceil(' + 60 * 60 * 24 + '*floor(({{timeVar}})/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
-            '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor(({{timeVar}})/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
-            '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor(({{timeVar}})/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
-            '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor(({{timeVar}})/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
-            '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor(({{timeVar}})/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
-            '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor(({{timeVar}})/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
-            '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor(({{timeVar}})/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
+            'None': ['ceil(' + 60 * 60 + '*floor((({{timeVar}})+' + 60 * 60 + '/2)/' + 60 * 60 + '))'],
+            '3hr': ['ceil(' + 60 * 60 * 3 + '*floor((({{timeVar}})+' + 60 * 60 * 3 + '/2)/' + 60 * 60 * 3 + '))'],
+            '6hr': ['ceil(' + 60 * 60 * 6 + '*floor((({{timeVar}})+' + 60 * 60 * 6 + '/2)/' + 60 * 60 * 6 + '))'],
+            '12hr': ['ceil(' + 60 * 60 * 12 + '*floor((({{timeVar}})+' + 60 * 60 * 12 + '/2)/' + 60 * 60 * 12 + '))'],
+            '1D': ['ceil(' + 60 * 60 * 24 + '*floor((({{timeVar}})+' + 60 * 60 * 24 + '/2)/' + 60 * 60 * 24 + '))'],
+            '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((({{timeVar}})+' + 60 * 60 * 24 * 3 + '/2)/' + 60 * 60 * 24 * 3 + '))'],
+            '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor((({{timeVar}})+' + 60 * 60 * 24 * 7 + '/2)/' + 60 * 60 * 24 * 7 + '))'],
+            '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor((({{timeVar}})+' + 60 * 60 * 24 * 30 + '/2)/' + 60 * 60 * 24 * 30 + '))'],
+            '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor((({{timeVar}})+' + 60 * 60 * 24 * 60 + '/2)/' + 60 * 60 * 24 * 60 + '))'],
+            '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor((({{timeVar}})+' + 60 * 60 * 24 * 90 + '/2)/' + 60 * 60 * 24 * 90 + '))'],
+            '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor((({{timeVar}})+' + 60 * 60 * 24 * 180 + '/2)/' + 60 * 60 * 24 * 180 + '))'],
         };
         matsCollections.CurveParams.insert(
             {
@@ -974,6 +974,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -992,6 +993,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -1011,6 +1013,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -1028,6 +1031,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -1059,6 +1063,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -1077,6 +1082,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -1098,6 +1104,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
