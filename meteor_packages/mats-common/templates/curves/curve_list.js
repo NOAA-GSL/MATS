@@ -24,11 +24,29 @@ Template.curveList.helpers({
         }
     },
     displayPlotMatched: function() {
-        // don't allow plotting when editing, or for ROC curves
+        // don't allow plotting when editing, or for ROC / single contour / reliability curves
         const mode = Session.get("editMode");
         const plotType = Session.get('plotType');
-        if ((mode === undefined || mode === "") && plotType !== matsTypes.PlotTypes.roc) {
-            return "block";
+        if (mode === undefined || mode === "") {
+            switch (plotType) {
+                case matsTypes.PlotTypes.reliability:
+                case matsTypes.PlotTypes.roc:
+                case matsTypes.PlotTypes.contour:
+                    return "none";
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.ensembleHistogram:
+                case matsTypes.PlotTypes.contourDiff:
+                case matsTypes.PlotTypes.scatter2d:
+                default:
+                    return "block";
+            }
         } else {
             return "none";
         }

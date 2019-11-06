@@ -47,16 +47,12 @@ dataProfile = function (plotParams, plotFunction) {
         var dbtable = data_source + "_anomcorr_" + region;
         const variable = curve['variable'];
         curves[curveIndex]['statistic'] = "Correlation";
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimes = validTimeOptionsMap[validTimeStr][0];
-        var validTimeClause = " ";
-        if (validTimes.length > 0) {
-            validTimeClause = validTimes;
-        }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
+        const validTimeStr = curve['valid-time'];
+        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
+        const validTimeClause = validTimeOptionsMap[validTimeStr][0];
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

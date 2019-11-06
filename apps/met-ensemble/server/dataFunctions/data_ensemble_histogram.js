@@ -11,10 +11,10 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
-dataROC = function (plotParams, plotFunction) {
+dataEnsembleHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appParams = {
-        "plotType": matsTypes.PlotTypes.roc,
+        "plotType": matsTypes.PlotTypes.ensembleHistogram,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
@@ -25,9 +25,6 @@ dataROC = function (plotParams, plotFunction) {
     var dataFoundForCurve = true;
     var dataFoundForAnyCurve = false;
     var totalProcessingStart = moment();
-    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
@@ -37,6 +34,10 @@ dataROC = function (plotParams, plotFunction) {
     var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
+
+    // process user axis customizations
+    const yAxisFormat = plotParams['histogram-yaxis-controls'];
+    const histogramType = plotParams['histogram-type-controls'];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -55,10 +56,22 @@ dataROC = function (plotParams, plotFunction) {
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
         const variable = curve['variable'];
-        const statistic = "None";
+        const statistic = histogramType;    // histogramType isn't really a statistic, but it's a good way to pass the type of histogram to the query function.
         const statLineType = 'ensemble';
-        const lineDataType = 'line_data_pct';
-        const lineDataSuffix = 'thresh';
+        var lineDataType;
+        var lineDataSuffix;
+        if (histogramType === 'Rank Histogram') {
+            lineDataType = 'line_data_rhist';
+            lineDataSuffix = 'rank';
+        } else if (histogramType === 'Probability Integral Transform Histogram') {
+            lineDataType = 'line_data_phist';
+            lineDataSuffix = 'bin';
+        } else if (histogramType === 'Relative Position Histogram') {
+            lineDataType = 'line_data_relp';
+            lineDataSuffix = 'ens';
+        } else {
+            throw new Error("Unrecognized histogram type.");
+        }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -81,7 +94,7 @@ dataROC = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
-            // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
+            // we can't just leave the level clause out, because we might end up with some strange levels in the mix
             levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
@@ -98,29 +111,30 @@ dataROC = function (plotParams, plotFunction) {
             }).join(',');
             validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
         }
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
-        // variable (axisKey) it will use the same axis.
-        // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = 'roc';
+        // units (axisKey) it will use the same axis.
+        // Histograms should have everything under the same axisKey.
+        var axisKey = yAxisFormat;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select unix_timestamp(ld.fcst_valid_beg) as avtime, " +
+            var statement = "select ldr.i_value as bin, " +
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "ldt.i_value as bin_number, " +
-                "ldt.thresh_i as threshold, " +
-                "sum(ldt.oy_i) as oy_i, " +
-                "sum(ldt.on_i) as on_i " +
+                "sum(ldr.{{lineDataSuffix}}_i) as bin_count, " +
+                "group_concat(distinct ldr.{{lineDataSuffix}}_i, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.{{lineDataType}} ld, " +
-                "{{database}}.{{lineDataType}}_{{lineDataSuffix}} ldt " +
+                "{{database}}.{{lineDataType}}_{{lineDataSuffix}} ldr " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
                 "{{regionsClause}} " +
@@ -131,9 +145,9 @@ dataROC = function (plotParams, plotFunction) {
                 "and h.fcst_var = '{{variable}}' " +
                 "{{levelsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
-                "and ld.line_data_id = ldt.line_data_id " +
-                "group by avtime, bin_number, threshold " +
-                "order by avtime" +
+                "and ld.line_data_id = ldr.line_data_id " +
+                "group by bin " +
+                "order by bin" +
                 ";";
 
             statement = statement.split('{{database}}').join(database);
@@ -196,8 +210,13 @@ dataROC = function (plotParams, plotFunction) {
                 ymax = ymax > d.ymax ? ymax : d.ymax;
             }
         } else {
-            // this is a difference curve -- not supported for ROC plots
-            throw new Error("INFO:  Difference curves are not supported for ROC curves, as they do not feature consistent x or y values across all curves.");
+            // this is a difference curve
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
+            d = diffResult.dataset;
+            xmin = xmin < d.xmin ? xmin : d.xmin;
+            xmax = xmax > d.xmax ? xmax : d.xmax;
+            ymin = ymin < d.ymin ? ymin : d.ymin;
+            ymax = ymax > d.ymax ? ymax : d.ymax;
         }
 
         // set curve annotation to be the curve mean -- may be recalculated later
@@ -210,7 +229,7 @@ dataROC = function (plotParams, plotFunction) {
         curve['ymin'] = d.ymin;
         curve['ymax'] = d.ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -230,10 +249,11 @@ dataROC = function (plotParams, plotFunction) {
         "curves": curves,
         "curvesLength": curvesLength,
         "axisMap": axisMap,
+        "yAxisFormat": yAxisFormat,
         "xmax": xmax,
         "xmin": xmin
     };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
-    var result = matsDataProcessUtils.processDataROC(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
+    var result = matsDataProcessUtils.processDataEnsembleHistogram(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
 };

@@ -156,12 +156,12 @@ Template.dateRange.onRendered(function () {
                     const tStart = superiorVals[si].min;
                     const tEnd = superiorVals[si].max;
                     if (dataEnd.isBefore(tStart)) {
-                        // NCD not coincindebtal data?
+                        // NCD not coincidental data?
                         setInfo("You do not have any coincidental data with these two selections: The valid date ranges do not overlap - " +
                             dataStart.toString() + " to " + dataEnd.toString() + " and " + tStart.toString() + " to " + tEnd.toString());
                         return false;
                     } else if (tEnd.isBefore(dataStart)) {
-                        // NCD not coincindebtal data?
+                        // NCD not coincidental data?
                         setInfo("You do not have any coincidental data with these two selections: The valid date ranges do not overlap - " +
                             dataStart.toString() + " to " + dataEnd.toString() + " and " + tStart.toString() + " to " + tEnd.toString());
                         return false;
@@ -201,7 +201,7 @@ Template.dateRange.onRendered(function () {
             const jqIdRef = "#" + idref;
             $(jqIdRef).data('daterangepicker').setStartDate(startDsr);
             $(jqIdRef).data('daterangepicker').setEndDate(endDsr);
-            const newDateStr = startDsr.format('MM/DD/YYYY HH:mm') + ' - ' + endDsr.format('MM/DD/YYYY HH:mm');
+            const newDateStr = moment.utc(startDsr).format('MM/DD/YYYY HH:mm') + ' - ' + moment.utc(endDsr).format('MM/DD/YYYY HH:mm');
             matsParamUtils.setValueTextForParamName(name, newDateStr);
         } catch (error) {
             console.log("Error in date_range.js.refresh : " + error.message);

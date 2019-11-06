@@ -101,12 +101,10 @@ dataDieOff = function (plotParams, plotFunction) {
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;
-        var sum = 0;
-        var count = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.fcst_len AS avtime, " +
+            var statement = "SELECT m0.fcst_len AS fcst_lead, " +
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
@@ -119,8 +117,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 "and m0.fcst_len >= 0 " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
-                "group by avtime " +
-                "order by avtime;";
+                "group by fcst_lead " +
+                "order by fcst_lead;";
 
             statement = statement.replace('{{model}}', tablePrefix + region);
             statement = statement.replace('{{top}}', top);

@@ -104,6 +104,7 @@ const getDataForDiffCurve = function (dataset, diffFrom, appParams) {
             subSecs: [],   //subSecs
             subLevs: [],   //subLevs
             glob_stats: [],
+            bin_stats: [],
             stats: [],     //curveStats
             text: [],
             xmin: Number.MAX_VALUE,

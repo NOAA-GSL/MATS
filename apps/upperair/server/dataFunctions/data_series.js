@@ -75,6 +75,7 @@ dataSeries = function (plotParams, plotFunction) {
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         const validTimeClause = validTimeOptionsMap[validTimeStr][0];
+        const validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
@@ -128,7 +129,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, [], appParams, true);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, validTimes, appParams, true);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

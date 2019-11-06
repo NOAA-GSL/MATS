@@ -66,11 +66,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             const validTimeStr = curve['valid-time'];
             const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-            const validTimes = validTimeOptionsMap[validTimeStr][0];
-            var validTimeClause = " ";
-            if (validTimes.length > 0) {
-                validTimeClause = validTimes;
-            }
+            validTimeClause = validTimeOptionsMap[validTimeStr][0];
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
             utcCycleStartClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
@@ -88,7 +84,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.fcst_len as avtime, " +
+            var statement = "select m0.fcst_len as fcst_lead, " +
                 "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
                 "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
                 "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
@@ -102,8 +98,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
                 "{{levelClause}} " +
-                "group by avtime " +
-                "order by avtime" +
+                "group by fcst_lead " +
+                "order by fcst_lead" +
                 ";";
 
             statement = statement.replace('{{dbtable}}', dbtable);

@@ -55,13 +55,9 @@ dataHistogram = function (plotParams, plotFunction) {
         if (levels.length > 0) {
             levelClause = " and  m0.level IN(" + levels + ")";
         }
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimes = validTimeOptionsMap[validTimeStr][0];
-        var validTimeClause = " ";
-        if (validTimes.length > 0) {
-            validTimeClause = validTimes;
-        }
+        var validTimeStr = curve['valid-time'];
+        var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
+        var validTimeClause = validTimeOptionsMap[validTimeStr][0];
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
