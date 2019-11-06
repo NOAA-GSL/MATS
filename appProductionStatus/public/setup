@@ -417,7 +417,7 @@ defaultEntryPoints = ["http", "https"]
               "user": "${userName}",
               "password": "${password}",
               "database": "${database}",
-              "connectionLimit": 10
+              "connectionLimit": 4
               } 
 %ENDPOOLS
             # add a comma if more than one and not on the last one

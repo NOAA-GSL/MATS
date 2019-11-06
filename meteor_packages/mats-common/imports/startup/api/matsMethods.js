@@ -223,16 +223,17 @@ const _checkMetaDataRefresh = function () {
             for (var i = 0; i < rows.length; i++) {
                 try {
                     updatedEpoch = rows[i]['UNIX_TIMESTAMP(UPDATE_TIME)'];
+                    if (updatedEpoch === Number.MAX_VALUE) {
+                        throw new Error("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
+                    }
                     break;
                 } catch (e) {
                     throw new Error("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName + " ERROR:" + e.message);
                 }
-                if (updatedEpoch === Number.MAX_VALUE) {
-                    throw new Error("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
-                }
             }
             const lastRefreshedEpoch = moment(lastRefreshed).valueOf() / 1000;
-            if (lastRefreshedEpoch < updatedEpoch) {
+            const updatedEpochMoment = moment(updatedEpoch).valueOf();
+            if (lastRefreshedEpoch < updatedEpochMoment) {
                 refresh = true;
                 console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
                 break;
@@ -2082,8 +2083,6 @@ const resetApp = function (appRef) {
     }
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
-    if (deploymentText == null) {  // equivilent to deploymentText === null || deploymentText === undefined
-    }
     deployment = JSON.parse(deploymentText);
     var app = {};
     for (var ai = 0; ai < deployment.length; ai++) {
