@@ -63,7 +63,7 @@ dataSeries = function (plotParams, plotFunction) {
         var queryPool;
         var regionType = curve['region-type'];
         if (regionType === 'Predefined region') {
-            timeVar = "(m0.valid_day)+3600*m0.hour";
+            timeVar = "m0.valid_day+3600*m0.hour";
             var metarStringStr = curve['truth'];
             var metarString = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === metarStringStr);
             var regionStr = curve['region'];
@@ -71,7 +71,7 @@ dataSeries = function (plotParams, plotFunction) {
             queryTableClause = "from " + model + "_" + metarString + "_" + region + " as m0";
             forecastLengthClause = "and m0.fcst_len = " + forecastLength;
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and m0.hour IN(" + validTimes + ")";
+                validTimeClause = "and m0.hour IN(" + validTimes + ")";
             }
             var statisticSelect = curve['statistic'];
             var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
@@ -100,7 +100,7 @@ dataSeries = function (plotParams, plotFunction) {
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
             queryTableClause = "from metars as s, " + obsTable + " as o, " + modelTable + " as m0 ";
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + "))" +
+                validTimeClause = "and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + "))" +
                     " OR (m0.time%3600>=1800 and FROM_UNIXTIME((m0.time-((m0.time%3600)-3600)),'%H') IN (" + validTimes + ")))";
             }
             var variableClause;
@@ -141,9 +141,9 @@ dataSeries = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             var statement = "select {{average}} as avtime, " +
-                "count(distinct {{timeVar}}) as N_times, " +
-                "min({{timeVar}}) as min_secs, " +
-                "max({{timeVar}}) as max_secs, " +
+                "count(distinct ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as N_times, " +
+                "min(ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as min_secs, " +
+                "max(ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as max_secs, " +
                 "{{statistic}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
