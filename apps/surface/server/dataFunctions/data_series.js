@@ -50,7 +50,6 @@ dataSeries = function (plotParams, plotFunction) {
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var forecastLength = curve['forecast-length'];
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var timeVar;
         var statistic;
         var queryTableClause = "";
@@ -70,9 +69,6 @@ dataSeries = function (plotParams, plotFunction) {
             var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + model + "_" + metarString + "_" + region + " as m0";
             forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and m0.hour IN(" + validTimes + ")";
-            }
             var statisticSelect = curve['statistic'];
             var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
@@ -99,10 +95,6 @@ dataSeries = function (plotParams, plotFunction) {
             }
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
             queryTableClause = "from metars as s, " + obsTable + " as o, " + modelTable + " as m0 ";
-            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + "))" +
-                    " OR (m0.time%3600>=1800 and FROM_UNIXTIME((m0.time-((m0.time%3600)-3600)),'%H') IN (" + validTimes + ")))";
-            }
             var variableClause;
             if (variable[2] === "temp" || variable[2] === "dp") {
                 variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
@@ -125,6 +117,10 @@ dataSeries = function (plotParams, plotFunction) {
             siteDateClause = "and o.time >= '{{fromSecs}}' and o.time <= '{{toSecs}}'";
             siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
             queryPool = sitePool;
+        }
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and floor(({{timeVar}}+3600/2)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
         }
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
