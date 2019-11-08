@@ -106,7 +106,7 @@ dataSeries = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600 * floor((m0.time + 3600 / 2) / 3600)) order by ceil(3600 * floor((m0.time + 3600 / 2) / 3600))) as sub_data';
+            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
             statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -120,7 +120,7 @@ dataSeries = function (plotParams, plotFunction) {
         }
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and floor(({{timeVar}}+3600/2)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            validTimeClause = "and floor(({{timeVar}}+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
         }
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
@@ -137,9 +137,9 @@ dataSeries = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             var statement = "select {{average}} as avtime, " +
-                "count(distinct ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as N_times, " +
-                "min(ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as min_secs, " +
-                "max(ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as max_secs, " +
+                "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
+                "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
+                "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
                 "{{statistic}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +

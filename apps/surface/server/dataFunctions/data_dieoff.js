@@ -98,7 +98,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600 * floor((m0.time + 3600 / 2) / 3600)) order by ceil(3600 * floor((m0.time + 3600 / 2) / 3600))) as sub_data';
+            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
             statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -118,11 +118,11 @@ dataDieOff = function (plotParams, plotFunction) {
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and floor(({{timeVar}}+3600/2)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+                validTimeClause = "and floor(({{timeVar}}+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor((({{timeVar}}+3600/2) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            utcCycleStartClause = "and floor((({{timeVar}}+1800)-m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
         } else {
             dateRangeClause = "and ({{timeVar}} - m0.fcst_len*3600) = " + fromSecs;
         }
@@ -138,9 +138,9 @@ dataDieOff = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             var statement = "SELECT m0.fcst_len AS fcst_lead, " +
-                "count(distinct ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as N_times, " +
-                "min(ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as min_secs, " +
-                "max(ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as max_secs, " +
+                "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
+                "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
+                "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
                 "{{statistic}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +

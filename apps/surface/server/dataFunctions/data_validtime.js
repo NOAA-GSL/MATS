@@ -86,7 +86,7 @@ dataValidTime = function (plotParams, plotFunction) {
             queryPool = sumPool;
         } else {
             timeVar = "m0.time";
-            validTimeVar = "floor(({{timeVar}}+3600/2)%(24*3600)/3600)"; // adjust by 1800 seconds to center obs at the top of the hour
+            validTimeVar = "floor(({{timeVar}}+1800)%(24*3600)/3600)"; // adjust by 1800 seconds to center obs at the top of the hour
             var modelTable;
             if (forecastLength === 1) {
                 modelTable = model + "qp1f";
@@ -108,7 +108,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600 * floor((m0.time + 3600 / 2) / 3600)) order by ceil(3600 * floor((m0.time + 3600 / 2) / 3600))) as sub_data';
+            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
             statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -132,9 +132,9 @@ dataValidTime = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             var statement = "select {{validTimeVar}} as hr_of_day, " +
-                "count(distinct ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as N_times, " +
-                "min(ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as min_secs, " +
-                "max(ceil(3600 * floor(({{timeVar}} + 3600 / 2) / 3600))) as max_secs, " +
+                "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
+                "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
+                "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
                 "{{statistic}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
