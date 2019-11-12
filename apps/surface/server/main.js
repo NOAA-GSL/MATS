@@ -831,11 +831,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -863,11 +858,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,

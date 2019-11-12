@@ -160,7 +160,7 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.split('{{timeVar}}').join(timeVar);
             statement = statement.split('{{fromSecs}}').join(fromSecs);
             statement = statement.split('{{toSecs}}').join(toSecs);
-            dataRequests[curve.label] = statement;
+            dataRequests[label] = statement;
 
             var queryResult;
             var startMoment = moment();
@@ -169,7 +169,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams);
                 finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
+                dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",

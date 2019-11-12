@@ -420,13 +420,13 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
                 var queryVal;
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     const site = rows[rowIndex].sta_name;
-                    queryVal = rows[rowIndex].model_ob_diff;
+                    queryVal = rows[rowIndex].stat;
                     d.siteName.push(site);
                     d.queryVal.push(queryVal);
                     d.stats.push({
                         N_times: rows[rowIndex].N_times,
-                        min_time: rows[rowIndex].min_time,
-                        max_time: rows[rowIndex].max_time
+                        min_time: rows[rowIndex].min_secs,
+                        max_time: rows[rowIndex].max_secs
                     });
                     var tooltips = site +
                         "<br>" + "variable: " + variable +

@@ -32,11 +32,18 @@ dataMap = function (plotParams, plotFunction) {
     }
     var dataset = [];
     var curve = curves[0];
+    var label = curve['label'];
     var dataSource = curve['data-source'];
-    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[dataSource][0];
+    var variableStr = curve['variable'];
+    var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+    var variable = variableOptionsMap[variableStr];
     var forecastLength = curve['forecast-length'];
+    var sitesClause = "";
+    var forecastLengthClause = "";
+    var validTimeClause = "";
+    var varUnits;
     var modelTable;
-    var forecastLengthClause;
     if (forecastLength === 1) {
         modelTable = model + "qp1f";
         forecastLengthClause = "";
@@ -46,94 +53,97 @@ dataMap = function (plotParams, plotFunction) {
     }
     var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
-    var sitesClause = "";
+    var queryTableClause = "from metars as s, " + obsTable + " as o, " + modelTable + " as m0 ";
+    var variableClause;
+    if (variable[2] === "temp" || variable[2] === "dp") {
+        variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
+        varUnits = '°C';
+    } else if (variable[2] === "rh") {
+        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")/10";
+        varUnits = 'RH (%)';
+    } else {
+        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
+        varUnits = 'm/s';
+    }
+    var statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, count(distinct m0.time) as N0';
+    statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         sitesClause = " and s.name in('" + sitesList.join("','") + "')";
     } else {
-        throw new Error("INFO:  Please add sites in order to plot a map.");
+        throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var variableStr = curve['variable'];
-    var variable = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 2})['optionsMap'][variableStr][2];
-    var variableClause;
-    if (variable === "temp" || variable === "dp") {
-        variableClause = "sum((((m0." + variable + "/10)-32)*(5/9)) - (((o." + variable + "/10)-32)*(5/9)))";
-    } else if (variable === "rh" || variable === "press") {
-        variableClause = "sum((m0." + variable + " - o." + variable + ")/10)";
-    } else {
-        variableClause = "sum((m0." + variable + " - o." + variable + ")*0.44704)";
-    }
-    var statisticSelect = 'diff';
-    var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {mapVarUnitMap: 1})['mapVarUnitMap'];
-    var varUnits = statVarUnitMap[statisticSelect][variableStr];
-    var validTimeClause = "";
+    var siteDateClause = "and o.time >= '{{fromSecs}}' and o.time <= '{{toSecs}}'";
+    var siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-    if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = " and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + "))" +
-            " OR (m0.time%3600>=1800 and FROM_UNIXTIME((m0.time-((m0.time%3600)-3600)),'%H') IN (" + validTimes + ")))";
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
     }
 
     var statement = "select s.name as sta_name, " +
         "s.madis_id as sta_id, " +
-        "count(distinct m0.time) as N_times, " +
-        "min(m0.time) as min_time, " +
-        "max(m0.time) as max_time, " +
-        "{{variableClause}}/count(distinct m0.time) as model_ob_diff " +
-        "from metars as s, {{obsTable}} as o, {{modelTable}} as m0 " +
+        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
+        "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
+        "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
+        "{{statistic}} " +
+        "{{queryTableClause}} " +
         "where 1=1 " +
-        "and s.madis_id = m0.sta_id " +
-        "and s.madis_id = o.sta_id " +
-        "and m0.time = o.time " +
+        "{{siteMatchClause}} " +
         "{{sitesClause}} " +
         "and m0.time >= '{{fromSecs}}' " +
         "and m0.time <= '{{toSecs}}' " +
-        "and o.time >= '{{fromSecs}}' " +
-        "and o.time <= '{{toSecs}}' " +
+        "{{siteDateClause}} " +
+        "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "{{validTimeClause}}" +
         "group by sta_name " +
         "order by sta_name" +
         ";";
 
-    statement = statement.replace('{{modelTable}}', modelTable);
-    statement = statement.replace('{{obsTable}}', obsTable);
+    statement = statement.replace('{{statistic}}', statistic);
+    statement = statement.replace('{{queryTableClause}}', queryTableClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+    statement = statement.replace('{{siteDateClause}}', siteDateClause);
+    statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
     statement = statement.replace('{{sitesClause}}', sitesClause);
-    statement = statement.replace('{{variableClause}}', variableClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.split('{{fromSecs}}').join(fromSecs);
     statement = statement.split('{{toSecs}}').join(toSecs);
-    dataRequests[curve.label + " - " + 0] = statement;
+    dataRequests[label] = statement;
+
     var queryResult;
     var startMoment = moment();
     var finishMoment;
     try {
+        // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, dataSource, variable, varUnits, siteMap);
         finishMoment = moment();
-        dataRequests["data retrieval (query) time - " + curve.label + " - " + 0] = {
+        dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
             finish: finishMoment.format(),
             duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
             recordCount: queryResult.data.length
         };
 
+        // get the data back from the query
         var d = queryResult.data;
         var dBlue = queryResult.dataBlue;
         var dBlack = queryResult.dataBlack;
         var dRed = queryResult.dataRed;
 
     } catch (e) {
+                // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
         throw new Error(e.message);
     }
     if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-            // This is NOT an error just a no data condition
+                    // this is NOT an error just a no data condition
             dataFoundForCurve = false;
         } else {
+                    // this is an error returned by the mysql database
             error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
             if (error.includes('Unknown column')) {
-                throw new Error("INFO:  The variable combination [" + variableStr + "] is not supported by the database for the model/site [" + model + " and " + site + "].");
+                throw new Error("INFO:  The variable [" + variableStr + "] is not supported by the database for the model/sites [" + model + " and " + sitesList + "].");
             } else {
                 throw new Error(error);
             }

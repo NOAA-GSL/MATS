@@ -159,7 +159,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             statement = statement.split('{{timeVar}}').join(timeVar);
             statement = statement.split('{{fromSecs}}').join(fromSecs);
             statement = statement.split('{{toSecs}}').join(toSecs);
-            dataRequests[curve.label] = statement;
+            dataRequests[label] = statement;
 
             var queryResult;
             var startMoment = moment();
@@ -168,7 +168,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams);
                 finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
+                dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
@@ -229,7 +229,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retrieval (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
