@@ -940,7 +940,7 @@ const showContourFace = function () {
             'bin-pivot': 'none',
             'bin-bounds': 'none',
             'truth': 'block',
-            'region-type' : 'block',
+            'region-type' : 'none',
             'x-axis-parameter': 'block',
             'y-axis-parameter': 'block',
             'significance': 'none'

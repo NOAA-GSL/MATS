@@ -751,6 +751,8 @@ Template.plotType.events({
             // change has been confirmed
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
+            // contours need to have the region be in predefined mode
+            matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
             // display appropriate selectors for contours
             matsCurveUtils.showContourFace();
             // make sure the curves already added also have the correct parameters displayed
@@ -793,9 +795,6 @@ Template.plotType.events({
                     if (!curves[ci]['y-axis-parameter'] && matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}) && matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).default) {
                         curves[ci]['y-axis-parameter'] = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).default;
                     }
-                    if (!curves[ci]['significance'] && matsCollections.CurveParams.findOne({name: 'significance'}) && matsCollections.CurveParams.findOne({name: 'significance'}).default) {
-                        curves[ci]['significance'] = matsCollections.CurveParams.findOne({name: 'significance'}).default;
-                    }
                 }
                 Session.set('Curves', curves);
             }
@@ -810,6 +809,8 @@ Template.plotType.events({
                 // no curves - just set the contour face
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
+                // contours need to have the region be in predefined mode
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
                 // display appropriate selectors for contours
                 matsCurveUtils.showContourFace();
                 if (!oldDatesExist) {
@@ -823,12 +824,15 @@ Template.plotType.events({
     'click .plot-type-ContourDiff': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
-            // see if the previous plot type also used the 'dates' parameter
+            // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
+            // contours need to have the region be in predefined mode
+            matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            // display appropriate selectors for contours
             matsCurveUtils.showContourFace();
+            // make sure the curves already added also have the correct parameters displayed
             var curves = Session.get('Curves');
-            // if a 'dates' parameter was already in use, we want to keep that value.
-            // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
+            // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
             if (!oldDatesExist) {
                 const curveDate = $('#controlButton-curve-dates-value').text();
                 matsParamUtils.setValueTextForParamName('dates', curveDate)
@@ -836,27 +840,26 @@ Template.plotType.events({
             if (curves.length > 0) {
                 // initialize parameters that may not have been used yet
                 for (var ci = 0; ci < curves.length; ci++) {
-                    // the average may not have been carried over from other curve types so let it default
-                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
-                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
-                    }
-                    if (!curves[ci]['utc-cycle-start'] && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}) && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default) {
-                        curves[ci]['utc-cycle-start'] = matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default;
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
                     }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
                     }
+                    if (!curves[ci]['level'] && matsCollections.CurveParams.findOne({name: 'level'}) && matsCollections.CurveParams.findOne({name: 'level'}).default) {
+                        curves[ci]['level'] = matsCollections.CurveParams.findOne({name: 'level'}).default;
+                    }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
-                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
-                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
-                    }
-                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
-                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    if (!curves[ci]['valid-time'] && matsCollections.CurveParams.findOne({name: 'valid-time'}) && matsCollections.CurveParams.findOne({name: 'valid-time'}).default) {
+                        curves[ci]['valid-time'] = matsCollections.CurveParams.findOne({name: 'valid-time'}).default;
                     }
                     if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
                         curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
                     }
                     if (!curves[ci]['x-axis-parameter'] && matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}) && matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).default) {
                         curves[ci]['x-axis-parameter'] = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).default;
@@ -879,12 +882,14 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the contour face
-                // see if the previous plot type also used the 'dates' parameter
+                // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
+                // contours need to have the region be in predefined mode
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+                // display appropriate selectors for contours
                 matsCurveUtils.showContourFace();
-                // if a 'dates' parameter was already in use, we want to keep that value.
-                // otherwise, set the 'dates' parameter to whatever 'curve-dates' was set to.
                 if (!oldDatesExist) {
+                    // If a 'dates' parameter was not already in use, set the 'dates' parameter to whatever 'curve-dates' was set to.
                     const curveDate = $('#controlButton-curve-dates-value').text();
                     matsParamUtils.setValueTextForParamName('dates', curveDate)
                 }
