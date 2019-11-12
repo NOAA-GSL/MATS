@@ -61,8 +61,11 @@ dataHistogram = function (plotParams, plotFunction) {
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.hour IN(" + validTimes + ")";
+        }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
@@ -104,10 +107,6 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{statistic}}', statistic);
-            var validTimeClause = " ";
-            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
-            }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[label] = statement;
 

@@ -51,7 +51,11 @@ dataThreshold = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
+        var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
+        }
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -90,10 +94,6 @@ dataThreshold = function (plotParams, plotFunction) {
             statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            var validTimeClause = " ";
-            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")"
-            }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[label] = statement;
 

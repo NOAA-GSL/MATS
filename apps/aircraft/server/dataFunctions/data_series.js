@@ -71,10 +71,10 @@ dataSeries = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var validTimeClause = " ";
+        var validTimeClause = "";
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = " and m0.hour IN(" + validTimes + ")";
+            validTimeClause = "and m0.hour IN(" + validTimes + ")";
         }
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];

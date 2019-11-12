@@ -71,7 +71,11 @@ dataSeries = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable2\}\}/g, variable[2]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
+        var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")";
+        }
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
@@ -114,10 +118,6 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{scale}}', grid_scale);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{regionClause}}', regionClause);
-            var validTimeClause = " ";
-            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")"
-            }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[label] = statement;
 

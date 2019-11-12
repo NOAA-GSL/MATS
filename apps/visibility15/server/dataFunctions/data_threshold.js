@@ -53,7 +53,11 @@ dataThreshold = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
+        var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")";
+        }
         var forecastLength = Number(curve['forecast-length']);
         var forecastHour = Math.floor(forecastLength);
         var forecastMinute = (forecastLength - forecastHour) * 60;
@@ -98,10 +102,6 @@ dataThreshold = function (plotParams, plotFunction) {
             statement = statement.replace('{{truth}}', truth);
             statement = statement.replace('{{forecastLength}}', forecastHour);
             statement = statement.replace('{{forecastMinute}}', forecastMinute);
-            var validTimeClause = " ";
-            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")"
-            }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[label] = statement;
 

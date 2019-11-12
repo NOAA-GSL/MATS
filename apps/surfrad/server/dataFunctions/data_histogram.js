@@ -67,7 +67,11 @@ dataHistogram = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         statistic = statistic.replace(/\{\{variable2\}\}/g, variable[2]);
+        var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")";
+        }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
@@ -113,10 +117,6 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{scale}}', grid_scale);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{regionClause}}', regionClause);
-            var validTimeClause = " ";
-            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")"
-            }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[label] = statement;
 
