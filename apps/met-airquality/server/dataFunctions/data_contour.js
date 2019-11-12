@@ -177,7 +177,7 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{levelsClause}}', levelsClause);
     statement = statement.split('{{lineDataType}}').join(lineDataType);
     statement = statement.split('{{dateClause}}').join(dateClause);
-    dataRequests[curve.label] = statement;
+    dataRequests[label] = statement;
     // console.log(statement);
 
     var queryResult;
@@ -187,7 +187,7 @@ dataContour = function (plotParams, plotFunction) {
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBPython(sumPool, statement, statLineType, statistic, appParams, vts);
         finishMoment = moment();
-        dataRequests["data retrieval (query) time - " + curve.label] = {
+        dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
             finish: finishMoment.format(),
             duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
@@ -233,7 +233,7 @@ dataContour = function (plotParams, plotFunction) {
     const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
     dataset.push(cOptions);
     var postQueryFinishMoment = moment();
-    dataRequests["post data retrieval (query) process time - " + curve.label] = {
+    dataRequests["post data retrieval (query) process time - " + label] = {
         begin: postQueryStartMoment.format(),
         finish: postQueryFinishMoment.format(),
         duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'

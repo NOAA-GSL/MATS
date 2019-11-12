@@ -145,7 +145,7 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement.replace('{{statisticsClause}}', statisticsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.split('{{lineDataType}}').join(lineDataType);
-            dataRequests[curve.label] = statement;
+            dataRequests[label] = statement;
             // console.log(statement);
 
             var queryResult;
@@ -155,7 +155,7 @@ dataProfile = function (plotParams, plotFunction) {
                 // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBPython(sumPool, statement, statLineType, statistic, appParams, vts);
                 finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
+                dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
@@ -209,7 +209,7 @@ dataProfile = function (plotParams, plotFunction) {
         const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retrieval (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'

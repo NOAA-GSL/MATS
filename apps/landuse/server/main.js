@@ -473,17 +473,17 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         const optionsMap = {
-            'None': ['(m0.valid_day)+3600*m0.hour'],
-            '3hr': ['ceil(' + 60 * 60 * 3 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 3 + ')+' + 60 * 60 * 3 + '/2)'],
-            '6hr': ['ceil(' + 60 * 60 * 6 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 6 + ')+' + 60 * 60 * 6 + '/2)'],
-            '12hr': ['ceil(' + 60 * 60 * 12 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 12 + ')+' + 60 * 60 * 12 + '/2)'],
-            '1D': ['ceil(' + 60 * 60 * 24 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
-            '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
-            '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
-            '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
-            '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
-            '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
-            '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
+            'None': ['ceil(' + 3600 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 + '/2)/' + 3600 + '))'],
+            '3hr': ['ceil(' + 3600 * 3 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 3 + '/2)/' + 3600 * 3 + '))'],
+            '6hr': ['ceil(' + 3600 * 6 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 6 + '/2)/' + 3600 * 6 + '))'],
+            '12hr': ['ceil(' + 3600 * 12 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 12 + '/2)/' + 3600 * 12 + '))'],
+            '1D': ['ceil(' + 3600 * 24 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 24 + '/2)/' + 3600 * 24 + '))'],
+            '3D': ['ceil(' + 3600 * 24 * 3 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 24 * 3 + '/2)/' + 3600 * 24 * 3 + '))'],
+            '7D': ['ceil(' + 3600 * 24 * 7 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 24 * 7 + '/2)/' + 3600 * 24 * 7 + '))'],
+            '30D': ['ceil(' + 3600 * 24 * 30 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 24 * 30 + '/2)/' + 3600 * 24 * 30 + '))'],
+            '60D': ['ceil(' + 3600 * 24 * 60 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 24 * 60 + '/2)/' + 3600 * 24 * 60 + '))'],
+            '90D': ['ceil(' + 3600 * 24 * 90 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 24 * 90 + '/2)/' + 3600 * 24 * 90 + '))'],
+            '180D': ['ceil(' + 3600 * 24 * 180 + '*floor((((m0.valid_day)+3600*m0.hour)+' + 3600 * 24 * 180 + '/2)/' + 3600 * 24 * 180 + '))'],
         };
         matsCollections.CurveParams.insert(
             {
@@ -618,11 +618,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -650,11 +645,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,

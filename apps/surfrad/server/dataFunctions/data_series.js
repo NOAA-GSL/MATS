@@ -119,7 +119,7 @@ dataSeries = function (plotParams, plotFunction) {
                 validTimeClause = " and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            dataRequests[curve.label] = statement;
+            dataRequests[label] = statement;
 
             if (data_source !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
                 throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is only available for the HRRR data-source.");
@@ -137,7 +137,7 @@ dataSeries = function (plotParams, plotFunction) {
                 // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, data_source, forecastLength, fromSecs, toSecs, averageStr, validTimes, appParams, false);
                 finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
+                dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
@@ -194,7 +194,7 @@ dataSeries = function (plotParams, plotFunction) {
         const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retrieval (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'

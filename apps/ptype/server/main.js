@@ -474,22 +474,22 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         const optionsMap = {
-            'None': ['m0.valid_secs'],
-            '15m': ['ceil(900*floor(m0.valid_secs/900)+900/2)'],
-            '30m': ['ceil(1800*floor(m0.valid_secs/1800)+1800/2)'],
-            '1h': ['ceil(3600*floor(m0.valid_secs/3600)+3600/2)'],
-            '90m': ['ceil(5400*floor(m0.valid_secs/5400)+5400/2)'],
-            '2h': ['ceil(7200*floor(m0.valid_secs/7200)+7200/2)'],
-            '3h': ['ceil(10800*floor(m0.valid_secs/10800)+10800/2)'],
-            '6h': ['ceil(21600*floor(m0.valid_secs/21600)+21600/2)'],
-            '12h': ['ceil(43200*floor(m0.valid_secs/43200)+43200/2)'],
-            '1D': ['ceil(86400*floor(m0.valid_secs/86400)+86400/2)'],
-            '3D': ['ceil(259200*floor(m0.valid_secs/259200)+259200/2)'],
-            '7D': ['ceil(604800*floor(m0.valid_secs/604800)+604800/2)'],
-            '30D': ['ceil(2592000*floor(m0.valid_secs/2592000)+2592000/2)'],
-            '60D': ['ceil(5184000*floor(m0.valid_secs/5184000)+5184000/2)']
+            'None': ['ceil(' + 900 + '*floor(((m0.time)+' + 900 + '/2)/' + 900 + '))'],
+            '30m': ['ceil(' + 1800 + '*floor(((m0.time)+' + 1800 + '/2)/' + 1800 + '))'],
+            '1hr': ['ceil(' + 3600 + '*floor(((m0.time)+' + 3600 + '/2)/' + 3600 + '))'],
+            '90m': ['ceil(' + 3600 * 1.5 + '*floor(((m0.time)+' + 3600 * 1.5 + '/2)/' + 3600 * 1.5 + '))'],
+            '2hr': ['ceil(' + 3600 * 2 + '*floor(((m0.time)+' + 3600 * 2 + '/2)/' + 3600 * 2 + '))'],
+            '3hr': ['ceil(' + 3600 * 3 + '*floor(((m0.time)+' + 3600 * 3 + '/2)/' + 3600 * 3 + '))'],
+            '6hr': ['ceil(' + 3600 * 6 + '*floor(((m0.time)+' + 3600 * 6 + '/2)/' + 3600 * 6 + '))'],
+            '12hr': ['ceil(' + 3600 * 12 + '*floor(((m0.time)+' + 3600 * 12 + '/2)/' + 3600 * 12 + '))'],
+            '1D': ['ceil(' + 3600 * 24 + '*floor(((m0.time)+' + 3600 * 24 + '/2)/' + 3600 * 24 + '))'],
+            '3D': ['ceil(' + 3600 * 24 * 3 + '*floor(((m0.time)+' + 3600 * 24 * 3 + '/2)/' + 3600 * 24 * 3 + '))'],
+            '7D': ['ceil(' + 3600 * 24 * 7 + '*floor(((m0.time)+' + 3600 * 24 * 7 + '/2)/' + 3600 * 24 * 7 + '))'],
+            '30D': ['ceil(' + 3600 * 24 * 30 + '*floor(((m0.time)+' + 3600 * 24 * 30 + '/2)/' + 3600 * 24 * 30 + '))'],
+            '60D': ['ceil(' + 3600 * 24 * 60 + '*floor(((m0.time)+' + 3600 * 24 * 60 + '/2)/' + 3600 * 24 * 60 + '))'],
+            '90D': ['ceil(' + 3600 * 24 * 90 + '*floor(((m0.time)+' + 3600 * 24 * 90 + '/2)/' + 3600 * 24 * 90 + '))'],
+            '180D': ['ceil(' + 3600 * 24 * 180 + '*floor(((m0.time)+' + 3600 * 24 * 180 + '/2)/' + 3600 * 24 * 180 + '))'],
         };
-
         matsCollections.CurveParams.insert(
             {
                 name: 'average',
@@ -624,11 +624,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -657,11 +652,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,

@@ -611,14 +611,14 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
         const optionsMap = {
-            'None': ['unix_timestamp(m0.date)+3600*m0.hour'],
-            '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
-            '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
-            '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
-            '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
-            '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
-            '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
-            '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
+            'None': ['ceil(' + 3600 + '*floor(((unix_timestamp(m0.date)+3600*m0.hour)+' + 3600 + '/2)/' + 3600 + '))'],
+            '1D': ['ceil(' + 3600 * 24 + '*floor(((unix_timestamp(m0.date)+3600*m0.hour)+' + 3600 * 24 + '/2)/' + 3600 * 24 + '))'],
+            '3D': ['ceil(' + 3600 * 24 * 3 + '*floor(((unix_timestamp(m0.date)+3600*m0.hour)+' + 3600 * 24 * 3 + '/2)/' + 3600 * 24 * 3 + '))'],
+            '7D': ['ceil(' + 3600 * 24 * 7 + '*floor(((unix_timestamp(m0.date)+3600*m0.hour)+' + 3600 * 24 * 7 + '/2)/' + 3600 * 24 * 7 + '))'],
+            '30D': ['ceil(' + 3600 * 24 * 30 + '*floor(((unix_timestamp(m0.date)+3600*m0.hour)+' + 3600 * 24 * 30 + '/2)/' + 3600 * 24 * 30 + '))'],
+            '60D': ['ceil(' + 3600 * 24 * 60 + '*floor(((unix_timestamp(m0.date)+3600*m0.hour)+' + 3600 * 24 * 60 + '/2)/' + 3600 * 24 * 60 + '))'],
+            '90D': ['ceil(' + 3600 * 24 * 90 + '*floor(((unix_timestamp(m0.date)+3600*m0.hour)+' + 3600 * 24 * 90 + '/2)/' + 3600 * 24 * 90 + '))'],
+            '180D': ['ceil(' + 3600 * 24 * 180 + '*floor(((unix_timestamp(m0.date)+3600*m0.hour)+' + 3600 * 24 * 180 + '/2)/' + 3600 * 24 * 180 + '))'],
         };
         matsCollections.CurveParams.insert(
             {
@@ -698,11 +698,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -731,11 +726,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,

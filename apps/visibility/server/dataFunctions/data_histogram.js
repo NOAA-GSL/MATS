@@ -100,7 +100,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 validTimeClause = " and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            dataRequests[curve.label] = statement;
+            dataRequests[label] = statement;
 
             var queryResult;
             var startMoment = moment();
@@ -109,7 +109,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams);
                 finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
+                dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",

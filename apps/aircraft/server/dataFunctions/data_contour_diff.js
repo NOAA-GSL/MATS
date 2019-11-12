@@ -179,7 +179,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{toSecs}}', toSecs);
         statement = statement.replace('{{matchDates}}', matchDates);
         statement = statement.replace('{{matchClause}}', matchClause);
-        dataRequests[curve.label] = statement;
+        dataRequests[label] = statement;
 
         var queryResult;
         var startMoment = moment();
@@ -188,7 +188,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             // send the query statement to the query function
             queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement);
             finishMoment = moment();
-            dataRequests["data retrieval (query) time - " + curve.label] = {
+            dataRequests["data retrieval (query) time - " + label] = {
                 begin: startMoment.format(),
                 finish: finishMoment.format(),
                 duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
@@ -232,7 +232,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retrieval (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'

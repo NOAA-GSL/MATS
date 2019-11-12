@@ -111,7 +111,7 @@ dataSeries = function (plotParams, plotFunction) {
                 validTimeClause = " and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            dataRequests[curve.label] = statement;
+            dataRequests[label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
             if (forecastLength === "-99") {
@@ -125,7 +125,7 @@ dataSeries = function (plotParams, plotFunction) {
                 // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, validTimes, appParams, false);
                 finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
+                dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
@@ -182,7 +182,7 @@ dataSeries = function (plotParams, plotFunction) {
         const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retrieval (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'

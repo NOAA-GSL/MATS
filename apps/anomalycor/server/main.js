@@ -431,14 +431,15 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         const optionsMap = {
-            'None': ['unix_timestamp(m0.valid_date)+3600*m0.valid_hour'],
-            '1D': ['ceil(86400*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/86400)+86400/2)'],
-            '3D': ['ceil(259200*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/259200)+259200/2)'],
-            '7D': ['ceil(604800*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/604800)+604800/2)'],
-            '30D': ['ceil(2592000*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/2592000)+2592000/2)'],
-            '60D': ['ceil(5184000*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/5184000)+5184000/2)']
+            'None': ['ceil(' + 3600 + '*floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)+' + 3600 + '/2)/' + 3600 + '))'],
+            '1D': ['ceil(' + 3600 * 24 + '*floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)+' + 3600 * 24 + '/2)/' + 3600 * 24 + '))'],
+            '3D': ['ceil(' + 3600 * 24 * 3 + '*floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)+' + 3600 * 24 * 3 + '/2)/' + 3600 * 24 * 3 + '))'],
+            '7D': ['ceil(' + 3600 * 24 * 7 + '*floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)+' + 3600 * 24 * 7 + '/2)/' + 3600 * 24 * 7 + '))'],
+            '30D': ['ceil(' + 3600 * 24 * 30 + '*floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)+' + 3600 * 24 * 30 + '/2)/' + 3600 * 24 * 30 + '))'],
+            '60D': ['ceil(' + 3600 * 24 * 60 + '*floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)+' + 3600 * 24 * 60 + '/2)/' + 3600 * 24 * 60 + '))'],
+            '90D': ['ceil(' + 3600 * 24 * 90 + '*floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)+' + 3600 * 24 * 90 + '/2)/' + 3600 * 24 * 90 + '))'],
+            '180D': ['ceil(' + 3600 * 24 * 180 + '*floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)+' + 3600 * 24 * 180 + '/2)/' + 3600 * 24 * 180 + '))'],
         };
-
         matsCollections.CurveParams.insert(
             {
                 name: 'average',
@@ -574,11 +575,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -607,11 +603,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
-                // hideOtherFor: {
-                //     'forecast-length': ["Fcst lead time"],
-                //     'valid-time': ["Valid UTC hour"],
-                //     'level': ["Pressure level"],
-                // },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,

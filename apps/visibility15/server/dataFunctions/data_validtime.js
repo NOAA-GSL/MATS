@@ -100,7 +100,7 @@ dataValidTime = function (plotParams, plotFunction) {
             statement = statement.replace('{{truth}}', truth);
             statement = statement.replace('{{forecastLength}}', forecastHour);
             statement = statement.replace('{{forecastMinute}}', forecastMinute);
-            dataRequests[curve.label] = statement;
+            dataRequests[label] = statement;
 
             var queryResult;
             var startMoment = moment();
@@ -109,7 +109,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams);
                 finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
+                dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
@@ -166,7 +166,7 @@ dataValidTime = function (plotParams, plotFunction) {
         const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retrieval (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'

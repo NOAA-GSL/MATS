@@ -116,7 +116,7 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            dataRequests[curve.label] = statement;
+            dataRequests[label] = statement;
 
             var queryResult;
             var startMoment = moment();
@@ -125,7 +125,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams);
                 finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
+                dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",

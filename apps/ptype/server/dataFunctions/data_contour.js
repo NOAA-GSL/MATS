@@ -109,7 +109,7 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.split('{{variable}}').join(variable);
     statement = statement.split('{{dateClause}}').join(dateClause);
-    dataRequests[curve.label] = statement;
+    dataRequests[label] = statement;
 
     // math is done on forecastLength later on -- set all analyses to 0
     if (forecastLength === "-99") {
@@ -123,7 +123,7 @@ dataContour = function (plotParams, plotFunction) {
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement);
         finishMoment = moment();
-        dataRequests["data retrieval (query) time - " + curve.label] = {
+        dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
             finish: finishMoment.format(),
             duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
@@ -175,7 +175,7 @@ dataContour = function (plotParams, plotFunction) {
     const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(curve, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
     dataset.push(cOptions);
     var postQueryFinishMoment = moment();
-    dataRequests["post data retrieval (query) process time - " + curve.label] = {
+    dataRequests["post data retrieval (query) process time - " + label] = {
         begin: postQueryStartMoment.format(),
         finish: postQueryFinishMoment.format(),
         duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
