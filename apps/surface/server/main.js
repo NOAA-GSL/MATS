@@ -290,14 +290,14 @@ const doCurveParams = function () {
 
     try {
         matsCollections.SiteMap.remove({});
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metars.desc from metars order by name;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,description from metars_mats_global order by name;");
         for (var i = 0; i < rows.length; i++) {
 
             var site_name = rows[i].name;
-            var site_description = rows[i].desc;
+            var site_description = rows[i].description;
             var site_id = rows[i].madis_id;
-            var site_lat = rows[i].lat / 100;
-            var site_lon = rows[i].lon / 100;
+            var site_lat = rows[i].lat / 182;
+            var site_lon = rows[i].lon / 182;
             var site_elev = rows[i].elev;
             siteOptionsMap[site_name] = [site_id];
             //masterSitesMap[site_name] = [site_description];
@@ -336,7 +336,6 @@ const doCurveParams = function () {
             }
         );
     }
-
 
     if (matsCollections.CurveParams.find({name: 'label'}).count() == 0) {
         matsCollections.CurveParams.insert(
@@ -758,13 +757,7 @@ const doCurveParams = function () {
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 4,
-                multiple: true,
-                /*
-                hiddenPlotTypes means that this parameter will be hidden for all the PlotTypes listed here. In other words this param
-                will only be visible for matsTypes.PlotTypes.map
-                If this param option is missing or empty then the parameter is visible for all plotTypes.
-                 */
-                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.profile, matsTypes.PlotTypes.scatter2d]
+                multiple: true
             });
     } else {
         // it is defined but check for necessary update
@@ -790,7 +783,6 @@ const doCurveParams = function () {
                 peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                //default: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
@@ -798,7 +790,6 @@ const doCurveParams = function () {
                 displayGroup: 4,
                 multiple: true,
                 defaultMapView: {point: [50, -92.5], zoomLevel: 1.25},
-                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.profile, matsTypes.PlotTypes.scatter2d],
                 help: 'map-help.html'
             });
     } else {
