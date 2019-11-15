@@ -16,6 +16,14 @@
   "test_directory": "/builds/buildArea/mats-testing",
   "test_command": "sh ./matsTest -b phantomjs -s mats-int.gsd.esrl.noaa.gov -f progress:/builds/buildArea/test_results/mats-int-`/bin/date +%Y.%m.%d.%H.%M.%S`",
   "test_result_directory": "/builds/buildArea/test_results",
+  "groupOrder": [
+    "Upper Air",
+    "Ceiling and Visibility",
+    "Surface",
+    "Precipitation",
+    "Radar",
+    "METexpress"
+  ],
   "app_list": [
     {
       "app": "upperair",
@@ -221,6 +229,14 @@
   "test_directory": "/builds/buildArea/mats-testing",
   "test_command": "sh ./matsTest -b phantomjs -f progress:/builds/buildArea/test_results/mats-dev-`/bin/date +%Y.%m.%d.%H.%M.%S`",
   "test_result_directory": "/builds/buildArea/test_results",
+  "groupOrder": [
+    "Upper Air",
+    "Ceiling and Visibility",
+    "Surface",
+    "Precipitation",
+    "Radar",
+    "METexpress"
+  ],
   "app_list": [
     {
       "app": "upperair",
@@ -427,6 +443,14 @@
   "test_directory": "/builds/buildArea/test_results",
   "test_command": "sh ./matsTest -b phantomjs -f progress:/builds/buildArea/test_results/mats-`/bin/date +%Y.%m.%d.%H.%M.%S`",
   "test_result_directory": "/builds/buildArea/test_results",
+  "groupOrder": [
+    "Upper Air",
+    "Ceiling and Visibility",
+    "Surface",
+    "Precipitation",
+    "Radar",
+    "METexpress"
+  ],
   "app_list": [
     {
       "app": "upperair",
