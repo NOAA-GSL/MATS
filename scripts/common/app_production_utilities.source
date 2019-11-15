@@ -103,7 +103,7 @@ setBuildConfigVarsForDevelopmentServer() {
 	openTunnel
 	unset data
     local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'development'},{_id:0}).shellPrint()")
-    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | del(.groupOrder) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
 	closeTunnel
 }
 
@@ -115,7 +115,7 @@ setBuildConfigVarsForIntegrationServer() {
     openTunnel
     unset data
     local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'integration'},{_id:0}).shellPrint()")
-    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | del(.groupOrder) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
     closeTunnel
 }
 
@@ -127,7 +127,7 @@ setBuildConfigVarsForProductionServer() {
     openTunnel
     unset data
     local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'production'},{_id:0}).shellPrint()")
-    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | del(.groupOrder) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
     closeTunnel
 }
 
