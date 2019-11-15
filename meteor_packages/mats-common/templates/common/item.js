@@ -95,6 +95,14 @@ Template.item.helpers({
         } else {
             return "block";
         }
+    },
+    zIndexVal: function() {
+        // the difference selector keeps trying to cover the map modal, so increase the map's z-index.
+        if ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.selectMap)) {
+            return "10";
+        } else {
+            return "5";
+        }
     }
 });
 

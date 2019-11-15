@@ -7,6 +7,8 @@ import {matsParamUtils} from 'meteor/randyp:mats-common';
 Template.map.onRendered(function () {
 
     var defaultAttrs = this;    // save for when we need to reset to defaults
+    var divElement;             // save so the event handlers can talk to the two selectors
+    var targetElement;          // save so the event handlers can talk to the two selectors
 
     $.getScript("https://cdn.plot.ly/plotly-latest.min.js", function () {
         var targetId = '';
@@ -15,7 +17,6 @@ Template.map.onRendered(function () {
         var thisMarkers = [];
         var peerOptions = [];
         var selectedValues = [];
-        var divElement = '';
         var divId = '';
         var layout = {};
         var dataset = {};
@@ -26,7 +27,7 @@ Template.map.onRendered(function () {
             var defaultZoomLevel = item.data.defaultMapView.zoomLevel;
             peerName = item.data.peerName;
 
-            var targetElement = document.getElementsByName(peerName)[0];
+            targetElement = document.getElementsByName(peerName)[0];
             if (!targetElement) {
                 return;
             }
@@ -277,7 +278,7 @@ Template.map.onRendered(function () {
         // register an event listener so that the select.js can ask the map div to refresh after a selection
         var elem = document.getElementById(divElement);
         elem.addEventListener('refresh', function (e) {
-            refresh(e.detail.refElement);
+            refresh(targetElement);
         });
 
         // register an event listener so that the param_util.js can ask the map div to reset when someone clicks 'reset to defaults'
