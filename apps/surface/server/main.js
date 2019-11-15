@@ -1030,7 +1030,8 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'data-source', ': '],
                 ['', 'sites', ': '],
-                ['', 'variable', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', ' h '],
                 [' valid-time:', 'valid-time', '']
             ],

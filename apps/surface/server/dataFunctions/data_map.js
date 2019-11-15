@@ -67,6 +67,7 @@ dataMap = function (plotParams, plotFunction) {
     }
     var statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, count(distinct m0.time) as N0';
     statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
+    curves[0]['statistic'] = "Bias (Model - Obs)";
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         sitesClause = " and s.name in('" + sitesList.join("','") + "')";

@@ -100,6 +100,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
             statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
             statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
+            curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
                 sitesClause = " and s.name in('" + sitesList.join("','") + "')";
