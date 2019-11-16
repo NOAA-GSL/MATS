@@ -565,7 +565,9 @@ Template.plotType.events({
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // maps need to have the region be station-select mode
-            matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Select stations (bias only)');
+            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations (bias only)');
+            }
             // display appropriate selectors for maps
             matsCurveUtils.showMapFace();
             // make sure the curves already added also have the correct parameters displayed
@@ -602,7 +604,9 @@ Template.plotType.events({
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // maps need to have the region be station-select mode
-                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Select stations (bias only)');
+                if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations (bias only)');
+                }
                 // display appropriate selectors for maps
                 matsCurveUtils.showMapFace();
                 if (!oldDatesExist) {
@@ -752,7 +756,9 @@ Template.plotType.events({
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // contours need to have the region be in predefined mode
-            matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            }
             // display appropriate selectors for contours
             matsCurveUtils.showContourFace();
             // make sure the curves already added also have the correct parameters displayed
@@ -810,7 +816,9 @@ Template.plotType.events({
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // contours need to have the region be in predefined mode
-                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+                if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+                }
                 // display appropriate selectors for contours
                 matsCurveUtils.showContourFace();
                 if (!oldDatesExist) {
@@ -827,7 +835,9 @@ Template.plotType.events({
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // contours need to have the region be in predefined mode
-            matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            }
             // display appropriate selectors for contours
             matsCurveUtils.showContourFace();
             // make sure the curves already added also have the correct parameters displayed
@@ -885,7 +895,9 @@ Template.plotType.events({
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // contours need to have the region be in predefined mode
-                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+                if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+                }
                 // display appropriate selectors for contours
                 matsCurveUtils.showContourFace();
                 if (!oldDatesExist) {
