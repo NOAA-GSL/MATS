@@ -1019,9 +1019,7 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
-    sumPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
+
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "mats_metadata", ['anomalycor_mats_metadata', 'anomalycor_database_groups']);
     matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-anomalycor'});
 });

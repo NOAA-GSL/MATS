@@ -955,9 +955,6 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
-    sumPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
 
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories', 'vgtyp_descriptions']);
     matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'landuse'});

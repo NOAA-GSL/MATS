@@ -2066,7 +2066,7 @@ const resetApp = function (appRef) {
     var dep_env = process.env.NODE_ENV;
     // set some defaults for python processing - these can be overridden
     if (Meteor.settings.private != null && Meteor.settings.private.PYTHON_PATH == null) {
-        Meteor.settings.private.PYTHON_PATH = "/usr/bin/python";
+        Meteor.settings.private.PYTHON_PATH = "/usr/bin/python3";
     }
 
     if (Meteor.settings.private != null && Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
@@ -2081,6 +2081,46 @@ const resetApp = function (appRef) {
                break;
         }
     }
+
+    var connectionTimeout = 300; // timeout in seconds
+    if (Meteor.settings.public != null && Meteor.settings.public.mysql_wait_timeout != null) {
+        connectionTimeout = Meteor.settings.public.mysql_wait_timeout;
+    }
+    try {
+        sumPool.on('connection', function (connection) {
+            connection.query('set group_concat_max_len = 4294967295');
+            connection.query('set session wait_timeout = ' + connectionTimeout);
+            console.log("opening new sumsPool connection")
+        });
+    } catch (e) {
+        console.log("no sumPool initialized--not opening connection")
+    }
+    try {
+        modelPool.on('connection', function (connection) {
+            connection.query('set session wait_timeout = ' + connectionTimeout);
+            console.log("opening new modelPool connection")
+        });
+    } catch (e) {
+        console.log("no modelPool initialized--not opening connection")
+    }
+    try {
+        metadataPool.on('connection', function (connection) {
+            connection.query('set session wait_timeout = ' + connectionTimeout);
+            console.log("opening new metadataPool connection")
+        });
+    } catch (e) {
+        console.log("no metadataPool initialized--not opening connection")
+    }
+    try {
+        sitePool.on('connection', function (connection) {
+            connection.query('set group_concat_max_len = 4294967295');
+            connection.query('set session wait_timeout = ' + connectionTimeout);
+            console.log("opening new sitePool connection")
+        });
+    } catch (e) {
+        console.log("no sitePool initialized--not opening connection")
+    }
+
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     deployment = JSON.parse(deploymentText);

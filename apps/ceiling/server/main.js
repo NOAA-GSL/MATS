@@ -966,9 +966,6 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
-    sumPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
 
     let mdr = new matsTypes.MetaDataDBRecord("modelPool", "ceiling2", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "ceiling_sums2", ['regions_per_model_mats_all_categories']);

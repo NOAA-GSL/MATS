@@ -1205,9 +1205,6 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
-    sumPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
 
     const siteSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SITE_DATA, status: "active"}, {
         host: 1,
@@ -1218,9 +1215,6 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     sitePool = mysql.createPool(siteSettings);
-    sitePool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
 
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
