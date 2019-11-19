@@ -11,18 +11,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2019-08-20T21:53:51.537+0000"
-          },
-          "hashedToken": "WNZoKW/fOv/gbAHjw/I/YYiZq7MFwWDLzVrU79tlxyE="
-        },
-        {
-          "when": {
-            "$date": "2019-08-20T21:53:51.686+0000"
-          },
-          "hashedToken": "2T2tGaXSaQqD8W845MVBWuXBnoYO039cssb2FeOa6YI="
-        },
-        {
-          "when": {
             "$date": "2019-08-29T16:43:15.940+0000"
           },
           "hashedToken": "opUQ0lRZQgRvP2DYsp2xjOLY9WwgonAXIpRzBqdKAFM="
