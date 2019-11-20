@@ -96,7 +96,7 @@ dataROC = function (plotParams, plotFunction) {
             vts = vts.map(function (vt) {
                 return "'" + vt + "'";
             }).join(',');
-            validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
+            validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

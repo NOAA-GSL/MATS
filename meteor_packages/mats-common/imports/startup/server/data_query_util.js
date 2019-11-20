@@ -155,7 +155,7 @@ const queryDBPython = function (pool, statement, statLineType, statistic, appPar
                 "-t", appParams.plotType,
                 "-l", appParams.hasLevels,
                 "-g", appParams.hideGaps,
-                "-c", appParams.completeness,
+                "-c", appParams.completeness / 100,
                 "-v", vts
             ]
         };

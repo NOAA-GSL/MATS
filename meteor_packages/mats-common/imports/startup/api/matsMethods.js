@@ -2212,10 +2212,10 @@ const restoreFromFile = new ValidatedMethod({
             var path = "";
             if (params.type == "data") {
                 path = "/web/static/dataFunctions/" + params.name;
-            } else if (params.ype == "graph") {
+            } else if (params.type == "graph") {
                 path = "/web/static/displayFunctions/" + params.name;
             } else {
-                return ("error - wrong tyoe");
+                return ("error - wrong type");
             }
             console.log('importing ' + params.type + ' file: ' + path);
             var fse = require('fs-extra');

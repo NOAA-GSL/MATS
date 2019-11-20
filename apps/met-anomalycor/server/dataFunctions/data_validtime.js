@@ -101,7 +101,7 @@ dataValidTime = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) as hr_of_day, " +
+            var statement = "select unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as hr_of_day, " +
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
