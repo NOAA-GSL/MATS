@@ -1089,7 +1089,18 @@ const _runMetadata = function (params, req, res, next) {
 // private define a middleware for refreshing the metadata
 const _refreshMetadataMWltData = function (params, req, res, next) {
     if (Meteor.isServer) {
-        _checkMetaDataRefresh();
+        console.log("Server route asked to refresh metadata");
+
+        try {
+            console.log("GUI asked to refresh metadata");
+            _checkMetaDataRefresh();
+        } catch (e) {
+            console.log(e);
+            res.end("<body>" +
+                "<h1>refreshMetadata Failed!</h1>" +
+                "<p>" + e.message + "</p>" +
+                "</body>");
+        }
         res.end("<body><h1>refreshMetadata Done!</h1></body>");
     }
 };
@@ -1972,7 +1983,7 @@ const refreshMetaData = new ValidatedMethod({
     run() {
         if (Meteor.isServer) {
             try {
-                //console.log("Asked to refresh metadata");
+                console.log("GUI asked to refresh metadata");
                 _checkMetaDataRefresh();
             } catch (e) {
                 console.log(e);
