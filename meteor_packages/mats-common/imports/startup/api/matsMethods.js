@@ -237,12 +237,15 @@ const _checkMetaDataRefresh = function () {
                 refresh = true;
                 console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
                 break;
+            } else {
+                console.log("NOT Refreshing the metadata for table " + dbName + "." + tName + " : updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " : metadata last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
             }
         }
         if (refresh === true) {
             // refresh the app metadata
             // app specific routines
             //const asrKeys = Object.keys(appSpecificResetRoutines);
+           console.log("Actually refreshing metadata");
             const asrKeys = appSpecificResetRoutines;
             for (var ai = 0; ai < asrKeys.length; ai++) {
                 global.appSpecificResetRoutines[ai]();
