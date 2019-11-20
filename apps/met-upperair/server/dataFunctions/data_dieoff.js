@@ -103,13 +103,13 @@ dataDieOff = function (plotParams, plotFunction) {
                 vts = vts.map(function (vt) {
                     return "'" + vt + "'";
                 }).join(',');
-                validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
+                validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
             }
         } else if (dieoffType === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and (unix_timestamp(ld.fcst_valid_beg) - ld.fcst_lead*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+            utcCycleStartClause = "and unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 IN(" + utcCycleStart + ")";
         } else {
-            dateRangeClause = "and (unix_timestamp(ld.fcst_valid_beg) - ld.fcst_lead*3600) = " + fromSecs;
+            dateRangeClause = "and unix_timestamp(ld.fcst_init_beg) = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

@@ -99,7 +99,7 @@ dataContour = function (plotParams, plotFunction) {
             vts = vts.map(function (vt) {
                 return "'" + vt + "'";
             }).join(',');
-            validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
+            validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
         }
     }
     var dateClause = "";
