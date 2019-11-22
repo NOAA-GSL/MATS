@@ -57,6 +57,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var thresholdClause = "";
         var validTimeClause = "";
         var forecastLengthClause = "";
+        var dateString = "";
         var dateClause = "";
         if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
             var thresholdStr = curve['threshold'];
@@ -74,44 +75,50 @@ dataContourDiff = function (plotParams, plotFunction) {
             forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-            dateClause = "m0.time-m0.fcst_len*3600";
+            dateString = "m0.time-m0.fcst_len*3600";
         } else {
-            dateClause = "m0.time";
+            dateString = "m0.time";
         }
-        // for two contours it's faster to just take care of matching in the query
-        var matchModel = "";
-        var matchDates = "";
-        var matchThresholdClause = "";
-        var matchValidTimeClause = "";
-        var matchForecastLengthClause = "";
-        var matchClause = "";
-        if (appParams.matching) {
-            const otherCurveIndex = curveIndex === 0 ? 1 : 0;
-            const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
-            const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
-
-            matchModel = ", " + otherModel + "_" + otherRegion + " as a0";
-            const matchDateClause = dateClause.split('m0').join('a0');
-            matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "'";
-            matchClause = "and m0.time = a0.time";
-
-            if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-                var matchForecastLength = curves[otherCurveIndex]['forecast-length'];
-                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength;
-            } else {
-                matchForecastLengthClause = "and m0.fcst_len = a0.fcst_len";
-            }
-            if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
-                var matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === curves[otherCurveIndex]['threshold']);
-                matchThresholdClause = "and a0.trsh = " + matchThreshold;
-            } else {
-                matchThresholdClause = "and m0.trsh = a0.trsh";
-            }
-            if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-                var matchValidTimes = curves[otherCurveIndex]['valid-time'] === undefined ? [] : curves[otherCurveIndex]['valid-time'];
-                if (matchValidTimes.length > 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    matchValidTimeClause = " and a0.time%(24*3600)/3600 IN(" + matchValidTimes + ")";
+        dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+        // for contingency table apps, we currently have to deal with matching in the query.
+        if (appParams.matching && curvesLength > 1) {
+            var matchCurveIdx = 0;
+            var mcidx;
+            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
+                const matchCurve = curves[mcidx];
+                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
+                    continue;
                 }
+                matchCurveIdx++;
+                const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
+                if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
+                    const matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
+                    thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
+                } else {
+                    thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
+                }
+                if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
+                    const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
+                    if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
+                        validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + validTimes + ")";
+                    }
+                }
+                if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
+                    const matchForecastLength = matchCurve['forecast-length'];
+                    forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
+                } else {
+                    forecastLengthClause = forecastLengthClause + " and m0.fcst_len = m" + matchCurveIdx + ".fcst_len";
+                }
+                var matchDateString = "";
+                if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
+                    matchDateString = "m" + matchCurveIdx + ".time-m" + matchCurveIdx + ".fcst_len*3600";
+                } else {
+                    matchDateString = "m" + matchCurveIdx + ".time";
+                }
+                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
+                dateClause = dateClause + " and " + matchDateString + " >= " + fromSecs + " and " + matchDateString + " <= " + toSecs;
             }
         }
         var statisticSelect = curve['statistic'];
@@ -125,23 +132,17 @@ dataContourDiff = function (plotParams, plotFunction) {
         // prepare the query from the above parameters
         var statement = "{{xValClause}} " +
             "{{yValClause}} " +
-            "count(distinct {{dateClause}}) as N_times, " +
-            "min({{dateClause}}) as min_secs, " +
-            "max({{dateClause}}) as max_secs, " +
+            "count(distinct {{dateString}}) as N_times, " +
+            "min({{dateString}}) as min_secs, " +
+            "max({{dateString}}) as max_secs, " +
             "{{statisticClause}} " +
-            "{{queryTableClause}}{{matchModel}} " +
+            "{{queryTableClause}} " +
             "where 1=1 " +
             "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-            "{{matchClause}} " +
-            "and {{dateClause}} >= '{{fromSecs}}' " +
-            "and {{dateClause}} <= '{{toSecs}}' " +
-            "{{matchDates}} " +
+            "{{dateClause}} " +
             "{{thresholdClause}} " +
-            "{{matchThresholdClause}} " +
             "{{validTimeClause}} " +
-            "{{matchValidTimeClause}} " +
             "{{forecastLengthClause}} " +
-            "{{matchForecastLengthClause}} " +
             "group by xVal,yVal " +
             "order by xVal,yVal" +
             ";";
@@ -150,18 +151,11 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{yValClause}}', yValClause);
         statement = statement.replace('{{statisticClause}}', statisticClause);
         statement = statement.replace('{{queryTableClause}}', queryTableClause);
-        statement = statement.replace('{{matchModel}}', matchModel);
-        statement = statement.replace('{{matchClause}}', matchClause);
         statement = statement.replace('{{thresholdClause}}', thresholdClause);
-        statement = statement.replace('{{matchThresholdClause}}', matchThresholdClause);
         statement = statement.replace('{{validTimeClause}}', validTimeClause);
-        statement = statement.replace('{{matchValidTimeClause}}', matchValidTimeClause);
         statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-        statement = statement.replace('{{matchForecastLengthClause}}', matchForecastLengthClause);
-        statement = statement.replace('{{fromSecs}}', fromSecs);
-        statement = statement.replace('{{toSecs}}', toSecs);
-        statement = statement.replace('{{matchDates}}', matchDates);
-        statement = statement.split('{{dateClause}}').join(dateClause);
+        statement = statement.replace('{{dateClause}}', dateClause);
+        statement = statement.split('{{dateString}}').join(dateString);
         dataRequests[label] = statement;
 
         // math is done on forecastLength later on -- set all analyses to 0

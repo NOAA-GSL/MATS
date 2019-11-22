@@ -48,6 +48,7 @@ dataContour = function (plotParams, plotFunction) {
     var thresholdClause = "";
     var validTimeClause = "";
     var forecastLengthClause = "";
+    var dateString = "";
     var dateClause = "";
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
@@ -65,10 +66,11 @@ dataContour = function (plotParams, plotFunction) {
         forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
     if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-        dateClause = "m0.time-m0.fcst_len*3600";
+        dateString = "m0.time-m0.fcst_len*3600";
     } else {
-        dateClause = "m0.time";
+        dateString = "m0.time";
     }
+       dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statisticClause = statisticOptionsMap[statisticSelect][0];
@@ -80,15 +82,14 @@ dataContour = function (plotParams, plotFunction) {
     // prepare the query from the above parameters
     var statement = "{{xValClause}} " +
         "{{yValClause}} " +
-        "count(distinct {{dateClause}}) as N_times, " +
-        "min({{dateClause}}) as min_secs, " +
-        "max({{dateClause}}) as max_secs, " +
+        "count(distinct {{dateString}}) as N_times, " +
+        "min({{dateString}}) as min_secs, " +
+        "max({{dateString}}) as max_secs, " +
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +
         "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-        "and {{dateClause}} >= '{{fromSecs}}' " +
-        "and {{dateClause}} <= '{{toSecs}}' " +
+        "{{dateClause}} " +
         "{{thresholdClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
@@ -103,9 +104,8 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{thresholdClause}}', thresholdClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-    statement = statement.replace('{{fromSecs}}', fromSecs);
-    statement = statement.replace('{{toSecs}}', toSecs);
-    statement = statement.split('{{dateClause}}').join(dateClause);
+    statement = statement.replace('{{dateClause}}', dateClause);
+    statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
 
     // math is done on forecastLength later on -- set all analyses to 0
