@@ -44,17 +44,11 @@ dataContour = function (plotParams, plotFunction) {
     var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var regionStr = curve['region'];
     var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-    var statisticSelect = curve['statistic'];
-    var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-    var statistic = statisticOptionsMap[statisticSelect][0];
-    var validTimeClause = "";
+    var queryTableClause = "from " + model + "_" + region + " as m0";
     var thresholdClause = "";
+    var validTimeClause = "";
     var forecastLengthClause = "";
     var dateClause = "";
-    if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-        var forecastLength = curve['forecast-length'];
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-    }
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
@@ -63,17 +57,23 @@ dataContour = function (plotParams, plotFunction) {
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = " and  m0.time%(24*3600)/3600 IN(" + validTimes + ")";
+            validTimeClause = " and m0.time%(24*3600)/3600 IN(" + validTimes + ")";
         }
+    }
+    if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
+        var forecastLength = curve['forecast-length'];
+        forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
     if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
         dateClause = "m0.time-m0.fcst_len*3600";
     } else {
         dateClause = "m0.time";
     }
-
+    var statisticSelect = curve['statistic'];
+    var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+    var statisticClause = statisticOptionsMap[statisticSelect][0];
     // For contours, this functions as the colorbar label.
-    curve['unitKey'] = statisticOptionsMap[statisticSelect][1];
+    curve['unitKey'] = statisticOptionsMap[statisticSelect][2];
 
     var d;
     // this is a database driven curve, not a difference curve
@@ -83,12 +83,12 @@ dataContour = function (plotParams, plotFunction) {
         "count(distinct {{dateClause}}) as N_times, " +
         "min({{dateClause}}) as min_secs, " +
         "max({{dateClause}}) as max_secs, " +
-        "{{statistic}} " +
-        "from {{model}}_{{region}} as m0 " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
         "where 1=1 " +
+        "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
         "and {{dateClause}} >= '{{fromSecs}}' " +
         "and {{dateClause}} <= '{{toSecs}}' " +
-        "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
         "{{thresholdClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
@@ -98,14 +98,13 @@ dataContour = function (plotParams, plotFunction) {
 
     statement = statement.replace('{{xValClause}}', xValClause);
     statement = statement.replace('{{yValClause}}', yValClause);
-    statement = statement.replace('{{model}}', model);
-    statement = statement.replace('{{region}}', region);
-    statement = statement.replace('{{statistic}}', statistic);
+    statement = statement.replace('{{statisticClause}}', statisticClause);
+    statement = statement.replace('{{queryTableClause}}', queryTableClause);
+    statement = statement.replace('{{thresholdClause}}', thresholdClause);
+    statement = statement.replace('{{validTimeClause}}', validTimeClause);
+    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{fromSecs}}', fromSecs);
     statement = statement.replace('{{toSecs}}', toSecs);
-    statement = statement.replace('{{thresholdClause}}', thresholdClause);
-    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-    statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.split('{{dateClause}}').join(dateClause);
     dataRequests[label] = statement;
 
