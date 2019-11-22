@@ -238,14 +238,19 @@ const _checkMetaDataRefresh = function () {
                 console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
                 break;
             } else {
-                console.log("NOT Refreshing the metadata for table " + dbName + "." + tName + " : updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " : metadata last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
+                // force refresh because we could not get the update time
+                if (updatedEpoch == undefined || updatedEpoch === "NULL") {
+                    refresh = true;
+                    console.log("FORCED Refreshing the metadata for table because updatedEpoch is undefined" + dbName + "." + tName + " : updated at " + updatedEpoch);
+                } else {
+                    console.log("NOT Refreshing the metadata for table " + dbName + "." + tName + " : updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " : metadata last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
+                }
             }
         }
         if (refresh === true) {
             // refresh the app metadata
             // app specific routines
             //const asrKeys = Object.keys(appSpecificResetRoutines);
-           console.log("Actually refreshing metadata");
             const asrKeys = appSpecificResetRoutines;
             for (var ai = 0; ai < asrKeys.length; ai++) {
                 global.appSpecificResetRoutines[ai]();
@@ -2088,6 +2093,7 @@ const resetApp = function (appRef) {
             case "development":
             case "integration":
             case "production":
+            case "metexpress":
                 dep_env = Meteor.settings.private.process.RUN_ENV;
                 break;
             default:
