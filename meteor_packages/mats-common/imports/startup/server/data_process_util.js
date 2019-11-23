@@ -18,8 +18,8 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
 
     const appName = matsCollections.appName.findOne({}).app;
 
-    // if matching, pare down dataset to only matching data
-    if (curveInfoParams.curvesLength > 1 && appParams.matching) {
+    // if matching, pare down dataset to only matching data. Contingency table apps already did their matching in the query
+    if (curveInfoParams.curvesLength > 1 && appParams.matching && curveInfoParams.statType !== 'ctc') {
         dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curveInfoParams.curvesLength, appParams);
     }
 
@@ -28,9 +28,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
 
     // calculate data statistics (including error bars) for each curve
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
-        if (appName !== "surfrad") {
-            axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
-        }
+        axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
         var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
         var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curves[curveIndex]['statistic'];
         var data = dataset[curveIndex];
@@ -52,23 +50,25 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], [], appParams);
             }
 
-            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
+            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc. Don't replace the stat for contingency table apps.
             rawStat = data.y[di];
-            // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
-            if (appName !== "surfrad" ||
-                !(appName === "surfrad" &&
-                    (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') &&
-                    !appParams.matching)) {
-                if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
-                    // assign recalculated statistic to data[di][1], which is the value to be plotted
-                    data.y[di] = errorResult.d_mean;
-                } else {
-                    if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
-                        // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                        data.y[di] = dataset[diffFrom[0]].y[di] - dataset[diffFrom[1]].y[di];
+            if (curveInfoParams.statType !== 'ctc') {
+                // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
+                if (appName !== "surfrad" ||
+                    !(appName === "surfrad" &&
+                        (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') &&
+                        !appParams.matching)) {
+                    if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
+                        // assign recalculated statistic to data[di][1], which is the value to be plotted
+                        data.y[di] = errorResult.d_mean;
                     } else {
-                        // keep the null for no data at this point
-                        data.y[di] = null;
+                        if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
+                            // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                            data.y[di] = dataset[diffFrom[0]].y[di] - dataset[diffFrom[1]].y[di];
+                        } else {
+                            // keep the null for no data at this point
+                            data.y[di] = null;
+                        }
                     }
                 }
             }
@@ -131,23 +131,26 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 "<br>sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>n: " + errorResult.n_good +
-                // "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
-                // "<br>stde: " + errorResult.stde_betsy +
-                "<br>errorbars: " + Number((data.y[di]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data.y[di]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+                "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                "<br>stde: " + errorResult.stde_betsy;
+
+            if (curveInfoParams.statType !== 'ctc') {
+                data.text[di] = data.text[di] + "<br>errorbars: " + Number((data.y[di]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data.y[di]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+            }
 
             di++;
         }
 
-        // enable error bars if matching and they aren't null
-        if (appParams.matching && data.error_y.array.filter(x => x).length > 0) {
+        // enable error bars if matching and they aren't null. Don't show them for contingency table plots, because they don't really correspond to what's being plotted.
+        if (appParams.matching && curveInfoParams.statType !== 'ctc' && data.error_y.array.filter(x => x).length > 0) {
             data.error_y.visible = true;
         }
 
-        // get the overall stats for the text output - this uses the means not the stats.
+        // get the overall stats for the text output.
         const stats = matsDataUtils.get_err(values, indVars, [], appParams);
-        const filteredMeans = means.filter(x => x);
-        var miny = Math.min(...filteredMeans);
-        var maxy = Math.max(...filteredMeans);
+        const filteredValues = values.filter(x => x);
+        var miny = Math.min(...filteredValues);
+        var maxy = Math.max(...filteredValues);
         if (means.indexOf(0) !== -1 && 0 < miny) {
             miny = 0;
         }
@@ -159,14 +162,12 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         dataset[curveIndex]['glob_stats'] = stats;
 
         // recalculate axis options after QC and matching
-        if (appName !== "surfrad") {
-            const minx = Math.min(...indVars);
-            const maxx = Math.max(...indVars);
-            curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxy : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'];
-            curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
-            curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'];
-            curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? minx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'];
-        }
+        const minx = Math.min(...indVars);
+        const maxx = Math.max(...indVars);
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxy : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'];
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'];
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? minx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'];
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
@@ -241,8 +242,8 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
     const appName = matsCollections.appName.findOne({}).app;
 
-    // if matching, pare down dataset to only matching data
-    if (curveInfoParams.curvesLength > 1 && appParams.matching) {
+    // if matching, pare down dataset to only matching data. Contingency table apps already did their matching in the query
+    if (curveInfoParams.curvesLength > 1 && appParams.matching && curveInfoParams.statType !== 'ctc') {
         dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curveInfoParams.curvesLength, appParams);
     }
 
@@ -268,18 +269,20 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
             // errorResult holds all the calculated curve stats like mean, sd, etc.
             var errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], data.subLevs[di], appParams);
 
-            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
+            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc. Don't replace the stat for contingency table apps.
             rawStat = data.x[di];
-            if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
-                // assign recalculated statistic to data[di][1], which is the value to be plotted
-                data.x[di] = errorResult.d_mean;
-            } else {
-                if (dataset[diffFrom[0]].x[di] !== null && dataset[diffFrom[1]].x[di] !== null) {
-                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                    data.x[di] = dataset[diffFrom[0]].x[di] - dataset[diffFrom[1]].x[di];
+            if (curveInfoParams.statType !== 'ctc') {
+                if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
+                    // assign recalculated statistic to data[di][1], which is the value to be plotted
+                    data.x[di] = errorResult.d_mean;
                 } else {
-                    // keep the null for no data at this point
-                    data.x[di] = null;
+                    if (dataset[diffFrom[0]].x[di] !== null && dataset[diffFrom[1]].x[di] !== null) {
+                        // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                        data.x[di] = dataset[diffFrom[0]].x[di] - dataset[diffFrom[1]].x[di];
+                    } else {
+                        // keep the null for no data at this point
+                        data.x[di] = null;
+                    }
                 }
             }
             values.push(data.x[di]);
@@ -300,7 +303,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
             data.subSecs[di] = [];
             data.subLevs[di] = [];
 
-            // store statistics
+            // store statistics for this di datapoint
             data.stats[di] = {
                 raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
@@ -317,23 +320,26 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                 "<br>sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>n: " + errorResult.n_good +
-                // "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
-                // "<br>stde: " + errorResult.stde_betsy +
-                "<br>errorbars: " + Number((data.x[di]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data.x[di]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+                "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                "<br>stde: " + errorResult.stde_betsy;
+
+            if (curveInfoParams.statType !== 'ctc') {
+                data.text[di] = data.text[di] + "<br>errorbars: " + Number((data.x[di]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data.x[di]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+            }
 
             di++;
         }
 
-        // enable error bars if matching and they aren't null
-        if (appParams.matching && data.error_x.array.filter(x => x).length > 0) {
+        // enable error bars if matching and they aren't null. Don't show them for contingency table plots, because they don't really correspond to what's being plotted.
+        if (appParams.matching && curveInfoParams.statType !== 'ctc' && data.error_x.array.filter(x => x).length > 0) {
             data.error_x.visible = true;
         }
 
-        // get the overall stats for the text output - this uses the means not the stats.
+        // get the overall stats for the text output.
         const stats = matsDataUtils.get_err(values.reverse(), levels.reverse(), [], appParams); // have to reverse because of data inversion
-        const filteredMeans = means.filter(x => x);
-        var minx = Math.min(...filteredMeans);
-        var maxx = Math.max(...filteredMeans);
+        const filteredValues = values.filter(x => x);
+        var minx = Math.min(...filteredValues);
+        var maxx = Math.max(...filteredValues);
         if (means.indexOf(0) !== -1 && 0 < minx) {
             minx = 0;
         }
