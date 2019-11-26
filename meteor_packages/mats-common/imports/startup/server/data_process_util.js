@@ -17,6 +17,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
     var error = "";
 
     const appName = matsCollections.appName.findOne({}).app;
+    curveInfoParams.statType = curveInfoParams.statType === undefined ? 'scalar' : curveInfoParams.statType;
 
     // if matching, pare down dataset to only matching data. Contingency table apps already did their matching in the query
     if (curveInfoParams.curvesLength > 1 && appParams.matching && curveInfoParams.statType !== 'ctc') {
@@ -126,12 +127,12 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                     data.text[di] = data.text[di] + "<br>" + data.x[di];
                     break;
             }
+
             data.text[di] = data.text[di] +
                 "<br>" + statisticSelect + ": " + (data.y[di] === null ? null : data.y[di].toPrecision(4)) +
                 "<br>sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>n: " + errorResult.n_good +
-                "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 "<br>stde: " + errorResult.stde_betsy;
 
             if (curveInfoParams.statType !== 'ctc') {
@@ -241,6 +242,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     var error = "";
 
     const appName = matsCollections.appName.findOne({}).app;
+    curveInfoParams.statType = curveInfoParams.statType === undefined ? 'scalar' : curveInfoParams.statType;
 
     // if matching, pare down dataset to only matching data. Contingency table apps already did their matching in the query
     if (curveInfoParams.curvesLength > 1 && appParams.matching && curveInfoParams.statType !== 'ctc') {
@@ -320,7 +322,6 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                 "<br>sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>n: " + errorResult.n_good +
-                "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 "<br>stde: " + errorResult.stde_betsy;
 
             if (curveInfoParams.statType !== 'ctc') {

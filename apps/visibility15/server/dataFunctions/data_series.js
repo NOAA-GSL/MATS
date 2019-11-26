@@ -48,31 +48,66 @@ dataSeries = function (plotParams, plotFunction) {
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var queryTableClause = "from " + model + "_" + region + " as m0";
         var truthStr = curve['truth'];
         var truth = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === truthStr);
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic = statisticOptionsMap[statisticSelect][0];
+        var truthClause = "and m0.truth = '" + truth + "'";
+        var thresholdStr = curve['threshold'];
+        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var thresholdClause = "and m0.trsh = " + threshold;
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")";
         }
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
         var forecastLength = Number(curve['forecast-length']);
         var forecastHour = Math.floor(forecastLength);
         var forecastMinute = (forecastLength - forecastHour) * 60;
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength + " and m0.fcst_min = " + forecastMinute;
+        var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
+        // for contingency table apps, we currently have to deal with matching in the query.
+        if (appParams.matching && curvesLength > 1) {
+            var matchCurveIdx = 0;
+            var mcidx;
+            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
+                const matchCurve = curves[mcidx];
+                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
+                    continue;
+                }
+                matchCurveIdx++;
+                const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
+                const matchTruth = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === matchCurve['truth']);
+                truthClause = truthClause + " and m" + matchCurveIdx + ".truth = '" + matchTruth + "'";
+                const matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
+                thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
+                const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
+                if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
+                    validTimeClause = validTimeClause + " and (m" + matchCurveIdx + ".time)%(24*3600)/3600 IN(" + validTimes + ")";
+                }
+                const matchForecastLength = Number(matchCurve['forecast-length']);
+                const matchForecastHour = Math.floor(matchForecastLength);
+                const matchForecastMinute = (matchForecastLength - matchForecastHour) * 60;
+                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength + " and m" + matchCurveIdx + ".fcst_min = " + matchForecastMinute;
+                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
+                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " and m" + matchCurveIdx + ".time <= " + toSecs;
+            }
+        }
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause = statisticOptionsMap[statisticSelect][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = statisticOptionsMap[statisticSelect][1];
+        var statType = statisticOptionsMap[statisticSelect][1];
+        var axisKey = statisticOptionsMap[statisticSelect][2];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var idealVal = statisticOptionsMap[statisticSelect][2];
+        var idealVal = statisticOptionsMap[statisticSelect][3];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
             idealValues.push(idealVal);
         }
@@ -85,32 +120,27 @@ dataSeries = function (plotParams, plotFunction) {
                 "count(distinct m0.time) as N_times, " +
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +
-                "{{statistic}} " +
-                "from {{model}}_{{region}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and m0.time >= {{fromSecs}} " +
-                "and m0.time <  {{toSecs}} " +
-                "{{validTimeClause}} " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.trsh = {{threshold}} " +
-                "and m0.truth = '{{truth}}' " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.fcst_min = {{forecastMinute}} " +
+                "{{dateClause}} " +
+                "{{truthClause}} " +
+                "{{thresholdClause}} " +
+                "{{validTimeClause}} " +
+                "{{forecastLengthClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
             statement = statement.replace('{{average}}', average);
-            statement = statement.replace('{{model}}', model);
-            statement = statement.replace('{{threshold}}', threshold);
-            statement = statement.replace('{{truth}}', truth);
-            statement = statement.replace('{{forecastLength}}', forecastHour);
-            statement = statement.replace('{{forecastMinute}}', forecastMinute);
-            statement = statement.replace('{{region}}', region);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{truthClause}}', truthClause);
+            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
@@ -200,6 +230,7 @@ dataSeries = function (plotParams, plotFunction) {
         "curvesLength": curvesLength,
         "idealValues": idealValues,
         "utcCycleStarts": utcCycleStarts,
+        "statType": statType,
         "axisMap": axisMap,
         "xmax": xmax,
         "xmin": xmin
