@@ -61,6 +61,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var forecastLengthStr = curve['dieoff-type'];
         var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
         var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+        var forecastLengthClause = "";
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
@@ -98,6 +99,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".thresh = " + matchThreshold;
                 const matchForecastLengthStr = matchCurve['dieoff-type'];
                 const matchForecastLength = forecastLengthOptionsMap[matchForecastLengthStr][0];
+                forecastLengthClause = forecastLengthClause + " and m0.fcst_len = m" + matchCurveIdx + ".fcst_len";
                 const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
                 const matchFromSecs = matchDateRange.fromSeconds;
                 const matchToSecs = matchDateRange.toSeconds;
@@ -147,6 +149,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{dateClause}} " +
                 "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
+                "{{forecastLengthClause}} " +
                 "{{utcCycleStartClause}} " +
                 "group by fcst_lead " +
                 "order by fcst_lead" +
@@ -156,6 +159,7 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;

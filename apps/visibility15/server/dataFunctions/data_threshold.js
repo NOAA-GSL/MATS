@@ -49,6 +49,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var truthStr = curve['truth'];
         var truth = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === truthStr);
         var truthClause = "and m0.truth = '" + truth + "'";
+        var thresholdClause = "";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -77,6 +78,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
                 const matchTruth = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === matchCurve['truth']);
                 truthClause = truthClause + " and m" + matchCurveIdx + ".truth = '" + matchTruth + "'";
+                thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
                 const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                 if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
                     validTimeClause = validTimeClause + " and (m" + matchCurveIdx + ".time)%(24*3600)/3600 IN(" + validTimes + ")";
@@ -121,6 +123,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "{{dateClause}} " +
                 "{{truthClause}} " +
+                "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
                 "group by thresh " +
@@ -130,6 +133,7 @@ dataThreshold = function (plotParams, plotFunction) {
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{truthClause}}', truthClause);
+            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);

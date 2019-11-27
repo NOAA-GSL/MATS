@@ -51,6 +51,7 @@ dataThreshold = function (plotParams, plotFunction) {
             sourceStr = "_" + source;
         }
         var queryTableClause = "from " + model + "_" + region + sourceStr + " as m0";
+        var thresholdClause = "";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -80,6 +81,7 @@ dataThreshold = function (plotParams, plotFunction) {
                     matchSourceStr = "_" + matchSource;
                 }
                 queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + matchSourceStr + " as m" + matchCurveIdx;
+                thresholdClause = thresholdClause + " and m0.thresh = m" + matchCurveIdx + ".thresh";
                 const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                 if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
                     validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".valid_time)%(24*3600)/3600) IN(" + validTimes + ")";
@@ -121,6 +123,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "{{dateClause}} " +
+                "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
                 "group by thresh " +
@@ -129,6 +132,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);

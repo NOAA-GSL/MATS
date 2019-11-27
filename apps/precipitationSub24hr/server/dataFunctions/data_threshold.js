@@ -48,6 +48,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var scaleStr = curve['scale'];
         var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var queryTableClause = "from " + model + '_' + grid_scale + '_' + region + " as m0";
+        var thresholdClause = "";
         var forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
         var forecastTypeStr = curve['forecast-type'];
         var forecastType = Object.keys(matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
@@ -70,6 +71,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
                 const matchScale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
                 queryTableClause = queryTableClause + ", " + matchModel + "_" + matchScale + "_" + matchRegion + " as m" + matchCurveIdx;
+                thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
                 const matchForecastType = Object.keys(matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap[key] === matchCurve['forecast-type']);
                 forecastTypeClause = forecastTypeClause + " and m" + matchCurveIdx + ".accum_len = " + matchForecastType;
                 const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
@@ -107,6 +109,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "{{dateClause}} " +
+                "{{thresholdClause}} " +
                 "{{forecastTypeClause}} " +
                 "group by thresh " +
                 "order by thresh" +
@@ -114,6 +117,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{forecastTypeClause}}', forecastTypeClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;

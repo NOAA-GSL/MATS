@@ -48,6 +48,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var scaleStr = curve['scale'];
         var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var queryTableClause = "from " + model + '_' + grid_scale + '_' + region + " as m0";
+        var thresholdClause = "";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -73,6 +74,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
                 const matchScale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
                 queryTableClause = queryTableClause + ", " + matchModel + "_" + matchScale + "_" + matchRegion + " as m" + matchCurveIdx;
+                thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
                 const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                 if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
                     validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + validTimes + ")";
@@ -114,6 +116,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "{{dateClause}} " +
+                "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
                 "group by thresh " +
@@ -122,6 +125,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
