@@ -100,10 +100,10 @@ dataDieOff = function (plotParams, plotFunction) {
                     dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
                 } else if (matchForecastLength === matsTypes.ForecastTypes.utcCycle) {
                     const matchUtcCycleStart = Number(matchCurve['utc-cycle-start']);
-                    utcCycleStartClause = utcCycleStartClause + " and (m" + matchCurveIdx + ".time - m" + matchCurveIdx + ".fcst_len*60+m" + matchCurveIdx + ".fcst_min)*60)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
+                    utcCycleStartClause = utcCycleStartClause + " and (m" + matchCurveIdx + ".time - (m" + matchCurveIdx + ".fcst_len*60+m" + matchCurveIdx + ".fcst_min)*60)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
                     dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
                 } else {
-                    dateClause = dateClause + " and (m" + matchCurveIdx + ".time - m" + matchCurveIdx + ".fcst_len*60+m" + matchCurveIdx + ".fcst_min)*60) = " + matchFromSecs;
+                    dateClause = dateClause + " and (m" + matchCurveIdx + ".time - (m" + matchCurveIdx + ".fcst_len*60+m" + matchCurveIdx + ".fcst_min)*60) = " + matchFromSecs;
                 }
             }
         }
