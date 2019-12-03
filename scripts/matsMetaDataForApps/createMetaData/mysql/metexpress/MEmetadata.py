@@ -460,8 +460,8 @@ class ParentMetadata:
                 per_mvdb[mvdb][model]['fcsts'] = []
                 per_mvdb[mvdb][model]['fcst_orig'] = []
                 num_recs = 0
-                min = datetime.max
-                max = datetime.min  # earliest epoch?
+                mindate = datetime.max
+                maxdate = datetime.min  # earliest epoch?
                 for line_data_table in self.line_data_table:
                     fcst_clause = ''
                     if self.fcstWhereClause is not None and self.fcstWhereClause != "":
@@ -513,21 +513,21 @@ class ParentMetadata:
                             cnx2.commit()
                             data = cursor2.fetchone()
                             if data is not None:
-                                min = min if data['mindate'] is None or min < data['mindate'] else data[
+                                mindate = mindate if data['mindate'] is None or mindate < data['mindate'] else data[
                                     'mindate']
-                                max = max if data['maxdate'] is None or max > data['maxdate'] else data[
+                                maxdate = maxdate if data['maxdate'] is None or maxdate > data['maxdate'] else data[
                                     'maxdate']
                                 num_recs = num_recs + data['numrecs']
                         except pymysql.Error as e:
                             continue
                 per_mvdb[mvdb][model]['fcsts'] = list(map(str, sorted(temp_fcsts)))
                 per_mvdb[mvdb][model]['fcst_orig'] = list(map(str, sorted(temp_fcsts_orig)))
-                if (min is None or min is datetime.max):
-                    min = datetime.utcnow()
-                if (max is None is max is datetime.min):
-                    max = datetime.utcnow()
-                per_mvdb[mvdb][model]['mindate'] = int(min.replace(tzinfo=timezone.utc).timestamp())
-                per_mvdb[mvdb][model]['maxdate'] = int(max.replace(tzinfo=timezone.utc).timestamp())
+                if mindate is None or mindate is datetime.max:
+                    mindate = datetime.utcnow()
+                if maxdate is None is maxdate is datetime.min:
+                    maxdate = datetime.utcnow()
+                per_mvdb[mvdb][model]['mindate'] = int(mindate.replace(tzinfo=timezone.utc).timestamp())
+                per_mvdb[mvdb][model]['maxdate'] = int(maxdate.replace(tzinfo=timezone.utc).timestamp())
                 per_mvdb[mvdb][model]['numrecs'] = num_recs
                 if int(per_mvdb[mvdb][model]['numrecs']) > 0:
                     db_has_valid_data = True
