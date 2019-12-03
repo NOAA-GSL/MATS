@@ -138,7 +138,7 @@ class ParentMetadata:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), variables varchar(4095), trshs varchar(4095), truths varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(self.metadata_table)
+            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), variables varchar(4095), trshs varchar(4095), gridpoints varchar(4095), truths varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
@@ -411,6 +411,21 @@ class ParentMetadata:
                     per_mvdb[mvdb][model]['trshs'].append(trsh)
                 per_mvdb[mvdb][model]['trshs'].sort(key=self.strip_trsh)
 
+                # Get the gridpoints for this model in this database
+                get_gridpoints = 'select distinct interp_pnts from stat_header where model = "' + model + '"'
+                if self.fcstWhereClause is not None and self.fcstWhereClause != "":
+                    get_gridpoints += ' and ' + self.fcstWhereClause + ';'
+                per_mvdb[mvdb][model]['gridpoints'] = []
+                print(self.script_name + " - Getting gridpoints for model " + model)
+                if debug:
+                    print(self.script_name + " - gridpoints sql query: " + get_gridpoints)
+                cursor2.execute(get_gridpoints)
+                cnx2.commit()
+                for line2 in cursor2:
+                    gridpoint = str(list(line2.values())[0])
+                    per_mvdb[mvdb][model]['gridpoints'].append(gridpoint)
+                per_mvdb[mvdb][model]['gridpoints'].sort(key=int)
+
                 # Get the truths for this model in this database
                 get_truths = 'select distinct obtype from stat_header where model = "' + model + '"'
                 if self.fcstWhereClause is not None and self.fcstWhereClause != "":
@@ -573,7 +588,7 @@ class ParentMetadata:
             mindate = raw_metadata['mindate']
             maxdate = raw_metadata['maxdate']
             display_text = model.replace('.', '_')
-            insert_row = "insert into {}_dev (db, model, display_text, regions, levels, fcst_lens, variables, trshs, truths, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(self.metadata_table)
+            insert_row = "insert into {}_dev (db, model, display_text, regions, levels, fcst_lens, variables, trshs, gridpoints, truths, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(self.metadata_table)
             qd.append(mvdb)
             qd.append(model)
             qd.append(display_text)
@@ -582,6 +597,7 @@ class ParentMetadata:
             qd.append(str(raw_metadata['fcsts']))
             qd.append(str(raw_metadata['variables']))
             qd.append(str(raw_metadata['trshs']))
+            qd.append(str(raw_metadata['gridpoints']))
             qd.append(str(raw_metadata['truths']))
             qd.append(str(raw_metadata['fcst_orig']))
             qd.append(mindate)
