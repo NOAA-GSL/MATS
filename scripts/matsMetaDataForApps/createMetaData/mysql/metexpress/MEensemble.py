@@ -24,9 +24,14 @@ from metexpress.MEmetadata import ParentMetadata
 class MEEnsemble(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['needsTrshs'] = False  # ensemble does not have thresholds
         options['fcstWhereClause'] = ''
-        options['line_data_table'] = ["line_data_pct", "line_data_ecnt", "line_data_cnt", "line_data_pstd"]
+        options['line_data_table'] = ["line_data_pct",      # used for reliability and ROC plot types
+                                      "line_data_ecnt",     # used for most stats on timeseries/dieoff/validtime/hist
+                                      "line_data_cnt",      # used for MAE and ACC on timeseries/dieoff/validtime/hist
+                                      "line_data_pstd",     # used for brier scores on timeseries/dieoff/validtime/hist
+                                      "line_data_eclv",     # used for EV on timeseries/dieoff/validtime/hist
+                                      "line_data_nbrcnt",   # used for FSS on timeseries/dieoff/validtime/hist
+                                      "line_data_rhist"]    # used for ensemble histogram plot types
         options['metadata_table'] = "ensemble_mats_metadata"
         options['app_reference'] = "met-ensemble"
         options['database_groups'] = "ensemble_database_groups"
@@ -55,6 +60,20 @@ class MEEnsemble(ParentMetadata):
                 return int(float(elem) + 10000)
             except ValueError:
                 return 0
+
+    def strip_trsh(self, elem):
+        # helper function for sorting thresholds
+        if elem[0] == '>' or elem[0] == '<':
+            try:
+                return int(float(elem[1:]))
+            except ValueError:
+                return 0
+        else:
+            try:
+                return int(float(elem))
+            except ValueError:
+                return 0
+
 
 if __name__ == '__main__':
     options = MEEnsemble.get_options(sys.argv)

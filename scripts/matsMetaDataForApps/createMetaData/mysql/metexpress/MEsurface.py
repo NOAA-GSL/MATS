@@ -24,9 +24,8 @@ from metexpress.MEmetadata import ParentMetadata
 class MESurface(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['needsTrshs'] = False  # surface does not have thresholds
         options['fcstWhereClause'] = 'fcst_lev in ("MSL", "SFC", "Z0", "Z2", "Z10", "H0", "H2", "H10", "L0") and fcst_var not regexp "^OZ|^PM25"'
-        options['line_data_table'] = ["line_data_sl1l2"]
+        options['line_data_table'] = ["line_data_sl1l2"]    # used for scalar stats on all plot types
         options['metadata_table'] = "surface_mats_metadata"
         options['app_reference'] = "met-surface"
         options['database_groups'] = "surface_database_groups"
@@ -48,6 +47,20 @@ class MESurface(ParentMetadata):
                 return int(float(elem) + 10000)
             except ValueError:
                 return 0
+
+    def strip_trsh(self, elem):
+        # helper function for sorting thresholds
+        if elem[0] == '>' or elem[0] == '<':
+            try:
+                return int(float(elem[1:]))
+            except ValueError:
+                return 0
+        else:
+            try:
+                return int(float(elem))
+            except ValueError:
+                return 0
+
 
 if __name__ == '__main__':
     options = MESurface.get_options(sys.argv)
