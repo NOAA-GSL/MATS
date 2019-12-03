@@ -29,8 +29,6 @@ class MEEnsemble(ParentMetadata):
                                       "line_data_ecnt",     # used for most stats on timeseries/dieoff/validtime/hist
                                       "line_data_cnt",      # used for MAE and ACC on timeseries/dieoff/validtime/hist
                                       "line_data_pstd",     # used for brier scores on timeseries/dieoff/validtime/hist
-                                      "line_data_eclv",     # used for EV on timeseries/dieoff/validtime/hist
-                                      "line_data_nbrcnt",   # used for FSS on timeseries/dieoff/validtime/hist
                                       "line_data_rhist"]    # used for ensemble histogram plot types
         options['metadata_table'] = "ensemble_mats_metadata"
         options['app_reference'] = "met-ensemble"
