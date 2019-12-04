@@ -75,8 +75,8 @@ const doPlotParams = function () {
             });
 
         const yAxisOptionsMap = {
-            "Number": ["number"],
-            "Relative frequency": ["relFreq"]
+            "Relative frequency": ["relFreq"],
+            "Number": ["number"]
         };
         matsCollections.PlotParams.insert(
             {
