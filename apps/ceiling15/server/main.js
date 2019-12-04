@@ -599,7 +599,7 @@ const doCurveParams = function () {
 
         const optionsMap = {
             'Fcst lead time': "select m0.fcst_len+m0.fcst_min/60 as xVal, ",
-            'Threshold': "select m0.trsh/100 as xVal, ",
+            'Threshold': "select m0.trsh/100 as xVal, ",    // produces thresholds in kft
             'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
             'Init UTC hour': "select (m0.time-(m0.fcst_len*3600+m0.fcst_min*60))%(24*3600)/3600 as xVal, ",
             'Valid Date': "select m0.time as xVal, ",
@@ -627,7 +627,7 @@ const doCurveParams = function () {
 
         const optionsMap = {
             'Fcst lead time': "m0.fcst_len+m0.fcst_min/60 as yVal, ",
-            'Threshold': "m0.trsh/100 as yVal, ",
+            'Threshold': "m0.trsh/100 as yVal, ",    // produces thresholds in kft
             'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
             'Init UTC hour': "(m0.time-(m0.fcst_len*3600+m0.fcst_min*60))%(24*3600)/3600 as yVal, ",
             'Valid Date': "m0.time as yVal, ",

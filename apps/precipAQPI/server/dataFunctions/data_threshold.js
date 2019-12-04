@@ -114,7 +114,7 @@ dataThreshold = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.thresh/100 as thresh, " +
+            var statement = "SELECT m0.thresh/100 as thresh, " +      // produces thresholds in inches
                 "count(distinct m0.valid_time) as N_times, " +
                 "min(m0.valid_time) as min_secs, " +
                 "max(m0.valid_time) as max_secs, " +
