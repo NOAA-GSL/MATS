@@ -248,7 +248,7 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
             const theseXBins = dataset[curveIndex].x;
             const nextXBins = dataset[curveIndex + 1].x;
             if (!matsDataUtils.arraysEqual(theseXBins, nextXBins)) {
-                throw new Error("INFO:  Can't plot matched with these curves because they don't have the same bins.");
+                throw new Error("INFO:  Can't plot matched with these curves because they don't have the same bins. Try setting the histogram type to 'Probability Integral Transform Histogram'.");
             }
         }
     }
