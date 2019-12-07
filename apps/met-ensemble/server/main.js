@@ -223,6 +223,7 @@ const doPlotParams = function () {
 };
 
 const doCurveParams = function () {
+    // force a reset if requested - simply remove all the existing params to force a reload
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
@@ -536,7 +537,7 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'variable'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'variable',
@@ -700,7 +701,7 @@ const doCurveParams = function () {
                 name: 'average',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: ['None', '1D', '3D', '7D', '30D', '60D', '90D', '180D'],
+                options: Object.keys(optionsMap),
                 controlButtonCovered: true,
                 unique: false,
                 selected: 'None',
@@ -955,7 +956,6 @@ const doCurveTextPatterns = function () {
                 "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level"
             ],
             groupSize: 6
-
         });
     }
 };
