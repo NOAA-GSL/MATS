@@ -1039,6 +1039,27 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.threshold,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'scale', ' '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'truth', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "level", "truth", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
                 ['', 'label', ': '],
@@ -1056,6 +1077,27 @@ const doCurveTextPatterns = function () {
             ],
             displayParams: [
                 "label", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "scale", "forecast-length", "level", "truth", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.scale,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'truth', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "valid-time", "forecast-length", "level", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1132,9 +1174,21 @@ const doPlotGraph = function () {
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.threshold,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataThreshold",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphPlotly",
             dataFunction: "dataValidTime",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.scale,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataScale",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
