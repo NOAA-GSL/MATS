@@ -75,6 +75,10 @@
             </nav>
             <div style="background-color: #dddddd;margin-bottom:0;margin-top:0;padding-left:1em;padding-right:0" class="container-fluid">
                 <ul class="nav navbar-nav navbar-left" style="min-height:10px;">
+                    {{#if noGroups}}
+                        <h1> There are no apps defined for the deployment_envrionment: {{environment}}</h1>
+                        <h3>Check /usr/app/settings</h3>
+                    {{/if}}
                     {{#each group in groups}}
                         <div class="container-fluid">
                             <ul class="nav navbar-nav navbar-left">
@@ -107,7 +111,7 @@
                 </div>
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="navbar-collapse-3"
-                     style="background-color: #dddddd;margin-bottom:0;margin-top:0;padding-bottom:1em;padding-top:0;">
+                     style="background-color: #dddddd;margin-bottom:0;margin-top:0;padding-bottom:2em;padding-top:0;">
                     <ul class="nav navbar-nav"
                         style="background-color: #dddddd;margin-bottom:0;margin-top:0;padding-bottom:0;padding-top:0;">
                         <li style="height:1em"><a href="http://www.noaa.gov/privacy.html" class="navbar-link">NOAA Privacy Statement</a></li>

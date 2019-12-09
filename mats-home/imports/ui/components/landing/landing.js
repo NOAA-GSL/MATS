@@ -14,7 +14,7 @@ Template.landing.onCreated(function () {
         alert(error);
         Session.set('deployment_environment', 'unknown');
       } else {
-        Session.set('deployment_environment', 'unknown');
+        Session.set('deployment_environment', result);
       }
     });
 });
@@ -23,6 +23,10 @@ Template.landing.helpers({
   groups() {
     const groups = Groups.find({}, {sort: {groupOrder: '1'}}).fetch();
     return groups;
+  },
+  noGroups() {
+    const groupsSize = Groups.find({}).count();
+    return groupsSize == 0;
   },
   groupName() {
     this.groupName;
