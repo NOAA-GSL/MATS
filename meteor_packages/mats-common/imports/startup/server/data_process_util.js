@@ -79,11 +79,11 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
 
             // store error bars if matching
             const errorBar = errorResult.stde_betsy * 1.96;
-            if (appParams.matching) {
+            if (!appParams.matching || curveInfoParams.statType === 'ctc') {
+                data.error_y.array[di] = null;
+            } else {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data.error_y.array[di] = errorBar;
-            } else {
-                data.error_y.array[di] = null;
             }
 
             // remove sub values and times to save space
@@ -293,11 +293,11 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
             // store error bars if matching
             const errorBar = errorResult.stde_betsy * 1.96;
-            if (appParams.matching) {
+            if (!appParams.matching || curveInfoParams.statType === 'ctc') {
+                data.error_x.array[di] = null;
+            } else {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data.error_x.array[di] = errorBar;
-            } else {
-                data.error_x.array[di] = null;
             }
 
             // remove sub values and times to save space
