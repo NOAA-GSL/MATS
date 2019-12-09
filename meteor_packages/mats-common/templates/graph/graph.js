@@ -284,7 +284,8 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.histogram:
                     return "Histogram: " + format;
                 case matsTypes.PlotTypes.ensembleHistogram:
-                    return "Ensemble Histogram: " + format;
+                    const ensembleType = p["histogram-type-controls"] !== undefined ? p["histogram-type-controls"] : "Ensemble Histogram";
+                    return ensembleType + ": " + format;
                 case matsTypes.PlotTypes.contour:
                     return "Contour " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.contourDiff:

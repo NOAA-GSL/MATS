@@ -43,27 +43,60 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var queryTableClause = "from " + model + "_" + region + " as m0";
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic = statisticOptionsMap[statisticSelect][0];
+        var thresholdClause = "and m0.trsh = " + threshold;
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
         }
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = curve['forecast-length'];
+        var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
+        // for contingency table apps, we currently have to deal with matching in the query.
+        if (appParams.matching && curvesLength > 1) {
+            var matchCurveIdx = 0;
+            var mcidx;
+            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
+                const matchCurve = curves[mcidx];
+                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
+                    continue;
+                }
+                matchCurveIdx++;
+                const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
+                const matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
+                thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
+                const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
+                if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
+                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + validTimes + ")";
+                }
+                const matchForecastLength = matchCurve['forecast-length'];
+                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
+                const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
+                const matchFromSecs = matchDateRange.fromSeconds;
+                const matchToSecs = matchDateRange.toSeconds;
+                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
+                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
+            }
+        }
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause = statisticOptionsMap[statisticSelect][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
+        var statType = statisticOptionsMap[statisticSelect][1];
         var axisKey = yAxisFormat;
         if (yAxisFormat === 'Relative frequency') {
             axisKey = axisKey + " (x100)"
@@ -79,26 +112,24 @@ dataHistogram = function (plotParams, plotFunction) {
                 "count(distinct m0.time) as N_times, " +
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +
-                "{{statistic}} " +
-                "from {{data_source}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "{{validTimeClause}} " +
-                "and m0.time >= '{{fromSecs}}' " +
-                "and m0.time <= '{{toSecs}}' " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.trsh = '{{threshold}}' " +
-                "and m0.fcst_len = '{{forecastLength}}' " +
+                "{{dateClause}} " +
+                "{{thresholdClause}} " +
+                "{{validTimeClause}} " +
+                "{{forecastLengthClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + '_' + region);
-            statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{threshold}}', threshold);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             var queryResult;
@@ -143,10 +174,12 @@ dataHistogram = function (plotParams, plotFunction) {
         throw new Error("INFO:  No valid data for any curves.");
     }
 
+    // process the data returned by the query
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
         "dataFoundForCurve": dataFoundForCurve,
+        "statType": statType,
         "axisMap": axisMap,
         "yAxisFormat": yAxisFormat
     };

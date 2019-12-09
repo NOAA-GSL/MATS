@@ -97,9 +97,11 @@ Template.item.helpers({
         }
     },
     zIndexVal: function() {
-        // the difference selector keeps trying to cover the map modal, so increase the map's z-index.
+        // the difference selector keeps trying to cover the map modal, so increase the map's z-index, and decrease the difference selector's.
         if ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.selectMap)) {
             return "10";
+        } else if ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.radioGroup)){
+            return "4";
         } else {
             return "5";
         }

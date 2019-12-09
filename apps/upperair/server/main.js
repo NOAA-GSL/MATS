@@ -56,8 +56,8 @@ const doPlotParams = function () {
             });
 
         const yAxisOptionsMap = {
-            "Number": ["number"],
-            "Relative frequency": ["relFreq"]
+            "Relative frequency": ["relFreq"],
+            "Number": ["number"]
         };
         matsCollections.PlotParams.insert(
             {
@@ -68,7 +68,7 @@ const doPlotParams = function () {
                 default: Object.keys(yAxisOptionsMap)[0],
                 controlButtonCovered: true,
                 controlButtonText: 'Y-axis mode',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -99,7 +99,7 @@ const doPlotParams = function () {
                 default: Object.keys(binOptionsMap)[0],
                 controlButtonCovered: true,
                 controlButtonText: 'customize bins',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -109,14 +109,14 @@ const doPlotParams = function () {
                 name: 'bin-number',
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
-                options: [],   // convenience
+                options: [],
                 min: '2',
                 max: '100',
                 step: 'any',
                 default: '12',
                 controlButtonCovered: true,
                 controlButtonText: "number of bins",
-                displayOrder: 3,
+                displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -126,14 +126,14 @@ const doPlotParams = function () {
                 name: 'bin-pivot',
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
-                options: [],   // convenience
+                options: [],
                 min: '-10000',
                 max: '10000',
                 step: 'any',
                 default: '0',
                 controlButtonCovered: true,
                 controlButtonText: "bin pivot value",
-                displayOrder: 4,
+                displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -143,14 +143,14 @@ const doPlotParams = function () {
                 name: 'bin-start',
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
-                options: [],   // convenience
+                options: [],
                 min: '-10000',
                 max: '10000',
                 step: 'any',
                 default: '0',
                 controlButtonCovered: true,
                 controlButtonText: "bin start",
-                displayOrder: 5,
+                displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -160,14 +160,14 @@ const doPlotParams = function () {
                 name: 'bin-stride',
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
-                options: [],   // convenience
+                options: [],
                 min: '-10000',
                 max: '10000',
                 step: 'any',
                 default: '0',
                 controlButtonCovered: true,
                 controlButtonText: "bin stride",
-                displayOrder: 6,
+                displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -177,11 +177,11 @@ const doPlotParams = function () {
                 name: 'bin-bounds',
                 type: matsTypes.InputTypes.textInput,
                 optionsMap: {},
-                options: [],   // convenience
+                options: [],
                 default: ' ',
                 controlButtonCovered: true,
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
-                displayOrder: 7,
+                displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -204,6 +204,10 @@ const doPlotParams = function () {
 };
 
 const doCurveParams = function () {
+    // force a reset if requested - simply remove all the existing params to force a reload
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.CurveParams.remove({});
+    }
     var modelOptionsMap = {};
     var forecastLengthOptionsMap = {};
     var regionModelOptionsMap = {};
@@ -214,14 +218,8 @@ const doCurveParams = function () {
     var modelTableMap = {};
     var modelDateRangeMap = {};
 
-    // force a reset if requested - simply remove all the existing params to force a reload
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.CurveParams.remove({});
-    }
-
-    var rows;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select id,description from region_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select id,description from region_descriptions;");
         var masterRegDescription;
         var masterId;
         for (var j = 0; j < rows.length; j++) {
@@ -230,11 +228,11 @@ const doCurveParams = function () {
             masterRegionValuesMap[masterId] = masterRegDescription;
         }
     } catch (err) {
-        console.log("regionNumberDescriptionMapping:" + err.message);
+        console.log(err.message);
     }
-    // all the rest
+
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "select id,model,display_text,table_name_prefix,regions,fcst_lens,display_order,display_category,mindate,minhour,maxdate,maxhour,numrecs from regions_per_model_mats_all_categories order by display_category, display_order;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "select id,model,display_text,table_name_prefix,regions,fcst_lens,display_order,display_category,mindate,minhour,maxdate,maxhour,numrecs from regions_per_model_mats_all_categories order by display_category, display_order;");
 
         var label = "";
         for (var i = 0; i < rows.length; i++) {
@@ -289,7 +287,7 @@ const doCurveParams = function () {
                 name: 'label',
                 type: matsTypes.InputTypes.textInput,
                 optionsMap: {},
-                options: [],   // convenience
+                options: [],
                 controlButtonCovered: true,
                 default: '',
                 unique: true,
@@ -312,7 +310,7 @@ const doCurveParams = function () {
                 disabledOptions: modelDisabledOptions,
                 tableMap: modelTableMap,
                 dates: modelDateRangeMap,
-                options: Object.keys(modelOptionsMap),   // convenience
+                options: Object.keys(modelOptionsMap),
                 dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
@@ -339,26 +337,25 @@ const doCurveParams = function () {
                     disabledOptions: modelDisabledOptions,
                     tableMap: modelTableMap,
                     dates: modelDateRangeMap,
-                    options: Object.keys(modelOptionsMap)
+                    options: Object.keys(modelOptionsMap),
+                    default: Object.keys(modelOptionsMap)[0]
                 }
             });
         }
     }
-    /* regionModelOptionsMap is indexed by model(data_source) and contains array of regions.
-       masterRegionValuesMap is indexed by table id and contains a region description.
-     */
+
     if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
-                options: regionModelOptionsMap[myModels[0]],   // convenience
+                options: regionModelOptionsMap[myModels[0]],
                 valuesMap: masterRegionValuesMap,
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[myModels[0]][0],  // always use the first region for the first model
+                default: regionModelOptionsMap[myModels[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -370,7 +367,7 @@ const doCurveParams = function () {
         var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
-            // have to reload model data
+            // have to reload region data
             matsCollections.CurveParams.update({name: 'region'}, {
                 $set: {
                     optionsMap: regionModelOptionsMap,
@@ -490,24 +487,6 @@ const doCurveParams = function () {
             });
     }
 
-    // if (matsCollections.CurveParams.findOne({name: 'cloud-coverage'}) == undefined) {
-    //     optionsMap = {All: ['All'], Clear: ['Clear'], Cloudy: ['Cloudy']};
-    //     matsCollections.CurveParams.insert(
-    //         {
-    //             name: 'cloud-coverage',
-    //             type: matsTypes.InputTypes.select,
-    //             optionsMap: optionsMap,
-    //             options: ['All', 'Clear', 'Cloudy'],
-    //             controlButtonCovered: true,
-    //             unique: false,
-    //             default: 'All',
-    //             controlButtonVisibility: 'block',
-    //             displayOrder: 3,
-    //             displayPriority: 1,
-    //             displayGroup: 2
-    //         });
-    // }
-    //
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -524,13 +503,13 @@ const doCurveParams = function () {
                 controlButtonText: "forecast lead time",
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     } else {
-        // it is defined but check for necessary updates to forecastLengthOptionsMap
+        // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
-            // have to reload model data
+            // have to reload forecast length data
             matsCollections.CurveParams.update({name: 'forecast-length'}, {
                 $set: {
                     optionsMap: forecastLengthOptionsMap,
@@ -564,7 +543,7 @@ const doCurveParams = function () {
                 controlButtonText: 'dieoff type',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     }
 
@@ -575,37 +554,34 @@ const doCurveParams = function () {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: ['both', '0-UTC', '12-UTC',],
+                options: Object.keys(optionsMap),
                 controlButtonCovered: true,
-                selected: 'both',
+                selected: Object.keys(optionsMap)[0],
                 unique: false,
-                default: 'both',
+                default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
                 controlButtonText: "valid utc hour",
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     }
 
-    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
-
-        const optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
-
+    if (matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'utc-cycle-start',
                 type: matsTypes.InputTypes.select,
-                options: optionsArr,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: optionsArr[12],
+                default: 12,
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle init hour",
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
             });
     }
 
@@ -625,7 +601,7 @@ const doCurveParams = function () {
                 name: 'average',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: ['None', '1D', '3D', '7D', '30D', '60D', '90D', '180D'],
+                options: Object.keys(optionsMap),
                 controlButtonCovered: true,
                 unique: false,
                 selected: 'None',
@@ -633,7 +609,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     }
 
@@ -654,7 +630,7 @@ const doCurveParams = function () {
                 controlButtonText: 'top (hPa)',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 5,
                 help: 'top-help.html'
             });
     }
@@ -676,13 +652,12 @@ const doCurveParams = function () {
                 controlButtonText: 'bottom (hPa)',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 5,
                 help: 'bottom-help.html'
             });
     }
 
-    if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {
-
+    if (matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "select m0.fcst_len as xVal, ",
             'Pressure level': "select m0.mb10*10 as xVal, ",
@@ -705,12 +680,11 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
             });
     }
 
-    if (matsCollections.CurveParams.find({name: 'y-axis-parameter'}).count() == 0) {
-
+    if (matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "m0.fcst_len as yVal,",
             'Pressure level': "m0.mb10*10 as yVal,",
@@ -733,12 +707,11 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
             });
     }
 
-   if (matsCollections.CurveParams.find({name: 'significance'}).count() == 0) {
-
+    if (matsCollections.CurveParams.findOne({name: 'significance'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'significance',
@@ -752,7 +725,7 @@ const doCurveParams = function () {
                 controlButtonText: "overlay student's t-test",
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 6,
+                displayGroup: 7,
             });
     }
 
@@ -768,7 +741,7 @@ const doCurveParams = function () {
     maxDate = newDateRange.maxDate;
     dstr = moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm") + ' - ' + moment.utc(maxDate).format("MM/DD/YYYY HH:mm");
 
-    if (matsCollections.CurveParams.find({name: 'curve-dates'}).count() == 0) {
+    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         const optionsMap = {
             '1 day': ['1 day'],
             '3 days': ['3 days'],
@@ -793,7 +766,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6,
+                displayGroup: 7,
                 help: "dateHelp.html"
             });
     } else {
@@ -802,7 +775,7 @@ const doCurveParams = function () {
         if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
-            // have to reload model data
+            // have to reload dates data
             matsCollections.CurveParams.update({name: 'curve-dates'}, {
                 $set: {
                     startDate: minDate,
@@ -921,7 +894,6 @@ const doCurveTextPatterns = function () {
                 "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
-
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.contourDiff,
@@ -940,7 +912,6 @@ const doCurveTextPatterns = function () {
                 "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "x-axis-parameter", "y-axis-parameter", "significance"
             ],
             groupSize: 6
-
         });
     }
 };
@@ -997,7 +968,6 @@ const doPlotGraph = function () {
         });
     }
 };
-
 
 Meteor.startup(function () {
     if (Meteor.settings.private == null) {

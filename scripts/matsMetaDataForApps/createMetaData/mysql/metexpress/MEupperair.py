@@ -24,9 +24,8 @@ from metexpress.MEmetadata import ParentMetadata
 class MEUpperair(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['needsTrshs'] = False  # upperair does not have thresholds
         options['fcstWhereClause'] = 'fcst_lev like "P%"'
-        options['line_data_table'] = ["line_data_sl1l2"]
+        options['line_data_table'] = ["line_data_sl1l2"]    # used for scalar stats on all plot types
         options['metadata_table'] = "upperair_mats_metadata"
         options['app_reference'] = "met-upperair"
         options['database_groups'] = "upperair_database_groups"
@@ -43,6 +42,19 @@ class MEUpperair(ParentMetadata):
         else:
             hyphen_idx = elem.find('-')
             return int(elem[1:hyphen_idx])
+
+    def strip_trsh(self, elem):
+        # helper function for sorting thresholds
+        if elem[0] == '>' or elem[0] == '<':
+            try:
+                return int(float(elem[1:]))
+            except ValueError:
+                return 0
+        else:
+            try:
+                return int(float(elem))
+            except ValueError:
+                return 0
 
 
 if __name__ == '__main__':

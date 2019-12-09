@@ -129,7 +129,7 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.timeSeries:
                 header += "<th>" + curve.label + " time</th>\
                         <th>raw stat from query</th>\
-                        <th>plotted stat</th>\
+                        <th>mean stat</th>\
                         <th>std dev</th>\
                         <th>std error</th>\
                         <th>lag1</th>\
@@ -138,14 +138,14 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.dailyModelCycle:
                 header += "<th>" + curve.label + " time</th>\
                         <th>raw stat from query</th>\
-                        <th>plotted stat</th>\
+                        <th>mean stat</th>\
                         <th>std dev</th>\
                         <th>n</th>";
                 break;
             case matsTypes.PlotTypes.profile:
                 header += "<th>" + curve.label + " level</th>\
                         <th>raw stat from query</th>\
-                        <th>plotted stat</th>\
+                        <th>mean stat</th>\
                         <th>std dev</th>\
                         <th>std error</th>\
                         <th>lag1</th>\
@@ -154,21 +154,21 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.dieoff:
                 header += "<th>" + curve.label + " forecast lead time</th>\
                         <th>raw stat from query</th>\
-                        <th>plotted stat</th>\
+                        <th>mean stat</th>\
                         <th>std dev</th>\
                         <th>n</th>";
                 break;
             case matsTypes.PlotTypes.threshold:
                 header += "<th>" + curve.label + " threshold</th>\
                         <th>raw stat from query</th>\
-                        <th>plotted stat</th>\
+                        <th>mean stat</th>\
                         <th>std dev</th>\
                         <th>n</th>";
                 break;
             case matsTypes.PlotTypes.validtime:
                 header += "<th>" + curve.label + " hour of day</th>\
                         <th>raw stat from query</th>\
-                        <th>plotted stat</th>\
+                        <th>mean stat</th>\
                         <th>std dev</th>\
                         <th>n</th>";
                 break;
@@ -262,7 +262,7 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.timeSeries:
                 line += "<td>" + element[labelKey += " time"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
-                    "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['mean stat'] != undefined && element['mean stat'] !== null ? element['mean stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std error'] != undefined && element['std error'] !== null ? element['std error'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['lag1'] != undefined && element['lag1'] !== null ? element['lag1'].toPrecision(4) : fillStr) + "</td>" +
@@ -271,7 +271,7 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.profile:
                 line += "<td>" + element[labelKey += " level"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
-                    "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['mean stat'] != undefined && element['mean stat'] !== null ? element['mean stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std error'] != undefined && element['std error'] !== null ? element['std error'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['lag1'] != undefined && element['lag1'] !== null ? element['lag1'].toPrecision(4) : fillStr) + "</td>" +
@@ -280,28 +280,28 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.dieoff:
                 line += "<td>" + element[labelKey += " forecast lead time"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
-                    "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['mean stat'] != undefined && element['mean stat'] !== null ? element['mean stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.threshold:
                 line += "<td>" + element[labelKey += " threshold"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
-                    "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['mean stat'] != undefined && element['mean stat'] !== null ? element['mean stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.validtime:
                 line += "<td>" + element[labelKey += " hour of day"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
-                    "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['mean stat'] != undefined && element['mean stat'] !== null ? element['mean stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.dailyModelCycle:
                 line += "<td>" + element[labelKey += " time"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
-                    "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['mean stat'] != undefined && element['mean stat'] !== null ? element['mean stat'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;

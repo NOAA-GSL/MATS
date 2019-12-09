@@ -42,7 +42,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var source = curve['truth'];
@@ -50,25 +50,62 @@ dataThreshold = function (plotParams, plotFunction) {
         if (source !== "All") {
             sourceStr = "_" + source;
         }
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic = statisticOptionsMap[statisticSelect][0];
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
+        var queryTableClause = "from " + model + "_" + region + sourceStr + " as m0";
+        var thresholdClause = "";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and floor((m0.valid_time)%(24*3600)/3600) IN(" + validTimes + ")";
         }
         var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var dateClause = "and m0.valid_time >= " + fromSecs + " and m0.valid_time <= " + toSecs;
+        // for contingency table apps, we currently have to deal with matching in the query.
+        if (appParams.matching && curvesLength > 1) {
+            var matchCurveIdx = 0;
+            var mcidx;
+            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
+                const matchCurve = curves[mcidx];
+                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
+                    continue;
+                }
+                matchCurveIdx++;
+                const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                const matchSource = curve['truth'];
+                var matchSourceStr = "";
+                if (matchSource !== "All") {
+                    matchSourceStr = "_" + matchSource;
+                }
+                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + matchSourceStr + " as m" + matchCurveIdx;
+                thresholdClause = thresholdClause + " and m0.thresh = m" + matchCurveIdx + ".thresh";
+                const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
+                if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
+                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".valid_time)%(24*3600)/3600) IN(" + validTimes + ")";
+                }
+                const matchForecastLength = matchCurve['forecast-length'];
+                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
+                const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
+                const matchFromSecs = matchDateRange.fromSeconds;
+                const matchToSecs = matchDateRange.toSeconds;
+                dateClause = "and m0.valid_time = m" + matchCurveIdx + ".valid_time " + dateClause;
+                dateClause = dateClause + " and m" + matchCurveIdx + ".valid_time >= " + matchFromSecs + " and m" + matchCurveIdx + ".valid_time <= " + matchToSecs;
+            }
+        }
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause = statisticOptionsMap[statisticSelect][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = statisticOptionsMap[statisticSelect][1];
+        var statType = statisticOptionsMap[statisticSelect][1];
+        var axisKey = statisticOptionsMap[statisticSelect][2];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var idealVal = statisticOptionsMap[statisticSelect][2];
+        var idealVal = statisticOptionsMap[statisticSelect][3];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
             idealValues.push(idealVal);
         }
@@ -77,28 +114,28 @@ dataThreshold = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.thresh/100 as thresh, " +
+            var statement = "SELECT m0.thresh/100 as thresh, " +      // produces thresholds in inches
                 "count(distinct m0.valid_time) as N_times, " +
                 "min(m0.valid_time) as min_secs, " +
                 "max(m0.valid_time) as max_secs, " +
-                "{{statistic}} " +
-                "from {{data_source}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and m0.valid_time >= '{{fromSecs}}' " +
-                "and m0.valid_time <= '{{toSecs}}' " +
-                "{{validTimeClause}} " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.fcst_len = '{{forecastLength}}' " +
+                "{{dateClause}} " +
+                "{{thresholdClause}} " +
+                "{{validTimeClause}} " +
+                "{{forecastLengthClause}} " +
                 "group by thresh " +
                 "order by thresh" +
                 ";";
 
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + '_' + region + sourceStr);
-            statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             var queryResult;
@@ -183,6 +220,7 @@ dataThreshold = function (plotParams, plotFunction) {
         "curvesLength": curvesLength,
         "idealValues": idealValues,
         "utcCycleStarts": utcCycleStarts,
+        "statType": statType,
         "axisMap": axisMap,
         "xmax": xmax,
         "xmin": xmin

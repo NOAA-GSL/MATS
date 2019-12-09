@@ -242,6 +242,15 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
     if (!dataFoundForAnyCurve) {
         // we found no data for any curves so don't bother proceeding
         throw new Error("INFO:  No valid data for any curves.");
+    } else if (appParams.matching) {
+        // make sure each curve has the same number of bins if plotting matched
+        for (curveIndex = 0; curveIndex < curvesLength - 1; curveIndex++) {
+            const theseXBins = dataset[curveIndex].x;
+            const nextXBins = dataset[curveIndex + 1].x;
+            if (!matsDataUtils.arraysEqual(theseXBins, nextXBins)) {
+                throw new Error("INFO:  Can't plot matched with these curves because they don't have the same bins. Try setting the histogram type to 'Probability Integral Transform Histogram'.");
+            }
+        }
     }
 
     // process the data returned by the query

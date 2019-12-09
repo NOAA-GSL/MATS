@@ -24,9 +24,8 @@ from metexpress.MEmetadata import ParentMetadata
 class MEAnomalycor(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['needsTrshs'] = False  # anomalycor does not have thresholds
         options['fcstWhereClause'] = ''
-        options['line_data_table'] = ["line_data_sal1l2"]
+        options['line_data_table'] = ["line_data_sal1l2"]    # used for scalar stats on all plot types
         options['metadata_table'] = "anomalycor_mats_metadata"
         options['app_reference'] = "met-anomalycor"
         options['database_groups'] = "anomalycor_database_groups"
@@ -55,6 +54,20 @@ class MEAnomalycor(ParentMetadata):
                 return int(float(elem) + 10000)
             except ValueError:
                 return 0
+
+    def strip_trsh(self, elem):
+        # helper function for sorting thresholds
+        if elem[0] == '>' or elem[0] == '<':
+            try:
+                return int(float(elem[1:]))
+            except ValueError:
+                return 0
+        else:
+            try:
+                return int(float(elem))
+            except ValueError:
+                return 0
+
 
 if __name__ == '__main__':
     options = MEAnomalycor.get_options(sys.argv)
