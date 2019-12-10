@@ -4,6 +4,7 @@ import {Groups} from "../../api/groups.js";
 
 Meteor.startup(() => {
   try {
+    const env = process.env.deployment_environment;
     const groupOrderStr = process.env.GROUP_ORDER == undefined ? "Upper Air,Ceiling and Visibility,Surface,Precipitation,Radar,METexpress" : process.env.GROUP_ORDER;
     var group_order = groupOrderStr.split(',');
     const fs = require('fs');
@@ -37,13 +38,17 @@ Meteor.startup(() => {
         var group = Groups.findOne({groupOrder: groupIndex});
         if (group === undefined) {
           // create and insert new group
-          var appList = [item];
-          var group = {groupOrder: groupIndex, groupName: item['group'], appList: appList};
-          Groups.insert(group);
+          if (item.deployment_environment === env) {
+            var appList = [item];
+            var group = {groupOrder: groupIndex, groupName: item['group'], appList: appList};
+            Groups.insert(group);
+          }
         } else {
           var newAppList = group.appList;
-          newAppList.push(item);
-          Groups.update({_id: group._id}, {$set: {appList: newAppList}})
+          if (item.deployment_environment === env) {
+            newAppList.push(item);
+            Groups.update({_id: group._id}, {$set: {appList: newAppList}});
+          }
         }
       } catch (error) {
         throw new Meteor.Error("Error processing settings file:\n /usr/app/settings/" + appSettingsDir + "/settings.json" + ":\n" + error.message);
