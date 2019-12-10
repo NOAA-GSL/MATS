@@ -1386,6 +1386,12 @@ Template.graph.events({
                 updates[index] = updates[index] === undefined ? {} : updates[index];
                 updates[index]['line.color'] = elem.value;
                 updates[index]['marker.color'] = elem.value;
+                if (dataset[index].error_x !== undefined && dataset[index].error_x.color !== undefined) {
+                    updates[index]['error_x.color'] = elem.value;
+                }
+                if (dataset[index].error_y !== undefined && dataset[index].error_y.color !== undefined) {
+                    updates[index]['error_y.color'] = elem.value;
+                }
 
                 // update the annotation with the new color
                 const thisAnnotation = $("#legendContainer" + dataset[index].curveId);
