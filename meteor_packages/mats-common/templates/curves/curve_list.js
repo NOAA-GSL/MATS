@@ -73,26 +73,50 @@ Template.curveList.helpers({
     log: function () {
         console.log(this);
     },
+    metarMismatchHidden: function () {
+        const appName = matsCollections.appName.findOne({}).app;
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length === 0 || (appName !== "surface")) {
+            return "none";
+        }
+        var i;
+        var truth;
+        for (i = 0; i < curves.length; i++) {
+            if (curves[i]["region-type"] === "Predefined region") {
+                truth = curves[i].truth;
+                break;
+            }
+        }
+        for (i = 0; i < curves.length; i++) {
+            if (curves[i]["region-type"] !== "Predefined region") {
+                continue;
+            }
+            if (truth !== curves[i].truth) {
+                return "block";
+            }
+        }
+        return "none"
+    },
     averagesDisabled: function () {
         var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
+        if (curves === undefined || curves.length === 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
             return "";
         }
         var average = curves[0].average;
         for (var i = 0; i < curves.length; i++) {
-            if (average != curves[i].average) {
+            if (average !== curves[i].average) {
                 return "disabled";
             }
         }
     },
     disabledPlotsHidden: function () {
         var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
+        if (curves === undefined || curves.length === 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
             return "none";
         }
         var average = curves[0].average;
         for (var i = 0; i < curves.length; i++) {
-            if (average != curves[i].average) {
+            if (average !== curves[i].average) {
                 return "block";
             }
         }
@@ -100,7 +124,7 @@ Template.curveList.helpers({
     },
     identicalContourDisabled: function () {
         var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.contour)) {
+        if (curves === undefined || curves.length === 0 || (Session.get('plotType') !== matsTypes.PlotTypes.contour)) {
             return "";
         }
         var xAxis = curves[0]['x-axis-parameter'];
@@ -112,7 +136,7 @@ Template.curveList.helpers({
     },
     identicalContourHidden: function () {
         var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.contour)) {
+        if (curves === undefined || curves.length === 0 || (Session.get('plotType') !== matsTypes.PlotTypes.contour)) {
             return "none";
         }
         var xAxis = curves[0]['x-axis-parameter'];
