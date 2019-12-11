@@ -71,7 +71,8 @@ dataSeries = function (plotParams, plotFunction) {
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
             levels = levels.map(function (l) {
-                return "'" + l + "'";
+                // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                return "'" + l + "','" + l + "='";
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {

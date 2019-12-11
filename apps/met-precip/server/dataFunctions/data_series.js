@@ -185,7 +185,6 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
-            console.log(statement);
 
             var queryResult;
             var startMoment = moment();
