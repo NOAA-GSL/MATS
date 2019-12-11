@@ -131,7 +131,10 @@ This class enforces the types of the poolName (in case someone accidentally trie
 of table names. The internal list can be appended. The getRecords returns the internal list.
  */
 class MetaDataDBRecord {
-    constructor(poolName, dbName, tables) {
+    constructor(role, poolName, dbName, tables) {
+        if (!typeof role === "string") {
+            throw new Error("MetaDataDBRecord.constructor : role is not a string");
+        }
         if (!typeof poolName === "string") {
             throw new Error("MetaDataDBRecord.constructor : poolName is not a string");
         }
@@ -142,11 +145,14 @@ class MetaDataDBRecord {
             throw new Error("MetaDataDBRecord.constructor : tables is not an array");
         }
         this._records = [];
-        var record = {'pool': poolName, 'name': dbName, 'tables': tables};
+        var record = {'role': role, 'pool': poolName, 'name': dbName, 'tables': tables};
         this._records.push(record);
     }
 
-    addRecord(poolName, dbName, tables) {
+    addRecord(role, poolName, dbName, tables) {
+        if (!typeof role === "string") {
+            throw new Error("MetaDataDBRecord.constructor : role is not a string");
+        }
         if (!typeof poolName === "string") {
             throw new Error("MetaDataDBRecord.constructor : poolName is not a string");
         }
@@ -156,7 +162,7 @@ class MetaDataDBRecord {
         if (!tables instanceof Array) {
             throw new Error("MetaDataDBRecord.constructor : tables is not an array");
         }
-        var record = {'pool': poolName, 'name': dbName, 'tables': tables};
+        var record = {'role':role, 'pool': poolName, 'name': dbName, 'tables': tables};
         this._records.push(record);
     }
 

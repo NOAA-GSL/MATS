@@ -15,18 +15,41 @@ Meteor.startup(() => {
         //console.log("processing settings file: " + '/usr/app/settings/' + appSettingsDir + "/settings.json");
         const appSettingsData = fs.readFileSync('/usr/app/settings/' + appSettingsDir + "/settings.json");
         const appSettings = JSON.parse(appSettingsData);
-        /* These should be set at installation time
+        /* These settings files should be set at installation time
         either through compose file or helm chart or manually.
-        They should be like
-        {
-            "mysql_wait_timeout": 1800
-            "deployment_environment":"development",
-            "proxy_prefix_path": "",
-            "home": "https://mats-docker-dev.gsd.esrl.noaa.gov",
-            "group": "Upper Air",
-            "title": "Upper Air (AMDAR)",
-            "color": "darkorchid"
-          }
+
+        Each settings file should be like .....
+{
+  "private": {
+    "databases": [
+      {
+        "role": "",
+        "status": "",
+        "host": "",
+        "port": "",
+        "user": "",
+        "password": "",
+        "database": "",
+        "connectionLimit": 4
+      }
+    ],
+    "process": {
+      "RUN_ENV": "development"
+    },
+    "PYTHON_PATH": "/usr/bin/python3"
+  },
+  "public": {
+    "deployment_environment": "development",
+    "proxy_prefix_path": "",
+    "home": "https://mats-docker-dev.gsd.esrl.noaa.gov/",
+    "mysql_wait_timeout": 300,
+    "group": "METexpress",
+    "title": "MET Air Quality",
+    "color": "darkorchid"
+  }
+}
+        The private.databases array will be empty until it is configured, either by hand, or by the configuration page.
+
          */
         var item = appSettings.public;
         item['app'] = appSettingsDir;  // the settings directory is named after the app reference

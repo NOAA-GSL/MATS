@@ -2106,39 +2106,39 @@ const resetApp = function (appRef) {
     if (Meteor.settings.public != null && Meteor.settings.public.mysql_wait_timeout != null) {
         connectionTimeout = Meteor.settings.public.mysql_wait_timeout;
     }
-    try {
-        sumPool.on('connection', function (connection) {
-            connection.query('set group_concat_max_len = 4294967295');
-            connection.query('set session wait_timeout = ' + connectionTimeout);
-            console.log("opening new sumsPool connection")
-        });
-    } catch (e) {
-        console.log("no sumPool initialized--not opening connection")
+    const mdrecords = metaDataTableRecords.getRecords();
+    for (var mdri=0; mdri<mdrecords.length; mdri++) {
+        const record = mdrecords[mdri];
+        const poolName = record.pool;
+        if (global[poolName] === undefined) {
+            // There was no pool defined for this poolName - probably needs to be configured
+            if (Meteor.settings.public != null && Meteor.settings.public.undefinedPools  == null) {
+                Meteor.settings.public.undefinedPools = [];
+            }
+            Meteor.settings.public.undefinedPools.push(poolName)
+            //throw new Meteor.Error("pool: " + poolName + " is undefined");
+            continue;
+        }
+        try {
+            global[poolName].on('connection', function (connection) {
+                connection.query('set group_concat_max_len = 4294967295');
+                connection.query('set session wait_timeout = ' + connectionTimeout);
+                console.log("opening new " + poolName + " connection")
+            });
+        } catch (e) {
+            console.log(poolName + ":  not initialized-- could not open connection: Error:" + e.message);
+            if (Meteor.settings.public != null && Meteor.settings.public.undefinedPools  == null) {
+                Meteor.settings.public.undefinedPools = [];
+            }
+            Meteor.settings.public.undefinedPools.push(poolName)
+            //throw new Meteor.Error("pool: " + poolName + " not initialized");
+            continue
+        }
+        Meteor.settings.public.undefinedPools = null;
     }
-    try {
-        modelPool.on('connection', function (connection) {
-            connection.query('set session wait_timeout = ' + connectionTimeout);
-            console.log("opening new modelPool connection")
-        });
-    } catch (e) {
-        console.log("no modelPool initialized--not opening connection")
-    }
-    try {
-        metadataPool.on('connection', function (connection) {
-            connection.query('set session wait_timeout = ' + connectionTimeout);
-            console.log("opening new metadataPool connection")
-        });
-    } catch (e) {
-        console.log("no metadataPool initialized--not opening connection")
-    }
-    try {
-        sitePool.on('connection', function (connection) {
-            connection.query('set group_concat_max_len = 4294967295');
-            connection.query('set session wait_timeout = ' + connectionTimeout);
-            console.log("opening new sitePool connection")
-        });
-    } catch (e) {
-        console.log("no sitePool initialized--not opening connection")
+
+    if (Meteor.settings.public.undefinedPools && Meteor.settings.public.undefinedPools.length >1 ) {
+        throw new Meteor.Error("dbpools not initialized " + Meteor.settings.public.undefinedPools );
     }
 
     var deployment;
