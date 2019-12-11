@@ -9,7 +9,7 @@ import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {moment} from 'meteor/momentjs:moment'
+import {moment} from 'meteor/momentjs:moment';
 
 dataDieOff = function (plotParams, plotFunction) {
     // initialize variables common to all curves

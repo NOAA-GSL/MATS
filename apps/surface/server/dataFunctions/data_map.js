@@ -8,7 +8,7 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
-import {moment} from 'meteor/momentjs:moment'
+import {moment} from 'meteor/momentjs:moment';
 
 dataMap = function (plotParams, plotFunction) {
     const appParams = {
