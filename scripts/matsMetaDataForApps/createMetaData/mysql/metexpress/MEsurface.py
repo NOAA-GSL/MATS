@@ -50,11 +50,24 @@ class MESurface(ParentMetadata):
 
     def strip_trsh(self, elem):
         # helper function for sorting thresholds
-        if elem[0] == '>' or elem[0] == '<':
+        if elem[0] == '>':
             try:
-                return int(float(elem[1:]))
+                return 10000 + int(float(elem[1:]))
             except ValueError:
-                return 0
+                return 10000
+        elif elem[0] == '<':
+            try:
+                return 20000 + int(float(elem[1:]))
+            except ValueError:
+                return 20000
+        elif elem[0] == '=':
+            try:
+                return 30000 + int(float(elem[1:]))
+            except ValueError:
+                try:
+                    return 30000 + int(float(elem[2:]))
+                except ValueError:
+                    return 30000
         else:
             try:
                 return int(float(elem))

@@ -52,12 +52,12 @@ class MEPrecip(ParentMetadata):
 
     def strip_trsh(self, elem):
         # helper function for sorting thresholds
-        if elem[0] == '<':
+        if elem[0] == '>':
             try:
                 return 10000 + int(float(elem[1:]))
             except ValueError:
                 return 10000
-        elif elem[0] == '>':
+        elif elem[0] == '<':
             try:
                 return 20000 + int(float(elem[1:]))
             except ValueError:
@@ -75,6 +75,7 @@ class MEPrecip(ParentMetadata):
                 return int(float(elem))
             except ValueError:
                 return 0
+
 
 if __name__ == '__main__':
     options = MEPrecip.get_options(sys.argv)
