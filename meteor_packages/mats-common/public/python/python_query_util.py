@@ -893,7 +893,7 @@ class QueryUtil:
                 ind_var = int(row['fcst_lead'])
                 ind_var = ind_var if ind_var % 10000 != 0 else ind_var / 10000
             elif plot_type == 'Threshold':
-                ind_var = float(row['thresh'])
+                ind_var = float(row['thresh'].replace('=', '').replace('<', '').replace('>', ''))
             else:
                 ind_var = int(row['avtime'])
 
