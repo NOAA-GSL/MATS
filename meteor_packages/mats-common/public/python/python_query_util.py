@@ -520,7 +520,7 @@ class QueryUtil:
                 # calculate the ctc statistic
                 sub_values, stat = self.calculate_ctc_stat(statistic, sub_fy_oy, sub_fy_on, sub_fn_oy, sub_fn_on,
                                                            sub_total)
-            elif stat_line_type == 'ensemble':
+            elif stat_line_type == 'precalculated':
                 # ensemble app currently has no contour plots
                 stat = float(row['stat']) if float(row['stat']) != -9999 else 'null'
                 sub_data = str(row['sub_data']).split(',')
@@ -759,7 +759,7 @@ class QueryUtil:
                 data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
             elif stat_line_type == 'ctc':
                 data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
-            elif stat_line_type == 'ensemble':
+            elif stat_line_type == 'precalculated':
                 data_exists = row['stat'] != "null" and row['stat'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))
@@ -902,7 +902,7 @@ class QueryUtil:
                 data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
             elif stat_line_type == 'ctc':
                 data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
-            elif stat_line_type == 'ensemble':
+            elif stat_line_type == 'precalculated':
                 data_exists = row['stat'] != "null" and row['stat'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))
@@ -1053,7 +1053,7 @@ class QueryUtil:
                 data_exists = row['fbar'] != "null" and row['fbar'] != "NULL" and row['obar'] != "null" and row['obar'] != "NULL"
             elif stat_line_type == 'ctc':
                 data_exists = row['fy_oy'] != "null" and row['fy_oy'] != "NULL"
-            elif stat_line_type == 'ensemble':
+            elif stat_line_type == 'precalculated':
                 data_exists = row['stat'] != "null" and row['stat'] != "NULL"
             self.n0.append(int(row['N0']))
             self.n_times.append(int(row['N_times']))

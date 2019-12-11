@@ -59,7 +59,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const statLineType = statisticOptionsMap[statistic][0];
         var statisticsClause = "";
         var lineDataType = "";
-        if (statLineType === 'ensemble') {
+        if (statLineType === 'precalculated') {
             statisticsClause = "avg(" + statisticOptionsMap[statistic][2] + ") as stat, group_concat(distinct " + statisticOptionsMap[statistic][2] + ", ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
             lineDataType = statisticOptionsMap[statistic][1];
         }
