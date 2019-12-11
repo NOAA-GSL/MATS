@@ -128,7 +128,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.fcst_len + (m0.fcst_min/60) AS fcst_lead, " +
+            var statement = "select m0.fcst_len + (m0.fcst_min/60) as fcst_lead, " +
                 "count(distinct m0.time) as N_times, " +
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +

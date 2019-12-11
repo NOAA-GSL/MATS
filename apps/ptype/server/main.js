@@ -218,7 +218,7 @@ const doCurveParams = function () {
     var masterVariableValuesMap = {};
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select short_name,description from region_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -231,7 +231,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT scle,description FROM scale_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select scle,description from scale_descriptions;");
         var masterDescription;
         var masterScale;
         for (var j = 0; j < rows.length; j++) {
@@ -244,7 +244,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT ptype,description FROM ptype_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select ptype,description from ptype_descriptions;");
         var masterVarDescription;
         var masterVariable;
         for (var j = 0; j < rows.length; j++) {

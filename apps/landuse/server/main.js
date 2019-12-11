@@ -215,7 +215,7 @@ const doCurveParams = function () {
     var masterVgtypValuesMap = {};
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT vgtyp,description FROM vgtyp_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select vgtyp,description from vgtyp_descriptions;");
         var masterDescription;
         var masterVgtyp;
         for (var j = 0; j < rows.length; j++) {
