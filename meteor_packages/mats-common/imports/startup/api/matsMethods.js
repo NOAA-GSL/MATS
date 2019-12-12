@@ -1334,7 +1334,6 @@ const applyDatabaseSettings = new ValidatedMethod({
     }
 });
 
-
 //administration tools
 const deleteSettings = new ValidatedMethod({
     name: 'matsMethods.deleteSettings',
@@ -2076,6 +2075,35 @@ const removeDatabase = new ValidatedMethod({
     }
 });
 
+// Configure utility
+const applySettingsData = new ValidatedMethod({
+    name: 'matsMethods.applySettingsData',
+    validate: new SimpleSchema({
+        settings: {type: Object, blackbox: true}
+    }).validator(),
+
+    run(settingsParam) {
+        if (Meteor.isServer) {
+            // Read the existing settings file
+            const fs = require('fs');
+            const appName = matsCollections.appName.findOne({}).app;
+            const appSettingsData = fs.readFileSync('/usr/app/settings/' + appName + "/settings.json");
+            const appSettings = JSON.parse(appSettingsData);
+            const formSettings = settingsParam.settings;
+            // Merge formSetings into appSettings
+            var newSettings = {};
+            newSettings.private = Object (formSettings.private);
+            newSettings.public =  {...appSettings.public, ...formSettings.public};
+            // write the settings file
+            //console.log (JSON.stringify(newSettings,null,2));
+            fs.writeFileSync('/usr/app/settings/' + appName + "/settings.json", JSON.stringify(newSettings,null,2), {encoding:'utf8',flag:'w'});
+            // get rid of undefinedRoles so that the page will route normally now
+            delete Meteor.settings.public.undefinedRoles;
+        }
+    }
+});
+
+
 // makes sure all of the parameters display appropriate selections in relation to one another
 const resetApp = function (appRef) {
     var fse = require('fs-extra');
@@ -2111,34 +2139,33 @@ const resetApp = function (appRef) {
         const record = mdrecords[mdri];
         const poolName = record.pool;
         if (global[poolName] === undefined) {
-            // There was no pool defined for this poolName - probably needs to be configured
-            if (Meteor.settings.public != null && Meteor.settings.public.undefinedPools  == null) {
-                Meteor.settings.public.undefinedPools = [];
+            // There was no pool defined for this poolName - probably needs to be configured so stash the role in the public settings
+            if (Meteor.settings.public != null && Meteor.settings.public.undefinedRoles  == null) {
+                Meteor.settings.public.undefinedRoles = [];
             }
-            Meteor.settings.public.undefinedPools.push(poolName)
-            //throw new Meteor.Error("pool: " + poolName + " is undefined");
+            Meteor.settings.public.undefinedRoles.push(record.role);
             continue;
         }
         try {
             global[poolName].on('connection', function (connection) {
                 connection.query('set group_concat_max_len = 4294967295');
                 connection.query('set session wait_timeout = ' + connectionTimeout);
-                console.log("opening new " + poolName + " connection")
+                console.log("opening new " + poolName + " connection");
             });
         } catch (e) {
             console.log(poolName + ":  not initialized-- could not open connection: Error:" + e.message);
-            if (Meteor.settings.public != null && Meteor.settings.public.undefinedPools  == null) {
-                Meteor.settings.public.undefinedPools = [];
+            if (Meteor.settings.public != null && Meteor.settings.public.undefinedRoles  == null) {
+                Meteor.settings.public.undefinedRoles = [];
             }
-            Meteor.settings.public.undefinedPools.push(poolName)
-            //throw new Meteor.Error("pool: " + poolName + " not initialized");
+            Meteor.settings.public.undefinedRoles.push(record.role);
             continue
         }
-        Meteor.settings.public.undefinedPools = null;
+        // connections all work so make sure that Meteor.settings.public.undefinedRoles is undefined
+        Meteor.settings.public.undefinedRoles = null;
     }
 
-    if (Meteor.settings.public.undefinedPools && Meteor.settings.public.undefinedPools.length >1 ) {
-        throw new Meteor.Error("dbpools not initialized " + Meteor.settings.public.undefinedPools );
+    if (Meteor.settings.public.undefinedRoles && Meteor.settings.public.undefinedRoles.length >1 ) {
+        throw new Meteor.Error("dbpools not initialized " + Meteor.settings.public.undefinedRoles );
     }
 
     var deployment;
@@ -2510,6 +2537,7 @@ export default matsMethods = {
     addSentAddress: addSentAddress,
     applyAuthorization: applyAuthorization,
     applyDatabaseSettings: applyDatabaseSettings,
+    applySettingsData: applySettingsData,
     deleteSettings: deleteSettings,
     emailImage: emailImage,
     getAuthorizations: getAuthorizations,

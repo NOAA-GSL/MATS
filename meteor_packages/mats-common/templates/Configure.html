@@ -6,7 +6,8 @@
         {{>topNav}}
         <div>
             {{>error}}
-            <h1>{{app}} DatabAse Configuration Page</h1>
+            <h1>{{app}} Database Configuration</h1>
+            <h3>One or more of your database roles remains undefined. Define them now.</h3>
             <form class="ui form configure-settings-form ">
                 <h2>Public settings </h2>
                 <div class="">
@@ -14,19 +15,24 @@
                         <div class="form-group-sm row">
                             <label for="group" class="col-sm-2 col-form-label">Group:</label>
                             <div class="col-sm-2">
-                                <input id="group" class="form-control " type="text" name="group" placeholder="{{group}}" value="{{group}}" />
+                                <input id="group" class="form-control " type="text" name="group" placeholder="{{group}}" value="{{group}}"/>
                             </div>
                         </div>
                         <div class="form-group-sm row">
                             <label for="title" class="col-sm-2 col-form-label">Title:</label>
                             <div class="col-sm-2">
-                                <input id="title" class="form-control " type="text" name="title" placeholder="{{title}}" value="{{title}}" />
+                                <input id="title" class="form-control " type="text" name="title" placeholder="{{title}}" value="{{title}}"/>
                             </div>
                         </div>
                         <div class="form-group-sm row">
                             <label for="color" class="col-sm-2 col-form-label">Color:</label>
-                            <div class="col-sm-2">
-                                <input id="color" class="form-control " type="color" name="color" value="{{color}}" />
+                            <div class="col-sm-6">
+                                <div class="col-sm-3 text-left">
+                                    <input id="color" class="form-control" type="color" name="color" value="{{color}}"/>
+                                </div>
+                                <div class="col-sm-3 text-right">
+                                    <input id="colorValue" class="form-control colorValue" type="text" name="colorValue" value="{{color}}"/>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -40,38 +46,51 @@
                                 <div class="form-group-sm row">
                                     <label for="host" class="col-sm-2 col-form-label">Host:</label>
                                     <div class="col-sm-4">
-                                        <input id="{{role}}-host" class="form-control  input-sm" type="text" name="host" placeholder="" />
+                                        <input id="{{role}}-host" class="form-control  input-sm" type="text" name="host" placeholder=""/>
                                     </div>
                                 </div>
                                 <div class="form-group-sm row">
                                     <label for="port" class="col-sm-2 col-form-label">Port:</label>
                                     <div class="col-sm-4">
-                                        <input id="{{role}}-port" class="form-control  input-sm" type="text" name="port" placeholder="" />
+                                        <input id="{{role}}-port" class="form-control  input-sm" type="text" name="port" placeholder=""/>
                                     </div>
                                 </div>
                                 <div class="form-group-sm row">
                                     <label for="user" class="col-sm-2 col-form-label">User:</label>
                                     <div class="col-sm-4">
-                                        <input id="{{role}}-user" class="form-control  input-sm" type="text" name="user" placeholder="" />
+                                        <input id="{{role}}-user" class="form-control  input-sm" type="text" name="user" placeholder=""/>
                                     </div>
                                 </div>
                                 <div class="form-group-sm row">
                                     <label for="password" class="col-sm-2 col-form-label">Password:</label>
                                     <div class="col-sm-4">
-                                        <input id="{{role}}-password" class="form-control  input-sm" type="password" name="password" placeholder="" />
+                                        <input id="{{role}}-password" class="form-control  input-sm" type="password" name="password" placeholder=""/>
                                     </div>
                                 </div>
                                 <div class="form-group-sm row">
                                     <label for="database" class="col-sm-2 col-form-label">Database:</label>
                                     <div class="col-sm-4">
-                                        <input id="{{role}}-database" class="form-control input-sm" type="text" name="database" placeholder="" />
+                                        <input id="{{role}}-database" class="form-control input-sm" type="text" name="database" placeholder=""/>
+                                    </div>
+                                </div>
+                                <div class="form-group-sm row text-left">
+                                    <div class="col-sm-1">
+                                        <button id="{{role}}-test" class="btn btn-info test">Test</button>
+                                    </div>
+                                    <div class="col-sm-1 text-right" >
+                                        <button id="{{role}}-success" class="btn btn-success success" style="display:none;">Success</button>
+                                    </div>
+                                    <div class="col-sm-1 text-right" >
+                                        <button id="{{role}}-fail" class="btn btn-danger fail" style="display:none;">Fail</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 {{/each}}
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <div class="row" style="margin:1%">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
             </form>
         </div>
         {{>footer}}

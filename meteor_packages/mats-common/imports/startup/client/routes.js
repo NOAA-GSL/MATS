@@ -14,7 +14,7 @@ FlowRouter.route('/', {
         if (Meteor.settings.public.custom) {
             this.render('CustomHome');
         } else {
-                if (Meteor.settings.public.undefinedPools != undefined && Meteor.settings.public.undefinedPools.length > 0) {
+                if (Meteor.settings.public.undefinedRoles != undefined && Meteor.settings.public.undefinedRoles.length > 0) {
                     this.render('Configure');
                 } else {
                     this.render('Home');
