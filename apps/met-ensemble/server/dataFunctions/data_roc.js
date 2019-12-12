@@ -42,9 +42,21 @@ dataROC = function (plotParams, plotFunction) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        const label = curve['label'];
-        const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
+        var label = curve['label'];
+        var database = curve['database'];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var modelClause = "and h.model = '" + model + "'";
+        var variable = curve['variable'];
+        var variableClause = "and h.fcst_var = '" + variable + "'";
+        var statistic = "None";
+        var statLineType = 'ensemble';
+        var lineDataType = 'line_data_pct';
+        var lineDataSuffix = 'thresh';
+        var statisticClause = "ldt.i_value as bin_number, " +
+                "ldt.thresh_i as threshold, " +
+                "sum(ldt.oy_i) as oy_i, " +
+                "sum(ldt.on_i) as on_i";
+        var queryTableClause = "from " + database + ".stat_header h, " + database + "." + lineDataType + " ld, " + database + "." + lineDataType + "_" + lineDataSuffix + " ldt";
         var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
         regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
@@ -54,30 +66,13 @@ dataROC = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-        const variable = curve['variable'];
-        const statistic = "None";
-        const statLineType = 'ensemble';
-        const lineDataType = 'line_data_pct';
-        const lineDataSuffix = 'thresh';
-        // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
-        // have been sanitized for display purposes in the forecastValueMap.
-        // now we have to go get the damn ole unsanitary ones for the database.
-        var forecastLengthsClause = "";
-        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
-        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
-        if (fcsts.length > 0) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            fcsts = fcsts.map(function (fl) {
-                return forecastValueMap[fl];
-            }).join(',');
-            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
-        }
-        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
+          var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
             levels = levels.map(function (l) {
-                return "'" + l + "'";
+                // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                return "'" + l + "','" + l + "='";
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
@@ -98,6 +93,20 @@ dataROC = function (plotParams, plotFunction) {
             }).join(',');
             validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
         }
+      // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
+        // have been sanitized for display purposes in the forecastValueMap.
+        // now we have to go get the damn ole unsanitary ones for the database.
+        var forecastLengthsClause = "";
+        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
+        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
+        if (fcsts.length > 0) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
+            fcsts = fcsts.map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
+        }
+        var dateClause = "and unix_timestamp(ld.fcst_valid_beg) >= " + fromSecs + " and unix_timestamp(ld.fcst_valid_beg) <= " + toSecs;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable (axisKey) it will use the same axis.
@@ -114,41 +123,32 @@ dataROC = function (plotParams, plotFunction) {
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "ldt.i_value as bin_number, " +
-                "ldt.thresh_i as threshold, " +
-                "sum(ldt.oy_i) as oy_i, " +
-                "sum(ldt.on_i) as on_i " +
-                "from {{database}}.stat_header h, " +
-                "{{database}}.{{lineDataType}} ld, " +
-                "{{database}}.{{lineDataType}}_{{lineDataSuffix}} ldt " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and h.model = '{{model}}' " +
+                "{{dateClause}} " +
+                "{{modelClause}} " +
+                "{{variableClause}} " +
                 "{{regionsClause}} " +
-                "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
-                "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
+                "{{levelsClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
-                "and h.fcst_var = '{{variable}}' " +
-                "{{levelsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "and ld.line_data_id = ldt.line_data_id " +
                 "group by avtime, bin_number, threshold " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.split('{{database}}').join(database);
-            statement = statement.replace('{{model}}', model);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{modelClause}}', modelClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{regionsClause}}', regionsClause);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
-            statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{levelsClause}}', levelsClause);
-            statement = statement.split('{{lineDataType}}').join(lineDataType);
-            statement = statement.split('{{lineDataSuffix}}').join(lineDataSuffix);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
-            // console.log(statement);
 
             var queryResult;
             var startMoment = moment();
@@ -178,7 +178,7 @@ dataROC = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/regions [" + model + " and " + regions + "].");
                     } else {
                         throw new Error(error);
                     }
@@ -229,6 +229,7 @@ dataROC = function (plotParams, plotFunction) {
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
+        "statType": "met-" + statLineType,
         "axisMap": axisMap,
         "xmax": xmax,
         "xmin": xmin
