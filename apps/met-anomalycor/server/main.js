@@ -929,7 +929,7 @@ const doCurveTextPatterns = function () {
                 ['', 'variable', ' ACC, '],
                 ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ', ']
+                ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
                 "label", "group", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "level", "x-axis-parameter", "y-axis-parameter"

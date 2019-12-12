@@ -36,13 +36,29 @@ dataContour = function (plotParams, plotFunction) {
 
     // initialize variables specific to the curve
     var curve = curves[0];
-    const label = curve['label'];
-    const xAxisParam = curve['x-axis-parameter'];
-    const yAxisParam = curve['y-axis-parameter'];
-    const xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-    const yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
-    const database = curve['database'];
-    const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
+    var label = curve['label'];
+    var xAxisParam = curve['x-axis-parameter'];
+    var yAxisParam = curve['y-axis-parameter'];
+    var xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+    var yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
+    var database = curve['database'];
+    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+    var modelClause = "and h.model = '" + model + "'";
+    var variable = curve['variable'];
+    var variableClause = "and h.fcst_var = '" + variable + "'";
+    var statistic = "ACC";
+    var statLineType = 'scalar';
+    var lineDataType = 'line_data_sal1l2';
+    var statisticClause = "count(ld.fabar) as n, " +
+        "avg(ld.fabar) as sub_fbar, " +
+        "avg(ld.oabar) as sub_obar, " +
+        "avg(ld.ffabar) as sub_ffbar, " +
+        "avg(ld.ooabar) as sub_oobar, " +
+        "avg(ld.foabar) as sub_fobar, " +
+        "avg(ld.total) as sub_total, " +
+        "avg(ld.fcst_valid_beg) as sub_secs, " +    // this is just a dummy for the common python function -- the actual value doesn't matter
+        "count(h.fcst_lev) as sub_levs";      // this is just a dummy for the common python function -- the actual value doesn't matter
+    var queryTableClause = "from " + database + ".stat_header h, " + database + "." + lineDataType + " ld";
     var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
     regions = Array.isArray(regions) ? regions : [regions];
     var regionsClause = "";
@@ -52,31 +68,13 @@ dataContour = function (plotParams, plotFunction) {
         }).join(',');
         regionsClause = "and h.vx_mask IN(" + regions + ")";
     }
-    const variable = curve['variable'];
-    const statistic = "ACC";
-    const statLineType = 'scalar';
-    const lineDataType = 'line_data_sal1l2';
-    // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
-    // have been sanitized for display purposes in the forecastValueMap.
-    // now we have to go get the damn ole unsanitary ones for the database.
-    var forecastLengthsClause = "";
-    if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
-        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
-        if (fcsts.length > 0) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            fcsts = fcsts.map(function (fl) {
-                return forecastValueMap[fl];
-            }).join(',');
-            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
-        }
-    }
     var levelsClause = "";
     var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
     levels = Array.isArray(levels) ? levels : [levels];
     if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level' && levels.length > 0) {
         levels = levels.map(function (l) {
-            return "'" + l + "'";
+            // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+            return "'" + l + "','" + l + "='";
         }).join(',');
         levelsClause = "and h.fcst_lev IN(" + levels + ")";
     } else {
@@ -102,44 +100,49 @@ dataContour = function (plotParams, plotFunction) {
             validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
         }
     }
+    // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
+    // have been sanitized for display purposes in the forecastValueMap.
+    // now we have to go get the damn ole unsanitary ones for the database.
+    var forecastLengthsClause = "";
+    if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
+        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
+        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
+        if (fcsts.length > 0) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
+            fcsts = fcsts.map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
+        }
+    }
+    var dateString = "";
     var dateClause = "";
     if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-        dateClause = "unix_timestamp(ld.fcst_init_beg)";
+        dateString = "unix_timestamp(ld.fcst_init_beg)";
     } else {
-        dateClause = "unix_timestamp(ld.fcst_valid_beg)";
+        dateString = "unix_timestamp(ld.fcst_valid_beg)";
     }
-
+   dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
     // For contours, this functions as the colorbar label.
     curve['unitKey'] = variable + " " + statistic;
 
     var d;
     // this is a database driven curve, not a difference curve
     // prepare the query from the above parameters
-    // we query a lot of average values as sub values here, in order to comply with the common query routines from other plot types
     var statement = "{{xValClause}} " +
         "{{yValClause}} " +
-        "min({{dateClause}}) as min_secs, " +
-        "max({{dateClause}}) as max_secs, " +
-        "count(ld.fabar) as n, " +
-        "avg(ld.fabar) as sub_fbar, " +
-        "avg(ld.oabar) as sub_obar, " +
-        "avg(ld.ffabar) as sub_ffbar, " +
-        "avg(ld.ooabar) as sub_oobar, " +
-        "avg(ld.foabar) as sub_fobar, " +
-        "avg(ld.total) as sub_total, " +
-        "avg(ld.fcst_valid_beg) as sub_secs, " +    // this is just a dummy for the common python function -- the actual value doesn't matter
-        "count(h.fcst_lev) as sub_levs " +      // this is just a dummy for the common python function -- the actual value doesn't matter
-        "from {{database}}.stat_header h, " +
-        "{{database}}.{{lineDataType}} ld " +
+        "min({{dateString}}) as min_secs, " +
+        "max({{dateString}}) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
         "where 1=1 " +
-        "and h.model = '{{model}}' " +
+        "{{dateClause}} " +
+        "{{modelClause}} " +
+        "{{variableClause}} " +
         "{{regionsClause}} " +
-        "and {{dateClause}} >= '{{fromSecs}}' " +
-        "and {{dateClause}} <= '{{toSecs}}' " +
+        "{{levelsClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthsClause}} " +
-        "and h.fcst_var = '{{variable}}' " +
-        "{{levelsClause}} " +
         "and h.stat_header_id = ld.stat_header_id " +
         "group by xVal,yVal " +
         "order by xVal,yVal" +
@@ -147,19 +150,17 @@ dataContour = function (plotParams, plotFunction) {
 
     statement = statement.replace('{{xValClause}}', xValClause);
     statement = statement.replace('{{yValClause}}', yValClause);
-    statement = statement.split('{{database}}').join(database);
-    statement = statement.replace('{{model}}', model);
+    statement = statement.replace('{{statisticClause}}', statisticClause);
+    statement = statement.replace('{{queryTableClause}}', queryTableClause);
+    statement = statement.replace('{{modelClause}}', modelClause);
+    statement = statement.replace('{{variableClause}}', variableClause);
     statement = statement.replace('{{regionsClause}}', regionsClause);
-    statement = statement.replace('{{fromSecs}}', fromSecs);
-    statement = statement.replace('{{toSecs}}', toSecs);
+    statement = statement.replace('{{levelsClause}}', levelsClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
-    statement = statement.replace('{{variable}}', variable);
-    statement = statement.replace('{{levelsClause}}', levelsClause);
-    statement = statement.split('{{lineDataType}}').join(lineDataType);
-    statement = statement.split('{{dateClause}}').join(dateClause);
+    statement = statement.replace('{{dateClause}}', dateClause);
+    statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
-    // console.log(statement);
 
     var queryResult;
     var startMoment = moment();
@@ -221,7 +222,7 @@ dataContour = function (plotParams, plotFunction) {
     };
 
     // process the data returned by the query
-    const curveInfoParams = {"curve": curves, "axisMap": axisMap};
+    const curveInfoParams = {"curve": curves, "statType": "met-" + statLineType, "axisMap": axisMap};
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataContour(dataset, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
