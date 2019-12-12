@@ -69,8 +69,8 @@ dataContour = function (plotParams, plotFunction) {
             "avg(ld.total) as sub_total, ";
         lineDataType = "line_data_ctc";
     } else if (statLineType === 'precalculated') {
-        statisticClause = "count(statisticOptionsMap[statistic][2]) as n, " +
-            "avg(statisticOptionsMap[statistic][2]) as sub_precalc_stat, " +
+        statisticClause = "count(" + statisticOptionsMap[statistic][2] + ") as n, " +
+            "avg(" + statisticOptionsMap[statistic][2] + ") as sub_precalc_stat, " +
             "avg(ld.total) as sub_total, ";
         lineDataType = statisticOptionsMap[statistic][1];
     }
