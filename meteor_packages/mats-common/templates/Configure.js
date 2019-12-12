@@ -33,6 +33,15 @@ Template.Configure.helpers({
     group: function() {
         return Meteor.settings.public.group;
     },
+    showCopyIcon: function() {
+        const roles =  Meteor.settings.public.undefinedRoles;
+        if (this == roles[0]) {
+            return "none";
+        } else {
+            return "block";
+        }
+
+    },
 
     color: function() {
         return Meteor.settings.public.color;
@@ -88,12 +97,45 @@ Template.Configure.events({
         });
     },
     'click .test': function (event) {
+        event.preventDefault();
         const role = event.target.id.replace('-test','')
         const successButton = document.getElementById(role + "-success");
         const failButton = document.getElementById(role + "-fail");
-        // we have to implement the actual test here
-        successButton.style.display = "block";
-        failButton.style.display = "block";
+        const roleIdStr = event.target.id;
+        const roleStr = roleIdStr.replace('-test','');
+        failButton.style.display = "none";
+        successButton.style.display = "none";
+        document.getElementById(role + "-spinner").style.display = "block";
+        matsMethods.testGetTables.call({
+            host: document.getElementById(roleStr + '-host').value,
+            port: document.getElementById(roleStr + '-port').value,
+            user: document.getElementById(roleStr + '-user').value,
+            password: document.getElementById(roleStr + '-password').value,
+            database: document.getElementById(roleStr + '-database').value
+        }, function (error, result) {
+            document.getElementById(role + "-spinner").style.display = "none";
+            if(error) {
+                setError(error);
+                failButton.style.display = "block";
+                successButton.style.display = "none";
+            } else {
+                successButton.style.display = "block";
+                failButton.style.display = "none";
+            }
+        });
+    },
+    'click .copy': function(event) {
+        console.log(event);
+        event.preventDefault();
+        const baseHost = document.getElementById(Meteor.settings.public.undefinedRoles[0] + "-host").value;
+        const basePort = document.getElementById(Meteor.settings.public.undefinedRoles[0] + "-port").value;
+        const baseUser = document.getElementById(Meteor.settings.public.undefinedRoles[0] + "-user").value;
+        const basePassword = document.getElementById(Meteor.settings.public.undefinedRoles[0] + "-password").value;
+        const thisRole = event.target.id.replace('-copy','');
+        document.getElementById(thisRole + "-host").value = baseHost;
+        document.getElementById(thisRole + "-port").value = basePort;
+        document.getElementById(thisRole + "-user").value = baseUser;
+        document.getElementById(thisRole + "-password").value = basePassword;
     },
     'change .colorValue': function(event) {
         document.getElementById('color').value=document.getElementById('colorValue').value

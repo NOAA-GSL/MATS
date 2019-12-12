@@ -2075,7 +2075,7 @@ const removeDatabase = new ValidatedMethod({
     }
 });
 
-// Configure utility
+
 const applySettingsData = new ValidatedMethod({
     name: 'matsMethods.applySettingsData',
     validate: new SimpleSchema({
@@ -2102,7 +2102,6 @@ const applySettingsData = new ValidatedMethod({
         }
     }
 });
-
 
 // makes sure all of the parameters display appropriate selections in relation to one another
 const resetApp = function (appRef) {
@@ -2491,6 +2490,7 @@ const testGetTables = new ValidatedMethod({
     validate: new SimpleSchema(
         {
             host: {type: String},
+            port: {type: String},
             user: {type: String},
             password: {type: String},
             database: {type: String}
@@ -2501,14 +2501,20 @@ const testGetTables = new ValidatedMethod({
             const queryWrap = Future.wrap(function (callback) {
                 const connection = mysql.createConnection({
                     host: params.host,
+                    port: params.port,
                     user: params.user,
                     password: params.password,
                     database: params.database
                 });
                 connection.query("show tables;", function (err, result) {
+                    if (err || result === undefined) {
+                       //return callback(err,null);
+                        return callback(err,null);
+                    }
                     const tables = result.map(function (a) {
-                        return a.Tables_in_ruc_ua_sums2;
+                        return a;
                     });
+
                     return callback(err, tables);
                 });
                 connection.end(function (err) {
@@ -2517,7 +2523,11 @@ const testGetTables = new ValidatedMethod({
                     }
                 });
             });
-            return queryWrap().wait();
+            try {
+                return queryWrap().wait();
+            } catch (e) {
+                throw new Meteor.Error(e.message);
+            }
         }
     }
 });

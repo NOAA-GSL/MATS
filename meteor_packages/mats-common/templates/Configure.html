@@ -40,8 +40,8 @@
                 <h2>Unconfigured Database settings </h2>
                 {{#each roles}}
                     <div class="container-fluid" style="border:1px solid #cecece; padding:1%; margin:1%;">
-                        <h2>Role: {{role}}</h2>
-                        <div class="">
+                        <span class="h1">Role: {{role}} </span><i class="fa fa-copy copy" id="{{role}}-copy" style="display:{{showCopyIcon}}"></i>
+                        <div>
                             <div class="form-group-sm db-{{role}}">
                                 <div class="form-group-sm row">
                                     <label for="host" class="col-sm-2 col-form-label">Host:</label>
@@ -82,6 +82,9 @@
                                     </div>
                                     <div class="col-sm-1 text-right" >
                                         <button id="{{role}}-fail" class="btn btn-danger fail" style="display:none;">Fail</button>
+                                    </div>
+                                    <div class="col-sm-2 text-right" id="{{role}}-spinner" name="{{role}}-spinner" style="display:none">
+                                        <img src="img/spinner.gif" alt="Testing..." height="15%" width="15%"> <span style="color:red">Testing ...</span>
                                     </div>
                                 </div>
                             </div>
