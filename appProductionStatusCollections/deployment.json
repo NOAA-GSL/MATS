@@ -316,8 +316,8 @@
     {
       "app": "met-precip",
       "title": "MET Precipitation",
-      "version": "2.3.10-2019.12.12.21.22",
-      "buildDate": "2019.12.12.21.22",
+      "version": "2.3.10-2019.12.12.22.20",
+      "buildDate": "2019.12.12.22.20",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
