@@ -123,7 +123,7 @@ dataSeries = function (plotParams, plotFunction) {
         // This axisKeySet object is used like a set and if a curve has the same
         // variable (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = variable;
+        var axisKey = variable + " " + statistic;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;

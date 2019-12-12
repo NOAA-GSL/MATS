@@ -876,8 +876,6 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "select ld.fcst_lead as xVal, ",
-            'Threshold': "select h.fcst_thresh as xVal, ",
-            'Scale': "select h.interp_pnts as xVal, ",
             'Valid UTC hour': "select unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as xVal, ",
             'Init UTC hour': "select unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 as xVal, ",
             'Valid Date': "select unix_timestamp(ld.fcst_valid_beg) as xVal, ",
@@ -893,7 +891,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[5],
+                default: Object.keys(optionsMap)[2],
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -904,8 +902,6 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "ld.fcst_lead as yVal, ",
-            'Threshold': "h.fcst_thresh as yVal, ",
-            'Scale': "h.interp_pnts as yVal, ",
             'Valid UTC hour': "unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as yVal, ",
             'Init UTC hour': "unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 as yVal, ",
             'Valid Date': "unix_timestamp(ld.fcst_valid_beg) as yVal, ",
@@ -1145,7 +1141,7 @@ const doCurveTextPatterns = function () {
                 ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['', 'truth', ', ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "group", "database", "data-source", "region", "statistic", "variable", "threshold", "scale", "valid-time", "forecast-length", "level", "truth", "x-axis-parameter", "y-axis-parameter"
