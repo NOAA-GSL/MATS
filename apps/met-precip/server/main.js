@@ -242,7 +242,7 @@ const doCurveParams = function () {
 
     var thisDB;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT DISTINCT db FROM precip_mats_metadata;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select distinct db from precip_mats_metadata;");
         for (i = 0; i < rows.length; i++) {
             thisDB = rows[i].db.trim();
             myDBs.push(thisDB);
@@ -304,11 +304,17 @@ const doCurveParams = function () {
                 forecastValueOptionsMap[thisDB][model] = lengthValMap;
 
                 var levels = rows[i].levels;
-                var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
-                for (var j = 0; j < levelArr.length; j++) {
-                    levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
+                var levelsArrRaw = levels.split(',').map(Function.prototype.call, String.prototype.trim);
+                var levelsArr = [];
+                var dummyLevel;
+                for (var j = 0; j < levelsArrRaw.length; j++) {
+                    // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                    dummyLevel = levelsArrRaw[j].replace(/'|\[|\]|\=/g, "");
+                    if (levelsArr.indexOf(dummyLevel) === -1) {
+                        levelsArr.push(dummyLevel);
+                    }
                 }
-                levelOptionsMap[thisDB][model] = levelArr;
+                levelOptionsMap[thisDB][model] = levelsArr;
 
                 var variables = rows[i].variables;
                 var variableArr = variables.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -365,7 +371,7 @@ const doCurveParams = function () {
         );
     }
 
-    var defaultGroup = (Object.keys(dbGroupMap).indexOf("PROD") !== -1) ? "PROD" : Object.keys(dbGroupMap)[0];
+    var defaultGroup = (Object.keys(dbGroupMap).indexOf("NCEP_ylin") !== -1) ? "NCEP_ylin" : Object.keys(dbGroupMap)[0];
     var defaultDB = dbGroupMap[defaultGroup][0];
 
     if (matsCollections.CurveParams.findOne({name: 'group'}) == undefined) {
@@ -476,17 +482,25 @@ const doCurveParams = function () {
         }
     }
 
+    const regionOptions = forecastLengthOptionsMap[defaultDB][Object.keys(forecastLengthOptionsMap[defaultDB])[0]];
+    var regionDefault;
+    if (regionOptions.indexOf("G218/APL") !== -1) {
+        regionDefault = "G218/APL";
+    } else {
+        regionDefault = regionOptions[0];
+    }
+
     if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
-                options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],
+                options: regionOptions,
                 superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0],
+                default: regionDefault,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -501,8 +515,8 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'region'}, {
                 $set: {
                     optionsMap: regionModelOptionsMap,
-                    options: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]],
-                    default: regionModelOptionsMap[defaultDB][Object.keys(regionModelOptionsMap[defaultDB])[0]][0]
+                    options: regionOptions,
+                    default: regionDefault
                 }
             });
         }
@@ -510,18 +524,6 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const statOptionsMap = {
-            'RMSE': ['scalar'],
-            'Bias-corrected RMSE': ['scalar'],
-            'MSE': ['scalar'],
-            'Bias-corrected MSE': ['scalar'],
-            'ME (Additive bias)': ['scalar'],
-            'Multiplicative bias': ['scalar'],
-            'Forecast mean': ['scalar'],
-            'Observed mean': ['scalar'],
-            'Forecast stdev': ['scalar'],
-            'Observed stdev': ['scalar'],
-            'Error stdev': ['scalar'],
-            'Pearson correlation': ['scalar'],
             'CSI': ['ctc'],
             'FAR': ['ctc'],
             'FBIAS': ['ctc'],
@@ -529,7 +531,13 @@ const doCurveParams = function () {
             'HSS': ['ctc'],
             'PODy': ['ctc'],
             'PODn': ['ctc'],
-            'POFD': ['ctc']
+            'POFD': ['ctc'],
+            'ME (Additive bias)': ['scalar'],
+            'Multiplicative bias': ['scalar'],
+            'Forecast mean': ['scalar'],
+            'Observed mean': ['scalar'],
+            'EV': ['precalculated', 'line_data_eclv', 'ld.value_baser'],
+            'FSS': ['precalculated', 'line_data_nbrcnt', 'ld.fss']
         };
 
         matsCollections.CurveParams.insert(
@@ -1000,14 +1008,14 @@ const doCurveTextPatterns = function () {
                 ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
+                ['', 'threshold', ', '],
                 ['', 'scale', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'level', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['avg: ', 'average', ' '],
+                ['avg: ', 'average', ', '],
                 ['', 'truth', ' ']
             ],
             displayParams: [
@@ -1022,7 +1030,7 @@ const doCurveTextPatterns = function () {
                 ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
+                ['', 'threshold', ', '],
                 ['', 'scale', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -1066,7 +1074,7 @@ const doCurveTextPatterns = function () {
                 ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
+                ['', 'threshold', ', '],
                 ['', 'scale', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -1087,7 +1095,7 @@ const doCurveTextPatterns = function () {
                 ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
+                ['', 'threshold', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'level', ', '],
@@ -1108,7 +1116,7 @@ const doCurveTextPatterns = function () {
                 ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
+                ['', 'threshold', ', '],
                 ['', 'scale', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -1130,7 +1138,7 @@ const doCurveTextPatterns = function () {
                 ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
+                ['', 'threshold', ', '],
                 ['', 'scale', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],

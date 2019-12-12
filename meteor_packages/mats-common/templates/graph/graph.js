@@ -102,7 +102,8 @@ Template.graph.helpers({
                         barTypeResetOpts.push({
                             'name': dataset[bidx].name,
                             'visible': dataset[bidx].visible,
-                        });
+                            'marker.color': dataset[bidx].marker.color,
+                       });
                     }
                     Session.set('barTypeResetOpts', barTypeResetOpts);
                     break;
@@ -134,7 +135,7 @@ Template.graph.helpers({
             }
             Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
 
-            // append annotations
+            // append annotations and other setup
             var localAnnotation;
             for (var i = 0; i < dataset.length; i++) {
                 if (Object.values(matsTypes.ReservedWords).indexOf(dataset[i].label) >= 0) {
@@ -174,11 +175,29 @@ Template.graph.helpers({
                 });
 
                 // enable colorpickers on curve styles modal
-                $(function () {
-                    var l = '.' + dataset[i].label + '-graphColorpick';
-                    $(l).colorpicker({format: "rgb", align:"left"});
-                });
+                var l = dataset[i].label + 'LineColor';
+                if (document.getElementById(l) !== undefined) {
+                    $('#' + l).colorpicker({format: "rgb", align: "left"});
+                }
             }
+
+            if (plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
+                // enable colorpicker on colorbar modal, if applicable. Otherwise hide the selection field.
+                const lastCurveIndex = dataset.length - 1;
+                if (dataset[lastCurveIndex].label === matsTypes.ReservedWords.contourSigLabel && dataset[lastCurveIndex].x.length > 0) {
+                    $('#sigDotColor').colorpicker({format: "rgb", align: "left"});
+                    $('#sigDotContainer')[0].style.display = "block";
+                } else {
+                    $('#sigDotContainer')[0].style.display = "none";
+                }
+
+                // make default colorbar selection actually match what is on the graph
+                const colorscale = JSON.stringify(dataset[0].colorscale);
+                let elem = document.getElementById("colormapSelect");
+                elem.value = colorscale;
+            }
+
+            // store annotation
             annotation = $("#curves")[0].innerHTML;
             matsCurveUtils.hideSpinner();
         }
@@ -203,15 +222,11 @@ Template.graph.helpers({
     plotName: function () {
         return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || Session.get('plotType') === matsTypes.PlotTypes.map ? "" : Session.get('PlotParams').plotAction.toUpperCase();
     },
-    colorpick: function() {
-        var l = this.label + '-graphColorpick';
-        return l;
-    },
     curveText: function () {
         if (this.diffFrom === undefined) {
             var plotType = Session.get('plotType');
             if (plotType === undefined) {
-                pfuncs = matsCollections.PlotGraphFunctions.find({}).fetch();
+                var pfuncs = matsCollections.PlotGraphFunctions.find({}).fetch();
                 for (var i = 0; i < pfuncs.length; i++) {
                     if (pfuncs[i].checked === true) {
                         Session.set('plotType', pfuncs[i].plotType);
@@ -254,15 +269,6 @@ Template.graph.helpers({
             return "none";
         }
     },
-    mvSpanDisplay: function () {
-        var updated = Session.get("MvResultsUpDated");
-        if (Session.get("mvResultKey") != null || Session.get('plotParams')['metexpress-mode'] == "matsmv") {
-            return "block";
-        } else {
-            return "none";
-        }
-    },
-
     plotText: function () {
         var p = Session.get('PlotParams');
         if (p !== undefined) {
@@ -1003,6 +1009,7 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+
         // save the updates in case we want to pass them to a pop-out window.
         curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
         var updatedKeys = Object.keys(update);
@@ -1050,6 +1057,7 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+
         // save the updates in case we want to pass them to a pop-out window.
         curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
         var updatedKeys = Object.keys(update);
@@ -1094,6 +1102,7 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+
         // save the updates in case we want to pass them to a pop-out window.
         curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
         var updatedKeys = Object.keys(update);
@@ -1123,6 +1132,7 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+
         // save the updates in case we want to pass them to a pop-out window.
         curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
         var updatedKeys = Object.keys(update);
@@ -1214,6 +1224,12 @@ Template.graph.events({
                 case matsTypes.PlotTypes.contourDiff:
                     // restyle for contour plots
                     Plotly.restyle($("#placeholder")[0], Session.get('colorbarResetOpts'), 0);
+                    // deal with sig dots that some of the difference contours have
+                    const lastCurveIndex = dataset.length - 1;
+                    if (dataset[lastCurveIndex].label === matsTypes.ReservedWords.contourSigLabel && dataset[lastCurveIndex].x.length > 0) {
+                        const sigDotReset = {'marker.color': 'rgb(0,0,0)'};
+                        Plotly.restyle($("#placeholder")[0], sigDotReset, lastCurveIndex);
+                    }
                     break;
                 case matsTypes.PlotTypes.timeSeries:
                 case matsTypes.PlotTypes.profile:
@@ -1231,6 +1247,7 @@ Template.graph.events({
                             $('#' + dataset[lidx].label + "-curve-show-hide")[0].value = "hide curve";
                             $('#' + dataset[lidx].label + "-curve-show-hide-points")[0].value = "hide points";
                             $('#' + dataset[lidx].label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+
                             // revert the annotation to the original colors
                             const thisAnnotation = $("#legendContainer" + dataset[lidx].label);
                             const annotationCurrentlyHidden = thisAnnotation[0].hidden;
@@ -1369,6 +1386,13 @@ Template.graph.events({
                 updates[index] = updates[index] === undefined ? {} : updates[index];
                 updates[index]['line.color'] = elem.value;
                 updates[index]['marker.color'] = elem.value;
+                if (dataset[index].error_x !== undefined && dataset[index].error_x.color !== undefined) {
+                    updates[index]['error_x.color'] = elem.value;
+                }
+                if (dataset[index].error_y !== undefined && dataset[index].error_y.color !== undefined) {
+                    updates[index]['error_y.color'] = elem.value;
+                }
+
                 // update the annotation with the new color
                 const thisAnnotation = $("#legendContainer" + dataset[index].curveId);
                 const annotationCurrentlyHidden = thisAnnotation[0].hidden;
@@ -1407,7 +1431,7 @@ Template.graph.events({
             // apply new settings
             Plotly.restyle($("#placeholder")[0], updates[uidx], uidx);
         }
-        $("#lineTypeModal").modal('hide');
+
         // save the updates in case we want to pass them to a pop-out window.
         for (uidx = 0; uidx < updates.length; uidx++) {
             curveOpsUpdate[uidx] = curveOpsUpdate[uidx] === undefined ? {} : curveOpsUpdate[uidx];
@@ -1419,6 +1443,7 @@ Template.graph.events({
                 curveOpsUpdate[uidx][jsonHappyKey] = updates[uidx][updatedKey];
             }
         }
+        $("#lineTypeModal").modal('hide');
     },
     // add show/hide modal submit button
     'click #showHideSubmit': function (event) {
@@ -1440,12 +1465,13 @@ Template.graph.events({
             // apply new settings
             Plotly.restyle($("#placeholder")[0], updates[uidx], uidx);
         }
-        $("#legendTextModal").modal('hide');
+
         // save the updates in case we want to pass them to a pop-out window.
         for (uidx = 0; uidx < updates.length; uidx++) {
             curveOpsUpdate[uidx] = curveOpsUpdate[uidx] === undefined ? {} : curveOpsUpdate[uidx];
             curveOpsUpdate[uidx]['name'] = updates[uidx]['name'];
         }
+        $("#legendTextModal").modal('hide');
     },
     // add colorbar customization modal submit button
     'click #colorbarSubmit': function (event) {
@@ -1511,7 +1537,7 @@ Template.graph.events({
         }
         // apply new settings
         Plotly.restyle($("#placeholder")[0], update, 0);
-        $("#colorbarModal").modal('hide');
+
         // save the updates in case we want to pass them to a pop-out window.
         curveOpsUpdate[0] = curveOpsUpdate[0] === undefined ? {} : curveOpsUpdate[0];
         const updatedKeys = Object.keys(update);
@@ -1521,6 +1547,23 @@ Template.graph.events({
             var jsonHappyKey = updatedKey.split(".").join("____");
             curveOpsUpdate[0][jsonHappyKey] = update[updatedKey];
         }
+
+        // deal with sig dots that some of the difference contours have
+        const lastCurveIndex = dataset.length - 1;
+        if (dataset[lastCurveIndex].label === matsTypes.ReservedWords.contourSigLabel && dataset[lastCurveIndex].x.length > 0) {
+            $("[id$=sigDotColor]").get().forEach(function (elem, index) {
+                update = {};
+                if (elem.value !== undefined && elem.value !== "") {
+                    update['marker.color'] = elem.value;
+                }
+            });
+            Plotly.restyle($("#placeholder")[0], update, lastCurveIndex);
+        }
+
+        // save the update in case we want to pass it to a pop-out window.
+        curveOpsUpdate[lastCurveIndex] = curveOpsUpdate[lastCurveIndex] === undefined ? {} : curveOpsUpdate[lastCurveIndex];
+        curveOpsUpdate[lastCurveIndex]['marker____color'] = update['marker.color'];
+        $("#colorbarModal").modal('hide');
     }
 });
 

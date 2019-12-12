@@ -239,7 +239,7 @@ const doCurveParams = function () {
 
     var thisDB;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT DISTINCT db FROM surface_mats_metadata;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select distinct db from surface_mats_metadata;");
         for (i = 0; i < rows.length; i++) {
             thisDB = rows[i].db.trim();
             myDBs.push(thisDB);
@@ -290,11 +290,17 @@ const doCurveParams = function () {
                 forecastValueOptionsMap[thisDB][model] = lengthValMap;
 
                 var levels = rows[i].levels;
-                var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
-                for (var j = 0; j < levelArr.length; j++) {
-                    levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
+                var levelsArrRaw = levels.split(',').map(Function.prototype.call, String.prototype.trim);
+                var levelsArr = [];
+                var dummyLevel;
+                for (var j = 0; j < levelsArrRaw.length; j++) {
+                    // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                    dummyLevel = levelsArrRaw[j].replace(/'|\[|\]|\=/g, "");
+                    if (levelsArr.indexOf(dummyLevel) === -1) {
+                        levelsArr.push(dummyLevel);
+                    }
                 }
-                levelOptionsMap[thisDB][model] = levelArr;
+                levelOptionsMap[thisDB][model] = levelsArr;
 
                 var variables = rows[i].variables;
                 var variableArr = variables.split(',').map(Function.prototype.call, String.prototype.trim);

@@ -41,9 +41,19 @@ dataDieOff = function (plotParams, plotFunction) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        const label = curve['label'];
-        const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
+        var label = curve['label'];
+        var database = curve['database'];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var modelClause = "and h.model = '" + model + "'";
+        var variable = curve['variable'];
+        var variableClause = "and h.fcst_var = '" + variable + "'";
+        var statistic = "ACC";
+        var statLineType = 'scalar';
+        var lineDataType = 'line_data_sal1l2';
+        var statisticClause = "avg(ld.fabar) as fbar, " +
+                "avg(ld.oabar) as obar, " +
+                "group_concat(distinct ld.fabar, ';', ld.oabar, ';', ld.ffabar, ';', ld.ooabar, ';', ld.foabar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
+        var queryTableClause = "from " + database + ".stat_header h, " + database + "." + lineDataType + " ld";
         var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
         regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
@@ -53,16 +63,13 @@ dataDieOff = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-        const variable = curve['variable'];
-        const statistic = "ACC";
-        const statLineType = 'scalar';
-        const lineDataType = 'line_data_sal1l2';
         var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
             levels = levels.map(function (l) {
-                return "'" + l + "'";
+                // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                return "'" + l + "','" + l + "='";
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
@@ -73,19 +80,20 @@ dataDieOff = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
-        var dieoffTypeStr = curve['dieoff-type'];
-        var dieoffTypeOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
-        var dieoffType = dieoffTypeOptionsMap[dieoffTypeStr][0];
+        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
-        var dateRangeClause = "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' ";
+        var dieoffTypeStr = curve['dieoff-type'];
+        var dieoffTypeOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
+        var dieoffType = dieoffTypeOptionsMap[dieoffTypeStr][0];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var dateClause = "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' ";
         if (dieoffType === matsTypes.ForecastTypes.dieoff) {
-            var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
-            if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
+            vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+            if (vts.length !== 0 && vts !== matsTypes.InputTypes.unused) {
                 vts = curve['valid-time'];
                 vts = Array.isArray(vts) ? vts : [vts];
                 vts = vts.map(function (vt) {
@@ -93,11 +101,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 }).join(',');
                 validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
             }
-        } else if (dieoffType === matsTypes.ForecastTypes.utcCycle) {
+        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
             utcCycleStartClause = "and unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 IN(" + utcCycleStart + ")";
         } else {
-            dateRangeClause = "and unix_timestamp(ld.fcst_init_beg) = " + fromSecs;
+            dateClause = "and unix_timestamp(ld.fcst_init_beg) = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -110,40 +118,36 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT ld.fcst_lead AS fcst_lead, " +
+            var statement = "select ld.fcst_lead as fcst_lead, " +
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "avg(ld.fabar) as fbar, " +
-                "avg(ld.oabar) as obar, " +
-                "group_concat(distinct ld.fabar, ';', ld.oabar, ';', ld.ffabar, ';', ld.ooabar, ';', ld.foabar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
-                "from {{database}}.stat_header h, " +
-                "{{database}}.{{lineDataType}} ld " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and h.model = '{{model}}' " +
+                "{{dateClause}} " +
+                "{{modelClause}} " +
+                "{{variableClause}} " +
                 "{{regionsClause}} " +
-                "{{dateRangeClause}} " +
+                "{{levelsClause}} " +
                 "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
-                "and h.fcst_var = '{{variable}}' " +
-                "{{levelsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "group by fcst_lead " +
                 "order by fcst_lead" +
                 ";";
 
-            statement = statement.split('{{database}}').join(database);
-            statement = statement.replace('{{model}}', model);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{modelClause}}', modelClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{regionsClause}}', regionsClause);
-            statement = statement.replace('{{dateRangeClause}}', dateRangeClause);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
-            statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{levelsClause}}', levelsClause);
-            statement = statement.split('{{lineDataType}}').join(lineDataType);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
-            // console.log(statement);
 
             var queryResult;
             var startMoment = moment();
@@ -231,6 +235,7 @@ dataDieOff = function (plotParams, plotFunction) {
         "curvesLength": curvesLength,
         "idealValues": idealValues,
         "utcCycleStarts": utcCycleStarts,
+        "statType": "met-" + statLineType,
         "axisMap": axisMap,
         "xmax": xmax,
         "xmin": xmin

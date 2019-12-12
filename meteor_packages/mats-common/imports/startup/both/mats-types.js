@@ -117,7 +117,8 @@ var ReservedWords = {
     noSkill: "No Skill",
     blueCurveText: "Cold bias",
     blackCurveText: "Small bias",
-    redCurveText: "Warm bias"
+    redCurveText: "Warm bias",
+    contourSigLabel: "Curve1-Curve0 Significance"
 };
 
 var Messages = {

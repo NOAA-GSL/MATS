@@ -466,7 +466,7 @@ const generateContourCurveOptions = function (curve, axisMap, dataset, appParams
 
 const getContourSignificanceLayer = function (dataset) {
 
-    const label = "Curve1-Curve0 Significance";
+    const label = matsTypes.ReservedWords.contourSigLabel;
     var curveOptions = {
         label: label,
         curveId: label,

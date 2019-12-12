@@ -217,7 +217,7 @@ const doCurveParams = function () {
     var masterThresholdValuesMap = {};
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select short_name,description from region_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -230,7 +230,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "select trsh,description from threshold_descriptions;");
         var masterDescription;
         var masterTrsh;
         for (var j = 0; j < rows.length; j++) {

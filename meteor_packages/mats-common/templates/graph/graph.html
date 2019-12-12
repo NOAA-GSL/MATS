@@ -196,7 +196,7 @@
                         {{#each curves}}
                             <div class="row">
                                 <label class="col-sm-2">{{this.label}}: </label>
-                                <input id="{{this.label}}LineColor" type="text" class="col-sm-2 form-control {{colorpick}}" value="{{this.color}}" style="display:inline-block; width: 8em; font-size: small;"/>
+                                <input id="{{this.label}}LineColor" type="text" class="col-sm-2 form-control {{this.label}}-graphColorpick" value="{{this.color}}" style="display:inline-block; width: 8em; font-size: small;"/>
                                 {{#if isLinePlot}}
                                     <select id="{{this.label}}LineStyle" class="{{this.label}}-line-style col-sm-2" style="font-size: small;">
                                         <option value="solid" selected="selected">Solid</option>
@@ -345,7 +345,7 @@
                                 <div class="row">
                                     <label class="col-sm-5">Select colormap: </label>
                                     <select id="colormapSelect">
-                                        <option value='RdBu' selected="selected">RedBlue</option>
+                                        <option value='RdBu'>RedBlue</option>
                                         <option value={{RdWhBuTriplet}}>RedWhiteBlue</option>
                                         <option value={{MPL_BrBGTriplet}}>Wet/Dry (No White)</option>
                                         <option value={{MPL_BrBWGTriplet}}>Wet/Dry (Center White)</option>
@@ -367,6 +367,13 @@
                                         <option value='YlGnBu'>YellowGreenBlue</option>
                                         <option value='YlOrRd'>YellowOrangeRed</option>
                                     </select>
+                                </div>
+                                <div id="sigDotContainer" style="display:block">
+                                    <div><br></div>
+                                    <div class="row">
+                                        <label class="col-sm-5">Significance dot color: </label>
+                                    <input id="sigDotColor" type="text" class="col-sm-5 form-control sigDot-graphColorpick" value="rgb(0,0,0)" style="display:inline-block; width: 8em; font-size: small;"/>
+                                    </div>
                                 </div>
                                 <div><br></div>
                                 <div class="row">

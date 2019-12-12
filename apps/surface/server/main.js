@@ -219,7 +219,7 @@ const doCurveParams = function () {
     var metarModelOptionsMap = {};
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select short_name,description from region_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -232,7 +232,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT metar_string,description FROM metar_string_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select metar_string,description from metar_string_descriptions;");
         var masterMETARDescription;
         var masterMETARString;
         for (var j = 0; j < rows.length; j++) {

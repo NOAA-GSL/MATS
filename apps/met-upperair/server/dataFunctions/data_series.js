@@ -44,9 +44,28 @@ dataSeries = function (plotParams, plotFunction) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        const label = curve['label'];
-        const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
+        var label = curve['label'];
+        var database = curve['database'];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var modelClause = "and h.model = '" + model + "'";
+        var variable = curve['variable'];
+        var variableClause = "and h.fcst_var = '" + variable + "'";
+        var statistic = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statLineType = statisticOptionsMap[statistic][0];
+        var statisticClause = "";
+        var lineDataType = "";
+        if (statLineType === 'scalar') {
+            statisticClause = "avg(ld.fbar) as fbar, " +
+                "avg(ld.obar) as obar, " +
+                "group_concat(distinct ld.fbar, ';', ld.obar, ';', ld.ffbar, ';', ld.oobar, ';', ld.fobar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
+            lineDataType = "line_data_sl1l2";
+        } else if (statLineType === 'ctc') {
+            statisticClause = "avg(ld.fy_oy) as fy_oy, " +
+                "group_concat(distinct ld.fy_oy, ';', ld.fy_on, ';', ld.fn_oy, ';', ld.fn_on, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
+            lineDataType = "line_data_ctc";
+        }
+        var queryTableClause = "from " + database + ".stat_header h, " + database + "." + lineDataType + " ld";
         var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
         regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
@@ -56,44 +75,13 @@ dataSeries = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-        const variable = curve['variable'];
-        const statistic = curve['statistic'];
-        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        const statLineType = statisticOptionsMap[statistic][0];
-        var statisticsClause = "";
-        var lineDataType = "";
-        if (statLineType === 'scalar') {
-            statisticsClause = "avg(ld.fbar) as fbar, " +
-                "avg(ld.obar) as obar, " +
-                "group_concat(distinct ld.fbar, ';', ld.obar, ';', ld.ffbar, ';', ld.oobar, ';', ld.fobar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
-            lineDataType = "line_data_sl1l2";
-        } else if (statLineType === 'ctc') {
-            statisticsClause = "avg(ld.fy_oy) as fy_oy, " +
-                "group_concat(distinct ld.fy_oy, ';', ld.fy_on, ';', ld.fn_oy, ';', ld.fn_on, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
-            lineDataType = "line_data_ctc";
-        }
-        // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
-        // have been sanitized for display purposes in the forecastValueMap.
-        // now we have to go get the damn ole unsanitary ones for the database.
-        var forecastLengthsClause = "";
-        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
-        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
-        if (fcsts.length > 0) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            fcsts = fcsts.map(function (fl) {
-                return forecastValueMap[fl];
-            }).join(',');
-            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
-        }
-        const averageStr = curve['average'];
-        const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        const average = averageOptionsMap[averageStr][0];
         var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
             levels = levels.map(function (l) {
-                return "'" + l + "'";
+                // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                return "'" + l + "','" + l + "='";
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
@@ -114,6 +102,23 @@ dataSeries = function (plotParams, plotFunction) {
             }).join(',');
             validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
         }
+        // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
+        // have been sanitized for display purposes in the forecastValueMap.
+        // now we have to go get the damn ole unsanitary ones for the database.
+        var forecastLengthsClause = "";
+        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
+        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
+        if (fcsts.length > 0) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
+            fcsts = fcsts.map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
+        }
+        var dateClause = "and unix_timestamp(ld.fcst_valid_beg) >= " + fromSecs + " and unix_timestamp(ld.fcst_valid_beg) <= " + toSecs;
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable (axisKey) it will use the same axis.
@@ -130,37 +135,32 @@ dataSeries = function (plotParams, plotFunction) {
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "{{statisticsClause}} " +
-                "from {{database}}.stat_header h, " +
-                "{{database}}.{{lineDataType}} ld " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and h.model = '{{model}}' " +
+                "{{dateClause}} " +
+                "{{modelClause}} " +
+                "{{variableClause}} " +
                 "{{regionsClause}} " +
-                "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
-                "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
+                "{{levelsClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
-                "and h.fcst_var = '{{variable}}' " +
-                "{{levelsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
             statement = statement.replace('{{average}}', average);
-            statement = statement.split('{{database}}').join(database);
-            statement = statement.replace('{{model}}', model);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{modelClause}}', modelClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{regionsClause}}', regionsClause);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
-            statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{statisticsClause}}', statisticsClause);
-            statement = statement.replace('{{levelsClause}}', levelsClause);
-            statement = statement.split('{{lineDataType}}').join(lineDataType);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
-            // console.log(statement);
 
             var queryResult;
             var startMoment = moment();
@@ -248,6 +248,7 @@ dataSeries = function (plotParams, plotFunction) {
         "curvesLength": curvesLength,
         "idealValues": idealValues,
         "utcCycleStarts": utcCycleStarts,
+        "statType": "met-" + statLineType,
         "axisMap": axisMap,
         "xmax": xmax,
         "xmin": xmin

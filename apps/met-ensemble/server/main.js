@@ -258,7 +258,7 @@ const doCurveParams = function () {
 
     var thisDB;
     try {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT DISTINCT db FROM ensemble_mats_metadata;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select distinct db from ensemble_mats_metadata;");
         for (i = 0; i < rows.length; i++) {
             thisDB = rows[i].db.trim();
             myDBs.push(thisDB);
@@ -309,11 +309,17 @@ const doCurveParams = function () {
                 forecastValueOptionsMap[thisDB][model] = lengthValMap;
 
                 var levels = rows[i].levels;
-                var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
-                for (var j = 0; j < levelArr.length; j++) {
-                    levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
+                var levelsArrRaw = levels.split(',').map(Function.prototype.call, String.prototype.trim);
+                var levelsArr = [];
+                var dummyLevel;
+                for (var j = 0; j < levelsArrRaw.length; j++) {
+                    // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                    dummyLevel = levelsArrRaw[j].replace(/'|\[|\]|\=/g, "");
+                    if (levelsArr.indexOf(dummyLevel) === -1) {
+                        levelsArr.push(dummyLevel);
+                    }
                 }
-                levelOptionsMap[thisDB][model] = levelArr;
+                levelOptionsMap[thisDB][model] = levelsArr;
 
                 var variables = rows[i].variables;
                 var variableArr = variables.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -499,26 +505,26 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const statOptionsMap = {
-            'RMSE': ['ensemble', 'line_data_ecnt', 'ld.rmse'],
-            'RMSE with obs error': ['ensemble', 'line_data_ecnt', 'ld.rmse_oerr'],
-            'Spread': ['ensemble', 'line_data_ecnt', 'ld.spread'],
-            'Spread with obs error': ['ensemble', 'line_data_ecnt', 'ld.spread_oerr'],
-            'ME (Additive bias)': ['ensemble', 'line_data_ecnt', 'ld.me'],
-            'ME with obs error': ['ensemble', 'line_data_ecnt', 'ld.me_oerr'],
-            'MAE': ['ensemble', 'line_data_cnt', 'ld.mae'],
-            'ACC': ['ensemble', 'line_data_cnt', 'ld.anom_corr'],
-            'CRPS': ['ensemble', 'line_data_ecnt', 'ld.crps'],
-            'CRPSS': ['ensemble', 'line_data_ecnt', 'ld.crpss'],
-            'BS': ['ensemble', 'line_data_pstd', 'ld.brier'],
-            'BSS': ['ensemble', 'line_data_pstd', 'ld.bss'],
-            'BS reliability': ['ensemble', 'line_data_pstd', 'ld.reliability'],
-            'BS resolution': ['ensemble', 'line_data_pstd', 'ld.resolution'],
-            'BS uncertainty': ['ensemble', 'line_data_pstd', 'ld.uncertainty'],
-            'BS lower confidence limit': ['ensemble', 'line_data_pstd', 'ld.brier_ncl'],
-            'BS upper confidence limit': ['ensemble', 'line_data_pstd', 'ld.brier_ncu'],
-            'EV': ['ensemble', 'line_data_eclv', 'ld.value_baser'],
-            'FSS': ['ensemble', 'line_data_nbrcnt', 'ld.fss'],
-            'ROC AUC': ['ensemble', 'line_data_pstd', 'ld.roc_auc']
+            'RMSE': ['precalculated', 'line_data_ecnt', 'ld.rmse'],
+            'RMSE with obs error': ['precalculated', 'line_data_ecnt', 'ld.rmse_oerr'],
+            'Spread': ['precalculated', 'line_data_ecnt', 'ld.spread'],
+            'Spread with obs error': ['precalculated', 'line_data_ecnt', 'ld.spread_oerr'],
+            'ME (Additive bias)': ['precalculated', 'line_data_ecnt', 'ld.me'],
+            'ME with obs error': ['precalculated', 'line_data_ecnt', 'ld.me_oerr'],
+            'MAE': ['precalculated', 'line_data_cnt', 'ld.mae'],
+            'ACC': ['precalculated', 'line_data_cnt', 'ld.anom_corr'],
+            'CRPS': ['precalculated', 'line_data_ecnt', 'ld.crps'],
+            'CRPSS': ['precalculated', 'line_data_ecnt', 'ld.crpss'],
+            'BS': ['precalculated', 'line_data_pstd', 'ld.brier'],
+            'BSS': ['precalculated', 'line_data_pstd', 'ld.bss'],
+            'BS reliability': ['precalculated', 'line_data_pstd', 'ld.reliability'],
+            'BS resolution': ['precalculated', 'line_data_pstd', 'ld.resolution'],
+            'BS uncertainty': ['precalculated', 'line_data_pstd', 'ld.uncertainty'],
+            'BS lower confidence limit': ['precalculated', 'line_data_pstd', 'ld.brier_ncl'],
+            'BS upper confidence limit': ['precalculated', 'line_data_pstd', 'ld.brier_ncu'],
+            'EV': ['precalculated', 'line_data_eclv', 'ld.value_baser'],
+            'FSS': ['precalculated', 'line_data_nbrcnt', 'ld.fss'],
+            'ROC AUC': ['precalculated', 'line_data_pstd', 'ld.roc_auc']
         };
 
         matsCollections.CurveParams.insert(

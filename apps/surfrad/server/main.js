@@ -217,7 +217,7 @@ const doCurveParams = function () {
     var masterScaleValuesMap = {};
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT station,description FROM station_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select station,description from station_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -230,7 +230,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT scle,description FROM scale_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select scle,description from scale_descriptions;");
         var masterDescription;
         var masterScale;
         for (var j = 0; j < rows.length; j++) {

@@ -9,7 +9,7 @@ import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
-import {moment} from 'meteor/momentjs:moment'
+import {moment} from 'meteor/momentjs:moment';
 
 dataDieOff = function (plotParams, plotFunction) {
     // initialize variables common to all curves
@@ -89,7 +89,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.fcst_len/60 AS fcst_lead, " +
+            var statement = "select m0.fcst_len/60 as fcst_lead, " +
                 "count(distinct m0.valid_secs) as N_times, " +
                 "min(m0.valid_secs) as min_secs, " +
                 "max(m0.valid_secs) as max_secs, " +
