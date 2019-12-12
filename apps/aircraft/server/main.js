@@ -934,6 +934,7 @@ Meteor.startup(function () {
 
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,

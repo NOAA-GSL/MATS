@@ -1174,6 +1174,7 @@ Meteor.startup(function () {
 
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
@@ -1184,28 +1185,39 @@ Meteor.startup(function () {
 
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    sumPool = mysql.createPool(sumSettings);
+    if (sumSettings) {
+        sumPool = mysql.createPool(sumSettings)
+    };
 
     const siteSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SITE_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    sitePool = mysql.createPool(siteSettings);
+    if (siteSettings) {
+        sitePool = mysql.createPool(siteSettings);
+    }
 
-    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
-    mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord("sitePool", "madis3", ['metar_mats_test']);
-    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'surface'});});
+    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
+    mdr.addRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord(matsTypes.DatabaseRoles.SITE_DATA, "sitePool", "madis3", ['metar_mats_test']);
+    try {
+        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surface'});
+    } catch (error) {
+        console.log(error.message);
+    }
+});
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
