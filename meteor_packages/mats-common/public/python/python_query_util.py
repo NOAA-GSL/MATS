@@ -521,30 +521,46 @@ class QueryUtil:
                 sub_values, stat = self.calculate_ctc_stat(statistic, sub_fy_oy, sub_fy_on, sub_fn_oy, sub_fn_on,
                                                            sub_total)
             elif stat_line_type == 'precalculated':
-                # ensemble app currently has no contour plots
-                stat = float(row['stat']) if float(row['stat']) != -9999 else 'null'
-                sub_data = str(row['sub_data']).split(',')
-                sub_values = []
-                sub_total = []
-                sub_secs = []
-                sub_levs = []
-                for sub_datum in sub_data:
-                    sub_datum = sub_datum.split(';')
-                    sub_values.append(float(sub_datum[0]) if float(sub_datum[0]) != -9999 else np.nan)
-                    sub_total.append(float(sub_datum[1]) if float(sub_datum[1]) != -9999 else np.nan)
-                    sub_secs.append(float(sub_datum[2]) if float(sub_datum[2]) != -9999 else np.nan)
-                    if len(sub_datum) > 3:
-                        if self.is_number(sub_datum[3]):
-                            sub_levs.append(int(sub_datum[3]) if float(sub_datum[0]) != -9999 else np.nan)
-                        else:
-                            sub_levs.append(sub_datum[3])
-                sub_values = np.asarray(sub_values)
-                sub_total = np.asarray(sub_total)
-                sub_secs = np.asarray(sub_secs)
-                if len(sub_levs) == 0:
-                    sub_levs = np.empty(len(sub_secs))
+                if 'sub_data' in row:
+                    # everything except contour plots should be in this format
+                    stat = float(row['stat']) if float(row['stat']) != -9999 else 'null'
+                    sub_data = str(row['sub_data']).split(',')
+                    sub_values = []
+                    sub_total = []
+                    sub_secs = []
+                    sub_levs = []
+                    for sub_datum in sub_data:
+                        sub_datum = sub_datum.split(';')
+                        sub_values.append(float(sub_datum[0]) if float(sub_datum[0]) != -9999 else np.nan)
+                        sub_total.append(float(sub_datum[1]) if float(sub_datum[1]) != -9999 else np.nan)
+                        sub_secs.append(float(sub_datum[2]) if float(sub_datum[2]) != -9999 else np.nan)
+                        if len(sub_datum) > 3:
+                            if self.is_number(sub_datum[3]):
+                                sub_levs.append(int(sub_datum[3]) if float(sub_datum[0]) != -9999 else np.nan)
+                            else:
+                                sub_levs.append(sub_datum[3])
+                    sub_values = np.asarray(sub_values)
+                    sub_total = np.asarray(sub_total)
+                    sub_secs = np.asarray(sub_secs)
+                    if len(sub_levs) == 0:
+                        sub_levs = np.empty(len(sub_secs))
+                    else:
+                        sub_levs = np.asarray(sub_levs)
                 else:
-                    sub_levs = np.asarray(sub_levs)
+                    # contour plot data
+                    sub_values = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_precalc_stat']).split(','))])
+                    sub_total = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_total']).split(','))])
+                    sub_secs = np.array([float(i) if float(i) != -9999 else np.nan for i in (str(row['sub_secs']).split(','))])
+                    if has_levels:
+                        sub_levs_raw = str(row['sub_levs']).split(',')
+                        if self.is_number(sub_levs_raw[0]):
+                            sub_levs = np.array([int(i) if float(i) != -9999 else np.nan for i in sub_levs_raw])
+                        else:
+                            sub_levs = np.array(sub_levs_raw)
+                    else:
+                        sub_levs = np.empty(len(sub_secs))
+                    value_mean = np.mean(sub_values)
+                    stat = value_mean if len(sub_values > 0) and self.is_number(value_mean) else 'null'
 
             else:
                 stat = 'null'
@@ -1247,6 +1263,8 @@ class QueryUtil:
                 data_exists = row['sub_fbar'] != "null" and row['sub_fbar'] != "NULL" and row['sub_obar'] != "null" and row['sub_obar'] != "NULL"
             elif stat_line_type == 'ctc':
                 data_exists = row['sub_fy_oy'] != "null" and row['sub_fy_oy'] != "NULL"
+            elif stat_line_type == 'precalculated':
+                data_exists = row['sub_precalc_stat'] != "null" and row['sub_precalc_stat'] != "NULL"
 
             if data_exists:
                 stat, sub_levs, sub_secs, sub_values = self.get_stat(has_levels, row, statistic, stat_line_type)
