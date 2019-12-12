@@ -1235,10 +1235,16 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    sumPool = mysql.createPool(sumSettings);
+    if (sumSettings) {
+        sumPool = mysql.createPool(sumSettings);
+    }
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "mats_metadata", ['precip_mats_metadata', 'precip_database_groups']);
-    matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-precip'});
+    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "mats_metadata", ['precip_mats_metadata', 'precip_database_groups']);
+    try {
+        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-precip'});
+    } catch(error) {
+        console.log(error.message);
+    }
 });
 
 // this object is global so that the reset code can get to it

@@ -147,6 +147,8 @@ Package.onUse(function (api) {
     api.addFiles('templates/footer.js', "client");
     api.addFiles('templates/Home.html', "client");
     api.addFiles('templates/Home.js', "client");
+    api.addFiles('templates/Configure.html', "client");
+    api.addFiles('templates/Configure.js', "client");
     api.addFiles('templates/CustomHome.html', "client");
     api.addFiles('templates/CustomHome.js', "client");
     api.addFiles('templates/underConstruction/underConstruction.html', "client");

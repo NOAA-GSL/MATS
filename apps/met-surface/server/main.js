@@ -1020,7 +1020,7 @@ Meteor.startup(function () {
         }
     }
 
-    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
+    var sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         port: 1,
         user: 1,
@@ -1029,10 +1029,16 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    sumPool = mysql.createPool(sumSettings);
+    if (sumSettings) {
+        sumPool = mysql.createPool(sumSettings);
+    }
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "mats_metadata", ['surface_mats_metadata', 'surface_database_groups']);
-    matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-surface'});
+    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "mats_metadata", ['surface_mats_metadata', 'surface_database_groups']);
+    try {
+        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-surface'});
+    } catch(error) {
+        console.log(error.message);
+    }
 });
 
 // this object is global so that the reset code can get to it

@@ -972,38 +972,51 @@ Meteor.startup(function () {
 
     const modelSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    modelPool = mysql.createPool(modelSettings);
+    if (modelSettings) {
+        modelPool = mysql.createPool(modelSettings)
+    };
 
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    metadataPool = mysql.createPool(metadataSettings);
+    if (metadataSettings)  {
+        metadataPool = mysql.createPool(metadataSettings);
+    }
 
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    sumPool = mysql.createPool(sumSettings);
+    if (sumSettings) {
+        sumPool = mysql.createPool(sumSettings)
+    };
 
-    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "precip_mesonets2", ['threshold_descriptions']);
-    mdr.addRecord("sumPool", "precip_mesonets2_sums", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'precipAQPI'});
+    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.MODEL_DATA, "modelPool", "precip_mesonets2", ['threshold_descriptions']);
+    mdr.addRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "precip_mesonets2_sums", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
+    try {
+        matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'precipAQPI'});
+    } catch (error) {
+        console.log(error.message);
+    }
 });
 
 // this object is global so that the reset code can get to it

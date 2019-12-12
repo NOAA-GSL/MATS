@@ -936,16 +936,23 @@ Meteor.startup(function () {
 
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    sumPool = mysql.createPool(sumSettings);
+    if (sumSettings) {
+        sumPool = mysql.createPool(sumSettings)
+    };
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories', 'vgtyp_descriptions']);
-    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'landuse'});
+    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories', 'vgtyp_descriptions']);
+    try {
+        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'landuse'});
+    } catch (error) {
+        console.log(error.message);
+    }
 });
 
 // this object is global so that the reset code can get to it

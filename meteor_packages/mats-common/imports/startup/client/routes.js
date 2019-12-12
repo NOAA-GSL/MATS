@@ -10,12 +10,16 @@ import { FlowRouter } from 'meteor/ostrio:flow-router-extra';
 FlowRouter.route('/', {
     name: 'main',
     action() {
+        console.log("flowrouter.route")
         if (Meteor.settings.public.custom) {
             this.render('CustomHome');
-        }
-        else {
-            this.render('Home');
-        }
+        } else {
+                if (Meteor.settings.public.undefinedRoles != undefined && Meteor.settings.public.undefinedRoles.length > 0) {
+                    this.render('Configure');
+                } else {
+                    this.render('Home');
+                }
+            }
     }
 });
 

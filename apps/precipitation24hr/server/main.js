@@ -863,27 +863,37 @@ Meteor.startup(function () {
 
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    sumPool = mysql.createPool(sumSettings);
+    if (sumSettings) {
+        sumPool = mysql.createPool(sumSettings)
+    };
 
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
+        port: 1,
         user: 1,
         password: 1,
         database: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
-    metadataPool = mysql.createPool(metadataSettings);
+    if (metadataSettings)  {
+        metadataPool = mysql.createPool(metadataSettings);
+    }
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "precip", ['regions_per_model_mats_all_categories', 'threshold_descriptions', 'scale_descriptions', 'fcst_type_descriptions']);
-    mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipitation24hr'});
+    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "precip", ['regions_per_model_mats_all_categories', 'threshold_descriptions', 'scale_descriptions', 'fcst_type_descriptions']);
+    mdr.addRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
+    try {
+        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipitation24hr'});
+    } catch (error) {
+        console.log(error.message);
+    }
 });
 
 // this object is global so that the reset code can get to it

@@ -47,6 +47,7 @@ describe('test mapping of tables wrt models, regions, and forecast lengths - ser
                 forecastLen = matsCollections.CurveParams.findOne({name: "forecast-length"});
                 matsMethods.testGetTables.call({
                     host: 'wolphin.fsl.noaa.gov',
+                    port: '3306',
                     user: 'readonly',
                     password: 'ReadOnly@2016!',
                     database: 'ruc_ua_sums2'

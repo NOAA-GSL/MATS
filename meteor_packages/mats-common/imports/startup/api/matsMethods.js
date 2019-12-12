@@ -1334,7 +1334,6 @@ const applyDatabaseSettings = new ValidatedMethod({
     }
 });
 
-
 //administration tools
 const deleteSettings = new ValidatedMethod({
     name: 'matsMethods.deleteSettings',
@@ -2076,6 +2075,34 @@ const removeDatabase = new ValidatedMethod({
     }
 });
 
+
+const applySettingsData = new ValidatedMethod({
+    name: 'matsMethods.applySettingsData',
+    validate: new SimpleSchema({
+        settings: {type: Object, blackbox: true}
+    }).validator(),
+
+    run(settingsParam) {
+        if (Meteor.isServer) {
+            // Read the existing settings file
+            const fs = require('fs');
+            const appName = matsCollections.appName.findOne({}).app;
+            const appSettingsData = fs.readFileSync('/usr/app/settings/' + appName + "/settings.json");
+            const appSettings = JSON.parse(appSettingsData);
+            const formSettings = settingsParam.settings;
+            // Merge formSetings into appSettings
+            var newSettings = {};
+            newSettings.private = Object (formSettings.private);
+            newSettings.public =  {...appSettings.public, ...formSettings.public};
+            // write the settings file
+            //console.log (JSON.stringify(newSettings,null,2));
+            fs.writeFileSync('/usr/app/settings/' + appName + "/settings.json", JSON.stringify(newSettings,null,2), {encoding:'utf8',flag:'w'});
+            // get rid of undefinedRoles so that the page will route normally now
+            delete Meteor.settings.public.undefinedRoles;
+        }
+    }
+});
+
 // makes sure all of the parameters display appropriate selections in relation to one another
 const resetApp = function (appRef) {
     var fse = require('fs-extra');
@@ -2106,39 +2133,38 @@ const resetApp = function (appRef) {
     if (Meteor.settings.public != null && Meteor.settings.public.mysql_wait_timeout != null) {
         connectionTimeout = Meteor.settings.public.mysql_wait_timeout;
     }
-    try {
-        sumPool.on('connection', function (connection) {
-            connection.query('set group_concat_max_len = 4294967295');
-            connection.query('set session wait_timeout = ' + connectionTimeout);
-            console.log("opening new sumsPool connection")
-        });
-    } catch (e) {
-        console.log("no sumPool initialized--not opening connection")
+    const mdrecords = metaDataTableRecords.getRecords();
+    for (var mdri=0; mdri<mdrecords.length; mdri++) {
+        const record = mdrecords[mdri];
+        const poolName = record.pool;
+        if (global[poolName] === undefined) {
+            // There was no pool defined for this poolName - probably needs to be configured so stash the role in the public settings
+            if (Meteor.settings.public != null && Meteor.settings.public.undefinedRoles  == null) {
+                Meteor.settings.public.undefinedRoles = [];
+            }
+            Meteor.settings.public.undefinedRoles.push(record.role);
+            continue;
+        }
+        try {
+            global[poolName].on('connection', function (connection) {
+                connection.query('set group_concat_max_len = 4294967295');
+                connection.query('set session wait_timeout = ' + connectionTimeout);
+                console.log("opening new " + poolName + " connection");
+            });
+        } catch (e) {
+            console.log(poolName + ":  not initialized-- could not open connection: Error:" + e.message);
+            if (Meteor.settings.public != null && Meteor.settings.public.undefinedRoles  == null) {
+                Meteor.settings.public.undefinedRoles = [];
+            }
+            Meteor.settings.public.undefinedRoles.push(record.role);
+            continue
+        }
+        // connections all work so make sure that Meteor.settings.public.undefinedRoles is undefined
+        Meteor.settings.public.undefinedRoles = null;
     }
-    try {
-        modelPool.on('connection', function (connection) {
-            connection.query('set session wait_timeout = ' + connectionTimeout);
-            console.log("opening new modelPool connection")
-        });
-    } catch (e) {
-        console.log("no modelPool initialized--not opening connection")
-    }
-    try {
-        metadataPool.on('connection', function (connection) {
-            connection.query('set session wait_timeout = ' + connectionTimeout);
-            console.log("opening new metadataPool connection")
-        });
-    } catch (e) {
-        console.log("no metadataPool initialized--not opening connection")
-    }
-    try {
-        sitePool.on('connection', function (connection) {
-            connection.query('set group_concat_max_len = 4294967295');
-            connection.query('set session wait_timeout = ' + connectionTimeout);
-            console.log("opening new sitePool connection")
-        });
-    } catch (e) {
-        console.log("no sitePool initialized--not opening connection")
+
+    if (Meteor.settings.public.undefinedRoles && Meteor.settings.public.undefinedRoles.length >1 ) {
+        throw new Meteor.Error("dbpools not initialized " + Meteor.settings.public.undefinedRoles );
     }
 
     var deployment;
@@ -2464,6 +2490,7 @@ const testGetTables = new ValidatedMethod({
     validate: new SimpleSchema(
         {
             host: {type: String},
+            port: {type: String},
             user: {type: String},
             password: {type: String},
             database: {type: String}
@@ -2474,14 +2501,20 @@ const testGetTables = new ValidatedMethod({
             const queryWrap = Future.wrap(function (callback) {
                 const connection = mysql.createConnection({
                     host: params.host,
+                    port: params.port,
                     user: params.user,
                     password: params.password,
                     database: params.database
                 });
                 connection.query("show tables;", function (err, result) {
+                    if (err || result === undefined) {
+                       //return callback(err,null);
+                        return callback(err,null);
+                    }
                     const tables = result.map(function (a) {
-                        return a.Tables_in_ruc_ua_sums2;
+                        return a;
                     });
+
                     return callback(err, tables);
                 });
                 connection.end(function (err) {
@@ -2490,7 +2523,11 @@ const testGetTables = new ValidatedMethod({
                     }
                 });
             });
-            return queryWrap().wait();
+            try {
+                return queryWrap().wait();
+            } catch (e) {
+                throw new Meteor.Error(e.message);
+            }
         }
     }
 });
@@ -2510,6 +2547,7 @@ export default matsMethods = {
     addSentAddress: addSentAddress,
     applyAuthorization: applyAuthorization,
     applyDatabaseSettings: applyDatabaseSettings,
+    applySettingsData: applySettingsData,
     deleteSettings: deleteSettings,
     emailImage: emailImage,
     getAuthorizations: getAuthorizations,
