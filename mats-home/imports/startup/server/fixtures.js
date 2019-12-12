@@ -4,7 +4,7 @@ import {Groups} from "../../api/groups.js";
 
 Meteor.startup(() => {
   try {
-    const env = process.env.deployment_environment;
+    const env = process.env.DEPLOYMENT_ENVIRONMENT;
     const groupOrderStr = process.env.GROUP_ORDER == undefined ? "Upper Air,Ceiling and Visibility,Surface,Precipitation,Radar,METexpress" : process.env.GROUP_ORDER;
     var group_order = groupOrderStr.split(',');
     const fs = require('fs');

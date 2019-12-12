@@ -7,7 +7,7 @@ import { check } from 'meteor/check';
 
 Meteor.methods({
     'getEnvironment'() {
-        const env = process.env.deployment_environment;
+        const env = process.env.DEPLOYMENT_ENVIRONMENT;
         if (env === undefined) {
             throw new Meteor.Error('deployment environment is unknown (ENV variable deployment_environment is not set)');
         }
