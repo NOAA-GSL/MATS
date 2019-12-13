@@ -882,7 +882,7 @@ class QueryUtil:
         self.data['ymax'] = ymax
         self.data['sum'] = loop_sum
 
-    # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
+    # function for parsing the data returned by a profile/dieoff/threshold/validtime/gridscale etc query
     def parse_query_data_specialty_curve(self, cursor, stat_line_type, statistic, plot_type, has_levels, hide_gaps, completeness_qc_param):
         # initialize local variables
         ind_var_min = sys.float_info.max
@@ -901,6 +901,8 @@ class QueryUtil:
             row_idx = query_data.index(row)
             if plot_type == 'ValidTime':
                 ind_var = float(row['hr_of_day'])
+            elif plot_type == 'GridScale':
+                ind_var = float(row['gridscale'])
             elif plot_type == 'Profile':
                 ind_var = float(str(row['avVal']).replace('P', ''))
             elif plot_type == 'DailyModelCycle' or plot_type == 'TimeSeries':

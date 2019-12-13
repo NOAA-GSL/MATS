@@ -73,6 +73,9 @@ const _plotText = function (plotParams) {
         case matsTypes.PlotTypes.validtime:
             return "ValidTime: " + format;
             break;
+        case matsTypes.PlotTypes.gridscale:
+            return "GridScale: " + format;
+            break;
         case matsTypes.PlotTypes.dailyModelCycle:
             return "DailyModelCycle " + plotParams.dates + " : " + format;
             break;

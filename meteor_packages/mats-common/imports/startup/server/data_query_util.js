@@ -304,7 +304,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
     }
 };
 
-// this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, and histograms
+// this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, grid scale plots, and histograms
 const queryDBSpecialtyCurve = function (pool, statement, appParams) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
@@ -712,7 +712,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
     };
 };
 
-// this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
+// this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, grid scale plots, and histograms
 const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
     /*
         var d = {// d will contain the curve data
@@ -750,6 +750,8 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
         var independentVar;
         if (plotType === matsTypes.PlotTypes.validtime) {
             independentVar = Number(rows[rowIndex].hr_of_day);
+        } else if (plotType === matsTypes.PlotTypes.gridscale) {
+            independentVar = Number(rows[rowIndex].gridscale);
         } else if (plotType === matsTypes.PlotTypes.profile) {
             independentVar = Number((rows[rowIndex].avVal).toString().replace('P', ''));
         } else if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {

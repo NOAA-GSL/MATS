@@ -123,6 +123,9 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 case matsTypes.PlotTypes.validtime:
                     data.text[di] = data.text[di] + "<br>hour of day: " + data.x[di];
                     break;
+                case matsTypes.PlotTypes.gridscale:
+                    data.text[di] = data.text[di] + "<br>grid scale: " + data.x[di];
+                    break;
                 default:
                     data.text[di] = data.text[di] + "<br>" + data.x[di];
                     break;
@@ -207,11 +210,14 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         case matsTypes.PlotTypes.dieoff:
             resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(curveInfoParams.axisMap, errorMax);
             break;
+        case matsTypes.PlotTypes.threshold:
+            resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curveInfoParams.axisMap, errorMax);
+            break;
         case matsTypes.PlotTypes.validtime:
             resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(curveInfoParams.axisMap, errorMax);
             break;
-        case matsTypes.PlotTypes.threshold:
-            resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curveInfoParams.axisMap, errorMax);
+        case matsTypes.PlotTypes.gridscale:
+            resultOptions = matsDataPlotOpsUtils.generateGridScalePlotOptions(curveInfoParams.axisMap, errorMax);
             break;
         default:
             break;

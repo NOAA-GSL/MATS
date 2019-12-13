@@ -402,6 +402,7 @@ const showTimeseriesFace = function () {
             'dates': 'block',
             'statistic': 'block',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -449,6 +450,7 @@ const showProfileFace = function () {
             'dates': 'none',
             'statistic': 'block',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'none',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -496,6 +498,7 @@ const showDieOffFace = function () {
             'dates': 'none',
             'statistic': 'block',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'none',
             'dieoff-type': 'block',
@@ -547,6 +550,7 @@ const showThresholdFace = function () {
             'dates': 'none',
             'statistic': 'block',
             'threshold': 'none',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -594,6 +598,7 @@ const showValidTimeFace = function () {
             'dates': 'none',
             'statistic': 'block',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -632,6 +637,54 @@ const showValidTimeFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a grid scale curve
+const showGridScaleFace = function () {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.gridscale).checked === true) {
+        var faceOptions = {
+            'curve-dates': 'block',
+            'dates': 'none',
+            'statistic': 'block',
+            'threshold': 'block',
+            'scale': 'none',
+            'level': 'block',
+            'forecast-length': 'block',
+            'dieoff-type': 'none',
+            'average': 'none',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-type-controls': 'none',
+            'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
+            'bin-number': 'none',
+            'bin-start': 'none',
+            'bin-stride': 'none',
+            'bin-pivot': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block',
+            'region-type' : 'block',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none',
+            'significance': 'none'
+        };
+        const faceSelectors = Object.keys(faceOptions);
+        var elem;
+        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
+            elem = document.getElementById(faceSelectors[fidx] + '-item');
+            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
+                elem.style.display = faceOptions[faceSelectors[fidx]];
+            }
+        }
+        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.gridscale);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
 // method to display the appropriate selectors for a daily model cycle curve
 const showDailyModelCycleFace = function () {
     // move dates selector to plot parameters - one date range for all curves
@@ -641,6 +694,7 @@ const showDailyModelCycleFace = function () {
             'dates': 'block',
             'statistic': 'block',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'none',
             'dieoff-type': 'none',
@@ -688,6 +742,7 @@ const showReliabilityFace = function () {
             'dates': 'block',
             'statistic': 'none',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -735,6 +790,7 @@ const showROCFace = function () {
             'dates': 'block',
             'statistic': 'none',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -780,8 +836,9 @@ const showMapFace = function () {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
-            'statistic': 'block',
-            'threshold': 'none',
+            'statistic': 'none',
+            'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -829,6 +886,7 @@ const showHistogramFace = function () {
             'dates': 'none',
             'statistic': 'block',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -876,6 +934,7 @@ const showEnsembleHistogramFace = function () {
             'dates': 'none',
             'statistic': 'none',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -925,6 +984,7 @@ const showContourFace = function () {
             'dates': 'block',
             'statistic': 'block',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -978,6 +1038,7 @@ const showScatterFace = function () {
             'dates': 'block',
             'statistic': 'block',
             'threshold': 'block',
+            'scale': 'block',
             'level': 'block',
             'forecast-length': 'block',
             'dieoff-type': 'none',
@@ -995,7 +1056,8 @@ const showScatterFace = function () {
             'truth': 'block',
             'region-type' : 'block',
             'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none'
+            'y-axis-parameter': 'none',
+            'significance': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -1052,6 +1114,7 @@ export default matsCurveUtils = {
     showDieOffFace: showDieOffFace,
     showThresholdFace: showThresholdFace,
     showValidTimeFace: showValidTimeFace,
+    showGridScaleFace: showGridScaleFace,
     showDailyModelCycleFace: showDailyModelCycleFace,
     showReliabilityFace: showReliabilityFace,
     showROCFace: showROCFace,

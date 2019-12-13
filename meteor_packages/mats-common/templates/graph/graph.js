@@ -71,6 +71,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.gridscale:
                 case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.roc:
@@ -147,6 +148,7 @@ Template.graph.helpers({
                     case matsTypes.PlotTypes.dieoff:
                     case matsTypes.PlotTypes.threshold:
                     case matsTypes.PlotTypes.validtime:
+                    case matsTypes.PlotTypes.gridscale:
                     case matsTypes.PlotTypes.dailyModelCycle:
                     case matsTypes.PlotTypes.scatter2d:
                         localAnnotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
@@ -252,6 +254,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.gridscale:
                 case matsTypes.PlotTypes.dailyModelCycle:
                     return "block";
                 case matsTypes.PlotTypes.reliability:
@@ -293,6 +296,8 @@ Template.graph.helpers({
                     return "Threshold: " + format;
                 case matsTypes.PlotTypes.validtime:
                     return "ValidTime: " + format;
+                case matsTypes.PlotTypes.gridscale:
+                    return "GridScale: " + format;
                 case matsTypes.PlotTypes.dailyModelCycle:
                     return "DailyModelCycle " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.reliability:
@@ -370,6 +375,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.gridscale:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.roc:
@@ -451,6 +457,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.gridscale:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.roc:
@@ -473,6 +480,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.gridscale:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.roc:
@@ -497,6 +505,7 @@ Template.graph.helpers({
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.gridscale:
                 case matsTypes.PlotTypes.dailyModelCycle:
                     return "block";
                 case matsTypes.PlotTypes.reliability:
@@ -530,6 +539,7 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.threshold:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.gridscale:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.scatter2d:
                 return 'block';
@@ -1236,6 +1246,7 @@ Template.graph.events({
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.gridscale:
                 case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.reliability:
                 case matsTypes.PlotTypes.roc:

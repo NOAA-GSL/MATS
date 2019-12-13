@@ -237,6 +237,9 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.validtime:
                                 matsCurveUtils.showValidTimeFace();
                                 break;
+                            case matsTypes.PlotTypes.gridscale:
+                                matsCurveUtils.showGridScaleFace();
+                                break;
                             case matsTypes.PlotTypes.dailyModelCycle:
                                 matsCurveUtils.showDailyModelCycleFace();
                                 break;
@@ -444,6 +447,9 @@ Template.plotList.onRendered( function() {
             break;
         case matsTypes.PlotTypes.validtime:
             matsCurveUtils.showValidTimeFace();
+            break;
+        case matsTypes.PlotTypes.gridscale:
+            matsCurveUtils.showGridScaleFace();
             break;
         case matsTypes.PlotTypes.dailyModelCycle:
             matsCurveUtils.showDailyModelCycleFace();
