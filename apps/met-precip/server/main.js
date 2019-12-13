@@ -1085,7 +1085,7 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.scale,
+            plotType: matsTypes.PlotTypes.gridscale,
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'database', '.'],
@@ -1190,9 +1190,9 @@ const doPlotGraph = function () {
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.scale,
+            plotType: matsTypes.PlotTypes.gridscale,
             graphFunction: "graphPlotly",
-            dataFunction: "dataScale",
+            dataFunction: "dataGridScale",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({

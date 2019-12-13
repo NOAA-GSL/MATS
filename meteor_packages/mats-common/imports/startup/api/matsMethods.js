@@ -467,6 +467,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.gridscale:
                     var labelSuffix;
                     switch (plotType) {
                         case matsTypes.PlotTypes.dieoff:
@@ -477,6 +478,9 @@ const _getFlattenedResultData = function (rk, p, np) {
                             break;
                         case matsTypes.PlotTypes.threshold:
                             labelSuffix = " threshold";
+                            break;
+                        case matsTypes.PlotTypes.gridscale:
+                            labelSuffix = " grid scale";
                             break;
                     }
                     var returnData = {};

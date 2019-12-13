@@ -37,6 +37,9 @@ Template.curveParamItemGroup.helpers({
             case matsTypes.PlotTypes.validtime:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.validtime});
                 break;
+            case matsTypes.PlotTypes.gridscale:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.gridscale});
+                break;
             case matsTypes.PlotTypes.dailyModelCycle:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.dailyModelCycle});
                 break;

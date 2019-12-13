@@ -130,6 +130,7 @@ const width = function (plotType) {
         case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.gridscale:
         case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.map:
@@ -157,6 +158,7 @@ const height = function (plotType) {
         case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.threshold:
         case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.gridscale:
         case matsTypes.PlotTypes.reliability:
         case matsTypes.PlotTypes.roc:
         case matsTypes.PlotTypes.map:

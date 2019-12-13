@@ -38,6 +38,7 @@ Template.curveList.helpers({
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.threshold:
                 case matsTypes.PlotTypes.validtime:
+                case matsTypes.PlotTypes.gridscale:
                 case matsTypes.PlotTypes.dailyModelCycle:
                 case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:

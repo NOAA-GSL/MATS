@@ -581,6 +581,121 @@ const generateValidTimePlotOptions = function (axisMap, errorMax) {
     return layout;
 };
 
+// sets plot options for grid scale plots
+const generateGridScalePlotOptions = function (axisMap, errorMax) {
+    var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
+    var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
+    const appName = matsCollections.appName.findOne({}).app;
+    var xLabel;
+    if (appName.includes("met-")){
+        xLabel = "Interpolation Points";
+    } else {
+        xLabel = "Grid Scale";
+    }
+
+    // overall plot options
+    var layout = {
+        margin: {
+            l: 80,
+            r: 80,
+            b: 80,
+            t: 20,
+            pad: 4
+        },
+        zeroline: false,
+        hovermode: 'closest',
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
+        legend: {orientation: "h", x: 0, y: 1}
+    };
+
+    // x-axis options
+    layout['xaxis'] = {
+        title: xLabel,
+        titlefont: {color: '#000000', size: 24},
+        tickfont: {color: '#000000', size: 18},
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true
+    };
+
+    // allow support for multiple y-axes (currently 8)
+    const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free', 4: 'free', 5: 'free', 6: 'free', 7: 'free'};
+    const axisSide = {0: 'left', 1: 'right', 2: 'left', 3: 'right', 4: 'left', 5: 'right', 6: 'left', 7: 'right'};
+    const axisPosition = {0: 0, 1: 1, 2: 0.1, 3: 0.9, 4: 0.2, 5: 0.8, 6: 0.3, 7: 0.7};
+
+    // loop over all y-axes
+    const yAxisNumber = Object.keys(axisMap).length;
+    var axisKey;
+    var axisIdx;
+    var axisLabel;
+    for (axisIdx = 0; axisIdx < yAxisNumber; axisIdx++) {
+        // get max and min values and label for curves on this y-axis
+        axisKey = Object.keys(axisMap)[axisIdx];
+        var ymin = axisMap[axisKey].ymin;
+        var ymax = axisMap[axisKey].ymax;
+        ymax = ymax + errorMax;
+        ymin = ymin - errorMax;
+        const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
+        xmin = axisMap[axisKey].xmin < xmin ? axisMap[axisKey].xmin : xmin;
+        xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
+        axisLabel = axisMap[axisKey].axisLabel;
+        var axisObjectKey;
+        if (axisIdx === 0) {
+            // the first (and main) y-axis
+            axisObjectKey = 'yaxis';
+            layout[axisObjectKey] = {
+                title: axisLabel,
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+                zeroline: false
+            };
+        } else if (axisIdx < Object.keys(axisPosition).length) {
+            // subsequent y-axes, up to the 8 we support
+            axisObjectKey = 'yaxis' + (axisIdx + 1);
+            layout[axisObjectKey] = {
+                title: axisLabel,
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+                anchor: axisAnchor[axisIdx],
+                overlaying: 'y',
+                side: axisSide[axisIdx],
+                position: axisPosition[axisIdx],
+                zeroline: false
+            };
+        } else {
+            // if the user by some miracle wants more than 8 y-axes, just shove them all into the position of the 8th
+            axisObjectKey = 'yaxis' + (axisIdx + 1);
+            layout[axisObjectKey] = {
+                title: axisLabel,
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+                anchor: axisAnchor[Object.keys(axisPosition).length - 1],
+                overlaying: 'y',
+                side: axisSide[Object.keys(axisPosition).length - 1],
+                position: axisPosition[Object.keys(axisPosition).length - 1],
+                zeroline: false
+            };
+        }
+    }
+    const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
+    xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
+    xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
+    layout['xaxis']['range'] = [xmin, xmax];
+    return layout;
+};
+
 // sets plot options for reliability plots
 const generateReliabilityPlotOptions = function () {
     var xmin = 0;
@@ -867,6 +982,7 @@ export default matsDataPlotOpsUtils = {
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
+    generateGridScalePlotOptions: generateGridScalePlotOptions,
     generateReliabilityPlotOptions: generateReliabilityPlotOptions,
     generateROCPlotOptions: generateROCPlotOptions,
     generateMapPlotOptions: generateMapPlotOptions,

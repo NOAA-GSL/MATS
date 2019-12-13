@@ -42,7 +42,7 @@ var PlotTypes = {
     dieoff: "DieOff",
     threshold: "Threshold",
     validtime: "ValidTime",
-    scale: "SpatialScale",
+    gridscale: "GridScale",
     dailyModelCycle: "DailyModelCycle",
     reliability: "Reliability",
     roc: "ROC",

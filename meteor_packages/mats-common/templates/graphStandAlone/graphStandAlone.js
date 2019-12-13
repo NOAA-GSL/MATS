@@ -164,6 +164,8 @@ Template.GraphStandAlone.helpers({
                     return "Threshold: " + format;
                 case matsTypes.PlotTypes.validtime:
                     return "ValidTime: " + format;
+                case matsTypes.PlotTypes.gridscale:
+                    return "GridScale: " + format;
                 case matsTypes.PlotTypes.dailyModelCycle:
                     return "DailyModelCycle " + p.dates + " : " + format;
                 case matsTypes.PlotTypes.reliability:
