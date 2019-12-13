@@ -131,9 +131,6 @@ dataValidTime = function (plotParams, plotFunction) {
                 "{{variableClause}} " +
                 "{{regionsClause}} " +
                 "{{levelsClause}} " +
-                "{{truthClause}} " +
-                "{{scaleClause}} " +
-                "{{thresholdClause}} " +
                 "{{forecastLengthsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "group by hr_of_day " +
