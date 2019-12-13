@@ -101,7 +101,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 }).join(',');
                 validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
             }
-        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+        } else if (dieoffType === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
             utcCycleStartClause = "and unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 IN(" + utcCycleStart + ")";
         } else {

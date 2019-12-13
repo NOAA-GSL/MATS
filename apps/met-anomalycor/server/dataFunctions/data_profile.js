@@ -41,9 +41,19 @@ dataProfile = function (plotParams, plotFunction) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        const label = curve['label'];
-        const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
+        var label = curve['label'];
+        var database = curve['database'];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var modelClause = "and h.model = '" + model + "'";
+        var variable = curve['variable'];
+        var variableClause = "and h.fcst_var = '" + variable + "'";
+        var statistic = "ACC";
+        var statLineType = 'scalar';
+        var lineDataType = 'line_data_sal1l2';
+        var statisticClause = "avg(ld.fabar) as fbar, " +
+                "avg(ld.oabar) as obar, " +
+                "group_concat(distinct ld.fabar, ';', ld.oabar, ';', ld.ffabar, ';', ld.ooabar, ';', ld.foabar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data";
+        var queryTableClause = "from " + database + ".stat_header h, " + database + "." + lineDataType + " ld";
         var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
         regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
@@ -53,10 +63,23 @@ dataProfile = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-        const variable = curve['variable'];
-        const statistic = "ACC";
-        const statLineType = 'scalar';
-        const lineDataType = 'line_data_sal1l2';
+        // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
+        var levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+        levels = levels.filter(lev => lev.toString().startsWith("P"));  // remove anything that isn't a pressure level for this plot.
+        levels = levels.map(function (l) {
+            return "'" + l + "'";
+        }).join(',');
+        var levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
+        var validTimeClause = "";
+        if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
+            vts = curve['valid-time'];
+            vts = Array.isArray(vts) ? vts : [vts];
+            vts = vts.map(function (vt) {
+                return "'" + vt + "'";
+            }).join(',');
+            validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
+        }
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
@@ -70,26 +93,10 @@ dataProfile = function (plotParams, plotFunction) {
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
-        // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
-        var levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
-        levels = levels.filter(lev => lev.toString().startsWith("P"));  // remove anything that isn't a pressure level for this plot.
-        levels = levels.map(function (l) {
-            return "'" + l + "'";
-        }).join(',');
-        const levelsClause = "and h.fcst_lev IN(" + levels + ")";
-        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
-        var validTimeClause = "";
-        if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
-            vts = curve['valid-time'];
-            vts = Array.isArray(vts) ? vts : [vts];
-            vts = vts.map(function (vt) {
-                return "'" + vt + "'";
-            }).join(',');
-            validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
-        }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
+        var dateClause = "and unix_timestamp(ld.fcst_valid_beg) >= " + fromSecs + " and unix_timestamp(ld.fcst_valid_beg) <= " + toSecs;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable (axisKey) it will use the same axis.
@@ -106,37 +113,31 @@ dataProfile = function (plotParams, plotFunction) {
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "sum(ld.total) as N0, " +
-                "avg(ld.fabar) as fbar, " +
-                "avg(ld.oabar) as obar, " +
-                "group_concat(distinct ld.fabar, ';', ld.oabar, ';', ld.ffabar, ';', ld.ooabar, ';', ld.foabar, ';', ld.total, ';', unix_timestamp(ld.fcst_valid_beg), ';', h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_data " +
-                "from {{database}}.stat_header h, " +
-                "{{database}}.{{lineDataType}} ld " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and h.model = '{{model}}' " +
+                "{{dateClause}} " +
+                "{{modelClause}} " +
+                "{{variableClause}} " +
                 "{{regionsClause}} " +
-                "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
-                "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
+                "{{levelsClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
-                "and h.fcst_var = '{{variable}}' " +
-                "{{levelsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "group by avVal " +
                 "order by avVal" +
                 ";";
 
-            statement = statement.split('{{database}}').join(database);
-            statement = statement.replace('{{model}}', model);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{modelClause}}', modelClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{regionsClause}}', regionsClause);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
-            statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{levelsClause}}', levelsClause);
-            statement = statement.split('{{lineDataType}}').join(lineDataType);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
-            // console.log(statement);
 
             var queryResult;
             var startMoment = moment();
@@ -216,6 +217,7 @@ dataProfile = function (plotParams, plotFunction) {
         "curves": curves,
         "curvesLength": curvesLength,
         "idealValues": idealValues,
+        "statType": "met-" + statLineType,
         "axisMap": axisMap
     };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
