@@ -90,13 +90,6 @@ Template.landing.helpers({
         default:
           return false;
       }
-    },
-  proxyPrefix() {
-    if (process.env.PROXY_PREFIX){
-      return process.env.PROXY_PREFIX + "/";
-    } else {
-      return "";
     }
-  }
 });
 
