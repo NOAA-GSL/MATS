@@ -55,6 +55,7 @@ Template.graph.helpers({
                     //saved curve options for contours
                     Session.set('colorbarResetOpts', {
                         'name': dataset[0].name,
+                        'showlegend': dataset[0].showlegend,
                         'colorbar.title': dataset[0].colorbar.title,
                         'autocontour': dataset[0].autocontour,
                         'ncontours': dataset[0].ncontours,
@@ -81,6 +82,7 @@ Template.graph.helpers({
                         lineTypeResetOpts.push({
                             'name': dataset[lidx].name,
                             'visible': dataset[lidx].visible,
+                            'showlegend': dataset[lidx].showlegend,
                             'mode': dataset[lidx].mode,
                             'x': [dataset[lidx].x],
                             'error_y': dataset[lidx].error_y,
@@ -90,7 +92,7 @@ Template.graph.helpers({
                             'line.color': dataset[lidx].line.color,
                             'marker.symbol': dataset[lidx].marker.symbol,
                             'marker.size': dataset[lidx].marker.size,
-                            'marker.color': dataset[lidx].marker.color,
+                            'marker.color': dataset[lidx].marker.color
                         });
                     }
                     Session.set('lineTypeResetOpts', lineTypeResetOpts);
@@ -103,7 +105,8 @@ Template.graph.helpers({
                         barTypeResetOpts.push({
                             'name': dataset[bidx].name,
                             'visible': dataset[bidx].visible,
-                            'marker.color': dataset[bidx].marker.color,
+                            'showlegend': dataset[0].showlegend,
+                            'marker.color': dataset[bidx].marker.color
                        });
                     }
                     Session.set('barTypeResetOpts', barTypeResetOpts);
@@ -442,6 +445,13 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
+    legendButtonText: function () {
+        var sval = this.label + "legendButtonText";
+        if (Session.get(sval) === undefined) {
+            Session.set(sval, 'hide legend');
+        }
+        return Session.get(sval);
+    },
     heatMapButtonText: function () {
         var sval = this.label + "heatMapButtonText";
         if (Session.get(sval) === undefined) {
@@ -543,7 +553,6 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.scatter2d:
                 return 'block';
-                break;
             case matsTypes.PlotTypes.map:
             case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.roc:
@@ -553,7 +562,29 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.contourDiff:
             default:
                 return 'none';
-                break;
+        }
+    },
+    legendShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.gridscale:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.roc:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.ensembleHistogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+                return 'block';
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.scatter2d:
+            default:
+                return 'none';
         }
     },
     heatMapShowHideDisplay: function () {
@@ -1168,6 +1199,36 @@ Template.graph.events({
             legendContainer[0].hidden = true;
         }
         annotation = $("#curves")[0].innerHTML;
+    },
+    'click .legendVisibility': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-legend', '');
+        const myDataIdx = dataset.findIndex(function (d) {
+            return d.curveId === label;
+        });
+        if (dataset[myDataIdx].x.length > 0) {
+            var update = {
+                showlegend: !dataset[myDataIdx].showlegend
+            };
+            if (update.showlegend) {
+                $('#' + id)[0].value = "hide legend";
+            } else {
+                $('#' + id)[0].value = "show legend";
+            }
+        }
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .heatMapVisibility': function (event) {
         event.preventDefault();
