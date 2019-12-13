@@ -220,16 +220,17 @@ const _checkMetaDataRefresh = function () {
                 "    FROM   information_schema.tables" +
                 "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
                 "    AND TABLE_NAME = '" + tName + "'");
-            for (var i = 0; i < rows.length; i++) {
-                try {
-                    updatedEpoch = rows[i]['UNIX_TIMESTAMP(UPDATE_TIME)'];
-                    if (updatedEpoch === Number.MAX_VALUE) {
-                        throw new Error("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
-                    }
+            try {
+                updatedEpoch = rows[0]['UNIX_TIMESTAMP(UPDATE_TIME)'];
+                if (updatedEpoch === undefined || updatedEpoch === "NULL" || updatedEpoch === Number.MAX_VALUE) {
+                    // if time of last update isn't stored by the database (thanks, Aurora DB), refresh automatically
+                    console.log("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
+                    refresh = true;
+                    console.log("FORCED Refreshing the metadata for table because updatedEpoch is undefined" + dbName + "." + tName + " : updated at " + updatedEpoch);
                     break;
-                } catch (e) {
-                    throw new Error("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName + " ERROR:" + e.message);
                 }
+            } catch (e) {
+                throw new Error("_checkMetaDataRefresh - error finding last update time for database: " + dbName + " and table: " + tName + ", ERROR:" + e.message);
             }
             const lastRefreshedEpoch = moment(lastRefreshed).valueOf() / 1000;
             const updatedEpochMoment = moment(updatedEpoch).valueOf();
@@ -238,19 +239,13 @@ const _checkMetaDataRefresh = function () {
                 console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
                 break;
             } else {
-                // force refresh because we could not get the update time
-                if (updatedEpoch == undefined || updatedEpoch === "NULL") {
-                    refresh = true;
-                    console.log("FORCED Refreshing the metadata for table because updatedEpoch is undefined" + dbName + "." + tName + " : updated at " + updatedEpoch);
-                } else {
-                    console.log("NOT Refreshing the metadata for table " + dbName + "." + tName + " : updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " : metadata last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
-                }
+                console.log("NOT Refreshing the metadata for table " + dbName + "." + tName + " : updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " : metadata last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
             }
         }
         if (refresh === true) {
             // refresh the app metadata
             // app specific routines
-            //const asrKeys = Object.keys(appSpecificResetRoutines);
+            // const asrKeys = Object.keys(appSpecificResetRoutines);
             const asrKeys = appSpecificResetRoutines;
             for (var ai = 0; ai < asrKeys.length; ai++) {
                 global.appSpecificResetRoutines[ai]();
