@@ -6,12 +6,13 @@
     "test": "meteor test --once --driver-package meteortesting:mocha"
   },
   "dependencies": {
-    "@babel/runtime": "^7.6.0",
+    "@babel/runtime": "^7.7.6",
     "@fortawesome/fontawesome": "^1.1.8",
     "@fortawesome/fontawesome-free": "^5.11.2",
     "@fortawesome/fontawesome-free-brands": "^5.0.13",
     "@fortawesome/fontawesome-free-regular": "^5.0.13",
     "@fortawesome/fontawesome-free-solid": "^5.0.13",
+    "bootstrap": "^4.4.1",
     "meteor-node-stubs": "^1.0.0"
   },
   "devDependencies": {
