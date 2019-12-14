@@ -350,9 +350,13 @@ const setDefaultForParamName = function (param) {
         if (defaultValue != "undefined") {
             if (type === matsTypes.InputTypes.select && (defaultValue === -1 || defaultValue === undefined || defaultValue === matsTypes.InputTypes.unused)) {
                 setInputForParamName(paramName, matsTypes.InputTypes.unused);
-            }
-            else {
+            } else {
                 setInputForParamName(paramName, defaultValue);
+            }
+            // need to trigger a change so that hideOtherFor and disableOtherFor work properly
+            if (param.hideOtherFor !== undefined || param.disableOtherFor !== undefined) {
+                const elem = getInputElementForParamName(paramName);
+                $(elem).trigger('change');
             }
         }
     }
@@ -399,9 +403,9 @@ const setAllParamsToDefault = function () {
             return obj.name !== param.name;
         });
     });
-    // refresh all the non superiors to their default values
-    const nonDependents = matsCollections.CurveParams.find({"superiorNames": {"$exists": true}}).fetch();
-    nonDependents.forEach(function (param) {
+    // refresh all the dependents to their default values
+    const dependents = matsCollections.CurveParams.find({"superiorNames": {"$exists": true}}).fetch();
+    dependents.forEach(function (param) {
         setDefaultForParamName(param);
         if (param.type === matsTypes.InputTypes.dateRange) {
             const dstr = getDefaultDateRange(param.name).dstr;
