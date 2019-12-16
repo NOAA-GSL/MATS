@@ -1369,6 +1369,11 @@ Template.graph.events({
                 newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
         });
+        $("input[id^=x][id$=AxisFont]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.titlefont.size'] = elem.value;
+            }
+        });
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
             ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             $("input[id^=x][id$=AxisMinText]").get().forEach(function (elem, index) {
@@ -1396,6 +1401,11 @@ Template.graph.events({
         $("input[id^=y][id$=AxisLabel]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
                 newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
+            }
+        });
+        $("input[id^=y][id$=AxisFont]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.titlefont.size'] = elem.value;
             }
         });
         if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
