@@ -202,6 +202,11 @@ Template.graph.helpers({
                 elem.value = colorscale;
             }
 
+            // enable colorpicker on axes modal, if applicable.
+            if (plotType !== matsTypes.PlotTypes.map) {
+                $('#gridColor').colorpicker({format: "rgb", align: "left"});
+            }
+
             // store annotation
             annotation = $("#curves")[0].innerHTML;
             matsCurveUtils.hideSpinner();
@@ -1374,6 +1379,11 @@ Template.graph.events({
                 newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.titlefont.size'] = elem.value;
             }
         });
+        $("input[id^=x][id$=TickFont]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.tickfont.size'] = elem.value;
+            }
+        });
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
             ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             $("input[id^=x][id$=AxisMinText]").get().forEach(function (elem, index) {
@@ -1406,6 +1416,11 @@ Template.graph.events({
         $("input[id^=y][id$=AxisFont]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
                 newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.titlefont.size'] = elem.value;
+            }
+        });
+        $("input[id^=y][id$=TickFont]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.tickfont.size'] = elem.value;
             }
         });
         if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
@@ -1449,6 +1464,18 @@ Template.graph.events({
                 }
             });
         }
+        $("[id$=gridWeight]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.gridwidth'] = elem.value;
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.gridwidth'] = elem.value;
+            }
+        });
+        $("[id$=gridColor]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.gridcolor'] = elem.value;
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.gridcolor'] = elem.value;
+            }
+        });
         Plotly.relayout($("#placeholder")[0], newOpts);
         // if needed, restore the log axis
         if (changeYScaleBack) {
