@@ -10,6 +10,7 @@ import {moment} from 'meteor/momentjs:moment'
 const generateSeriesPlotOptions = function (axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
+    const yAxisNumber = Object.keys(axisMap).length;
 
     // overall plot options
     var layout = {
@@ -33,7 +34,10 @@ const generateSeriesPlotOptions = function (axisMap, errorMax) {
         tickfont: {color: '#000000', size: 16},
         linecolor: 'black',
         linewidth: 2,
-        mirror: true
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)"
     };
 
     // allow support for multiple y-axes (currently 8)
@@ -42,7 +46,6 @@ const generateSeriesPlotOptions = function (axisMap, errorMax) {
     const axisPosition = {0: 0, 1: 1, 2: 0.1, 3: 0.9, 4: 0.2, 5: 0.8, 6: 0.3, 7: 0.7};
 
     // loop over all y-axes
-    const yAxisNumber = Object.keys(axisMap).length;
     var axisKey;
     var axisIdx;
     var axisLabel;
@@ -58,53 +61,39 @@ const generateSeriesPlotOptions = function (axisMap, errorMax) {
         xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
+        var axisObjectBegin = {
+            title: axisLabel,
+            titlefont: {color: '#000000', size: 24},
+            tickfont: {color: '#000000', size: 18},
+            linecolor: 'black',
+            linewidth: 2,
+            mirror: true,
+            showgrid: true,
+            gridwidth: 1,
+            gridcolor: "rgb(238,238,238)",
+            range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+            zeroline: false
+        };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
         } else if (axisIdx < Object.keys(axisPosition).length) {
             // subsequent y-axes, up to the 8 we support
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[axisIdx],
-                overlaying: 'y',
-                side: axisSide[axisIdx],
-                position: axisPosition[axisIdx],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[axisIdx];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[axisIdx];
+            layout[axisObjectKey].position = axisPosition[axisIdx];
         } else {
             // if the user by some miracle wants more than 8 y-axes, just shove them all into the position of the 8th
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[Object.keys(axisPosition).length - 1],
-                overlaying: 'y',
-                side: axisSide[Object.keys(axisPosition).length - 1],
-                position: axisPosition[Object.keys(axisPosition).length - 1],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].position = axisPosition[Object.keys(axisPosition).length - 1];
         }
     }
     const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
@@ -131,7 +120,7 @@ const generateProfilePlotOptions = function (axisMap, errorMax) {
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font': {'size': 18, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 16, 'family': 'Arial', 'color': '#FFFFFF'}},
         legend: {orientation: "v", x: 1.05, y: 1}
     };
 
@@ -154,7 +143,10 @@ const generateProfilePlotOptions = function (axisMap, errorMax) {
         linecolor: 'black',
         linewidth: 2,
         mirror: true,
-        type: 'linear'
+        type: 'linear',
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)"
     };
 
     // allow support for multiple x-axes (currently 8)
@@ -173,57 +165,42 @@ const generateProfilePlotOptions = function (axisMap, errorMax) {
         var xmax = axisMap[axisKey].xmax;
         xmax = xmax + errorMax;
         xmin = xmin - errorMax;
-        axisLabel = axisMap[axisKey].axisLabel;
         const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
+        var axisObjectBegin = {
+            title: axisLabel,
+            titlefont: {color: '#000000', size: 24},
+            tickfont: {color: '#000000', size: 18},
+            linecolor: 'black',
+            linewidth: 2,
+            mirror: true,
+            showgrid: true,
+            gridwidth: 1,
+            gridcolor: "rgb(238,238,238)",
+            range: [xmin - xPad, xmax + xPad],
+            zeroline: false
+        };
         if (axisIdx === 0) {
             // the first (and main) x-axis
             axisObjectKey = 'xaxis';
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [xmin - xPad, xmax + xPad],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
         } else if (axisIdx < Object.keys(axisPosition).length) {
             // subsequent x-axes, up to the 8 we support
             axisObjectKey = 'xaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [xmin - xPad, xmax + xPad],
-                anchor: axisAnchor[axisIdx],
-                overlaying: 'x',
-                side: axisSide[axisIdx],
-                position: axisPosition[axisIdx],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[axisIdx];
+            layout[axisObjectKey].overlaying = 'x';
+            layout[axisObjectKey].side = axisSide[axisIdx];
+            layout[axisObjectKey].position = axisPosition[axisIdx];
         } else {
             // if the user by some miracle wants more than 8 x-axes, just shove them all into the position of the 8th
             axisObjectKey = 'xaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [xmin - xPad, xmax + xPad],
-                anchor: axisAnchor[Object.keys(axisPosition).length - 1],
-                overlaying: 'x',
-                side: axisSide[Object.keys(axisPosition).length - 1],
-                position: axisPosition[Object.keys(axisPosition).length - 1],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].overlaying = 'x';
+            layout[axisObjectKey].side = axisSide[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].position = axisPosition[Object.keys(axisPosition).length - 1];
         }
     }
     const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
@@ -237,6 +214,7 @@ const generateProfilePlotOptions = function (axisMap, errorMax) {
 const generateDieoffPlotOptions = function (axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
+    const yAxisNumber = Object.keys(axisMap).length;
 
     // overall plot options
     var layout = {
@@ -260,7 +238,10 @@ const generateDieoffPlotOptions = function (axisMap, errorMax) {
         tickfont: {color: '#000000', size: 18},
         linecolor: 'black',
         linewidth: 2,
-        mirror: true
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)"
     };
 
     // allow support for multiple y-axes (currently 8)
@@ -269,7 +250,6 @@ const generateDieoffPlotOptions = function (axisMap, errorMax) {
     const axisPosition = {0: 0, 1: 1, 2: 0.1, 3: 0.9, 4: 0.2, 5: 0.8, 6: 0.3, 7: 0.7};
 
     // loop over all y-axes
-    const yAxisNumber = Object.keys(axisMap).length;
     var axisKey;
     var axisIdx;
     var axisLabel;
@@ -285,53 +265,39 @@ const generateDieoffPlotOptions = function (axisMap, errorMax) {
         xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
+        var axisObjectBegin = {
+            title: axisLabel,
+            titlefont: {color: '#000000', size: 24},
+            tickfont: {color: '#000000', size: 18},
+            linecolor: 'black',
+            linewidth: 2,
+            mirror: true,
+            showgrid: true,
+            gridwidth: 1,
+            gridcolor: "rgb(238,238,238)",
+            range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+            zeroline: false
+            };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
         } else if (axisIdx < Object.keys(axisPosition).length) {
             // subsequent y-axes, up to the 8 we support
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[axisIdx],
-                overlaying: 'y',
-                side: axisSide[axisIdx],
-                position: axisPosition[axisIdx],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[axisIdx];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[axisIdx];
+            layout[axisObjectKey].position = axisPosition[axisIdx];
         } else {
             // if the user by some miracle wants more than 8 y-axes, just shove them all into the position of the 8th
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[Object.keys(axisPosition).length - 1],
-                overlaying: 'y',
-                side: axisSide[Object.keys(axisPosition).length - 1],
-                position: axisPosition[Object.keys(axisPosition).length - 1],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].position = axisPosition[Object.keys(axisPosition).length - 1];
         }
     }
     const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
@@ -345,6 +311,7 @@ const generateDieoffPlotOptions = function (axisMap, errorMax) {
 const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
+    const yAxisNumber = Object.keys(axisMap).length;
     const appName = matsCollections.appName.findOne({}).app;
     var xLabel;
     if (appName.includes("Precip") || appName.includes("precip")){
@@ -392,7 +359,10 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         ticktext: tickvals.map(String),
         linecolor: 'black',
         linewidth: 2,
-        mirror: true
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)"
     };
 
     // allow support for multiple y-axes (currently 8)
@@ -401,7 +371,6 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
     const axisPosition = {0: 0, 1: 1, 2: 0.1, 3: 0.9, 4: 0.2, 5: 0.8, 6: 0.3, 7: 0.7};
 
     // loop over all y-axes
-    const yAxisNumber = Object.keys(axisMap).length;
     var axisKey;
     var axisIdx;
     var axisLabel;
@@ -417,53 +386,39 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
         xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
+        var axisObjectBegin = {
+            title: axisLabel,
+            titlefont: {color: '#000000', size: 24},
+            tickfont: {color: '#000000', size: 18},
+            linecolor: 'black',
+            linewidth: 2,
+            mirror: true,
+            showgrid: true,
+            gridwidth: 1,
+            gridcolor: "rgb(238,238,238)",
+            range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+            zeroline: false
+            };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
         } else if (axisIdx < Object.keys(axisPosition).length) {
             // subsequent y-axes, up to the 8 we support
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[axisIdx],
-                overlaying: 'y',
-                side: axisSide[axisIdx],
-                position: axisPosition[axisIdx],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[axisIdx];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[axisIdx];
+            layout[axisObjectKey].position = axisPosition[axisIdx];
         } else {
             // if the user by some miracle wants more than 8 y-axes, just shove them all into the position of the 8th
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[Object.keys(axisPosition).length - 1],
-                overlaying: 'y',
-                side: axisSide[Object.keys(axisPosition).length - 1],
-                position: axisPosition[Object.keys(axisPosition).length - 1],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].position = axisPosition[Object.keys(axisPosition).length - 1];
         }
     }
     const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
@@ -477,6 +432,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
 const generateValidTimePlotOptions = function (axisMap, errorMax) {
     var xmin = 0;
     var xmax = 23;
+    const yAxisNumber = Object.keys(axisMap).length;
 
     // overall plot options
     var layout = {
@@ -502,7 +458,10 @@ const generateValidTimePlotOptions = function (axisMap, errorMax) {
         ticktext: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"],
         linecolor: 'black',
         linewidth: 2,
-        mirror: true
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)"
     };
 
     // allow support for multiple y-axes (currently 8)
@@ -511,7 +470,6 @@ const generateValidTimePlotOptions = function (axisMap, errorMax) {
     const axisPosition = {0: 0, 1: 1, 2: 0.1, 3: 0.9, 4: 0.2, 5: 0.8, 6: 0.3, 7: 0.7};
 
     // loop over all y-axes
-    const yAxisNumber = Object.keys(axisMap).length;
     var axisKey;
     var axisIdx;
     var axisLabel;
@@ -525,53 +483,39 @@ const generateValidTimePlotOptions = function (axisMap, errorMax) {
         const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
+        var axisObjectBegin = {
+            title: axisLabel,
+            titlefont: {color: '#000000', size: 24},
+            tickfont: {color: '#000000', size: 18},
+            linecolor: 'black',
+            linewidth: 2,
+            mirror: true,
+            showgrid: true,
+            gridwidth: 1,
+            gridcolor: "rgb(238,238,238)",
+            range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+            zeroline: false
+            };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
         } else if (axisIdx < Object.keys(axisPosition).length) {
             // subsequent y-axes, up to the 8 we support
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[axisIdx],
-                overlaying: 'y',
-                side: axisSide[axisIdx],
-                position: axisPosition[axisIdx],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[axisIdx];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[axisIdx];
+            layout[axisObjectKey].position = axisPosition[axisIdx];
         } else {
             // if the user by some miracle wants more than 8 y-axes, just shove them all into the position of the 8th
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[Object.keys(axisPosition).length - 1],
-                overlaying: 'y',
-                side: axisSide[Object.keys(axisPosition).length - 1],
-                position: axisPosition[Object.keys(axisPosition).length - 1],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].position = axisPosition[Object.keys(axisPosition).length - 1];
         }
     }
     const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
@@ -585,6 +529,8 @@ const generateValidTimePlotOptions = function (axisMap, errorMax) {
 const generateGridScalePlotOptions = function (axisMap, errorMax) {
     var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
     var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
+    const yAxisNumber = Object.keys(axisMap).length;
+
     const appName = matsCollections.appName.findOne({}).app;
     var xLabel;
     if (appName.includes("met-")){
@@ -615,7 +561,10 @@ const generateGridScalePlotOptions = function (axisMap, errorMax) {
         tickfont: {color: '#000000', size: 18},
         linecolor: 'black',
         linewidth: 2,
-        mirror: true
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)"
     };
 
     // allow support for multiple y-axes (currently 8)
@@ -624,7 +573,6 @@ const generateGridScalePlotOptions = function (axisMap, errorMax) {
     const axisPosition = {0: 0, 1: 1, 2: 0.1, 3: 0.9, 4: 0.2, 5: 0.8, 6: 0.3, 7: 0.7};
 
     // loop over all y-axes
-    const yAxisNumber = Object.keys(axisMap).length;
     var axisKey;
     var axisIdx;
     var axisLabel;
@@ -640,53 +588,39 @@ const generateGridScalePlotOptions = function (axisMap, errorMax) {
         xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
+        var axisObjectBegin = {
+                title: axisLabel,
+                titlefont: {color: '#000000', size: 24},
+                tickfont: {color: '#000000', size: 18},
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true,
+            showgrid: true,
+            gridwidth: 1,
+            gridcolor: "rgb(238,238,238)",
+                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+                zeroline: false
+            };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
         } else if (axisIdx < Object.keys(axisPosition).length) {
             // subsequent y-axes, up to the 8 we support
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[axisIdx],
-                overlaying: 'y',
-                side: axisSide[axisIdx],
-                position: axisPosition[axisIdx],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[axisIdx];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[axisIdx];
+            layout[axisObjectKey].position = axisPosition[axisIdx];
         } else {
             // if the user by some miracle wants more than 8 y-axes, just shove them all into the position of the 8th
             axisObjectKey = 'yaxis' + (axisIdx + 1);
-            layout[axisObjectKey] = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                anchor: axisAnchor[Object.keys(axisPosition).length - 1],
-                overlaying: 'y',
-                side: axisSide[Object.keys(axisPosition).length - 1],
-                position: axisPosition[Object.keys(axisPosition).length - 1],
-                zeroline: false
-            };
+            layout[axisObjectKey] = axisObjectBegin;
+            layout[axisObjectKey].anchor = axisAnchor[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].overlaying = 'y';
+            layout[axisObjectKey].side = axisSide[Object.keys(axisPosition).length - 1];
+            layout[axisObjectKey].position = axisPosition[Object.keys(axisPosition).length - 1];
         }
     }
     const xPad = ((xmax - xmin) * 0.025) !== 0 ? (xmax - xmin) * 0.025 : 0.025;
@@ -726,6 +660,12 @@ const generateReliabilityPlotOptions = function () {
         tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
         range: [xmin, xmax + 0.05]
     };
 
@@ -736,6 +676,12 @@ const generateReliabilityPlotOptions = function () {
         tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
         range: [ymin, ymax + 0.05]
     };
 
@@ -772,6 +718,12 @@ const generateROCPlotOptions = function () {
         tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
         range: [xmin, xmax + 0.05]
     };
 
@@ -782,6 +734,12 @@ const generateROCPlotOptions = function () {
         tickfont: {color: '#000000', size: 18},
         tickvals: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         ticktext: ["0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"],
+        linecolor: 'black',
+        linewidth: 2,
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
         range: [ymin, ymax + 0.05]
     };
 
@@ -846,11 +804,14 @@ const generateHistogramPlotOptions = function (curves, axisMap, plotBins) {
         title: 'Bin',
         titlefont: {color: '#000000', size: 24},
         tickfont: {color: '#000000', size: 14},
+        tickvals: plotBins.binMeans,
+        ticktext: plotBins.binLabels,
         linecolor: 'black',
         linewidth: 2,
         mirror: true,
-        tickvals: plotBins.binMeans,
-        ticktext: plotBins.binLabels,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
     };
 
     // y-axis options
@@ -861,6 +822,9 @@ const generateHistogramPlotOptions = function (curves, axisMap, plotBins) {
         linecolor: 'black',
         linewidth: 2,
         mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
         range: [ymin - yPad, ymax + 8 * yPad]  // need to allow room at the top for the legend
     };
 
@@ -905,11 +869,14 @@ const generateEnsembleHistogramPlotOptions = function (dataset, curves, axisMap)
         title: 'Bin',
         titlefont: {color: '#000000', size: 24},
         tickfont: {color: '#000000', size: 14},
+        tickvals: tickvals,
+        ticktext: tickvals.map(String),
         linecolor: 'black',
         linewidth: 2,
         mirror: true,
-        tickvals: tickvals,
-        ticktext: tickvals.map(String),
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
     };
 
     // y-axis options
@@ -920,6 +887,9 @@ const generateEnsembleHistogramPlotOptions = function (dataset, curves, axisMap)
         linecolor: 'black',
         linewidth: 2,
         mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
         range: [ymin - yPad, ymax + 8 * yPad]  // need to allow room at the top for the legend
     };
 
@@ -951,6 +921,10 @@ const generateContourPlotOptions = function (dataset) {
         title: xAxisKey,
         titlefont: {color: '#000000', size: 24},
         tickfont: {color: '#000000', size: 18},
+        mirror: true,
+        showgrid: true,
+        gridwidth: 1,
+        gridcolor: "rgb(238,238,238)",
     };
 
     // y-axis options
@@ -962,13 +936,21 @@ const generateContourPlotOptions = function (dataset) {
             tickvals: [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100],
             ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
             type: 'linear',
-            autorange: 'reversed'
+            autorange: 'reversed',
+            mirror: true,
+            showgrid: true,
+            gridwidth: 1,
+            gridcolor: "rgb(238,238,238)"
         };
     } else {
         layout['yaxis'] = {
             title: yAxisKey,
             titlefont: {color: '#000000', size: 24},
             tickfont: {color: '#000000', size: 18},
+            mirror: true,
+            showgrid: true,
+            gridwidth: 1,
+            gridcolor: "rgb(238,238,238)",
         };
     }
 
