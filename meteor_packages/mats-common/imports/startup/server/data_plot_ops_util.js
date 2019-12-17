@@ -277,7 +277,7 @@ const generateDieoffPlotOptions = function (axisMap, errorMax) {
             gridcolor: "rgb(238,238,238)",
             range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
             zeroline: false
-            };
+        };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
@@ -314,15 +314,15 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
     const yAxisNumber = Object.keys(axisMap).length;
     const appName = matsCollections.appName.findOne({}).app;
     var xLabel;
-    if (appName.includes("Precip") || appName.includes("precip")){
+    if (appName.includes("Precip") || appName.includes("precip")) {
         xLabel = "Threshold (in)";
     } else if (appName.includes("Reflectivity") || appName.includes("reflectivity")) {
         xLabel = "Threshold (dBZ)";
     } else if (appName === "echotop" || appName.includes("ceiling")) {
         xLabel = "Threshold (kft)";
-    }  else if (appName === "vil") {
+    } else if (appName === "vil") {
         xLabel = "Threshold (kg/m2)";
-    }  else if (appName.includes("visibility")) {
+    } else if (appName.includes("visibility")) {
         xLabel = "Threshold (mi)";
     } else {
         xLabel = "Threshold";
@@ -331,9 +331,11 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
     // get actual thresholds from the query to place on the x-axis
     var tickvals = [];
     for (var didx = 0; didx < dataset.length; didx++) {
-         tickvals = _.union(tickvals, dataset[didx].x);
+        tickvals = _.union(tickvals, dataset[didx].x);
     }
-    tickvals = tickvals.sort(function(a, b){return a - b});
+    tickvals = tickvals.sort(function (a, b) {
+        return a - b
+    });
 
     // overall plot options
     var layout = {
@@ -398,7 +400,7 @@ const generateThresholdPlotOptions = function (dataset, axisMap, errorMax) {
             gridcolor: "rgb(238,238,238)",
             range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
             zeroline: false
-            };
+        };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
@@ -495,7 +497,7 @@ const generateValidTimePlotOptions = function (axisMap, errorMax) {
             gridcolor: "rgb(238,238,238)",
             range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
             zeroline: false
-            };
+        };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
@@ -533,7 +535,7 @@ const generateGridScalePlotOptions = function (axisMap, errorMax) {
 
     const appName = matsCollections.appName.findOne({}).app;
     var xLabel;
-    if (appName.includes("met-")){
+    if (appName.includes("met-")) {
         xLabel = "Interpolation Points";
     } else {
         xLabel = "Grid Scale";
@@ -589,18 +591,18 @@ const generateGridScalePlotOptions = function (axisMap, errorMax) {
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         var axisObjectBegin = {
-                title: axisLabel,
-                titlefont: {color: '#000000', size: 24},
-                tickfont: {color: '#000000', size: 18},
-                linecolor: 'black',
-                linewidth: 2,
-                mirror: true,
+            title: axisLabel,
+            titlefont: {color: '#000000', size: 24},
+            tickfont: {color: '#000000', size: 18},
+            linecolor: 'black',
+            linewidth: 2,
+            mirror: true,
             showgrid: true,
             gridwidth: 1,
             gridcolor: "rgb(238,238,238)",
-                range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
-                zeroline: false
-            };
+            range: [ymin - yPad, ymax + 8 * yPad],  // need to allow room at the top for the legend
+            zeroline: false
+        };
         if (axisIdx === 0) {
             // the first (and main) y-axis
             axisObjectKey = 'yaxis';
@@ -811,7 +813,7 @@ const generateHistogramPlotOptions = function (curves, axisMap, plotBins) {
         mirror: true,
         showgrid: true,
         gridwidth: 1,
-        gridcolor: "rgb(238,238,238)",
+        gridcolor: "rgb(238,238,238)"
     };
 
     // y-axis options
@@ -842,9 +844,11 @@ const generateEnsembleHistogramPlotOptions = function (dataset, curves, axisMap)
     // get actual bins from the query to place on the x-axis
     var tickvals = [];
     for (var didx = 0; didx < dataset.length; didx++) {
-         tickvals = _.union(tickvals, dataset[didx].x);
+        tickvals = _.union(tickvals, dataset[didx].x);
     }
-    tickvals = tickvals.sort(function(a, b){return a - b});
+    tickvals = tickvals.sort(function (a, b) {
+        return a - b
+    });
 
 
     // overall plot options
@@ -876,7 +880,7 @@ const generateEnsembleHistogramPlotOptions = function (dataset, curves, axisMap)
         mirror: true,
         showgrid: true,
         gridwidth: 1,
-        gridcolor: "rgb(238,238,238)",
+        gridcolor: "rgb(238,238,238)"
     };
 
     // y-axis options
@@ -921,10 +925,9 @@ const generateContourPlotOptions = function (dataset) {
         title: xAxisKey,
         titlefont: {color: '#000000', size: 24},
         tickfont: {color: '#000000', size: 18},
-        mirror: true,
         showgrid: true,
         gridwidth: 1,
-        gridcolor: "rgb(238,238,238)",
+        gridcolor: "rgb(238,238,238)"
     };
 
     // y-axis options
@@ -937,7 +940,6 @@ const generateContourPlotOptions = function (dataset) {
             ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
             type: 'linear',
             autorange: 'reversed',
-            mirror: true,
             showgrid: true,
             gridwidth: 1,
             gridcolor: "rgb(238,238,238)"
@@ -947,10 +949,9 @@ const generateContourPlotOptions = function (dataset) {
             title: yAxisKey,
             titlefont: {color: '#000000', size: 24},
             tickfont: {color: '#000000', size: 18},
-            mirror: true,
             showgrid: true,
             gridwidth: 1,
-            gridcolor: "rgb(238,238,238)",
+            gridcolor: "rgb(238,238,238)"
         };
     }
 
