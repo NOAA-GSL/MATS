@@ -642,6 +642,19 @@
         "sums_data",
         "meta_data"
       ]
+    },
+    {
+      "app": "met-precip",
+      "title": "MET Precipitation",
+      "version": "2.3.10",
+      "buildDate": "2019.12.17.21.25",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "METexpress",
+      "dbroles": [
+        "sums_data",
+        "meta_data"
+      ]
     }
   ]
 },
@@ -1043,6 +1056,19 @@
       "title": "MET Ensemble",
       "version": "2.3.10",
       "buildDate": "2019.12.17.20.46",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "METexpress",
+      "dbroles": [
+        "sums_data",
+        "meta_data"
+      ]
+    },
+    {
+      "app": "met-precip",
+      "title": "MET Precipitation",
+      "version": "2.3.10",
+      "buildDate": "2019.12.17.21.25",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
