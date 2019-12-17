@@ -651,6 +651,14 @@
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
+    },
+    {
+      "app": "met-precip",
+      "displayName": "MET Precipitation",
+      "displayOrder": 24,
+      "group": "MET Express",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     }
   ]
 }
