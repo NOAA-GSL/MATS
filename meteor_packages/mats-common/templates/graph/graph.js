@@ -202,6 +202,11 @@ Template.graph.helpers({
                 elem.value = colorscale;
             }
 
+            // enable colorpicker on axes modal, if applicable.
+            if (plotType !== matsTypes.PlotTypes.map) {
+                $('#gridColor').colorpicker({format: "rgb", align: "left"});
+            }
+
             // store annotation
             annotation = $("#curves")[0].innerHTML;
             matsCurveUtils.hideSpinner();
@@ -1319,6 +1324,7 @@ Template.graph.events({
                             $('#' + dataset[lidx].label + "-curve-show-hide")[0].value = "hide curve";
                             $('#' + dataset[lidx].label + "-curve-show-hide-points")[0].value = "hide points";
                             $('#' + dataset[lidx].label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+                            $('#' + dataset[lidx].label + "-curve-show-hide-legend")[0].value = "hide legend";
 
                             // revert the annotation to the original colors
                             const thisAnnotation = $("#legendContainer" + dataset[lidx].label);
@@ -1339,6 +1345,7 @@ Template.graph.events({
                         Plotly.restyle($("#placeholder")[0], barTypeResetOpts[bidx], bidx);
                         if (Object.values(matsTypes.ReservedWords).indexOf(dataset[bidx].label) === -1) {
                             $('#' + dataset[bidx].label + "-curve-show-hide-bars")[0].value = "hide bars";
+                            $('#' + dataset[bidx].label + "-curve-show-hide-legend")[0].value = "hide legend";
                         }
                     }
                     break;
@@ -1369,6 +1376,11 @@ Template.graph.events({
                 newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
         });
+        $("input[id^=x][id$=AxisFont]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.titlefont.size'] = elem.value;
+            }
+        });
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
             ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             $("input[id^=x][id$=AxisMinText]").get().forEach(function (elem, index) {
@@ -1379,6 +1391,11 @@ Template.graph.events({
             $("input[id^=x][id$=AxisMaxText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                }
+            });
+            $("input[id^=x][id$=TextTickFont]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.tickfont.size'] = elem.value;
                 }
             });
         } else {
@@ -1392,10 +1409,20 @@ Template.graph.events({
                     newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
                 }
             });
+            $("input[id^=x][id$=TickFont]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.tickfont.size'] = elem.value;
+                }
+            });
         }
         $("input[id^=y][id$=AxisLabel]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
                 newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
+            }
+        });
+        $("input[id^=y][id$=AxisFont]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.titlefont.size'] = elem.value;
             }
         });
         if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
@@ -1407,6 +1434,11 @@ Template.graph.events({
             $("input[id^=y][id$=AxisMaxText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                }
+            });
+            $("input[id^=y][id$=TextTickFont]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.tickfont.size'] = elem.value;
                 }
             });
         } else {
@@ -1438,7 +1470,24 @@ Template.graph.events({
                     }
                 }
             });
+            $("input[id^=y][id$=TickFont]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.tickfont.size'] = elem.value;
+                }
+            });
         }
+        $("[id$=gridWeight]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.gridwidth'] = elem.value;
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.gridwidth'] = elem.value;
+            }
+        });
+        $("[id$=gridColor]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.gridcolor'] = elem.value;
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.gridcolor'] = elem.value;
+            }
+        });
         Plotly.relayout($("#placeholder")[0], newOpts);
         // if needed, restore the log axis
         if (changeYScaleBack) {
@@ -1456,23 +1505,47 @@ Template.graph.events({
         $("[id$=LineColor]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
                 updates[index] = updates[index] === undefined ? {} : updates[index];
-                updates[index]['line.color'] = elem.value;
-                updates[index]['marker.color'] = elem.value;
-                if (dataset[index].error_x !== undefined && dataset[index].error_x.color !== undefined) {
-                    updates[index]['error_x.color'] = elem.value;
-                }
-                if (dataset[index].error_y !== undefined && dataset[index].error_y.color !== undefined) {
-                    updates[index]['error_y.color'] = elem.value;
-                }
+                switch (plotType) {
+                    case matsTypes.PlotTypes.timeSeries:
+                    case matsTypes.PlotTypes.profile:
+                    case matsTypes.PlotTypes.dieoff:
+                    case matsTypes.PlotTypes.threshold:
+                    case matsTypes.PlotTypes.validtime:
+                    case matsTypes.PlotTypes.gridscale:
+                    case matsTypes.PlotTypes.dailyModelCycle:
+                    case matsTypes.PlotTypes.reliability:
+                    case matsTypes.PlotTypes.roc:
+                        // options for line plots
+                        updates[index]['line.color'] = elem.value;
+                        updates[index]['marker.color'] = elem.value;
+                        if (dataset[index].error_x !== undefined && dataset[index].error_x !== null && dataset[index].error_x.color !== undefined) {
+                            updates[index]['error_x.color'] = elem.value;
+                        }
+                        if (dataset[index].error_y !== undefined && dataset[index].error_y !== null && dataset[index].error_y.color !== undefined) {
+                            updates[index]['error_y.color'] = elem.value;
+                        }
 
-                // update the annotation with the new color
-                const thisAnnotation = $("#legendContainer" + dataset[index].curveId);
-                const annotationCurrentlyHidden = thisAnnotation[0].hidden;
-                const localAnnotation = "<div id='" + dataset[index].curveId + "-annotation' style='color:" + elem.value + "'>" + dataset[index].annotation + " </div>";
-                thisAnnotation.empty().append(localAnnotation);
-                thisAnnotation[0].hidden = annotationCurrentlyHidden;
-                thisAnnotation[0].style.display = thisAnnotation[0].hidden ? "none" : "block";
-                annotation = $("#curves")[0].innerHTML;
+                        // update the annotation with the new color
+                        const thisAnnotation = $("#legendContainer" + dataset[index].curveId);
+                        const annotationCurrentlyHidden = thisAnnotation[0].hidden;
+                        const localAnnotation = "<div id='" + dataset[index].curveId + "-annotation' style='color:" + elem.value + "'>" + dataset[index].annotation + " </div>";
+                        thisAnnotation.empty().append(localAnnotation);
+                        thisAnnotation[0].hidden = annotationCurrentlyHidden;
+                        thisAnnotation[0].style.display = thisAnnotation[0].hidden ? "none" : "block";
+                        annotation = $("#curves")[0].innerHTML;
+                        break;
+                    case matsTypes.PlotTypes.histogram:
+                    case matsTypes.PlotTypes.ensembleHistogram:
+                        // options for bar plots
+                        updates[index]['marker.color'] = elem.value;
+                        break;
+                    case matsTypes.PlotTypes.contour:
+                    case matsTypes.PlotTypes.contourDiff:
+                    case matsTypes.PlotTypes.map:
+                    case matsTypes.PlotTypes.scatter2d:
+                    default:
+                        break;
+                }
             }
         });
         $("[id$=LineStyle]").get().forEach(function (elem, index) {

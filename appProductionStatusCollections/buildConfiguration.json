@@ -208,6 +208,14 @@
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
+    },
+    {
+      "app": "met-precip",
+      "displayName": "MET Precipitation",
+      "displayOrder": 24,
+      "group": "METexpress",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     }
   ]
 }
@@ -640,6 +648,14 @@
       "app": "met-ensemble",
       "displayName": "MET Ensemble",
       "displayOrder": 23,
+      "group": "MET Express",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "met-precip",
+      "displayName": "MET Precipitation",
+      "displayOrder": 24,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"

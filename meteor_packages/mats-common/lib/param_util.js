@@ -356,7 +356,9 @@ const setDefaultForParamName = function (param) {
             // need to trigger a change so that hideOtherFor and disableOtherFor work properly
             if (param.hideOtherFor !== undefined || param.disableOtherFor !== undefined) {
                 const elem = getInputElementForParamName(paramName);
-                $(elem).trigger('change');
+                if (elem && elem.style && elem.style.display === "block") {
+                    $(elem).trigger('change');
+                }
             }
         }
     }

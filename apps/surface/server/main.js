@@ -1209,7 +1209,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord(matsTypes.DatabaseRoles.SITE_DATA, "sitePool", "madis3", ['metar_mats_test']);
+    mdr.addRecord(matsTypes.DatabaseRoles.SITE_DATA, "sitePool", "madis3", ['metars_mats_global']);
     try {
         matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surface', title: "Surface", group: "Surface"});
     } catch (error) {
