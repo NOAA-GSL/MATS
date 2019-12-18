@@ -232,9 +232,10 @@ const _checkMetaDataRefresh = function () {
             } catch (e) {
                 throw new Error("_checkMetaDataRefresh - error finding last update time for database: " + dbName + " and table: " + tName + ", ERROR:" + e.message);
             }
-            const lastRefreshedEpoch = moment(lastRefreshed).valueOf() / 1000;
-            const updatedEpochMoment = moment(updatedEpoch).valueOf();
-            if (lastRefreshedEpoch < updatedEpochMoment) {
+            const lastRefreshedEpoch = moment.utc(lastRefreshed).valueOf() / 1000;
+            const updatedEpochMoment = moment.utc(updatedEpoch).valueOf();
+            if (lastRefreshedEpoch < updatedEpochMoment || updatedEpochMoment === 0) {
+                // Aurora DB sometimes returns a 0 for last updated. In that case, do refresh the metadata.
                 refresh = true;
                 console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
                 break;
