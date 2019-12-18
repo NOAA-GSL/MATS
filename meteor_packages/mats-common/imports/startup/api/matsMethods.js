@@ -17,32 +17,11 @@ const metaDataTableUpdates = new Mongo.Collection(null);
 const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection"); // initialize collection used for pop-out window functionality
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
 
-var MV_DIRS = {};
 // Define routes for server
 if (Meteor.isServer) {
     if (Meteor.settings.private !== undefined && Meteor.settings.private !== null) {
-        const _MV_OUT = Meteor.settings.private.MV_OUTPUT;
-        const _MV_HOME = Meteor.settings.private.MV_HOME;
-        const _MV_LOGDIR = _MV_OUT + "/xml/";
-        const _MV_ERRDIR = _MV_OUT + "/xml/";
-        const _MV_DATADIR = _MV_OUT + "/data/";
-        const _MV_SQLDIR = _MV_OUT + "/xml/";  // sql output goes with the xml output
-        const _MV_XMLDIR = _MV_OUT + "/xml/";
-        const _MV_SCRIPTSDIR = _MV_OUT + "/scripts/";
-        const _MV_PLOTSSDIR = _MV_OUT + "/plots/";
         const METADATA_SCRIPT = Meteor.settings.private.METADATA_SCRIPT;
         process.env.JAVA_HOME = Meteor.settings.private.JAVA_HOME;
-        process.env.MV_HOME = Meteor.settings.private.MV_HOME;
-
-        MV_DIRS = {
-            LOGDIR: _MV_LOGDIR,
-            ERRDIR: _MV_ERRDIR,
-            DATADIR: _MV_DATADIR,
-            SQLDIR: _MV_SQLDIR,
-            XMLDIR: _MV_XMLDIR,
-            SCRIPTSDIR: _MV_SCRIPTSDIR,
-            PLOTSDIR: _MV_PLOTSSDIR,
-            HOME: _MV_HOME
         };
     }
 
@@ -114,19 +93,6 @@ if (Meteor.isServer) {
         Picker.middleware(_clearCache(params, req, res, next));
     });
 
-// create picker routes for metadata_script
-    Picker.route('/runMetadata', function (params, req, res, next) {
-        Picker.middleware(_runMetadata(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/runMetadata', function (params, req, res, next) {
-        Picker.middleware(_runMetadata(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/runMetadata', function (params, req, res, next) {
-        Picker.middleware(_runMetadata(params, req, res, next));
-    });
-
 // create picker routes for refreshMetaData
     Picker.route('/refreshMetadata', function (params, req, res, next) {
         Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
@@ -139,59 +105,6 @@ if (Meteor.isServer) {
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/refreshMetadata', function (params, req, res, next) {
         Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
     });
-
-// set loading_metadata show/hide
-    Picker.route('/loadingMetadataIcon', function (params, req, res, next) {
-        Picker.middleware(_loadingMetadataIcon(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/loadingMetadataIcon', function (params, req, res, next) {
-        Picker.middleware(_loadingMetadataIcon(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/loadingMetadataIcon', function (params, req, res, next) {
-        Picker.middleware(_loadingMetadataIcon(params, req, res, next));
-    });
-
-
-
-// create picker routes for metviewer middleware static files
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvdata/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetData(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvpoints1/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetPoints1(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvpoints2/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetPoints2(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvxml/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetXml(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvplot/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetPlot(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvscript/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetScript(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvsql/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetSql(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mvlog/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetLog(params, req, res, next));
-    });
-
-    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/mverr/:key', function (params, req, res, next) {
-        Picker.middleware(_mvGetErr(params, req, res, next));
-    });
-}
 
 // private - used to see if the main page needs to update its selectors
 const _checkMetaDataRefresh = function () {
@@ -865,233 +778,6 @@ const _getPagenatedData = function (rky, p, np) {
     }
 };
 
-//private middleware for getting metviewer data file
-const _mvGetData = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.DATADIR;
-    const baseName = params.key + ".data";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/plain')
-            if (err) {console.log(err);} // Fail if the file can't be read.
-            res.end(data); // Send the file data to the browser.
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'text/plain');
-        res.write("Error Error getting data file :" + baseName);
-        res.end();
-    }
-}
-
-//private middleware for getting metviewer points1 file
-const _mvGetPoints1 = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.DATADIR;
-    const baseName = params.key + ".points1";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/plain')
-            if (err) {console.log(err);} // Fail if the file can't be read.
-            res.end(data); // Send the file data to the browser.
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'text/plain');
-        res.write("Error Error getting data file :" + baseName);
-        res.end();
-    }
-}
-
-
-//private middleware for getting metviewer points1 file
-const _mvGetPoints2 = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.DATADIR;
-    const baseName = params.key + ".points2";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/plain')
-            if (err) {console.log(err);} // Fail if the file can't be read.
-            res.end(data); // Send the file data to the browser.
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'text/plain');
-        res.write("Error Error getting data file :" + baseName);
-        res.end();
-    }
-}
-
-//private middleware for getting metviewer xml file
-const _mvGetXml = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.XMLDIR;
-    const baseName = params.key + ".xml";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/plain');
-            if (err) {console.log(err);} // Fail if the file can't be read.
-            res.end(data); // Send the file data to the browser.
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'text/plain');
-        res.write("Error Error getting xml file :" + baseName);
-        res.end();
-    }
-}
-//private middleware for getting metviewer plot file
-const _mvGetPlot = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.PLOTSDIR;
-    const baseName = params.key + ".png";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'image/png');
-            if (err) {console.log(err);} // Fail if the file can't be read.
-            res.end(data); // Send the file data to the browser.
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'application/txt');
-        res.write("Error Error getting plot file :" + baseName);
-        res.end();
-    }
-}
-//private middleware for getting metviewer script file
-const _mvGetScript = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.SCRIPTSDIR;
-    const baseName = params.key + ".R";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/plain');
-            if (err) {console.log(err);} // Fail if the file can't be read.
-            res.end(data); // Send the file data to the browser.
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'text/plain');
-        res.write("Error Error getting script file :" + baseName);
-        res.end();
-    }}
-//private middleware for getting metviewer sql file
-const _mvGetSql = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.SQLDIR;
-    const baseName = params.key + ".sql";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/sql');
-            if (err) {console.log(err);} // Fail if the file can't be read.
-            res.end(data); // Send the file data to the browser.
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'text/plain');
-        res.write("Error Error getting sql file :" + baseName);
-        res.end();
-    }
-}
-//private middleware for getting metviewer log file
-const _mvGetLog = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.LOGDIR;
-    const baseName = params.key + ".log";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/plain');
-            if (err) {console.log(err);} // Fail if the file can't be read.
-            res.end(data); // Send the file data to the browser.
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'text/plain');
-        res.write("Error Error getting log file :" + baseName);
-        res.end();
-    }
-}
-//private middleware for getting metviewer err file
-const _mvGetErr = function(params, req, res, next) {
-    const fse = require("fs-extra");
-    const filePath = MV_DIRS.ERRDIR;
-    const baseName = params.key + ".err";
-    const fileName = filePath + '/' + baseName;
-    try {
-        fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/plain');
-            if (err) {
-                res.setHeader('Content-Type', 'text/plain');
-                res.write("Error Error getting err file :" + baseName);
-                res.end();
-            } else {
-                res.end(data); // Send the file data to the browser.
-            }
-        });
-    }
-    catch (error) {
-        res.setHeader('Content-Type', 'text/plain');
-        res.write("Error Error getting plot file :" + baseName);
-        res.end();
-    }
-}
-
-// private middlewatre for show/hide running metadata process icon
-const _loadingMetadataIcon = function (params, req, res, next) {
-    const cp = require('child_process');
-    const db = params.db
-    const state=params.state;
-    if (state !== "show" && state != "hide") {
-        res.end("<body><h1>Invalid state! " + state + " should be show|hide</h1></body>");
-    }
-    const loadingMetadata = state == "show" ? true : false;
-    const mySettings = matsCollections.Settings.find({}).fetch();
-    // set the "loading metadata" spinner to visible
-    matsCollections.Settings.update(mySettings[0]._id, {$set: {loadingMetadata: loadingMetadata}});
-    res.write("<body><h1>state set to  " + state + "</h1></body>");
-    res.end();
-}
-
-// private middlewatre for running metadata process
-const _runMetadata = function (params, req, res, next) {
-    const meExecutible = Meteor.settings.private.METADATA_SCRIPT;
-    const cp = require('child_process');
-    const db = params.db
-    const mySettings = matsCollections.Settings.find({}).fetch();
-    // set the "loading metadata" spinner to visible
-    matsCollections.Settings.update(myMessages[0]._id, {$set: {important: true}});
-    Messages.update(mySettings[0]._id, {$set: {loadingMetadata: true}});
-    res.setHeader('Content-Type', 'text/plain');
-    try {
-        // exec runMetadata - this should be asynchronous and shpould return the log
-        const { spawn } = require('child_process');
-        const child = spawn(meExecutible,[db,metexpress_base_url,appRef]);
-        child.on('exit', function (code, signal) {
-            res.end('process exited with ' +
-                  `code ${code} and signal ${signal}`);
-        });
-        child.stdout.on('data', (data) => {
-            res.write(`stdout:\n${data}`);
-        });
-        child.stderr.on('data', (data) => {
-            res.write(`stderr:\n${data}`);
-        });
-
-    } finally {
-        res.end("metadata process exited unexpectedly! Check output")
-            // set the "loading metadata" spinner to hidden
-            Messages.update(mySettings[0]._id, {$set: {loadingMetadata: false}});
-    }
-}
 
 // private define a middleware for refreshing the metadata
 const _refreshMetadataMWltData = function (params, req, res, next) {
@@ -1208,6 +894,27 @@ const _saveResultData = function (result) {
         return ret;
     }
 };
+
+//Utility method for writing out the meteor.settings file
+const _write_settings = function(settings, appName) {
+    const fs = require('fs');
+    const appSettingsData = fs.readFileSync('/usr/app/settings/' + appName + "/settings.json");
+    var newSettings = {};
+    if (appSettingsData == undefined) {
+        newSettings = settings;
+    } else {
+        const appSettings = JSON.parse(appSettingsData);
+        // Merge settings into appSettings
+        newSettings.private = {...appSettings.private, ...settings.private};
+        newSettings.public = {...appSettings.public, ...settings.public};
+    }
+    // write the settings file
+    //console.log (JSON.stringify(newSettings,null,2));
+    fs.writeFileSync('/usr/app/settings/' + appName + "/settings.json", JSON.stringify(newSettings, null, 2), {
+        encoding: 'utf8',
+        flag: 'w'
+    });
+}
 
 // PUBLIC METHODS
 //administration tools
@@ -1583,28 +1290,6 @@ const getLayout = new ValidatedMethod({
     }
 });
 
-// retrieves the saved artifacts (file urls) that were generated by nvBatch for a specific key
-const getMvArtifactsByKey = new ValidatedMethod({
-    name: 'matsMethods.getMvArtifactsByKey',
-    validate: new SimpleSchema({
-        key: {
-            type: String
-        }
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var ret;
-            var key = params.key;
-            try {
-                ret = matsCache.getResult(key); // {key:someKey, result:resultObject}
-                return ret;
-            } catch (error) {
-                throw new Meteor.Error("Error in getMvArtifactsByKey function:" + key + " : " + error.message);
-            }
-            return undefined;
-        }
-    }
-});
 
 /*
 getPlotResult is used by the graph/text_*_output templates which are used to display textual results.
@@ -1707,251 +1392,6 @@ const insertColor = new ValidatedMethod({
     }
 });
 
-
-// checks to see if the mv artifacts are cached (based on plotspec hash) if not execs an mvbatch and caches the results
-const mvBatch = new ValidatedMethod({
-    name: 'matsMethods.mvBatch',
-    validate: new SimpleSchema({
-        plotParams: {
-            type: Object,
-            blackbox: true
-        },
-        plotType: {
-            type: String
-        }
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var mvbatch = MV_DIRS.HOME + "/bin/mv_batch.sh";
-            var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
-            var plotSpecFunction = plotGraphFunction.plotSpecFunction;
-            var ret;
-            const appName = matsCollections.appName.findOne({}).app;
-            const fse = require('fs-extra');
-            // generate the key from the params
-            const hash = require('object-hash');
-            const key = hash(params.plotParams);
-            // generate the server router (Picker) urls according to the hash key.
-            var artifacts = {};
-            if (process.env.NODE_ENV === "development") {
-                artifacts = {
-                    png: appName + "/mvplot/" + key,
-                    xml: appName + "/mvxml/" + key,
-                    sql: appName + "/mvsql/" + key,
-                    log: appName + "/mvlog/" + key,
-                    err: appName + "/mverr/" + key,
-                    R: appName + "/mvscript/" + key,
-                    data: appName + "/mvdata/" + key,
-                    points1: appName + "/mvpoints1/" + key,
-                    points2: appName + "/mvpoints2/" + key,
-                };
-            } else {
-                // in production the appName is already at the end of the location.href
-                // - which is used to form a url for retrieving the artifact
-                artifacts = {
-                    png: "/mvplot/" + key,
-                    xml: "/mvxml/" + key,
-                    sql: "/mvsql/" + key,
-                    log: "/mvlog/" + key,
-                    err: "/mverr/" + key,
-                    R: "/mvscript/" + key,
-                    data: "/mvdata/" + key,
-                    points1: "/mvpoints1/" + key,
-                    points2: "/mvpoints2/" + key,
-                };
-            }
-            // generate the real file paths (these are not exposed to clients)
-            const plotSpecFilePath = MV_DIRS.XMLDIR + key + ".xml";
-            const pngFilePath = MV_DIRS.PLOTSDIR + key + ".png";
-            const sqlFilePath = MV_DIRS.SQLDIR + key + ".sql";
-            const logFilePath = MV_DIRS.LOGDIR + key + ".log";
-            const errFilePath = MV_DIRS.ERRDIR + key + ".err";
-            const scriptFilePath = MV_DIRS.SCRIPTSDIR + key + ".R";
-            const dataFilePath = MV_DIRS.DATADIR + key + ".data";
-            const points1Path = MV_DIRS.DATADIR + key + ".points1";
-            const points2Path = MV_DIRS.DATADIR + key + ".points2";
-            // NOTE: the plotParams should include an mvPlot:true parameter.
-            // This should have been set in the caller. This makes the mv plotSpec cache entry unique from a MATS plot
-            if (params.plotParams.mvPlot !== true) {
-                throw new Meteor.Error("Error in mvBatch: Not an mv plot request: no plotParams.mvPlot:true");
-            }
-            if (process.env.NODE_ENV === "development" || params.expireKey) {
-                matsCache.expireKey(key);
-                // in development just blow away the files too
-                try {
-                    fse.unlinkSync(plotSpecFilePath);
-                } catch (ignore){}
-                try {
-                    fse.unlinkSync(pngFilePath);
-                } catch (ignore){}
-                try {
-                    fse.unlinkSync(sqlFilePath);
-                } catch (ignore){}
-                try {
-                    fse.unlinkSync(logFilePath);
-                } catch (ignore){}
-                try {
-                    fse.unlinkSync(errFilePath);
-                } catch (ignore){}
-                try {
-                    fse.unlinkSync(scriptFilePath);
-                } catch (ignore){}
-                try {
-                    fse.unlinkSync(dataFilePath);
-                } catch (ignore){}
-                try {
-                    fse.unlinkSync(points1Path);
-                } catch (ignore){}
-                try {
-                    fse.unlinkSync(points2Path);
-                } catch (ignore){}
-            }
-            // try to get the key from the cache
-            var artifactPaths = matsCache.getResult(key);
-            var filesExist = false;
-            if (artifactPaths != null) {
-                // artifact paths were already cached
-                // do the files exist?
-                // check for file existence
-                var xmlSpecExists = fse.existsSync(plotSpecFilePath);
-                var plotExists = fse.existsSync(pngFilePath);
-                var scriptExists = fse.existsSync(scriptFilePath);
-                var dataExists = fse.existsSync(dataFilePath);
-                var sqlExists = fse.existsSync(sqlFilePath);
-                var logExists = fse.existsSync(logFilePath);
-                filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
-            }
-            // either the artifacts were cached but the files don't exist or the artifacts were not cached
-            if (artifactPaths == null || filesExist === false) {
-                // artifactPaths are not in the cache - or the files are not there - need to process plotSpecFunction routine
-                // translate the plotparams to a plotSpec and use the key in the plotSpec reference
-                global[plotSpecFunction](params.plotParams, key, function (err, plotSpec) {
-                    // callback
-                    if (err) {
-                        console.log(err, "plotspecFunction:", plotSpecFunction);
-                        throw new Meteor.Error(err + "plotspecFunction: " + plotSpecFunction);
-                    } else {
-
-                        // no error and we have a plot spec
-                        // see if the artifacts exist as files. They might have been run before and are still hanging around.
-                        // NOTE: the MV_OUTPUT aren't cached at all (i.e. no expiration) -
-                        // therefore the expiration of the MATS cache plotSpec and the actual artifacts is sloppy.
-
-                        // check for file existence
-                        var xmlSpecExists = fse.existsSync(plotSpecFilePath);
-                        var plotExists = fse.existsSync(pngFilePath);
-                        var scriptExists = fse.existsSync(scriptFilePath);
-                        var dataExists = fse.existsSync(dataFilePath);
-                        var sqlExists = fse.existsSync(sqlFilePath);
-                        var logExists = fse.existsSync(logFilePath);
-                        var filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
-                        if (!filesExist) {
-                            const mvBatchCmd = MV_DIRS.HOME + "/bin/mv_batch.sh " + ' ' + plotSpecFilePath;
-                            const cp = require('child_process');
-                            // save the plotSpec
-                            fse.outputFileSync(plotSpecFilePath, plotSpec);
-                            // exec mv batch with this plotSpec - this should be synchronous
-                            cp.execSync(mvBatchCmd, (error, stdout, stderr) => {
-                                if (stderr) {
-                                    fse.outputFileSync(errFilePath, stderr, function (err) {
-                                        if (err) {
-                                            console.log("Error:couldn't write error file" + err); //null
-                                        }
-                                    });
-                                } else {
-                                    fse.outputFileSync(errFilePath, "no stderr for key: " + key, function (err) {
-                                        if (err) {
-                                            console.log("Error:couldn't write error file" + err); //null
-                                        }
-                                    });
-                                }
-                                if (stdout) {
-                                    if (stdout.match(/ERROR/)) {
-                                        fse.outputFileSync(errFilePath, stdout, function (err) {
-                                            if (err) {
-                                                console.log("Error:couldn't write log/err file" + err);
-                                            }
-                                        });
-                                    }
-                                    fse.outputFileSync(logFilePath, stdout, function (err) {
-                                        if (err) {
-                                            console.log("Error:couldn't write log file" + err);
-                                        }
-                                    });
-                                    var sqlout = stdout.match(/[\s\S]*#*(SELECT[\s\S]*)Database/) == null ? null : stdout.match(/[\s\S]*#*(SELECT[\s\S]*)Database/)[1];
-                                    if (sqlout == null) {
-                                        fse.outputFileSync(sqlFilePath, "no sql statement found in output for key: " + key, function (err) {
-                                            if (err) {
-                                                console.log("Error:couldn't write sql file" + err);
-                                            }
-                                        });
-                                    } else {
-                                        fse.outputFileSync(sqlFilePath, sqlout, function (err) {
-                                            if (err) {
-                                                console.log("Error:couldn't write sql file" + err);
-                                            }
-                                        });
-                                    }
-                                } else {
-                                    fse.outputFileSync(logFilePath, "No stdout captured for: " + key, function (err) {
-                                        if (err) {
-                                            console.log("Error:couldn't write log file" + err);
-                                        }
-                                    });
-                                }
-
-                                // no error - check for the files and cache the spec and filePaths
-                                var xmlSpecExists = fse.existsSync(plotSpecFilePath);
-                                var plotExists = fse.existsSync(pngFilePath);
-                                var scriptExists = fse.existsSync(scriptFilePath);
-                                var dataExists = fse.existsSync(dataFilePath);
-                                var sqlExists = fse.existsSync(sqlFilePath);
-                                var logExists = fse.existsSync(logFilePath);
-                                var filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
-                                if (!filesExist) {
-                                    console.error('exec error: expected files do not exist');
-                                }
-                                matsCache.storeResult(key, artifacts);
-                                /*
-                                    The mvbatch should have saved the plot artifacts according to the following plotSpec elements
-                                        <data_file>key.data</data_file>
-                                        <plot_file>key.png</plot_file>
-                                        <r_file>key.R</r_file>
-                                    where key is the same as the key for the matsCache
-                                    The stored artifacts shoulkd be like ...
-                                        MV_OUTPUT/plots/key.png
-                                        MV_OUTPUT/xml/key.xml
-                                        MV_OUTPUT/xml/key.sql
-                                        MV_OUTPUT/xml/key.log
-                                        MV_OUTPUT/scripts/key.R
-                                        MV_OUTPUT/data/key.data
-                                        MV_OUTPUT/data/key.sum_stat.info
-                                        MV_OUTPUT/data/key.data.sum_stat
-
-                                        MV_OUTPUT/xml/key.xml is the plotSpec
-                                */
-                                return {'key': key, 'artifacts':artifacts};
-                            }); //ret = {key:key, result:{artifacts:artifacts}}
-                            // return the key and the artifacts
-                        }  // plotspec did not exist
-                        else {
-                            // the files actually already existed but we needed the plotspec
-                            // so just refresh the cache and return the key right away
-                            matsCache.storeResult(key, artifacts);
-                            return {'key': key, 'artifacts':artifacts};
-                        }
-                    }
-                });
-            } // either artifactPaths == null || filesExist === false
-            else {
-                // artifacts existed and plotspec existed - refresh the cache
-                matsCache.storeResult(key, artifacts);
-                return {'key': key, 'artifacts':artifacts};
-            }
-            return {'key': key, 'artifacts':artifacts};
-        } // if Meteor is Server
-    } // run
-});
 
 // administration tool
 const readFunctionFile = new ValidatedMethod({
@@ -2074,7 +1514,6 @@ const removeDatabase = new ValidatedMethod({
     }
 });
 
-
 const applySettingsData = new ValidatedMethod({
     name: 'matsMethods.applySettingsData',
     validate: new SimpleSchema({
@@ -2084,18 +1523,9 @@ const applySettingsData = new ValidatedMethod({
     run(settingsParam) {
         if (Meteor.isServer) {
             // Read the existing settings file
-            const fs = require('fs');
+            const  settings = settingsParam.settings;
             const appName = matsCollections.appName.findOne({}).app;
-            const appSettingsData = fs.readFileSync('/usr/app/settings/' + appName + "/settings.json");
-            const appSettings = JSON.parse(appSettingsData);
-            const formSettings = settingsParam.settings;
-            // Merge formSetings into appSettings
-            var newSettings = {};
-            newSettings.private = Object (formSettings.private);
-            newSettings.public =  {...appSettings.public, ...formSettings.public};
-            // write the settings file
-            //console.log (JSON.stringify(newSettings,null,2));
-            fs.writeFileSync('/usr/app/settings/' + appName + "/settings.json", JSON.stringify(newSettings,null,2), {encoding:'utf8',flag:'w'});
+            _write_settings(settings, appName);
             // get rid of undefinedRoles so that the page will route normally now
             delete Meteor.settings.public.undefinedRoles;
         }
@@ -2103,15 +1533,40 @@ const applySettingsData = new ValidatedMethod({
 });
 
 // makes sure all of the parameters display appropriate selections in relation to one another
+// for default settings ...
 const resetApp = function (appRef) {
     var fse = require('fs-extra');
     const metaDataTableRecords = appRef.appMdr;
     const type = appRef.appType;
     const appName = appRef.app;
+    const appTitle = appRef.title;
+    const appGroup =  appRef.group;
+    const appColor = appType = matsTypes.AppTypes.mats ? "#3366bb" : "darkorchid";
+    const appTimeOut = 300;
     var dep_env = process.env.NODE_ENV;
-    // set some defaults for python processing - these can be overridden
-    if (Meteor.settings.private != null && Meteor.settings.private.PYTHON_PATH == null) {
-        Meteor.settings.private.PYTHON_PATH = "/usr/bin/python3";
+    // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
+    if (Meteor.settings.private == undefined) {
+        // create some default meteor settings and write them out
+        const  settings = {
+            "private": {
+                "databases": [
+                ],
+                    "process": {
+                    "RUN_ENV" : dep_env
+                },
+                "PYTHON_PATH": "/usr/bin/python3"
+            },
+            "public": {
+                "deployment_environment":dep_env,
+                    "proxy_prefix_path": "",
+                    "home": process.env.HOME == undefined ? "https://localhost" : process.env.HOME,
+                    "mysql_wait_timeout": appTimeOut,
+                    "group": appGroup,
+                    "title": appTitle,
+                    "color": appColor
+            }
+        };
+        _write_settings(settings, appName);  // this is going to cause the app to restart
     }
 
     if (Meteor.settings.private != null && Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
@@ -2128,17 +1583,18 @@ const resetApp = function (appRef) {
         }
     }
 
-    var connectionTimeout = 300; // timeout in seconds
-    if (Meteor.settings.public != null && Meteor.settings.public.mysql_wait_timeout != null) {
-        connectionTimeout = Meteor.settings.public.mysql_wait_timeout;
-    }
+    // timeout in seconds
+    var connectionTimeout =  Meteor.settings.public.mysql_wait_timeout != undefined ? Meteor.settings.public.mysql_wait_timeout : 300;
     const mdrecords = metaDataTableRecords.getRecords();
     for (var mdri=0; mdri<mdrecords.length; mdri++) {
         const record = mdrecords[mdri];
         const poolName = record.pool;
+        // if the database credentials have been set in the meteor.private.settings file then the global[poolName]
+        // will have been defined in the app main.js. Otherwise it will not have been defined. We will skip it but add
+        // the corresponding role to Meteor.settings.public.undefinedRoles - which will cause the app to route to the db configuration page.
         if (global[poolName] === undefined) {
             // There was no pool defined for this poolName - probably needs to be configured so stash the role in the public settings
-            if (Meteor.settings.public != null && Meteor.settings.public.undefinedRoles  == null) {
+            if (Meteor.settings.public.undefinedRoles  == undefined) {
                 Meteor.settings.public.undefinedRoles = [];
             }
             Meteor.settings.public.undefinedRoles.push(record.role);
@@ -2152,9 +1608,7 @@ const resetApp = function (appRef) {
             });
         } catch (e) {
             console.log(poolName + ":  not initialized-- could not open connection: Error:" + e.message);
-            if (Meteor.settings.public != null && Meteor.settings.public.undefinedRoles  == null) {
-                Meteor.settings.public.undefinedRoles = [];
-            }
+            Meteor.settings.public.undefinedRoles = Meteor.settings.public.undefinedRoles  == undefined ? [] : Meteor.settings.public.undefinedRoles  == undefined;
             Meteor.settings.public.undefinedRoles.push(record.role);
             continue
         }
@@ -2162,6 +1616,7 @@ const resetApp = function (appRef) {
         Meteor.settings.public.undefinedRoles = null;
     }
 
+    // just in case - should never happen.
     if (Meteor.settings.public.undefinedRoles && Meteor.settings.public.undefinedRoles.length >1 ) {
         throw new Meteor.Error("dbpools not initialized " + Meteor.settings.public.undefinedRoles );
     }
@@ -2180,7 +1635,6 @@ const resetApp = function (appRef) {
     }
     const deployment_environment = Meteor.settings.public.deployment_environment ? Meteor.settings.public.deployment_environment : "unknown";
     const appVersion = app ? app.version : "unknown";
-    const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
     const appType = type ? type : matsTypes.AppTypes.mats;
     matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
@@ -2555,12 +2009,10 @@ export default matsMethods = {
     getGraphDataByKey: getGraphDataByKey,
     getGraphFunctionFileList: getGraphFunctionFileList,
     getLayout: getLayout,
-    getMvArtifactsByKey:getMvArtifactsByKey,
     getPlotResult: getPlotResult,
     getReleaseNotes: getReleaseNotes,
     getUserAddress: getUserAddress,
     insertColor: insertColor,
-    mvBatch: mvBatch,
     readFunctionFile: readFunctionFile,
     refreshMetaData: refreshMetaData,
     removeAuthorization: removeAuthorization,
@@ -2576,5 +2028,4 @@ export default matsMethods = {
     testGetMetaDataTableUpdates: testGetMetaDataTableUpdates,
     testGetTables: testGetTables,
     testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack,
-    MV_DIRS: MV_DIRS
 };

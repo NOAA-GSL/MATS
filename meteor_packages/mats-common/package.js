@@ -69,7 +69,6 @@ Package.onUse(function (api) {
     api.export("matsParamUtils", ['client', 'server']);
     api.export("matsMathUtils", ['client', 'server']);
     api.export("matsPlotUtils", ['client', 'server']);
-    api.export("matsPlotSpecUtils", ['server']);
     api.export("matsDataUtils", ['server']);
     api.export("matsDataQueryUtils", ['server']);
     api.export("matsDataDiffUtils", ['server']);

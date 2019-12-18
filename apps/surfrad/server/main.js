@@ -331,9 +331,6 @@ const doCurveParams = function () {
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
             (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap))) {
             // have to reload model data
-            if (process.env.NODE_ENV === "development") {
-                console.log("updating model data")
-            }
             matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
@@ -930,13 +927,14 @@ const doPlotGraph = function () {
 };
 
 Meteor.startup(function () {
-    if (Meteor.settings.private == null) {
-        console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
-        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
-    }
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
-        var databases = Meteor.settings.private.databases;
+        var databases = undefined;
+        if (Meteor.settings == undefined || Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined) {
+            databases = undefined;
+        } else {
+            databases = Meteor.settings.private.databases;
+        }
         if (databases !== null && databases !== undefined && Array.isArray(databases)) {
             for (var di = 0; di < databases.length; di++) {
                 matsCollections.Databases.insert(databases[di]);
@@ -959,7 +957,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "surfrad3", ['scale_descriptions', 'station_descriptions', 'regions_per_model_mats_all_categories']);
     try {
-        matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'surfrad'});
+        matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'surfrad', title: "Surface Radiation", group: "Surface"});
     } catch (error) {
         console.log(error.message);
     }

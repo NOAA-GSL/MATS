@@ -457,9 +457,6 @@ const doCurveParams = function () {
         if ((!matsDataUtils.areObjectsEqual(modelOptionsMap, currentParam.optionsMap)) ||
             (!matsDataUtils.areObjectsEqual(levelOptionsMap, currentParam.levelsMap))) {
             // have to reload model data
-            if (process.env.NODE_ENV === "development") {
-                console.log("updating model data")
-            }
             matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
@@ -1025,15 +1022,15 @@ const doPlotGraph = function () {
     }
 };
 
-
 Meteor.startup(function () {
-    if (Meteor.settings.private == null) {
-        console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
-        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
-    }
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
-        var databases = Meteor.settings.private.databases;
+        var databases = undefined;
+        if (Meteor.settings == undefined || Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined) {
+            databases = undefined;
+        } else {
+            databases = Meteor.settings.private.databases;
+        }
         if (databases !== null && databases !== undefined && Array.isArray(databases)) {
             for (var di = 0; di < databases.length; di++) {
                 matsCollections.Databases.insert(databases[di]);
@@ -1056,7 +1053,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "mats_metadata", ['ensemble_mats_metadata', 'ensemble_database_groups']);
     try {
-        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-ensemble'});
+        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-ensemble', title: "MET Ensemble", group: "METexpress"});
     } catch (error) {
         console.log(error.message);
     }

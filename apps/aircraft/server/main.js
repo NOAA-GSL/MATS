@@ -905,10 +905,6 @@ const doPlotGraph = function () {
 };
 
 Meteor.startup(function () {
-    // if (Meteor.settings.private == null) {
-    //     console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
-    //     throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
-    // }
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
         var databases = undefined;
