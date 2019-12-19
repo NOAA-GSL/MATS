@@ -135,6 +135,7 @@ const _checkMetaDataRefresh = function () {
                 "    AND TABLE_NAME = '" + tName + "'");
             try {
                 updatedEpoch = rows[0]['UNIX_TIMESTAMP(UPDATE_TIME)'];
+                console.log("DB says metadata for table " + dbName + "." + tName + " was updated at " + updatedEpoch);
                 if (updatedEpoch === undefined || updatedEpoch === "NULL" || updatedEpoch === Number.MAX_VALUE) {
                     // if time of last update isn't stored by the database (thanks, Aurora DB), refresh automatically
                     console.log("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
@@ -147,7 +148,11 @@ const _checkMetaDataRefresh = function () {
             }
             const lastRefreshedEpoch = moment.utc(lastRefreshed).valueOf() / 1000;
             const updatedEpochMoment = moment.utc(updatedEpoch).valueOf();
-            if (lastRefreshedEpoch < updatedEpochMoment || updatedEpochMoment === 0) {
+            console.log("Epoch of when this app last refreshed metadata for table " + dbName + "." + tName + " is " + lastRefreshedEpoch);
+            console.log("Epoch of when the DB says table " + dbName + "." + tName + " was last updated is " + lastRefreshedEpoch);
+            console.log("Was the metadata refreshed by the app before the table was last updated? " + (lastRefreshedEpoch < updatedEpochMoment));
+            console.log("Did the DB return 0 for its last updated epoch? " + (updatedEpochMoment === 0));
+            if (lastRefreshedEpoch < updatedEpochMoment || updatedEpochMoment == 0) {
                 // Aurora DB sometimes returns a 0 for last updated. In that case, do refresh the metadata.
                 refresh = true;
                 console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
