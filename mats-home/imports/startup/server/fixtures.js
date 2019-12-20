@@ -70,7 +70,12 @@ Meteor.startup(() => {
           var newAppList = group.appList;
           if (item.deployment_environment === env) {
             newAppList.push(item);
-            Groups.update({_id: group._id}, {$set: {appList: newAppList}});
+            // sort  newApplist by group_order
+	    try {
+              Groups.update({_id: group._id}, {$set: {appList: newAppList.sort((a, b) => (a.group_order > b.group_order) ? 1 : -1)}});
+            } catch(error) {
+              Groups.update({_id: group._id}, {$set: {appList: newAppList}});
+            }
           }
         }
       } catch (error) {
