@@ -46,6 +46,11 @@ Template.landing.helpers({
   home(app) {
     return app.home;
   },
+  baseUrl(app) {
+    var base_arr = app.home.split('/');
+    base_arr.pop();
+    return( base_arr.join('/') );
+  },
   environment() {
       return Session.get('deployment_environment');
       },
