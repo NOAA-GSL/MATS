@@ -26,7 +26,7 @@ stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v "mongo" | gre
 containerCreating=($(rancher kubectl --namespace=${env} get pods | grep -i ContainerCreating | awk '{print $1}'))
 if [[ ${#stuckPods[@]} -gt 0 ]]; then
 	i="0"
-	while [ $i -lt 5 -o ${#containerCreating[@]} -gt 0 -o ${#stuckPods[@]} -gt 0 ]
+	while [[ $i -lt 10  &&  ( ${#containerCreating[@]} -gt 0 || ${#stuckPods[@]} -gt 0 ) ]]
 	do
 		rancher kubectl --namespace=${env} delete pods $(rancher kubectl --namespace=${env} get pods | grep ImageInspectError | awk '{print $1}')
 		containerCreating=($(rancher kubectl --namespace=${env} get pods | grep -v "mongo" | grep -v "mats-home" grep -v http | grep -i ContainerCreating | awk '{print $1}'))

@@ -40,8 +40,8 @@ Meteor.startup(() => {
   },
   "public": {
     "deployment_environment": "development",
-    "proxy_prefix_path": "",
-    "home": "https://mats-docker-dev.gsd.esrl.noaa.gov/",
+    "proxy_prefix_path": "matsdev",
+    "home": "https://mats-docker-dev.gsd.esrl.noaa.gov/matsdev/home",
     "mysql_wait_timeout": 300,
     "group": "METexpress",
     "title": "MET Air Quality",
