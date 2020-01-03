@@ -111,7 +111,6 @@ Package.onUse(function (api) {
     api.addFiles('imports/startup/server/data_curve_ops_util.js');
     api.addFiles('imports/startup/server/data_plot_ops_util.js');
     api.addFiles('imports/startup/server/data_process_util.js');
-    api.addFiles('imports/startup/server/plot_spec_util.js');
     api.addFiles('imports/startup/server/index.js');
     api.addFiles('imports/startup/server/publications.js');
     api.addFiles('imports/startup/server/cache.js');
