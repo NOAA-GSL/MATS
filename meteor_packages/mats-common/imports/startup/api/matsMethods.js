@@ -22,14 +22,13 @@ if (Meteor.isServer) {
     if (Meteor.settings.private !== undefined && Meteor.settings.private !== null) {
         const METADATA_SCRIPT = Meteor.settings.private.METADATA_SCRIPT;
         process.env.JAVA_HOME = Meteor.settings.private.JAVA_HOME;
-        };
     }
 
     // add indexes to result and axes collections
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     LayoutStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
     // set the default proxy prefix path to ""
-    if (Meteor.settings.public != null && Meteor.settings.public.proxy_prefix_path  == null) {
+    if (Meteor.settings.public != null && Meteor.settings.public.proxy_prefix_path == null) {
         Meteor.settings.public.proxy_prefix_path = "";
     }
 
@@ -105,6 +104,7 @@ if (Meteor.isServer) {
     Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/refreshMetadata', function (params, req, res, next) {
         Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
     });
+}
 
 // private - used to see if the main page needs to update its selectors
 const _checkMetaDataRefresh = function () {
@@ -1547,7 +1547,7 @@ const resetApp = function (appRef) {
     const appName = appRef.app;
     const appTitle = appRef.title;
     const appGroup =  appRef.group;
-    const appColor = appType = matsTypes.AppTypes.mats ? "#3366bb" : "darkorchid";
+    const appColor = matsTypes.AppTypes.mats ? "#3366bb" : "darkorchid";
     const appTimeOut = 300;
     var dep_env = process.env.NODE_ENV;
     // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
@@ -1572,7 +1572,7 @@ const resetApp = function (appRef) {
                     "color": appColor
             }
         };
-        _write_settings(settings, appName);  // this is going to cause the app to restart
+        _write_settings(settings, appName);  // this is going to cause the app to restart!!!
     }
 
     if (Meteor.settings.private != null && Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
