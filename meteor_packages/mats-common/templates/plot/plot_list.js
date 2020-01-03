@@ -401,28 +401,6 @@ Template.plotList.events({
                     console.log("after successful getGraphData call time:", new Date(), ":Session key: ",  ret.key, " graphFunction:", graphFunction);
                     matsGraphUtils.setGraphView(pt);
                 });
-                if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && p['metexpress-mode'] === "matsmv") {
-                    p['mvPlot'] = true;   // mark this as a metviewer plot so that the key is uniq wrt the mats plot
-                    Session.set('mvs', null);
-                    Session.set("mvResultKey", null);
-                    matsMethods.mvBatch.call({plotParams: p, plotType: pt}, function (error, ret) {
-                        if (error !== undefined) {
-                            setError("matsMethods.mvBatch from plot_list.js : error: " + error);
-                            return false;
-                        }
-                        var mvs = [];
-                            var key = ret.key;
-                            var artifacts = ret.artifacts;
-                            for (var i =0; i < Object.keys(artifacts).length; i++){
-                                const name = Object.keys(artifacts)[i];
-                                const url = location.href + artifacts[name];
-                                mvs.push({name:name,url:url});
-                            }
-                            Session.set('mvs', mvs);
-                            Session.set("mvResultKey", key);
-                            Session.set('MvResultsUpDated', new Date());
-                        });
-                }
                 break;
             default:
                 break;

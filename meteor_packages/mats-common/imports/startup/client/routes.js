@@ -10,7 +10,7 @@ import { FlowRouter } from 'meteor/ostrio:flow-router-extra';
 FlowRouter.route('/', {
     name: 'main',
     action() {
-        console.log("flowrouter.route")
+        //console.log("flowrouter.route")
         if (Meteor.settings.public.custom) {
             this.render('CustomHome');
         } else {

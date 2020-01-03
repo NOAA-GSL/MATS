@@ -353,9 +353,6 @@ const doCurveParams = function () {
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
             (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap))) {
             // have to reload model data
-            if (process.env.NODE_ENV === "development") {
-                console.log("updating model data")
-            }
             matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
@@ -984,13 +981,14 @@ const doPlotGraph = function () {
 };
 
 Meteor.startup(function () {
-    if (Meteor.settings.private == null) {
-        console.log("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
-        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
-    }
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
-        var databases = Meteor.settings.private.databases;
+        var databases = undefined;
+        if (Meteor.settings == undefined || Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined) {
+            databases = undefined;
+        } else {
+            databases = Meteor.settings.private.databases;
+        }
         if (databases !== null && databases !== undefined && Array.isArray(databases)) {
             for (var di = 0; di < databases.length; di++) {
                 matsCollections.Databases.insert(databases[di]);
@@ -1041,7 +1039,7 @@ Meteor.startup(function () {
     mdr.addRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "vis_1min_sums", ['regions_per_model_mats_all_categories']);
     mdr.addRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
     try {
-        matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'visibility15'});
+        matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'visibility15', title: "Visibility 15 Min", group: "Ceiling and Visibility"});
     } catch (error) {
         console.log(error.message);
     }
