@@ -14,10 +14,11 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int|prod [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
+usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
-	default is build changed apps, e is build environment (dev, int, or prod), and i is build images also"
+	default is build changed apps, e is build environment (dev, int, prod, or exp), and i is build images also, \n\
+	environment exp is for experimental builds - which will be pushed to the experipental repository."
 requestedApp=""
 requestedTag=""
 requestedBranch=""
@@ -28,6 +29,7 @@ build_images="no"
 deploy_build="yes"
 WEB_DEPLOY_DIRECTORY="/web"
 roll_versions="yes"
+experimental="no"
 while getopts "alisr:e:t:b:" o; do
     case "${o}" in
         t)
@@ -59,7 +61,10 @@ while getopts "alisr:e:t:b:" o; do
         ;;
         e)
             build_env="${OPTARG}"
-            if [ "${build_env}" == "dev" ]; then
+            if [ "${build_env}" == "exp" ]; then
+                setBuildConfigVarsForDevelopmentServer
+                experimental="yes"
+            elif [ "${build_env}" == "dev" ]; then
                 setBuildConfigVarsForDevelopmentServer
             elif [ "${build_env}" == "int" ]; then
                 setBuildConfigVarsForIntegrationServer
@@ -325,9 +330,12 @@ buildApp() {
         if [[ ${build_env} == "int" ]]; then
             REPO="matsapps/integration"
         else if [[ ${build_env} == "dev" ]]; then
-            REPO="matsapps/development"
-            TAG="${myApp}-nightly"
+              REPO="matsapps/development"
+              TAG="${myApp}-nightly"
+            fi
         fi
+        if [[ ${experimental} == "yes" ]]; then
+          REPO="matsapps/experimental"
         fi
         echo "$0:${myApp}: building container in ${BUNDLE_DIRECTORY}"
         # remove the container if it exists - force in case it is running
