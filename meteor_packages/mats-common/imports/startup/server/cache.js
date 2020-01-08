@@ -5,7 +5,7 @@
 import {Meteor} from "meteor/meteor";
 import {matsCollections} from 'meteor/randyp:mats-common';
 if (Meteor.isServer) {
-    const Results = require('node-file-cache').create({file:'fileCache', life: 8 * 3600});
+    const Results = require('node-file-cache').create({file:'/usr/app/fileCache', life: 8 * 3600});
     var getResult = function (key) {
         //console.log('asked to get result from cache for key:', key);
         var result = Results.get(key);
