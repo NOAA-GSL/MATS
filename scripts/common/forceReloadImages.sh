@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# source the matsapps credentials file
+. ~/.matsapps_credentials
+
 env="matsdev"
 requestedApp="all"
 version="latest"
@@ -71,10 +75,6 @@ if [[ "X${CONTEXT}" == "X" ]]; then
 	usage
 fi 
 
-#these keys are for randy's account to rancher
-export CATTLE_ACCESS_KEY=token-7jsvp
-export CATTLE_SECRET_KEY=6nvh77zpmcg6s4z6m7l2hl82swzftzpkvf8f9xw9kbbwwkhpq9gs4v
-export TOKEN=token-7jsvp:6nvh77zpmcg6s4z6m7l2hl82swzftzpkvf8f9xw9kbbwwkhpq9gs4v
 
 rancher login https://rancher.gsd.esrl.noaa.gov/v3 --token ${TOKEN} --context ${CONTEXT}
 #first delete any evicted pods - still don't understand why they got evicted - did not pay rent???
