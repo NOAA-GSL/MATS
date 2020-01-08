@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
+
+# source the matsapps credentials file
+if [ ! -f ~/.matsapps_credentials ]; then
+    echo "~/.matsapps_credentials file not found!"
+    echo "you must creqate a ~/.matsapps_credentials file with the following entries.."
+    echo "# rancher cli user access for *your id*"
+    echo "export CATTLE_ACCESS_KEY=key_from_rancher"
+    echo "export CATTLE_SECRET_KEY=secret_key_from_rancher"
+    echo "export TOKEN=token_from_rancher"
+    echo "Log into the rancher GUI, hover over your user icon (top right), and choose 'API and KEYS' to create your keys"
+    exit 1
+fi
+. ~/.matsapps_credentials
+
 env="matsdev"
 db=""
 
@@ -63,11 +77,6 @@ shift "$(($OPTIND -1))"
 if [[ "X${CONTEXT}" == "X" ]]; then
 	usage
 fi 
-
-#these keys are for randy's account to rancher
-export CATTLE_ACCESS_KEY=token-7jsvp
-export CATTLE_SECRET_KEY=6nvh77zpmcg6s4z6m7l2hl82swzftzpkvf8f9xw9kbbwwkhpq9gs4v
-export TOKEN=token-7jsvp:6nvh77zpmcg6s4z6m7l2hl82swzftzpkvf8f9xw9kbbwwkhpq9gs4v
 
 rancher login https://rancher.gsd.esrl.noaa.gov/v3 --token ${TOKEN} --context ${CONTEXT}
 

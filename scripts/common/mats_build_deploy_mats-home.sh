@@ -3,6 +3,13 @@
 # and then builds the image from an appropriate node image that corresponds to the node verwsion of the app.
 #
 # source the credentials for the matsapps account
+if [ ! -f ~/.matsapps_credentials ]; then
+    echo "~/.matsapps_credentials file not found!"
+    echo "you must creqate a ~/.matsapps_credentials file with the following entries.."
+    echo "export matsapps_user='matsapps user'"
+    echo "export matsapps_password='matsapps user password'"
+    exit 1
+fi
 . ~/.matsapps_credentials
 
 # set up logging
