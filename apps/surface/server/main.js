@@ -290,7 +290,7 @@ const doCurveParams = function () {
 
     try {
         matsCollections.SiteMap.remove({});
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,description from metars_mats_global order by name;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,description from metars_mats_global where lat > -16380 and lat < 16380 and lon > -32760 and lon < 32760 order by name;");
         for (var i = 0; i < rows.length; i++) {
 
             var site_name = rows[i].name;
@@ -300,10 +300,6 @@ const doCurveParams = function () {
             var site_lon = rows[i].lon / 182;
             var site_elev = rows[i].elev;
             siteOptionsMap[site_name] = [site_id];
-            //masterSitesMap[site_name] = [site_description];
-            //sitesLocationMap[site_name] = {lat: site_lat, lon: site_lon, elev: site_elev};
-
-            matsCollections.SiteMap.insert({siteName: site_name, siteId: site_id});
 
             var point = [site_lat, site_lon];
             var obj = {
@@ -321,21 +317,20 @@ const doCurveParams = function () {
                 }
             };
             sitesLocationMap.push(obj);
-        }
 
+            matsCollections.SiteMap.insert({siteName: site_name, siteId: site_id});
+        }
     } catch (err) {
         console.log(err.message);
     }
-    matsCollections.StationMap.remove({});
 
-    if (matsCollections.StationMap.find({name: 'stations'}).count() == 0) {
-        matsCollections.StationMap.insert(
-            {
-                name: 'stations',
-                optionsMap: sitesLocationMap,
-            }
-        );
-    }
+    matsCollections.StationMap.remove({});
+    matsCollections.StationMap.insert(
+        {
+            name: 'stations',
+            optionsMap: sitesLocationMap,
+        }
+    );
 
     if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -753,21 +748,9 @@ const doCurveParams = function () {
                 displayGroup: 5,
                 multiple: true
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'sites'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, siteOptionsMap)) {
-            // have to reload sites data
-            matsCollections.CurveParams.update({name: 'sites'}, {
-                $set: {
-                    optionsMap: siteOptionsMap,
-                    options: Object.keys(siteOptionsMap),
-                }
-            });
-        }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'sitesMAP'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'sitesMap'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'sitesMap',
@@ -786,18 +769,6 @@ const doCurveParams = function () {
                 defaultMapView: {point: [50, -92.5], zoomLevel: 1.25},
                 help: 'map-help.html'
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'sitesMap'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, siteOptionsMap)) {
-            // have to reload sites data
-            matsCollections.CurveParams.update({name: 'sitesMap'}, {
-                $set: {
-                    optionsMap: siteOptionsMap,
-                    options: Object.keys(siteOptionsMap),
-                }
-            });
-        }
     }
 
     if (matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}) == undefined) {
@@ -872,8 +843,8 @@ const doCurveParams = function () {
     }
 
     // determine date defaults for dates and curveDates
-    const defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
+    const defaultDataSource = matsCollections.CurveParams.findOne({name: "data-source"}, {default: 1}).default;
+    modelDateRangeMap = matsCollections.CurveParams.findOne({name: "data-source"}, {dates: 1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
 
@@ -1192,7 +1163,7 @@ Meteor.startup(function () {
     // the pool is intended to be global
     if (sumSettings) {
         sumPool = mysql.createPool(sumSettings)
-    };
+    }
 
     const siteSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SITE_DATA, status: "active"}, {
         host: 1,
@@ -1209,7 +1180,6 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord(matsTypes.DatabaseRoles.SITE_DATA, "sitePool", "madis3", ['metars_mats_global']);
     try {
         matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surface', title: "Surface", group: "Surface"});
     } catch (error) {

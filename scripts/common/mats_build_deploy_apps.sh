@@ -6,6 +6,9 @@
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
 
 
+# source the credentials for the matsapps account
+. ~/.matsapps_credentials
+
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
 logDir="/builds/buildArea/logs"
@@ -359,7 +362,7 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         docker build --no-cache --rm -t ${REPO}:${TAG} .
         docker tag ${REPO}:${TAG} ${REPO}:${TAG}
         if [ "${pushImage}" == "yes" ]; then
-            echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
+            echo ${matsapps_password} | docker login -u ${matsapps_user} --password-stdin
             echo "pushing image ${REPO}:${TAG}"
             docker push ${REPO}:${TAG}
         else

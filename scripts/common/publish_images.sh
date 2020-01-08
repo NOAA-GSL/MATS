@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# source the credentials for the matsapps account
+. ~/.matsapps_credentials
 
 RED='\033[0;31m'
 GRN='\033[0;32m'
@@ -47,7 +49,7 @@ function buildTagList {
 }
 
 # login
-echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
+echo ${matsapps_password} | docker login -u ${matsapps_user} --password-stdin
 
 echo -e "${GRN} get production applist ${NC}"
 curl -k ${serverUrl}/getStableDeployment/production 2>/dev/null > $tmpProductionFile

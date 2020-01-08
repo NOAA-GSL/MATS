@@ -5,8 +5,8 @@
     "start": "meteor run"
   },
   "dependencies": {
-    "@babel/runtime": "^7.5.5",
-    "bootstrap": "^4.3.1",
+    "@babel/runtime": "^7.7.7",
+    "bootstrap": "^4.4.1",
     "chai": "^4.2.0",
     "downsample-lttb": "git+https://github.com/pingec/downsample-lttb.git",
     "fibers": "^2.0.0",

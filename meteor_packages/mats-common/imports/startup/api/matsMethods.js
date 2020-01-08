@@ -150,8 +150,6 @@ const _checkMetaDataRefresh = function () {
             const updatedEpochMoment = moment.utc(updatedEpoch).valueOf();
             console.log("Epoch of when this app last refreshed metadata for table " + dbName + "." + tName + " is " + lastRefreshedEpoch);
             console.log("Epoch of when the DB says table " + dbName + "." + tName + " was last updated is " + updatedEpochMoment);
-            console.log("Was the metadata refreshed by the app before the table was last updated? " + (lastRefreshedEpoch < updatedEpochMoment));
-            console.log("Did the DB return 0 for its last updated epoch? " + (updatedEpochMoment === 0));
             if (lastRefreshedEpoch < updatedEpochMoment || updatedEpochMoment == 0) {
                 // Aurora DB sometimes returns a 0 for last updated. In that case, do refresh the metadata.
                 refresh = true;
