@@ -108,9 +108,9 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "{{statisticClause}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
-                "{{utcCycleStartClause}} " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "{{dateClause}} " +
+                "{{utcCycleStartClause}} " +
                 "{{thresholdClause}} " +
                 "{{forecastLengthClause}} " +
                 "group by avtime " +

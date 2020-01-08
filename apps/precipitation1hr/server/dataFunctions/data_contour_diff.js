@@ -74,7 +74,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and m0.time%(24*3600)/3600 IN(" + validTimes + ")";
+                validTimeClause = "and m0.time%(24*3600)/3600 IN(" + validTimes + ")";
             }
         }
         if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
@@ -115,7 +115,7 @@ dataContourDiff = function (plotParams, plotFunction) {
                 if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                     const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                     if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                        validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + validTimes + ")";
+                        validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + matchValidTimes + ")";
                     }
                 }
                 if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
