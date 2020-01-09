@@ -33,15 +33,14 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-    var dataSource = curve['data-source'];
-    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[dataSource][0];
+    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var variableStr = curve['variable'];
     var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
-    var forecastLength = curve['forecast-length'];
-    var sitesClause = "";
-    var forecastLengthClause = "";
     var validTimeClause = "";
+    var forecastLength = curve['forecast-length'];
+    var forecastLengthClause = "";
+    var sitesClause = "";
     var varUnits;
     var modelTable;
     if (forecastLength === 1) {
@@ -52,8 +51,8 @@ dataMap = function (plotParams, plotFunction) {
         forecastLengthClause = "and m0.fcst_len = " + forecastLength + " "
     }
     var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
-    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var queryTableClause = "from metars as s, " + obsTable + " as o, " + modelTable + " as m0 ";
+    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var variableClause;
     if (variable[2] === "temp" || variable[2] === "dp") {
         variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
@@ -65,8 +64,8 @@ dataMap = function (plotParams, plotFunction) {
         variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
         varUnits = 'm/s';
     }
-    var statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, count(distinct m0.time) as N0';
-    statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
+    var statisticClause = 'sum({{variableClause}})/count(distinct m0.time) as stat, count(distinct m0.time) as N0';
+    statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
     curves[0]['statistic'] = "Bias (Model - Obs)";
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -74,8 +73,9 @@ dataMap = function (plotParams, plotFunction) {
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var siteDateClause = "and o.time >= '{{fromSecs}}' and o.time <= '{{toSecs}}'";
+    var siteDateClause = "and o.time >= " + fromSecs + " and o.time <= " + toSecs;
     var siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
+    var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
@@ -86,13 +86,12 @@ dataMap = function (plotParams, plotFunction) {
         "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
         "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
         "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
-        "{{statistic}} " +
+        "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +
         "{{siteMatchClause}} " +
         "{{sitesClause}} " +
-        "and m0.time >= '{{fromSecs}}' " +
-        "and m0.time <= '{{toSecs}}' " +
+        "{{dateClause}} " +
         "{{siteDateClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
@@ -100,15 +99,14 @@ dataMap = function (plotParams, plotFunction) {
         "order by sta_name" +
         ";";
 
-    statement = statement.replace('{{statistic}}', statistic);
+    statement = statement.replace('{{statisticClause}}', statisticClause);
     statement = statement.replace('{{queryTableClause}}', queryTableClause);
+    statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-    statement = statement.replace('{{siteDateClause}}', siteDateClause);
     statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
     statement = statement.replace('{{sitesClause}}', sitesClause);
-    statement = statement.replace('{{validTimeClause}}', validTimeClause);
-    statement = statement.split('{{fromSecs}}').join(fromSecs);
-    statement = statement.split('{{toSecs}}').join(toSecs);
+    statement = statement.replace('{{dateClause}}', dateClause);
+    statement = statement.replace('{{siteDateClause}}', siteDateClause);
     dataRequests[label] = statement;
 
     var queryResult;
@@ -116,7 +114,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, dataSource, variable, varUnits, siteMap);
+        queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, model, variable, varUnits, siteMap);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),

@@ -45,17 +45,24 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var dataSourceStr = curve['data-source'];
-        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var variableStr = curve['variable'];
-        var variable = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][variableStr];
         var scaleStr = curve['scale'];
         var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
+        var scaleClause = "and m0.scale = " + grid_scale;
+        var queryTableClause = "from " + model + '_freq_' + region + " as m0";
+        var variableStr = curve['variable'];
+        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variable = variableOptionsMap[variableStr];
+        var utcCycleStart = Number(curve['utc-cycle-start']);
+        utcCycleStarts[curveIndex] = utcCycleStart;
+        var utcCycleStartClause = "and (m0.valid_secs - m0.fcst_len*60)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        var forecastLengthClause = "and m0.fcst_len < 24 * 60";
+        var dateClause = "and m0.valid_secs >= " + fromSecs + " and m0.valid_secs <= " + toSecs;
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic = statisticOptionsMap[statisticSelect][0];
+        var statisticClause = statisticOptionsMap[statisticSelect][0];
         var utcCycleStart = Number(curve['utc-cycle-start']);
         utcCycleStarts[curveIndex] = utcCycleStart;
         // axisKey is used to determine which axis a curve should use.
@@ -77,24 +84,23 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "count(distinct m0.valid_secs) as N_times, " +
                 "min(m0.valid_secs) as min_secs, " +
                 "max(m0.valid_secs) as max_secs, " +
-                "{{statistic}} " +
-                "from {{data_source}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and m0.valid_secs >= {{fromSecs}} " +
-                "and m0.valid_secs <= {{toSecs}} " +
-                "and m0.scale = '{{scale}}' " +
-                "and m0.fcst_len < 24*60 " +
-                "and (m0.valid_secs - m0.fcst_len*60)%(24*3600)/3600 IN({{utcCycleStart}}) " +
+                "{{dateClause}} " +
+                "{{utcCycleStartClause}} " +
+                "{{forecastLengthClause}} " +
+                "{{scaleClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{data_source}}', data_source + '_freq_' + region);
-            statement = statement.replace('{{scale}}', grid_scale);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{utcCycleStart}}', utcCycleStart);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{scaleClause}}', scaleClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.split('{{variable}}').join(variable);
             dataRequests[label] = statement;
 

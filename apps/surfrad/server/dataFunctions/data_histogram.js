@@ -43,7 +43,7 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var regionClause;
@@ -58,24 +58,30 @@ dataHistogram = function (plotParams, plotFunction) {
         }
         var scaleStr = curve['scale'];
         var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
+        var scaleClause = "and m0.scale = " + grid_scale;
+        var queryTableClause = "from surfrad as ob0, " + model + " as m0";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic = statisticOptionsMap[statisticSelect][0];
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        statistic = statistic.replace(/\{\{variable2\}\}/g, variable[2]);
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")";
         }
+        var forecastLength = Number(curve['forecast-length']) * 60;
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = Number(curve['forecast-length']) * 60;
+        var dateClause = "and ob0.secs >= " + fromSecs + " and ob0.secs <= " + toSecs;
+        dateClause = dateClause + " and m0.secs >= " + fromSecs + " and m0.secs <= " + toSecs;
+        var matchClause = "and m0.id = ob0.id and m0.secs = ob0.secs";
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause = statisticOptionsMap[statisticSelect][0];
+        statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+        statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
+        statisticClause = statisticClause.replace(/\{\{variable2\}\}/g, variable[2]);
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -95,32 +101,30 @@ dataHistogram = function (plotParams, plotFunction) {
                 "count(distinct m0.secs) as N_times, " +
                 "min(m0.secs) as min_secs, " +
                 "max(m0.secs) as max_secs, " +
-                "{{statistic}} " +
-                "from surfrad as ob0, {{data_source}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and ob0.secs = m0.secs " +
-                "and ob0.id = m0.id " +
-                "and m0.secs >= '{{fromSecs}}' " +
-                "and m0.secs <= '{{toSecs}}' " +
-                "and m0.fcst_len = '{{forecastLength}}' " +
-                "and m0.scale = '{{scale}}' " +
-                "{{regionClause}} " +
+                "{{matchClause}} " +
+                "{{dateClause}} " +
                 "{{validTimeClause}} " +
+                "{{forecastLengthClause}} " +
+                "{{scaleClause}} " +
+                "{{regionClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source);
-            statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{scale}}', grid_scale);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
-            statement = statement.replace('{{regionClause}}', regionClause);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{scaleClause}}', scaleClause);
+            statement = statement.replace('{{regionClause}}', regionClause);
+            statement = statement.replace('{{matchClause}}', matchClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
-            if (data_source !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
+            if (model !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
                 throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is only available for the HRRR data-source.");
             }
 

@@ -48,25 +48,30 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var vgtypStr = curve['vgtyp'];
         var vgtyp = Object.keys(matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap[key] === vgtypStr);
+        var vgtypClause = "and m0.vgtyp IN(" + vgtyp + ")";
+        var queryTableClause = "from " + model + " as m0";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic;
-        if (variableStr === 'temperature' || variableStr === 'dewpoint') {
-            statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr === 'wind') {
-            statistic = statisticOptionsMap[statisticSelect][2];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][1];
-        }
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
-        var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var utcCycleStart = Number(curve['utc-cycle-start']);
         utcCycleStarts[curveIndex] = utcCycleStart;
+        var utcCycleStartClause = "and (m0.valid_day+3600*m0.hour - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        var forecastLengthClause = "and m0.fcst_len < 24";
+        var dateClause = "and m0.valid_day+3600*m0.hour >= " + fromSecs + " and m0.valid_day+3600*m0.hour <= " + toSecs;
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause;
+        if (variableStr === 'temperature' || variableStr === 'dewpoint') {
+            statisticClause = statisticOptionsMap[statisticSelect][0];
+        } else if (variableStr === 'wind') {
+            statisticClause = statisticOptionsMap[statisticSelect][2];
+        } else {
+            statisticClause = statisticOptionsMap[statisticSelect][1];
+        }
+        statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+        statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
+        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var varUnits = statVarUnitMap[statisticSelect][variableStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -82,24 +87,23 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
                 "min(m0.valid_day+3600*m0.hour) as min_secs, " +
                 "max(m0.valid_day+3600*m0.hour) as max_secs, " +
-                "{{statistic}} " +
-                "from {{model}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-                "and m0.vgtyp IN({{vgtyp}}) " +
-                "and m0.fcst_len < 24 " +
-                "and (m0.valid_day+3600*m0.hour - m0.fcst_len*3600)%(24*3600)/3600 IN({{utcCycleStart}}) " +
+                "{{dateClause}} " +
+                "{{utcCycleStartClause}} " +
+                "{{forecastLengthClause}} " +
+                "{{vgtypClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{vgtyp}}', vgtyp);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model);
-            statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{utcCycleStart}}', utcCycleStart);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{vgtypClause}}', vgtypClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             var queryResult;

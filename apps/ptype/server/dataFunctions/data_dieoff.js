@@ -42,27 +42,27 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var variableStr = curve['variable'];
-        var variable = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][variableStr];
         var scaleStr = curve['scale'];
         var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic = statisticOptionsMap[statisticSelect][0];
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
-        var forecastLengthStr = curve['dieoff-type'];
-        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
-        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+        var scaleClause = "and m0.scale = " + grid_scale;
+        var queryTableClause = "from " + model + '_freq_' + region + " as m0";
+        var variableStr = curve['variable'];
+        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variable = variableOptionsMap[variableStr];
         var validTimes;
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
-        var dateRangeClause = "and m0.valid_secs >= " + fromSecs + " and m0.valid_secs <= " + toSecs;
+        var forecastLengthStr = curve['dieoff-type'];
+        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
+        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var dateClause = "and m0.valid_secs >= " + fromSecs + " and m0.valid_secs <= " + toSecs;
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -72,8 +72,11 @@ dataDieOff = function (plotParams, plotFunction) {
             utcCycleStart = Number(curve['utc-cycle-start']);
             utcCycleStartClause = "and (m0.valid_secs - m0.fcst_len*60)%(24*3600)/3600 IN(" + utcCycleStart + ")";
         } else {
-            dateRangeClause = "and (m0.valid_secs - m0.fcst_len*60) = " + fromSecs;
+            dateClause = "and (m0.valid_secs - m0.fcst_len*60) = " + fromSecs;
         }
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause = statisticOptionsMap[statisticSelect][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -93,24 +96,23 @@ dataDieOff = function (plotParams, plotFunction) {
                 "count(distinct m0.valid_secs) as N_times, " +
                 "min(m0.valid_secs) as min_secs, " +
                 "max(m0.valid_secs) as max_secs, " +
-                "{{statistic}} " +
-                "from {{data_source}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "{{dateRangeClause}} " +
-                "and m0.scale = '{{scale}}' " +
+                "{{dateClause}} " +
                 "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
+                "{{scaleClause}} " +
                 "group by fcst_lead " +
-                "order by fcst_lead;";
+                "order by fcst_lead" +
+                ";";
 
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + '_freq_' + region);
-            statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{scale}}', grid_scale);
-            statement = statement.replace('{{dateRangeClause}}', dateRangeClause);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
+            statement = statement.replace('{{scaleClause}}', scaleClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.split('{{variable}}').join(variable);
             dataRequests[label] = statement;
 
