@@ -5,6 +5,15 @@
 # source the build environment and mongo utilities
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
 
+# source the credentials for the matsapps account
+if [ ! -f ~/.matsapps_credentials ]; then
+    echo "~/.matsapps_credentials file not found!"
+    echo "you must creqate a ~/.matsapps_credentials file with the following entries.."
+    echo "export matsapps_user='matsapps user'"
+    echo "export matsapps_password='matsapps user password'"
+    exit 1
+fi
+. ~/.matsapps_credentials
 
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
@@ -393,7 +402,7 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         echo "$0:${myApp}: docker tag ${REPO}:${TAG} ${REPO}:${TAG}"
         docker tag ${REPO}:${TAG} ${REPO}:${TAG}
         if [ "${pushImage}" == "yes" ]; then
-            echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
+            echo ${matsapps_password} | docker login -u ${matsapps_user} --password-stdin
             echo "$0:${myApp}: pushing image ${REPO}:${TAG}"
             docker push ${REPO}:${TAG}
             if [ $? -ne 0 ]; then

@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
+
+# source the matsapps credentials file
+if [ ! -f ~/.matsapps_credentials ]; then
+    echo "~/.matsapps_credentials file not found!"
+    echo "you must creqate a ~/.matsapps_credentials file with the following entries.."
+    echo "# rancher cli user access for *your id*"
+    echo "export CATTLE_ACCESS_KEY=key_from_rancher"
+    echo "export CATTLE_SECRET_KEY=secret_key_from_rancher"
+    echo "export TOKEN=token_from_rancher"
+    echo "Log into the rancher GUI, hover over your user icon (top right), and choose 'API and KEYS' to create your keys"
+    exit 1
+fi
+. ~/.matsapps_credentials
+
 env="matsdev"
 requestedApp="all"
 version="latest"
@@ -71,14 +85,13 @@ if [[ "X${CONTEXT}" == "X" ]]; then
 	usage
 fi 
 
-#these keys are for randy's account to rancher
-export CATTLE_ACCESS_KEY=token-7jsvp
-export CATTLE_SECRET_KEY=6nvh77zpmcg6s4z6m7l2hl82swzftzpkvf8f9xw9kbbwwkhpq9gs4v
-export TOKEN=token-7jsvp:6nvh77zpmcg6s4z6m7l2hl82swzftzpkvf8f9xw9kbbwwkhpq9gs4v
 
 rancher login https://rancher.gsd.esrl.noaa.gov/v3 --token ${TOKEN} --context ${CONTEXT}
 #first delete any evicted pods - still don't understand why they got evicted - did not pay rent???
-rancher kubectl --namespace=${env} delete pods $(rancher kubectl  get pods --namespace ${env} --field-selector=status.phase='Failed' | grep -i evicted | awk '{print $1}')
+evictedPods=($(rancher kubectl  get pods --namespace ${env} --field-selector=status.phase='Failed' | grep -i evicted | awk '{print $1}'))
+if [[ ${#evictedPods[@]} -gt 0 ]];then
+	rancher kubectl --namespace=${env} delete pods ${evictedPods[@]}
+fi
 
 #restart all the apps that are currently running
 rancher ps | grep -v NAME | grep -v mongo | grep -v mats-home | grep -v http | awk '{print $2}' | while read app
@@ -91,7 +104,7 @@ do
   fi
 done
 echo "forcing reload of any stuck pods"
-stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep ImageInspectError | awk '{print $1}'))
+stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
 containerCreating=($(rancher kubectl --namespace=${env} get pods | grep -i ContainerCreating | awk '{print $1}'))
 echo ""
 if [[ ${#stuckPods[@]} -gt 0 ]]; then
@@ -100,9 +113,11 @@ if [[ ${#stuckPods[@]} -gt 0 ]]; then
 	do
                 echo "stuck pods ${stuckPods[@]}"
                 echo "container creating pods ${containerCreating[@]}"
-		rancher kubectl --namespace=${env} delete pods $(rancher kubectl --namespace=${env} get pods | grep ImageInspectError | awk '{print $1}')
+		if [[ ${#stuckPods[@]} -gt 0 ]];then
+			rancher kubectl --namespace=${env} delete pods ${stuckPods[@]}
+		fi
 		containerCreating=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ContainerCreating | awk '{print $1}'))
-		stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep ImageInspectError | awk '{print $1}'))
+		stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
 		sleep 30
 		i=$[$i+1]
 	done

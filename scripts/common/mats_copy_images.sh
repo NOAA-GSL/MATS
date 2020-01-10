@@ -11,9 +11,19 @@ fi
 repo="$1"
 version="$2"
 
+# source the credentials for the matsapps account
+if [ ! -f ~/.matsapps_credentials ]; then
+    echo "~/.matsapps_credentials file not found!"
+    echo "you must creqate a ~/.matsapps_credentials file with the following entries.."
+    echo "export matsapps_user='matsapps user'"
+    echo "export matsapps_password='matsapps user password'"
+    exit 1
+fi
+. ~/.matsapps_credentials
 #echo  set username and password
-UNAME="matsapps"
-UPASS='mats@Gsd!1234'
+UNAME=${matsapps_user}
+UPASS=${matsapps_password}
+
 docker system prune -af
 #echo  get token to be able to talk to Docker Hub
 TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'${UNAME}'", "password": "'${UPASS}'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
@@ -52,7 +62,6 @@ IMAGE_TAGS=()
 IMAGE_TAGS=$FILTERED_IMAGE_TAGS
 #echo tags are ${IMAGE_TAGS[@]}
 
-#echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
 for i in ${IMAGE_TAGS[@]}
 do
   echo ${i}
