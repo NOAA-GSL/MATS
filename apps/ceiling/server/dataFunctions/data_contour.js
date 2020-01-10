@@ -70,7 +70,7 @@ dataContour = function (plotParams, plotFunction) {
     } else {
         dateString = "m0.time";
     }
-       dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+    dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statisticClause = statisticOptionsMap[statisticSelect][0];

@@ -44,26 +44,31 @@ dataSeries = function (plotParams, plotFunction) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        const label = curve['label'];
-        const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        const regionStr = curve['region'];
-        const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var dbtable = data_source + "_anomcorr_" + region;
-        const variable = curve['variable'];
-        curves[curveIndex]['statistic'] = "Correlation";
-        var levels = curve['level'] === undefined ? [] : curve['level'];
-        var levelClause = " ";
-        if (levels.length > 0) {
-            levelClause = " and  m0.level IN(" + levels + ")";
-        }
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimeClause = validTimeOptionsMap[validTimeStr][0];
-        const validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
-        const averageStr = curve['average'];
-        const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        const average = averageOptionsMap[averageStr][0];
+        var label = curve['label'];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var regionStr = curve['region'];
+        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var queryTableClause = "from " + model + "_anomcorr_" + region + " as m0";
+        var variable = curve['variable'];
+        var variableClause = "and m0.variable = '" + variable + "'";
+        var validTimeStr = curve['valid-time'];
+        var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
+        var validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
+        var dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= " + fromSecs + " and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= " + toSecs;
+        var levelClause = "";
+        var levels = curve['level'] === undefined ? [] : curve['level'];
+        if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
+            levelClause = "and m0.level IN(" + levels + ")";
+        }
+        var statisticClause = "avg(m0.wacorr/100) as stat, " +
+            "count(m0.wacorr) as N0, " +
+            "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data";
+        curves[curveIndex]['statistic'] = "Correlation";
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -79,31 +84,26 @@ dataSeries = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
                 "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
                 "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
-                "avg(m0.wacorr/100) as stat, " +
-                "count(m0.wacorr) as N0, " +
-                "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data " +
-                "from {{dbtable}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '{{toSecs}}' " +
-                "and m0.variable = '{{variable}}' " +
+                "{{dateClause}} " +
+                "{{variableClause}} " +
                 "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
+                "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{dbtable}}', dbtable);
             statement = statement.replace('{{average}}', average);
-            statement = statement.replace('{{data_source}}', data_source);
-            statement = statement.replace('{{region}}', region);
-            statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
@@ -116,7 +116,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, data_source, forecastLength, fromSecs, toSecs, averageStr, validTimes, appParams, false);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, validTimes, appParams, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
