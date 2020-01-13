@@ -232,42 +232,6 @@ Package.onUse(function (api) {
     api.addFiles("templates/plotType/plot_type.html", "client");
     api.addFiles("templates/plotType/plot_type.js", "client");
 
-    api.addFiles("templates/administration/reset.html", "client");
-    api.addFiles("templates/administration/reset.js", "client");
-
-    api.addFiles("templates/administration/export.html", "client");
-    api.addFiles("templates/administration/export.js", "client");
-
-    api.addFiles("templates/administration/import.html", "client");
-    api.addFiles("templates/administration/import.js", "client");
-
-    api.addFiles("templates/administration/settings.html", "client");
-    api.addFiles("templates/administration/settings.js", "client");
-
-    api.addFiles("templates/administration/databases.html", "client");
-    api.addFiles("templates/administration/databases.js", "client");
-
-    api.addFiles("templates/administration/plotParams.html", "client");
-    api.addFiles("templates/administration/plotParams.js", "client");
-
-    api.addFiles("templates/administration/colorsScheme.html", "client");
-    api.addFiles("templates/administration/colorScheme.js", "client");
-
-    api.addFiles("templates/administration/curveParams.html", "client");
-    api.addFiles("templates/administration/curveParams.js", "client");
-
-    api.addFiles("templates/administration/authorization.html", "client");
-    api.addFiles("templates/administration/authorization.js", "client");
-
-    api.addFiles("templates/administration/mail_credentials.html", "client");
-    api.addFiles("templates/administration/mail_credentials.js", "client");
-
-    api.addFiles("templates/administration/PlotGraphFunctions.html", "client");
-    api.addFiles("templates/administration/PlotGraphFunctions.js", "client");
-
-    api.addFiles("templates/administration/administration.html", "client");
-    api.addFiles("templates/administration/administration.js", "client");
-
     // static assets
     api.addAssets('public/img/bootstrap-colorpicker/alpha-horizontal.png', "client");
     api.addAssets('public/img/bootstrap-colorpicker/alpha.png', "client");

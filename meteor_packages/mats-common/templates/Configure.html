@@ -11,30 +11,57 @@
             <form class="ui form configure-settings-form ">
                 <h2>Public settings </h2>
                 <div class="">
-                    <div class="form-group-sm public">
+                    <div class="form-group-sm">
                         <div class="form-group-sm row">
-                            <label for="group" class="col-sm-2 col-form-label">Group:</label>
+                            <label for="proxy_prefix_path" class="col-sm-2 col-form-label">Proxy Prefix:</label>
                             <div class="col-sm-2">
-                                <input id="group" class="form-control " type="text" name="group" placeholder="{{group}}" value="{{group}}"/>
+                                <input id="proxy_prefix_path" class="form-control " type="text" name="proxy_prefix_path" placeholder="{{proxy_prefix_path}}" value="{{proxy_prefix_path}}"/>
                             </div>
                         </div>
+
+                        <div class="form-group-sm row">
+                            <label for="home" class="col-sm-2 col-form-label home">Home:</label>
+                            <div class="col-sm-2">
+                                <input id="home" class="form-control " type="text" name="home" placeholder="{{home}}" value="{{home}}"/>
+                            </div>
+                        </div>
+
+                        <div class="form-group-sm row">
+                            <label for="groupSelect" class="col-sm-2 col-form-label">Group:</label>
+                            <div class="col-sm-2">
+                                <select class="form-control groupSelect" id="groupSelect" name="groupSelect">
+                                    {{#each groups}}
+                                        <option value="{{groupName}}">{{groupName}}</option>
+                                    {{/each}}
+                                </select>
+                                <input id="group" class="form-control group" type="text" name="group" placeholder="{{group}}" value="{{group}}" style="display:none" />
+                            </div>
+                        </div>
+
+                        <div class="form-group-sm row">
+                            <label for="groupOrder" class="col-sm-2 col-form-label">Group Order:</label>
+                            <div class="col-sm-2">
+                                <input id="groupOrder" class="form-control groupOrder" type="number" min="1" max="{{groupsLength}}" name="groupOrder" placeholder="{{groupOrder}}" value="{{groupOrder}}"/>
+                            </div>
+                        </div>
+
                         <div class="form-group-sm row">
                             <label for="title" class="col-sm-2 col-form-label">Title:</label>
                             <div class="col-sm-2">
                                 <input id="title" class="form-control " type="text" name="title" placeholder="{{title}}" value="{{title}}"/>
                             </div>
                         </div>
+
                         <div class="form-group-sm row">
                             <label for="color" class="col-sm-2 col-form-label">Color:</label>
-                            <div class="col-sm-6">
-                                <div class="col-sm-3 text-left">
-                                    <input id="color" class="form-control" type="color" name="color" value="{{color}}"/>
-                                </div>
-                                <div class="col-sm-3 text-right">
-                                    <input id="colorValue" class="form-control colorValue" type="text" name="colorValue" value="{{color}}"/>
-                                </div>
+                            <div class="col-sm-3 text-left">
+                                <input id="color" class="form-control color" type="color" name="color" value="{{color}}"/>
+                            </div>
+                            <div class="col-sm-3 text-right">
+                                <input id="colorValue" class="form-control colorValue" type="text" name="colorValue" value="{{color}}"/>
                             </div>
                         </div>
+
                     </div>
                 </div>
                 <h2>Unconfigured Database settings </h2>
@@ -49,30 +76,35 @@
                                         <input id="{{role}}-host" class="form-control  input-sm" type="text" name="host" placeholder=""/>
                                     </div>
                                 </div>
+
                                 <div class="form-group-sm row">
                                     <label for="port" class="col-sm-2 col-form-label">Port:</label>
                                     <div class="col-sm-4">
                                         <input id="{{role}}-port" class="form-control  input-sm" type="text" name="port" placeholder=""/>
                                     </div>
                                 </div>
+
                                 <div class="form-group-sm row">
                                     <label for="user" class="col-sm-2 col-form-label">User:</label>
                                     <div class="col-sm-4">
                                         <input id="{{role}}-user" class="form-control  input-sm" type="text" name="user" placeholder=""/>
                                     </div>
                                 </div>
+
                                 <div class="form-group-sm row">
                                     <label for="password" class="col-sm-2 col-form-label">Password:</label>
                                     <div class="col-sm-4">
                                         <input id="{{role}}-password" class="form-control  input-sm" type="password" name="password" placeholder=""/>
                                     </div>
                                 </div>
+
                                 <div class="form-group-sm row">
                                     <label for="database" class="col-sm-2 col-form-label">Database:</label>
                                     <div class="col-sm-4">
                                         <input id="{{role}}-database" class="form-control input-sm" type="text" name="database" placeholder=""/>
                                     </div>
                                 </div>
+
                                 <div class="form-group-sm row text-left">
                                     <div class="col-sm-1">
                                         <button id="{{role}}-test" class="btn btn-info test">Test</button>

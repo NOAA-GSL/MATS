@@ -426,7 +426,7 @@ defaultEntryPoints = ["http", "https"]
             fi
         done
         #finish up the document
-        echo "], \"process\": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}}" >> $tmpSettingsFile
+        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}}" >> $tmpSettingsFile
         jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
     done

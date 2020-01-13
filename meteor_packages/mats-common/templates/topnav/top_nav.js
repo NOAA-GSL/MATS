@@ -1,12 +1,19 @@
 /*
  * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
+import matsMethods from "../../imports/startup/api/matsMethods";
+
 const getDeploymentEnvironment = function () {
-    if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {deployment_environment: 1}}) === undefined) {
-        return "";
-    } else {
-        return matsCollections.Settings.findOne({}, {fields: {deployment_environment: 1}}).deployment_environment;
+    if (Session.get('deployment_environment') == undefined) {
+        matsMethods.getDeploymentEnvironment.call({}, function (error, result) {
+            if (error !== undefined) {
+                setError(error);
+                return "<p>" + error + "</p>";
+            }
+            Session.set('deployment_environment', result);
+        });
     }
+    return Session.get('deployment_environment')
 }
 
 Template.topNav.helpers({

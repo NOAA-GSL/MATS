@@ -5,6 +5,9 @@
 /**
  * Created by pierce on 8/31/16.
  */
+
+var DEFAULT_GROUP_LIST = ["Upper Air","Ceiling and Visibility","Surface","Precipitation,Radar","METexpress"];
+
 var DatabaseRoles = {
     MODEL_DATA: 'model_data',
     META_DATA: 'meta_data',
@@ -186,6 +189,7 @@ export default matsTypes = {
     ReservedWords: ReservedWords,
     MetaDataDBRecord: MetaDataDBRecord,
     AppTypes: AppTypes,
-    DatabaseRoles: DatabaseRoles
+    DatabaseRoles: DatabaseRoles,
+    DEFAULT_GROUP_LIST: DEFAULT_GROUP_LIST
 }
 

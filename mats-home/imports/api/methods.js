@@ -4,6 +4,8 @@
 
 import { Meteor } from 'meteor/meteor';
 import { check } from 'meteor/check';
+import {Groups} from "../../api/groups.js";
+
 
 Meteor.methods({
     'getEnvironment'() {

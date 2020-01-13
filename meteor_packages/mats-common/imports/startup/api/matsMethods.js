@@ -19,15 +19,11 @@ const DownSampleResults = new Mongo.Collection("DownSampleResults");
 
 // Define routes for server
 if (Meteor.isServer) {
-    if (Meteor.settings.private !== undefined && Meteor.settings.private !== null) {
-        const METADATA_SCRIPT = Meteor.settings.private.METADATA_SCRIPT;
-        process.env.JAVA_HOME = Meteor.settings.private.JAVA_HOME;
-    }
-
     // add indexes to result and axes collections
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     LayoutStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
     // set the default proxy prefix path to ""
+    // If the settings are not complete, they will be set by the configuration and written out, which will cause the app to reset
     if (Meteor.settings.public != null && Meteor.settings.public.proxy_prefix_path == null) {
         Meteor.settings.public.proxy_prefix_path = "";
     }
@@ -899,26 +895,40 @@ const _saveResultData = function (result) {
     }
 };
 
+
 //Utility method for writing out the meteor.settings file
 const _write_settings = function(settings, appName) {
+
     const fs = require('fs');
-    const appSettingsData = fs.readFileSync('/usr/app/settings/' + appName + "/settings.json");
-    var newSettings = {};
-    if (appSettingsData == undefined) {
-        newSettings = settings;
-    } else {
-        const appSettings = JSON.parse(appSettingsData);
-        // Merge settings into appSettings
-        newSettings.private = {...appSettings.private, ...settings.private};
-        newSettings.public = {...appSettings.public, ...settings.public};
+    const settingsPath = process.env.METEOR_SETTINGS_DIR;
+    if (! fs.existsSync(settingsPath)) {
+        fs.mkdirSync(settingsPath, {recursive: true});
     }
+    var appSettings = {};
+    var newSettings = {};
+    try {
+        const appSettingsData = fs.readFileSync(settingsPath + "/" + appName + "/settings.json");
+        appSettings = JSON.parse(appSettingsData);
+    } catch (e) {
+        appSettings = {
+            "private": {},
+            "public": {}
+        };
+    }
+    newSettings = settings;
+    // Merge settings into appSettings
+    newSettings.private = {...appSettings.private, ...settings.private};
+        newSettings.public = {...appSettings.public, ...settings.public};
     // write the settings file
-    //console.log (JSON.stringify(newSettings,null,2));
-    fs.writeFileSync('/usr/app/settings/' + appName + "/settings.json", JSON.stringify(newSettings, null, 2), {
+    const jsonSettings = JSON.stringify(newSettings, null, 2);
+    //console.log (jsonSettings);
+    process.env.METEOR_SETTINGS = jsonSettings;
+    fs.writeFileSync(settingsPath + "/" + appName + "/settings.json", jsonSettings, {
         encoding: 'utf8',
         flag: 'w'
     });
 }
+
 
 // PUBLIC METHODS
 //administration tools
@@ -1157,15 +1167,22 @@ const getAuthorizations = new ValidatedMethod({
 });
 
 // administration tool
-const getDataFunctionFileList = new ValidatedMethod({
-    name: 'matsMethods.getDataFunctionFileList',
+
+const getDeploymentEnvironment = new ValidatedMethod({
+    name: 'matsMethods.getDeploymentEnvironment',
     validate: new SimpleSchema({}).validator(),
     run() {
-        if (Meteor.isServer) {
-        }
+        return process.env.DEPLOYMENT_ENVIRONMENT;
     }
 });
 
+const getDefaultGroupList =  new ValidatedMethod({
+    name: 'matsMethods.getDefaultGroupList',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        return matsTypes.DEFAULT_GROUP_LIST;
+    }
+});
 
 // retrieves the saved query results (or downsampled results)
 const getGraphData = new ValidatedMethod({
@@ -1258,16 +1275,6 @@ const getGraphDataByKey = new ValidatedMethod({
                 throw new Meteor.Error("Error in getGraphDataByKey function:" + key + " : " + error.message);
             }
             return undefined;
-        }
-    }
-});
-
-// administration tool
-const getGraphFunctionFileList = new ValidatedMethod({
-    name: 'matsMethods.getGraphFunctionFileList',
-    validate: new SimpleSchema({}).validator(),
-    run() {
-        if (Meteor.isServer) {
         }
     }
 });
@@ -1549,42 +1556,35 @@ const resetApp = function (appRef) {
     const appTimeOut = 300;
     var dep_env = process.env.NODE_ENV;
     // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
-    if (Meteor.settings.private == undefined) {
+    if (Meteor.settings.private == undefined || Meteor.settings.private.process == undefined ) {
         // create some default meteor settings and write them out
         const  settings = {
             "private": {
                 "databases": [
                 ],
-                    "process": {
-                    "RUN_ENV" : dep_env
-                },
                 "PYTHON_PATH": "/usr/bin/python3"
             },
             "public": {
-                "deployment_environment":dep_env,
-                    "proxy_prefix_path": "",
-                    "home": process.env.HOME == undefined ? "https://localhost" : process.env.HOME,
-                    "mysql_wait_timeout": appTimeOut,
-                    "group": appGroup,
-                    "title": appTitle,
-                    "color": appColor
+                "proxy_prefix_path": "",
+                "home": process.env.ROOT_URL == undefined ? "https://localhost" : process.env.ROOT_URL,
+                "mysql_wait_timeout": appTimeOut,
+                "group": appGroup,
+                "group_order":0,
+                "title": appTitle,
+                "color": appColor
             }
         };
         _write_settings(settings, appName);  // this is going to cause the app to restart!!!
     }
 
-    if (Meteor.settings.private != null && Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
-        switch (Meteor.settings.private.process.RUN_ENV) {
-            case "development":
-            case "integration":
-            case "production":
-            case "metexpress":
-                dep_env = Meteor.settings.private.process.RUN_ENV;
-                break;
-            default:
-                dep_env = process.env.NODE_ENV;
-               break;
-        }
+    // mostly for running locally for debugging. We have to be able to choose the app from the app list in deployment.json
+    // normally (on a server) it will be an environment variable.
+    // to debug an integration or production deployment, set the environment variable DEPLOYMENT_ENVIRONMENT to one of
+    // development, integration, production, metexpress
+    if (process.env.DEPLOYMENT_ENVIRONMENT != null) {
+        dep_env = process.env.DEPLOYMENT_ENVIRONMENT;
+    } else {
+        dep_env = process.env.NODE_ENV;
     }
 
     // timeout in seconds
@@ -1629,6 +1629,7 @@ const resetApp = function (appRef) {
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     deployment = JSON.parse(deploymentText);
     var app = {};
+    // sort through the deployments to find the app that matches this deployment environment that is currently running
     for (var ai = 0; ai < deployment.length; ai++) {
         var dep = deployment[ai];
         if (dep.deployment_environment == dep_env) {
@@ -1637,7 +1638,6 @@ const resetApp = function (appRef) {
             })[0];
         }
     }
-    const deployment_environment = Meteor.settings.public.deployment_environment ? Meteor.settings.public.deployment_environment : "unknown";
     const appVersion = app ? app.version : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
     const appType = type ? type : matsTypes.AppTypes.mats;
@@ -1676,7 +1676,7 @@ const resetApp = function (appRef) {
     matsCollections.ColorScheme.remove({});
     matsDataUtils.doColorScheme();
     matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType, deployment_environment);
+    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType);
     matsCollections.CurveParams.remove({});
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
@@ -1688,248 +1688,6 @@ const resetApp = function (appRef) {
     }
     matsCache.clear();
 };
-
-// administration tool
-const restoreFromFile = new ValidatedMethod({
-    name: 'matsMethods.restoreFromFile',
-    validate: new SimpleSchema({
-        type: {type: String},
-        name: {type: String},
-        data: {type: Object, blackbox: true}
-    }).validator(),
-
-    run(params) {
-        if (Meteor.isServer) {
-            console.log("restoring " + params.type + " file " + params.name);
-            var path = "";
-            if (params.type == "data") {
-                path = "/web/static/dataFunctions/" + params.name;
-            } else if (params.type == "graph") {
-                path = "/web/static/displayFunctions/" + params.name;
-            } else {
-                return ("error - wrong type");
-            }
-            console.log('importing ' + params.type + ' file: ' + path);
-            var fse = require('fs-extra');
-            fse.writeFile(path, params.data.toString(), function (err) {
-                if (err) {
-                    return (err.toLocaleString());
-                }
-                console.log('imported ' + params.type + ' file: ' + path);
-            });
-        }
-    }
-});
-
-// administration tool
-const restoreFromParameterFile = new ValidatedMethod({
-    name: 'matsMethods.restoreFromParameterFile',
-    validate: new SimpleSchema({
-        name: {type: String},
-        data: {type: Object, blackbox: true}
-    }).validator(),
-    run(params) {
-        var data = params.data;
-        if (Meteor.isServer) {
-            var d = [];
-            if (data.CurveParams) {
-                matsCollections.CurveParams.remove({});
-                d = _.map(data.CurveParams, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.CurveParams.insert(o);
-                });
-            }
-            if (data.PlotParams) {
-                matsCollections.PlotParams.remove({});
-                d = _.map(data.PlotParams, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.PlotParams.insert(o);
-                });
-            }
-            if (data.PlotGraphFunctions) {
-                matsCollections.PlotGraphFunctions.remove({});
-                d = _.map(data.PlotGraphFunctions, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.PlotGraphFunctions.insert(o);
-                });
-            }
-            if (data.Settings) {
-                matsCollections.Settings.remove({});
-                d = _.map(data.Settings, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.Settings.insert(o);
-                });
-            }
-            if (data.ColorScheme) {
-                matsCollections.ColorScheme.remove({});
-                d = _.map(data.ColorScheme, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.ColorScheme.insert(o);
-                });
-            }
-            if (data.Authorization) {
-                matsCollections.Authorization.remove({});
-                d = _.map(data.Authorization, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.Authorization.insert(o);
-                });
-            }
-            if (data.Roles) {
-                matsCollections.Roles.remove({});
-                d = _.map(data.Roles, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.Roles.insert(o);
-                });
-            }
-            if (data.Databases) {
-                matsCollections.Databases.remove({});
-                d = _.map(data.Databases, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.Databases.insert(o);
-                });
-            }
-            if (data.Credentials) {
-                matsCollections.Credentials.remove({});
-                d = _.map(data.Credentials, function (o) {
-                    return _.omit(o, '_id');
-                });
-                d.forEach(function (o) {
-                    matsCollections.Credentials.insert(o);
-                });
-            }
-        }
-    }
-});
-
-const saveLayout = new ValidatedMethod({
-    name: 'matsMethods.saveLayout',
-    validate: new SimpleSchema({
-        resultKey: {
-            type: String
-        },
-        layout: {
-            type: Object, blackbox: true
-        },
-        curveOpsUpdate: {
-            type: Object, blackbox: true
-        },
-        annotation: {
-            type: String
-        }
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var key = params.resultKey;
-            var layout = params.layout;
-            var curveOpsUpdate = params.curveOpsUpdate;
-            var annotation = params.annotation;
-            try {
-                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate, annotation: annotation}});
-            } catch (error) {
-                throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
-            }
-        }
-    }
-});
-
-//administration tools
-const saveSettings = new ValidatedMethod({
-    name: 'matsMethods.saveSettings',
-    validate: new SimpleSchema({
-        saveAs: {
-            type: String
-        },
-        p: {
-            type: Object,
-            blackbox: true
-        },
-        permission: {
-            type: String
-        }
-    }).validator(),
-    run(params) {
-        var user = "anonymous";
-        matsCollections.CurveSettings.upsert({name: params.saveAs}, {
-            created: moment().format("MM/DD/YYYY HH:mm:ss"),
-            name: params.saveAs,
-            data: params.p,
-            owner: Meteor.userId() == null ? "anonymous" : Meteor.userId(),
-            permission: params.permission,
-            savedAt: new Date(),
-            savedBy: Meteor.user() == null ? "anonymous" : user
-        });
-    }
-});
-
-// administation tool
-const setCredentials = new ValidatedMethod({
-    name: 'matsMethods.setCredentials',
-    validate: new SimpleSchema({
-        settings: {type: Object, blackbox: true}
-    }).validator(),
-    run(settings) {
-        if (Meteor.isServer) {
-            var name = settings.name;
-            var clientId = settings.clientId;
-            var clientSecret = settings.clientSecret;
-            var clientRefreshToken = settings.clientRefreshToken;
-            matsCollections.Credentials.update({}, {
-                $set: {
-                    name: name,
-                    clientId: clientId,
-                    clientSecret: clientSecret,
-                    refresh_token: clientRefreshToken
-                }
-            });
-            return false;
-        }
-    }
-});
-
-const setSettings = new ValidatedMethod({
-    name: 'matsMethods.setSettings',
-    validate: new SimpleSchema({
-        settings: {type: Object, blackbox: true}
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var settings = params.settings;
-            var labelPrefix = settings.labelPrefix;
-            var title = settings.title;
-            var lineWidth = settings.lineWidth;
-            var nullFillString = settings.nullFillString;
-            var resetFromCode = settings.resetFromCode;
-            var displayLoadingMetadata = false;
-            matsCollections.Settings.update({}, {
-                $set: {
-                    LabelPrefix: labelPrefix,
-                    Title: title,
-                    LineWidth: lineWidth,
-                    NullFillString: nullFillString,
-                    resetFromCode: resetFromCode,
-                    displayLoadingMetadata: displayLoadingMetadata
-                }
-            });
-        }
-        return false;
-    }
-});
 
 
 /* test methods */
@@ -2008,10 +1766,10 @@ export default matsMethods = {
     deleteSettings: deleteSettings,
     emailImage: emailImage,
     getAuthorizations: getAuthorizations,
-    getDataFunctionFileList: getDataFunctionFileList,
+    getDeploymentEnvironment:getDeploymentEnvironment,
+    getDefaultGroupList:getDefaultGroupList,
     getGraphData: getGraphData,
     getGraphDataByKey: getGraphDataByKey,
-    getGraphFunctionFileList: getGraphFunctionFileList,
     getLayout: getLayout,
     getPlotResult: getPlotResult,
     getReleaseNotes: getReleaseNotes,
@@ -2023,12 +1781,6 @@ export default matsMethods = {
     removeColor: removeColor,
     removeDatabase: removeDatabase,
     resetApp: resetApp,
-    restoreFromFile: restoreFromFile,
-    restoreFromParameterFile: restoreFromParameterFile,
-    saveLayout: saveLayout,
-    saveSettings: saveSettings,
-    setCredentials: setCredentials,
-    setSettings: setSettings,
     testGetMetaDataTableUpdates: testGetMetaDataTableUpdates,
     testGetTables: testGetTables,
     testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack,

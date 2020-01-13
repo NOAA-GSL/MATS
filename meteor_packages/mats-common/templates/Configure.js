@@ -13,7 +13,6 @@ Template.Configure.helpers({
     title: function() {
         return Meteor.settings.public.title;
     },
-
     roles: function() {
         if (Meteor.settings.public.undefinedRoles) {
             return Meteor.settings.public.undefinedRoles;
@@ -21,17 +20,23 @@ Template.Configure.helpers({
             return [];
         }
     },
-
     role: function() {
         return this;
     },
-
     status: function() {
         return "active";
     },
-
+    proxy_prefix_path: function() {
+        return Meteor.settings.public.proxy_prefix_path;
+    },
+    home: function() {
+        return Meteor.settings.public.home;
+    },
     group: function() {
-        return Meteor.settings.public.group;
+        return Session.get('selectedGroup');
+    },
+    groupOrder: function() {
+        return Meteor.settings.public.group_order;
     },
     showCopyIcon: function() {
         const roles =  Meteor.settings.public.undefinedRoles;
@@ -40,11 +45,39 @@ Template.Configure.helpers({
         } else {
             return "block";
         }
-
     },
-
     color: function() {
         return Meteor.settings.public.color;
+    },
+    groups: function() {
+        if (Session.get('defaultGroups') == undefined) {
+            matsMethods.getDefaultGroupList.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(error);
+                    return "<p>" + error + "</p>";
+                }
+                Session.set('defaultGroups', result);
+            });
+        }
+        if (Session.get('selectedGroup') == undefined) {
+            Session.set('selectedGroup', Session.get('defaultGroups')[0]);
+        }
+        return Session.get('defaultGroups')
+    },
+    groupName: function () {
+        return this;
+    },
+    groupsLength: function() {
+        if (Session.get('defaultGroups') == undefined) {
+            matsMethods.getDefaultGroupList.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(error);
+                    return "<p>" + error + "</p>";
+                }
+                Session.set('defaultGroups', result);
+            });
+        }
+        return Session.get('defaultGroups').length;
     }
 });
 
@@ -89,12 +122,14 @@ Template.Configure.events({
                 data['public'][name] = value;
             }
         }
-        console.log(JSON.stringify(data,null,2));
         matsMethods.applySettingsData.call( {settings:data}, function(error){
             if (error) {
                 setError(new Error("matsMethods.applySettingsData error: " +error.message));
             }
         });
+    },
+    'change select.groupSelect': function(event) {
+        document.getElementById('group').value=document.getElementById('groupSelect').selectedOptions[0].value
     },
     'click .test': function (event) {
         event.preventDefault();
@@ -137,7 +172,7 @@ Template.Configure.events({
         document.getElementById(thisRole + "-user").value = baseUser;
         document.getElementById(thisRole + "-password").value = basePassword;
     },
-    'change .colorValue': function(event) {
-        document.getElementById('color').value=document.getElementById('colorValue').value
+    'change .color': function(event) {
+        document.getElementById('colorValue').value=document.getElementById('color').value;
     }
 });

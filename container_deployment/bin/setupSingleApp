@@ -359,7 +359,7 @@ for (( ri=0; ri<${#dbroles[@]}; ri++ )); do
     wrote=1
 done
 #finish up the document
-echo "], \"process\": {\"RUN_ENV\":\"${runenv}\"},\"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\",\"custom\":\"true\"}}" >> $tmpSettingsFile
+echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\",\"custom\":\"true\"}}" >> $tmpSettingsFile
 
 jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
