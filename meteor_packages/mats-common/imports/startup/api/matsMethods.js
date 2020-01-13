@@ -1574,7 +1574,7 @@ const resetApp = function (appRef) {
                 "color": appColor
             }
         };
-        _write_settings(settings, appName);  // this is going to cause the app to restart!!!
+        _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
     }
 
     // mostly for running locally for debugging. We have to be able to choose the app from the app list in deployment.json
