@@ -1556,7 +1556,7 @@ const resetApp = function (appRef) {
     const appTimeOut = 300;
     var dep_env = process.env.NODE_ENV;
     // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
-    if (Meteor.settings.private == undefined || Meteor.settings.private.process == undefined ) {
+    if (Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined || Meteor.settings.private.databases.length === 0) {
         // create some default meteor settings and write them out
         const  settings = {
             "private": {

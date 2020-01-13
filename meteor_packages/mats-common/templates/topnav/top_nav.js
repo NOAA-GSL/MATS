@@ -11,9 +11,11 @@ const getDeploymentEnvironment = function () {
                 return "<p>" + error + "</p>";
             }
             Session.set('deployment_environment', result);
+            return result;
         });
+    } else {
+        return Session.get('deployment_environment')
     }
-    return Session.get('deployment_environment')
 }
 
 Template.topNav.helpers({

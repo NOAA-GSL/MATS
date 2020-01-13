@@ -59,7 +59,7 @@ Template.Configure.helpers({
                 Session.set('defaultGroups', result);
             });
         }
-        if (Session.get('selectedGroup') == undefined) {
+        if (Session.get('selectedGroup') == undefined && Session.get('defaultGroups') != undefined) {
             Session.set('selectedGroup', Session.get('defaultGroups')[0]);
         }
         return Session.get('defaultGroups')
@@ -75,9 +75,11 @@ Template.Configure.helpers({
                     return "<p>" + error + "</p>";
                 }
                 Session.set('defaultGroups', result);
+                return result.length;
             });
+        } else {
+            return Session.get('defaultGroups').length;
         }
-        return Session.get('defaultGroups').length;
     }
 });
 
