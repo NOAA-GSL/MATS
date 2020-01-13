@@ -36,7 +36,11 @@ Template.Configure.helpers({
         return Session.get('selectedGroup');
     },
     groupOrder: function() {
-        return Meteor.settings.public.group_order;
+        if (Meteor.settings.public.group_order) {
+            return Meteor.settings.public.group_order;
+        } else {
+            return 1;
+        }
     },
     showCopyIcon: function() {
         const roles =  Meteor.settings.public.undefinedRoles;

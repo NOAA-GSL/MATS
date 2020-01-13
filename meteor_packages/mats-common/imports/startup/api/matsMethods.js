@@ -17,6 +17,15 @@ const metaDataTableUpdates = new Mongo.Collection(null);
 const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection"); // initialize collection used for pop-out window functionality
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
 
+// utility to check for empty object
+const isEmpty = function(map) {
+    for(var key in map) {
+        if (map.hasOwnProperty(key)) {
+            return false;
+        }
+    }
+    return true;
+}
 // Define routes for server
 if (Meteor.isServer) {
     // add indexes to result and axes collections
@@ -922,7 +931,6 @@ const _write_settings = function(settings, appName) {
     // write the settings file
     const jsonSettings = JSON.stringify(newSettings, null, 2);
     //console.log (jsonSettings);
-    process.env.METEOR_SETTINGS = jsonSettings;
     fs.writeFileSync(settingsPath + "/" + appName + "/settings.json", jsonSettings, {
         encoding: 'utf8',
         flag: 'w'
@@ -1556,7 +1564,7 @@ const resetApp = function (appRef) {
     const appTimeOut = 300;
     var dep_env = process.env.NODE_ENV;
     // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
-    if (Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined || Meteor.settings.private.databases.length === 0) {
+    if (isEmpty (Meteor.settings.private) || isEmpty(Meteor.settings.public)) {
         // create some default meteor settings and write them out
         const  settings = {
             "private": {
@@ -1575,6 +1583,9 @@ const resetApp = function (appRef) {
             }
         };
         _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
+        // exit for production - probably won't ever get here in development mode (running with meteor)
+        // This depends on whatever system is running the node process to restart it.
+        process.exit(1);
     }
 
     // mostly for running locally for debugging. We have to be able to choose the app from the app list in deployment.json
