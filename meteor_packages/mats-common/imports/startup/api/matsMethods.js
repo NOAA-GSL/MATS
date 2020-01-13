@@ -909,7 +909,11 @@ const _saveResultData = function (result) {
 const _write_settings = function(settings, appName) {
 
     const fs = require('fs');
-    const settingsPath = process.env.METEOR_SETTINGS_DIR;
+    var settingsPath = process.env.METEOR_SETTINGS_DIR;
+    if (settingsPath == null) {
+        console.log ("environment var settingsPath is undefined: setting it to /usr/app/settings");
+        settingsPath = "/usr/app/settings";
+    }
     if (! fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath, {recursive: true});
     }

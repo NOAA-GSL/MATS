@@ -22,7 +22,10 @@ cat << EOF > /usr/app/settings/${APPNAME}/settings.json
   "public": {}
 }
 EOF
+  # make sure the settings sirectory and file are still modifiable.
+  chmod -R 777 /usr/app/settings/${APPNAME}
 fi
+export METEOR_SETTINGS_DIR=/usr/app/settings
 export METEOR_SETTINGS=$(cat /usr/app/settings/${APPNAME}/settings.json)
 cd /usr/app
 if [[ $DEBUG ]]; then
