@@ -2,13 +2,15 @@
  * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
-import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
+import {
+    matsCollections,
+    matsDataCurveOpsUtils,
+    matsDataDiffUtils,
+    matsDataProcessUtils,
+    matsDataQueryUtils,
+    matsDataUtils,
+    matsTypes
+} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataDieOff = function (plotParams, plotFunction) {
@@ -43,6 +45,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var queryTableClause = "";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
@@ -53,11 +56,10 @@ dataDieOff = function (plotParams, plotFunction) {
         var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
         var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
         var timeVar;
-        var statistic;
-        var queryTableClause = "";
         var siteDateClause = "";
         var siteMatchClause = "";
         var sitesClause = "";
+        var statisticClause;
         var varUnits;
         var queryPool;
         var regionType = curve['region-type'];
@@ -71,14 +73,14 @@ dataDieOff = function (plotParams, plotFunction) {
             var statisticSelect = curve['statistic'];
             var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
-                statistic = statisticOptionsMap[statisticSelect][0];
+                statisticClause = statisticOptionsMap[statisticSelect][0];
             } else if (variableStr === '10m wind') {
-                statistic = statisticOptionsMap[statisticSelect][2];
+                statisticClause = statisticOptionsMap[statisticSelect][2];
             } else {
-                statistic = statisticOptionsMap[statisticSelect][1];
+                statisticClause = statisticOptionsMap[statisticSelect][1];
             }
-            statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-            statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+            statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+            statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
             var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
             varUnits = statVarUnitMap[statisticSelect][variableStr];
             queryPool = sumPool;
@@ -98,8 +100,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
-            statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
+            statisticClause = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
+            statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -107,7 +109,7 @@ dataDieOff = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            siteDateClause = "and o.time >= '{{fromSecs}}' and o.time <= '{{toSecs}}'";
+            siteDateClause = "and o.time >= " + fromSecs + " and o.time <= " + toSecs;
             siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
             queryPool = sitePool;
         }
@@ -115,17 +117,17 @@ dataDieOff = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
-        var dateRangeClause = "and {{timeVar}} >= '" + fromSecs + "' and {{timeVar}} <= '" + toSecs + "'";
+        var dateClause = "and " + timeVar + " >= " + fromSecs + " and " + timeVar + " <= " + toSecs;
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and floor(({{timeVar}}+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+                validTimeClause = "and floor((" + timeVar + "+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor((({{timeVar}}+1800)-m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            utcCycleStartClause = "and floor(((" + timeVar + "+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
         } else {
-            dateRangeClause = "and ({{timeVar}} - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and (" + timeVar + " - m0.fcst_len*3600) = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -142,29 +144,28 @@ dataDieOff = function (plotParams, plotFunction) {
                 "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
                 "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
                 "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
-                "{{statistic}} " +
+                "{{statisticClause}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
                 "{{siteMatchClause}} " +
                 "{{sitesClause}} " +
-                "{{dateRangeClause}} " +
+                "{{dateClause}} " +
                 "{{siteDateClause}} " +
                 "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
                 "group by fcst_lead " +
-                "order by fcst_lead;";
+                "order by fcst_lead" +
+                ";";
 
-            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-            statement = statement.replace('{{sitesClause}}', sitesClause);
-            statement = statement.replace('{{dateRangeClause}}', dateRangeClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
+            statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
+            statement = statement.replace('{{sitesClause}}', sitesClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
+            statement = statement.replace('{{siteDateClause}}', siteDateClause);
             statement = statement.split('{{timeVar}}').join(timeVar);
-            statement = statement.split('{{fromSecs}}').join(fromSecs);
-            statement = statement.split('{{toSecs}}').join(toSecs);
             dataRequests[label] = statement;
 
             var queryResult;

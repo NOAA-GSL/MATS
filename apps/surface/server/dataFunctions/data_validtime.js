@@ -43,21 +43,21 @@ dataValidTime = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var queryTableClause = "";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
+        var validTimeVar;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
         var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "";
         var timeVar;
-        var validTimeVar;
-        var statistic;
-        var queryTableClause = "";
         var siteDateClause = "";
         var siteMatchClause = "";
         var sitesClause = "";
-        var forecastLengthClause = "";
+        var statisticClause;
         var varUnits;
         var queryPool;
         var regionType = curve['region-type'];
@@ -73,20 +73,20 @@ dataValidTime = function (plotParams, plotFunction) {
             var statisticSelect = curve['statistic'];
             var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
-                statistic = statisticOptionsMap[statisticSelect][0];
+                statisticClause = statisticOptionsMap[statisticSelect][0];
             } else if (variableStr === '10m wind') {
-                statistic = statisticOptionsMap[statisticSelect][2];
+                statisticClause = statisticOptionsMap[statisticSelect][2];
             } else {
-                statistic = statisticOptionsMap[statisticSelect][1];
+                statisticClause = statisticOptionsMap[statisticSelect][1];
             }
-            statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-            statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+            statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+            statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
             var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
             varUnits = statVarUnitMap[statisticSelect][variableStr];
             queryPool = sumPool;
         } else {
             timeVar = "m0.time";
-            validTimeVar = "floor(({{timeVar}}+1800)%(24*3600)/3600)"; // adjust by 1800 seconds to center obs at the top of the hour
+            validTimeVar = "floor((" + timeVar + "+1800)%(24*3600)/3600)"; // adjust by 1800 seconds to center obs at the top of the hour
             var modelTable;
             if (forecastLength === 1) {
                 modelTable = model + "qp1f";
@@ -108,8 +108,8 @@ dataValidTime = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statistic = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
-            statistic = statistic.replace(/\{\{variableClause\}\}/g, variableClause);
+            statisticClause = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
+            statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -117,10 +117,11 @@ dataValidTime = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            siteDateClause = "and o.time >= '{{fromSecs}}' and o.time <= '{{toSecs}}'";
+            siteDateClause = "and o.time >= " + fromSecs + " and o.time <= " + toSecs;
             siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
             queryPool = sitePool;
         }
+        var dateClause = "and " + timeVar + " >= " + fromSecs + " and " + timeVar + " <= " + toSecs;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -136,29 +137,27 @@ dataValidTime = function (plotParams, plotFunction) {
                 "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
                 "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
                 "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
-                "{{statistic}} " +
+                "{{statisticClause}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
                 "{{siteMatchClause}} " +
                 "{{sitesClause}} " +
-                "and {{timeVar}} >= '{{fromSecs}}' " +
-                "and {{timeVar}} <= '{{toSecs}}' " +
+                "{{dateClause}} " +
                 "{{siteDateClause}} " +
                 "{{forecastLengthClause}} " +
                 "group by hr_of_day " +
                 "order by hr_of_day" +
                 ";";
 
-            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{validTimeVar}}', validTimeVar);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-            statement = statement.replace('{{siteDateClause}}', siteDateClause);
             statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
             statement = statement.replace('{{sitesClause}}', sitesClause);
-            statement = statement.replace('{{validTimeVar}}', validTimeVar);
+            statement = statement.replace('{{dateClause}}', dateClause);
+            statement = statement.replace('{{siteDateClause}}', siteDateClause);
             statement = statement.split('{{timeVar}}').join(timeVar);
-            statement = statement.split('{{fromSecs}}').join(fromSecs);
-            statement = statement.split('{{toSecs}}').join(toSecs);
             dataRequests[label] = statement;
 
             var queryResult;

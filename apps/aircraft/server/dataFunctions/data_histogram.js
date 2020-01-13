@@ -44,42 +44,42 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var forecastLength = curve['forecast-length'];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var queryTableClause = "from " + model + "_" + forecastLength + "_" + region + "_sums as m0";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var statisticSelect = curve['statistic'];
-        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
-        var statistic;
-        var statKey;
-        if (variableStr === 'winds') {
-            statistic = statisticOptionsMap[statisticSelect][1];
-            statKey = statisticSelect + '-winds';
-            statistic = statistic + "," + statAuxMap[statKey];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][0];
-            statKey = statisticSelect + '-other';
-            statistic = statistic + "," + statAuxMap[statKey];
-        }
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and m0.hour IN(" + validTimes + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = curve['forecast-length'];
+        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs;
+        var top = curve['top'];
+        var bottom = curve['bottom'];
+        var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
         var phaseStr = curve['phase'];
         var phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
-        var phase = phaseOptionsMap[phaseStr];
+        var phaseClause = phaseOptionsMap[phaseStr];
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
+        var statisticClause;
+        if (variableStr === 'winds') {
+            statisticClause = statisticOptionsMap[statisticSelect][1];
+            statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
+        } else {
+            statisticClause = statisticOptionsMap[statisticSelect][0];
+            statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
+        }
+        statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+        statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -99,27 +99,23 @@ dataHistogram = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
-                "{{statistic}} " +
-                "from {{data_source}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
+                "{{dateClause}} " +
                 "{{validTimeClause}} " +
-                "{{phase}} " +
-                "and m0.mb10 >= {{top}}/10 " +
-                "and m0.mb10 <= {{bottom}}/10 " +
+                "{{levelClause}} " +
+                "{{phaseClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{data_source}}', data_source + "_" + forecastLength + "_" + region + "_sums");
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{phase}}', phase);
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
+            statement = statement.replace('{{levelClause}}', levelClause);
+            statement = statement.replace('{{phaseClause}}', phaseClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             var queryResult;
@@ -153,7 +149,7 @@ dataHistogram = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + data_source + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }

@@ -41,38 +41,41 @@ dataDieOff = function (plotParams, plotFunction) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        const label = curve['label'];
-        const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        const regionStr = curve['region'];
-        const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var dbtable = data_source + "_anomcorr_" + region;
-        const variable = curve['variable'];
-        curves[curveIndex]['statistic'] = "Correlation";
-        var levels = curve['level'] === undefined ? [] : curve['level'];
-        var levelClause = " ";
-        if (levels.length > 0) {
-            levelClause = " and  m0.level IN(" + levels + ")";
-        }
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
-        var forecastLengthStr = curve['dieoff-type'];
-        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
-        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+        var label = curve['label'];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var regionStr = curve['region'];
+        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var queryTableClause = "from " + model + "_anomcorr_" + region + " as m0";
+        var variable = curve['variable'];
+        var variableClause = "and m0.variable = '" + variable + "'";
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
-        var dateRangeClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '" + fromSecs + "' and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '" + toSecs + "' ";
+        var forecastLengthStr = curve['dieoff-type'];
+        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
+        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '" + fromSecs + "' and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '" + toSecs + "' ";
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-            const validTimeStr = curve['valid-time'];
-            const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-            validTimeClause = validTimeOptionsMap[validTimeStr][0];
+            var validTimeStr = curve['valid-time'];
+            validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
             utcCycleStartClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
         } else {
-            dateRangeClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600) = " + fromSecs;
         }
+        var levelClause = "";
+        var levels = curve['level'] === undefined ? [] : curve['level'];
+        if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
+            levelClause = "and m0.level IN(" + levels + ")";
+        }
+        var statisticClause = "avg(m0.wacorr/100) as stat, " +
+            "count(m0.wacorr) as N0, " +
+            "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data";
+        curves[curveIndex]['statistic'] = "Correlation";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -88,13 +91,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
                 "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
                 "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
-                "avg(m0.wacorr/100) as stat, " +
-                "count(m0.wacorr) as N0, " +
-                "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data " +
-                "from {{dbtable}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "{{dateRangeClause}} " +
-                "and m0.variable = '{{variable}}' " +
+                "{{dateClause}} " +
+                "{{variableClause}} " +
                 "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
                 "{{levelClause}} " +
@@ -102,14 +103,13 @@ dataDieOff = function (plotParams, plotFunction) {
                 "order by fcst_lead" +
                 ";";
 
-            statement = statement.replace('{{dbtable}}', dbtable);
-            statement = statement.replace('{{data_source}}', data_source);
-            statement = statement.replace('{{region}}', region);
-            statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{levelClause}}', levelClause);
-            statement = statement.replace('{{dateRangeClause}}', dateRangeClause);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
+            statement = statement.replace('{{levelClause}}', levelClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             var queryResult;

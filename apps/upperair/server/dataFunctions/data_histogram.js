@@ -48,34 +48,34 @@ dataHistogram = function (plotParams, plotFunction) {
         var tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var queryTableClause = "from " + tablePrefix + region + " as m0";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var statisticSelect = curve['statistic'];
-        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
-        var statistic;
-        var statKey;
-        if (variableStr === 'winds') {
-            statistic = statisticOptionsMap[statisticSelect][1];
-            statKey = statisticSelect + '-winds';
-            statistic = statistic + "," + statAuxMap[statKey];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][0];
-            statKey = statisticSelect + '-other';
-            statistic = statistic + "," + statAuxMap[statKey];
-        }
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var validTimeStr = curve['valid-time'];
-        var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        var validTimeClause = validTimeOptionsMap[validTimeStr][0];
+        var validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = curve['forecast-length'];
+        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs;
+        var top = curve['top'];
+        var bottom = curve['bottom'];
+        var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
+        var statisticClause;
+        if (variableStr === 'winds') {
+            statisticClause = statisticOptionsMap[statisticSelect][1];
+            statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
+        } else {
+            statisticClause = statisticOptionsMap[statisticSelect][0];
+            statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
+        }
+        statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+        statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -95,27 +95,23 @@ dataHistogram = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
-                "{{statistic}} " +
-                "from {{model}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
+                "{{dateClause}} " +
                 "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 >= {{top}}/10 " +
-                "and m0.mb10 <= {{bottom}}/10 " +
+                "{{forecastLengthClause}} " +
+                "{{levelClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{model}}', tablePrefix + region);
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{levelClause}}', levelClause);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             var queryResult;

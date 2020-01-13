@@ -44,24 +44,29 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var dbtable = data_source + "_anomcorr_" + region;
-        const variable = curve['variable'];
-        curves[curveIndex]['statistic'] = "Correlation";
-        var levels = curve['level'] === undefined ? [] : curve['level'];
-        var levelClause = " ";
-        if (levels.length > 0) {
-            levelClause = " and  m0.level IN(" + levels + ")";
-        }
+        var queryTableClause = "from " + model + "_anomcorr_" + region + " as m0";
+        var variable = curve['variable'];
+        var variableClause = "and m0.variable = '" + variable + "'";
         var validTimeStr = curve['valid-time'];
-        var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        var validTimeClause = validTimeOptionsMap[validTimeStr][0];
+        var validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = curve['forecast-length'];
+        var dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= " + fromSecs + " and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= " + toSecs;
+        var levelClause = "";
+        var levels = curve['level'] === undefined ? [] : curve['level'];
+        if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
+            levelClause = "and m0.level IN(" + levels + ")";
+        }
+        var statisticClause = "avg(m0.wacorr/100) as stat, " +
+            "count(m0.wacorr) as N0, " +
+            "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data";
+        curves[curveIndex]['statistic'] = "Correlation";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -81,28 +86,25 @@ dataHistogram = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
                 "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
                 "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
-                "avg(m0.wacorr/100) as stat, " +
-                "count(m0.wacorr) as N0, " +
-                "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data " +
-                "from {{dbtable}} as m0 " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '{{toSecs}}' " +
-                "and m0.variable = '{{variable}}' " +
+                "{{dateClause}} " +
+                "{{variableClause}} " +
                 "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
+                "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{dbtable}}', dbtable);
-            statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
+            statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
             var queryResult;

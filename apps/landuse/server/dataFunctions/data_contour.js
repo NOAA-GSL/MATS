@@ -44,41 +44,45 @@ dataContour = function (plotParams, plotFunction) {
     var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var vgtypStr = curve['vgtyp'];
     var vgtyp = Object.keys(matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap[key] === vgtypStr);
+    var vgtypClause = "and m0.vgtyp IN(" + vgtyp + ")";
+    var queryTableClause = "from " + model + " as m0";
     var variableStr = curve['variable'];
     var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
-    var statisticSelect = curve['statistic'];
-    var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-    var statistic;
-    if (variableStr === 'temperature' || variableStr === 'dewpoint') {
-        statistic = statisticOptionsMap[statisticSelect][0];
-    } else if (variableStr === 'wind') {
-        statistic = statisticOptionsMap[statisticSelect][2];
-    } else {
-        statistic = statisticOptionsMap[statisticSelect][1];
-    }
-    statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-    statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-    var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
-    var varUnits = statVarUnitMap[statisticSelect][variableStr];
     var validTimeClause = "";
     var forecastLengthClause = "";
+    var dateString = "";
     var dateClause = "";
+    if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.hour IN(" + validTimes + ")";
+        }
+    }
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'];
         forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
-    if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = " and m0.hour IN(" + validTimes + ")";
-        }
-    }
     if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-        dateClause = "m0.valid_day+3600*m0.hour-m0.fcst_len*3600";
+        dateString = "m0.valid_day+3600*m0.hour-m0.fcst_len*3600";
     } else {
-        dateClause = "m0.valid_day+3600*m0.hour";
+        dateString = "m0.valid_day+3600*m0.hour";
     }
+    dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+    var statisticSelect = curve['statistic'];
+    var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+    var statisticClause;
+    if (variableStr === 'temperature' || variableStr === 'dewpoint') {
+        statisticClause = statisticOptionsMap[statisticSelect][0];
+    } else if (variableStr === 'wind') {
+        statisticClause = statisticOptionsMap[statisticSelect][2];
+    } else {
+        statisticClause = statisticOptionsMap[statisticSelect][1];
+    }
+    statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+    statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
+    var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+    var varUnits = statVarUnitMap[statisticSelect][variableStr];
 
     // For contours, this functions as the colorbar label.
     curve['unitKey'] = varUnits;
@@ -88,31 +92,29 @@ dataContour = function (plotParams, plotFunction) {
     // prepare the query from the above parameters
     var statement = "{{xValClause}} " +
         "{{yValClause}} " +
-        "count(distinct {{dateClause}}) as N_times, " +
-        "min({{dateClause}}) as min_secs, " +
-        "max({{dateClause}}) as max_secs, " +
-        "{{statistic}} " +
-        "from {{model}} as m0 " +
+        "count(distinct {{dateString}}) as N_times, " +
+        "min({{dateString}}) as min_secs, " +
+        "max({{dateString}}) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
         "where 1=1 " +
-        "and {{dateClause}} >= '{{fromSecs}}' " +
-        "and {{dateClause}} <= '{{toSecs}}' " +
+        "{{dateClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "and m0.vgtyp IN({{vgtyp}}) " +
+        "{{vgtypClause}} " +
         "group by xVal,yVal " +
         "order by xVal,yVal" +
         ";";
 
     statement = statement.replace('{{xValClause}}', xValClause);
     statement = statement.replace('{{yValClause}}', yValClause);
-    statement = statement.replace('{{statistic}}', statistic);
-    statement = statement.replace('{{vgtyp}}', vgtyp);
-    statement = statement.replace('{{model}}', model);
-    statement = statement.replace('{{fromSecs}}', fromSecs);
-    statement = statement.replace('{{toSecs}}', toSecs);
-    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+    statement = statement.replace('{{statisticClause}}', statisticClause);
+    statement = statement.replace('{{queryTableClause}}', queryTableClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
-    statement = statement.split('{{dateClause}}').join(dateClause);
+    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+    statement = statement.replace('{{vgtypClause}}', vgtypClause);
+    statement = statement.replace('{{dateClause}}', dateClause);
+    statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
 
     var queryResult;

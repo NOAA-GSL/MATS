@@ -36,41 +36,47 @@ dataContour = function (plotParams, plotFunction) {
 
     // initialize variables specific to the curve
     var curve = curves[0];
-    const label = curve['label'];
-    const xAxisParam = curve['x-axis-parameter'];
-    const yAxisParam = curve['y-axis-parameter'];
-    const xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-    const yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
-    const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-    const regionStr = curve['region'];
-    const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-    var dbtable = data_source + "_anomcorr_" + region;
-    const variable = curve['variable'];
-    curve['statistic'] = "Correlation";
-    var levelClause = "";
+    var label = curve['label'];
+    var xAxisParam = curve['x-axis-parameter'];
+    var yAxisParam = curve['y-axis-parameter'];
+    var xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+    var yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
+    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var regionStr = curve['region'];
+    var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+    var queryTableClause = "from " + model + "_anomcorr_" + region + " as m0";
+    var variable = curve['variable'];
+    var variableClause = "and m0.variable = '" + variable + "'";
     var validTimeClause = "";
     var forecastLengthClause = "";
+    var dateString = "";
     var dateClause = "";
+    var levelClause = "";
+    if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
+        var validTimeStr = curve['valid-time'];
+        validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+    }
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'];
         forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     }
-    if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        validTimeClause = validTimeOptionsMap[validTimeStr][0];
+    if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
+        dateString = "unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600";
+    } else {
+        dateString = "unix_timestamp(m0.valid_date)+3600*m0.valid_hour";
     }
+    dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
     if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
         var levels = curve['level'] === undefined ? [] : curve['level'];
         if (levels.length > 0 && levels !== matsTypes.InputTypes.unused) {
-            levelClause = " and m0.level IN(" + levels + ")";
+            levelClause = "and m0.level IN(" + levels + ")";
         }
     }
-    if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-        dateClause = "unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600";
-    } else {
-        dateClause = "unix_timestamp(m0.valid_date)+3600*m0.valid_hour";
-    }
+    var statisticClause = "avg(m0.wacorr/100) as stat, " +
+        "stddev(m0.wacorr/100) as stdev, " +
+        "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data, " +
+        "count(m0.wacorr) as N0";
+    curve['statistic'] = "Correlation";
 
     // For contours, this functions as the colorbar label.
     curve['unitKey'] = curve['statistic'];
@@ -80,17 +86,14 @@ dataContour = function (plotParams, plotFunction) {
     // prepare the query from the above parameters
     var statement = "{{xValClause}} " +
         "{{yValClause}} " +
-        "count(distinct {{dateClause}}) as N_times, " +
-        "min({{dateClause}}) as min_secs, " +
-        "max({{dateClause}}) as max_secs, " +
-        "avg(m0.wacorr/100) as stat, " +
-        "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data, " +
-        "count(m0.wacorr) as N0 " +
-        "from {{dbtable}} as m0 " +
+        "count(distinct {{dateString}}) as N_times, " +
+        "min({{dateString}}) as min_secs, " +
+        "max({{dateString}}) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
         "where 1=1 " +
-        "and {{dateClause}} >= '{{fromSecs}}' " +
-        "and {{dateClause}} <= '{{toSecs}}' " +
-        "and m0.variable = '{{variable}}' " +
+        "{{dateClause}} " +
+        "{{variableClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
         "{{levelClause}} " +
@@ -100,16 +103,14 @@ dataContour = function (plotParams, plotFunction) {
 
     statement = statement.replace('{{xValClause}}', xValClause);
     statement = statement.replace('{{yValClause}}', yValClause);
-    statement = statement.replace('{{dbtable}}', dbtable);
-    statement = statement.replace('{{data_source}}', data_source);
-    statement = statement.replace('{{region}}', region);
-    statement = statement.replace('{{variable}}', variable);
+    statement = statement.replace('{{statisticClause}}', statisticClause);
+    statement = statement.replace('{{queryTableClause}}', queryTableClause);
+    statement = statement.replace('{{variableClause}}', variableClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{levelClause}}', levelClause);
-    statement = statement.split('{{dateClause}}').join(dateClause);
-    statement = statement.replace('{{fromSecs}}', fromSecs);
-    statement = statement.replace('{{toSecs}}', toSecs);
+    statement = statement.replace('{{dateClause}}', dateClause);
+    statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
 
     // math is done on forecastLength later on -- set all analyses to 0

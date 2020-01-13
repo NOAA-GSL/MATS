@@ -58,7 +58,7 @@ dataContour = function (plotParams, plotFunction) {
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = " and m0.time%(24*3600)/3600 IN(" + validTimes + ")";
+            validTimeClause = "and m0.time%(24*3600)/3600 IN(" + validTimes + ")";
         }
     }
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
@@ -70,7 +70,7 @@ dataContour = function (plotParams, plotFunction) {
     } else {
         dateString = "m0.time";
     }
-       dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+    dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statisticClause = statisticOptionsMap[statisticSelect][0];
