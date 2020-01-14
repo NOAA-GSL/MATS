@@ -39,7 +39,7 @@ Template.Configure.helpers({
         if (Meteor.settings.public.group_order) {
             return Meteor.settings.public.group_order;
         } else {
-            return 1;
+            return 0;
         }
     },
     showCopyIcon: function() {

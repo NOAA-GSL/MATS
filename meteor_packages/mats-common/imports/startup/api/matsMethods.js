@@ -1549,8 +1549,14 @@ const applySettingsData = new ValidatedMethod({
             const  settings = settingsParam.settings;
             const appName = matsCollections.appName.findOne({}).app;
             _write_settings(settings, appName);
+            // in development - when being run by meteor, this should force a restart of the app.
             // get rid of undefinedRoles so that the page will route normally now
             delete Meteor.settings.public.undefinedRoles;
+            // exit for production - probably won't ever get here in development mode (running with meteor)
+            // This depends on whatever system is running the node process to restart it.
+            if (process.env.DEPLOYMENT_ENVIRONMENT !== "development") {
+                process.exit(1);   // force restart in production to pick up environment changes.
+            }
         }
     }
 });
