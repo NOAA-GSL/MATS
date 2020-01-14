@@ -1554,7 +1554,7 @@ const applySettingsData = new ValidatedMethod({
             delete Meteor.settings.public.undefinedRoles;
             // exit for production - probably won't ever get here in development mode (running with meteor)
             // This depends on whatever system is running the node process to restart it.
-            if (process.env.DEPLOYMENT_ENVIRONMENT !== "development") {
+            if (process.env.NODE_ENV !== "development") {
                 process.exit(1);   // force restart in production to pick up environment changes.
             }
         }
