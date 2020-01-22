@@ -45,8 +45,6 @@ dataDieOff = function (plotParams, plotFunction) {
         var database = curve['database'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var modelClause = "and h.model = '" + model + "'";
-        var variable = curve['variable'];
-        var variableClause = "and h.fcst_var = '" + variable + "'";
         var statistic = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statLineType = statisticOptionsMap[statistic][0];
@@ -72,23 +70,8 @@ dataDieOff = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
-        var levelsClause = "";
-        levels = Array.isArray(levels) ? levels : [levels];
-        if (levels.length > 0) {
-            levels = levels.map(function (l) {
-                // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
-                return "'" + l + "','" + l + "='";
-            }).join(',');
-            levelsClause = "and h.fcst_lev IN(" + levels + ")";
-        } else {
-            // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
-            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
-            levels = levels.map(function (l) {
-                return "'" + l + "'";
-            }).join(',');
-            levelsClause = "and h.fcst_lev IN(" + levels + ")";
-        }
+        var variable = curve['variable'];
+        var variableClause = "and h.fcst_var = '" + variable + "'";
         var threshold = curve['threshold'];
         var thresholdClause = "";
         if (threshold !== 'All thresholds') {
@@ -121,9 +104,26 @@ dataDieOff = function (plotParams, plotFunction) {
         } else {
             dateClause = "and unix_timestamp(ld.fcst_init_beg) = " + fromSecs;
         }
+        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
+        var levelsClause = "";
+        levels = Array.isArray(levels) ? levels : [levels];
+        if (levels.length > 0) {
+            levels = levels.map(function (l) {
+                // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                return "'" + l + "','" + l + "='";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        } else {
+            // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
+            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
-        // variable (axisKey) it will use the same axis.
+        // variable + statistic (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         var axisKey = variable + " " + statistic;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
@@ -142,12 +142,12 @@ dataDieOff = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{dateClause}} " +
                 "{{modelClause}} " +
-                "{{variableClause}} " +
                 "{{regionsClause}} " +
-                "{{levelsClause}} " +
+                "{{variableClause}} " +
                 "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
+                "{{levelsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "group by fcst_lead " +
                 "order by fcst_lead" +
@@ -156,12 +156,12 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{modelClause}}', modelClause);
-            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{regionsClause}}', regionsClause);
-            statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 

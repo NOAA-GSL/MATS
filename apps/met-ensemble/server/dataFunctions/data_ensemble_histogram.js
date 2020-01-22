@@ -47,8 +47,6 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
         var database = curve['database'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var modelClause = "and h.model = '" + model + "'";
-        var variable = curve['variable'];
-        var variableClause = "and h.fcst_var = '" + variable + "'";
         var statistic = histogramType;    // histogramType isn't really a statistic, but it's a good way to pass the type of histogram to the query function.
         var statLineType = 'ensemble';
         var lineDataType;
@@ -77,23 +75,8 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
-        var levelsClause = "";
-        levels = Array.isArray(levels) ? levels : [levels];
-        if (levels.length > 0) {
-            levels = levels.map(function (l) {
-                // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
-                return "'" + l + "','" + l + "='";
-            }).join(',');
-            levelsClause = "and h.fcst_lev IN(" + levels + ")";
-        } else {
-            // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
-            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
-            levels = levels.map(function (l) {
-                return "'" + l + "'";
-            }).join(',');
-            levelsClause = "and h.fcst_lev IN(" + levels + ")";
-        }
+        var variable = curve['variable'];
+        var variableClause = "and h.fcst_var = '" + variable + "'";
         var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
         if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
@@ -121,6 +104,23 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
         var dateClause = "and unix_timestamp(ld.fcst_valid_beg) >= " + fromSecs + " and unix_timestamp(ld.fcst_valid_beg) <= " + toSecs;
+        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
+        var levelsClause = "";
+        levels = Array.isArray(levels) ? levels : [levels];
+        if (levels.length > 0) {
+            levels = levels.map(function (l) {
+                // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+                return "'" + l + "','" + l + "='";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        } else {
+            // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
+            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -142,11 +142,11 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{dateClause}} " +
                 "{{modelClause}} " +
-                "{{variableClause}} " +
                 "{{regionsClause}} " +
-                "{{levelsClause}} " +
+                "{{variableClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
+                "{{levelsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "and ld.line_data_id = ldr.line_data_id " +
                 "group by bin " +
@@ -156,11 +156,11 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{modelClause}}', modelClause);
-            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{regionsClause}}', regionsClause);
-            statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
@@ -247,7 +247,7 @@ dataEnsembleHistogram = function (plotParams, plotFunction) {
         for (curveIndex = 0; curveIndex < curvesLength - 1; curveIndex++) {
             const theseXBins = dataset[curveIndex].x;
             const nextXBins = dataset[curveIndex + 1].x;
-            if (!matsDataUtils.arraysEqual(theseXBins, nextXBins)) {
+            if (theseXBins.length !== 0 && nextXBins.length !== 0 && !matsDataUtils.arraysEqual(theseXBins, nextXBins)) {
                 throw new Error("INFO:  Can't plot matched with these curves because they don't have the same bins. Try setting the histogram type to 'Probability Integral Transform Histogram'.");
             }
         }

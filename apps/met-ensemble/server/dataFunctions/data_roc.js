@@ -46,8 +46,6 @@ dataROC = function (plotParams, plotFunction) {
         var database = curve['database'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var modelClause = "and h.model = '" + model + "'";
-        var variable = curve['variable'];
-        var variableClause = "and h.fcst_var = '" + variable + "'";
         var statistic = "None";
         var statLineType = 'ensemble';
         var lineDataType = 'line_data_pct';
@@ -66,7 +64,33 @@ dataROC = function (plotParams, plotFunction) {
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-          var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
+        var variable = curve['variable'];
+        var variableClause = "and h.fcst_var = '" + variable + "'";
+        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
+        var validTimeClause = "";
+        if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
+            vts = curve['valid-time'];
+            vts = Array.isArray(vts) ? vts : [vts];
+            vts = vts.map(function (vt) {
+                return "'" + vt + "'";
+            }).join(',');
+            validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
+        }
+        // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
+        // have been sanitized for display purposes in the forecastValueMap.
+        // now we have to go get the damn ole unsanitary ones for the database.
+        var forecastLengthsClause = "";
+        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
+        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
+        if (fcsts.length > 0) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
+            fcsts = fcsts.map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
+        }
+        var dateClause = "and unix_timestamp(ld.fcst_valid_beg) >= " + fromSecs + " and unix_timestamp(ld.fcst_valid_beg) <= " + toSecs;
+        var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -83,33 +107,9 @@ dataROC = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
-        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
-        var validTimeClause = "";
-        if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
-            vts = curve['valid-time'];
-            vts = Array.isArray(vts) ? vts : [vts];
-            vts = vts.map(function (vt) {
-                return "'" + vt + "'";
-            }).join(',');
-            validTimeClause = "and unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 IN(" + vts + ")";
-        }
-      // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
-        // have been sanitized for display purposes in the forecastValueMap.
-        // now we have to go get the damn ole unsanitary ones for the database.
-        var forecastLengthsClause = "";
-        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
-        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
-        if (fcsts.length > 0) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            fcsts = fcsts.map(function (fl) {
-                return forecastValueMap[fl];
-            }).join(',');
-            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
-        }
-        var dateClause = "and unix_timestamp(ld.fcst_valid_beg) >= " + fromSecs + " and unix_timestamp(ld.fcst_valid_beg) <= " + toSecs;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
-        // variable (axisKey) it will use the same axis.
+        // variable + statistic (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         var axisKey = 'roc';
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
@@ -128,11 +128,11 @@ dataROC = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{dateClause}} " +
                 "{{modelClause}} " +
-                "{{variableClause}} " +
                 "{{regionsClause}} " +
-                "{{levelsClause}} " +
+                "{{variableClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
+                "{{levelsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "and ld.line_data_id = ldt.line_data_id " +
                 "group by avtime, bin_number, threshold " +
@@ -142,11 +142,11 @@ dataROC = function (plotParams, plotFunction) {
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{modelClause}}', modelClause);
-            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{regionsClause}}', regionsClause);
-            statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.replace('{{variableClause}}', variableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 

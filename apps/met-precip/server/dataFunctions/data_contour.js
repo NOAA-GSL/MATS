@@ -44,8 +44,6 @@ dataContour = function (plotParams, plotFunction) {
     var database = curve['database'];
     var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
     var modelClause = "and h.model = '" + model + "'";
-    var variable = curve['variable'];
-    var variableClause = "and h.fcst_var = '" + variable + "'";
     var statistic = curve['statistic'];
     var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statLineType = statisticOptionsMap[statistic][0];
@@ -87,32 +85,17 @@ dataContour = function (plotParams, plotFunction) {
         }).join(',');
         regionsClause = "and h.vx_mask IN(" + regions + ")";
     }
-    var levelsClause = "";
-    var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
-    levels = Array.isArray(levels) ? levels : [levels];
-    if (levels.length > 0) {
-        levels = levels.map(function (l) {
-            // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
-            return "'" + l + "','" + l + "='";
-        }).join(',');
-        levelsClause = "and h.fcst_lev IN(" + levels + ")";
-    } else {
-        // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
-        levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
-        levels = levels.map(function (l) {
-            return "'" + l + "'";
-        }).join(',');
-        levelsClause = "and h.fcst_lev IN(" + levels + ")";
-    }
-    var truth = curve['truth'];
-    var truthClause = "";
-    if (truth !== 'Any obs type') {
-        truthClause = "and h.obtype = '" + truth + "'";
-    }
     var scale = curve['scale'];
     var scaleClause = "";
     if (scale !== 'All scales') {
         scaleClause = "and h.interp_pnts = '" + scale + "'";
+    }
+    var variable = curve['variable'];
+    var variableClause = "and h.fcst_var = '" + variable + "'";
+    var truth = curve['truth'];
+    var truthClause = "";
+    if (truth !== 'Any obs type') {
+        truthClause = "and h.obtype = '" + truth + "'";
     }
     var threshold = curve['threshold'];
     var thresholdClause = "";
@@ -153,7 +136,24 @@ dataContour = function (plotParams, plotFunction) {
     } else {
         dateString = "unix_timestamp(ld.fcst_valid_beg)";
     }
-   dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+    dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+    var levelsClause = "";
+    var levels = (curve['level'] === undefined || curve['level'] === matsTypes.InputTypes.unused) ? [] : curve['level'];
+    levels = Array.isArray(levels) ? levels : [levels];
+    if (levels.length > 0) {
+        levels = levels.map(function (l) {
+            // sometimes bad vsdb parsing sticks an = on the end of levels in the db, so check for that.
+            return "'" + l + "','" + l + "='";
+        }).join(',');
+        levelsClause = "and h.fcst_lev IN(" + levels + ")";
+    } else {
+        // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
+        levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+        levels = levels.map(function (l) {
+            return "'" + l + "'";
+        }).join(',');
+        levelsClause = "and h.fcst_lev IN(" + levels + ")";
+    }
     // For contours, this functions as the colorbar label.
     curve['unitKey'] = variable + " " + statistic;
 
@@ -169,14 +169,14 @@ dataContour = function (plotParams, plotFunction) {
         "where 1=1 " +
         "{{dateClause}} " +
         "{{modelClause}} " +
-        "{{variableClause}} " +
         "{{regionsClause}} " +
-        "{{levelsClause}} " +
-        "{{truthClause}} " +
         "{{scaleClause}} " +
+        "{{variableClause}} " +
+        "{{truthClause}} " +
         "{{thresholdClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthsClause}} " +
+        "{{levelsClause}} " +
         "and h.stat_header_id = ld.stat_header_id " +
         "group by xVal,yVal " +
         "order by xVal,yVal" +
@@ -187,14 +187,14 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{statisticClause}}', statisticClause);
     statement = statement.replace('{{queryTableClause}}', queryTableClause);
     statement = statement.replace('{{modelClause}}', modelClause);
-    statement = statement.replace('{{variableClause}}', variableClause);
     statement = statement.replace('{{regionsClause}}', regionsClause);
-    statement = statement.replace('{{levelsClause}}', levelsClause);
-    statement = statement.replace('{{truthClause}}', truthClause);
     statement = statement.replace('{{scaleClause}}', scaleClause);
+    statement = statement.replace('{{variableClause}}', variableClause);
+    statement = statement.replace('{{truthClause}}', truthClause);
     statement = statement.replace('{{thresholdClause}}', thresholdClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
+    statement = statement.replace('{{levelsClause}}', levelsClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
