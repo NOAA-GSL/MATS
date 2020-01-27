@@ -1704,7 +1704,65 @@ const resetApp = function (appRef) {
     }
     matsCache.clear();
 };
+const saveLayout = new ValidatedMethod({
+    name: 'matsMethods.saveLayout',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        },
+        layout: {
+            type: Object, blackbox: true
+        },
+        curveOpsUpdate: {
+            type: Object, blackbox: true
+        },
+        annotation: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var key = params.resultKey;
+            var layout = params.layout;
+            var curveOpsUpdate = params.curveOpsUpdate;
+            var annotation = params.annotation;
+            try {
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate, annotation: annotation}});
+            } catch (error) {
+                throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
+            }
+        }
+    }
+});
 
+//administration tools
+const saveSettings = new ValidatedMethod({
+    name: 'matsMethods.saveSettings',
+    validate: new SimpleSchema({
+        saveAs: {
+            type: String
+        },
+        p: {
+            type: Object,
+            blackbox: true
+        },
+        permission: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        var user = "anonymous";
+        matsCollections.CurveSettings.upsert({name: params.saveAs}, {
+            created: moment().format("MM/DD/YYYY HH:mm:ss"),
+            name: params.saveAs,
+            data: params.p,
+            owner: Meteor.userId() == null ? "anonymous" : Meteor.userId(),
+            permission: params.permission,
+            savedAt: new Date(),
+            savedBy: Meteor.user() == null ? "anonymous" : user
+        });
+    }
+});
 
 /* test methods */
 
@@ -1797,7 +1855,9 @@ export default matsMethods = {
     removeColor: removeColor,
     removeDatabase: removeDatabase,
     resetApp: resetApp,
+    saveLayout: saveLayout,
+    saveSettings: saveSettings,
     testGetMetaDataTableUpdates: testGetMetaDataTableUpdates,
     testGetTables: testGetTables,
-    testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack,
+    testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack
 };
