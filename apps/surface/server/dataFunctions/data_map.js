@@ -101,10 +101,10 @@ dataMap = function (plotParams, plotFunction) {
 
     statement = statement.replace('{{statisticClause}}', statisticClause);
     statement = statement.replace('{{queryTableClause}}', queryTableClause);
-    statement = statement.replace('{{validTimeClause}}', validTimeClause);
-    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
     statement = statement.replace('{{sitesClause}}', sitesClause);
+    statement = statement.replace('{{validTimeClause}}', validTimeClause);
+    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
     dataRequests[label] = statement;

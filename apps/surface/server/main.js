@@ -743,7 +743,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 5,
                 multiple: true
@@ -762,7 +762,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 5,
                 multiple: true,

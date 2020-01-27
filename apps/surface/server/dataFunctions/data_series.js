@@ -106,7 +106,7 @@ dataSeries = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statisticClause = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
+            statisticClause = 'sum({{variableClause}})/count(distinct ' + timeVar + ') as stat, stddev({{variableClause}}) as stdev, count(distinct ' + timeVar + ') as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((' + timeVar + '+1800)/3600)) order by ceil(3600*floor((' + timeVar + '+1800)/3600))) as sub_data';
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
@@ -158,10 +158,10 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
             statement = statement.replace('{{sitesClause}}', sitesClause);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
             statement = statement.split('{{timeVar}}').join(timeVar);

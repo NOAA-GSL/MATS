@@ -211,6 +211,8 @@ const doCurveParams = function () {
     var modelOptionsMap = {};
     var forecastLengthOptionsMap = {};
     var regionModelOptionsMap = {};
+    var siteOptionsMap = {};
+    var sitesLocationMap = [];
     var masterRegionValuesMap = {};
     var modelOptionsGroups = {};
     var modelDisabledOptions = [];  // model select has optionGroups (disabled options are group labels)
@@ -281,6 +283,51 @@ const doCurveParams = function () {
         console.log(err.message);
     }
 
+    try {
+        matsCollections.SiteMap.remove({});
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "select wmoid,name,lat,lon,elev,descript from metadata where lat > -9000 and lat < 9000 and lon > -18000 and lon < 18000 order by descript;");
+        for (var i = 0; i < rows.length; i++) {
+
+            var site_name = rows[i].name;
+            var site_description = rows[i].descript !== null ? rows[i].descript.replace(/\./g, "") : site_name;
+            var name_string = site_description !== site_name ? site_description + " (" + site_name + ")" : site_name;
+            var site_id = rows[i].wmoid;
+            var site_lat = rows[i].lat / 100;
+            var site_lon = rows[i].lon / 100;
+            var site_elev = rows[i].elev;
+            siteOptionsMap[name_string] = [site_id];
+
+            var point = [site_lat, site_lon];
+            var obj = {
+                name: name_string,
+                point: point,
+                elevation: site_elev,
+                options: {
+                    title: name_string,
+                    color: 'red',
+                    size: 5,
+                    network: 'RAOB',
+                    peerOption: name_string,
+                    id: site_id,
+                    highLightColor: 'blue'
+                }
+            };
+            sitesLocationMap.push(obj);
+
+            matsCollections.SiteMap.insert({siteName: name_string, siteId: site_id});
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    matsCollections.StationMap.remove({});
+    matsCollections.StationMap.insert(
+        {
+            name: 'stations',
+            optionsMap: sitesLocationMap,
+        }
+    );
+
     if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -298,6 +345,28 @@ const doCurveParams = function () {
                 help: 'label.html'
             }
         );
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'region-type'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'region-type',
+                type: matsTypes.InputTypes.select,
+                options: ['Predefined region', 'Select stations (bias only)'],
+                default: 'Predefined region',
+                hideOtherFor: {
+                    'region': ["Select stations (bias only)"],
+                    'truth': ["Select stations (bias only)"],
+                    'statistic': ["Select stations (bias only)"],
+                    'sites': ["Predefined region"],
+                    'sitesMap': ["Predefined region"]
+                },
+                controlButtonCovered: true,
+                controlButtonText: 'Region mode',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 1
+            });
     }
 
     if (matsCollections.CurveParams.findOne({name: 'data-source'}) == undefined) {
@@ -354,9 +423,9 @@ const doCurveParams = function () {
                 unique: false,
                 default: regionModelOptionsMap[myModels[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1,
+                displayGroup: 2,
                 help: 'region.html'
             });
     } else {
@@ -414,7 +483,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(statOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -422,11 +491,11 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'variable'}) == undefined) {
         const statVarOptionsMap = {
-            'temperature': ['dt', 't'],
-            'RH': ['dR', 'R'],
-            'RHobT': ['dRoT', 'RoT'],
-            'winds': ['dw', 'ws'],
-            'height': ['dH', 'H']
+            'temperature': ['dt', 't', 't'],
+            'RH': ['dR', 'R', 'rh'],
+            'RHobT': ['dRoT', 'RoT', 'rhot'],
+            'winds': ['dw', 'ws', 'ws'],
+            'height': ['dH', 'H', 'z']
         };
 
         const statVarUnitMap = {
@@ -478,7 +547,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(statVarOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -654,6 +723,46 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections.CurveParams.findOne({name: 'sites'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'sites',
+                type: matsTypes.InputTypes.select,
+                optionsMap: siteOptionsMap,
+                options: Object.keys(siteOptionsMap),
+                peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 5,
+                multiple: true
+            });
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'sitesMap'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'sitesMap',
+                type: matsTypes.InputTypes.selectMap,
+                optionsMap: sitesLocationMap,
+                options: Object.keys(sitesLocationMap),
+                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 5,
+                multiple: true,
+                defaultMapView: {point: [50, -92.5], zoomLevel: 1.25},
+                help: 'map-help.html'
+            });
+    }
+
     if (matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "select m0.fcst_len as xVal, ",
@@ -802,6 +911,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -812,7 +922,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "average", "forecast-length", "top", "bottom"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "average", "forecast-length", "top", "bottom", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -821,6 +931,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -831,7 +942,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -840,6 +951,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -851,7 +963,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -860,6 +972,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -870,7 +983,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -879,6 +992,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -888,7 +1002,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "sites", "sitesMap", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
         });
@@ -897,6 +1011,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -906,7 +1021,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "x-axis-parameter", "y-axis-parameter", "significance"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "sites", "sitesMap", "x-axis-parameter", "y-axis-parameter", "significance"
             ],
             groupSize: 6
         });
