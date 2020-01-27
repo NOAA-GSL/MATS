@@ -219,6 +219,20 @@ const setTextView = function (plotType) {
     //shows text page and proper text output, hides everything else
     document.getElementById('placeholder').style.width = width(plotType);
     document.getElementById('placeholder').style.height = height(plotType);
+    document.getElementById('graph-container').style.display = 'block';
+    document.getElementById('plotType').style.display = 'none';
+    document.getElementById('paramList').style.display = 'none';
+    document.getElementById('plotList').style.display = 'none';
+    document.getElementById('curveList').style.display = 'none';
+    if (document.getElementById("plotTypeContainer")) {
+        document.getElementById("plotTypeContainer").style.display = "none";
+    }
+    if (document.getElementById("scatter2d")) {
+        document.getElementById("scatter2d").style.display = "none";
+    }
+    if (document.getElementById("scatterView")) {
+        document.getElementById("scatterView").style.display = "none";
+    }
     document.getElementById("text-page-button-group").style.display = "block";
     document.getElementById("plot-page-button-group").style.display = "none";
     document.getElementById("curves").style.display = "none";
@@ -229,9 +243,9 @@ const setTextView = function (plotType) {
 
 // helper to bring up the graph page
 const setGraphView = function (plotType) {
+    //shows graph page, hides everything else
     document.getElementById('placeholder').style.width = width(plotType);
     document.getElementById('placeholder').style.height = height(plotType);
-    //shows graph page, hides everything else
     document.getElementById('graph-container').style.display = 'block';
     document.getElementById('plotType').style.display = 'none';
     document.getElementById('paramList').style.display = 'none';
@@ -267,31 +281,25 @@ const standAloneSetGraphView = function () {
 // helper to bring up the main selector page
 const setDefaultView = function () {
     // show elements of the main page
-    if (document.getElementById('paramList')) {
-        document.getElementById('paramList').style.display = 'block';
-    }
-    if (document.getElementById('plotList')) {
-        document.getElementById('plotList').style.display = 'block';
-    }
-    if (document.getElementById('curveList')) {
-        document.getElementById('curveList').style.display = 'block';
-    }
+    document.getElementById('graph-container').style.display = 'none';
+    document.getElementById('plotType').style.display = 'block';
+    document.getElementById('paramList').style.display = 'block';
+    document.getElementById('plotList').style.display = 'block';
+    document.getElementById('curveList').style.display = 'block';
     if (document.getElementById("plotTypeContainer")) {
         document.getElementById("plotTypeContainer").style.display = "block";
-    }
-    if (document.getElementById("scatterView")) {
-        document.getElementById("scatterView").style.display = "block";
     }
     if (document.getElementById("scatter2d")) {
         document.getElementById("scatter2d").style.display = "block";
     }
-    // hide graph page
-    if (document.getElementById('graph-container')) {
-        document.getElementById('graph-container').style.display = 'none';
+    if (document.getElementById("scatterView")) {
+        document.getElementById("scatterView").style.display = "block";
     }
+    document.getElementById("text-page-button-group").style.display = "none";
     document.getElementById("plot-page-button-group").style.display = "block";
     document.getElementById('plot-control-button-group').style.display = "block";
-    // hide text page
+    document.getElementById("curves").style.display = "none";
+    document.getElementById("graphView").style.display = "none";
     document.getElementById("textView").style.display = "none";
 };
 

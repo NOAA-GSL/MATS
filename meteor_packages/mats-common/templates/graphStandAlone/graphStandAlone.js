@@ -195,7 +195,7 @@ Template.GraphStandAlone.helpers({
         return this.color;
     },
     matsplotFilemname: function () {
-        return "matsplot-" + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss")
+        return "newplot-" + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss")
     },
     image: function () {
         var img = Session.get("spinner_img");
