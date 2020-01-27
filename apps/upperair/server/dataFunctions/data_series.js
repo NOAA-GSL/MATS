@@ -98,13 +98,13 @@ dataSeries = function (plotParams, plotFunction) {
             } else if (variable[2] === "ws") {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
-            } else  if (variable[2] === "z") {
+            } else if (variable[2] === "z") {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
                 varUnits = 'm';
             } else {
                 throw new Error("RHobT stats are not supported for single/multi station plots");
             }
-            statisticClause = 'sum({{variableClause}})/count(distinct unix_timestamp(m0.date)+3600*m0.hour) as stat, stddev({{variableClause}}) as stdev, count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((unix_timestamp(m0.date)+3600*m0.hour+1800)/3600)) order by ceil(3600*floor((unix_timestamp(m0.date)+3600*m0.hour+1800)/3600))) as sub_data';
+            statisticClause = 'sum({{variableClause}})/count(distinct unix_timestamp(m0.date)+3600*m0.hour) as stat, stddev({{variableClause}}) as stdev, count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N0, group_concat({{variableClause}}, ";", ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), ";", m0.press order by ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), m0.press) as sub_data';
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
@@ -168,7 +168,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
-            statement = statement.replace('{{siteLevelClause}}', siteDateClause);
+            statement = statement.replace('{{siteLevelClause}}', siteLevelClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
             dataRequests[label] = statement;
