@@ -20,13 +20,11 @@ db=""
 function usage() {
       echo "USAGE: $0 -e env [-d db]"
       echo "where env is a valid namespace"
-      echo "where db is optional but if it is used it must be a valid app reference i.e. upperair or met-surface"
-      echo "if db is left off you will be connected to the default database which is 'test' ..."
       exit 1;
 }
 
 export CONTEXT=''
-while getopts 'e:d:h' OPTION; do
+while getopts 'e:h' OPTION; do
   case "$OPTION" in
     e)
         env="$OPTARG"
@@ -41,11 +39,6 @@ while getopts 'e:d:h' OPTION; do
           echo "setting environment to $env"
           echo "CONTEXT: $CONTEXT"
         fi
-      ;;
-
-    d)
-      db="/${OPTARG}"
-      echo "attempting to connect to $OPTARG"
       ;;
 
     h)
@@ -66,31 +59,3 @@ fi
 
 echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
-if [[ $? -ne 0 ]]; then
-  echo "FAILED to login to rancher! exiting"
-  exit 1
-fi
-
-node=$(rancher kubectl -n ${env} get nodes --no-headers=true | head -1 | awk '{print $1}' | awk '{$1=$1};1')
-echo "node: ${node}"
-if [[ "$node" == "docker-desktop" ]]; then
-  host=localhost
-else
-  host=$(rancher kubectl -n  ${env} describe nodes ${node} | grep public-ip | awk -F':' '{print $2}' | awk '{$1=$1};1')
-fi
-echo "host: ${host}"
-if [ -z $host ]; then
-  echo "cannot determine host! - exiting"
-  exit 1
-fi
-
-port=$(rancher kubectl -n ${env} get services | grep mongo-nodeport | awk -F'[/:]' '{print $2}' | awk '{$1=$1};1')
-echo "port: ${port}"
-if [ -z $port ]; then
-  echo "cannot determine port! No mongo running there perhaps??? - exiting"
-  exit 1
-fi
-
-echo mongo "mongodb://${host}:${port}${db}"
-mongo mongodb://${host}:${port}${db}
-
