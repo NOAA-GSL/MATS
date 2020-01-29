@@ -118,8 +118,8 @@ dataDieOff = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
+            siteDateClause = "and unix_timestamp(o.date)+3600*o.hour + 1800 >= " + fromSecs + " and unix_timestamp(o.date)+3600*o.hour - 1800 <= " + toSecs;
             levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
-            siteDateClause = "and ceil(43200*floor(((unix_timestamp(o.date)+3600*o.hour)+43200/2)/43200)) >= " + fromSecs + " and ceil(43200*floor(((unix_timestamp(o.date)+3600*o.hour)+43200/2)/43200)) <= " + toSecs;
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
             siteMatchClause = "and s.wmoid = m0.wmoid and s.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
             queryPool = modelPool;
@@ -127,7 +127,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
-        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs;
+        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             var validTimeStr = curve['valid-time'];
             validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
@@ -149,9 +149,9 @@ dataDieOff = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             var statement = "select m0.fcst_len as fcst_lead, " +
-                "count(distinct ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200))) as N_times, " +
-                "min(ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200))) as min_secs, " +
-                "max(ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200))) as max_secs, " +
+                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
+                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
+                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statisticClause}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
