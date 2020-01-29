@@ -54,6 +54,7 @@ dataValidTime = function (plotParams, plotFunction) {
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "";
         var timeVar;
+        var dateClause;
         var siteDateClause = "";
         var siteMatchClause = "";
         var sitesClause = "";
@@ -83,6 +84,7 @@ dataValidTime = function (plotParams, plotFunction) {
             statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
             var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
             varUnits = statVarUnitMap[statisticSelect][variableStr];
+            dateClause = "and m0.valid_day+3600*m0.hour >= " + fromSecs + " and m0.valid_day+3600*m0.hour <= " + toSecs;
             queryPool = sumPool;
         } else {
             timeVar = "m0.time";
@@ -108,7 +110,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statisticClause = 'sum({{variableClause}})/count(distinct ' + timeVar + ') as stat, stddev({{variableClause}}) as stdev, count(distinct ' + timeVar + ') as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((' + timeVar + '+1800)/3600)) order by ceil(3600*floor((' + timeVar + '+1800)/3600))) as sub_data';
+            statisticClause = 'sum({{variableClause}})/count(distinct m0.time) as stat, stddev({{variableClause}}) as stdev, count(distinct m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
@@ -117,11 +119,11 @@ dataValidTime = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            siteDateClause = "and o.time >= " + fromSecs + " and o.time <= " + toSecs;
+            dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
+            siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
             siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
             queryPool = sitePool;
         }
-        var dateClause = "and " + timeVar + " >= " + fromSecs + " and " + timeVar + " <= " + toSecs;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
