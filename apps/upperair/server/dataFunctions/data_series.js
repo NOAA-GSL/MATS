@@ -118,7 +118,7 @@ dataSeries = function (plotParams, plotFunction) {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
             levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
-            siteDateClause = "and unix_timestamp(o.date)+3600*o.hour >= " + fromSecs + " and unix_timestamp(o.date)+3600*o.hour <= " + toSecs;
+            siteDateClause = "and ceil(43200*floor(((unix_timestamp(o.date)+3600*o.hour)+43200/2)/43200)) >= " + fromSecs + " and ceil(43200*floor(((unix_timestamp(o.date)+3600*o.hour)+43200/2)/43200)) <= " + toSecs;
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
             siteMatchClause = "and s.wmoid = m0.wmoid and s.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
             queryPool = modelPool;
@@ -142,9 +142,9 @@ dataSeries = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             var statement = "select {{average}} as avtime, " +
-                "count(distinct ceil(3600*floor((unix_timestamp(m0.date)+3600*m0.hour+1800)/3600))) as N_times, " +
-                "min(ceil(3600*floor((unix_timestamp(m0.date)+3600*m0.hour+1800)/3600))) as min_secs, " +
-                "max(ceil(3600*floor((unix_timestamp(m0.date)+3600*m0.hour+1800)/3600))) as max_secs, " +
+                "count(distinct ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200))) as N_times, " +
+                "min(ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200))) as min_secs, " +
+                "max(ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200))) as max_secs, " +
                 "{{statisticClause}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
