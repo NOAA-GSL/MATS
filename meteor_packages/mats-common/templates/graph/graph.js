@@ -993,21 +993,11 @@ Template.graph.events({
             var newDateRange = moment.utc($("#placeholder")[0].layout['xaxis'].range[0]).format('M/DD/YYYY HH:mm') + " - " + moment.utc($("#placeholder")[0].layout['xaxis'].range[1]).format('M/DD/YYYY HH:mm');
             console.log(newDateRange);
             document.getElementById('controlButton-dates-value').innerHTML = newDateRange;
-            var params = Session.get('params');
-            var actionId = "plotUnmatched";
-            if (params.plotAction === "matched") {
-                actionId = "plotMatched";
-            }
             document.getElementById("plot-curves").click();
         }
     },
     'click .reCacheButton': function () {
         var plotType = Session.get('plotType');
-        var params = Session.get('params');
-        var actionId = "plotUnmatched";
-        if (params.plotAction === "matched") {
-            actionId = "plotMatched";
-        }
         Session.set('expireKey', true);
         document.getElementById("plot-curves").click();
     },
