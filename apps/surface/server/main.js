@@ -1035,7 +1035,7 @@ const doCurveTextPatterns = function () {
                 ['', 'truth', ', ']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "sites", "sitesMap", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
         });
@@ -1053,7 +1053,7 @@ const doCurveTextPatterns = function () {
                 ['', 'truth', ', ']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "sites", "sitesMap", "x-axis-parameter", "y-axis-parameter", "significance"
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter", "significance"
             ],
             groupSize: 6
         });
