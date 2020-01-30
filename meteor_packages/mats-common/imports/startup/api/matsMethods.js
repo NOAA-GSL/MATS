@@ -931,7 +931,7 @@ const _write_settings = function(settings, appName) {
     newSettings = settings;
     // Merge settings into appSettings
     newSettings.private = {...appSettings.private, ...settings.private};
-        newSettings.public = {...appSettings.public, ...settings.public};
+    newSettings.public = {...appSettings.public, ...settings.public};
     // write the settings file
     const jsonSettings = JSON.stringify(newSettings, null, 2);
     //console.log (jsonSettings);
@@ -1180,11 +1180,11 @@ const getAuthorizations = new ValidatedMethod({
 
 // administration tool
 
-const getDeploymentEnvironment = new ValidatedMethod({
-    name: 'matsMethods.getDeploymentEnvironment',
+const getRuntEnvironment = new ValidatedMethod({
+    name: 'matsMethods.getRuntEnvironment',
     validate: new SimpleSchema({}).validator(),
     run() {
-        return process.env.DEPLOYMENT_ENVIRONMENT;
+        return Meteor.settings.public.run_environment;
     }
 });
 
@@ -1578,6 +1578,7 @@ const resetApp = function (appRef) {
                 "PYTHON_PATH": "/usr/bin/python3"
             },
             "public": {
+                "run_environment" : dep_env,
                 "proxy_prefix_path": "",
                 "home": process.env.ROOT_URL == undefined ? "https://localhost" : process.env.ROOT_URL,
                 "mysql_wait_timeout": appTimeOut,
@@ -1595,10 +1596,10 @@ const resetApp = function (appRef) {
 
     // mostly for running locally for debugging. We have to be able to choose the app from the app list in deployment.json
     // normally (on a server) it will be an environment variable.
-    // to debug an integration or production deployment, set the environment variable DEPLOYMENT_ENVIRONMENT to one of
+    // to debug an integration or production deployment, set the environment variable deployment_environment to one of
     // development, integration, production, metexpress
-    if (process.env.DEPLOYMENT_ENVIRONMENT != null) {
-        dep_env = process.env.DEPLOYMENT_ENVIRONMENT;
+    if (Meteor.settings.public && Meteor.settings.public.run_environment) {
+        dep_env = Meteor.settings.public.run_environment;
     } else {
         dep_env = process.env.NODE_ENV;
     }
@@ -1840,7 +1841,7 @@ export default matsMethods = {
     deleteSettings: deleteSettings,
     emailImage: emailImage,
     getAuthorizations: getAuthorizations,
-    getDeploymentEnvironment:getDeploymentEnvironment,
+    getRuntEnvironment:getRuntEnvironment,
     getDefaultGroupList:getDefaultGroupList,
     getGraphData: getGraphData,
     getGraphDataByKey: getGraphDataByKey,

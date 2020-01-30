@@ -29,6 +29,9 @@ Template.Configure.helpers({
     proxy_prefix_path: function() {
         return Meteor.settings.public.proxy_prefix_path;
     },
+    run_environment: function() {
+        return Meteor.settings.public.run_environment;
+    },
     home: function() {
         return Meteor.settings.public.home;
     },

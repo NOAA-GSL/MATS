@@ -3,9 +3,9 @@
  */
 import matsMethods from "../../imports/startup/api/matsMethods";
 
-const getDeploymentEnvironment = function () {
+const getRuntEnvironment = function () {
     if (Session.get('deployment_environment') == undefined) {
-        matsMethods.getDeploymentEnvironment.call({}, function (error, result) {
+        matsMethods.getRuntEnvironment.call({}, function (error, result) {
             if (error !== undefined) {
                 setError(error);
                 return "<p>" + error + "</p>";
@@ -20,7 +20,7 @@ const getDeploymentEnvironment = function () {
 
 Template.topNav.helpers({
     agencyText: function () {
-        switch (getDeploymentEnvironment()) {
+        switch (getRuntEnvironment()) {
             case "metexpress":
                 return "National Weather Service";
                 break;
@@ -29,7 +29,7 @@ Template.topNav.helpers({
         }
     },
     agencyLink: function () {
-        switch (getDeploymentEnvironment()) {
+        switch (getRuntEnvironment()) {
             case "metexpress":
                 return "https://www.weather.gov/";
                 break;
@@ -38,7 +38,7 @@ Template.topNav.helpers({
         }
     },
     productText: function () {
-        switch (getDeploymentEnvironment()) {
+        switch (getRuntEnvironment()) {
             case "metexpress":
                 return "METexpress";
                 break;
@@ -47,7 +47,7 @@ Template.topNav.helpers({
         }
     },
     productLink: function () {
-        switch (getDeploymentEnvironment()) {
+        switch (getRuntEnvironment()) {
             case "metexpress":
                 return "";
                 break;
