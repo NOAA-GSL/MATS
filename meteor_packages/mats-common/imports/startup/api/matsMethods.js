@@ -1547,6 +1547,7 @@ const applySettingsData = new ValidatedMethod({
         if (Meteor.isServer) {
             // Read the existing settings file
             const  settings = settingsParam.settings;
+            console.log("applySettingsData - matsCollections.appName.findOne({}) is ", matsCollections.appName.findOne({}));
             const appName = matsCollections.appName.findOne({}).app;
             _write_settings(settings, appName);
             // in development - when being run by meteor, this should force a restart of the app.
@@ -1589,7 +1590,8 @@ const resetApp = function (appRef) {
             }
         };
         // if there isn't an app listing in matsCollections create one here so that the configuration-> applySettingsData won't fail
-        if (matsCollections.appName.findOne({}) === undefined) {
+        console.log("resetApp - matsCollections.appName.findOne({}) is ", matsCollections.appName.findOne({}));
+        if (matsCollections.appName.findOne({}) == undefined) {
             matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
         }
         _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
