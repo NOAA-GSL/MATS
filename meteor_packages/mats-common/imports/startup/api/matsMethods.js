@@ -1588,6 +1588,10 @@ const resetApp = function (appRef) {
                 "color": appColor
             }
         };
+        // if there isn't an app listing in matsCollections create one here so that the configuration-> applySettingsData won't fail
+        if (matsCollections.appName.findOne({}) === undefined) {
+            matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
+        }
         _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
         // exit for production - probably won't ever get here in development mode (running with meteor)
         // This depends on whatever system is running the node process to restart it.
