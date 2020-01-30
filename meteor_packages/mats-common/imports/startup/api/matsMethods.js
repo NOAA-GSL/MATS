@@ -1569,6 +1569,13 @@ const resetApp = function (appRef) {
     const appColor = matsTypes.AppTypes.mats ? "#3366bb" : "darkorchid";
     const appTimeOut = 300;
     var dep_env = process.env.NODE_ENV;
+
+    // if there isn't an app listing in matsCollections create one here so that the configuration-> applySettingsData won't fail
+    console.log("resetApp - matsCollections.appName.findOne({}) is ", matsCollections.appName.findOne({}));
+    if (matsCollections.appName.findOne({}) == undefined) {
+        matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
+    }
+
     // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
     if (isEmpty (Meteor.settings.private) || isEmpty(Meteor.settings.public)) {
         // create some default meteor settings and write them out
@@ -1589,11 +1596,6 @@ const resetApp = function (appRef) {
                 "color": appColor
             }
         };
-        // if there isn't an app listing in matsCollections create one here so that the configuration-> applySettingsData won't fail
-        console.log("resetApp - matsCollections.appName.findOne({}) is ", matsCollections.appName.findOne({}));
-        if (matsCollections.appName.findOne({}) == undefined) {
-            matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
-        }
         _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
         // exit for production - probably won't ever get here in development mode (running with meteor)
         // This depends on whatever system is running the node process to restart it.
