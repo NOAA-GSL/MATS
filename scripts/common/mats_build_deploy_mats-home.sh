@@ -164,7 +164,7 @@ buildApp() {
     if [[ "${build_images}" == "yes" ]]; then
         echo -e "$0:${myApp}: Building image for ${myApp}"
         //buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
-        buildVer=1.0
+        buildVer=1.0.0
         # build container....
         export METEORD_DIR=/opt/meteord
         export APPNAME=${myApp}
