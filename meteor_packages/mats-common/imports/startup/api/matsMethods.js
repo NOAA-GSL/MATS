@@ -1180,8 +1180,8 @@ const getAuthorizations = new ValidatedMethod({
 
 // administration tool
 
-const getRuntEnvironment = new ValidatedMethod({
-    name: 'matsMethods.getRuntEnvironment',
+const getRunEnvironment = new ValidatedMethod({
+    name: 'matsMethods.getRunEnvironment',
     validate: new SimpleSchema({}).validator(),
     run() {
         return Meteor.settings.public.run_environment;
@@ -1841,7 +1841,7 @@ export default matsMethods = {
     deleteSettings: deleteSettings,
     emailImage: emailImage,
     getAuthorizations: getAuthorizations,
-    getRuntEnvironment:getRuntEnvironment,
+    getRunEnvironment:getRunEnvironment,
     getDefaultGroupList:getDefaultGroupList,
     getGraphData: getGraphData,
     getGraphDataByKey: getGraphDataByKey,
