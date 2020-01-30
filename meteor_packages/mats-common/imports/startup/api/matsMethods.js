@@ -1551,8 +1551,8 @@ const applySettingsData = new ValidatedMethod({
             const appName = matsCollections.appName.findOne({}).app;
             _write_settings(settings, appName);
             // in development - when being run by meteor, this should force a restart of the app.
-            // get rid of undefinedRoles so that the page will route normally now
-            delete Meteor.settings.public.undefinedRoles;
+            //in case I am in a container - exit and force a reload
+            process.exit(1);
         }
     }
 });
