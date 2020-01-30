@@ -73,9 +73,9 @@ dataMap = function (plotParams, plotFunction) {
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var siteDateClause = "and o.time >= " + fromSecs + " and o.time <= " + toSecs;
+    var dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
+    var siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
     var siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
-    var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
@@ -101,10 +101,10 @@ dataMap = function (plotParams, plotFunction) {
 
     statement = statement.replace('{{statisticClause}}', statisticClause);
     statement = statement.replace('{{queryTableClause}}', queryTableClause);
-    statement = statement.replace('{{validTimeClause}}', validTimeClause);
-    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
     statement = statement.replace('{{sitesClause}}', sitesClause);
+    statement = statement.replace('{{validTimeClause}}', validTimeClause);
+    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
     dataRequests[label] = statement;
@@ -130,16 +130,16 @@ dataMap = function (plotParams, plotFunction) {
         var dRed = queryResult.dataRed;
 
     } catch (e) {
-                // this is an error produced by a bug in the query function, not an error returned by the mysql database
+        // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
         throw new Error(e.message);
     }
     if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-                    // this is NOT an error just a no data condition
+            // this is NOT an error just a no data condition
             dataFoundForCurve = false;
         } else {
-                    // this is an error returned by the mysql database
+            // this is an error returned by the mysql database
             error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
             if (error.includes('Unknown column')) {
                 throw new Error("INFO:  The variable [" + variableStr + "] is not supported by the database for the model/sites [" + model + " and " + sitesList + "].");

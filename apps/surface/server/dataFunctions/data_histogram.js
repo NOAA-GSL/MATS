@@ -55,6 +55,7 @@ dataHistogram = function (plotParams, plotFunction) {
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "";
         var timeVar;
+        var dateClause;
         var siteDateClause = "";
         var siteMatchClause = "";
         var sitesClause = "";
@@ -80,6 +81,7 @@ dataHistogram = function (plotParams, plotFunction) {
             }
             statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
             statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
+            dateClause = "and m0.valid_day+3600*m0.hour >= " + fromSecs + " and m0.valid_day+3600*m0.hour <= " + toSecs;
             queryPool = sumPool;
         } else {
             timeVar = "m0.time";
@@ -110,11 +112,11 @@ dataHistogram = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            siteDateClause = "and o.time >= " + fromSecs + " and o.time <= " + toSecs;
+            dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
+            siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
             siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
             queryPool = sitePool;
         }
-        var dateClause = "and " + timeVar + " >= " + fromSecs + " and " + timeVar + " <= " + toSecs;
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and floor((" + timeVar + "+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
@@ -153,10 +155,10 @@ dataHistogram = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
             statement = statement.replace('{{sitesClause}}', sitesClause);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
             statement = statement.split('{{timeVar}}').join(timeVar);
