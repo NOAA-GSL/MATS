@@ -4,7 +4,7 @@
 
 import { Meteor } from 'meteor/meteor';
 import { check } from 'meteor/check';
-import {Groups} from "../../api/groups.js";
+//import {Groups} from "groups.js";
 
 
 Meteor.methods({

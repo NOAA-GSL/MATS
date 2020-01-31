@@ -17,7 +17,7 @@ Meteor.startup(() => {
                 /* These settings files should be set at installation time
                 either through compose file or helm chart or manually.
 
-                Each settings file should be like .....
+                Each settings file should be something like .....
         {
           "private": {
             "databases": [
@@ -35,11 +35,12 @@ Meteor.startup(() => {
             "PYTHON_PATH": "/usr/bin/python3"
           },
           "public": {
+            "run_environment": "development",
             "proxy_prefix_path": "matsdev",
             "home": "https://mats-docker-dev.gsd.esrl.noaa.gov/matsdev/home",
             "mysql_wait_timeout": 300,
             "group": "METexpress",
-            "group_order": 0,
+            "app_order": 0,
             "title": "MET Air Quality",
             "color": "darkorchid"
           }
@@ -65,7 +66,7 @@ Meteor.startup(() => {
                     newAppList.push(item);
                     // sort  newApplist by group_order
                     try {
-                        Groups.update({_id: group._id}, {$set: {appList: newAppList.sort((a, b) => (a.group_order > b.group_order) ? 1 : -1)}});
+                        Groups.update({_id: group._id}, {$set: {appList: newAppList.sort((a, b) => (a.app_order > b.app_order) ? 1 : -1)}});
                     } catch (error) {
                         Groups.update({_id: group._id}, {$set: {appList: newAppList}});
                     }

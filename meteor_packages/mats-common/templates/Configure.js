@@ -38,7 +38,7 @@ Template.Configure.helpers({
     group: function() {
         return Session.get('selectedGroup');
     },
-    groupOrder: function() {
+    group_order: function() {
         if (Meteor.settings.public.group_order) {
             return Meteor.settings.public.group_order;
         } else {
@@ -120,6 +120,9 @@ Template.Configure.events({
         for (var i = 0; i < inputs.length; i++) {
             const input = inputs[i];
             name = input.id;
+            if (name === "colorValue") {
+                continue;
+            }
             value = input.value;
             var roleVal = false;
             for (ri =0; ri < roles.length; ri++) {
