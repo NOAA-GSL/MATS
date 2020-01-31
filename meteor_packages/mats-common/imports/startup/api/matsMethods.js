@@ -1591,7 +1591,7 @@ const resetApp = function (appRef) {
                 "home": process.env.ROOT_URL == undefined ? "https://localhost" : process.env.ROOT_URL,
                 "mysql_wait_timeout": appTimeOut,
                 "group": appGroup,
-                "group_order":0,
+                "app_order":0,
                 "title": appTitle,
                 "color": appColor
             }
