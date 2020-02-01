@@ -42,7 +42,7 @@
                             <div class="col-sm-2">
                                 <select class="form-control groupSelect" id="groupSelect" name="groupSelect">
                                     {{#each groups}}
-                                        <option value="{{groupName}}">{{groupName}}</option>
+                                        <option value="{{group_name}}">{{group_name}}</option>
                                     {{/each}}
                                 </select>
                                 <input id="group" class="form-control group" type="text" name="group" placeholder="{{group}}" value="{{group}}" style="display:none" />
@@ -50,9 +50,9 @@
                         </div>
 
                         <div class="form-group-sm row">
-                            <label for="groupOrder" class="col-sm-2 col-form-label">Group Order:</label>
+                            <label for="app_order" class="col-sm-2 col-form-label">App Order:</label>
                             <div class="col-sm-2">
-                                <input id="group_order" class="form-control group_order" type="number" min="0" max="{{groupsLength}}" name="groupOrder" placeholder="{{groupOrder}}" value="{{groupOrder}}"/>
+                                <input id="app_order" class="form-control app_order" type="number" min="0" max="{{apps_length}}" name="appOrder" placeholder="{{app_order}}" value="{{app_order}}"/>
                             </div>
                         </div>
 
@@ -78,7 +78,7 @@
                 <h2>Unconfigured Database settings </h2>
                 {{#each roles}}
                     <div class="container-fluid" style="border:1px solid #cecece; padding:1%; margin:1%;">
-                        <span class="h1">Role: {{role}} </span><i class="fa fa-copy copy" id="{{role}}-copy" style="display:{{showCopyIcon}}"></i>
+                        <span class="h1">Role: {{role}} </span><i class="fa fa-copy copy" id="{{role}}-copy" style="display:{{show_copy_icon}}"></i>
                         <div>
                             <div class="form-group-sm db-{{role}}">
                                 <div class="form-group-sm row">

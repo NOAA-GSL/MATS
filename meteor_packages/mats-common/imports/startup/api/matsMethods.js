@@ -1552,7 +1552,9 @@ const applySettingsData = new ValidatedMethod({
             _write_settings(settings, appName);
             // in development - when being run by meteor, this should force a restart of the app.
             //in case I am in a container - exit and force a reload
-            process.exit(1);
+            if (process.env.NODE_ENV != "development") {
+                process.exit(0);
+            }
         }
     }
 });
@@ -1579,6 +1581,16 @@ const resetApp = function (appRef) {
     // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
     if (isEmpty (Meteor.settings.private) || isEmpty(Meteor.settings.public)) {
         // create some default meteor settings and write them out
+
+        var homeUrl = "";
+        if (process.env.ROOT_URL == undefined) {
+            homeUrl = "https://localhost/home";
+        } else {
+            var homeUrlArr = process.env.ROOT_URL.split('/');
+            homeUrlArr.pop();
+            homeUrl = homeUrlArr.join('/') + "/home";
+        }
+
         const  settings = {
             "private": {
                 "databases": [
@@ -1588,7 +1600,7 @@ const resetApp = function (appRef) {
             "public": {
                 "run_environment" : dep_env,
                 "proxy_prefix_path": "",
-                "home": process.env.ROOT_URL == undefined ? "https://localhost" : process.env.ROOT_URL,
+                "home": homeUrl,
                 "mysql_wait_timeout": appTimeOut,
                 "group": appGroup,
                 "app_order":0,
@@ -1599,6 +1611,7 @@ const resetApp = function (appRef) {
         _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
         // exit for production - probably won't ever get here in development mode (running with meteor)
         // This depends on whatever system is running the node process to restart it.
+        console.log('exiting');
         process.exit(1);
     }
 

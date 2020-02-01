@@ -38,14 +38,10 @@ Template.Configure.helpers({
     group: function() {
         return Session.get('selectedGroup');
     },
-    group_order: function() {
-        if (Meteor.settings.public.group_order) {
-            return Meteor.settings.public.group_order;
-        } else {
-            return 0;
-        }
+    app_order: function() {
+        document.getElementById('app_order').value;
     },
-    showCopyIcon: function() {
+    show_copy_icon: function() {
         const roles =  Meteor.settings.public.undefinedRoles;
         if (this == roles[0]) {
             return "none";
@@ -71,22 +67,11 @@ Template.Configure.helpers({
         }
         return Session.get('defaultGroups')
     },
-    groupName: function () {
+    group_name: function () {
         return this;
     },
-    groupsLength: function() {
-        if (Session.get('defaultGroups') == undefined) {
-            matsMethods.getDefaultGroupList.call({}, function (error, result) {
-                if (error !== undefined) {
-                    setError(error);
-                    return "<p>" + error + "</p>";
-                }
-                Session.set('defaultGroups', result);
-                return result.length;
-            });
-        } else {
-            return Session.get('defaultGroups').length;
-        }
+    apps_length: function(group) {
+        return 10;
     }
 });
 
