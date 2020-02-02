@@ -953,8 +953,8 @@ Meteor.startup(function () {
     } catch (error) {
         console.log(error.message);
     }
-    console.log ("global[sumPool] is: " + global[sumPool] );
-    console.log ("global[metadataPool] is: " + global[metadataPool] );
+    console.log ("global[sumPool] is: " + global['sumPool'] );
+    console.log ("global[metadataPool] is: " + global['metadataPool'] );
 });
 
 // this object is global so that the reset code can get to it
