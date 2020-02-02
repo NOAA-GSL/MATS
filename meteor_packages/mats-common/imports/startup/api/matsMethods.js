@@ -1638,8 +1638,9 @@ const resetApp = function (appRef) {
         // if the database credentials have been set in the meteor.private.settings file then the global[poolName]
         // will have been defined in the app main.js. Otherwise it will not have been defined. We will skip it but add
         // the corresponding role to Meteor.settings.public.undefinedRoles - which will cause the app to route to the db configuration page.
-        console.log ("resetApp global[poolName] is: " + global[poolName]);
-        if (global[poolName] === undefined) {
+        console.log ("resetApp global[" + poolName+ "] is: " + global[poolName]);
+        console.log ("global[" + poolName+ "] == undefined is: " + global[poolName] == undifned);
+        if (global[poolName] == undefined) {
             console.log ("resetApp adding " + global[poolName] + "to undefined roles");
             // There was no pool defined for this poolName - probably needs to be configured so stash the role in the public settings
             if (Meteor.settings.public.undefinedRoles  == undefined) {
