@@ -1552,9 +1552,10 @@ const applySettingsData = new ValidatedMethod({
             _write_settings(settings, appName);
             // in development - when being run by meteor, this should force a restart of the app.
             //in case I am in a container - exit and force a reload
-            if (process.env.NODE_ENV != "development") {
-                process.exit(0);
-            }
+            console.log ('process.env.NODE_ENV is: ' + process.env.NODE_ENV);
+            //if (process.env.NODE_ENV != "development") {
+            //    process.exit(0);
+            //}
         }
     }
 });
