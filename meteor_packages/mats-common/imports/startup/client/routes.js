@@ -14,6 +14,7 @@ FlowRouter.route('/', {
         if (Meteor.settings.public.custom) {
             this.render('CustomHome');
         } else {
+                console.log ('Meteor.settings.public.undefinedRoles is:' + Meteor.settings.public.undefinedRoles)
                 if (Meteor.settings.public.undefinedRoles != undefined && Meteor.settings.public.undefinedRoles.length > 0) {
                     this.render('Configure');
                 } else {
