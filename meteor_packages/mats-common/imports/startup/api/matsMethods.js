@@ -1631,6 +1631,7 @@ const resetApp = function (appRef) {
     // timeout in seconds
     var connectionTimeout =  Meteor.settings.public.mysql_wait_timeout != undefined ? Meteor.settings.public.mysql_wait_timeout : 300;
     const mdrecords = metaDataTableRecords.getRecords();
+    delete Meteor.settings.public.undefinedRoles;
     for (var mdri=0; mdri<mdrecords.length; mdri++) {
         const record = mdrecords[mdri];
         const poolName = record.pool;
@@ -1645,6 +1646,7 @@ const resetApp = function (appRef) {
             Meteor.settings.public.undefinedRoles.push(record.role);
             continue;
         }
+
         try {
             global[poolName].on('connection', function (connection) {
                 connection.query('set group_concat_max_len = 4294967295');
@@ -1658,7 +1660,7 @@ const resetApp = function (appRef) {
             continue
         }
         // connections all work so make sure that Meteor.settings.public.undefinedRoles is undefined
-        Meteor.settings.public.undefinedRoles = null;
+        delete Meteor.settings.public.undefinedRoles;
     }
 
     // just in case - should never happen.
