@@ -908,6 +908,10 @@ Meteor.startup(function () {
     console.log('Entering app startup for aircraft');
     console.log ('app startup for aircraft: settings are', JSON.stringify (Meteor.settings,null,2));
     matsCollections.Databases.remove({});
+    if (matsCollections.Databases.find({}).count() < 0) {
+        // databse corrupted? saw it once before..
+        matsCollections.Databases.drop();
+    }
     if (matsCollections.Databases.find({}).count() === 0) {
         console.log('app startup for aircraft: setting databases:');
         var databases = undefined;
