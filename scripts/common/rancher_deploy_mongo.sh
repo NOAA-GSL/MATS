@@ -20,6 +20,6 @@ if [[ $# -ne 0 ]]; then
     ns=$1
 fi
 
-
+rootUrl=https://rancher.localhost
 pvc=matsdata
-rancher app install matsmongo mongo  -n $ns   --set persistentVolumeClaim=${pvc}
+rancher app install matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} 

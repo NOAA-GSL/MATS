@@ -905,6 +905,8 @@ const doPlotGraph = function () {
 };
 
 Meteor.startup(function () {
+    console.log('Entering app startup for aircraft');
+    console.log ('app startup for aircraft: settings are', Meteor.settings);
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
         var databases = undefined;

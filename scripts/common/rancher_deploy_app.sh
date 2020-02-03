@@ -20,4 +20,4 @@ rootUrl=https://rancher.localhost
 appReference=$1
 imageVersion=nightly
 pvc=matsdata
-rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=fals --set image.appVersion=${imageVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${imageVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
