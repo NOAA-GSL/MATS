@@ -906,13 +906,15 @@ const doPlotGraph = function () {
 
 Meteor.startup(function () {
     console.log('Entering app startup for aircraft');
-    console.log ('app startup for aircraft: settings are', Meteor.settings);
+    console.log ('app startup for aircraft: settings are', JSON.stringify (Meteor.settings,null,2));
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
+        console.log('app startup for aircraft: setting databases:');
         var databases = undefined;
         if (Meteor.settings == undefined || Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined) {
             databases = undefined;
         } else {
+            console.log('app startup for aircraft: defining databases from these settings...:', JSON.stringify(Meteor.settings.private.databases, null,2));
             databases = Meteor.settings.private.databases;
         }
         if (databases !== null && databases !== undefined && Array.isArray(databases)) {
@@ -931,6 +933,7 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
+    console.log('app startup for aircraft: sumSettings...:', JSON.stringify(sumSettings, null,2));
     if (sumSettings) {
         try {
             sumPool = mysql.createPool(sumSettings)
@@ -948,6 +951,7 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
+    console.log('app startup for aircraft: metadataSettings...:', JSON.stringify(metadataSettings, null,2));
     if (metadataSettings)  {
         try {
             metadataPool = mysql.createPool(metadataSettings);
