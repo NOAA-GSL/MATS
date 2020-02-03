@@ -202,9 +202,10 @@ Template.graph.helpers({
                 elem.value = colorscale;
             }
 
-            // enable colorpicker on axes modal, if applicable.
+            // enable colorpickers on axes modal, if applicable.
             if (plotType !== matsTypes.PlotTypes.map) {
                 $('#gridColor').colorpicker({format: "rgb", align: "left"});
+                $('#legendFontColor').colorpicker({format: "rgb", align: "left"});
             }
 
             // store annotation
@@ -1466,6 +1467,16 @@ Template.graph.events({
                 }
             });
         }
+        $("[id$=legendFontSize]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['legend.font.size'] = elem.value;
+            }
+        });
+        $("[id$=legendFontColor]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['legend.font.color'] = elem.value;
+            }
+        });
         $("[id$=gridWeight]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
                 newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.gridwidth'] = elem.value;
