@@ -930,7 +930,11 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     if (sumSettings) {
-        sumPool = mysql.createPool(sumSettings)
+        try {
+            sumPool = mysql.createPool(sumSettings)
+        } catch (error) {
+            console.log("aircraft main error defining sumpool - " + error.message);
+        }
     };
 
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
@@ -943,7 +947,12 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     if (metadataSettings)  {
-        metadataPool = mysql.createPool(metadataSettings);
+        try {
+            metadataPool = mysql.createPool(metadataSettings);
+        } catch (error) {
+            console.log("aircraft main error defining metadataPool - " + error.message);
+        }
+
     }
 
     const mdr = new matsTypes.MetaDataDBRecord( matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
@@ -951,10 +960,10 @@ Meteor.startup(function () {
     try {
         matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'aircraft', title: "Upper Air (AMDAR)", group: "Upper Air"});
     } catch (error) {
-        console.log(error.message);
+        console.log("aircraft main - " + error.message);
     }
-    console.log ("global[sumPool] is: " + global['sumPool'] );
-    console.log ("global[metadataPool] is: " + global['metadataPool'] );
+    console.log ("aircraft main - global[sumPool] is: " + global['sumPool'] );
+    console.log ("aircraft main - global[metadataPool] is: " + global['metadataPool'] );
 });
 
 // this object is global so that the reset code can get to it
