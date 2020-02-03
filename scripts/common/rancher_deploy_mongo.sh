@@ -16,6 +16,10 @@ fi
 . ~/.matsapps_credentials
 
 ns="matsdev"
-rootUrl=https://rancher.localhost
+if [[ $# -ne 0 ]]; then
+    ns=$1
+fi
+
+
 pvc=matsdata
-rancher app install matsmongo mongo  -n $ns --set userId=${userId} --set defaultImage=false --set image.appVersion=${imageVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+rancher app install matsmongo mongo  -n $ns   --set persistentVolumeClaim=${pvc}

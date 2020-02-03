@@ -1542,7 +1542,10 @@ const applySettingsData = new ValidatedMethod({
     validate: new SimpleSchema({
         settings: {type: Object, blackbox: true}
     }).validator(),
-
+    // this method forces a restart on purpose. We do not want retries
+    applyOptions: {
+        noRetry: true,
+    },
     run(settingsParam) {
         if (Meteor.isServer) {
             // Read the existing settings file
@@ -1555,8 +1558,7 @@ const applySettingsData = new ValidatedMethod({
             console.log ('process.env.NODE_ENV is: ' + process.env.NODE_ENV);
             if (process.env.NODE_ENV != "development") {
                 console.log("exiting after applySettingsData");
-                throw new Meteor.Error("applied settings restart service");
-//                process.exit(0);
+                process.exit(0);
             }
         }
     }
@@ -1565,175 +1567,176 @@ const applySettingsData = new ValidatedMethod({
 // makes sure all of the parameters display appropriate selections in relation to one another
 // for default settings ...
 const resetApp = function (appRef) {
-    var fse = require('fs-extra');
-    const metaDataTableRecords = appRef.appMdr;
-    const type = appRef.appType;
-    const appName = appRef.app;
-    const appTitle = appRef.title;
-    const appGroup =  appRef.group;
-    const appColor = matsTypes.AppTypes.mats ? "#3366bb" : "darkorchid";
-    const appTimeOut = 300;
-    var dep_env = process.env.NODE_ENV;
+    if (Meteor.isServer) {
+        var fse = require('fs-extra');
+        const metaDataTableRecords = appRef.appMdr;
+        const type = appRef.appType;
+        const appName = appRef.app;
+        const appTitle = appRef.title;
+        const appGroup = appRef.group;
+        const appColor = matsTypes.AppTypes.mats ? "#3366bb" : "darkorchid";
+        const appTimeOut = 300;
+        var dep_env = process.env.NODE_ENV;
 
-    // if there isn't an app listing in matsCollections create one here so that the configuration-> applySettingsData won't fail
-    console.log("resetApp - matsCollections.appName.findOne({}) is ", matsCollections.appName.findOne({}));
-    if (matsCollections.appName.findOne({}) == undefined) {
-        matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
-    }
+        // if there isn't an app listing in matsCollections create one here so that the configuration-> applySettingsData won't fail
+        console.log("resetApp - matsCollections.appName.findOne({}) is ", matsCollections.appName.findOne({}));
+        if (matsCollections.appName.findOne({}) == undefined) {
+            matsCollections.appName.upsert({app: appName}, {$set: {app: appName}});
+        }
 
-    // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
-    if (isEmpty (Meteor.settings.private) || isEmpty(Meteor.settings.public)) {
-        // create some default meteor settings and write them out
+        // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
+        if (isEmpty(Meteor.settings.private) || isEmpty(Meteor.settings.public)) {
+            // create some default meteor settings and write them out
 
-        var homeUrl = "";
-        if (process.env.ROOT_URL == undefined) {
-            homeUrl = "https://localhost/home";
+            var homeUrl = "";
+            if (process.env.ROOT_URL == undefined) {
+                homeUrl = "https://localhost/home";
+            } else {
+                var homeUrlArr = process.env.ROOT_URL.split('/');
+                homeUrlArr.pop();
+                homeUrl = homeUrlArr.join('/') + "/home";
+            }
+
+            const settings = {
+                "private": {
+                    "databases": [],
+                    "PYTHON_PATH": "/usr/bin/python3"
+                },
+                "public": {
+                    "run_environment": dep_env,
+                    "proxy_prefix_path": "",
+                    "home": homeUrl,
+                    "mysql_wait_timeout": appTimeOut,
+                    "group": appGroup,
+                    "app_order": 0,
+                    "title": appTitle,
+                    "color": appColor
+                }
+            };
+            _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
+            // exit for production - probably won't ever get here in development mode (running with meteor)
+            // This depends on whatever system is running the node process to restart it.
+            console.log('exiting');
+            process.exit(1);
+        }
+
+        // mostly for running locally for debugging. We have to be able to choose the app from the app list in deployment.json
+        // normally (on a server) it will be an environment variable.
+        // to debug an integration or production deployment, set the environment variable deployment_environment to one of
+        // development, integration, production, metexpress
+        if (Meteor.settings.public && Meteor.settings.public.run_environment) {
+            dep_env = Meteor.settings.public.run_environment;
         } else {
-            var homeUrlArr = process.env.ROOT_URL.split('/');
-            homeUrlArr.pop();
-            homeUrl = homeUrlArr.join('/') + "/home";
+            dep_env = process.env.NODE_ENV;
         }
 
-        const  settings = {
-            "private": {
-                "databases": [
-                ],
-                "PYTHON_PATH": "/usr/bin/python3"
-            },
-            "public": {
-                "run_environment" : dep_env,
-                "proxy_prefix_path": "",
-                "home": homeUrl,
-                "mysql_wait_timeout": appTimeOut,
-                "group": appGroup,
-                "app_order":0,
-                "title": appTitle,
-                "color": appColor
-            }
-        };
-        _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
-        // exit for production - probably won't ever get here in development mode (running with meteor)
-        // This depends on whatever system is running the node process to restart it.
-        console.log('exiting');
-        process.exit(1);
-    }
-
-    // mostly for running locally for debugging. We have to be able to choose the app from the app list in deployment.json
-    // normally (on a server) it will be an environment variable.
-    // to debug an integration or production deployment, set the environment variable deployment_environment to one of
-    // development, integration, production, metexpress
-    if (Meteor.settings.public && Meteor.settings.public.run_environment) {
-        dep_env = Meteor.settings.public.run_environment;
-    } else {
-        dep_env = process.env.NODE_ENV;
-    }
-
-    // timeout in seconds
-    var connectionTimeout =  Meteor.settings.public.mysql_wait_timeout != undefined ? Meteor.settings.public.mysql_wait_timeout : 300;
-    const mdrecords = metaDataTableRecords.getRecords();
-    delete Meteor.settings.public.undefinedRoles;
-    for (var mdri=0; mdri<mdrecords.length; mdri++) {
-        const record = mdrecords[mdri];
-        const poolName = record.pool;
-        // if the database credentials have been set in the meteor.private.settings file then the global[poolName]
-        // will have been defined in the app main.js. Otherwise it will not have been defined. We will skip it but add
-        // the corresponding role to Meteor.settings.public.undefinedRoles - which will cause the app to route to the db configuration page.
-        //console.log ("reset app - globals are:", global );
-        console.log ("resetApp global[" + poolName+ "] is: " + global[poolName]);
-        console.log ("global[" + poolName+ "] == undefined is: " + global[poolName] == undefined);
-        if (global[poolName] == undefined) {
-            console.log ("resetApp adding " + global[poolName] + "to undefined roles");
-            // There was no pool defined for this poolName - probably needs to be configured so stash the role in the public settings
-            if (Meteor.settings.public.undefinedRoles  == undefined) {
-                Meteor.settings.public.undefinedRoles = [];
-            }
-            Meteor.settings.public.undefinedRoles.push(record.role);
-            continue;
-        }
-
-        try {
-            global[poolName].on('connection', function (connection) {
-                connection.query('set group_concat_max_len = 4294967295');
-                connection.query('set session wait_timeout = ' + connectionTimeout);
-                console.log("opening new " + poolName + " connection");
-            });
-        } catch (e) {
-            console.log(poolName + ":  not initialized-- could not open connection: Error:" + e.message);
-            Meteor.settings.public.undefinedRoles = Meteor.settings.public.undefinedRoles  == undefined ? [] : Meteor.settings.public.undefinedRoles  == undefined;
-            Meteor.settings.public.undefinedRoles.push(record.role);
-            continue
-        }
-        // connections all work so make sure that Meteor.settings.public.undefinedRoles is undefined
+        // timeout in seconds
+        var connectionTimeout = Meteor.settings.public.mysql_wait_timeout != undefined ? Meteor.settings.public.mysql_wait_timeout : 300;
+        const mdrecords = metaDataTableRecords.getRecords();
         delete Meteor.settings.public.undefinedRoles;
-    }
+        for (var mdri = 0; mdri < mdrecords.length; mdri++) {
+            const record = mdrecords[mdri];
+            const poolName = record.pool;
+            // if the database credentials have been set in the meteor.private.settings file then the global[poolName]
+            // will have been defined in the app main.js. Otherwise it will not have been defined. We will skip it but add
+            // the corresponding role to Meteor.settings.public.undefinedRoles - which will cause the app to route to the db configuration page.
+            //console.log ("reset app - globals are:", global );
+            console.log("resetApp global[" + poolName + "] is: " + global[poolName]);
+            console.log("global[" + poolName + "] == undefined is: " + global[poolName] == undefined);
+            if (global[poolName] == undefined) {
+                console.log("resetApp adding " + global[poolName] + "to undefined roles");
+                // There was no pool defined for this poolName - probably needs to be configured so stash the role in the public settings
+                if (Meteor.settings.public.undefinedRoles == undefined) {
+                    Meteor.settings.public.undefinedRoles = [];
+                }
+                Meteor.settings.public.undefinedRoles.push(record.role);
+                continue;
+            }
 
-    // just in case - should never happen.
-    if (Meteor.settings.public.undefinedRoles && Meteor.settings.public.undefinedRoles.length >1 ) {
-        throw new Meteor.Error("dbpools not initialized " + Meteor.settings.public.undefinedRoles );
-    }
-
-    var deployment;
-    var deploymentText = Assets.getText('public/deployment/deployment.json');
-    deployment = JSON.parse(deploymentText);
-    var app = {};
-    // sort through the deployments to find the app that matches this deployment environment that is currently running
-    for (var ai = 0; ai < deployment.length; ai++) {
-        var dep = deployment[ai];
-        if (dep.deployment_environment == dep_env) {
-            app = dep.apps.filter(function (app) {
-                return app.app === appName;
-            })[0];
+            try {
+                global[poolName].on('connection', function (connection) {
+                    connection.query('set group_concat_max_len = 4294967295');
+                    connection.query('set session wait_timeout = ' + connectionTimeout);
+                    console.log("opening new " + poolName + " connection");
+                });
+            } catch (e) {
+                console.log(poolName + ":  not initialized-- could not open connection: Error:" + e.message);
+                Meteor.settings.public.undefinedRoles = Meteor.settings.public.undefinedRoles == undefined ? [] : Meteor.settings.public.undefinedRoles == undefined;
+                Meteor.settings.public.undefinedRoles.push(record.role);
+                continue
+            }
+            // connections all work so make sure that Meteor.settings.public.undefinedRoles is undefined
+            delete Meteor.settings.public.undefinedRoles;
         }
-    }
-    const appVersion = app ? app.version : "unknown";
-    const buildDate = app ? app.buildDate : "unknown";
-    const appType = type ? type : matsTypes.AppTypes.mats;
-    matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
 
-    // remember that we updated the metadata tables just now - create metaDataTableUpdates
-    /*
-        metaDataTableUpdates:
-        {
-            name: dataBaseName,
-            tables: [tableName1, tableName2 ..],
-            lastRefreshed : timestamp
+        // just in case - should never happen.
+        if (Meteor.settings.public.undefinedRoles && Meteor.settings.public.undefinedRoles.length > 1) {
+            throw new Meteor.Error("dbpools not initialized " + Meteor.settings.public.undefinedRoles);
         }
-     */
-    // only create metadata tables if the resetApp was called with a real metaDataTables object
-    if (metaDataTableRecords instanceof matsTypes.MetaDataDBRecord) {
-        var metaDataTables = metaDataTableRecords.getRecords();
-        for (var mdti = 0; mdti < metaDataTables.length; mdti++) {
-            const metaDataRef = metaDataTables[mdti];
-            metaDataRef.lastRefreshed = moment().format();
-            if (metaDataTableUpdates.find({name: metaDataRef.name}).count() == 0) {
-                metaDataTableUpdates.update({name: metaDataRef.name}, metaDataRef, {upsert: true});
+
+        var deployment;
+        var deploymentText = Assets.getText('public/deployment/deployment.json');
+        deployment = JSON.parse(deploymentText);
+        var app = {};
+        // sort through the deployments to find the app that matches this deployment environment that is currently running
+        for (var ai = 0; ai < deployment.length; ai++) {
+            var dep = deployment[ai];
+            if (dep.deployment_environment == dep_env) {
+                app = dep.apps.filter(function (app) {
+                    return app.app === appName;
+                })[0];
             }
         }
-    } else {
-        throw new Meteor.Error("Server error: ", "resetApp: bad pool-database entry");
-    }
+        const appVersion = app ? app.version : "unknown";
+        const buildDate = app ? app.buildDate : "unknown";
+        const appType = type ? type : matsTypes.AppTypes.mats;
+        matsCollections.appName.upsert({app: appName}, {$set: {app: appName}});
 
-    matsCollections.Roles.remove({});
-    matsDataUtils.doRoles();
-    matsCollections.Authorization.remove({});
-    matsDataUtils.doAuthorization();
-    matsCollections.Credentials.remove({});
-    matsDataUtils.doCredentials();
-    matsCollections.PlotGraphFunctions.remove({});
-    matsCollections.ColorScheme.remove({});
-    matsDataUtils.doColorScheme();
-    matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType);
-    matsCollections.CurveParams.remove({});
-    matsCollections.PlotParams.remove({});
-    matsCollections.CurveTextPatterns.remove({});
+        // remember that we updated the metadata tables just now - create metaDataTableUpdates
+        /*
+            metaDataTableUpdates:
+            {
+                name: dataBaseName,
+                tables: [tableName1, tableName2 ..],
+                lastRefreshed : timestamp
+            }
+         */
+        // only create metadata tables if the resetApp was called with a real metaDataTables object
+        if (metaDataTableRecords instanceof matsTypes.MetaDataDBRecord) {
+            var metaDataTables = metaDataTableRecords.getRecords();
+            for (var mdti = 0; mdti < metaDataTables.length; mdti++) {
+                const metaDataRef = metaDataTables[mdti];
+                metaDataRef.lastRefreshed = moment().format();
+                if (metaDataTableUpdates.find({name: metaDataRef.name}).count() == 0) {
+                    metaDataTableUpdates.update({name: metaDataRef.name}, metaDataRef, {upsert: true});
+                }
+            }
+        } else {
+            throw new Meteor.Error("Server error: ", "resetApp: bad pool-database entry");
+        }
+
+        matsCollections.Roles.remove({});
+        matsDataUtils.doRoles();
+        matsCollections.Authorization.remove({});
+        matsDataUtils.doAuthorization();
+        matsCollections.Credentials.remove({});
+        matsDataUtils.doCredentials();
+        matsCollections.PlotGraphFunctions.remove({});
+        matsCollections.ColorScheme.remove({});
+        matsDataUtils.doColorScheme();
+        matsCollections.Settings.remove({});
+        matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType);
+        matsCollections.CurveParams.remove({});
+        matsCollections.PlotParams.remove({});
+        matsCollections.CurveTextPatterns.remove({});
 // app specific routines
-    //const asrKeys = Object.keys(appSpecificResetRoutines);
-    const asrKeys = appSpecificResetRoutines;
-    for (var ai = 0; ai < asrKeys.length; ai++) {
-        global.appSpecificResetRoutines[ai]();
+        //const asrKeys = Object.keys(appSpecificResetRoutines);
+        const asrKeys = appSpecificResetRoutines;
+        for (var ai = 0; ai < asrKeys.length; ai++) {
+            global.appSpecificResetRoutines[ai]();
+        }
+        matsCache.clear();
     }
-    matsCache.clear();
 };
 const saveLayout = new ValidatedMethod({
     name: 'matsMethods.saveLayout',
