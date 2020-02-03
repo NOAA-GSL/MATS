@@ -3,10 +3,12 @@ set -e
 
 echo "Running app ${APPNAME} date: $(date)"
 # Set a delay to wait to start meteor container
-if [[ $DELAY ]]; then
+
+#if [[ $DELAY ]]; then
+DELAY=10
     echo "run_app => Delaying startup for $DELAY seconds"
     sleep $DELAY
-fi
+#fi
 
 # Honour already existing PORT setup
 export PORT=${PORT:-80}
@@ -26,12 +28,15 @@ EOF
   chmod -R 777 /usr/app/settings/${APPNAME}
 fi
 export METEOR_SETTINGS_DIR=/usr/app/settings
+echo "run_app settings are ..."
+cat /usr/app/settings/${APPNAME}/settings.json
 export METEOR_SETTINGS=$(cat /usr/app/settings/${APPNAME}/settings.json)
+echo "METEOR_SETTINGS VAR IS" ${METEOR_SETTINGS}
 cd /usr/app
 if [[ $DEBUG ]]; then
-    echo "run_app => Starting meteor app for DEBUG on port:$PORT with settings $METEOR_SETTINGS"
+    echo "run_app => Starting meteor app for DEBUG on port: " $PORT " with settings " $METEOR_SETTINGS
     node --inspect=0.0.0.0:9229 main.js
 else
-    echo "run_app => Starting meteor app  on port:$PORT with settings $METEOR_SETTINGS"
+    echo "run_app => Starting meteor app  on port: " ${PORT} " with settings " ${METEOR_SETTINGS}
     node main.js
 fi
