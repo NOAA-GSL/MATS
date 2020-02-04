@@ -289,10 +289,10 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
-    const ymin = curve['ymin'];
-    const ymax = curve['ymax'];
-    const xmin = curve['xmin'];
-    const xmax = curve['xmax'];
+    const ymin = dataBars['ymin'];
+    const ymax = dataBars['ymax'];
+    const xmin = dataBars['xmin'];
+    const xmax = dataBars['xmax'];
     const axisKey = curve['axisKey'];
     if (axisKey in axisMap) {
         axisMap[axisKey].axisLabel = axisKey;

@@ -988,6 +988,9 @@ const generateMapPlotOptions = function () {
 const generateHistogramPlotOptions = function (curves, axisMap, plotBins) {
     const axisKey = curves[0].axisKey;
     const axisLabel = axisMap[axisKey].axisLabel;
+    var xmin = axisMap[axisKey].xmin;
+    var xmax = axisMap[axisKey].xmax;
+    const xPad = ((xmax - xmin) / plotBins.binMeans.length) * 1.2;
     var ymin = axisMap[axisKey].ymin;
     var ymax = axisMap[axisKey].ymax;
     const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
@@ -1040,7 +1043,8 @@ const generateHistogramPlotOptions = function (curves, axisMap, plotBins) {
         mirror: true,
         showgrid: true,
         gridwidth: 1,
-        gridcolor: "rgb(238,238,238)"
+        gridcolor: "rgb(238,238,238)",
+        range: [xmin - xPad, xmax + xPad]
     };
 
     // y-axis options
@@ -1070,6 +1074,9 @@ const generateHistogramPlotOptions = function (curves, axisMap, plotBins) {
 const generateEnsembleHistogramPlotOptions = function (dataset, curves, axisMap) {
     const axisKey = curves[0].axisKey;
     const axisLabel = axisMap[axisKey].axisLabel;
+    var xmin = dataset[0].x[0];
+    var xmax = dataset[0].x[dataset[0].x.length - 1];
+    const xPad = ((xmax - xmin) / dataset[0].x.length) * 0.6;
     var ymin = axisMap[axisKey].ymin;
     var ymax = axisMap[axisKey].ymax;
     const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
@@ -1132,7 +1139,8 @@ const generateEnsembleHistogramPlotOptions = function (dataset, curves, axisMap)
         mirror: true,
         showgrid: true,
         gridwidth: 1,
-        gridcolor: "rgb(238,238,238)"
+        gridcolor: "rgb(238,238,238)",
+        range: [xmin - xPad, xmax + xPad]
     };
 
     // y-axis options
@@ -1162,6 +1170,10 @@ const generateEnsembleHistogramPlotOptions = function (dataset, curves, axisMap)
 const generateContourPlotOptions = function (dataset) {
     const xAxisKey = dataset[0]['xAxisKey'];
     const yAxisKey = dataset[0]['yAxisKey'];
+    var xmin = dataset[0].xmin;
+    var xmax = dataset[0].xmax;
+    var ymin = dataset[0].ymin;
+    var ymax = dataset[0].ymax;
 
     // overall plot options
     var layout = {
@@ -1207,6 +1219,12 @@ const generateContourPlotOptions = function (dataset) {
         gridcolor: "rgb(238,238,238)"
     };
 
+    if (xAxisKey.indexOf("Date") > -1) {
+        layout['xaxis']['range'] = [moment.utc(xmin * 1000).format("YYYY-MM-DD HH:mm"), moment.utc(xmax * 1000).format("YYYY-MM-DD HH:mm")];
+    } else {
+        layout['xaxis']['range'] = [xmin, xmax];
+    }
+
     // y-axis options
     if (yAxisKey === "Pressure level") {
         layout['yaxis'] = {
@@ -1242,6 +1260,12 @@ const generateContourPlotOptions = function (dataset) {
             gridwidth: 1,
             gridcolor: "rgb(238,238,238)"
         };
+    }
+
+    if (yAxisKey.indexOf("Date") > -1) {
+        layout['yaxis']['range'] = [moment.utc(ymin * 1000).format("YYYY-MM-DD HH:mm"), moment.utc(ymax * 1000).format("YYYY-MM-DD HH:mm")];
+    } else {
+        layout['yaxis']['range'] = [ymin, ymax];
     }
 
     return layout;

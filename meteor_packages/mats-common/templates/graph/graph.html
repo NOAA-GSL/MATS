@@ -96,7 +96,6 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3>Select axis limits and labels: </h3>
-                            <h4>* Leave a field blank to preserve its original value. </h4>
                             <h4>* Only data from your original time range has been queried and is available to plot. </h4>
                         </div>
                         <div class="modal-body">
@@ -105,32 +104,32 @@
                                 <div id="x{{xAxis.label}}AxisCustomControls" style="display:block;">
                                     <div class="row">
                                         <label class="col-sm-2">X{{xAxis}} label: </label>
-                                        <input id="x{{xAxis}}AxisLabel" class="x{{xAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="x{{xAxis}}AxisLabel"/>
+                                        <input id="x{{xAxis}}AxisLabel" class="x{{xAxis}}-axis-label data-input textInput col-sm-3" type="text" value="{{xAxisTitle xAxis}}" name="x{{xAxis}}AxisLabel"/>
                                         <label class="col-sm-4">&nbsp;&nbsp;X{{xAxis}} label font size: </label>
-                                        <input id="x{{xAxis}}AxisFont" class="x{{xAxis}}-axis-font data-input numberInput col-sm-2" type="number" value="" name="x{{xAxis}}AxisFont"/>
+                                        <input id="x{{xAxis}}AxisFont" class="x{{xAxis}}-axis-font data-input numberInput col-sm-2" type="number" value="{{xAxisTitleFont xAxis}}" name="x{{xAxis}}AxisFont"/>
                                     </div>
                                     <div id="xAxisControlsNumber" style="display:{{xAxisControlsNumberVisibility}};">
                                         <div class="row">
                                             <label class="col-sm-2">X{{xAxis}}_min: </label>
-                                            <input id="x{{xAxis}}AxisMin" class="x{{xAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="" name="x{{xAxis}}AxisMin"/>
+                                            <input id="x{{xAxis}}AxisMin" class="x{{xAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="{{xAxisMin xAxis}}" name="x{{xAxis}}AxisMin"/>
                                             <label class="col-sm-4">&nbsp;&nbsp;X{{xAxis}} tick font size: </label>
-                                            <input id="x{{xAxis}}TickFont" class="x{{xAxis}}-tick-font data-input numberInput col-sm-2" type="number" value="" name="x{{xAxis}}TickFont"/>
+                                            <input id="x{{xAxis}}TickFont" class="x{{xAxis}}-tick-font data-input numberInput col-sm-2" type="number" value="{{xAxisTickFont xAxis}}" name="x{{xAxis}}TickFont"/>
                                         </div>
                                         <div class="row">
                                             <label class="col-sm-2">X{{xAxis}}_max: </label>
-                                            <input id="x{{xAxis}}AxisMax" class="x{{xAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="" name="x{{xAxis}}AxisMax"/>
+                                            <input id="x{{xAxis}}AxisMax" class="x{{xAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="{{xAxisMax xAxis}}" name="x{{xAxis}}AxisMax"/>
                                         </div>
                                     </div>
                                     <div id="xAxisControlsText" style="display:{{xAxisControlsTextVisibility}};">
                                         <div class="row">
                                             <label class="col-sm-2">X{{xAxis}}_min: </label>
-                                            <input id="x{{xAxis}}AxisMinText" class="x{{xAxis}}-axis-min data-input textInput col-sm-3" type="text" value="" name="x{{xAxis}}AxisMinText"/>
+                                            <input id="x{{xAxis}}AxisMinText" class="x{{xAxis}}-axis-min data-input textInput col-sm-3" type="text" value="{{xAxisMin xAxis}}" name="x{{xAxis}}AxisMinText"/>
                                             <label class="col-sm-4">&nbsp;&nbsp;X{{xAxis}} tick font size: </label>
-                                            <input id="x{{xAxis}}TextTickFont" class="x{{xAxis}}-text-tick-font data-input numberInput col-sm-2" type="number" value="" name="x{{xAxis}}TextTickFont"/>
+                                            <input id="x{{xAxis}}TickFontText" class="x{{xAxis}}-text-tick-font data-input numberInput col-sm-2" type="number" value="{{xAxisTickFont xAxis}}" name="x{{xAxis}}TextTickFont"/>
                                         </div>
                                         <div class="row">
                                             <label class="col-sm-2">X{{xAxis}}_max: </label>
-                                            <input id="x{{xAxis}}AxisMaxText" class="x{{xAxis}}-axis-max data-input textInput col-sm-3" type="text" value="" name="x{{xAxis}}AxisMaxText"/>
+                                            <input id="x{{xAxis}}AxisMaxText" class="x{{xAxis}}-axis-max data-input textInput col-sm-3" type="text" value="{{xAxisMax xAxis}}" name="x{{xAxis}}AxisMaxText"/>
                                         </div>
                                         <div class="row">
                                             <span class="col-sm-8">&nbsp;&nbsp; (Enter dates in YYYY-MM-DD HH:MM format)</span>
@@ -143,32 +142,32 @@
                                 <div id="y{{yAxis.label}}AxisCustomControls" style="display:block;">
                                     <div class="row">
                                         <label class="col-sm-2">Y{{yAxis}} label: </label>
-                                        <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisLabel"/>
+                                        <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput col-sm-3" type="text" value="{{yAxisTitle yAxis}}" name="y{{yAxis}}AxisLabel"/>
                                         <label class="col-sm-4">&nbsp;&nbsp;Y{{yAxis}} label font size: </label>
-                                        <input id="y{{yAxis}}AxisFont" class="y{{yAxis}}-axis-font data-input numberInput col-sm-2" type="number" value="" name="y{{yAxis}}AxisFont"/>
+                                        <input id="y{{yAxis}}AxisFont" class="y{{yAxis}}-axis-font data-input numberInput col-sm-2" type="number" value="{{yAxisTitleFont yAxis}}" name="y{{yAxis}}AxisFont"/>
                                     </div>
                                     <div id="yAxisControlsNumber" style="display:{{yAxisControlsNumberVisibility}};">
                                         <div class="row">
                                             <label class="col-sm-2">Y{{yAxis}}_min: </label>
-                                            <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMin"/>
+                                            <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="{{yAxisMin yAxis}}" name="y{{yAxis}}AxisMin"/>
                                             <label class="col-sm-4">&nbsp;&nbsp;Y{{yAxis}} tick font size: </label>
-                                            <input id="y{{yAxis}}TickFont" class="y{{yAxis}}-tick-font data-input numberInput col-sm-2" type="number" value="" name="y{{yAxis}}TickFont"/>
+                                            <input id="y{{yAxis}}TickFont" class="y{{yAxis}}-tick-font data-input numberInput col-sm-2" type="number" value="{{yAxisTickFont yAxis}}" name="y{{yAxis}}TickFont"/>
                                         </div>
                                         <div class="row">
                                             <label class="col-sm-2">Y{{yAxis}}_max: </label>
-                                            <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMax"/>
+                                            <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="{{yAxisMax yAxis}}" name="y{{yAxis}}AxisMax"/>
                                         </div>
                                     </div>
                                     <div id="yAxisControlsText" style="display:{{yAxisControlsTextVisibility}};">
                                         <div class="row">
                                             <label class="col-sm-2">Y{{yAxis}}_min: </label>
-                                            <input id="y{{yAxis}}AxisMinText" class="y{{yAxis}}-axis-min data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisMinText"/>
+                                            <input id="y{{yAxis}}AxisMinText" class="y{{yAxis}}-axis-min data-input textInput col-sm-3" type="text" value="{{yAxisMin yAxis}}" name="y{{yAxis}}AxisMinText"/>
                                             <label class="col-sm-4">&nbsp;&nbsp;Y{{yAxis}} tick font size: </label>
-                                            <input id="y{{yAxis}}TextTickFont" class="y{{yAxis}}-text-tick-font data-input numberInput col-sm-2" type="number" value="" name="y{{yAxis}}TextTickFont"/>
+                                            <input id="y{{yAxis}}TickFontText" class="y{{yAxis}}-text-tick-font data-input numberInput col-sm-2" type="number" value="{{yAxisTickFont yAxis}}" name="y{{yAxis}}TextTickFont"/>
                                         </div>
                                         <div class="row">
                                             <label class="col-sm-2">Y{{yAxis}}_max: </label>
-                                            <input id="y{{yAxis}}AxisMaxText" class="y{{yAxis}}-axis-max data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisMaxText"/>
+                                            <input id="y{{yAxis}}AxisMaxText" class="y{{yAxis}}-axis-max data-input textInput col-sm-3" type="text" value="{{yAxisMax yAxis}}" name="y{{yAxis}}AxisMaxText"/>
                                         </div>
                                         <div class="row">
                                             <span class="col-sm-8">&nbsp;&nbsp; (Enter dates in YYYY-MM-DD HH:MM format)</span>
@@ -179,7 +178,7 @@
                             <div class="row">
                                 <div><br></div>
                                 <label class="col-sm-4">&nbsp;&nbsp;Legend font size: </label>
-                                <input id="legendFontSize" class="legend-font-size data-input numberInput col-sm-2" type="number" value="" name="legendFontSize"/>
+                                <input id="legendFontSize" class="legend-font-size data-input numberInput col-sm-2" type="number" value="{{legendFontSize}}" name="legendFontSize"/>
                             </div>
                             <div class="row">
                                 <label class="col-sm-4">&nbsp;&nbsp;Legend font color: </label>
@@ -188,7 +187,7 @@
                             <div class="row">
                                 <div><br></div>
                                 <label class="col-sm-4">&nbsp;&nbsp;Grid line weight: </label>
-                                <input id="gridWeight" class="grid-weight data-input numberInput col-sm-2" type="number" value="" name="gridWeight"/>
+                                <input id="gridWeight" class="grid-weight data-input numberInput col-sm-2" type="number" value="{{gridWeight}}" name="gridWeight"/>
                             </div>
                             <div class="row">
                                 <label class="col-sm-4">&nbsp;&nbsp;Grid line color: </label>
