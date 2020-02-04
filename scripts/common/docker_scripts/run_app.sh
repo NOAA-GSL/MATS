@@ -14,7 +14,7 @@ export PORT=${PORT:-80}
 export NODE_ENV=production
 # check for persisted meteor settings and if not present create a template
 # secret settings are added to the persistent settings.json by the app itself durring configuration
-[[ -d /usr/app/settings/${APPNAME} ]] || mkdir /usr/app/settings/${APPNAME}
+[[ -d /usr/app/settings/${APPNAME} ]] || mkdir -p /usr/app/settings/${APPNAME}
 if [[ ! -f /usr/app/settings/${APPNAME}/settings.json ]]; then
   # create a template - lets the app start up in configure mode
 cat << EOF > /usr/app/settings/${APPNAME}/settings.json
