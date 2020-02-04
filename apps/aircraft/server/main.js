@@ -4,11 +4,7 @@
 
 import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsParamUtils} from 'meteor/randyp:mats-common';
+import {matsCollections, matsDataQueryUtils, matsDataUtils, matsParamUtils, matsTypes} from 'meteor/randyp:mats-common';
 
 // determined in doCurveParanms
 var minDate;
@@ -661,8 +657,8 @@ const doCurveParams = function () {
     }
 
     // determine date defaults for dates and curveDates
-    const defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
+    const defaultDataSource = matsCollections.CurveParams.findOne({name: "data-source"}, {default: 1}).default;
+    modelDateRangeMap = matsCollections.CurveParams.findOne({name: "data-source"}, {dates: 1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
 
@@ -905,20 +901,16 @@ const doPlotGraph = function () {
 };
 
 Meteor.startup(function () {
-    console.log('Entering app startup for aircraft');
-    console.log ('app startup for aircraft: settings are', JSON.stringify (Meteor.settings,null,2));
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() < 0) {
-        // databse corrupted? saw it once before..
+        console.log('main startup: corrupted Databases collection: dropping Databases collection');
         matsCollections.Databases.drop();
     }
     if (matsCollections.Databases.find({}).count() === 0) {
-        console.log('app startup for aircraft: setting databases:');
         var databases = undefined;
         if (Meteor.settings == undefined || Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined) {
             databases = undefined;
         } else {
-            console.log('app startup for aircraft: defining databases from these settings...:', JSON.stringify(Meteor.settings.private.databases, null,2));
             databases = Meteor.settings.private.databases;
         }
         if (databases !== null && databases !== undefined && Array.isArray(databases)) {
@@ -927,7 +919,6 @@ Meteor.startup(function () {
             }
         }
     }
-
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         port: 1,
@@ -937,16 +928,14 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    console.log('app startup for aircraft: sumSettings...:', JSON.stringify(sumSettings, null,2));
     if (sumSettings) {
-        try {
-            sumPool = mysql.createPool(sumSettings)
-        } catch (error) {
-            console.log("aircraft main error defining sumpool - " + error.message);
-        }
-    };
-
-    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
+        sumPool = mysql.createPool(sumSettings)
+    }
+    ;
+    const metadataSettings = matsCollections.Databases.findOne({
+        role: matsTypes.DatabaseRoles.META_DATA,
+        status: "active"
+    }, {
         host: 1,
         port: 1,
         user: 1,
@@ -955,25 +944,22 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    console.log('app startup for aircraft: metadataSettings...:', JSON.stringify(metadataSettings, null,2));
-    if (metadataSettings)  {
-        try {
-            metadataPool = mysql.createPool(metadataSettings);
-        } catch (error) {
-            console.log("aircraft main error defining metadataPool - " + error.message);
-        }
-
+    if (metadataSettings) {
+        metadataPool = mysql.createPool(metadataSettings);
     }
-
-    const mdr = new matsTypes.MetaDataDBRecord( matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
+    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
     mdr.addRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
     try {
-        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'aircraft', title: "Upper Air (AMDAR)", group: "Upper Air"});
+        matsMethods.resetApp({
+            appMdr: mdr,
+            appType: matsTypes.AppTypes.mats,
+            app: 'aircraft',
+            title: "Upper Air (AMDAR)",
+            group: "Upper Air"
+        });
     } catch (error) {
         console.log("aircraft main - " + error.message);
     }
-    console.log ("aircraft main - global[sumPool] is: " + global['sumPool'] );
-    console.log ("aircraft main - global[metadataPool] is: " + global['metadataPool'] );
 });
 
 // this object is global so that the reset code can get to it

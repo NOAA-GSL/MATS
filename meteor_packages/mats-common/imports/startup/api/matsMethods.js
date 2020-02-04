@@ -1555,9 +1555,9 @@ const applySettingsData = new ValidatedMethod({
             _write_settings(settings, appName);
             // in development - when being run by meteor, this should force a restart of the app.
             //in case I am in a container - exit and force a reload
-            console.log ('process.env.NODE_ENV is: ' + process.env.NODE_ENV);
+            console.log ('applySettingsData - process.env.NODE_ENV is: ' + process.env.NODE_ENV);
             if (process.env.NODE_ENV != "development") {
-                console.log("exiting after applySettingsData");
+                console.log("applySettingsData - exiting after writing new Settings");
                 process.exit(0);
             }
         }
@@ -1579,15 +1579,13 @@ const resetApp = function (appRef) {
         var dep_env = process.env.NODE_ENV;
 
         // if there isn't an app listing in matsCollections create one here so that the configuration-> applySettingsData won't fail
-        console.log("resetApp - matsCollections.appName.findOne({}) is ", matsCollections.appName.findOne({}));
         if (matsCollections.appName.findOne({}) == undefined) {
             matsCollections.appName.upsert({app: appName}, {$set: {app: appName}});
         }
 
-        // set meteor settings defaults if they do not exist - loosey == equality for null or undefined
+        // set meteor settings defaults if they do not exist
         if (isEmpty(Meteor.settings.private) || isEmpty(Meteor.settings.public)) {
             // create some default meteor settings and write them out
-
             var homeUrl = "";
             if (process.env.ROOT_URL == undefined) {
                 homeUrl = "https://localhost/home";
@@ -1596,7 +1594,6 @@ const resetApp = function (appRef) {
                 homeUrlArr.pop();
                 homeUrl = homeUrlArr.join('/') + "/home";
             }
-
             const settings = {
                 "private": {
                     "databases": [],
@@ -1608,7 +1605,7 @@ const resetApp = function (appRef) {
                     "home": homeUrl,
                     "mysql_wait_timeout": appTimeOut,
                     "group": appGroup,
-                    "app_order": 0,
+                    "app_order": 1,
                     "title": appTitle,
                     "color": appColor
                 }
@@ -1616,7 +1613,7 @@ const resetApp = function (appRef) {
             _write_settings(settings, appName);  // this is going to cause the app to restart in the meteor development environment!!!
             // exit for production - probably won't ever get here in development mode (running with meteor)
             // This depends on whatever system is running the node process to restart it.
-            console.log('exiting');
+            console.log('resetApp - exiting after creating default settings');
             process.exit(1);
         }
 
@@ -1629,7 +1626,6 @@ const resetApp = function (appRef) {
         } else {
             dep_env = process.env.NODE_ENV;
         }
-
         // timeout in seconds
         var connectionTimeout = Meteor.settings.public.mysql_wait_timeout != undefined ? Meteor.settings.public.mysql_wait_timeout : 300;
         const mdrecords = metaDataTableRecords.getRecords();
@@ -1638,11 +1634,10 @@ const resetApp = function (appRef) {
             const record = mdrecords[mdri];
             const poolName = record.pool;
             // if the database credentials have been set in the meteor.private.settings file then the global[poolName]
-            // will have been defined in the app main.js. Otherwise it will not have been defined. We will skip it but add
-            // the corresponding role to Meteor.settings.public.undefinedRoles - which will cause the app to route to the db configuration page.
-            //console.log ("reset app - globals are:", global );
-            console.log("resetApp global[" + poolName + "] is: " + global[poolName]);
-            console.log("global[" + poolName + "] == undefined is: " + global[poolName] == undefined);
+            // will have been defined in the app main.js. Otherwise it will not have been defined.
+            // If it is undefined (requiring configuration) we will skip it but add
+            // the corresponding role to Meteor.settings.public.undefinedRoles -
+            // which will cause the app to route to the configuration page.
             if (global[poolName] == undefined) {
                 console.log("resetApp adding " + global[poolName] + "to undefined roles");
                 // There was no pool defined for this poolName - probably needs to be configured so stash the role in the public settings
@@ -1652,7 +1647,6 @@ const resetApp = function (appRef) {
                 Meteor.settings.public.undefinedRoles.push(record.role);
                 continue;
             }
-
             try {
                 global[poolName].on('connection', function (connection) {
                     connection.query('set group_concat_max_len = 4294967295');
@@ -1668,12 +1662,10 @@ const resetApp = function (appRef) {
             // connections all work so make sure that Meteor.settings.public.undefinedRoles is undefined
             delete Meteor.settings.public.undefinedRoles;
         }
-
         // just in case - should never happen.
         if (Meteor.settings.public.undefinedRoles && Meteor.settings.public.undefinedRoles.length > 1) {
             throw new Meteor.Error("dbpools not initialized " + Meteor.settings.public.undefinedRoles);
         }
-
         var deployment;
         var deploymentText = Assets.getText('public/deployment/deployment.json');
         deployment = JSON.parse(deploymentText);
@@ -1714,7 +1706,7 @@ const resetApp = function (appRef) {
         } else {
             throw new Meteor.Error("Server error: ", "resetApp: bad pool-database entry");
         }
-
+        // invoke the standard common routines
         matsCollections.Roles.remove({});
         matsDataUtils.doRoles();
         matsCollections.Authorization.remove({});
@@ -1729,7 +1721,7 @@ const resetApp = function (appRef) {
         matsCollections.CurveParams.remove({});
         matsCollections.PlotParams.remove({});
         matsCollections.CurveTextPatterns.remove({});
-// app specific routines
+        // invoke the app specific routines
         //const asrKeys = Object.keys(appSpecificResetRoutines);
         const asrKeys = appSpecificResetRoutines;
         for (var ai = 0; ai < asrKeys.length; ai++) {

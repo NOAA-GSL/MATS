@@ -27,8 +27,6 @@ EOF
   chmod -R 777 /usr/app/settings/${APPNAME}
 fi
 export METEOR_SETTINGS_DIR="/usr/app/settings"
-echo "run_app settings are ..."
-cat /usr/app/settings/${APPNAME}/settings.json
 export METEOR_SETTINGS="$(cat /usr/app/settings/${APPNAME}/settings.json)"
 echo "METEOR_SETTINGS VAR IS" "${METEOR_SETTINGS}"
 cd /usr/app
