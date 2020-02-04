@@ -19,6 +19,9 @@ const getRunEnvironment = function () {
 }
 
 Template.topNav.helpers({
+    transparentGif: function() {
+        return document.location + "/img/noaa_transparent.gif";
+    },
     agencyText: function () {
         switch (getRunEnvironment()) {
             case "metexpress":
