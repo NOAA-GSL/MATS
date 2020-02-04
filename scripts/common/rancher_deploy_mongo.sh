@@ -15,11 +15,50 @@ if [ ! -f ~/.matsapps_credentials ]; then
 fi
 . ~/.matsapps_credentials
 
-ns="matsdev"
-if [[ $# -ne 0 ]]; then
-    ns=$1
+function usage() {
+      echo "USAGE: $0 -n namespace [-p persistentVolumeClaim]"
+      echo "where namespace is a valid namespace (namespaces are expected to match MATS environments)"
+      echo "and persistentVolumeClaim is the name of a predefined persistent Volume Claim - defaults to 'matsdata'"
+      exit 1;
+}
+
+export CONTEXT=""
+export pvc=matsdata
+while getopts 'n:p:h' OPTION; do
+  case "$OPTION" in
+    n)
+        ns="$OPTARG"
+        CONTEXT=$(echo 0 | rancher login $CATTLE_ENDPOINT --token ${TOKEN} --skip-verify 2> /dev/null | grep "^[1-9]" | grep $ns | awk '{print $3}')
+        if [ -z "$CONTEXT" ]; then
+          echo "invalid environment - there is no rancher context matching $ns"
+          echo "valid contexts are ..."
+          echo 0 | rancher login $CATTLE_ENDPOINT --token ${TOKEN} --skip-verify 2> /dev/null | grep "^[1-9]" | awk '{print $4}'
+          echo "exiting"
+          exit 1
+        else
+          echo "setting environment to $ns"
+          echo "CONTEXT: $CONTEXT"
+        fi
+      ;;
+    p)
+       persistentVolumeClaim="$OPTARG"
+        echo "deploying PersistentVolumeClaim  $pvc"
+        ;;
+    h)
+      usage
+      ;;
+    ?)
+      usage
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+if [ -z $CONTEXT ]; then
+  echo "You must provide a namespace!"
+  usage
 fi
 
-rootUrl=https://rancher.localhost
-pvc=matsdata
-rancher app install matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} 
+echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
+rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
+rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc}
