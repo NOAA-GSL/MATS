@@ -14,16 +14,23 @@ export PORT=${PORT:-80}
 export NODE_ENV=production
 # check for persisted meteor settings and if not present create a template
 # secret settings are added to the persistent settings.json by the app itself durring configuration
-[[ -d /usr/app/settings/${APPNAME} ]] || mkdir /usr/app/settings/${APPNAME}
+echo "run-app: make sure we have a /usr/app/settings/${APPNAME} directory.."
+if [[ ! -d /usr/app/settings/${APPNAME} ]]; then
+    echo "run-app: creating /usr/app/settings/${APPNAME}"
+    mkdir -p /usr/app/settings/${APPNAME}
+fi
+echo "$(ls /usr/app/settings/${APPNAME})"
+
 if [[ ! -f /usr/app/settings/${APPNAME}/settings.json ]]; then
   # create a template - lets the app start up in configure mode
+  echo "run-app: creating empty settings file"
 cat << EOF > /usr/app/settings/${APPNAME}/settings.json
 {
   "private": {},
   "public": {}
 }
 EOF
-  # make sure the settings sirectory and file are still modifiable.
+  # make sure the settings directory and file are still modifiable.
   chmod -R 777 /usr/app/settings/${APPNAME}
 fi
 export METEOR_SETTINGS_DIR="/usr/app/settings"

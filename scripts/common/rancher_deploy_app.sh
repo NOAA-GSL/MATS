@@ -15,9 +15,88 @@ if [ ! -f ~/.matsapps_credentials ]; then
 fi
 . ~/.matsapps_credentials
 
-ns="matsdev"
-rootUrl=https://rancher.localhost
-appReference=$1
-imageVersion=nightly
-pvc=matsdata
-rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${imageVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+function usage() {
+      echo "USAGE: $0 -n namespace -a appReference -v appVersion -u rootUrl [-p persistentVolumeClaim]"
+      echo "where namespace is a valid namespace (namespaces are expected to match MATS environments)"
+      echo "and appReference defines an app i.e. aircraft, upperair etc."
+      echo "and appVersion is the version of the app i.e. nightly, 2.3.13, 2.3.14 etc"
+      echo "and rootUrl is the root Url of the ingres to the corresponding matshome i.e. for https://rancher.localhost/matsdev/home it is https://rancher.localhost"
+      echo "and persistentVolumeClaim is the name of a predefined persistent Volume Claim - defaults to 'matsdata'"
+      exit 1;
+}
+
+export CONTEXT=""
+export appReference=""
+export appVersion=""
+export rootUrl=""
+export pvc=matsdata
+while getopts 'n:a:v:u:p:h' OPTION; do
+  case "$OPTION" in
+    n)
+        ns="$OPTARG"
+        CONTEXT=$(echo 0 | rancher login $CATTLE_ENDPOINT --token ${TOKEN} --skip-verify 2> /dev/null | grep "^[1-9]" | grep $ns | awk '{print $3}')
+        if [ -z "$CONTEXT" ]; then
+          echo "invalid environment - there is no rancher context matching $ns"
+          echo "valid contexts are ..."
+          echo 0 | rancher login $CATTLE_ENDPOINT --token ${TOKEN} --skip-verify 2> /dev/null | grep "^[1-9]" | awk '{print $4}'
+          echo "exiting"
+          exit 1
+        else
+          echo "setting environment to $ns"
+          echo "CONTEXT: $CONTEXT"
+        fi
+      ;;
+    a)
+        appReference="$OPTARG"
+        echo "deploying $appReference"
+      ;;
+    v)
+        appVersion="$OPTARG"
+        echo "deploying app version $appVersion"
+      ;;
+    u)
+       rootUrl="$OPTARG"
+        echo "deploying rootUrl $rootUrl"
+        ;;
+    p)
+       persistentVolumeClaim="$OPTARG"
+        echo "deploying PersistentVolumeClaim  $pvc"
+        ;;
+    h)
+      usage
+      ;;
+    ?)
+      usage
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+if [ -z $CONTEXT ]; then
+  echo "You must provide an environment!"
+  usage
+fi
+
+if [ -z $appReference ]; then
+  echo "You must provide an appReference!"
+  usage
+fi
+
+if [ -z $appVersion ]; then
+  echo "You must provide an appVersion!"
+  usage
+fi
+
+if [ -z $rootUrl ]; then
+  echo "You must provide a rootUrl!"
+  usage
+fi
+
+echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
+rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
+
+#rootUrl=https://rancher.localhost
+#imageVersion=nightly
+#pvc=matsdata
+echo "rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
+rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}

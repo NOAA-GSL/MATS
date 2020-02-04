@@ -15,11 +15,15 @@ if [ ! -f ~/.matsapps_credentials ]; then
 fi
 . ~/.matsapps_credentials
 
-if [[ $# -eq 0 ]]; then
-    rancher app delete $1
+if [[ $# -ne 0 ]]; then
+	echo "deleting single app $1"
+	echo "rancher app delete $1"
+	rancher app delete $1
 else
-    rancher  app ls -q | awk -F ':' '{print $2}' | grep -v home | grep -v mongo |  while read a
-    do
-        rancher app delete $a
-    done
+	echo "deleting all apps"
+	rancher  app ls -q | awk -F ':' '{print $2}' | grep -v home | grep -v mongo |  while read a
+	do
+		echo "rancher app delete $a"
+		rancher app delete $a
+	done
 fi
