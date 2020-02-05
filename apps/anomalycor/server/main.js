@@ -857,6 +857,10 @@ const doPlotGraph = function () {
 
 Meteor.startup(function () {
     matsCollections.Databases.remove({});
+    if (matsCollections.Databases.find({}).count() < 0) {
+        console.log('main startup: corrupted Databases collection: dropping Databases collection');
+        matsCollections.Databases.drop();
+    }
     if (matsCollections.Databases.find({}).count() === 0) {
         var databases = undefined;
         if (Meteor.settings == undefined || Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined) {
