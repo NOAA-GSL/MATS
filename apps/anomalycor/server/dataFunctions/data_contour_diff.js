@@ -129,7 +129,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data, " +
             "count(m0.wacorr) as N0";
         curve['statistic'] = "Correlation";
-        showSignificance = curve['significance'] === 'true' || showSignificance;
+        showSignificance = curve['significance'] !== 'none' || showSignificance;
 
         // For contours, this functions as the colorbar label.
         curves[curveIndex]['unitKey'] = curve['statistic'];
@@ -235,7 +235,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     // turn the two contours into one difference contour
-    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, showSignificance);
+    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, showSignificance, curve['significance']);
     plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
     curves = plotParams.curves;
     dataset[0]['name'] = matsPlotUtils.getCurveText(matsTypes.PlotTypes.contourDiff, curves[0]);

@@ -175,6 +175,30 @@ Template.curveList.helpers({
         }
         return "none"
     },
+    mismatchContourSigDisabled: function () {
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length < 2 || (Session.get('plotType') !== matsTypes.PlotTypes.contourDiff)) {
+            return "";
+        }
+        var sig0 = curves[0]['significance'];
+        var sig1 = curves[1]['significance'];
+        if (sig0 !== sig1) {
+            return "disabled";
+        }
+        return "";
+    },
+    mismatchContourSigHidden: function () {
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length < 2 || (Session.get('plotType') !== matsTypes.PlotTypes.contourDiff)) {
+            return "none";
+        }
+        var sig0 = curves[0]['significance'];
+        var sig1 = curves[1]['significance'];
+        if (sig0 !== sig1) {
+            return "block";
+        }
+        return "none"
+    },
     editMode: function() {
         if (Session.get('editMode') === '') {
             return '';

@@ -146,7 +146,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         statisticClause = statisticClause.replace(/\{\{variable2\}\}/g, variable[2]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        showSignificance = curve['significance'] === 'true' || showSignificance;
+        showSignificance = curve['significance'] !== 'none' || showSignificance;
 
         // For contours, this functions as the colorbar label.
         curves[curveIndex]['unitKey'] = varUnits;
@@ -253,7 +253,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     // turn the two contours into one difference contour
-    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, showSignificance);
+    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, showSignificance, curve['significance']);
     plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
     curves = plotParams.curves;
     dataset[0]['name'] = matsPlotUtils.getCurveText(matsTypes.PlotTypes.contourDiff, curves[0]);
