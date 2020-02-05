@@ -50,7 +50,7 @@ Template.landing.helpers({
     return app.home;
   },
   baseUrl(app) {
-    var base_arr = document.location.split('/');
+    var base_arr = document.location.href.split('/');
     base_arr.pop();
     return( base_arr.join('/') );
   },
