@@ -21,7 +21,9 @@ Template.landing.onCreated(function () {
 
 Template.landing.helpers({
   transparentGif: function() {
-    return document.location + "/img/noaa_transparent.gif";
+    var base_arr = document.location.href.split('/');
+    base_arr.pop();
+    return  base_arr.join('/') + "/img/noaa_transparent.gif";
   },
   groups() {
     const groups = Groups.find({}, {sort: {groupOrder: '1'}}).fetch();
@@ -49,7 +51,7 @@ Template.landing.helpers({
   home(app) {
     return app.home;
   },
-  baseUrl(app) {
+  baseUrl() {
     var base_arr = document.location.href.split('/');
     base_arr.pop();
     return( base_arr.join('/') );
