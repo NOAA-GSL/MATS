@@ -47,7 +47,7 @@ Template.landing.helpers({
     return app.home;
   },
   baseUrl(app) {
-    var base_arr = app.home.split('/');
+    var base_arr = document.location.split('/');
     base_arr.pop();
     return( base_arr.join('/') );
   },
