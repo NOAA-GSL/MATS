@@ -53,15 +53,6 @@
                 <span id="graph-touch-controls" class="btn-group btn-group-sm" role="group" aria-label="touchcontrol">
                     <button id="refresh-plot" type="button" class="btn btn-info fa fa-refresh" style="border-radius: 15px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="reset plot to original (or last re-sample)"></button>
                 </span>
-                <span>
-                    <div id="mv-controls" class="btn-group btn-group-xs" style="display:{{metApp}}" role="group" aria-label="touchcontrol">
-                        <button type="button" id="mvloading" class="btn btn-xs btn-warning" style="display:{{mvLoading}}">mvbatch</button>
-                        <span class="btn btn-xs btn-warning fas fa-spinner fa-pulse" style="display:{{mvLoading}}"></span>
-                        {{#each mvFiles}}
-                                <button type="button" id="{{this.name}}" class="btn btn-xs btn-info mvCtrlButton" style="display:{{mvDisabled}}">mv-{{this.name}}</button>
-                        {{/each}}
-                    </div>
-                </span>
             </span>
         </div>
         <div id="sendModal" class="modal row" role="dialog">
