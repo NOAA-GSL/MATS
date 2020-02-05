@@ -20,9 +20,7 @@ const getRunEnvironment = function () {
 
 Template.topNav.helpers({
     transparentGif: function() {
-        var base_arr = document.location.href.split('/');
-        base_arr.pop();
-        return  base_arr.join('/') + "/img/noaa_transparent.gif";
+        return  document.location.href + "/img/noaa_transparent.gif";
     },
     agencyText: function () {
         switch (getRunEnvironment()) {
