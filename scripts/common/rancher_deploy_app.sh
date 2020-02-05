@@ -95,8 +95,5 @@ fi
 echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
 
-#rootUrl=https://rancher.localhost
-#imageVersion=nightly
-#pvc=matsdata
 echo "rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
 rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
