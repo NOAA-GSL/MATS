@@ -16,7 +16,7 @@ fi
 . ~/.matsapps_credentials
 
 function usage() {
-      echo "USAGE: $0 -n namespace -a appReference -v appVersion -u rootUrl [-p persistentVolumeClaim]"
+      echo "USAGE: $0 -n namespace [-a appReference]"
       echo "where namespace is a valid namespace (namespaces are expected to match MATS environments)"
       echo "and appReference defines an app i.e. aircraft, upperair etc."
       echo "if appReference is ommited all the apps will be reloaded."
