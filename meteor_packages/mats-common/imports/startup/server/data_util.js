@@ -543,10 +543,10 @@ const get_err = function (sVals, sSecs, sLevs, appParams) {
 };
 
 // use a student's t-test to see if a point on a contour diff is statistically significant
-const checkDiffContourSignificance = function (x1, x2, s1, s2, n1, n2) {
+const checkDiffContourSignificance = function (x1, x2, s1, s2, n1, n2, sigType) {
     const t = getTValue(x1, x2, s1, s2, n1, n2);
     const df = getDfValue(x1, x2, s1, s2, n1, n2);
-    return isStudentTTestValueSignificant(t, df);
+    return isStudentTTestValueSignificant(t, df, sigType);
 };
 
 // calculate the t value for a student's t-test
@@ -560,7 +560,7 @@ const getDfValue = function (x1, x2, s1, s2, n1, n2) {
 };
 
 // checks if a t value an degrees of freedom combo is significant
-const isStudentTTestValueSignificant = function (t, df) {
+const isStudentTTestValueSignificant = function (t, df, sigType) {
     const sigThreshs = {
         1: 12.706,
         2: 4.303,
@@ -595,14 +595,18 @@ const isStudentTTestValueSignificant = function (t, df) {
     };
 
     var sigThresh;
-    if (df <= 30) {
-        sigThresh = sigThreshs[df];
-    } else if (df <= 40) {
-        sigThresh = 2.021;
-    } else if (df <= 60) {
-        sigThresh = 2.000
-    } else if (df <= 120) {
-        sigThresh = 1.980
+    if (sigType === 'standard') {
+        if (df <= 30) {
+            sigThresh = sigThreshs[df];
+        } else if (df <= 40) {
+            sigThresh = 2.021;
+        } else if (df <= 60) {
+            sigThresh = 2.000
+        } else if (df <= 120) {
+            sigThresh = 1.980
+        } else {
+            sigThresh = 1.960
+        }
     } else {
         sigThresh = 1.960
     }

@@ -107,7 +107,7 @@ Template.graph.helpers({
                             'visible': dataset[bidx].visible,
                             'showlegend': dataset[0].showlegend,
                             'marker.color': dataset[bidx].marker.color
-                       });
+                        });
                     }
                     Session.set('barTypeResetOpts', barTypeResetOpts);
                     break;
@@ -202,9 +202,10 @@ Template.graph.helpers({
                 elem.value = colorscale;
             }
 
-            // enable colorpicker on axes modal, if applicable.
+            // enable colorpickers on axes modal, if applicable.
             if (plotType !== matsTypes.PlotTypes.map) {
                 $('#gridColor').colorpicker({format: "rgb", align: "left"});
+                $('#legendFontColor').colorpicker({format: "rgb", align: "left"});
             }
 
             // store annotation
@@ -622,6 +623,7 @@ Template.graph.helpers({
     },
     yAxisControlsNumberVisibility: function () {
         Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
         if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
             return "none";
         } else {
@@ -630,6 +632,7 @@ Template.graph.helpers({
     },
     yAxisControlsTextVisibility: function () {
         Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
         if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
             return "block";
         } else {
@@ -657,30 +660,158 @@ Template.graph.helpers({
             return "none";
         }
     },
-    mvFiles: function () {
-        var updated = Session.get('MvResultsUpDated');
-        var key = Session.get('mvResultKey');
-        var mvs = Session.get('mvs');
-        if (mvs != null) {
-            return mvs;
+    xAxisTitle: function (xAxis) {
+        Session.get('PlotResultsUpDated');
+        var options = Session.get('options');
+        const xAxisKey = 'xaxis' + (xAxis === 0 ? "" : xAxis + 1);
+        if (options !== undefined && options[xAxisKey] !== undefined && options[xAxisKey].title !== undefined) {
+            return options[xAxisKey].title;
         } else {
-            return [];
+            return ""
         }
     },
-    mvDisabled: function () {
-        var updated = Session.get('MvResultsUpDated');
-        if (Session.get('mvs') == null || Session.get('PlotParams')['metexpress-mode'] == "mats") {
-            return "none";
+    xAxisTitleFont: function (xAxis) {
+        Session.get('PlotResultsUpDated');
+        var options = Session.get('options');
+        const xAxisKey = 'xaxis' + (xAxis === 0 ? "" : xAxis + 1);
+        if (options !== undefined && options[xAxisKey] !== undefined && options[xAxisKey].titlefont !== undefined && options[xAxisKey].titlefont.size !== undefined) {
+            return options[xAxisKey].titlefont.size;
         } else {
-            return "block";
+            return ""
         }
     },
-    mvLoading: function () {
-        var updated = Session.get('MvResultsUpDated');
-        if (Session.get('mvs') == null && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
-            return "block";
+    xAxisMin: function (xAxis) {
+        Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
+        var options = Session.get('options');
+        const xAxisKey = 'xaxis' + (xAxis === 0 ? "" : xAxis + 1);
+        if (options !== undefined && options[xAxisKey] !== undefined && options[xAxisKey].range !== undefined) {
+            try {
+                return options[xAxisKey].range[0].toPrecision(4);
+            } catch {
+                return options[xAxisKey].range[0];
+            }
         } else {
-            return "none";
+            return ""
+        }
+    },
+    xAxisMax: function (xAxis) {
+        Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
+        var options = Session.get('options');
+        const xAxisKey = 'xaxis' + (xAxis === 0 ? "" : xAxis + 1);
+        if (options !== undefined && options[xAxisKey] !== undefined && options[xAxisKey].range !== undefined) {
+            try {
+                return options[xAxisKey].range[1].toPrecision(4);
+            } catch {
+                return options[xAxisKey].range[1];
+            }
+        } else {
+            return ""
+        }
+    },
+    xAxisTickFont: function (xAxis) {
+        Session.get('PlotResultsUpDated');
+        var options = Session.get('options');
+        const xAxisKey = 'xaxis' + (xAxis === 0 ? "" : xAxis + 1);
+        if (options !== undefined && options[xAxisKey] !== undefined && options[xAxisKey].tickfont !== undefined && options[xAxisKey].tickfont.size !== undefined) {
+            return options[xAxisKey].tickfont.size;
+        } else {
+            return ""
+        }
+    },
+    yAxisTitle: function (yAxis) {
+        Session.get('PlotResultsUpDated');
+        var options = Session.get('options');
+        const yAxisKey = 'yaxis' + (yAxis === 0 ? "" : yAxis + 1);
+        if (options !== undefined && options[yAxisKey] !== undefined && options[yAxisKey].title !== undefined) {
+            return options[yAxisKey].title;
+        } else {
+            return ""
+        }
+    },
+    yAxisTitleFont: function (yAxis) {
+        Session.get('PlotResultsUpDated');
+        var options = Session.get('options');
+        const yAxisKey = 'yaxis' + (yAxis === 0 ? "" : yAxis + 1);
+        if (options !== undefined && options[yAxisKey] !== undefined && options[yAxisKey].titlefont !== undefined && options[yAxisKey].titlefont.size !== undefined) {
+            return options[yAxisKey].titlefont.size;
+        } else {
+            return ""
+        }
+    },
+    yAxisMin: function (yAxis) {
+        Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
+        var options = Session.get('options');
+        const yAxisKey = 'yaxis' + (yAxis === 0 ? "" : yAxis + 1);
+        if (options !== undefined && options[yAxisKey] !== undefined && options[yAxisKey].range !== undefined) {
+            if (plotType === matsTypes.PlotTypes.profile) {
+                try {
+                    return options[yAxisKey].range[1].toPrecision(4);
+                } catch {
+                    return options[yAxisKey].range[1];
+                }
+            } else {
+                try {
+                    return options[yAxisKey].range[0].toPrecision(4);
+                } catch {
+                    return options[yAxisKey].range[0];
+                }
+            }
+        } else {
+            return ""
+        }
+    },
+    yAxisMax: function (yAxis) {
+        Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
+        var options = Session.get('options');
+        const yAxisKey = 'yaxis' + (yAxis === 0 ? "" : yAxis + 1);
+        if (options !== undefined && options[yAxisKey] !== undefined && options[yAxisKey].range !== undefined) {
+            if (plotType === matsTypes.PlotTypes.profile) {
+                try {
+                    return options[yAxisKey].range[0].toPrecision(4);
+                } catch {
+                    return options[yAxisKey].range[0];
+                }
+            } else {
+                try {
+                    return options[yAxisKey].range[1].toPrecision(4);
+                } catch {
+                    return options[yAxisKey].range[1];
+                }
+            }
+        } else {
+            return ""
+        }
+    },
+    yAxisTickFont: function (yAxis) {
+        Session.get('PlotResultsUpDated');
+        var options = Session.get('options');
+        const yAxisKey = 'yaxis' + (yAxis === 0 ? "" : yAxis + 1);
+        if (options !== undefined && options[yAxisKey] !== undefined && options[yAxisKey].tickfont !== undefined && options[yAxisKey].tickfont.size !== undefined) {
+            return options[yAxisKey].tickfont.size;
+        } else {
+            return ""
+        }
+    },
+    legendFontSize: function () {
+        Session.get('PlotResultsUpDated');
+        var options = Session.get('options');
+        if (options !== undefined && options.legend !== undefined && options.legend.font !== undefined && options.legend.font.size !== undefined) {
+            return options.legend.font.size;
+        } else {
+            return ""
+        }
+    },
+    gridWeight: function () {
+        Session.get('PlotResultsUpDated');
+        var options = Session.get('options');
+        if (options !== undefined && options.xaxis !== undefined && options.xaxis.gridwidth !== undefined) {
+            return options.xaxis.gridwidth;
+        } else {
+            return ""
         }
     },
     /**
@@ -872,7 +1003,7 @@ Template.graph.events({
 
                 // store the new xmax and xmin from this curve
                 newOpts['xaxis.range[0]'] = newOpts['xaxis.range[0]'] < newX[0] ? newOpts['xaxis.range[0]'] : newX[0];
-                newOpts['xaxis.range[1]'] = newOpts['xaxis.range[1]'] > newX[newX.length-1] ? newOpts['xaxis.range[1]'] : newX[newX.length-1];
+                newOpts['xaxis.range[1]'] = newOpts['xaxis.range[1]'] > newX[newX.length - 1] ? newOpts['xaxis.range[1]'] : newX[newX.length - 1];
 
                 // store previous and new x values to craft consistent tick marks
                 tickvals = _.union(tickvals, newX);
@@ -891,20 +1022,24 @@ Template.graph.events({
 
                 // store the new xmax and xmin from this curve
                 newOpts['xaxis.range[0]'] = newOpts['xaxis.range[0]'] < origX[didx][0] ? newOpts['xaxis.range[0]'] : origX[didx][0];
-                newOpts['xaxis.range[1]'] = newOpts['xaxis.range[1]'] > origX[didx][origX[didx].length-1] ? newOpts['xaxis.range[1]'] : origX[didx][origX[didx].length-1];
+                newOpts['xaxis.range[1]'] = newOpts['xaxis.range[1]'] > origX[didx][origX[didx].length - 1] ? newOpts['xaxis.range[1]'] : origX[didx][origX[didx].length - 1];
 
                 // store previous and new x values to craft consistent tick marks
                 tickvals = _.union(tickvals, origX[didx]);
                 ticktext = _.union(ticktext, origX[didx]);
 
                 // remove new formatting that would have been passed to pop-out windows
-                delete(curveOpsUpdate[didx]['x']);
+                delete (curveOpsUpdate[didx]['x']);
             }
             Session.set('thresholdEquiX', false);
         }
         // redraw the plot with the new axis options
-        newOpts['xaxis.tickvals'] = tickvals.sort(function(a, b){return a - b});
-        newOpts['xaxis.ticktext'] = ticktext.sort(function(a, b){return a - b}).map(String);
+        newOpts['xaxis.tickvals'] = tickvals.sort(function (a, b) {
+            return a - b
+        });
+        newOpts['xaxis.ticktext'] = ticktext.sort(function (a, b) {
+            return a - b
+        }).map(String);
         const xPad = ((newOpts['xaxis.range[1]'] - newOpts['xaxis.range[0]']) * 0.025) !== 0 ? (newOpts['xaxis.range[1]'] - newOpts['xaxis.range[0]']) * 0.025 : 0.025;
         newOpts['xaxis.range[0]'] = newOpts['xaxis.range[0]'] - xPad;
         newOpts['xaxis.range[1]'] = newOpts['xaxis.range[1]'] + xPad;
@@ -1383,7 +1518,7 @@ Template.graph.events({
                     newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
                 }
             });
-            $("input[id^=x][id$=TextTickFont]").get().forEach(function (elem, index) {
+            $("input[id^=x][id$=TickFontText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.tickfont.size'] = elem.value;
                 }
@@ -1415,7 +1550,7 @@ Template.graph.events({
                 newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.titlefont.size'] = elem.value;
             }
         });
-        if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
+        if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
             $("input[id^=y][id$=AxisMinText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
@@ -1426,7 +1561,7 @@ Template.graph.events({
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
                 }
             });
-            $("input[id^=y][id$=TextTickFont]").get().forEach(function (elem, index) {
+            $("input[id^=y][id$=TickFontText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.tickfont.size'] = elem.value;
                 }
@@ -1466,6 +1601,16 @@ Template.graph.events({
                 }
             });
         }
+        $("[id$=legendFontSize]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['legend.font.size'] = elem.value;
+            }
+        });
+        $("[id$=legendFontColor]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['legend.font.color'] = elem.value;
+            }
+        });
         $("[id$=gridWeight]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
                 newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.gridwidth'] = elem.value;

@@ -785,6 +785,8 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
         // also pass previously calculated axis stats to curve options
         curve['annotation'] = "";
         curve['axisKey'] = curveInfoParams.curves[curveIndex].axisKey;
+        d.xmin = d.bin_stats[0].binUpBound;
+        d.xmax = d.bin_stats[d.bin_stats.length - 1].binLowBound;
         d.ymin = curveInfoParams.yAxisFormat === 'Relative frequency' ? d.ymin / d.glob_stats.glob_n * 100 : d.ymin;
         d.ymax = curveInfoParams.yAxisFormat === 'Relative frequency' ? d.ymax / d.glob_stats.glob_n * 100 : d.ymax;
         xmin = d.xmin < xmin ? d.xmin : xmin;

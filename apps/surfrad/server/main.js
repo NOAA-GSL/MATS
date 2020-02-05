@@ -678,16 +678,15 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'significance'}) == undefined) {
-
         matsCollections.CurveParams.insert(
             {
                 name: 'significance',
                 type: matsTypes.InputTypes.select,
-                options: ['false', 'true'],
+                options: ['none', 'standard', 'assume infinite degrees of freedom'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: 'false',
+                default: 'none',
                 controlButtonVisibility: 'block',
                 controlButtonText: "overlay student's t-test",
                 displayOrder: 2,
