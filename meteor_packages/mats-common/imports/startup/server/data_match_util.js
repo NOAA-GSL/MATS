@@ -193,7 +193,7 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats, ap
     var newSubStats = {};
     var newSubSecs = {};
     var newSubLevs = {};
-    var newCurveData;
+    var newCurveData = {};
     var curveIndex;
     var data;
     var di;
@@ -280,8 +280,6 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats, ap
             var d = {// d will contain the curve data
                 x: [], //placeholder
                 y: [], //placeholder
-                error_x: [], // unused
-                error_y: [], // unused
                 subVals: [],
                 subSecs: [],
                 subLevs: [],
@@ -294,17 +292,11 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats, ap
                 ymax: Number.MIN_VALUE,
             };
             newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], newSubLevs[curveIndex], data.x.length, binStats, appParams, d);
-            var newCurveDataKeys = Object.keys(newCurveData.d);
-            for (var didx = 0; didx < newCurveDataKeys.length; didx++) {
-                dataset[curveIndex][newCurveDataKeys[didx]] = newCurveData.d[newCurveDataKeys[didx]];
-            }
         } else {
             // if there are no matching values, set data to an empty dataset
-            dataset[curveIndex] = {
+            newCurveData["d"] = {
                 x: [],
                 y: [],
-                error_x: [],
-                error_y: [],
                 subVals: [],
                 subSecs: [],
                 subLevs: [],
@@ -316,6 +308,10 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats, ap
                 ymin: Number.MAX_VALUE,
                 ymax: Number.MIN_VALUE,
             };
+        }
+        var newCurveDataKeys = Object.keys(newCurveData.d);
+        for (var didx = 0; didx < newCurveDataKeys.length; didx++) {
+            dataset[curveIndex][newCurveDataKeys[didx]] = newCurveData.d[newCurveDataKeys[didx]];
         }
     }
     return dataset;
