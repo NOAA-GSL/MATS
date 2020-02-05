@@ -20,6 +20,9 @@ Template.landing.onCreated(function () {
 });
 
 Template.landing.helpers({
+  transparentGif: function() {
+    return document.location + "/img/noaa_transparent.gif";
+  },
   groups() {
     const groups = Groups.find({}, {sort: {groupOrder: '1'}}).fetch();
     return groups;
