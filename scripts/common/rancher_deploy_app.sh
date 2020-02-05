@@ -78,8 +78,13 @@ if [ -z $CONTEXT ]; then
 fi
 
 if [ -z $appReference ]; then
-  echo "You must provide an appReference!"
-  usage
+  read -p "You did not provide an appReference! Do you really want to install all of the available apps???? [Y|N]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "ok, here we go installing all the apps..."
+  else
+    usage
+  fi
 fi
 
 if [ -z $appVersion ]; then
@@ -95,5 +100,16 @@ fi
 echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
 
-echo "rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
-rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+
+if [[ -z $appReference ]]; then
+  rancher app lt | grep gslhelm | awk '{print $2}' | grep -v matsmongo | grep -v matshome	| while read a
+  do
+    echo "rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
+    rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+	  sleep 10
+	done
+else
+  echo "rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
+  rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+fi
+
