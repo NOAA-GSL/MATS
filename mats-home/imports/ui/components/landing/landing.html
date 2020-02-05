@@ -10,9 +10,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a style="color:white" class="navbar-brand" href="/">{{homeLabel}}</a>
-                <a style="color:white" class="navbar-brand" href="/"><i style="color:cyan" class="fa fa-home fa-lg"
-                                                                        aria-hidden="true"></i></a>
+                <a style="color:white" class="navbar-brand" href="{{homeUrl}}"><i style="color:cyan" class="fa fa-home fa-3x" aria-hidden="true"></i></a>
             </div>
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="navbar-collapse-1">
@@ -42,7 +40,7 @@
             </div>
 
             <div class="collapse navbar-collapse" id="navbar-collapse-2">
-                <a class="nav navbar-nav navbar-left" href="#"><img src="img/noaa_transparent.gif" alt="NOAA"
+                <a class="nav navbar-nav navbar-left" href="#"><img src="{{transparentGif}}" alt="NOAA"
                                                                     style="max-height:80%; max-width:80%;"></a>
                 <ul class="nav navbar-nav">
                     <li>
@@ -59,7 +57,7 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a style="font-size: small" href="/"><span style="color:white">Home</span></a></li>
+                    <li><a style="font-size: small" href="{{homeUrl}}"><span style="color:white">Home</span></a></li>
                     <li><a style="font-size: small" href="mailto:mats.gsd@noaa.gov?Subject=Feedback from mats">
                         <span style="color:white">Contact</span></a>
                     </li>
@@ -82,7 +80,7 @@
                                     <a class="btn-sm btn-primary" type="button"
                                        style="display:inline-block;font-size:medium; background-color: {{color
                                                app}}; font-weight: bold; border-radius:10px;"
-                                       href="{{baseUrl app}}/{{appReference app}}">{{title app}}</a>
+                                       href="{{baseUrl}}/{{appReference app}}">{{title app}}</a>
                                 </li>
                             {{/each}}
                         </UL>
