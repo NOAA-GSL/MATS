@@ -23,6 +23,9 @@ Template.landing.helpers({
   transparentGif: function() {
     return  document.location.href + "/img/noaa_transparent.gif";
   },
+  homeUrl: function() {
+    return  document.location.href;
+  },
   groups() {
     const groups = Groups.find({}, {sort: {groupOrder: '1'}}).fetch();
     return groups;
@@ -56,20 +59,6 @@ Template.landing.helpers({
   },
   environment() {
       return Session.get('deployment_environment');
-      },
-  homeLabel() {
-      switch (Session.get('deployment_environment')) {
-        case 'development':
-        case 'integration':
-        case 'production':
-          return "MATS";
-          break;
-        case 'metexpress':
-          return 'METexpress';
-          break;
-        default:
-          return "MATS";
-      }
   },
   isMats() {
       switch (Session.get('deployment_environment')) {
