@@ -8,14 +8,7 @@
       "bcrypt": "$2a$10$CB/EVGSW6IKRoDxY8yPlvOpxbQrqzb9/2K4G.9TeVp/TYodM538fm"
     },
     "resume": {
-      "loginTokens": [
-        {
-          "when": {
-            "$date": "2019-11-07T18:36:46.655+0000"
-          },
-          "hashedToken": "D57R9djYFB1gdRxuVZY6xhKHO+bDDGVcy38U3sxEm28="
-        }
-      ]
+      "loginTokens": []
     }
   },
   "username": "randy.pierce@noaa.gov"
