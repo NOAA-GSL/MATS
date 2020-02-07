@@ -21,7 +21,7 @@ Template.landing.onCreated(function () {
 
 Template.landing.helpers({
   transparentGif: function() {
-    return  document.location.href + "/img/noaa_transparent.gif";
+    return  document.location.href + "img/noaa_transparent.gif";
   },
   homeUrl: function() {
     return  document.location.href;
