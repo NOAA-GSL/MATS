@@ -19,15 +19,19 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int|prod  \n\
-	where e is build environment (dev, int, or prod)"
+usage="USAGE $0 -e dev|int|prod  [-b branch]\n\
+	where e is build environment (dev, int, or prod) and -b branch lets you override the assigned branch (feature build)"
 build_env=""
 pushImage="yes"
 build_images="yes"
 deploy_build="yes"
 while getopts "e:" o; do
     case "${o}" in
-        e)
+        b)
+            requestedBranch=(${OPTARG})
+            echo -e "requested branch ${requestedBranch}"
+        ;;
+         e)
             build_env="${OPTARG}"
             if [ "${build_env}" == "dev" ]; then
                 setBuildConfigVarsForDevelopmentServer
@@ -40,7 +44,7 @@ while getopts "e:" o; do
                 exit 1
             fi
         ;;
-        *)
+       *)
             echo -e "${RED} bad option? ${NC} \n$usage"
             exit 1
         ;;
@@ -52,6 +56,10 @@ if [ "X${build_env}" == "X" ]; then
 	echo -e $usage
 	echo "${RED}Must exit now${NC}"
 	exit 1
+fi
+if [ "X${requestedBranch}" != "X" ]; then
+    echo -e "overriding git branch with ${requestedBranch}"
+    BUILD_CODE_BRANCH=${requestedBranch}
 fi
 echo "Building mats-home app - environment is ${build_env}: date: $(/bin/date +%F_%T)"
 export DEPLOYMENT_DIRECTORY="/builds/buildArea/MATS_for_EMB"
