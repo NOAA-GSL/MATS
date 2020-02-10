@@ -52,13 +52,8 @@ Template.topNav.helpers({
     productLink: function () {
             const location = document.location.href;
             const locationArr = location.split('/');
-            const lastPart = locationArr[locationArr.length - 1]
-            if (lastPart == "home") {
-                return location;
-            } else {
-                locationArr.pop();
-                return locationArr.join('/') + "/home";
-            }
+            locationArr.pop();
+            return locationArr.join('/');
     },
     isMetexpress: function () {
         if (matsCollections.Settings.findOne({}) !== undefined && matsCollections.Settings.findOne({}).appType !== undefined) {
