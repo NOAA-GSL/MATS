@@ -197,13 +197,8 @@ Template.GraphStandAlone.helpers({
     matsplotFilemname: function () {
         return "newplot-" + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss")
     },
-    image: function () {
-        var img = Session.get("spinner_img");
-        if (img == undefined) {
-            img = "spinner.gif";
-            Session.set("spinner_img", "../../../../../image/spinner.gif");
-        }
-        return img;
+    spinnerUrl: function() {
+        return document.location.href.split('preview')[0] + "img/spinner.gif"
     }
 });
 
@@ -212,7 +207,6 @@ Template.GraphStandAlone.events({
         $(".previewCurveButtons").each(function (i, obj) {
             obj.style.display = "none";
         });
-        //const filename  = 'MATSPlot' + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss") + '.pdf';
         html2canvas(document.querySelector('#graph-container'), {scale: 3.0}).then(canvas => {
             var h = 419.53;
             var w = 595.28;

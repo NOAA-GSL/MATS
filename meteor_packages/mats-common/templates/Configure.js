@@ -72,7 +72,10 @@ Template.Configure.helpers({
     },
     apps_length: function(group) {
         return 10;
-    }
+    },
+    baseUrl: function() {
+        return  document.location.href;
+    },
 });
 
 Template.Configure.events({

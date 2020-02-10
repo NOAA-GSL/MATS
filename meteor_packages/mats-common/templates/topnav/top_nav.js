@@ -20,7 +20,7 @@ const getRunEnvironment = function () {
 
 Template.topNav.helpers({
     transparentGif: function() {
-        return  document.location.href + "/img/noaa_transparent.gif";
+        return  document.location.href + "img/noaa_transparent.gif";
     },
     agencyText: function () {
         switch (getRunEnvironment()) {
@@ -52,13 +52,8 @@ Template.topNav.helpers({
     productLink: function () {
             const location = document.location.href;
             const locationArr = location.split('/');
-            const lastPart = locationArr[locationArr.length - 1]
-            if (lastPart == "home") {
-                return location;
-            } else {
-                locationArr.pop();
-                return locationArr.join('/') + "/home";
-            }
+            locationArr.pop();
+            return locationArr.join('/');
     },
     isMetexpress: function () {
         if (matsCollections.Settings.findOne({}) !== undefined && matsCollections.Settings.findOne({}).appType !== undefined) {
