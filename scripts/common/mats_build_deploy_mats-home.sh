@@ -25,7 +25,7 @@ build_env=""
 pushImage="yes"
 build_images="yes"
 deploy_build="yes"
-while getopts "e:" o; do
+while getopts "e:b:" o; do
     case "${o}" in
         b)
             requestedBranch=(${OPTARG})
