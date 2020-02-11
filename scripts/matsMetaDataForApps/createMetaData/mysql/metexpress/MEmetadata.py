@@ -611,8 +611,9 @@ class ParentMetadata:
         cursor_tmp.execute("use  " + self.metadata_database + ";")
         cnx_tmp.commit()
         #
-        if len(raw_metadata['regions']) > 0 and len(raw_metadata['levels']) > 0 and len(
-                raw_metadata['fcsts']) > 0 and len(raw_metadata['variables']) > 0:
+        if len(raw_metadata['regions']) > 0 and len(raw_metadata['levels']) > 0 \
+                and len(raw_metadata['fcsts']) > 0 and len(raw_metadata['trshs']) > 0 \
+                and len(raw_metadata['gridpoints']) > 0 and len(raw_metadata['truths']) > 0:
             qd = []
             updated_utc = datetime.utcnow().strftime('%s')
             mindate = raw_metadata['mindate']
