@@ -38,7 +38,6 @@ class ParentMetadata:
         self.database_groups = options['database_groups']
         self.appSpecificWhereClause = options['appSpecificWhereClause']
         self.dbs_too_large = {}
-        print(self.metadata_database)
 
     def _create_run_stats_table(self):
         self.cursor.execute("""create table run_stats
@@ -473,11 +472,17 @@ class ParentMetadata:
                     for line_data_table in self.line_data_table:
                         # see if this is the first variable we've dealt with,
                         # and if per_mvdb[mvdb][model][line_data_table] is undefined
+                        print(0)
                         try:
+                            print(1)
                             per_mvdb[mvdb][model][line_data_table]
+                            print(2)
                         except NameError:
+                            print(3)
                             per_mvdb[mvdb][model][line_data_table] = {}
+                            print(4)
                         per_mvdb[mvdb][model][line_data_table][variable] = {}
+                        print(5)
 
                         # store header variables
                         per_mvdb[mvdb][model][line_data_table][variable]['regions'] = tmp_regions_list
