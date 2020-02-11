@@ -697,7 +697,7 @@ class ParentMetadata:
         cnf_file = None
         db = None
         metexpress_base_url = None
-        metadata_database = "tmp_mats_metadata"
+        metadata_database = "mats_metadata"
         data_table_stat_header_id_limit = None
         try:
             opts, args = getopt.getopt(args[1:], "c:d:u:m:D:u:", usage)
