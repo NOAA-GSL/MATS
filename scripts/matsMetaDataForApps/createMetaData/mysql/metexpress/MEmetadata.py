@@ -38,6 +38,7 @@ class ParentMetadata:
         self.database_groups = options['database_groups']
         self.appSpecificWhereClause = options['appSpecificWhereClause']
         self.dbs_too_large = {}
+        print(self.metadata_database)
 
     def _create_run_stats_table(self):
         self.cursor.execute("""create table run_stats
@@ -697,7 +698,7 @@ class ParentMetadata:
         cnf_file = None
         db = None
         metexpress_base_url = None
-        metadata_database = "mats_metadata"
+        metadata_database = "tmp_mats_metadata"
         data_table_stat_header_id_limit = None
         try:
             opts, args = getopt.getopt(args[1:], "c:d:u:m:D:u:", usage)
