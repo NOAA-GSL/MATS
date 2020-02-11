@@ -36,7 +36,7 @@ class ParentMetadata:
         self.metadata_table = options['metadata_table']
         self.app_reference = options['app_reference']
         self.database_groups = options['database_groups']
-        self.fcstWhereClause = options['fcstWhereClause']
+        self.appSpecificWhereClause = options['appSpecificWhereClause']
         self.dbs_too_large = {}
 
     def _create_run_stats_table(self):
@@ -138,7 +138,7 @@ class ParentMetadata:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), variables varchar(4095), trshs varchar(4095), gridpoints varchar(4095), truths varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(self.metadata_table)
+            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), line_data_table varchar(255), variable varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), trshs varchar(4095), gridpoints varchar(4095), truths varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
@@ -353,10 +353,11 @@ class ParentMetadata:
             cursor2.execute(use_db)
             cnx2.commit()
             print("\n\n" + self.script_name + "- Using db " + mvdb)
+
             # Get the models in this database
             get_models = 'select distinct model from stat_header'
-            if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                get_models += ' where ' + self.fcstWhereClause + ';'
+            if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                get_models += ' where ' + self.appSpecificWhereClause + ';'
             else:
                 get_models += ';'
             self.cursor.execute(get_models)
@@ -366,175 +367,204 @@ class ParentMetadata:
                 per_mvdb[mvdb][model] = {}
                 print("\n" + self.script_name + " - Processing model " + model)
 
-                # Get the regions for this model in this database
-                get_regions = 'select distinct vx_mask from stat_header where model = "' + model + '"'
-                if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                    get_regions += ' and ' + self.fcstWhereClause + ';'
-                per_mvdb[mvdb][model]['regions'] = []
-                print(self.script_name + " - Getting regions for model " + model)
-                if debug:
-                    print(self.script_name + " - region sql query: " + get_regions)
-                cursor2.execute(get_regions)
-                cnx2.commit()
-                for line2 in cursor2:
-                    region = list(line2.values())[0]
-                    per_mvdb[mvdb][model]['regions'].append(region)
-                per_mvdb[mvdb][model]['regions'].sort()
-
-                # Get the levels for this model in this database
-                get_levels = 'select distinct fcst_lev from stat_header where model = "' + model + '"'
-                if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                    get_levels += ' and ' + self.fcstWhereClause + ';'
-                per_mvdb[mvdb][model]['levels'] = []
-                print(self.script_name + " - Getting levels for model " + model)
-                if debug:
-                    print(self.script_name + " - level sql query: " + get_levels)
-                cursor2.execute(get_levels)
-                cnx2.commit()
-                for line2 in cursor2:
-                    level = list(line2.values())[0]
-                    per_mvdb[mvdb][model]['levels'].append(level)
-                per_mvdb[mvdb][model]['levels'].sort(key=self.strip_level)
-
-                # Get the thresholds for this model in this database
-                get_trshs = 'select distinct fcst_thresh from stat_header where model = "' + model + '"'
-                if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                    get_trshs += ' and ' + self.fcstWhereClause + ';'
-                per_mvdb[mvdb][model]['trshs'] = []
-                print(self.script_name + " - Getting thresholds for model " + model)
-                if debug:
-                    print(self.script_name + " - threshold sql query: " + get_trshs)
-                cursor2.execute(get_trshs)
-                cnx2.commit()
-                for line2 in cursor2:
-                    trsh = str(list(line2.values())[0])
-                    per_mvdb[mvdb][model]['trshs'].append(trsh)
-                per_mvdb[mvdb][model]['trshs'].sort(key=self.strip_trsh)
-
-                # Get the gridpoints for this model in this database
-                get_gridpoints = 'select distinct interp_pnts from stat_header where model = "' + model + '"'
-                if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                    get_gridpoints += ' and ' + self.fcstWhereClause + ';'
-                per_mvdb[mvdb][model]['gridpoints'] = []
-                print(self.script_name + " - Getting gridpoints for model " + model)
-                if debug:
-                    print(self.script_name + " - gridpoints sql query: " + get_gridpoints)
-                cursor2.execute(get_gridpoints)
-                cnx2.commit()
-                for line2 in cursor2:
-                    gridpoint = str(list(line2.values())[0])
-                    per_mvdb[mvdb][model]['gridpoints'].append(gridpoint)
-                per_mvdb[mvdb][model]['gridpoints'].sort(key=int)
-
-                # Get the truths for this model in this database
-                get_truths = 'select distinct obtype from stat_header where model = "' + model + '"'
-                if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                    get_truths += ' and ' + self.fcstWhereClause + ';'
-                per_mvdb[mvdb][model]['truths'] = []
-                print(self.script_name + " - Getting truths for model " + model)
-                if debug:
-                    print(self.script_name + " - truths sql query: " + get_truths)
-                cursor2.execute(get_truths)
-                cnx2.commit()
-                for line2 in cursor2:
-                    truth = str(list(line2.values())[0])
-                    per_mvdb[mvdb][model]['truths'].append(truth)
-                per_mvdb[mvdb][model]['truths'].sort()
-
                 # Get the variables for this model in this database
                 get_vars = 'select distinct fcst_var from stat_header where model = "' + model + '"'
-                if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                    get_vars += ' and ' + self.fcstWhereClause + ';'
-                per_mvdb[mvdb][model]['variables'] = []
-                print(self.script_name + " - Getting variables for model " + model)
+                if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                    get_vars += ' and ' + self.appSpecificWhereClause + ';'
+                else:
+                    get_vars += ';'
                 if debug:
                     print(self.script_name + " - variable sql query: " + get_vars)
                 cursor2.execute(get_vars)
                 cnx2.commit()
                 for line2 in cursor2:
                     variable = list(line2.values())[0]
-                    per_mvdb[mvdb][model]['variables'].append(variable)
-                per_mvdb[mvdb][model]['variables'].sort()
-                temp_fcsts = set()
-                temp_fcsts_orig = set()
-                per_mvdb[mvdb][model]['fcsts'] = []
-                per_mvdb[mvdb][model]['fcst_orig'] = []
-                num_recs = 0
-                mindate = datetime.max
-                maxdate = datetime.min  # earliest epoch?
-                for line_data_table in self.line_data_table:
-                    fcst_clause = ''
-                    if self.fcstWhereClause is not None and self.fcstWhereClause != "":
-                        fcst_clause = ' and ' + self.fcstWhereClause
+                    print("\n" + self.script_name + " - Processing variable " + variable)
 
-                    # select the minimum length set of stat_header_ids from the line_data_table that are unique with respect to model and vx_mask.
-                    # these will be used to qualify the distinct set of fcst_leads from the line data table.
-                    get_stat_header_ids = "select stat_header_id from " + \
-                                          "(select group_concat(stat_header_id) as stat_header_id from stat_header where stat_header_id in (select distinct stat_header_id from " + \
-                                          line_data_table + \
-                                          " where model = '" + model + \
-                                          "' order by stat_header_id)" + \
-                                          fcst_clause + \
-                                          " group by model, vx_mask) as stat_header_id order by length(stat_header_id) limit 1;"
+                    # Get the regions for this model/variable in this database
+                    get_regions = 'select distinct vx_mask from stat_header where model = "' + model + '" and fcst_var = "' + variable + '"'
+                    if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                        get_regions += ' and ' + self.appSpecificWhereClause + ';'
+                    else:
+                        get_regions += ';'
+                    tmp_regions_list = []
+                    print(self.script_name + " - Getting regions for model " + model + " and variable " + variable)
                     if debug:
-                        print(self.script_name + " - Getting get_stat_header_ids lens for model " + model + " sql: " + get_stat_header_ids)
-                    try:
-                        cursor2.execute(get_stat_header_ids)
-                        cnx2.commit()
-                        stat_header_id_values = cursor2.fetchall()
-                        stat_header_id_list = [d['stat_header_id'] for d in stat_header_id_values if
-                                               'stat_header_id' in d]
-                    except pymysql.Error as e:
-                        continue
-                    if stat_header_id_list is not None and len(stat_header_id_list) > 0:
-                        get_fcsts = "select distinct fcst_lead from " + line_data_table + " where stat_header_id in (" + ','.join(
-                            stat_header_id_list) + ");"
-                        print(self.script_name + " - Getting forecast lengths for model " + model)
-                        if debug:
-                            print(self.script_name + " - fcst_lead sql query: " + get_fcsts)
+                        print(self.script_name + " - region sql query: " + get_regions)
+                    cursor3.execute(get_regions)
+                    cnx3.commit()
+                    for line3 in cursor3:
+                        region = list(line3.values())[0]
+                        tmp_regions_list.append(region)
+                    tmp_regions_list.sort()
+
+                    # Get the levels for this model/variable in this database
+                    get_levels = 'select distinct fcst_lev from stat_header where model = "' + model + '" and fcst_var = "' + variable + '"'
+                    if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                        get_levels += ' and ' + self.appSpecificWhereClause + ';'
+                    else:
+                        get_levels += ';'
+                    tmp_levels_list = []
+                    print(self.script_name + " - Getting levels for model " + model + " and variable " + variable)
+                    if debug:
+                        print(self.script_name + " - level sql query: " + get_levels)
+                    cursor3.execute(get_levels)
+                    cnx3.commit()
+                    for line3 in cursor3:
+                        level = list(line3.values())[0]
+                        tmp_levels_list.append(level)
+                    tmp_levels_list.sort(key=self.strip_level)
+
+                    # Get the thresholds/variable for this model in this database
+                    get_trshs = 'select distinct fcst_thresh from stat_header where model = "' + model + '" and fcst_var = "' + variable + '"'
+                    if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                        get_trshs += ' and ' + self.appSpecificWhereClause + ';'
+                    else:
+                        get_trshs += ';'
+                    tmp_trshs_list = []
+                    print(self.script_name + " - Getting thresholds for model " + model + " and variable " + variable)
+                    if debug:
+                        print(self.script_name + " - threshold sql query: " + get_trshs)
+                    cursor3.execute(get_trshs)
+                    cnx3.commit()
+                    for line3 in cursor3:
+                        trsh = str(list(line3.values())[0])
+                        tmp_trshs_list.append(trsh)
+                    tmp_trshs_list.sort(key=self.strip_trsh)
+
+                    # Get the gridpoints for this model/variable in this database
+                    get_gridpoints = 'select distinct interp_pnts from stat_header where model = "' + model + '" and fcst_var = "' + variable + '"'
+                    if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                        get_gridpoints += ' and ' + self.appSpecificWhereClause + ';'
+                    else:
+                        get_gridpoints += ';'
+                    tmp_gridpoints_list = []
+                    print(self.script_name + " - Getting gridpoints for model " + model + " and variable " + variable)
+                    if debug:
+                        print(self.script_name + " - gridpoints sql query: " + get_gridpoints)
+                    cursor3.execute(get_gridpoints)
+                    cnx3.commit()
+                    for line3 in cursor3:
+                        gridpoint = str(list(line3.values())[0])
+                        tmp_gridpoints_list.append(gridpoint)
+                    tmp_gridpoints_list.sort(key=int)
+
+                    # Get the truths for this model/variable in this database
+                    get_truths = 'select distinct obtype from stat_header where model = "' + model + '" and fcst_var = "' + variable + '"'
+                    if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                        get_truths += ' and ' + self.appSpecificWhereClause + ';'
+                    else:
+                        get_truths += ';'
+                    tmp_truths_list = []
+                    print(self.script_name + " - Getting truths for model " + model + " and variable " + variable)
+                    if debug:
+                        print(self.script_name + " - truths sql query: " + get_truths)
+                    cursor3.execute(get_truths)
+                    cnx3.commit()
+                    for line3 in cursor3:
+                        truth = str(list(line3.values())[0])
+                        tmp_truths_list.append(truth)
+                    tmp_truths_list.sort()
+
+                    # get the line_date-specific fields
+                    for line_data_table in self.line_data_table:
+                        # see if this is the first variable we've dealt with,
+                        # and if per_mvdb[mvdb][model][line_data_table] is undefined
                         try:
-                            cursor2.execute(get_fcsts)
-                            cnx2.commit()
-                            for line2 in cursor2:
-                                fcst = int(list(line2.values())[0])
-                                temp_fcsts_orig.add(fcst)
-                                if fcst % 10000 == 0:
-                                    fcst = int(fcst / 10000)
-                                temp_fcsts.add(fcst)
+                            per_mvdb[mvdb][model][line_data_table]
+                        except NameError:
+                            per_mvdb[mvdb][model][line_data_table] = {}
+                        per_mvdb[mvdb][model][line_data_table][variable] = {}
+
+                        # store header variables
+                        per_mvdb[mvdb][model][line_data_table][variable]['regions'] = tmp_regions_list
+                        per_mvdb[mvdb][model][line_data_table][variable]['levels'] = tmp_levels_list
+                        per_mvdb[mvdb][model][line_data_table][variable]['trshs'] = tmp_trshs_list
+                        per_mvdb[mvdb][model][line_data_table][variable]['gridpoints'] = tmp_gridpoints_list
+                        per_mvdb[mvdb][model][line_data_table][variable]['truths'] = tmp_truths_list
+
+                        # get the line_data-specific fields
+                        temp_fcsts = set()
+                        temp_fcsts_orig = set()
+                        per_mvdb[mvdb][model][line_data_table][variable]['fcsts'] = []
+                        per_mvdb[mvdb][model][line_data_table][variable]['fcst_orig'] = []
+                        num_recs = 0
+                        mindate = datetime.max
+                        maxdate = datetime.min  # earliest epoch?
+                        app_specific_clause = ''
+                        if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                            app_specific_clause = ' and ' + self.appSpecificWhereClause
+
+                        # select the minimum length set of stat_header_ids from the line_data_table that are unique with respect to model, variable, and vx_mask.
+                        # these will be used to qualify the distinct set of fcst_leads from the line data table.
+                        get_stat_header_ids = "select stat_header_id from " + \
+                                              "(select group_concat(stat_header_id) as stat_header_id from stat_header where stat_header_id in (select distinct stat_header_id from " + \
+                                              line_data_table + \
+                                              " where model = '" + model + \
+                                              "' and fcst_var = '" + variable + \
+                                              "' order by stat_header_id)" + \
+                                              app_specific_clause + \
+                                              " group by model, fcst_var, vx_mask) as stat_header_id order by length(stat_header_id) limit 1;"
+                        if debug:
+                            print(self.script_name + " - Getting get_stat_header_ids lens for model " + model + " and variable " + variable + " sql: " + get_stat_header_ids)
+                        try:
+                            cursor3.execute(get_stat_header_ids)
+                            cnx3.commit()
+                            stat_header_id_values = cursor3.fetchall()
+                            stat_header_id_list = [d['stat_header_id'] for d in stat_header_id_values if
+                                                   'stat_header_id' in d]
                         except pymysql.Error as e:
                             continue
-                        get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from ' + line_data_table + " where stat_header_id in (" + ','.join(
-                            stat_header_id_list) + ");"
-                        print(self.script_name + " - Getting stats for model " + model)
-                        if debug:
-                            print(self.script_name + " - stats sql query: " + get_stats)
-                        try:
-                            cursor2.execute(get_stats)
-                            cnx2.commit()
-                            data = cursor2.fetchone()
-                            if data is not None:
-                                mindate = mindate if data['mindate'] is None or mindate < data['mindate'] else data[
-                                    'mindate']
-                                maxdate = maxdate if data['maxdate'] is None or maxdate > data['maxdate'] else data[
-                                    'maxdate']
-                                num_recs = num_recs + data['numrecs']
-                        except pymysql.Error as e:
-                            continue
-                per_mvdb[mvdb][model]['fcsts'] = list(map(str, sorted(temp_fcsts)))
-                per_mvdb[mvdb][model]['fcst_orig'] = list(map(str, sorted(temp_fcsts_orig)))
-                if mindate is None or mindate is datetime.max:
-                    mindate = datetime.utcnow()
-                if maxdate is None is maxdate is datetime.min:
-                    maxdate = datetime.utcnow()
-                per_mvdb[mvdb][model]['mindate'] = int(mindate.replace(tzinfo=timezone.utc).timestamp())
-                per_mvdb[mvdb][model]['maxdate'] = int(maxdate.replace(tzinfo=timezone.utc).timestamp())
-                per_mvdb[mvdb][model]['numrecs'] = num_recs
-                if int(per_mvdb[mvdb][model]['numrecs']) > 0:
-                    db_has_valid_data = True
-                    print("\n" + self.script_name + " - Storing metadata for model " + model)
-                    self.add_model_to_metadata_table(cnx3, cursor3, mvdb, model, per_mvdb[mvdb][model])
-                else:
-                    print("\n" + self.script_name + "  - No valid metadata for model " + model)
+
+                        if stat_header_id_list is not None and len(stat_header_id_list) > 0:
+                            get_fcsts = "select distinct fcst_lead from " + line_data_table + " where stat_header_id in (" + ','.join(
+                                stat_header_id_list) + ");"
+                            print(self.script_name + " - Getting forecast lengths for model " + model + " and variable " + variable)
+                            if debug:
+                                print(self.script_name + " - fcst_lead sql query: " + get_fcsts)
+                            try:
+                                cursor3.execute(get_fcsts)
+                                cnx3.commit()
+                                for line3 in cursor3:
+                                    fcst = int(list(line3.values())[0])
+                                    temp_fcsts_orig.add(fcst)
+                                    if fcst % 10000 == 0:
+                                        fcst = int(fcst / 10000)
+                                    temp_fcsts.add(fcst)
+                            except pymysql.Error as e:
+                                continue
+                            get_stats = 'select min(fcst_valid_beg) as mindate, max(fcst_valid_beg) as maxdate, count(fcst_valid_beg) as numrecs from ' + line_data_table + " where stat_header_id in (" + ','.join(
+                                stat_header_id_list) + ");"
+                            print(self.script_name + " - Getting stats for model " + model + " and variable " + variable)
+                            if debug:
+                                print(self.script_name + " - stats sql query: " + get_stats)
+                            try:
+                                cursor3.execute(get_stats)
+                                cnx3.commit()
+                                data = cursor3.fetchone()
+                                if data is not None:
+                                    mindate = mindate if data['mindate'] is None or mindate < data['mindate'] else data[
+                                        'mindate']
+                                    maxdate = maxdate if data['maxdate'] is None or maxdate > data['maxdate'] else data[
+                                        'maxdate']
+                                    num_recs = num_recs + data['numrecs']
+                            except pymysql.Error as e:
+                                continue
+                        per_mvdb[mvdb][model][line_data_table][variable]['fcsts'] = list(map(str, sorted(temp_fcsts)))
+                        per_mvdb[mvdb][model][line_data_table][variable]['fcst_orig'] = list(map(str, sorted(temp_fcsts_orig)))
+                        if mindate is None or mindate is datetime.max:
+                            mindate = datetime.utcnow()
+                        if maxdate is None is maxdate is datetime.min:
+                            maxdate = datetime.utcnow()
+                        per_mvdb[mvdb][model][line_data_table][variable]['mindate'] = int(mindate.replace(tzinfo=timezone.utc).timestamp())
+                        per_mvdb[mvdb][model][line_data_table][variable]['maxdate'] = int(maxdate.replace(tzinfo=timezone.utc).timestamp())
+                        per_mvdb[mvdb][model][line_data_table][variable]['numrecs'] = num_recs
+                        if int(num_recs) > 0:
+                            db_has_valid_data = True
+                            print("\n" + self.script_name + " - Storing metadata for model " + model + " and variable " + variable)
+                            self.add_model_to_metadata_table(cnx3, cursor3, mvdb, model, line_data_table, variable, per_mvdb[mvdb][model][line_data_table][variable])
+                        else:
+                            print("\n" + self.script_name + "  - No valid metadata for model " + model + " and variable " + variable)
 
             # Get the group(s) this db is in
             if db_has_valid_data:
@@ -576,7 +606,7 @@ class ParentMetadata:
             print(self.script_name + " - Error closing 3rd cursor: " + str(e))
             traceback.print_stack()
 
-    def add_model_to_metadata_table(self, cnx_tmp, cursor_tmp, mvdb, model, raw_metadata):
+    def add_model_to_metadata_table(self, cnx_tmp, cursor_tmp, mvdb, model, line_data_table, variable, raw_metadata):
         # Add a row for each model/db combo
         cursor_tmp.execute("use  " + self.metadata_database + ";")
         cnx_tmp.commit()
@@ -588,14 +618,15 @@ class ParentMetadata:
             mindate = raw_metadata['mindate']
             maxdate = raw_metadata['maxdate']
             display_text = model.replace('.', '_')
-            insert_row = "insert into {}_dev (db, model, display_text, regions, levels, fcst_lens, variables, trshs, gridpoints, truths, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(self.metadata_table)
+            insert_row = "insert into {}_dev (db, model, display_text, line_data_table, variable, regions, levels, fcst_lens, trshs, gridpoints, truths, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(self.metadata_table)
             qd.append(mvdb)
             qd.append(model)
             qd.append(display_text)
+            qd.append(line_data_table)
+            qd.append(variable)
             qd.append(str(raw_metadata['regions']))
             qd.append(str(raw_metadata['levels']))
             qd.append(str(raw_metadata['fcsts']))
-            qd.append(str(raw_metadata['variables']))
             qd.append(str(raw_metadata['trshs']))
             qd.append(str(raw_metadata['gridpoints']))
             qd.append(str(raw_metadata['truths']))
@@ -661,7 +692,7 @@ class ParentMetadata:
         cnf_file = None
         db = None
         metexpress_base_url = None
-        metadata_database = "mats_metadata"
+        metadata_database = "tmp_mats_metadata"
         data_table_stat_header_id_limit = None
         try:
             opts, args = getopt.getopt(args[1:], "c:d:u:m:D:u:", usage)

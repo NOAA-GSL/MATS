@@ -24,7 +24,7 @@ from metexpress.MEmetadata import ParentMetadata
 class MEEnsemble(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['fcstWhereClause'] = ''
+        options['appSpecificWhereClause'] = ''
         options['line_data_table'] = ["line_data_pct",      # used for reliability and ROC plot types
                                       "line_data_ecnt",     # used for most stats on timeseries/dieoff/validtime/hist
                                       "line_data_cnt",      # used for MAE and ACC on timeseries/dieoff/validtime/hist
