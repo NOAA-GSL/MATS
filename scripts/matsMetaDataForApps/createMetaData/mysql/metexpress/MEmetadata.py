@@ -472,17 +472,9 @@ class ParentMetadata:
                     for line_data_table in self.line_data_table:
                         # see if this is the first variable we've dealt with,
                         # and if per_mvdb[mvdb][model][line_data_table] is undefined
-                        print(0)
-                        try:
-                            print(1)
-                            per_mvdb[mvdb][model][line_data_table]
-                            print(2)
-                        except NameError:
-                            print(3)
+                        if line_data_table not in per_mvdb[mvdb][model].keys():
                             per_mvdb[mvdb][model][line_data_table] = {}
-                            print(4)
                         per_mvdb[mvdb][model][line_data_table][variable] = {}
-                        print(5)
 
                         # store header variables
                         per_mvdb[mvdb][model][line_data_table][variable]['regions'] = tmp_regions_list
