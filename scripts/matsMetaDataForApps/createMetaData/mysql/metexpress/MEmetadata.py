@@ -352,6 +352,8 @@ class ParentMetadata:
             self.cnx.commit()
             cursor2.execute(use_db)
             cnx2.commit()
+            cursor3.execute(use_db)
+            cnx3.commit()
             print("\n\n" + self.script_name + "- Using db " + mvdb)
 
             # Get the models in this database
@@ -637,6 +639,9 @@ class ParentMetadata:
             qd.append(updated_utc)
             cursor_tmp.execute(insert_row, qd)
             cnx_tmp.commit()
+        # put the cursor back to the db it was using
+        cursor_tmp.execute("use  " + mvdb + ";")
+        cnx_tmp.commit()
 
     def populate_db_group_tables(self, db_groups):
         self.cursor.execute("use  " + self.metadata_database + ";")
