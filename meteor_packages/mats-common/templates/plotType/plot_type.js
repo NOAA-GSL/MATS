@@ -45,6 +45,10 @@ Template.plotType.events({
     'click .plot-type-TimeSeries': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.timeSeries);
+            }
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // display appropriate selectors for timeseries
@@ -101,6 +105,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the timeseries face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.timeSeries);
+                }
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // display appropriate selectors for timeseries
@@ -116,6 +124,10 @@ Template.plotType.events({
     'click .plot-type-Profile': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.profile);
+            }
             // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
             // display appropriate selectors for profiles
@@ -169,6 +181,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the profile face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.profile);
+                }
                 // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
                 // display appropriate selectors for profiles
@@ -184,6 +200,10 @@ Template.plotType.events({
     'click .plot-type-DieOff': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.dieoff);
+            }
             // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
             // display appropriate selectors for dieoffs
@@ -240,6 +260,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the dieoff face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.dieoff);
+                }
                 // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
                 // display appropriate selectors for dieoffs
@@ -255,6 +279,10 @@ Template.plotType.events({
     'click .plot-type-Threshold': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.threshold);
+            }
             // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
             // display appropriate selectors for thresholds
@@ -308,6 +336,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the threshold face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.threshold);
+                }
                 // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
                 // display appropriate selectors for thresholds
@@ -323,6 +355,10 @@ Template.plotType.events({
     'click .plot-type-ValidTime': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.validtime);
+            }
             // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
             // display appropriate selectors for validtimes
@@ -376,6 +412,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the validtime face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.validtime);
+                }
                 // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
                 // display appropriate selectors for validtimes
@@ -391,6 +431,10 @@ Template.plotType.events({
     'click .plot-type-GridScale': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.gridscale);
+            }
             // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
             // display appropriate selectors for grid scale plots
@@ -444,6 +488,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the grid scale face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.gridscale);
+                }
                 // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
                 // display appropriate selectors for grid scale plots
@@ -459,6 +507,10 @@ Template.plotType.events({
     'click .plot-type-DailyModelCycle': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.dailyModelCycle);
+            }
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // display appropriate selectors for dailymodelcycle
@@ -509,6 +561,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the dailymodelcycle face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.dailyModelCycle);
+                }
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // display appropriate selectors for dailymodelcycle
@@ -524,6 +580,10 @@ Template.plotType.events({
     'click .plot-type-Reliability': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.reliability);
+            }
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // display appropriate selectors for reliability
@@ -574,6 +634,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the reliability face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.reliability);
+                }
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // display appropriate selectors for reliability
@@ -589,6 +653,10 @@ Template.plotType.events({
     'click .plot-type-ROC': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.roc);
+            }
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // display appropriate selectors for ROC
@@ -639,6 +707,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the ROC face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.roc);
+                }
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // display appropriate selectors for ROC
@@ -654,6 +726,10 @@ Template.plotType.events({
     'click .plot-type-Map': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.map);
+            }
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // maps need to have the region be station-select mode
@@ -699,6 +775,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the map face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.map);
+                }
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // maps need to have the region be station-select mode
@@ -718,6 +798,10 @@ Template.plotType.events({
     'click .plot-type-Histogram': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.histogram);
+            }
             // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
             // display appropriate selectors for histograms
@@ -774,6 +858,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the histogram face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.histogram);
+                }
                 // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
                 // display appropriate selectors for histograms
@@ -789,6 +877,10 @@ Template.plotType.events({
     'click .plot-type-EnsembleHistogram': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.ensembleHistogram);
+            }
             // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
             // display appropriate selectors for ensemble histograms
@@ -842,6 +934,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the histogram face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.ensembleHistogram);
+                }
                 // see if the previous plot type also used the 'curve-dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldCurveDatesExist = matsParamUtils.isParamVisible('curve-dates');
                 // display appropriate selectors for ensemble histograms
@@ -857,6 +953,10 @@ Template.plotType.events({
     'click .plot-type-Contour': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.contour);
+            }
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // contours need to have the region be in predefined mode
@@ -920,6 +1020,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the contour face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.contour);
+                }
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // contours need to have the region be in predefined mode
@@ -939,6 +1043,10 @@ Template.plotType.events({
     'click .plot-type-ContourDiff': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.contourDiff);
+            }
             // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             // contours need to have the region be in predefined mode
@@ -1002,6 +1110,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the contour face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.contourDiff);
+                }
                 // see if the previous plot type also used the 'dates' parameter. If it did, we'll just keep whatever value it's set to
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 // contours need to have the region be in predefined mode
@@ -1021,6 +1133,10 @@ Template.plotType.events({
     'click .plot-type-Scatter2d': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
+            // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+            if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.scatter2d);
+            }
             // see if the previous plot type also used the 'dates' parameter
             const oldDatesExist = matsParamUtils.isParamVisible('dates');
             matsCurveUtils.showScatterFace();
@@ -1039,6 +1155,10 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 // no curves - just set the scatter face
+                // the MET apps have a hidden plot-type selector than needs to match the actual plot type
+                if (matsCollections.CurveParams.findOne({name: 'plot-type'}) !== undefined) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('plot-type', matsTypes.PlotTypes.scatter2d);
+                }
                 // see if the previous plot type also used the 'dates' parameter
                 const oldDatesExist = matsParamUtils.isParamVisible('dates');
                 matsCurveUtils.showScatterFace();
