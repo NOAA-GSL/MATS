@@ -39,12 +39,11 @@ echo "mongo $MONGO_URL --eval \"db.${APPNAME}.drop()\""
 mongo $MONGO_URL --eval "db.${APPNAME}.drop()"
 export METEOR_SETTINGS_DIR="/usr/app/settings"
 export METEOR_SETTINGS="$(cat /usr/app/settings/${APPNAME}/settings.json)"
-echo "METEOR_SETTINGS VAR IS" "${METEOR_SETTINGS}"
 cd /usr/app
 if [[ $DEBUG ]]; then
     echo "run_app => Starting meteor app for DEBUG on port: " $PORT " with settings " ${METEOR_SETTINGS}
     node --inspect=0.0.0.0:9229 main.js
 else
-    echo "run_app => Starting meteor app  on port: " ${PORT} " with settings " ${METEOR_SETTINGS}
+    echo "run_app => Starting meteor app  on port: " ${PORT} "
     node main.js
 fi
