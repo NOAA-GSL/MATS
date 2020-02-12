@@ -133,6 +133,7 @@ cd ${DEPLOYMENT_DIRECTORY}
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
 # checkout proper branch
+echo "git checkout ${BUILD_CODE_BRANCH}"
 git checkout ${BUILD_CODE_BRANCH}
 
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
