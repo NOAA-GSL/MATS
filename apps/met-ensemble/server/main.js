@@ -569,7 +569,7 @@ const doCurveParams = function () {
                 options: Object.keys(plotTypeOptionsMap[defaultDB][defaultModel]),
                 superiorNames: ['database', 'data-source'],
                 dependentNames: ["statistic", "variable"],
-                controlButtonCovered: true,
+                controlButtonCovered: false,
                 default: defaultPlotType,
                 unique: false,
                 controlButtonVisibility: 'none',
