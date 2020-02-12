@@ -33,6 +33,10 @@ EOF
   # make sure the settings directory and file are still modifiable.
   chmod -R 777 /usr/app/settings/${APPNAME}
 fi
+echo "MONGO URL is: " $MONOG_URL
+echo "dropping database: "
+echo "mongo $MONGO_URL --eval \"db.${APPNAME}.drop()\""
+mongo $MONGO_URL --eval "db.${APPNAME}.drop()"
 export METEOR_SETTINGS_DIR="/usr/app/settings"
 export METEOR_SETTINGS="$(cat /usr/app/settings/${APPNAME}/settings.json)"
 echo "METEOR_SETTINGS VAR IS" "${METEOR_SETTINGS}"
