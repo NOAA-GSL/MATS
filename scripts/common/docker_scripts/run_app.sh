@@ -44,6 +44,6 @@ if [[ $DEBUG ]]; then
     echo "run_app => Starting meteor app for DEBUG"
     node --inspect=0.0.0.0:9229 main.js
 else
-    echo "run_app => Starting meteor app"
-    node main.js
+#    echo "run_app => Starting meteor app"
+#    node main.js
 fi
