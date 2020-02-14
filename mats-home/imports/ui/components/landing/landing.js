@@ -53,7 +53,9 @@ Template.landing.helpers({
     return app.home;
   },
   baseUrl() {
-    return document.location.href;
+    var base_arr = document.location.href.split('/');
+    base_arr.pop();
+    return( base_arr.join('/') );
   },
   environment() {
       return Session.get('deployment_environment');
