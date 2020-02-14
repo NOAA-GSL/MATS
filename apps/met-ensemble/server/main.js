@@ -566,7 +566,7 @@ const doCurveParams = function () {
                 name: 'plot-type',
                 type: matsTypes.InputTypes.select,
                 optionsMap: plotTypeOptionsMap,
-                options: Object.keys(plotTypeOptionsMap[defaultDB][defaultModel]),
+                options: plotTypeOptionsMap[defaultDB][defaultModel],
                 superiorNames: ['database', 'data-source'],
                 dependentNames: ["statistic", "variable"],
                 controlButtonCovered: false,
@@ -585,7 +585,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'plot-type'}, {
                 $set: {
                     optionsMap: plotTypeOptionsMap,
-                    options: Object.keys(plotTypeOptionsMap[defaultDB][defaultModel]),
+                    options: plotTypeOptionsMap[defaultDB][defaultModel],
                     default: defaultPlotType
                 }
             });
@@ -630,7 +630,7 @@ const doCurveParams = function () {
                 name: 'statistic',
                 type: matsTypes.InputTypes.select,
                 optionsMap: statisticOptionsMap,
-                options: statisticOptionsMap[defaultDB][defaultModel][defaultPlotType],
+                options: Object.keys(statisticOptionsMap[defaultDB][defaultModel][defaultPlotType]),
                 superiorNames: ['database', 'data-source', 'plot-type'],
                 controlButtonCovered: true,
                 unique: false,
@@ -648,7 +648,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'statistic'}, {
                 $set: {
                     optionsMap: statisticOptionsMap,
-                    options: statisticOptionsMap[defaultDB][defaultModel][defaultPlotType],
+                    options: Object.keys(statisticOptionsMap[defaultDB][defaultModel][defaultPlotType]),
                     default: Object.keys(statisticOptionsMap[defaultDB][defaultModel][defaultPlotType])[0]
                 }
             });
