@@ -53,128 +53,81 @@ const matchPlotTypeSelector = function (plotType) {
     }
 };
 
-const setDatesAndShowFace = function (plotType) {
+const setDatesAndShowFace = function (plotType, dateSelector) {
     // display appropriate selectors for each plot type, and make sure the previous dates or curve-dates values
     // carry across to the appropriate new selector
     var oldDatesExist;
+    if (dateSelector === 'dates') {
+        oldDatesExist = matsParamUtils.isParamVisible('dates');
+    } else {
+        oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
+    }
     switch (plotType) {
         case matsTypes.PlotTypes.timeSeries:
-            oldDatesExist = matsParamUtils.isParamVisible('dates');
             matsCurveUtils.showTimeseriesFace();
-            if (!oldDatesExist) {
-                const curveDate = $('#controlButton-curve-dates-value').text();
-                matsParamUtils.setValueTextForParamName('dates', curveDate)
-            }
             break;
         case matsTypes.PlotTypes.profile:
-            oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
             matsCurveUtils.showProfileFace();
-            if (!oldDatesExist) {
-                const date = $('#controlButton-dates-value').text();
-                matsParamUtils.setValueTextForParamName('curve-dates', date)
-            }
             break;
         case matsTypes.PlotTypes.dieoff:
-            oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
             matsCurveUtils.showDieOffFace();
-            if (!oldDatesExist) {
-                const date = $('#controlButton-dates-value').text();
-                matsParamUtils.setValueTextForParamName('curve-dates', date)
-            }
             break;
         case matsTypes.PlotTypes.threshold:
-            oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
             matsCurveUtils.showThresholdFace();
-            if (!oldDatesExist) {
-                const date = $('#controlButton-dates-value').text();
-                matsParamUtils.setValueTextForParamName('curve-dates', date)
-            }
             break;
         case matsTypes.PlotTypes.validtime:
-            oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
             matsCurveUtils.showValidTimeFace();
-            if (!oldDatesExist) {
-                const date = $('#controlButton-dates-value').text();
-                matsParamUtils.setValueTextForParamName('curve-dates', date)
-            }
             break;
         case matsTypes.PlotTypes.gridscale:
-            oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
             matsCurveUtils.showGridScaleFace();
-            if (!oldDatesExist) {
-                const date = $('#controlButton-dates-value').text();
-                matsParamUtils.setValueTextForParamName('curve-dates', date)
-            }
             break;
         case matsTypes.PlotTypes.dailyModelCycle:
-            oldDatesExist = matsParamUtils.isParamVisible('dates');
             matsCurveUtils.showDailyModelCycleFace();
-            if (!oldDatesExist) {
-                const curveDate = $('#controlButton-curve-dates-value').text();
-                matsParamUtils.setValueTextForParamName('dates', curveDate)
-            }
             break;
         case matsTypes.PlotTypes.map:
-            oldDatesExist = matsParamUtils.isParamVisible('dates');
             matsCurveUtils.showMapFace();
-            if (!oldDatesExist) {
-                const curveDate = $('#controlButton-curve-dates-value').text();
-                matsParamUtils.setValueTextForParamName('dates', curveDate)
-            }
             break;
         case matsTypes.PlotTypes.reliability:
-            oldDatesExist = matsParamUtils.isParamVisible('dates');
             matsCurveUtils.showReliabilityFace();
-            if (!oldDatesExist) {
-                const curveDate = $('#controlButton-curve-dates-value').text();
-                matsParamUtils.setValueTextForParamName('dates', curveDate)
-            }
             break;
         case matsTypes.PlotTypes.roc:
-            oldDatesExist = matsParamUtils.isParamVisible('dates');
             matsCurveUtils.showROCFace();
-            if (!oldDatesExist) {
-                const curveDate = $('#controlButton-curve-dates-value').text();
-                matsParamUtils.setValueTextForParamName('dates', curveDate)
-            }
             break;
         case matsTypes.PlotTypes.histogram:
-            oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
             matsCurveUtils.showHistogramFace();
-            if (!oldDatesExist) {
-                const date = $('#controlButton-dates-value').text();
-                matsParamUtils.setValueTextForParamName('curve-dates', date)
-            }
             break;
         case matsTypes.PlotTypes.ensembleHistogram:
-            oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
             matsCurveUtils.showEnsembleHistogramFace();
-            if (!oldDatesExist) {
-                const date = $('#controlButton-dates-value').text();
-                matsParamUtils.setValueTextForParamName('curve-dates', date)
-            }
             break;
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
-            oldDatesExist = matsParamUtils.isParamVisible('dates');
             matsCurveUtils.showContourFace();
-            if (!oldDatesExist) {
-                const curveDate = $('#controlButton-curve-dates-value').text();
-                matsParamUtils.setValueTextForParamName('dates', curveDate)
-            }
             break;
         case matsTypes.PlotTypes.scatter2d:
-            oldDatesExist = matsParamUtils.isParamVisible('dates');
             matsCurveUtils.showScatterFace();
-            if (!oldDatesExist) {
-                const curveDate = $('#controlButton-curve-dates-value').text();
-                matsParamUtils.setValueTextForParamName('dates', curveDate)
-            }
             break;
     }
+    if (dateSelector === 'dates') {
+        if (!oldDatesExist) {
+            const curveDate = $('#controlButton-curve-dates-value').text();
+            matsParamUtils.setValueTextForParamName('dates', curveDate);
+            return curveDate;
+        } else {
+            return 0;
+        }
+    } else {
+        if (!oldDatesExist) {
+            const tsDate = $('#controlButton-dates-value').text();
+            matsParamUtils.setValueTextForParamName('curve-dates', tsDate);
+            return tsDate;
+        } else {
+            return 0;
+        }
+    }
+
 };
 
-const changePlotType = function (plotType, selectorsToInitialize) {
+const changePlotType = function (plotType, selectorsToInitialize, dateSelector) {
     if (Session.get("confirmPlotChange")) {
         // change has been confirmed
         // the MET apps have a hidden plot-type selector than needs to match the actual plot type
@@ -182,7 +135,7 @@ const changePlotType = function (plotType, selectorsToInitialize) {
 
         // display appropriate selectors for this plot type, and make sure the previous dates or curve-dates values
         // carry across to the appropriate new selector
-        setDatesAndShowFace(plotType);
+        const newDate = setDatesAndShowFace(plotType, dateSelector);
 
         // make sure the curves already added also have the correct parameters displayed
         var curves = Session.get('Curves');
@@ -190,6 +143,9 @@ const changePlotType = function (plotType, selectorsToInitialize) {
             // initialize parameters that may not have been used yet
             for (var ci = 0; ci < curves.length; ci++) {
                 for (var si = 0; si < selectorsToInitialize.length; si++) {
+                    if (dateSelector === 'curve-dates' && newDate !== 0) {
+                        curves[ci]['curve-dates'] = newDate;
+                    }
                     if (!curves[ci][selectorsToInitialize[si]] && matsCollections.CurveParams.findOne({name: selectorsToInitialize[si]}) && matsCollections.CurveParams.findOne({name: selectorsToInitialize[si]}).default) {
                         curves[ci][selectorsToInitialize[si]] = matsCollections.CurveParams.findOne({name: selectorsToInitialize[si]}).default;
                     }
@@ -211,7 +167,7 @@ const changePlotType = function (plotType, selectorsToInitialize) {
 
             // display appropriate selectors for this plot type, and make sure the previous dates or curve-dates values
             // carry across to the appropriate new selector
-            setDatesAndShowFace(plotType);
+            setDatesAndShowFace(plotType, dateSelector);
         }
     }
 };
@@ -220,76 +176,91 @@ Template.plotType.events({
     'click .plot-type-TimeSeries': function (event) {
         const plotType = matsTypes.PlotTypes.timeSeries;
         const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'level', 'forecast-length', 'average', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-Profile': function (event) {
         const plotType = matsTypes.PlotTypes.profile;
         const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'curve-dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-DieOff': function (event) {
         const plotType = matsTypes.PlotTypes.dieoff;
         const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'level', 'dieoff-type', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'curve-dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-Threshold': function (event) {
         const plotType = matsTypes.PlotTypes.threshold;
         const selectorsToInitialize = ['statistic', 'scale', 'level', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'curve-dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-ValidTime': function (event) {
         const plotType = matsTypes.PlotTypes.validtime;
         const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'level', 'forecast-length', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'curve-dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-GridScale': function (event) {
         const plotType = matsTypes.PlotTypes.gridscale;
         const selectorsToInitialize = ['statistic', 'threshold', 'level', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'curve-dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-DailyModelCycle': function (event) {
         const plotType = matsTypes.PlotTypes.dailyModelCycle;
         const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'level', 'utc-cycle-start', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-Reliability': function (event) {
         const plotType = matsTypes.PlotTypes.reliability;
         const selectorsToInitialize = ['threshold', 'scale', 'level', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-ROC': function (event) {
         const plotType = matsTypes.PlotTypes.roc;
         const selectorsToInitialize = ['threshold', 'scale', 'level', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-Map': function (event) {
         const plotType = matsTypes.PlotTypes.map;
         const selectorsToInitialize = ['threshold', 'scale', 'level', 'forecast-length', 'valid-time'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-Histogram': function (event) {
         const plotType = matsTypes.PlotTypes.histogram;
         const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'level', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'curve-dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-EnsembleHistogram': function (event) {
         const plotType = matsTypes.PlotTypes.ensembleHistogram;
         const selectorsToInitialize = ['threshold', 'scale', 'level', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'curve-dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-Contour': function (event) {
         const plotType = matsTypes.PlotTypes.contour;
         const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'level', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region', 'x-axis-parameter', 'y-axis-parameter'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-ContourDiff': function (event) {
         const plotType = matsTypes.PlotTypes.contourDiff;
         const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'level', 'forecast-length', 'valid-time', 'truth', 'region-type', 'region', 'x-axis-parameter', 'y-axis-parameter'];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
     'click .plot-type-Scatter2d': function (event) {
         const plotType = matsTypes.PlotTypes.scatter2d;
         const selectorsToInitialize = [];
-        changePlotType(plotType, selectorsToInitialize);
+        const dateSelector = 'dates';
+        changePlotType(plotType, selectorsToInitialize, dateSelector);
     }
 });

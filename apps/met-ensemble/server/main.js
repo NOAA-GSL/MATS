@@ -408,7 +408,7 @@ const doCurveParams = function () {
                     if (statisticOptionsMap[thisDB][model][thisPlotType] === undefined) {
                         statisticOptionsMap[thisDB][model][thisPlotType] = validStats;
                         variableOptionsMap[thisDB][model][thisPlotType] = [];
-                        variableValuesMap[thisDB][model][thisPlotType] = [];
+                        variableValuesMap[thisDB][model][thisPlotType] = {};
                         regionModelOptionsMap[thisDB][model][thisPlotType] = {};
                         forecastLengthOptionsMap[thisDB][model][thisPlotType] = {};
                         forecastValueOptionsMap[thisDB][model][thisPlotType] = {};
@@ -416,13 +416,13 @@ const doCurveParams = function () {
                     } else {
                         statisticOptionsMap[thisDB][model][thisPlotType] = {...statisticOptionsMap[thisDB][model][thisPlotType], ...validStats};
                     }
-                    variableValuesMap[thisDB][model][thisPlotType].push(variable);
-                    variable = variable.replace(/\./g, "_");
-                    variableOptionsMap[thisDB][model][thisPlotType].push(variable);
-                    regionModelOptionsMap[thisDB][model][thisPlotType][variable] = regionsArr;
-                    forecastLengthOptionsMap[thisDB][model][thisPlotType][variable] = forecastLengthArr;
-                    forecastValueOptionsMap[thisDB][model][thisPlotType][variable] = lengthValMap;
-                    levelOptionsMap[thisDB][model][thisPlotType][variable] = levelsArr;
+                    const jsonFriendlyVariable = variable.replace(/\./g, "_");
+                    variableOptionsMap[thisDB][model][thisPlotType].push(jsonFriendlyVariable);
+                    variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = variable;
+                    regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = regionsArr;
+                    forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = forecastLengthArr;
+                    forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = lengthValMap;
+                    levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = levelsArr;
                 }
             }
         }
@@ -532,7 +532,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap[defaultDB]),
-                levelsMap: levelOptionsMap, // need to know what levels the metadata allows for each model.
                 superiorNames: ["database"],
                 dependentNames: ["plot-type", "dates", "curve-dates"],
                 controlButtonCovered: true,
@@ -546,13 +545,11 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
-        if ((!matsDataUtils.areObjectsEqual(modelOptionsMap, currentParam.optionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(levelOptionsMap, currentParam.levelsMap))) {
+        if ((!matsDataUtils.areObjectsEqual(modelOptionsMap, currentParam.optionsMap))) {
             // have to reload model data
             matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
-                    levelsMap: levelOptionsMap,
                     options: Object.keys(modelOptionsMap[defaultDB]),
                     default: defaultModel
                 }
@@ -677,11 +674,13 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'variable'});
-        if (!matsDataUtils.areObjectsEqual(variableOptionsMap, currentParam.optionsMap)) {
+        if ((!matsDataUtils.areObjectsEqual(variableOptionsMap, currentParam.optionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(variableValuesMap, currentParam.valuesMap))) {
             // have to reload variable data
             matsCollections.CurveParams.update({name: 'variable'}, {
                 $set: {
                     optionsMap: variableOptionsMap,
+                    valuesMap: variableValuesMap,
                     options: variableOptionsMap[defaultDB][defaultModel][defaultPlotType],
                     default: variableOptionsMap[defaultDB][defaultModel][defaultPlotType][0]
                 }
