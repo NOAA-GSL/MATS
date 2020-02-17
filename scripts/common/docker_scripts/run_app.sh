@@ -33,7 +33,7 @@ EOF
   # make sure the settings directory and file are still modifiable.
   chmod -R 777 /usr/app/settings/${APPNAME}
 fi
-echo "MONGO URL is: " $MONOG_URL
+echo "MONGO URL is: " $MONGO_URL
 echo "dropping database: "
 
 #mongo $MONGO_URL --eval "db.${APPNAME}.drop()"
