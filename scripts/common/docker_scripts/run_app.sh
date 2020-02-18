@@ -33,14 +33,14 @@ EOF
   # make sure the settings directory and file are still modifiable.
   chmod -R 777 /usr/app/settings/${APPNAME}
 fi
+echo "MONGO URL is: " $MONGO_URL
 export METEOR_SETTINGS_DIR="/usr/app/settings"
 export METEOR_SETTINGS="$(cat /usr/app/settings/${APPNAME}/settings.json)"
-echo "METEOR_SETTINGS VAR IS" "${METEOR_SETTINGS}"
 cd /usr/app
 if [[ $DEBUG ]]; then
-    echo "run_app => Starting meteor app for DEBUG on port: " $PORT " with settings " ${METEOR_SETTINGS}
+    echo "run_app => Starting meteor app for DEBUG"
     node --inspect=0.0.0.0:9229 main.js
 else
-    echo "run_app => Starting meteor app  on port: " ${PORT} " with settings " ${METEOR_SETTINGS}
+    echo "run_app => Starting meteor app"
     node main.js
 fi

@@ -133,6 +133,7 @@ cd ${DEPLOYMENT_DIRECTORY}
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
 # checkout proper branch
+echo "git checkout ${BUILD_CODE_BRANCH}"
 git checkout ${BUILD_CODE_BRANCH}
 
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
@@ -372,7 +373,7 @@ ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
 WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
-RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-dev bash && \\
+RUN apk --update --no-cache add mongodb-tools make gcc g++ python python3 python3-dev mariadb-dev bash && \\
     npm install -g npm@6.4.1 && \\
     npm cache clean -f && \\
     npm install -g n && \\

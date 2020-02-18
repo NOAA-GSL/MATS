@@ -16,15 +16,17 @@ fi
 . ~/.matsapps_credentials
 
 function usage() {
-      echo "USAGE: $0 -n namespace [-p persistentVolumeClaim]"
+      echo "USAGE: $0 -n namespace [-t template_version -p persistentVolumeClaim]"
       echo "where namespace is a valid namespace (namespaces are expected to match MATS environments)"
+      echo "For template version use 'rancher app st matsmongo' to list the versions"
       echo "and persistentVolumeClaim is the name of a predefined persistent Volume Claim - defaults to 'matsdata'"
       exit 1;
 }
 
 export CONTEXT=""
 export pvc=matsdata
-while getopts 'n:p:h' OPTION; do
+export templateVersion=""
+while getopts 'n:p:t:h' OPTION; do
   case "$OPTION" in
     n)
         ns="$OPTARG"
@@ -44,6 +46,10 @@ while getopts 'n:p:h' OPTION; do
        persistentVolumeClaim="$OPTARG"
         echo "deploying PersistentVolumeClaim  $pvc"
         ;;
+    t)
+       templateVersion="$OPTARG"
+        echo "deploying template version  $templateVersion"
+        ;;
     h)
       usage
       ;;
@@ -59,6 +65,11 @@ if [ -z $CONTEXT ]; then
   usage
 fi
 
+version=""
+if [ $templateVersion ]; then
+	version="--version $templateVersion"
+fi
 echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
-rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc}
+echo "rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}"
+rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}

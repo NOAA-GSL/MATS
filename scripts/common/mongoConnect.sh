@@ -18,7 +18,7 @@ env="matsdev"
 db=""
 
 function usage() {
-      echo "USAGE: $0 -e env [-d db]"
+      echo "USAGE: $0 -n env [-d db]"
       echo "where env is a valid namespace"
       echo "where db is optional but if it is used it must be a valid app reference i.e. upperair or met-surface"
       echo "if db is left off you will be connected to the default database which is 'test' ..."
@@ -26,9 +26,9 @@ function usage() {
 }
 
 export CONTEXT=''
-while getopts 'e:d:h' OPTION; do
+while getopts 'n:d:h' OPTION; do
   case "$OPTION" in
-    e)
+    n)
         env="$OPTARG"
         CONTEXT=$(echo 0 | rancher login $CATTLE_ENDPOINT --token ${TOKEN} --skip-verify 2> /dev/null | grep "^[1-9]" | grep $env | awk '{print $3}')
         if [ -z "$CONTEXT" ]; then
@@ -91,6 +91,6 @@ if [ -z $port ]; then
   exit 1
 fi
 
-echo mongo "mongodb://${host}:${port}${db}"
-mongo mongodb://${host}:${port}${db}
+echo mongo -u mats -p matsUser0 "mongodb://${host}:${port}${db}"
+mongo -u mats -p matsUser0 mongodb://${host}:${port}${db}
 
