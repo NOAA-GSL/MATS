@@ -34,9 +34,6 @@ EOF
   chmod -R 777 /usr/app/settings/${APPNAME}
 fi
 echo "MONGO URL is: " $MONGO_URL
-echo "dropping database: "
-
-#mongo $MONGO_URL --eval "db.${APPNAME}.drop()"
 export METEOR_SETTINGS_DIR="/usr/app/settings"
 export METEOR_SETTINGS="$(cat /usr/app/settings/${APPNAME}/settings.json)"
 cd /usr/app
