@@ -85,6 +85,10 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
             matsCurveUtils.showDailyModelCycleFace();
             break;
         case matsTypes.PlotTypes.map:
+            // maps need to have the region be station-select mode
+            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations (bias only)');
+            }
             matsCurveUtils.showMapFace();
             break;
         case matsTypes.PlotTypes.reliability:
@@ -101,6 +105,10 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
             break;
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
+            // contours need to have the region be in predefined mode
+            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            }
             matsCurveUtils.showContourFace();
             break;
         case matsTypes.PlotTypes.scatter2d:
