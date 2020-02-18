@@ -662,7 +662,6 @@ const doCurveParams = function () {
                 valuesMap: variableValuesMap,
                 superiorNames: ['database', 'data-source', 'plot-type'],
                 dependentNames: ["region", "forecast-length", "level"],
-                selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: variableOptionsMap[defaultDB][defaultModel][defaultPlotType][0],
@@ -751,7 +750,6 @@ const doCurveParams = function () {
                     'valid-time': ["Dieoff for a specified UTC cycle init hour", "Single cycle forecast (uses first date in range)"],
                     'utc-cycle-start': ["Dieoff", "Single cycle forecast (uses first date in range)"],
                 },
-                selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: Object.keys(dieoffOptionsMap)[0],
@@ -788,7 +786,6 @@ const doCurveParams = function () {
                 name: 'utc-cycle-start',
                 type: matsTypes.InputTypes.select,
                 options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: 12,
@@ -823,7 +820,6 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap),
                 controlButtonCovered: true,
                 unique: false,
-                selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
@@ -1173,7 +1169,13 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "mats_metadata", ['ensemble_mats_metadata', 'ensemble_database_groups']);
     try {
-        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-ensemble', title: "MET Ensemble", group: "METexpress"});
+        matsMethods.resetApp({
+            appMdr: mdr,
+            appType: matsTypes.AppTypes.metexpress,
+            app: 'met-ensemble',
+            title: "MET Ensemble",
+            group: "METexpress"
+        });
     } catch (error) {
         console.log(error.message);
     }
