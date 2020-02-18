@@ -578,10 +578,10 @@ class ParentMetadata:
                         per_mvdb[mvdb][model][line_data_table][variable]['numrecs'] = num_recs
                         if int(num_recs) > 0:
                             db_has_valid_data = True
-                            print("\n" + self.script_name + " - Storing metadata for model " + model + " and variable " + variable)
+                            print("\n" + self.script_name + " - Storing metadata for model " + model + ", variable " + variable + ", and line_type " + line_data_table)
                             self.add_model_to_metadata_table(cnx3, cursor3, mvdb, model, line_data_table, variable, per_mvdb[mvdb][model][line_data_table][variable])
                         else:
-                            print("\n" + self.script_name + "  - No valid metadata for model " + model + " and variable " + variable)
+                            print("\n" + self.script_name + " - No valid metadata for model " + model + ", variable " + variable + ", and line_type " + line_data_table)
 
             # Get the group(s) this db is in
             if db_has_valid_data:
