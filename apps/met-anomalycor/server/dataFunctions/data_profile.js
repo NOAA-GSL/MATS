@@ -32,9 +32,9 @@ dataProfile = function (plotParams, plotFunction) {
     var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = -1 * Number.MAX_VALUE;
+    var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
-    var ymax = 1050;
-    var ymin = 1;
+    var ymin = Number.MAX_VALUE;
     var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -179,15 +179,21 @@ dataProfile = function (plotParams, plotFunction) {
 
             // set axis limits based on returned data
             var postQueryStartMoment = moment();
-
+            if (dataFoundForCurve) {
+                xmin = xmin < d.xmin ? xmin : d.xmin;
+                xmax = xmax > d.xmax ? xmax : d.xmax;
+                ymin = ymin < d.ymin ? ymin : d.ymin;
+                ymax = ymax > d.ymax ? ymax : d.ymax;
+            }
         } else {
             // this is a difference curve
             const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
             d = diffResult.dataset;
+            xmin = xmin < d.xmin ? xmin : d.xmin;
+            xmax = xmax > d.xmax ? xmax : d.xmax;
+            ymin = ymin < d.ymin ? ymin : d.ymin;
+            ymax = ymax > d.ymax ? ymax : d.ymax;
         }
-
-        xmin = xmin < d.xmin ? xmin : d.xmin;
-        xmax = xmax > d.xmax ? xmax : d.xmax;
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
@@ -196,8 +202,9 @@ dataProfile = function (plotParams, plotFunction) {
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
         curve['xmax'] = d.xmax;
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
+        curve['ymin'] = d.ymin;
+        curve['ymax'] = d.ymax;
+        curve['axisKey'] = axisKey;
         const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();

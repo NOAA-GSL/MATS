@@ -32,9 +32,9 @@ dataProfile = function (plotParams, plotFunction) {
     var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = -1 * Number.MAX_VALUE;
+    var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
-    var ymax = 1050;
-    var ymin = 1;
+    var ymin = Number.MAX_VALUE;
     var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -45,8 +45,9 @@ dataProfile = function (plotParams, plotFunction) {
         var database = curve['database'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var modelClause = "and h.model = '" + model + "'";
+        var selectorPlotType = curve['plot-type'];
         var statistic = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'][database][curve['data-source']][selectorPlotType];
         var statLineType = statisticOptionsMap[statistic][0];
         var statisticClause = "";
         var lineDataType = "";
@@ -71,7 +72,8 @@ dataProfile = function (plotParams, plotFunction) {
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
         var variable = curve['variable'];
-        var variableClause = "and h.fcst_var = '" + variable + "'";
+        var variableValuesMap = matsCollections.CurveParams.findOne({name: 'variable'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']][selectorPlotType];
+        var variableClause = "and h.fcst_var = '" + variableValuesMap[variable] + "'";
         var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
         if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
@@ -89,7 +91,7 @@ dataProfile = function (plotParams, plotFunction) {
         var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
         fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
         if (fcsts.length > 0) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']][selectorPlotType][variable];
             fcsts = fcsts.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
@@ -100,7 +102,7 @@ dataProfile = function (plotParams, plotFunction) {
         var toSecs = dateRange.toSeconds;
         var dateClause = "and unix_timestamp(ld.fcst_valid_beg) >= " + fromSecs + " and unix_timestamp(ld.fcst_valid_beg) <= " + toSecs;
         // we can't just leave the level clause out, because we might end up with some non-metadata-approved levels in the mix
-        var levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+        var levels = matsCollections.CurveParams.findOne({name: 'level'}, {optionsMap: 1})['optionsMap'][database][curve['data-source']][selectorPlotType][variable];
         levels = levels.map(function (l) {
             return "'" + l + "'";
         }).join(',');
@@ -186,15 +188,21 @@ dataProfile = function (plotParams, plotFunction) {
 
             // set axis limits based on returned data
             var postQueryStartMoment = moment();
-
+            if (dataFoundForCurve) {
+                xmin = xmin < d.xmin ? xmin : d.xmin;
+                xmax = xmax > d.xmax ? xmax : d.xmax;
+                ymin = ymin < d.ymin ? ymin : d.ymin;
+                ymax = ymax > d.ymax ? ymax : d.ymax;
+            }
         } else {
             // this is a difference curve
             const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
             d = diffResult.dataset;
+            xmin = xmin < d.xmin ? xmin : d.xmin;
+            xmax = xmax > d.xmax ? xmax : d.xmax;
+            ymin = ymin < d.ymin ? ymin : d.ymin;
+            ymax = ymax > d.ymax ? ymax : d.ymax;
         }
-
-        xmin = xmin < d.xmin ? xmin : d.xmin;
-        xmax = xmax > d.xmax ? xmax : d.xmax;
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
@@ -203,8 +211,9 @@ dataProfile = function (plotParams, plotFunction) {
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
         curve['xmax'] = d.xmax;
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
+        curve['ymin'] = d.ymin;
+        curve['ymax'] = d.ymax;
+        curve['axisKey'] = axisKey;
         const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
