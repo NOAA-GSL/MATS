@@ -138,7 +138,7 @@ class ParentMetadata:
         self.cnx.commit()
         if self.cursor.rowcount == 0:
             print(self.script_name + " - Metadata dev table does not exist--creating it")
-            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), line_data_table varchar(255), variable varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), trshs varchar(4095), gridpoints varchar(4095), truths varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(self.metadata_table)
+            create_table_query = 'create table {}_dev (db varchar(255), model varchar(255), display_text varchar(255), line_data_table varchar(255), variable varchar(255), regions varchar(4095), levels varchar(4095), fcst_lens varchar(4095), trshs varchar(4095), gridpoints varchar(4095), truths varchar(4095), descrs varchar(4095), fcst_orig varchar(4095), mindate int(11), maxdate int(11), numrecs int(11), updated int(11));'.format(self.metadata_table)
             self.cursor.execute(create_table_query)
             self.cnx.commit()
 
@@ -468,6 +468,22 @@ class ParentMetadata:
                         tmp_truths_list.append(truth)
                     tmp_truths_list.sort()
 
+                    # Get the descriptions for this model/variable in this database
+                    get_descrs = 'select distinct descr from stat_header where model = "' + model + '" and fcst_var = "' + variable + '"'
+                    if self.appSpecificWhereClause is not None and self.appSpecificWhereClause != "":
+                        get_descrs += ' and ' + self.appSpecificWhereClause + ';'
+                    else:
+                        get_descrs += ';'
+                    tmp_descrs_list = []
+                    print(self.script_name + " - Getting descrs for model " + model + " and variable " + variable)
+                    if debug:
+                        print(self.script_name + " - descrs sql query: " + get_descrs)
+                    cursor3.execute(get_descrs)
+                    cnx3.commit()
+                    for line3 in cursor3:
+                        descr = str(list(line3.values())[0])
+                        tmp_descrs_list.append(descr)
+
                     # get the line_date-specific fields
                     for line_data_table in self.line_data_table:
                         # see if this is the first variable we've dealt with,
@@ -482,6 +498,7 @@ class ParentMetadata:
                         per_mvdb[mvdb][model][line_data_table][variable]['trshs'] = tmp_trshs_list
                         per_mvdb[mvdb][model][line_data_table][variable]['gridpoints'] = tmp_gridpoints_list
                         per_mvdb[mvdb][model][line_data_table][variable]['truths'] = tmp_truths_list
+                        per_mvdb[mvdb][model][line_data_table][variable]['descrs'] = tmp_descrs_list
 
                         # get the line_data-specific fields
                         temp_fcsts = set()
@@ -619,7 +636,7 @@ class ParentMetadata:
             mindate = raw_metadata['mindate']
             maxdate = raw_metadata['maxdate']
             display_text = model.replace('.', '_')
-            insert_row = "insert into {}_dev (db, model, display_text, line_data_table, variable, regions, levels, fcst_lens, trshs, gridpoints, truths, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(self.metadata_table)
+            insert_row = "insert into {}_dev (db, model, display_text, line_data_table, variable, regions, levels, fcst_lens, trshs, gridpoints, truths, descrs, fcst_orig, mindate, maxdate, numrecs, updated) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)".format(self.metadata_table)
             qd.append(mvdb)
             qd.append(model)
             qd.append(display_text)
@@ -631,6 +648,7 @@ class ParentMetadata:
             qd.append(str(raw_metadata['trshs']))
             qd.append(str(raw_metadata['gridpoints']))
             qd.append(str(raw_metadata['truths']))
+            qd.append(str(raw_metadata['descrs']))
             qd.append(str(raw_metadata['fcst_orig']))
             qd.append(mindate)
             qd.append(maxdate)
