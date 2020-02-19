@@ -124,8 +124,8 @@ Template.paramList.events({
                 (ctlElem && ctlElem.style && ctlElem.style.display === 'none');
             var isUnused = matsParamUtils.getInputElementForParamName(cname) !== undefined &&
                 matsParamUtils.getValueForParamName(cname) == matsTypes.InputTypes.unused;
-            if (isHidden || isUnused) {
-                //if (isHidden) {
+            if ((isHidden || isUnused) && cname !== 'plot-type') {
+                // MET apps have a hidden plot-type selector that needs to be included in the curve
                 curveNames.splice(cindex, 1);
             }
         }

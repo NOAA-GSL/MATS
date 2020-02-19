@@ -24,7 +24,7 @@ from metexpress.MEmetadata import ParentMetadata
 class MEAnomalycor(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['fcstWhereClause'] = ''
+        options['appSpecificWhereClause'] = ''
         options['line_data_table'] = ["line_data_sal1l2"]    # used for scalar stats on all plot types
         options['metadata_table'] = "anomalycor_mats_metadata"
         options['app_reference'] = "met-anomalycor"

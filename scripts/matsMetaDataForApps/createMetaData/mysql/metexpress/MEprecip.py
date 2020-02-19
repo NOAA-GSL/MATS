@@ -24,9 +24,10 @@ from metexpress.MEmetadata import ParentMetadata
 class MEPrecip(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['fcstWhereClause'] = 'fcst_var regexp "PCP|PRECIP|precip|pcp"'
+        options['appSpecificWhereClause'] = 'fcst_var regexp "PCP|PRECIP|precip|pcp"'
         options['line_data_table'] = ["line_data_sl1l2",    # used for scalar stats on all plot types
                                       "line_data_ctc",      # used for ctc stats on all plot types
+                                      "line_data_eclv",     # used for EV on all plot types
                                       "line_data_nbrcnt"]   # used for FSS on all plot types
         options['metadata_table'] = "precip_mats_metadata"
         options['app_reference'] = "met-precip"

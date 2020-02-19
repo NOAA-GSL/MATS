@@ -24,7 +24,7 @@ from metexpress.MEmetadata import ParentMetadata
 class MEAirquality(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['fcstWhereClause'] = 'fcst_var regexp "^OZ|^PM25"'
+        options['appSpecificWhereClause'] = 'fcst_var regexp "^OZ|^PM25"'
         options['line_data_table'] = ["line_data_sl1l2",    # used for scalar stats on all plot types
                                       "line_data_ctc"]      # used for ctc stats on all plot types
         options['metadata_table'] = "airquality_mats_metadata"

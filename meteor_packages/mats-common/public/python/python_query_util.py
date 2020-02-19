@@ -1323,8 +1323,8 @@ class QueryUtil:
         # calculate statistics
         self.data['xmin'] = self.data['x'][0]
         self.data['xmax'] = self.data['x'][len(self.data['x']) - 1]
-        self.data['xmin'] = self.data['y'][0]
-        self.data['xmax'] = self.data['y'][len(self.data['y']) - 1]
+        self.data['ymin'] = self.data['y'][0]
+        self.data['ymax'] = self.data['y'][len(self.data['y']) - 1]
         self.data['zmin'] = zmin
         self.data['zmax'] = zmax
         self.data['sum'] = loop_sum

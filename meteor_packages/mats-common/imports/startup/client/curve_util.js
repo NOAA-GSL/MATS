@@ -393,36 +393,11 @@ const checkDiffs = function () {
     }
 };
 
-// method to display the appropriate selectors for a timeseries curve
-const showTimeseriesFace = function () {
-    // move dates selector to plot parameters - one date range for all curves
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'none',
-            'dates': 'block',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'block',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
+const setSelectorVisibility = function(plotType, faceOptions) {
+    if (plotType === matsTypes.PlotTypes.contourDiff) {
+        faceOptions['significance'] = 'block';
+    }
+    if (document.getElementById('plot-type-' + plotType).checked === true) {
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -433,649 +408,459 @@ const showTimeseriesFace = function () {
         }
         elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
-            elem.style.display = "none";
+            elem.style.display = plotType === matsTypes.PlotTypes.scatter2d ? "block" : "none";
         }
-        Session.set('plotType', matsTypes.PlotTypes.timeSeries);
-        // matsParamUtils.setAllParamsToDefault();
+        Session.set('plotType', plotType);
         Session.set('lastUpdate', Date.now());
     }
+};
+
+// method to display the appropriate selectors for a timeseries curve
+const showTimeseriesFace = function () {
+    const plotType = matsTypes.PlotTypes.timeSeries;
+    const faceOptions = {
+        'curve-dates': 'none',
+        'dates': 'block',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'block',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a profile curve
 const showProfileFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'block',
-            'dates': 'none',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'none',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.profile);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.profile;
+    var faceOptions = {
+        'curve-dates': 'block',
+        'dates': 'none',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'none',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a dieoff curve
 const showDieOffFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'block',
-            'dates': 'none',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'none',
-            'dieoff-type': 'block',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        // reset the value for dieoff-type, so that the checkHideOther routine will work
-        const param = matsParamUtils.getParameterForName('dieoff-type');
-        matsParamUtils.setValueTextForParamName(param.name, param.default);
-
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.dieoff);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.dieoff;
+    var faceOptions = {
+        'curve-dates': 'block',
+        'dates': 'none',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'none',
+        'dieoff-type': 'block',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a threshold curve
 const showThresholdFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.threshold).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'block',
-            'dates': 'none',
-            'statistic': 'block',
-            'threshold': 'none',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.threshold);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.threshold;
+    var faceOptions = {
+        'curve-dates': 'block',
+        'dates': 'none',
+        'statistic': 'block',
+        'threshold': 'none',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a valid time curve
 const showValidTimeFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'block',
-            'dates': 'none',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'none',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.validtime);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.validtime;
+    var faceOptions = {
+        'curve-dates': 'block',
+        'dates': 'none',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'none',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a grid scale curve
 const showGridScaleFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.gridscale).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'block',
-            'dates': 'none',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'none',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.gridscale);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.gridscale;
+    var faceOptions = {
+        'curve-dates': 'block',
+        'dates': 'none',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'none',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a daily model cycle curve
 const showDailyModelCycleFace = function () {
-    // move dates selector to plot parameters - one date range for all curves
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'none',
-            'dates': 'block',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'none',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'none',
-            'utc-cycle-start': 'block',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.dailyModelCycle);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.dailyModelCycle;
+    var faceOptions = {
+        'curve-dates': 'none',
+        'dates': 'block',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'none',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'none',
+        'utc-cycle-start': 'block',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a reliability curve
 const showReliabilityFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.reliability).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'none',
-            'dates': 'block',
-            'statistic': 'none',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.reliability);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.reliability;
+    var faceOptions = {
+        'curve-dates': 'none',
+        'dates': 'block',
+        'statistic': 'none',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a ROC curve
 const showROCFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.roc).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'none',
-            'dates': 'block',
-            'statistic': 'none',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.roc);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.roc;
+    var faceOptions = {
+        'curve-dates': 'none',
+        'dates': 'block',
+        'statistic': 'none',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a map
 const showMapFace = function () {
-    // move dates selector to plot parameters - one date range for all curves
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'none',
-            'dates': 'block',
-            'statistic': 'none',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'none',
-            'region-type' : 'none',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.map);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.map;
+    var faceOptions = {
+        'curve-dates': 'none',
+        'dates': 'block',
+        'statistic': 'none',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'none',
+        'region-type' : 'none',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a histogram
 const showHistogramFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.histogram).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'block',
-            'dates': 'none',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'block',
-            'histogram-yaxis-controls': 'block',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.histogram);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.histogram;
+    var faceOptions = {
+        'curve-dates': 'block',
+        'dates': 'none',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'block',
+        'histogram-yaxis-controls': 'block',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a histogram
 const showEnsembleHistogramFace = function () {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.ensembleHistogram).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'block',
-            'dates': 'none',
-            'statistic': 'none',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'block',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'block',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.ensembleHistogram);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.ensembleHistogram;
+    var faceOptions = {
+        'curve-dates': 'block',
+        'dates': 'none',
+        'statistic': 'none',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'block',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'block',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a contour plot
 const showContourFace = function () {
-    // move dates selector to plot parameters - one date range for all curves
-    const isContour = document.getElementById('plot-type-' + matsTypes.PlotTypes.contour) !== null && document.getElementById('plot-type-' + matsTypes.PlotTypes.contour).checked === true;
-    const isContourDiff = document.getElementById('plot-type-' + matsTypes.PlotTypes.contourDiff) !== null && document.getElementById('plot-type-' + matsTypes.PlotTypes.contourDiff).checked === true;
-    if (isContour || isContourDiff) {
-        var faceOptions = {
-            'curve-dates': 'none',
-            'dates': 'block',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'none',
-            'x-axis-parameter': 'block',
-            'y-axis-parameter': 'block',
-            'significance': 'none'
-        };
-        if (isContourDiff) {
-            faceOptions['significance'] = 'block';
-        }
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        if (isContour) {
-            Session.set('plotType', matsTypes.PlotTypes.contour);
-        } else {
-            Session.set('plotType', matsTypes.PlotTypes.contourDiff);
-        }
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = (document.getElementById('plot-type-' + matsTypes.PlotTypes.contour) !== null && document.getElementById('plot-type-' + matsTypes.PlotTypes.contour).checked) ? matsTypes.PlotTypes.contour : matsTypes.PlotTypes.contourDiff;
+    var faceOptions = {
+        'curve-dates': 'none',
+        'dates': 'block',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'none',
+        'x-axis-parameter': 'block',
+        'y-axis-parameter': 'block',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 // method to display the appropriate selectors for a scatter plot
 const showScatterFace = function () {
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
-        var faceOptions = {
-            'curve-dates': 'none',
-            'dates': 'block',
-            'statistic': 'block',
-            'threshold': 'block',
-            'scale': 'block',
-            'level': 'block',
-            'forecast-length': 'block',
-            'dieoff-type': 'none',
-            'average': 'none',
-            'valid-time': 'block',
-            'utc-cycle-start': 'none',
-            'histogram-type-controls': 'none',
-            'histogram-bin-controls': 'none',
-            'histogram-yaxis-controls': 'none',
-            'bin-number': 'none',
-            'bin-start': 'none',
-            'bin-stride': 'none',
-            'bin-pivot': 'none',
-            'bin-bounds': 'none',
-            'truth': 'block',
-            'region-type' : 'block',
-            'x-axis-parameter': 'none',
-            'y-axis-parameter': 'none',
-            'significance': 'none'
-        };
-        const faceSelectors = Object.keys(faceOptions);
-        var elem;
-        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
-            elem = document.getElementById(faceSelectors[fidx] + '-item');
-            if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
-                elem.style.display = faceOptions[faceSelectors[fidx]];
-            }
-        }
-        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.scatter2d);
-        Session.set('lastUpdate', Date.now());   // force curveParams to re-render
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
+    const plotType = matsTypes.PlotTypes.scatter2d;
+    var faceOptions = {
+        'curve-dates': 'none',
+        'dates': 'block',
+        'statistic': 'block',
+        'threshold': 'block',
+        'scale': 'block',
+        'level': 'block',
+        'forecast-length': 'block',
+        'dieoff-type': 'none',
+        'average': 'none',
+        'valid-time': 'block',
+        'utc-cycle-start': 'none',
+        'histogram-type-controls': 'none',
+        'histogram-bin-controls': 'none',
+        'histogram-yaxis-controls': 'none',
+        'bin-number': 'none',
+        'bin-start': 'none',
+        'bin-stride': 'none',
+        'bin-pivot': 'none',
+        'bin-bounds': 'none',
+        'truth': 'block',
+        'region-type' : 'block',
+        'x-axis-parameter': 'none',
+        'y-axis-parameter': 'none',
+        'significance': 'none'
+    };
+    setSelectorVisibility(plotType, faceOptions);
 };
 
 const showSpinner = function () {

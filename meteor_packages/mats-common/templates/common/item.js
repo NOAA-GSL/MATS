@@ -78,11 +78,14 @@ Template.item.helpers({
         if (this.displayPriority !== undefined && this.displayPriority > Session.get('displayPriority')){
             return "none;margin-top: 1.5em;";
         }
+        if (this.controlButtonVisibility !== undefined && this.controlButtonVisibility === 'none'){
+            return "none;margin-top: 1.5em;";
+        }
         else {
             return "block;margin-top: 1.5em;";
         }
     },
-    controlButtonVisibility: function() {
+    controlButtonCovered: function() {
         if (this.controlButtonCovered) {
             return "block;";
         } else {

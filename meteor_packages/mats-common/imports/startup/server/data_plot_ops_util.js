@@ -255,7 +255,7 @@ const generateProfilePlotOptions = function (axisMap, errorMax) {
     }
     const yPad = ((ymax - ymin) * 0.025) !== 0 ? (ymax - ymin) * 0.025 : 0.025;
     ymax = ymax + (yPad * Math.ceil(xAxisNumber / 2));
-    ymin = ymin - (yPad * Math.ceil(xAxisNumber / 2));
+    ymin = ymin - (yPad * Math.ceil(xAxisNumber / 2) * 0.05);
     layout['yaxis']['range'] = [ymax, ymin];
     return layout;
 };
