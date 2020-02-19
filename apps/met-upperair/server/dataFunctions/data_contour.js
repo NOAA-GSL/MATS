@@ -136,6 +136,15 @@ dataContour = function (plotParams, plotFunction) {
         }).join(',');
         levelsClause = "and h.fcst_lev IN(" + levels + ")";
     }
+    var descrs = (curve['description'] === undefined || curve['description'] === matsTypes.InputTypes.unused) ? [] : curve['description'];
+    var descrsClause = "";
+    descrs = Array.isArray(descrs) ? descrs : [descrs];
+    if (descrs.length > 0) {
+        descrs = descrs.map(function (d) {
+            return "'" + d + "'";
+        }).join(',');
+        descrsClause = "and h.descr IN(" + descrs + ")";
+    }
     // For contours, this functions as the colorbar label.
     curve['unitKey'] = variable + " " + statistic;
 
@@ -156,6 +165,7 @@ dataContour = function (plotParams, plotFunction) {
         "{{validTimeClause}} " +
         "{{forecastLengthsClause}} " +
         "{{levelsClause}} " +
+        "{{descrsClause}} " +
         "and h.stat_header_id = ld.stat_header_id " +
         "group by xVal,yVal " +
         "order by xVal,yVal" +
@@ -171,6 +181,7 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
     statement = statement.replace('{{levelsClause}}', levelsClause);
+    statement = statement.replace('{{descrsClause}}', descrsClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;

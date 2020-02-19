@@ -109,6 +109,15 @@ dataROC = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
+        var descrs = (curve['description'] === undefined || curve['description'] === matsTypes.InputTypes.unused) ? [] : curve['description'];
+        var descrsClause = "";
+        descrs = Array.isArray(descrs) ? descrs : [descrs];
+        if (descrs.length > 0) {
+            descrs = descrs.map(function (d) {
+                return "'" + d + "'";
+            }).join(',');
+            descrsClause = "and h.descr IN(" + descrs + ")";
+        }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable + statistic (axisKey) it will use the same axis.
@@ -135,6 +144,7 @@ dataROC = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
                 "{{levelsClause}} " +
+                "{{descrsClause}} " +
                 "and h.stat_header_id = ld.stat_header_id " +
                 "and ld.line_data_id = ldt.line_data_id " +
                 "group by avtime, bin_number, threshold " +
@@ -149,6 +159,7 @@ dataROC = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{levelsClause}}', levelsClause);
+            statement = statement.replace('{{descrsClause}}', descrsClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
