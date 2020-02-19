@@ -74,5 +74,5 @@ if [ $templateVersion ]; then
 fi
 echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
-echo "rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc}  --set defaultCredentials=${defaultMongoCredentials} ${version}"
-rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc}  --set defaultCredentials=${defaultMongoCredentials} ${version}
+echo "rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc}  --set defaultMongoCredentials=${defaultMongoCredentials} ${version}"
+rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc}  --set defaultMongoCredentials=${defaultMongoCredentials} ${version}

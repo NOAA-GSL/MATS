@@ -3,6 +3,7 @@ import {Groups} from "../../api/groups.js";
 
 Meteor.startup(() => {
     try {
+        console.log("Running with MONGO_URL: " + process.env.MONGO_URL);
         const env = process.env.DEPLOYMENT_ENVIRONMENT;
         const groupOrderStr = process.env.GROUP_ORDER == undefined ? "Upper Air,Ceiling and Visibility,Surface,Precipitation,Radar,METexpress" : process.env.GROUP_ORDER;
         var group_order = groupOrderStr.split(',');
