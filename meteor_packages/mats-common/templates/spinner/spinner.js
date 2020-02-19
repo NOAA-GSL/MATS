@@ -11,7 +11,7 @@ Template.spinner.helpers({
             img = "spinner.gif";
             Session.set("spinner_img", "spinner.gif");
         }
-        return document.location.href + "img/spinner.gif"
+        return document.location.href + "/img/spinner.gif"
     }
 });
 

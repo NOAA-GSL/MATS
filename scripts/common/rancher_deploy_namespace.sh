@@ -114,6 +114,6 @@ do
   sleep 5
 done
 
-echo "rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}"
-rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}
+echo "rancher app install matshome home -n $ns --set userId=${userId} --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}"
+rancher app install matshome home -n $ns --set userId=${userId} --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}
 

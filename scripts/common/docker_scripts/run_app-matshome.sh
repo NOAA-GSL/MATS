@@ -8,8 +8,10 @@ if [[ $DELAY ]]; then
 fi
 
 # Honour already existing PORT setup
+
 export PORT=${PORT:-80}
 export NODE_ENV=production
+echo "MONGO URL is: " $MONGO_URL
 cd /usr/app
 if [[ $DEBUG ]]; then
     node --inspect=0.0.0.0:9229  main.js

@@ -76,5 +76,5 @@ fi
 echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
 
-echo "rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}"
-rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}
+echo "rancher app install matshome home -n $ns --set userId=${userId}  --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}"
+rancher app install matshome home -n $ns --set userId=${userId}  --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}
