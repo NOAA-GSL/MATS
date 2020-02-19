@@ -748,20 +748,28 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
     var subLevs = [];
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         var independentVar;
-        if (plotType === matsTypes.PlotTypes.validtime) {
-            independentVar = Number(rows[rowIndex].hr_of_day);
-        } else if (plotType === matsTypes.PlotTypes.gridscale) {
-            independentVar = Number(rows[rowIndex].gridscale);
-        } else if (plotType === matsTypes.PlotTypes.profile) {
-            independentVar = Number((rows[rowIndex].avVal).toString().replace('P', ''));
-        } else if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
-            independentVar = Number(rows[rowIndex].avtime) * 1000;
-        } else if (plotType === matsTypes.PlotTypes.dieoff) {
-            independentVar = Number(rows[rowIndex].fcst_lead);
-        } else if (plotType === matsTypes.PlotTypes.threshold) {
-            independentVar = Number(rows[rowIndex].thresh);
-        } else {
-            independentVar = Number(rows[rowIndex].avtime);
+        switch (plotType) {
+            case matsTypes.PlotTypes.validtime:
+                independentVar = Number(rows[rowIndex].hr_of_day);
+                break;
+            case matsTypes.PlotTypes.gridscale:
+                independentVar = Number(rows[rowIndex].gridscale);
+                break;
+            case matsTypes.PlotTypes.profile:
+                independentVar = Number((rows[rowIndex].avVal).toString().replace('P', ''));
+                break;
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.dailyModelCycle:
+                independentVar = Number(rows[rowIndex].avtime) * 1000;
+                break;
+            case matsTypes.PlotTypes.dieoff:
+                independentVar = Number(rows[rowIndex].fcst_lead);
+                break;
+            case matsTypes.PlotTypes.threshold:
+                independentVar = Number(rows[rowIndex].thresh);
+                break;
+            default:
+                independentVar = Number(rows[rowIndex].avtime);
         }
         var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
         N0.push(rows[rowIndex].N0);             // number of values that go into a point on the graph

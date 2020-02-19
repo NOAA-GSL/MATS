@@ -1,6 +1,6 @@
 <template name="item">
     <div id="{{name}}-item" class="item btn-group"  role="group" style="display:{{display}}">
-        <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonVisibility}}">{{cbname}}</button>
+        <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonCovered}}">{{cbname}}</button>
         <span style="display:inline-block;">&nbsp;</span>
         <div id="{{element}}" style="display:{{elementHidden}};position:absolute;z-index: {{zIndexVal}};float:right;background-color: white;" >
             {{#if isSelect}}
@@ -29,7 +29,7 @@
                 {{> map this}}
             {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}}
         </div>
-        <button type="button" class="control-button btn btn-info fa fa-label" name="{{controlButton}}-value" id="{{controlButton}}-value" style="display:{{controlButtonVisibility}}"> {{textValue}}</button>
+        <button type="button" class="control-button btn btn-info fa fa-label" name="{{controlButton}}-value" id="{{controlButton}}-value" style="display:{{controlButtonCovered}}"> {{textValue}}</button>
         {{#if hasHelp}}
             <button style="background-color:#bbffbb" type="button"  class="btn btn-default  btn-xs  help fa fa-question"></button>
         {{/if}}

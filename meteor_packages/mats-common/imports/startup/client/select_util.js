@@ -392,21 +392,29 @@ const refresh = function (event, paramName) {
             var selectedOptionIndex;
             if (selectedText === 'initial') {
                 selectedOptionIndex = myOptions.indexOf(param.default);
+            } else if (name === 'plot-type') {
+                // the met apps have a hidden plot-type selector that needs to match the current selected plot type
+                selectedOptionIndex = myOptions.indexOf(matsPlotUtils.getPlotType());
             } else {
                 selectedOptionIndex = myOptions.indexOf(selectedText);
             }
             var sviText = "";
-            if (selectedOptionIndex == -1 && elem.selectedIndex >= 0) {
-                for (var svi = 0; svi < selectedSuperiorValues.length; svi++) {
-                    superior = superiors[svi];
-                    if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
-                        if (svi > 0) {
-                            sviText += " and ";
-                        }
-                        sviText += selectedSuperiorValues[svi]
-                    }
+            if (selectedOptionIndex === -1) {
+                if (name === 'plot-type') {
+                    setInfo(('INFO:  Plot type ' + matsPlotUtils.getPlotType() + ' is not available for this database/model combination.'));
                 }
-                setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + myOptions[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
+                if (elem.selectedIndex >= 0) {
+                    for (var svi = 0; svi < selectedSuperiorValues.length; svi++) {
+                        superior = superiors[svi];
+                        if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
+                            if (svi > 0) {
+                                sviText += " and ";
+                            }
+                            sviText += selectedSuperiorValues[svi]
+                        }
+                    }
+                    setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + myOptions[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
+                }
             }
             // if the selectedText existed in the new options list then the selectedOptionIndex won't be -1 and we have to choose the default option
             if (selectedOptionIndex === -1) {

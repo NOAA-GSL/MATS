@@ -24,7 +24,7 @@ from metexpress.MEmetadata import ParentMetadata
 class MEUpperair(ParentMetadata):
     def __init__(self, options):
         options['name'] = __name__
-        options['fcstWhereClause'] = 'fcst_lev like "P%"'
+        options['appSpecificWhereClause'] = 'fcst_lev like "P%"'
         options['line_data_table'] = ["line_data_sl1l2"]    # used for scalar stats on all plot types
         options['metadata_table'] = "upperair_mats_metadata"
         options['app_reference'] = "met-upperair"
