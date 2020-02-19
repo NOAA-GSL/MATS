@@ -16,12 +16,13 @@ fi
 . ~/.matsapps_credentials
 
 function usage() {
-      echo "USAGE: $0 -n namespace -a appReference -v appVersion -u rootUrl [-p persistentVolumeClaim]"
+      echo "USAGE: $0 -n namespace -a appReference -v appVersion -u rootUrl [-p persistentVolumeClaim -d defaultCredentials]"
       echo "where namespace is a valid namespace (namespaces are expected to match MATS environments)"
       echo "and appReference defines an app i.e. aircraft, upperair etc."
       echo "and appVersion is the version of the app i.e. nightly, 2.3.13, 2.3.14 etc"
       echo "and rootUrl is the root Url of the ingres to the corresponding matshome i.e. for https://rancher.localhost/matsdev/home it is https://rancher.localhost"
       echo "and persistentVolumeClaim is the name of a predefined persistent Volume Claim - defaults to 'matsdata'"
+      echo "and defaultCredentials can be set to false to cause this program to ask the user for mongo credentials - default true" 
       exit 1;
 }
 
@@ -30,7 +31,8 @@ export appReference=""
 export appVersion=""
 export rootUrl=""
 export pvc=matsdata
-while getopts 'n:a:v:u:p:h' OPTION; do
+export defaultCredentials=true
+while getopts 'n:a:v:u:p:d:h' OPTION; do
   case "$OPTION" in
     n)
         ns="$OPTARG"
@@ -57,11 +59,15 @@ while getopts 'n:a:v:u:p:h' OPTION; do
     u)
        rootUrl="$OPTARG"
         echo "deploying rootUrl $rootUrl"
-        ;;
+      ;;
     p)
        persistentVolumeClaim="$OPTARG"
         echo "deploying PersistentVolumeClaim  $pvc"
-        ;;
+      ;;
+    d)
+       defaultCredentials="$OPTARG"
+        echo "Asking for mongo credentials"
+      ;;
     h)
       usage
       ;;
@@ -109,7 +115,7 @@ if [[ -z $appReference ]]; then
 	  sleep 5
 	done
 else
-  echo "rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
-  rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+  echo "rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}"
+  rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials}
 fi
 

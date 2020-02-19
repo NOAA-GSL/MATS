@@ -14,17 +14,19 @@ fi
 . ~/.matsapps_credentials
 
 function usage() {
-      echo "USAGE: $0 -n namespace -u rootUrl [-p persistentVolumeClaim]"
+      echo "USAGE: $0 -n namespace -u rootUrl [-p persistentVolumeClaim -d defaultCredentials]"
       echo "where namespace is a valid namespace (namespaces are expected to match MATS environments)"
       echo "and rootUrl is the root Url of the ingres to the corresponding matshome i.e. for https://rancher.localhost/matsdev/home it is https://rancher.localhost"
       echo "and persistentVolumeClaim is the name of a predefined persistent Volume Claim - defaults to 'matsdata'"
+      echo "and defaultCredentials can be set to false to cause this program to ask the user for mongo credentials - default true"
       exit 1;
 }
 
 export CONTEXT=""
 export rootUrl=""
 export pvc=matsdata
-while getopts 'n:u:p:h' OPTION; do
+export defaultCredentials=true
+while getopts 'n:a:v:u:p:d:h' OPTION; do
   case "$OPTION" in
     n)
         ns="$OPTARG"
@@ -48,6 +50,10 @@ while getopts 'n:u:p:h' OPTION; do
        persistentVolumeClaim="$OPTARG"
         echo "deploying PersistentVolumeClaim  $pvc"
         ;;
+    d)
+       defaultCredentials="$OPTARG"
+        echo "Asking for mongo credentials"
+      ;;
     h)
       usage
       ;;
@@ -57,7 +63,6 @@ while getopts 'n:u:p:h' OPTION; do
   esac
 done
 shift "$(($OPTIND -1))"
-
 if [ -z $CONTEXT ]; then
   echo "You must provide an environment!"
   usage
@@ -71,5 +76,5 @@ fi
 echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
 
-echo "rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
-rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+echo "rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}"
+rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}

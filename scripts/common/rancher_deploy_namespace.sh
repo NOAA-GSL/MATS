@@ -16,11 +16,12 @@ fi
 . ~/.matsapps_credentials
 
 function usage() {
-      echo "USAGE: $0 -n namespace -v appVersion -u rootUrl  [-t templateVersion -p persistentVolumeClaim]"
+      echo "USAGE: $0 -n namespace -v appVersion -u rootUrl  [-t templateVersion -p persistentVolumeClaim -d defaultCredentials]"
       echo "where namespace is a valid namespace (namespaces are expected to match MATS environments)"
       echo "and appVersion is the version of the app i.e. nightly, latest, 2.3.13, 2.3.14 etc"
       echo "and rootUrl is the root Url of the ingres to the corresponding matshome i.e. for https://rancher.localhost/matsdev/home it is https://rancher.localhost"
       echo "and persistentVolumeClaim is the name of a predefined persistent Volume Claim - defaults to 'matsdata'"
+      echo "and defaultCredentials can be set to false to cause this program to ask the user for mongo credentials - default true"
       echo "For template version use 'rancher app st matsmongo' to list the versions"
       exit 1;
 }
@@ -30,7 +31,8 @@ export appVersion=""
 export rootUrl=""
 export pvc=matsdata
 export templateVersion=""
-while getopts 'n:v:u:p:t:h' OPTION; do
+export defaultCredentials=true
+while getopts 'n:a:v:u:p:d:h' OPTION; do
   case "$OPTION" in
     n)
         ns="$OPTARG"
@@ -62,6 +64,10 @@ while getopts 'n:v:u:p:t:h' OPTION; do
        templateVersion="$OPTARG"
         echo "deploying template version  $templateVersion"
         ;;
+    d)
+       defaultCredentials="$OPTARG"
+        echo "Asking for mongo credentials"
+      ;;
     h)
       usage
       ;;
@@ -97,17 +103,17 @@ rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-ve
 
 echo "deploying matsmongo"
 echo "rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}"
-rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}
+rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} --set defaultMongoCredentials=${defaultCredentials} ${version}
 # wait for mongo to get a chance to come up
 sleep 10
 
 rancher app lt | grep gslhelm | awk '{print $2}' | grep -v matsmongo | grep -v matshome	| while read a
 do
-  echo "rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} ${version}"
-  rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} ${version}
+  echo "rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}"
+  rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}
   sleep 5
 done
 
-echo "rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} ${version}"
-rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} ${version}
+echo "rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}"
+rancher app install matshome home -n $ns --set userId=${userId} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}
 

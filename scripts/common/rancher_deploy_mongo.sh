@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-
-# source the matsapps credentials file
 if [ ! -f ~/.matsapps_credentials ]; then
     echo "~/.matsapps_credentials file not found!"
     echo "you must creqate a ~/.matsapps_credentials file with the following entries.."
@@ -16,17 +14,18 @@ fi
 . ~/.matsapps_credentials
 
 function usage() {
-      echo "USAGE: $0 -n namespace [-t template_version -p persistentVolumeClaim]"
+      echo "USAGE: $0 -n namespace [-t template_version -p persistentVolumeClaim -d defaultMongoCredentials]"
       echo "where namespace is a valid namespace (namespaces are expected to match MATS environments)"
       echo "For template version use 'rancher app st matsmongo' to list the versions"
       echo "and persistentVolumeClaim is the name of a predefined persistent Volume Claim - defaults to 'matsdata'"
+      echo "and defaultMongoCredentials can be set to false to cause this program to ask the user for mongo credentials - default true"
       exit 1;
 }
 
 export CONTEXT=""
 export pvc=matsdata
-export templateVersion=""
-while getopts 'n:p:t:h' OPTION; do
+export defaultMongoCredentials=true
+while getopts 'n:a:v:u:p:d:h' OPTION; do
   case "$OPTION" in
     n)
         ns="$OPTARG"
@@ -45,12 +44,16 @@ while getopts 'n:p:t:h' OPTION; do
     p)
        persistentVolumeClaim="$OPTARG"
         echo "deploying PersistentVolumeClaim  $pvc"
-        ;;
+      ;;
     t)
        templateVersion="$OPTARG"
         echo "deploying template version  $templateVersion"
-        ;;
-    h)
+      ;;
+    d)
+       defaultMongoCredentials="$OPTARG"
+        echo "Asking for mongo credentials"
+      ;;
+   h)
       usage
       ;;
     ?)
@@ -71,5 +74,5 @@ if [ $templateVersion ]; then
 fi
 echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify"
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
-echo "rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}"
-rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}
+echo "rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc}  --set defaultCredentials=${defaultMongoCredentials} ${version}"
+rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc}  --set defaultCredentials=${defaultMongoCredentials} ${version}
