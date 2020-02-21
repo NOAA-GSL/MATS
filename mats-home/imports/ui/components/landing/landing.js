@@ -48,8 +48,8 @@ Template.landing.onRendered(function () {
 });
 
 Template.landing.helpers({
-  appIsEnabled: function(app) {
-    return Session.get(app.app + "-enabled") == true ? "block" : "none";
+  appDisabled: function(app) {
+    return Session.get(app.app + "-enabled") == true ? "" : "disabled";
   },
   groupIsVisible: function() {
     return Session.get(this.groupName + "-visible") == true ? "block" : "none";

@@ -77,7 +77,7 @@
                             <h3>{{group.groupName}}:</h3>
                             {{#each app in group.appList}}
                                 <li id="{{appReference}}">
-                                    <a class="btn-sm btn-primary" type="button"
+                                    <a class="btn-sm btn-primary {{appDisabled}}" type="button"
                                        style="display:inline-block;font-size:medium; background-color: {{color
                                                app}}; font-weight: bold; border-radius:10px;"
                                        href="{{baseUrl}}/{{appReference app}}">{{title app}}</a>
