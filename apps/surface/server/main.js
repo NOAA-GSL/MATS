@@ -205,9 +205,7 @@ const doPlotParams = function () {
 
 const doCurveParams = function () {
     // force a reset if requested - simply remove all the existing params to force a reload
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.CurveParams.remove({});
-    }
+    matsCollections.CurveParams.remove({});
     var modelOptionsMap = {};
     var forecastLengthOptionsMap = {};
     var regionModelOptionsMap = {};
