@@ -6,6 +6,13 @@ import regular from '@fortawesome/fontawesome-free-regular';
 import solid from '@fortawesome/fontawesome-free-solid';
 import brands from '@fortawesome/fontawesome-free-brands';
 import { Session } from 'meteor/session';
+var urlExists = require('url-exists');
+
+const baseUrl = function() {
+    var base_arr = document.location.href.split('/');
+    base_arr.pop();
+    return( base_arr.join('/') );
+};
 
 Template.landing.onCreated(function () {
     Meteor.subscribe('groups');
@@ -19,7 +26,34 @@ Template.landing.onCreated(function () {
     });
 });
 
+Template.landing.onRendered(function () {
+  console.log('onRendered');
+  const groups = Groups.find({}, {sort: {groupOrder: '1'}}).fetch();
+  groups.forEach(function(group){
+    var groupName=group.groupName;
+    Session.set(groupName + "-visible", false);
+    const appList = group.appList;
+      appList.forEach(function(item){
+        var href=baseUrl() + "/" + item.app;
+        urlExists(href, function(err, exists) {
+          if (exists == true) {
+            Session.set(groupName + "-visible", true);
+            Session.set(item.app + "-enabled", true);
+          } else {
+            Session.set(item.app + "-enabled", false);
+          }
+        });
+      });
+  });
+});
+
 Template.landing.helpers({
+  appIsEnabled: function(app) {
+    return Session.get(app.app + "-enabled") == true ? "block" : "none";
+  },
+  groupIsVisible: function() {
+    return Session.get(this.groupName + "-visible") == true ? "block" : "none";
+  },
   transparentGif: function() {
     return  document.location.href + "img/noaa_transparent.gif";
   },
@@ -53,9 +87,7 @@ Template.landing.helpers({
     return app.home;
   },
   baseUrl() {
-    var base_arr = document.location.href.split('/');
-    base_arr.pop();
-    return( base_arr.join('/') );
+    return baseUrl();
   },
   environment() {
       return Session.get('deployment_environment');

@@ -72,11 +72,11 @@
                     <h3>Check /usr/app/settings</h3>
                 {{/if}}
                 {{#each group in groups}}
-                    <div class="container">
+                    <div class="container" id="{{groupName}}" style="display:{{groupIsVisible}};">
                         <ul class="nav navbar-nav navbar-left" style="margin-bottom: 1%;">
                             <h3>{{group.groupName}}:</h3>
                             {{#each app in group.appList}}
-                                <li>
+                                <li id="{{appReference}}">
                                     <a class="btn-sm btn-primary" type="button"
                                        style="display:inline-block;font-size:medium; background-color: {{color
                                                app}}; font-weight: bold; border-radius:10px;"
