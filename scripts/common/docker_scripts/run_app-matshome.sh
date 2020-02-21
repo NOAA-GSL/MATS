@@ -16,5 +16,6 @@ cd /usr/app
 if [[ $DEBUG ]]; then
     node --inspect=0.0.0.0:9229  main.js
 else
+    echo "run_app => Starting mats home app"
     node main.js
 fi

@@ -106,8 +106,11 @@ echo "rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set d
 rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} --set defaultMongoCredentials=${defaultCredentials} ${version}
 # wait for mongo to get a chance to come up
 sleep 10
-
-rancher app lt | grep gslhelm | awk '{print $2}' | grep -v matsmongo | grep -v matshome	| while read a
+export metexpress=""
+if [[ "$ns" == "metexpress" ]]; then
+	metexpress="-met-"
+fi
+rancher app lt | grep "gslhelm${metexpress}" | awk '{print $2}' | grep -v matsmongo | grep -v matshome | while read a
 do
   echo "rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}"
   rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}

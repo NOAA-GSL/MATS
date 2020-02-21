@@ -63,7 +63,7 @@ rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-ve
 		rancher app delete $a
 	done
 
-  echo "deleting the matshome app"
+  echo "deleting the home app"
 	echo "rancher app delete home"
   rancher app delete home
 
