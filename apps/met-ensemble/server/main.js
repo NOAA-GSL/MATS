@@ -224,7 +224,9 @@ const doPlotParams = function () {
 
 const doCurveParams = function () {
     // force a reset if requested - simply remove all the existing params to force a reload
-    matsCollections.CurveParams.remove({});
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.CurveParams.remove({});
+    }
 
     const masterPlotTypeOptionsMap = {
         "line_data_ecnt": [matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.histogram],
