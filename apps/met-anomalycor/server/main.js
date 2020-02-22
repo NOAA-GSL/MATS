@@ -205,9 +205,7 @@ const doPlotParams = function () {
 
 const doCurveParams = function () {
     // force a reset if requested - simply remove all the existing params to force a reload
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.CurveParams.remove({});
-    }
+    matsCollections.CurveParams.remove({});
 
     const masterPlotTypeOptionsMap = {
         "line_data_sal1l2": [matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.profile, matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.histogram, matsTypes.PlotTypes.contour]
@@ -804,10 +802,10 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'truth'});
+        var currentParam = matsCollections.CurveParams.findOne({name: 'description'});
         if (!matsDataUtils.areObjectsEqual(descrOptionsMap, currentParam.optionsMap)) {
-            // have to reload truth data
-            matsCollections.CurveParams.update({name: 'truth'}, {
+            // have to reload description data
+            matsCollections.CurveParams.update({name: 'description'}, {
                 $set: {
                     optionsMap: descrOptionsMap,
                     options: descrOptionsMap[defaultDB][defaultModel][defaultPlotType][Object.keys(descrOptionsMap[defaultDB][defaultModel][defaultPlotType])[0]],
