@@ -31,19 +31,19 @@ Template.landing.helpers({
         url: {href},
         statusCode: {
           200: function (responseObject, textStatus, jqXHR) {
-            console.log('success:', responseObject.status);
+            console.log('success for url: ', href, + ' : ', responseObject.status);
             document.getElementById(app.app + "-button").href=href;
             document.getElementById(app.app + "-button").classList.add("btn-primary");
           },
           404: function (responseObject, textStatus, jqXHR) {
             // No content found (404)
-            console.log('not found:', responseObject.status);
+            console.log('not found for url: ', href, + ' : ', responseObject.status);
             document.getElementById(app.app + "-button").href="";
             document.getElementById(app.app + "-button").classList.remove("btn-primary");
           },
           503: function (responseObject, textStatus, errorThrown) {
             // Service Unavailable (503)
-            console.log('unavailable:', responseObject.status);
+            console.log('unavailable for url: ', href, + ' : ', responseObject.status);
             document.getElementById(app.app + "-button").href="";
             document.getElementById(app.app + "-button").classList.remove("btn-primary");
           }
