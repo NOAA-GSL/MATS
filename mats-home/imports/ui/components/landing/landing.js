@@ -32,8 +32,14 @@ Template.landing.helpers({
         statusCode: {
           200: function (responseObject, textStatus, jqXHR) {
             console.log('success for url: ', href, + ' : ', responseObject.status);
-            document.getElementById(app.app + "-button").href=href;
-            document.getElementById(app.app + "-button").classList.add("btn-primary");
+            if (document.getElementsByClassName('bg-error')[0].textContent == "404") {
+              console.log('success for url: ', href, + ' : ', responseObject.status + " - containing error 404!");
+              document.getElementById(app.app + "-button").href="";
+              document.getElementById(app.app + "-button").classList.remove("btn-primary");
+            } else {
+              document.getElementById(app.app + "-button").href = href;
+              document.getElementById(app.app + "-button").classList.add("btn-primary");
+            }
           },
           404: function (responseObject, textStatus, jqXHR) {
             // No content found (404)
