@@ -9,7 +9,6 @@ if [ ! -f ~/.matsapps_credentials ]; then
     echo "export CATTLE_ACCESS_KEY=key_from_rancher"
     echo "export CATTLE_SECRET_KEY=secret_key_from_rancher"
     echo "export TOKEN=token_from_rancher"
-    echo "export userId=the_userId_from_the_YAML_from_your_rancher_user_access_key_token"
     echo "Log into the rancher GUI, hover over your user icon (top right), and choose 'API and KEYS' to create your keys"
     exit 1
 fi
@@ -73,7 +72,7 @@ if [[ ${#evictedPods[@]} -gt 0 ]];then
 fi
 
 #restart all the apps that are currently running
-rancher ps | grep -v NAME | grep -v mongo | grep -v mats-home | grep -v http | awk '{print $2}' | while read app
+rancher ps | grep -v NAME | grep -v mongo | grep -v matshome | grep -v http | awk '{print $2}' | while read app
 do
   if [[ "$requestedApp" == "all" || "$requestedApp" == "$app" ]]; then
 	echo "redeploying ${app}"
@@ -83,7 +82,7 @@ do
   fi
 done
 echo "forcing reload of any stuck pods"
-stuckPods=($(rancher kubectl --namespace=${ns} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
+stuckPods=($(rancher kubectl --namespace=${ns} get pods | grep -v mongo | grep -v matshome | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
 containerCreating=($(rancher kubectl --namespace=${ns} get pods | grep -i ContainerCreating | awk '{print $1}'))
 echo ""
 if [[ ${#stuckPods[@]} -gt 0 ]]; then
@@ -95,8 +94,8 @@ if [[ ${#stuckPods[@]} -gt 0 ]]; then
 		if [[ ${#stuckPods[@]} -gt 0 ]];then
 			rancher kubectl --namespace=${ns} delete pods ${stuckPods[@]}
 		fi
-		containerCreating=($(rancher kubectl --namespace=${ns} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ContainerCreating | awk '{print $1}'))
-		stuckPods=($(rancher kubectl --namespace=${ns} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
+		containerCreating=($(rancher kubectl --namespace=${ns} get pods | grep -v mongo | grep -v matshome | grep -v http | grep -i ContainerCreating | awk '{print $1}'))
+		stuckPods=($(rancher kubectl --namespace=${ns} get pods | grep -v mongo | grep -v matshome | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
 		sleep 30
 		i=$[$i+1]
 	done

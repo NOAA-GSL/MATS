@@ -9,7 +9,6 @@ if [ ! -f ~/.matsapps_credentials ]; then
     echo "export CATTLE_ACCESS_KEY=key_from_rancher"
     echo "export CATTLE_SECRET_KEY=secret_key_from_rancher"
     echo "export TOKEN=token_from_rancher"
-    echo "export userId=the_userId_from_the_YAML_from_your_rancher_user_access_key_token"
     echo "Log into the rancher GUI, hover over your user icon (top right), and choose 'API and KEYS' to create your keys"
     exit 1
 fi
@@ -102,8 +101,8 @@ echo "rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --s
 rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-verify
 
 echo "deploying matsmongo"
-echo "rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}"
-rancher app install -n $ns matsmongo mongo  --set userId=${userId} --set defaultImage=true  --set persistentVolumeClaim=${pvc} --set defaultMongoCredentials=${defaultCredentials} ${version}
+echo "rancher app install -n $ns matsmongo matsmongo --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}"
+rancher app install -n $ns matsmongo matsmongo --set defaultImage=true  --set persistentVolumeClaim=${pvc} --set defaultMongoCredentials=${defaultCredentials} ${version}
 # wait for mongo to get a chance to come up
 sleep 10
 export metexpress=""
@@ -112,11 +111,11 @@ if [[ "$ns" == "metexpress" ]]; then
 fi
 rancher app lt | grep "gslhelm${metexpress}" | awk '{print $2}' | grep -v matsmongo | grep -v matshome | while read a
 do
-  echo "rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}"
-  rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}
+  echo "rancher app install -n $ns $a $a --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}"
+  rancher app install -n $ns $a $a --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}
   sleep 5
 done
 
-echo "rancher app install matshome home -n $ns --set userId=${userId} --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}"
-rancher app install matshome home -n $ns --set userId=${userId} --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}
+echo "rancher app install matshome matshome -n $ns --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}"
+rancher app install matshome matshome -n $ns --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}
 

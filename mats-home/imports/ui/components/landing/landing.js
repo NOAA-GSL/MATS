@@ -1,12 +1,8 @@
-import { Groups } from '/imports/api/groups.js';
-import { Meteor } from 'meteor/meteor';
+import {Groups} from '/imports/api/groups.js';
+import {Meteor} from 'meteor/meteor';
 import './landing.html';
-import fontawesome from '@fortawesome/fontawesome';
-import regular from '@fortawesome/fontawesome-free-regular';
-import solid from '@fortawesome/fontawesome-free-solid';
-import brands from '@fortawesome/fontawesome-free-brands';
-import { Session } from 'meteor/session';
-var urlExists = require('url-exists');
+import {Session} from 'meteor/session';
+
 
 const baseUrl = function() {
     var base_arr = document.location.href.split('/');
@@ -26,33 +22,38 @@ Template.landing.onCreated(function () {
     });
 });
 
-Template.landing.onRendered(function () {
-  console.log('onRendered');
-  const groups = Groups.find({}, {sort: {groupOrder: '1'}}).fetch();
-  groups.forEach(function(group){
-    var groupName=group.groupName;
-    Session.set(groupName + "-visible", false);
-    const appList = group.appList;
-      appList.forEach(function(item){
-        var href=baseUrl() + "/" + item.app;
-        urlExists(href, function(err, exists) {
-          if (exists == true) {
-            Session.set(groupName + "-visible", true);
-            Session.set(item.app + "-enabled", true);
-          } else {
-            Session.set(item.app + "-enabled", false);
-          }
-        });
-      });
-  });
-});
-
 Template.landing.helpers({
   appDisabled: function(app) {
-    return Session.get(app.app + "-enabled") == true ? "" : "disabled";
+    if (app) {
+      var href = baseUrl() + "/" + app.app;
+      $.ajax({
+        type: 'GET',
+        url: {href},
+        statusCode: {
+          200: function (responseObject, textStatus, jqXHR) {
+            console.log('success:', responseObject.status);
+            document.getElementById(app.app + "-button").href=href;
+            document.getElementById(app.app + "-button").classList.add("btn-primary");
+          },
+          404: function (responseObject, textStatus, jqXHR) {
+            // No content found (404)
+            console.log('not found:', responseObject.status);
+            document.getElementById(app.app + "-button").href="";
+            document.getElementById(app.app + "-button").classList.remove("btn-primary");
+          },
+          503: function (responseObject, textStatus, errorThrown) {
+            // Service Unavailable (503)
+            console.log('unavailable:', responseObject.status);
+            document.getElementById(app.app + "-button").href="";
+            document.getElementById(app.app + "-button").classList.remove("btn-primary");
+          }
+        }
+      });
+    }
   },
-  groupIsVisible: function() {
-    return Session.get(this.groupName + "-visible") == true ? "block" : "none";
+  groupIsVisible: function(groupName) {
+    //return Session.get(groupName + "-visible") == true ? "block" : "none";
+    return "block";
   },
   transparentGif: function() {
     return  document.location.href + "img/noaa_transparent.gif";
@@ -72,7 +73,9 @@ Template.landing.helpers({
     this.groupName;
   },
   appReference(app) {
-    return app.app;
+    if (app) {
+      return app.app;
+    }
   },
   title(app) {
     return app.title;

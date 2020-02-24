@@ -9,7 +9,6 @@ if [ ! -f ~/.matsapps_credentials ]; then
     echo "export CATTLE_ACCESS_KEY=key_from_rancher"
     echo "export CATTLE_SECRET_KEY=secret_key_from_rancher"
     echo "export TOKEN=token_from_rancher"
-    echo "export userId=the_userId_from_the_YAML_from_your_rancher_user_access_key_token"
     echo "Log into the rancher GUI, hover over your user icon (top right), and choose 'API and KEYS' to create your keys"
     exit 1
 fi
@@ -110,12 +109,12 @@ rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-ve
 if [[ -z $appReference ]]; then
   rancher app lt | grep gslhelm | awk '{print $2}' | grep -v matsmongo | grep -v matshome	| while read a
   do
-    echo "rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
-    rancher app install -n $ns $a $a --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
+    echo "rancher app install -n $ns $a $a --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}"
+    rancher app install -n $ns $a $a --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}
 	  sleep 5
 	done
 else
-  echo "rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}"
-  rancher app install -n $ns $appReference $appReference --set userId=${userId} --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials}
+  echo "rancher app install -n $ns $appReference $appReference --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}"
+  rancher app install -n $ns $appReference $appReference --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials}
 fi
 
