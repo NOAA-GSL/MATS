@@ -25,14 +25,15 @@ Template.landing.onCreated(function () {
 Template.landing.helpers({
   appDisabled: function(app) {
     if (app) {
-      var href = baseUrl() + "/" + app.app;
+      var href = baseUrl() + "/" + app.app
       $.ajax({
         type: 'GET',
         url: {href},
         statusCode: {
           200: function (responseObject, textStatus, jqXHR) {
             console.log('success for url: ', href, + ' : ', responseObject.status);
-            if (document.getElementsByClassName('bg-error')[0].textContent == "404") {
+            console.log ("responseObject is: ",  responseObject);
+            if (responseObject.getElementsByClassName('bg-error')[0].textContent == "404") {
               console.log('success for url: ', href, + ' : ', responseObject.status + " - containing error 404!");
               document.getElementById(app.app + "-button").href="";
               document.getElementById(app.app + "-button").classList.remove("btn-primary");
