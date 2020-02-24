@@ -56,7 +56,9 @@ Template.landing.helpers({
     return "block";
   },
   transparentGif: function() {
-    return  document.location.href + "img/noaa_transparent.gif";
+    var loc = document.location.href.replace(/#$/g, '');;
+
+    return  loc + "/img/noaa_transparent.gif";
   },
   homeUrl: function() {
     return  document.location.href;
