@@ -32,6 +32,10 @@ Template.landing.helpers({
         statusCode: {
           200: function (responseObject, textStatus, jqXHR) {
             console.log('success for url: ', href, + ' : ', responseObject.status);
+            console.log('responseObject for url: ', href, + ' : ', responseObject);
+            console.log('textStatus for url: ', href, + ' : ', textStatus);
+            console.log('jqXHR for url: ', href, + ' : ', jqXHR);
+
             document.getElementById(app.app + "-button").href = href;
             document.getElementById(app.app + "-button").classList.add("btn-primary");
           },
