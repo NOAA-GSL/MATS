@@ -10,49 +10,96 @@ const baseUrl = function() {
     return( base_arr.join('/') );
 };
 
-Template.landing.onCreated(function () {
-    Meteor.subscribe('groups');
-    Meteor.call('getEnvironment', (error, result) => {
-      if (error) {
-        alert(error);
-        Session.set('deployment_environment', 'unknown');
+const getHref = function (app) {
+  if (app) {
+    // assume it isn't active
+    var href = baseUrl() + "/" + app.app + "/status";
+    //var href = baseUrl() + "/" + "home" + "/status";
+    var request = new XMLHttpRequest();
+    request.onload = function () {
+      if (this.status != 200) {
+        // no success
+        //return("");
+        Session.set('href-' + app.app, "");
       } else {
-        Session.set('deployment_environment', result);
+        // success - but might still be not running
+        if (this.responseText.includes("Running")) {
+          // it is there and running - set it active
+          //return baseUrl() + "/" + app.app;
+          Session.set('href-' + app.app, baseUrl() + "/" + app.app);
+        } else {
+          // was not running
+          //return "";
+          Session.set('href-' + app.app, "");
+        }
       }
-    });
+    };
+    request.open("GET", href);
+    request.send();
+
+  }
+}
+
+const getClass = function (app) {
+  if (app) {
+    // assume it isn't active
+    var href = baseUrl() + "/" + app.app + "/status";
+    //var href = baseUrl() + "/" + "home" + "/status";
+    var request = new XMLHttpRequest();
+    request.onload = function () {
+      if (this.status != 200) {
+        // no success
+        return "btn-sm";
+        Session.set('class-' + app.app, "btn-sm");
+      } else {
+        // success - but might still be not running
+        if (this.responseText.includes("Running")) {
+          // it is there and running - set it active
+          //return "btn-sm btn-primary";
+          Session.set('class-' + app.app, "btn-sm btn-primary");
+        } else {
+          // was not running
+          //return "btn-sm";
+          Session.set('class-' + app.app, "btn-sm");
+        }
+      }
+    };
+    request.open("GET", href);
+    request.send();
+  }
+}
+
+Template.landing.onCreated(function () {
+  Meteor.subscribe('groups');
+  Meteor.call('getEnvironment', (error, result) => {
+    if (error) {
+      alert(error);
+      Session.set('deployment_environment', 'unknown');
+    } else {
+      Session.set('deployment_environment', result);
+    }
+  });
 });
 
 Template.landing.helpers({
-  appDisabled: function(app) {
+  setHref: function(app) {
+    getHref(app);
+  },
+  setClass: function(app){
+    getClass(app);
+  },
+  href: function(app) {
     if (app) {
-      var href = baseUrl() + "/" + app.app
-      $.ajax({
-        type: 'GET',
-        url: {href},
-        statusCode: {
-          200: function (responseObject, textStatus, jqXHR) {
-            console.log('success for url: ', href, + ' : ', responseObject.status);
-            console.log('responseObject for url: ', href, + ' : ', responseObject);
-            console.log('textStatus for url: ', href, + ' : ', textStatus);
-            console.log('jqXHR for url: ', href, + ' : ', jqXHR);
-
-            document.getElementById(app.app + "-button").href = href;
-            document.getElementById(app.app + "-button").classList.add("btn-primary");
-          },
-          404: function (responseObject, textStatus, jqXHR) {
-            // No content found (404)
-            console.log('not found for url: ', href, + ' : ', responseObject.status);
-            document.getElementById(app.app + "-button").href="";
-            document.getElementById(app.app + "-button").classList.remove("btn-primary");
-          },
-          503: function (responseObject, textStatus, errorThrown) {
-            // Service Unavailable (503)
-            console.log('unavailable for url: ', href, + ' : ', responseObject.status);
-            document.getElementById(app.app + "-button").href="";
-            document.getElementById(app.app + "-button").classList.remove("btn-primary");
-          }
-        }
-      });
+      return Session.get('href-' + app.app);
+    } else {
+      return "";
+    }
+  },
+  class: function(app) {
+    if (app) {
+      return Session.get('class-' + app.app);
+    } else {
+      return 'btn-sm';
     }
   },
   groupIsVisible: function(groupName) {

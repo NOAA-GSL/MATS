@@ -77,10 +77,12 @@
                             <h3>{{group.groupName}}:</h3>
                             {{#each app in group.appList}}
                                 <li id="{{appReference app}}">
-                                    <a class="btn-sm btn-primary" id="{{appReference app}}-button" type="button"
+                                    {{setHref app}}
+                                    {{setClass app}}
+                                    <a class="{{class app}}" id="{{appReference app}}-button" type="button"
                                        style="display:inline-block;font-size:medium; background-color: {{color
                                                app}}; font-weight: bold; border-radius:10px;"
-                                       href="{{baseUrl}}/{{appReference app}}">{{title app}} {{appDisabled app}}</a>
+                                       href="{{href app}}">{{title app}}</a>
                                 </li>
                             {{/each}}
                         </UL>

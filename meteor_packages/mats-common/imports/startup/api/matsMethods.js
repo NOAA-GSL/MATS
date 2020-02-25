@@ -37,6 +37,19 @@ if (Meteor.isServer) {
         Meteor.settings.public.proxy_prefix_path = "";
     }
 
+    Picker.route('/status', function (params, req, res, next) {
+        Picker.middleware(_status(params, req, res, next));
+    });
+
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/status', function (params, req, res, next) {
+        Picker.middleware(_status(params, req, res, next));
+    });
+
+    Picker.route(Meteor.settings.public.proxy_prefix_path + '/:app/status', function (params, req, res, next) {
+        Picker.middleware(_status(params, req, res, next));
+    });
+
+
     Picker.route('/_getCSV/:key', function (params, req, res, next) {
         Picker.middleware(_getCSV(params, req, res, next));
     });
@@ -177,6 +190,13 @@ const _checkMetaDataRefresh = function () {
         }
     }
     return true;
+};
+
+// private middleware for getting the status - think health check
+const _status = function (params, req, res, next) {
+    if (Meteor.isServer) {
+        res.end("<body><div id='status'>Running</div></body>");
+    }
 };
 
 // private middleware for clearing the cache
@@ -911,7 +931,7 @@ const _write_settings = function(settings, appName) {
     const fs = require('fs');
     var settingsPath = process.env.METEOR_SETTINGS_DIR;
     if (settingsPath == null) {
-        console.log ("environment var settingsPath is undefined: setting it to /usr/app/settings");
+        console.log ("environment var METEOR_SETTINGS_DIR is undefined: setting it to /usr/app/settings");
         settingsPath = "/usr/app/settings";
     }
     if (! fs.existsSync(settingsPath)) {
