@@ -13,24 +13,25 @@ const baseUrl = function() {
 const getHref = function (app) {
   if (app) {
     // assume it isn't active
-    var href = baseUrl() + "/" + app.app + "/status";
+    // we lowercase the appReference because rancher (helm) chats don't seem to like mixed case names.
+    var href = baseUrl() + "/" + (app.app).toLowerCase() + "/status";
     //var href = baseUrl() + "/" + "home" + "/status";
     var request = new XMLHttpRequest();
     request.onload = function () {
       if (this.status != 200) {
         // no success
         //return("");
-        Session.set('href-' + app.app, "");
+        Session.set('href-' + (app.app).toLowerCase(), "");
       } else {
         // success - but might still be not running
         if (this.responseText.includes("Running")) {
           // it is there and running - set it active
-          //return baseUrl() + "/" + app.app;
-          Session.set('href-' + app.app, baseUrl() + "/" + app.app);
+          //return baseUrl() + "/" + (app.app).toLowerCase();
+          Session.set('href-' + (app.app).toLowerCase(), baseUrl() + "/" + (app.app).toLowerCase());
         } else {
           // was not running
           //return "";
-          Session.set('href-' + app.app, "");
+          Session.set('href-' + (app.app).toLowerCase(), "");
         }
       }
     };
@@ -43,24 +44,25 @@ const getHref = function (app) {
 const getClass = function (app) {
   if (app) {
     // assume it isn't active
-    var href = baseUrl() + "/" + app.app + "/status";
+    // we lowercase the appReference because rancher (helm) chats don't seem to like mixed case names.
+    var href = baseUrl() + "/" + (app.app).toLowerCase() + "/status";
     //var href = baseUrl() + "/" + "home" + "/status";
     var request = new XMLHttpRequest();
     request.onload = function () {
       if (this.status != 200) {
         // no success
         return "btn-sm";
-        Session.set('class-' + app.app, "btn-sm");
+        Session.set('class-' + (app.app).toLowerCase(), "btn-sm");
       } else {
         // success - but might still be not running
         if (this.responseText.includes("Running")) {
           // it is there and running - set it active
           //return "btn-sm btn-primary";
-          Session.set('class-' + app.app, "btn-sm btn-primary");
+          Session.set('class-' + (app.app).toLowerCase(), "btn-sm btn-primary");
         } else {
           // was not running
           //return "btn-sm";
-          Session.set('class-' + app.app, "btn-sm");
+          Session.set('class-' + (app.app).toLowerCase(), "btn-sm");
         }
       }
     };
@@ -90,14 +92,14 @@ Template.landing.helpers({
   },
   href: function(app) {
     if (app) {
-      return Session.get('href-' + app.app);
+      return Session.get('href-' + (app.app).toLowerCase());
     } else {
       return "";
     }
   },
   class: function(app) {
     if (app) {
-      return Session.get('class-' + app.app);
+      return Session.get('class-' + (app.app).toLowerCase());
     } else {
       return 'btn-sm';
     }
