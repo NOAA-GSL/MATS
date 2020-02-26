@@ -1,7 +1,42 @@
 #!/bin/sh
 set -e
+if [ -z ${ROOTPWD+x} ]; then
+  echo "ROOT PWD is unset"
+else
+  echo "reseting ROOT PWD"
+cat > /root/.cshrc << EOF
+unsetenv DISPLAY || true
+HISTCONTROL=ignoreboth
+EOF
+cp /root/.cshrc /root/.profile
+echo "${ROOTPWD}" | chpasswd
+fi
+echo "creating www-data user"
+mkdir -p /etc/skel/
+cat > /etc/skel/.logout << EOF
+history -c
+/bin/rm -f /opt/remote/.mysql_history
+/bin/rm -f /opt/remote/.history
+/bin/rm -f /opt/remote/.bash_history
+EOF
+cat > /etc/skel/.cshrc << EOF
+set autologout = 30
+set prompt = "$ "
+set history = 0
+set ignoreeof
+EOF
+cp /etc/skel/.cshrc /etc/skel/.profile
+adduser -D --shell /bin/bash www-data
+if [ -z ${WWW-DATA-PWD+x} ]; then
+  # password is unset
+  echo "WWW-DATA-PWD" | chpasswd
+else
+  # password is set
+  echo "${WWW-DATA-PWD}" | chpasswd
+fi
 
 echo "Running app ${APPNAME} date: $(date)"
+
 # Set a delay to wait to start meteor container
 
 if [[ $DELAY ]]; then
@@ -33,6 +68,7 @@ EOF
   # make sure the settings directory and file are still modifiable.
   chmod -R 777 /usr/app/settings/${APPNAME}
 fi
+
 echo "MONGO URL is: " $MONGO_URL
 export METEOR_SETTINGS_DIR="/usr/app/settings"
 export METEOR_SETTINGS="$(cat /usr/app/settings/${APPNAME}/settings.json)"
