@@ -44,6 +44,7 @@ lmieulet:meteor-coverage@3.2.0
 logging@1.1.20
 meteor@1.9.3
 meteor-base@1.4.0
+meteorhacks:picker@1.0.3
 meteortesting:browser-tests@1.3.1
 meteortesting:mocha@1.1.3
 meteortesting:mocha-core@6.2.2

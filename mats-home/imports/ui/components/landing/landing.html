@@ -40,7 +40,7 @@
             </div>
 
             <div class="collapse navbar-collapse" id="navbar-collapse-2">
-                <a class="nav navbar-nav navbar-left" href="#"><img src="{{transparentGif}}" alt="NOAA"
+                <a class="nav navbar-nav navbar-left" href="/"><img src="{{transparentGif}}" alt="NOAA"
                                                                     style="max-height:80%; max-width:80%;"></a>
                 <ul class="nav navbar-nav">
                     <li>
@@ -72,15 +72,17 @@
                     <h3>Check /usr/app/settings</h3>
                 {{/if}}
                 {{#each group in groups}}
-                    <div class="container">
+                    <div class="container" id="{{group.groupName}}" style="display:{{groupIsVisible group.groupName}};">
                         <ul class="nav navbar-nav navbar-left" style="margin-bottom: 1%;">
                             <h3>{{group.groupName}}:</h3>
                             {{#each app in group.appList}}
-                                <li>
-                                    <a class="btn-sm btn-primary" type="button"
+                                <li id="{{appReference app}}">
+                                    {{setHref app}}
+                                    {{setClass app}}
+                                    <a class="{{class app}}" id="{{appReference app}}-button" type="button"
                                        style="display:inline-block;font-size:medium; background-color: {{color
                                                app}}; font-weight: bold; border-radius:10px;"
-                                       href="{{baseUrl}}/{{appReference app}}">{{title app}}</a>
+                                       href="{{href app}}">{{title app}}</a>
                                 </li>
                             {{/each}}
                         </UL>

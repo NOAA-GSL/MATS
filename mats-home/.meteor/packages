@@ -27,3 +27,4 @@ johanbrook:publication-collector  # Test a Meteor publication by collecting its 
 modules
 twbs:bootstrap
 session
+meteorhacks:picker

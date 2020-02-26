@@ -8,7 +8,6 @@ if [ ! -f ~/.matsapps_credentials ]; then
     echo "export CATTLE_ACCESS_KEY=key_from_rancher"
     echo "export CATTLE_SECRET_KEY=secret_key_from_rancher"
     echo "export TOKEN=token_from_rancher"
-    echo "export userId=the_userId_from_the_YAML_from_your_rancher_user_access_key_token"
     echo "Log into the rancher GUI, hover over your user icon (top right), and choose 'API and KEYS' to create your keys"
     exit 1
 fi
@@ -63,10 +62,9 @@ rancher login ${CATTLE_ENDPOINT} --token ${TOKEN} --context ${CONTEXT} --skip-ve
 		rancher app delete $a
 	done
 
-  echo "deleting the home app"
-	echo "rancher app delete home"
-  rancher app delete home
+  echo "deleting the matshome app"
+  echo "rancher app delete matshome"
+  rancher app delete matshome
 
-  echo "deleting the mongo app"
-	echo "rancher app delete mongo"
-  rancher app delete mongo
+  echo "deleting the matsmongo app"
+  rancher app delete matsmongo
