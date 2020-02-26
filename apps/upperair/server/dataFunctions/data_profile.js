@@ -92,15 +92,19 @@ dataProfile = function (plotParams, plotFunction) {
             queryTableClause = "from metadata as s, " + obsTable + " as o, " + model + " as m0 ";
             var variableClause;
             if (variable[2] === "t" || variable[2] === "dp") {
-                variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
+                // stored in degC, and multiplied by 100.
+                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
                 varUnits = '°C';
             } else if (variable[2] === "rh") {
+                // stored in %.
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
                 varUnits = 'RH (%)';
             } else if (variable[2] === "ws") {
-                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
+                // stored in m/s, and multiplied by 100.
+                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
                 varUnits = 'm/s';
             } else if (variable[2] === "z") {
+                // stored in m.
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
                 varUnits = 'm';
             } else {
