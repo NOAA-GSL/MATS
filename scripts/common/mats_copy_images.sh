@@ -1,4 +1,10 @@
 #!/bin/bash
+# this script is used to copy images from a docker registry to harbor-dev.gsd.esrl.noaa.gov
+# you have to provide login credentials to harbor-dev.gsd.esrl.noaa.gov
+
+echo "login for harbor-dev.gsd.esrl.noaa.gov"
+docker login harbor-dev.gsd.esrl.noaa.gov
+
 export GRN='\033[0;32m'
 export RED='\033[0;31m'
 export NC='\033[0m'
@@ -65,9 +71,14 @@ IMAGE_TAGS=$FILTERED_IMAGE_TAGS
 for i in ${IMAGE_TAGS[@]}
 do
   echo ${i}
+  echo "docker pull ${UNAME}/${repo}:$i"
   docker pull ${UNAME}/${repo}:$i
+  echo "docker tag ${UNAME}/${repo}:${i} harbor-dev.gsd.esrl.noaa.gov/matsapps/${repo}:${i}"
   docker tag ${UNAME}/${repo}:${i} harbor-dev.gsd.esrl.noaa.gov/matsapps/${repo}:${i}
+  echo "docker push harbor-dev.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}"
   docker push harbor-dev.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}
 done
 docker logout
 docker system prune -af
+
+docker logout
