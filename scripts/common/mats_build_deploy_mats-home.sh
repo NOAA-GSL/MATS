@@ -61,7 +61,7 @@ if [ "X${requestedBranch}" != "X" ]; then
     echo -e "overriding git branch with ${requestedBranch}"
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
-echo "Building mats-home app - environment is ${build_env}: date: $(/bin/date +%F_%T)"
+echo "Building home app - environment is ${build_env}: date: $(/bin/date +%F_%T)"
 export DEPLOYMENT_DIRECTORY="/builds/buildArea/MATS_for_EMB"
 export BUILD_DIRECTORY="/builds/buildArea/"
 cd ${BUILD_DIRECTORY}
@@ -103,7 +103,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-#build mats-home
+#build home
 
 echo -e "$0 ${GRN} clean and remove existing image ${NC}"
 if [ "${build_images}" == "yes" ]; then
@@ -140,9 +140,9 @@ if [ "${build_images}" == "yes" ]; then
     docker system prune -af
 fi
 
-APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/mats-home
+APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/home
 cd ${APP_DIRECTORY}
-echo -e "$0 building these apps ${GRN}mats-home${NC}"
+echo -e "$0 building these apps ${GRN}home${NC}"
 
 buildApp() {
     local myApp=$1
@@ -262,7 +262,7 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
 }
 
 # build the app
-buildApp mats-home
+buildApp home
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*

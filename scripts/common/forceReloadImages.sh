@@ -82,7 +82,7 @@ if [[ ${#evictedPods[@]} -gt 0 ]];then
 fi
 
 #restart all the apps that are currently running
-rancher ps | grep -v NAME | grep -v mongo | grep -v mats-home | grep -v http | awk '{print $2}' | while read app
+rancher ps | grep -v NAME | grep -v mongo | grep -v home | grep -v http | awk '{print $2}' | while read app
 do
   if [[ "$requestedApp" == "all" || "$requestedApp" == "$app" ]]; then
 	echo "redeploying ${app}"
@@ -92,7 +92,7 @@ do
   fi
 done
 echo "forcing reload of any stuck pods"
-stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
+stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v home | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
 containerCreating=($(rancher kubectl --namespace=${env} get pods | grep -i ContainerCreating | awk '{print $1}'))
 echo ""
 if [[ ${#stuckPods[@]} -gt 0 ]]; then
@@ -104,8 +104,8 @@ if [[ ${#stuckPods[@]} -gt 0 ]]; then
 		if [[ ${#stuckPods[@]} -gt 0 ]];then
 			rancher kubectl --namespace=${env} delete pods ${stuckPods[@]}
 		fi
-		containerCreating=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ContainerCreating | awk '{print $1}'))
-		stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v mats-home | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
+		containerCreating=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v home | grep -v http | grep -i ContainerCreating | awk '{print $1}'))
+		stuckPods=($(rancher kubectl --namespace=${env} get pods | grep -v mongo | grep -v home | grep -v http | grep -i ImageInspectError | awk '{print $1}'))
 		sleep 30
 		i=$[$i+1]
 	done

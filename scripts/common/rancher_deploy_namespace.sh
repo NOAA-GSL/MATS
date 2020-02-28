@@ -31,7 +31,7 @@ export rootUrl=""
 export pvc=matsdata
 export templateVersion=""
 export defaultCredentials=true
-while getopts 'n:a:v:u:p:d:h' OPTION; do
+while getopts 'n:a:v:u:p:d:t:h' OPTION; do
   case "$OPTION" in
     n)
         ns="$OPTARG"
@@ -104,7 +104,7 @@ echo "deploying matsmongo"
 echo "rancher app install -n $ns matsmongo matsmongo --set defaultImage=true  --set persistentVolumeClaim=${pvc} ${version}"
 rancher app install -n $ns matsmongo matsmongo --set defaultImage=true  --set persistentVolumeClaim=${pvc} --set defaultMongoCredentials=${defaultCredentials} ${version}
 # wait for mongo to get a chance to come up
-sleep 10
+sleep 5
 export metexpress=""
 if [[ "$ns" == "metexpress" ]]; then
 	metexpress="-met-"
@@ -113,7 +113,7 @@ rancher app lt | grep "gslhelm${metexpress}" | awk '{print $2}' | grep -v matsmo
 do
   echo "rancher app install -n $ns $a $a --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}"
   rancher app install -n $ns $a $a --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials} ${version}
-  sleep 5
+  sleep 2
 done
 
 echo "rancher app install matshome matshome -n $ns --set defaultImage=true --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials} ${version}"
