@@ -114,7 +114,7 @@ if [[ -z $appReference ]]; then
 	  sleep 5
 	done
 else
-  echo "rancher app install -n $ns $appReference $appReference --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}"
-  rancher app install -n $ns $appReference $appReference --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials}
+  echo "rancher app install -n $ns app $appReference --set appName=$appReference --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl} --set defaultCredentials=${defaultCredentials}"
+  rancher app install -n $ns  app $appReference --set appName=$appReference --set defaultImage=false --set image.appVersion=${appVersion} --set persistentVolumeClaim=${pvc} --set rootUrl=${rootUrl}  --set defaultCredentials=${defaultCredentials}
 fi
 

@@ -494,6 +494,36 @@ getDeploymentEnvironmentForServer() {
 	
 }
 
+
+# This routine outputs the apps list for the given deployment_environment field for the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: deployment_environment
+#RETURNS: apps
+#TRANSFORMATION: none
+getAppsVersionsForDeploymentEnvironment() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
+	fi
+	local deployment_environment=$1
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetAppsVersionsForDeploymentEnvironment
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
+		{ deployment_environment: {
+		      \$in:["${deployment_environment}"]
+		}},
+		{
+			_id:0,
+			apps:1
+	   	});
+	%EODgetAppsVersionsForDeploymentEnvironment
+	)
+	closeTunnel
+	echo $data | jq -r '.apps | map({(.app):(.version)})| add | keys[] as $k | "\($k), \(.[$k])"'
+}
+
+
 getDeployedProductionServers() {
     if [ $# -ne 0 ]; then
         echo $0 - wrong number of params - usage: $0

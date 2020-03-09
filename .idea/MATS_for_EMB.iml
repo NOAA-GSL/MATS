@@ -61,6 +61,7 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2_dev/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/home/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/mats-home-tmp/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/mats-home/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/test/.meteor/local" />
