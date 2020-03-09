@@ -225,8 +225,8 @@ def reprocess_specific_metadata(models_to_reprocess):
                     for row2 in cursor2:
                         val = row2.values()[0]
                         thisfcst_lens.append(int(val))
-                    per_model[model]['fcst_lens'] = list(set(per_model[model]['fcst_lens']) | set(thisfcst_lens))
-                    per_model[model]['fcst_lens'].sort(key=int)
+                    per_model[model]['fcst_len'] = list(set(per_model[model]['fcst_len']) | set(thisfcst_lens))
+                    per_model[model]['fcst_len'].sort(key=int)
 
                     get_levels = ("SELECT DISTINCT level FROM " + tablename + ";")
                     cursor2.execute(get_levels)
