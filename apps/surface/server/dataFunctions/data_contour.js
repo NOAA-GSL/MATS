@@ -73,9 +73,9 @@ dataContour = function (plotParams, plotFunction) {
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statisticClause;
-    if (variableStr === 'temperature' || variableStr === 'dewpoint') {
+    if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
         statisticClause = statisticOptionsMap[statisticSelect][0];
-    } else if (variableStr === 'wind') {
+    } else if (variableStr === '10m wind') {
         statisticClause = statisticOptionsMap[statisticSelect][2];
     } else {
         statisticClause = statisticOptionsMap[statisticSelect][1];
