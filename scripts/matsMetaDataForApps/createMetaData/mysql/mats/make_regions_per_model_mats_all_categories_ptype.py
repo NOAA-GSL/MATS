@@ -66,7 +66,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
 def regions_per_model_mats_all_categories(mode):
     # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")  # location of cnf file on Theia; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:

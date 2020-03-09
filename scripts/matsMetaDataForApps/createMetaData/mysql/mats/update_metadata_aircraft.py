@@ -4,43 +4,36 @@
 
 # __future__ must come first
 from __future__ import print_function
-
-import re
-import sys
-import os
-import time
-import MySQLdb
 from datetime import datetime
 
+import time
+import re
+import sys
+import MySQLdb
 
-# from mysql_config import DB_connect_params
 
 ############################################################################
 
-def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcstlens, display_category, display_order,
-                      mindate, maxdate, numrecs):
+def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens, display_category, display_order, mindate, maxdate, numrecs):
 
+    # see if this record already exists
     find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE model = '" + str(table_name) + "'"
-    # print(find_rpm_rec)
     cursor.execute(find_rpm_rec)
     record_id = int(0)
     for row in cursor:
-        # print(row)
         val = row.values()[0]
-        # print(val)
         record_id = int(val)
 
-    # print( "FINAL record_id = " + str(record_id) )
-
-    if len(regions) > int(0) and len(fcstlens) > int(0):
+    if len(regions) > int(0) and len(fcst_lens) > int(0):
         qd = []
         updated_utc = datetime.utcnow().strftime('%s')
+        # if it's a new record, add it
         if record_id == 0:
             insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(regions))
-            qd.append(str(fcstlens))
+            qd.append(str(fcst_lens))
             qd.append(display_category)
             qd.append(display_order)
             qd.append(record_id)
@@ -48,17 +41,13 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcstlens, 
             qd.append(maxdate)
             qd.append(numrecs)
             qd.append(updated_utc)
-            # print( "insert_rpm_rec: " + insert_rpm_rec )
-            # print( "qd = " + str(qd) )
-            cursor.execute(insert_rpm_rec, qd)
-            cnx.commit()
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             cursor.execute(insert_rpm_rec, qd)
             cnx.commit()
         else:
+            # if there's a pre-existing record, update it
             update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET regions = %s, fcst_lens = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(regions))
-            qd.append(str(fcstlens))
+            qd.append(str(fcst_lens))
             qd.append(display_category)
             qd.append(display_order)
             qd.append(mindate)
@@ -66,11 +55,6 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcstlens, 
             qd.append(numrecs)
             qd.append(updated_utc)
             qd.append(record_id)
-            # print( "update_rpm_rec: " + update_rpm_rec )
-            # print( "qd = " + str(qd) )
-            cursor.execute(update_rpm_rec, qd)
-            cnx.commit()
-            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories SET regions = %s, fcst_lens = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             cursor.execute(update_rpm_rec, qd)
             cnx.commit()
 
@@ -78,11 +62,9 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcstlens, 
 ############################################################################
 
 def reprocess_specific_metadata(models_to_reprocess):
-    os.environ['TZ'] = 'UTC'
-    #  try:
-    # cnx = mysql.connector.connect( **DB_connect_params )
+    # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")
+        cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -114,20 +96,20 @@ def reprocess_specific_metadata(models_to_reprocess):
     usedb3 = "use " + db3
     cursor3.execute(usedb3)
 
-    # get valid MATS regions
+    # get a map of valid MATS regions
     valid_regions = {}
     valid_region_orders = {}
     get_valid_regions = "select id,short_name from region_descriptions"
     cursor3.execute(get_valid_regions)
-    for (line) in cursor3:
-        region_name = line['short_name']
-        region_id = line['id']
+    for row in cursor3:
+        region_name = row['short_name']
+        region_id = row['id']
         valid_regions[region_name] = region_id
     for region_name in valid_regions.keys():
         get_region_order = "select region_order from region_orders where id=" + str(valid_regions[region_name]) + ";"
         cursor3.execute(get_region_order)
-        for line in cursor3:
-            region_order = int(line['region_order'])
+        for row in cursor3:
+            region_order = int(row['region_order'])
             valid_region_orders[region_name] = region_order
 
     # get common MATS model names
@@ -168,7 +150,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         # initialize output object
         per_model[model] = {}
         per_model[model]['region'] = []
-        per_model[model]['fcst_lens'] = []
+        per_model[model]['fcst_len'] = []
         per_model[model]['mindate'] = sys.float_info.max
         per_model[model]['maxdate'] = 0
         per_model[model]['numrecs'] = 0
@@ -193,17 +175,17 @@ def reprocess_specific_metadata(models_to_reprocess):
         # get all tables that remotely resemble this model name
         show_tables = ("show tables like '" + model + "_%_sums';")
         cursor.execute(show_tables)
-        for (line) in cursor:
-            table_name = line.values()[0]
-            table_string = table_name.encode('ascii', 'ignore')
-            table_model = re.sub('_\d{1,2}_[A-Za-z]*_sums$', '', table_string)
+        for row in cursor:
+            tablename = row.values()[0]
+            tablename = tablename.encode('ascii', 'ignore')
+            table_model = re.sub('_\d{1,2}_[A-Za-z]*_sums$', '', tablename)
             if table_model == model:
                 # this is a table that does belong to this model
-                get_tablestats = "SELECT min(date) AS mindate, max(date) AS maxdate, count(date) AS numrecs FROM " + table_string + ";"
+                get_tablestats = "SELECT min(date) AS mindate, max(date) AS maxdate, count(date) AS numrecs FROM " + tablename + ";"
                 cursor2.execute(get_tablestats)
                 stats = {}
-                for row in cursor2:
-                    rowkeys = row.keys()
+                for row2 in cursor2:
+                    rowkeys = row2.keys()
                     for rowkey in rowkeys:
                         val = str(row[rowkey])
                         stats[rowkey] = val
@@ -211,34 +193,34 @@ def reprocess_specific_metadata(models_to_reprocess):
                 if int(stats['numrecs']) > 0:
                     # make sure the table actually has data
                     if stats['mindate'] != 'None':
-                        get_minhour = "SELECT min(hour) AS minhour FROM " + table_string + " WHERE date = '" + stats['mindate'] + "' ;"
+                        get_minhour = "SELECT min(hour) AS minhour FROM " + tablename + " WHERE date = '" + stats['mindate'] + "' ;"
                         cursor2.execute(get_minhour)
-                        for row in cursor2:
-                            minhour = str(row['minhour'])
+                        for row2 in cursor2:
+                            minhour = str(row2['minhour'])
                             stats['mindate'] = int(time.mktime(time.strptime(stats['mindate'] + ' ' + minhour, '%Y-%m-%d %H')))
                         per_model[model]['mindate'] = stats['mindate'] if stats['mindate'] < per_model[model]['mindate'] else per_model[model]['mindate']
 
                     if stats['maxdate'] != 'None':
-                        get_maxhour = "SELECT max(hour) AS maxhour FROM " + table_string + " WHERE date = '" + stats['maxdate'] + "' ;"
+                        get_maxhour = "SELECT max(hour) AS maxhour FROM " + tablename + " WHERE date = '" + stats['maxdate'] + "' ;"
                         cursor2.execute(get_maxhour)
-                        for row in cursor2:
-                            maxhour = str(row['maxhour'])
+                        for row2 in cursor2:
+                            maxhour = str(row2['maxhour'])
                             stats['maxdate'] = int(time.mktime(time.strptime(stats['maxdate'] + ' ' + maxhour, '%Y-%m-%d %H')))
                         per_model[model]['maxdate'] = stats['maxdate'] if stats['maxdate'] > per_model[model]['maxdate'] else per_model[model]['maxdate']
 
                     per_model[model]['numrecs'] = per_model[model]['numrecs'] + int(stats['numrecs'])
 
                     temp = "^" + model + "_\d{1,2}_"
-                    region1 = re.sub(temp, "", table_string)
+                    region1 = re.sub(temp, "", tablename)
                     region = re.sub("_sums", "", region1)
                     if region not in per_model[model]['region']:
                         per_model[model]['region'].append(region)
                     temp1 = "^" + model + "_"
                     temp2 = "_" + region + "_sums$"
-                    fcst_len1 = re.sub(temp1, "", table_string)
+                    fcst_len1 = re.sub(temp1, "", tablename)
                     fcst_len = int(re.sub(temp2, "", fcst_len1))
-                    if fcst_len not in per_model[model]['fcst_lens']:
-                        per_model[model]['fcst_lens'].append(fcst_len)
+                    if fcst_len not in per_model[model]['fcst_len']:
+                        per_model[model]['fcst_len'].append(fcst_len)
 
         if per_model[model]['mindate'] == sys.float_info.max:
             per_model[model]['mindate'] = str(datetime.now().strftime('%s'))
@@ -251,18 +233,17 @@ def reprocess_specific_metadata(models_to_reprocess):
                 region_orders.append(valid_region_orders[region])
             per_model[model]['region'] = [x for _, x in sorted(zip(region_orders, per_model[model]['region']))]
 
-        per_model[model]['fcst_lens'].sort(key=int)
+        per_model[model]['fcst_len'].sort(key=int)
 
     print(per_model)
 
-    # print("sys.exit(-1)")
     # sys.exit(-1)
 
     usedb = "use " + db
     cursor.execute(usedb)
     for model in models_to_reprocess:
-        if len(per_model[model]['region']) > 0 and len(per_model[model]['fcst_lens']) > 0:
-            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['region'], per_model[model]['fcst_lens'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
+        if len(per_model[model]['region']) > 0 and len(per_model[model]['fcst_len']) > 0:
+            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['region'], per_model[model]['fcst_len'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
 
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
     print("deploy " + db + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
