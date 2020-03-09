@@ -230,7 +230,7 @@ def reprocess_specific_metadata(models_to_reprocess):
                     per_model[model]['fcst_len'] = list(set(per_model[model]['fcst_len']) | set(thisfcst_lens))
                     per_model[model]['fcst_len'].sort(key=int)
 
-                    get_trsh = ("SELECT DISTINCT thresh FROM " + tablename + ";")
+                    get_trsh = ("SELECT DISTINCT trsh FROM " + tablename + ";")
                     cursor2.execute(get_trsh)
                     thistrsh = []
                     for row2 in cursor2:
