@@ -256,7 +256,7 @@ def reprocess_specific_metadata(models_to_reprocess):
 
     for model in models_to_reprocess:
         if len(per_model[model]['region']) > 0 and len(per_model[model]['fcst_len']) > 0 and len(per_model[model]['trshs']) > 0 and len(per_model[model]['scale']) > 0:
-            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['region'], per_model[model]['fcst_len'], per_model[model]['trshs'], per_model[model]['scale'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
+            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['region'], per_model[model]['sources'], per_model[model]['fcst_len'], per_model[model]['trshs'], per_model[model]['scale'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
 
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
     print("deploy " + db + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
