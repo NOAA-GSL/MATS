@@ -6,7 +6,6 @@
 from __future__ import print_function
 from datetime import datetime
 
-import re
 import sys
 import ast
 import MySQLdb
