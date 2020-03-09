@@ -187,7 +187,7 @@ def reprocess_specific_metadata(models_to_reprocess):
                 for row2 in cursor2:
                     rowkeys = row2.keys()
                     for rowkey in rowkeys:
-                        val = str(row[rowkey])
+                        val = str(row2[rowkey])
                         stats[rowkey] = val
 
                 if int(stats['numrecs']) > 0:
