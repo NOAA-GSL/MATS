@@ -61,6 +61,7 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2_dev/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/home/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/mats-home-tmp/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/mats-home/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/test/.meteor/local" />
@@ -71,7 +72,7 @@
     </content>
     <content url="file://$MODULE_DIR$/scripts/matsMetaDataForApps/createMetaData/mysql" />
     <content url="file://$MODULE_DIR$/scripts/matsMetaDataForApps/createMetaData/mysql/metexpress" />
-    <orderEntry type="jdk" jdkName="Python 3.7 (MATS_for_EMB)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7 (py27)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="R User Library" level="project" />
     <orderEntry type="library" name="R Skeletons" level="application" />
@@ -80,7 +81,6 @@
     <option name="requirementsPath" value="" />
   </component>
   <component name="TestRunnerService">
-    <option name="projectConfiguration" value="pytest" />
     <option name="PROJECT_TEST_RUNNER" value="pytest" />
   </component>
 </module>

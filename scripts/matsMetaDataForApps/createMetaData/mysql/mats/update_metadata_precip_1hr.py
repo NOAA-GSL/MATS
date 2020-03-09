@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Updates the regions_per_model_mats_all_categories table for all models in precip_mesonets2_sums
+# Updates the regions_per_model_mats_all_categories table for all models in precip_new
 
 # __future__ must come first
 from __future__ import print_function
@@ -13,7 +13,7 @@ import MySQLdb
 
 ############################################################################
 
-def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, fcst_lens, trshs, display_category, display_order, mindate, maxdate, numrecs):
+def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, fcst_lens, trshs, scales, display_category, display_order, mindate, maxdate, numrecs):
 
     # see if this record already exists
     find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE model = '" + str(table_name) + "'"
@@ -28,13 +28,14 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
         updated_utc = datetime.utcnow().strftime('%s')
         # if it's a new record, add it
         if record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, sources, fcst_lens, trsh, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, sources, fcst_lens, thresh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(regions))
             qd.append(str(sources))
             qd.append(str(fcst_lens))
             qd.append(str(trshs))
+            qd.append(str(scales))
             qd.append(display_category)
             qd.append(display_order)
             qd.append(record_id)
@@ -46,11 +47,12 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
             cnx.commit()
         else:
             # if there's a pre-existing record, update it
-            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET regions = %s, sources = %s, fcst_lens = %s, trsh = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
+            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET regions = %s, sources = %s, fcst_lens = %s, thresh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(regions))
             qd.append(str(sources))
             qd.append(str(fcst_lens))
             qd.append(str(trshs))
+            qd.append(str(scales))
             qd.append(display_category)
             qd.append(display_order)
             qd.append(mindate)
@@ -90,7 +92,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "precip_mesonets2_sums"
+    db = "precip_new"
     usedb = "use " + db
     cursor.execute(usedb)
     cursor2.execute(usedb)
@@ -157,6 +159,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         per_model[model]['sources'] = []
         per_model[model]['fcst_len'] = []
         per_model[model]['trshs'] = []
+        per_model[model]['scale'] = []
         per_model[model]['mindate'] = sys.float_info.max
         per_model[model]['maxdate'] = 0
         per_model[model]['numrecs'] = 0
@@ -184,18 +187,10 @@ def reprocess_specific_metadata(models_to_reprocess):
         for row in cursor:
             tablename = row.values()[0]
             tablename = tablename.encode('ascii', 'ignore')
-            temp = "^" + model + "_"
-            region = re.sub(temp, "", tablename)
-            source = "All"
-            if "_HadsRaws" in region:
-                region = re.sub("_HadsRaws", "", region)
-                source = "HadsRaws"
-            elif "_MesoWest" in region:
-                region = re.sub("_MesoWest", "", region)
-                source = "MesoWest"
-            if region in valid_regions.keys():
+            table_model = re.sub('_[0-9][0-9]km_.*', '', tablename)
+            if table_model == model:
                 # this is a table that does belong to this model
-                get_tablestats = "SELECT min(valid_time) AS mindate, max(valid_time) AS maxdate, count(valid_time) AS numrecs FROM " + tablename + ";"
+                get_tablestats = "SELECT min(time) AS mindate, max(time) AS maxdate, count(time) AS numrecs FROM " + tablename + ";"
                 cursor2.execute(get_tablestats)
                 stats = {}
                 for row2 in cursor2:
@@ -210,10 +205,21 @@ def reprocess_specific_metadata(models_to_reprocess):
                     per_model[model]['maxdate'] = int(stats['maxdate']) if stats['maxdate'] != 'None' and int(stats['maxdate']) > per_model[model]['maxdate'] else per_model[model]['maxdate']
                     per_model[model]['numrecs'] = per_model[model]['numrecs'] + int(stats['numrecs'])
 
+                    temp = "^" + model + "_[0-9][0-9]km_"
+                    temp1 = re.sub(temp, "", tablename)
+                    temp2 = re.split('_', temp1)
+                    region = '_'.join(temp2[1:])
                     if region not in per_model[model]['region']:
                         per_model[model]['region'].append(region)
+                    source = temp2[0]
                     if source not in per_model[model]['sources']:
                         per_model[model]['sources'].append(source)
+                    temp1 = "^" + model + "_"
+                    temp2 = "_" + source + "_" + region + "$"
+                    scale1 = re.sub(temp1, "", tablename)
+                    scale = re.sub(temp2, "", scale1)
+                    if scale not in per_model[model]['scale']:
+                        per_model[model]['scale'].append(scale)
 
                     get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + tablename + ";")
                     cursor2.execute(get_fcst_lens)
@@ -249,8 +255,8 @@ def reprocess_specific_metadata(models_to_reprocess):
     # sys.exit(-1)
 
     for model in models_to_reprocess:
-        if len(per_model[model]['region']) > 0 and len(per_model[model]['fcst_len']) > 0 and len(per_model[model]['trshs']) > 0 and len(per_model[model]['sources']) > 0:
-            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['region'], per_model[model]['sources'], per_model[model]['fcst_len'], per_model[model]['trshs'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
+        if len(per_model[model]['region']) > 0 and len(per_model[model]['fcst_len']) > 0 and len(per_model[model]['trshs']) > 0 and len(per_model[model]['scale']) > 0:
+            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['region'], per_model[model]['fcst_len'], per_model[model]['trshs'], per_model[model]['scale'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
 
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
     print("deploy " + db + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
@@ -265,10 +271,10 @@ if __name__ == '__main__':
     # args[1] should be a comma-separated list of models to reprocess
     if len(sys.argv) == 2:
         utcnow = str(datetime.now())
-        msg = 'PRECIP AQPI MATS METADATA START: ' + utcnow
+        msg = 'PRECIP 1hr MATS METADATA START: ' + utcnow
         print(msg)
         models_to_reprocess = sys.argv[1].strip().split(',')
         reprocess_specific_metadata(models_to_reprocess)
         utcnow = str(datetime.now())
-        msg = 'PRECIP AQPI MATS METADATA END: ' + utcnow
+        msg = 'PRECIP 1hr MATS METADATA END: ' + utcnow
         print(msg)
