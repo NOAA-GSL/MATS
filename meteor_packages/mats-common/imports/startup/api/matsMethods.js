@@ -195,7 +195,8 @@ const _checkMetaDataRefresh = function () {
 // private middleware for getting the status - think health check
 const _status = function (params, req, res, next) {
     if (Meteor.isServer) {
-        res.end("<body><div id='status'>Running</div></body>");
+        settings = matsCollections.Settings.findOne();
+        res.end("<body><div id='status'>Running: version - " + settings.appVersion + " </div></body>");
     }
 };
 
