@@ -1,11 +1,4 @@
 #!/bin/bash
-# this script is used to copy images from a docker registry to harbor-prod.gsd.esrl.noaa.gov
-# you have to provide login credentials to harbor-prod.gsd.esrl.noaa.gov
-
-
-echo "login for harbor-prod.gsd.esrl.noaa.gov"
-docker login harbor-prod.gsd.esrl.noaa.gov
-
 export GRN='\033[0;32m'
 export RED='\033[0;31m'
 export NC='\033[0m'
@@ -16,21 +9,12 @@ if [ $# -ne 2 ]; then
   exit 1
 fi
 repo="$1"
-version="$2"
-
-# source the credentials for the matsapps account
-if [ ! -f ~/.matsapps_credentials ]; then
-    echo "~/.matsapps_credentials file not found!"
-    echo "you must creqate a ~/.matsapps_credentials file with the following entries.."
-    echo "export matsapps_user='matsapps user'"
-    echo "export matsapps_password='matsapps user password'"
-    exit 1
-fi
-. ~/.matsapps_credentials
+# date yyyy-mm-dd
+prune_before="$2"
+prune_prior_to_epoch=$(date)
 #echo  set username and password
-UNAME=${matsapps_user}
-UPASS=${matsapps_password}
-
+UNAME="matsapps"
+UPASS='mats@Gsd!1234'
 docker system prune -af
 #echo  get token to be able to talk to Docker Hub
 TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'${UNAME}'", "password": "'${UPASS}'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
@@ -55,6 +39,8 @@ if [[ $found -eq 0  ]]; then
   exit 1
 fi
 
+#curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/matsapps/production/tags/?page_size=10000 | sed -E 's/\.[0-9]{1,6}Z/Z/g' | jq -r '.results[] | select(.last_updated | fromdateiso8601 < 1566594660 ) | .name' 
+
 #echo  build a list of all tags for repo
 IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${UNAME}/${repo}/tags/?page_size=10000 | jq -r '.results|.[]|.name'))
 FILTERED_IMAGE_TAGS=()
@@ -69,17 +55,13 @@ IMAGE_TAGS=()
 IMAGE_TAGS=$FILTERED_IMAGE_TAGS
 #echo tags are ${IMAGE_TAGS[@]}
 
+#echo 'mats@Gsd!1234' | docker login -u matsapps --password-stdin
 for i in ${IMAGE_TAGS[@]}
 do
   echo ${i}
-  echo "docker pull ${UNAME}/${repo}:$i"
   docker pull ${UNAME}/${repo}:$i
-  echo "docker tag ${UNAME}/${repo}:${i} harbor-prod.gsd.esrl.noaa.gov/matsapps/${repo}:${i}"
-  docker tag ${UNAME}/${repo}:${i} harbor-prod.gsd.esrl.noaa.gov/matsapps/${repo}:${i}
-  echo "docker push harbor-prod.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}"
-  docker push harbor-prod.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}
+  docker tag ${UNAME}/${repo}:${i} harbor-dev.gsd.esrl.noaa.gov/matsapps/${repo}:${i}
+  docker push harbor-dev.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}
 done
 docker logout
 docker system prune -af
-
-docker logout
