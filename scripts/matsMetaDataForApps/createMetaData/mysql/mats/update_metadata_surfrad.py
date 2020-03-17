@@ -42,6 +42,9 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
             qd.append(updated_utc)
             cursor.execute(insert_rpm_rec, qd)
             cnx.commit()
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, regions, fcst_lens, scle, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            cursor.execute(insert_rpm_rec, qd)
+            cnx.commit()
         else:
             # if there's a pre-existing record, update it
             update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET regions = %s, fcst_lens = %s, scle = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
@@ -55,6 +58,9 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
             qd.append(numrecs)
             qd.append(updated_utc)
             qd.append(record_id)
+            cursor.execute(update_rpm_rec, qd)
+            cnx.commit()
+            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories SET regions = %s, fcst_lens = %s, scle = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             cursor.execute(update_rpm_rec, qd)
             cnx.commit()
 
