@@ -1144,6 +1144,8 @@ Meteor.startup(function () {
         }
     }
 
+    // create list of all pools
+    var allPools = [];
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
         port: 1,
@@ -1153,7 +1155,10 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    metadataPool = mysql.createPool(metadataSettings);
+    if (metadataSettings)  {
+        metadataPool = mysql.createPool(metadataSettings);
+        allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
+    }
 
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
@@ -1165,7 +1170,8 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     if (sumSettings) {
-        sumPool = mysql.createPool(sumSettings)
+        sumPool = mysql.createPool(sumSettings);
+        allPools.push({pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA});
     }
 
     const siteSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SITE_DATA, status: "active"}, {
@@ -1179,12 +1185,14 @@ Meteor.startup(function () {
     // the pool is intended to be global
     if (siteSettings) {
         sitePool = mysql.createPool(siteSettings);
+        allPools.push({pool: "sitePool", role: matsTypes.DatabaseRoles.SITE_DATA});
     }
 
-    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
-    mdr.addRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
+    // create list of tables we need to monitor for update
+    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
+    mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
     try {
-        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surface', title: "Surface", group: "Surface"});
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surface', title: "Surface", group: "Surface"});
     } catch (error) {
         console.log(error.message);
     }

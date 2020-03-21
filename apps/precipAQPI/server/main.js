@@ -972,19 +972,8 @@ Meteor.startup(function () {
         }
     }
 
-    const modelSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}, {
-        host: 1,
-        port: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    // the pool is intended to be global
-    if (modelSettings) {
-        modelPool = mysql.createPool(modelSettings)
-    };
-
+    // create list of all pools
+    var allPools = [];
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
         port: 1,
@@ -996,6 +985,21 @@ Meteor.startup(function () {
     // the pool is intended to be global
     if (metadataSettings)  {
         metadataPool = mysql.createPool(metadataSettings);
+        allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
+    }
+
+    const modelSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}, {
+        host: 1,
+        port: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+    // the pool is intended to be global
+    if (modelSettings) {
+        modelPool = mysql.createPool(modelSettings);
+        allPools.push({pool: "modelPool", role: matsTypes.DatabaseRoles.MODEL_DATA});
     }
 
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
@@ -1008,14 +1012,16 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     if (sumSettings) {
-        sumPool = mysql.createPool(sumSettings)
-    };
+        sumPool = mysql.createPool(sumSettings);
+        allPools.push({pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA});
+    }
 
-    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.MODEL_DATA, "modelPool", "precip_mesonets2", ['threshold_descriptions']);
-    mdr.addRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "precip_mesonets2_sums", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
+    // create list of tables we need to monitor for update
+    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
+    mdr.addRecord("modelPool", "precip_mesonets2", ['threshold_descriptions']);
+    mdr.addRecord("sumPool", "precip_mesonets2_sums", ['regions_per_model_mats_all_categories']);
     try {
-        matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'precipAQPI', title: "AQPI Precipitation", group: "Precipitation"});
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipAQPI', title: "AQPI Precipitation", group: "Precipitation"});
     } catch (error) {
         console.log(error.message);
     }

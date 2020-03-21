@@ -4,7 +4,11 @@
 
 import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
-import {matsCollections, matsDataQueryUtils, matsDataUtils, matsParamUtils, matsTypes} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsParamUtils} from 'meteor/randyp:mats-common';
 
 // determined in doCurveParanms
 var minDate;
@@ -919,23 +923,10 @@ Meteor.startup(function () {
             }
         }
     }
-    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
-        host: 1,
-        port: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    // the pool is intended to be global
-    if (sumSettings) {
-        sumPool = mysql.createPool(sumSettings)
-    }
-    ;
-    const metadataSettings = matsCollections.Databases.findOne({
-        role: matsTypes.DatabaseRoles.META_DATA,
-        status: "active"
-    }, {
+
+    // create list of all pools
+    var allPools = [];
+    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
         port: 1,
         user: 1,
@@ -946,17 +937,28 @@ Meteor.startup(function () {
     // the pool is intended to be global
     if (metadataSettings) {
         metadataPool = mysql.createPool(metadataSettings);
+        allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
     }
-    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord(matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
+
+    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
+        host: 1,
+        port: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+    // the pool is intended to be global
+    if (sumSettings) {
+        sumPool = mysql.createPool(sumSettings);
+        allPools.push({pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA});
+    }
+
+    // create list of tables we need to monitor for update
+    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
+    mdr.addRecord("sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
     try {
-        matsMethods.resetApp({
-            appMdr: mdr,
-            appType: matsTypes.AppTypes.mats,
-            app: 'aircraft',
-            title: "Upper Air (AMDAR)",
-            group: "Upper Air"
-        });
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'aircraft', title: "Upper Air (AMDAR)", group: "Upper Air"});
     } catch (error) {
         console.log("aircraft main - " + error.message);
     }

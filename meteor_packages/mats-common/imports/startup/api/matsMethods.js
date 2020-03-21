@@ -1591,6 +1591,7 @@ const resetApp = function (appRef) {
     if (Meteor.isServer) {
         var fse = require('fs-extra');
         const metaDataTableRecords = appRef.appMdr;
+        const appPools = appRef.appPools;
         const type = appRef.appType;
         const appName = appRef.app;
         const appTitle = appRef.title;
@@ -1649,10 +1650,9 @@ const resetApp = function (appRef) {
         }
         // timeout in seconds
         var connectionTimeout = Meteor.settings.public.mysql_wait_timeout != undefined ? Meteor.settings.public.mysql_wait_timeout : 300;
-        const mdrecords = metaDataTableRecords.getRecords();
         delete Meteor.settings.public.undefinedRoles;
-        for (var mdri = 0; mdri < mdrecords.length; mdri++) {
-            const record = mdrecords[mdri];
+        for (var pi = 0; pi < appPools.length; pi++) {
+            const record = appPools[pi];
             const poolName = record.pool;
             // if the database credentials have been set in the meteor.private.settings file then the global[poolName]
             // will have been defined in the app main.js. Otherwise it will not have been defined.

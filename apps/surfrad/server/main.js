@@ -945,6 +945,8 @@ Meteor.startup(function () {
         }
     }
 
+    // create list of all pools
+    var allPools = [];
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         port: 1,
@@ -955,12 +957,14 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     if (sumSettings) {
-        sumPool = mysql.createPool(sumSettings)
-    };
+        sumPool = mysql.createPool(sumSettings);
+        allPools.push({pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA});
+    }
 
-    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "surfrad3", ['scale_descriptions', 'station_descriptions', 'regions_per_model_mats_all_categories']);
+    // create list of tables we need to monitor for update
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3", ['scale_descriptions', 'station_descriptions', 'regions_per_model_mats_all_categories']);
     try {
-        matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'surfrad', title: "Surface Radiation", group: "Surface"});
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surfrad', title: "Surface Radiation", group: "Surface"});
     } catch (error) {
         console.log(error.message);
     }

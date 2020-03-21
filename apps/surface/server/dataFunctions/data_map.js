@@ -64,7 +64,7 @@ dataMap = function (plotParams, plotFunction) {
         variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
         varUnits = 'm/s';
     }
-    var statisticClause = 'sum({{variableClause}})/count(distinct m0.time) as stat, count(distinct m0.time) as N0';
+    var statisticClause = 'avg({{variableClause}}) as stat, count(m0.time) as N0';
     statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
     curves[0]['statistic'] = "Bias (Model - Obs)";
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];

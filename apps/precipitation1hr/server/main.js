@@ -1039,19 +1039,8 @@ Meteor.startup(function () {
         }
     }
 
-    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
-        host: 1,
-        port: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    // the pool is intended to be global
-    if (sumSettings) {
-        sumPool = mysql.createPool(sumSettings)
-    };
-
+    // create list of all pools
+    var allPools = [];
     const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
         host: 1,
         port: 1,
@@ -1063,12 +1052,28 @@ Meteor.startup(function () {
     // the pool is intended to be global
     if (metadataSettings)  {
         metadataPool = mysql.createPool(metadataSettings);
+        allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
     }
 
-    const mdr = new matsTypes.MetaDataDBRecord( matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "precip_new", ['regions_per_model_mats_all_categories', 'threshold_descriptions', 'scale_descriptions']);
-    mdr.addRecord( matsTypes.DatabaseRoles.META_DATA, "metadataPool", "mats_common", ['region_descriptions']);
+    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
+        host: 1,
+        port: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+    // the pool is intended to be global
+    if (sumSettings) {
+        sumPool = mysql.createPool(sumSettings);
+        allPools.push({pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA});
+    }
+
+    // create list of tables we need to monitor for update
+    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
+    mdr.addRecord("sumPool", "precip_new", ['regions_per_model_mats_all_categories', 'threshold_descriptions', 'scale_descriptions']);
     try {
-        matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'precipitation1hr', title: "1 Hour Precipitation", group: "Precipitation"});
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipitation1hr', title: "1 Hour Precipitation", group: "Precipitation"});
     } catch (error) {
         console.log(error.message);
     }

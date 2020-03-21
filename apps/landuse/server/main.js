@@ -935,6 +935,8 @@ Meteor.startup(function () {
         }
     }
 
+    // create list of all pools
+    var allPools = [];
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         port: 1,
@@ -945,12 +947,14 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     if (sumSettings) {
-        sumPool = mysql.createPool(sumSettings)
-    };
+        sumPool = mysql.createPool(sumSettings);
+        allPools.push({pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA});
+    }
 
-    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories', 'vgtyp_descriptions']);
+    // create list of tables we need to monitor for update
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories', 'vgtyp_descriptions']);
     try {
-        matsMethods.resetApp({appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'landuse', title: "Surface Land Use", group: "Surface"});
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'landuse', title: "Surface Land Use", group: "Surface"});
     } catch (error) {
         console.log(error.message);
     }

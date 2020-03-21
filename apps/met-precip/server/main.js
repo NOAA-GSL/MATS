@@ -1383,7 +1383,9 @@ Meteor.startup(function () {
         }
     }
 
-    var sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
+    // create list of all pools
+    var allPools = [];
+    const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
         port: 1,
         user: 1,
@@ -1394,17 +1396,13 @@ Meteor.startup(function () {
     // the pool is intended to be global
     if (sumSettings) {
         sumPool = mysql.createPool(sumSettings);
+        allPools.push({pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA});
     }
 
-    const mdr = new matsTypes.MetaDataDBRecord(matsTypes.DatabaseRoles.SUMS_DATA, "sumPool", "mats_metadata", ['precip_mats_metadata', 'precip_database_groups']);
+    // create list of tables we need to monitor for update
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "mats_metadata", ['precip_mats_metadata', 'precip_database_groups']);
     try {
-        matsMethods.resetApp({
-            appMdr: mdr,
-            appType: matsTypes.AppTypes.metexpress,
-            app: 'met-precip',
-            title: "MET Precipitation",
-            group: "METexpress"
-        });
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.metexpress, app: 'met-precip', title: "MET Precipitation", group: "METexpress"});
     } catch (error) {
         console.log(error.message);
     }
