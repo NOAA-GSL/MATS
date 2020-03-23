@@ -68,6 +68,9 @@ def regions_per_model_mats_all_categories(mode):
         cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("set session connect_timeout=28800")
+        cursor.execute("set session wait_timeout=28800")
+        cursor.execute("set session interactive_timeout=28800")
     except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
@@ -181,6 +184,9 @@ def regions_per_model_mats_all_categories(mode):
         cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("set session connect_timeout=28800")
+        cursor.execute("set session wait_timeout=28800")
+        cursor.execute("set session interactive_timeout=28800")
     except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
@@ -192,6 +198,9 @@ def regions_per_model_mats_all_categories(mode):
         cnx4 = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")
         cnx4.autocommit = True
         cursor4 = cnx4.cursor(MySQLdb.cursors.DictCursor)
+        cursor4.execute("set session connect_timeout=28800")
+        cursor4.execute("set session wait_timeout=28800")
+        cursor4.execute("set session interactive_timeout=28800")
     except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
