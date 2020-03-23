@@ -174,8 +174,15 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? minx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'];
 
         // recalculate curve annotation after QC and matching
-        if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        const newMean = matsDataUtils.average(filteredValues);
+        const newMedian = matsDataUtils.median(filteredValues);
+        const newStdev = matsDataUtils.stdev(filteredValues);
+        if (newMean !== undefined && newMean !== null) {
+            dataset[curveIndex]['annotation'] = label + " mean = " + newMean.toPrecision(4);
+            dataset[curveIndex]['annotation'] = dataset[curveIndex]['annotation'] + ", median = " + newMedian.toPrecision(4);
+            dataset[curveIndex]['annotation'] = dataset[curveIndex]['annotation'] + ", stdev = " + newStdev.toPrecision(4);
+        } else {
+            dataset[curveIndex]['annotation'] = label + " mean = NoData, median = NoData, stdev = NoData";
         }
 
         if (appParams.plotType === matsTypes.PlotTypes.timeSeries || appParams.plotType === matsTypes.PlotTypes.dailyModelCycle) {
@@ -362,8 +369,15 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? minx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'];
 
         // recalculate curve annotation after QC and matching
-        if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        const newMean = matsDataUtils.average(filteredValues);
+        const newMedian = matsDataUtils.median(filteredValues);
+        const newStdev = matsDataUtils.stdev(filteredValues);
+        if (newMean !== undefined && newMean !== null) {
+            dataset[curveIndex]['annotation'] = label + " mean = " + newMean.toPrecision(4);
+            dataset[curveIndex]['annotation'] = dataset[curveIndex]['annotation'] + ", median = " + newMedian.toPrecision(4);
+            dataset[curveIndex]['annotation'] = dataset[curveIndex]['annotation'] + ", stdev = " + newStdev.toPrecision(4);
+        } else {
+            dataset[curveIndex]['annotation'] = label + " mean = NoData, median = NoData, stdev = NoData";
         }
     }
 
@@ -671,11 +685,6 @@ const processDataEnsembleHistogram = function (dataset, appParams, curveInfoPara
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'];
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? minx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'];
-
-        // recalculate curve annotation after QC and matching
-        if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
-        }
 
     } // end curves
 

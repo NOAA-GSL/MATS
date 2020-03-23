@@ -107,23 +107,35 @@ const objectContainsObject = function (superObject, subObject) {
 
 // utility for calculating the average of an array
 const average = function (data) {
+    if(data.length === 0) return null;
     var sum = data.reduce(function (sum, value) {
         return value == null ? sum : sum + value;
     }, 0);
-    var avg = sum / data.length;
-    return avg;
+    return sum / data.length;
+};
+
+// utility for calculating the median of an array
+const median = function (data) {
+    if(data.length === 0) return null;
+    data.sort(function(a,b){
+        return a-b;
+    });
+    var half = Math.floor(data.length / 2);
+    if (data.length % 2)
+        return data[half];
+    return (data[half - 1] + data[half]) / 2.0;
 };
 
 // utility for calculating the stdev of an array
 const stdev = function (data) {
+    if(data.length === 0) return 0;
     var avg = average(data);
     var squareDiffs = data.map(function (value) {
         var diff = value - avg;
         return diff * diff;
     });
     var avgSquareDiff = average(squareDiffs);
-    var stdDev = Math.sqrt(avgSquareDiff);
-    return stdDev;
+    return Math.sqrt(avgSquareDiff);
 };
 
 // this function makes sure date strings are in the correct format
@@ -1031,6 +1043,7 @@ export default matsDataUtils = {
     findArrayInSubArray: findArrayInSubArray,
     objectContainsObject: objectContainsObject,
     average: average,
+    median: median,
     stdev: stdev,
     dateConvert: dateConvert,
     getDateRange: getDateRange,
