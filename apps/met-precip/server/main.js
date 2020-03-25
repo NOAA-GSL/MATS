@@ -218,10 +218,18 @@ const doCurveParams = function () {
 
     const masterStatsOptionsMap = {
         "line_data_sl1l2": {
+            'RMSE': ['scalar'],
+            'Bias-corrected RMSE': ['scalar'],
+            'MSE': ['scalar'],
+            'Bias-corrected MSE': ['scalar'],
             'ME (Additive bias)': ['scalar'],
             'Multiplicative bias': ['scalar'],
             'Forecast mean': ['scalar'],
-            'Observed mean': ['scalar']
+            'Observed mean': ['scalar'],
+            'Forecast stdev': ['scalar'],
+            'Observed stdev': ['scalar'],
+            'Error stdev': ['scalar'],
+            'Pearson correlation': ['scalar']
         },
         "line_data_ctc": {
             'CSI': ['ctc'],
@@ -412,6 +420,7 @@ const doCurveParams = function () {
                 for (var ptidx = 0; ptidx < validPlotTypes.length; ptidx++) {
                     thisPlotType = validPlotTypes[ptidx];
                     if (statisticOptionsMap[thisDB][model][thisPlotType] === undefined) {
+                        // if we haven't encountered this plot type for this model yet, initialize everything
                         statisticOptionsMap[thisDB][model][thisPlotType] = validStats;
                         variableOptionsMap[thisDB][model][thisPlotType] = [];
                         variableValuesMap[thisDB][model][thisPlotType] = {};
@@ -424,19 +433,33 @@ const doCurveParams = function () {
                         sourceOptionsMap[thisDB][model][thisPlotType] = {};
                         descrOptionsMap[thisDB][model][thisPlotType] = {};
                     } else {
+                        // if we have encountered this plot type for this model, add in any new stats
                         statisticOptionsMap[thisDB][model][thisPlotType] = {...statisticOptionsMap[thisDB][model][thisPlotType], ...validStats};
                     }
                     const jsonFriendlyVariable = variable.replace(/\./g, "_");
-                    variableOptionsMap[thisDB][model][thisPlotType].push(jsonFriendlyVariable);
-                    variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = variable;
-                    regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = regionsArr;
-                    forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = forecastLengthArr;
-                    forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = lengthValMap;
-                    levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = levelsArr;
-                    thresholdOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = trshArr;
-                    scaleOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = scalesArr;
-                    sourceOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = sourceArr;
-                    descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = descrsArr;
+                    if (variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] === undefined) {
+                        // if we haven't encountered this variable for this plot type yet, just store the variable-dependent arrays
+                        variableOptionsMap[thisDB][model][thisPlotType].push(jsonFriendlyVariable);
+                        variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = variable;
+                        regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = regionsArr;
+                        forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = forecastLengthArr;
+                        forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = lengthValMap;
+                        levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = levelsArr;
+                        thresholdOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = trshArr;
+                        scaleOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = scalesArr;
+                        sourceOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = sourceArr;
+                        descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = descrsArr;
+                    } else {
+                        // if we have encountered this variable for this plot type, we need to take the unions of existing and new arrays
+                        regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], regionsArr);
+                        forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], forecastLengthArr);
+                        forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = {...forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], ...lengthValMap};
+                        levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], levelsArr);
+                        thresholdOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(thresholdOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], trshArr);
+                        scaleOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(scaleOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], scalesArr);
+                        sourceOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(sourceOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], sourceArr);
+                        descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], descrsArr);
+                    }
                 }
             }
         }

@@ -210,8 +210,8 @@ const doCurveParams = function () {
     }
 
     const masterPlotTypeOptionsMap = {
-        "line_data_sl1l2": [matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.histogram, matsTypes.PlotTypes.contour],
-        "line_data_ctc": [matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.histogram, matsTypes.PlotTypes.contour]
+        "line_data_sl1l2": [matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.threshold, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.histogram, matsTypes.PlotTypes.contour],
+        "line_data_ctc": [matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.threshold, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.histogram, matsTypes.PlotTypes.contour]
     };
 
     const masterStatsOptionsMap = {
@@ -392,6 +392,7 @@ const doCurveParams = function () {
                 for (var ptidx = 0; ptidx < validPlotTypes.length; ptidx++) {
                     thisPlotType = validPlotTypes[ptidx];
                     if (statisticOptionsMap[thisDB][model][thisPlotType] === undefined) {
+                        // if we haven't encountered this plot type for this model yet, initialize everything
                         statisticOptionsMap[thisDB][model][thisPlotType] = validStats;
                         variableOptionsMap[thisDB][model][thisPlotType] = [];
                         variableValuesMap[thisDB][model][thisPlotType] = {};
@@ -402,17 +403,29 @@ const doCurveParams = function () {
                         thresholdOptionsMap[thisDB][model][thisPlotType] = {};
                         descrOptionsMap[thisDB][model][thisPlotType] = {};
                     } else {
+                        // if we have encountered this plot type for this model, add in any new stats
                         statisticOptionsMap[thisDB][model][thisPlotType] = {...statisticOptionsMap[thisDB][model][thisPlotType], ...validStats};
                     }
                     const jsonFriendlyVariable = variable.replace(/\./g, "_");
-                    variableOptionsMap[thisDB][model][thisPlotType].push(jsonFriendlyVariable);
-                    variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = variable;
-                    regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = regionsArr;
-                    forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = forecastLengthArr;
-                    forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = lengthValMap;
-                    levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = levelsArr;
-                    thresholdOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = trshArr;
-                    descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = descrsArr;
+                    if (variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] === undefined) {
+                        // if we haven't encountered this variable for this plot type yet, just store the variable-dependent arrays
+                        variableOptionsMap[thisDB][model][thisPlotType].push(jsonFriendlyVariable);
+                        variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = variable;
+                        regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = regionsArr;
+                        forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = forecastLengthArr;
+                        forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = lengthValMap;
+                        levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = levelsArr;
+                        thresholdOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = trshArr;
+                        descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = descrsArr;
+                    } else {
+                        // if we have encountered this variable for this plot type, we need to take the unions of existing and new arrays
+                        regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], regionsArr);
+                        forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], forecastLengthArr);
+                        forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = {...forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], ...lengthValMap};
+                        levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], levelsArr);
+                        thresholdOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(thresholdOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], trshArr);
+                        descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], descrsArr);
+                    }
                 }
             }
         }
@@ -1094,6 +1107,26 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.threshold,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['desc: ', 'description', ' '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "group", "database", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "level", "description", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
                 ['', 'label', ': '],
@@ -1181,6 +1214,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.threshold,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataThreshold",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({

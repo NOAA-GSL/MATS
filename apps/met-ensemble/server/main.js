@@ -421,6 +421,7 @@ const doCurveParams = function () {
                 for (var ptidx = 0; ptidx < validPlotTypes.length; ptidx++) {
                     thisPlotType = validPlotTypes[ptidx];
                     if (statisticOptionsMap[thisDB][model][thisPlotType] === undefined) {
+                        // if we haven't encountered this plot type for this model yet, initialize everything
                         statisticOptionsMap[thisDB][model][thisPlotType] = validStats;
                         variableOptionsMap[thisDB][model][thisPlotType] = [];
                         variableValuesMap[thisDB][model][thisPlotType] = {};
@@ -430,16 +431,27 @@ const doCurveParams = function () {
                         levelOptionsMap[thisDB][model][thisPlotType] = {};
                         descrOptionsMap[thisDB][model][thisPlotType] = {};
                     } else {
+                        // if we have encountered this plot type for this model, add in any new stats
                         statisticOptionsMap[thisDB][model][thisPlotType] = {...statisticOptionsMap[thisDB][model][thisPlotType], ...validStats};
                     }
                     const jsonFriendlyVariable = variable.replace(/\./g, "_");
-                    variableOptionsMap[thisDB][model][thisPlotType].push(jsonFriendlyVariable);
-                    variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = variable;
-                    regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = regionsArr;
-                    forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = forecastLengthArr;
-                    forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = lengthValMap;
-                    levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = levelsArr;
-                    descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = descrsArr;
+                    if (variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] === undefined) {
+                        // if we haven't encountered this variable for this plot type yet, just store the variable-dependent arrays
+                        variableOptionsMap[thisDB][model][thisPlotType].push(jsonFriendlyVariable);
+                        variableValuesMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = variable;
+                        regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = regionsArr;
+                        forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = forecastLengthArr;
+                        forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = lengthValMap;
+                        levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = levelsArr;
+                        descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = descrsArr;
+                    } else {
+                        // if we have encountered this variable for this plot type, we need to take the unions of existing and new arrays
+                        regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(regionModelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], regionsArr);
+                        forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(forecastLengthOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], forecastLengthArr);
+                        forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = {...forecastValueOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], ...lengthValMap};
+                        levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(levelOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], levelsArr);
+                        descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable] = _.union(descrOptionsMap[thisDB][model][thisPlotType][jsonFriendlyVariable], descrsArr);
+                    }
                 }
             }
         }
