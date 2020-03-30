@@ -965,6 +965,14 @@ class QueryUtil:
             if has_levels:
                 sub_levs_all.append(sub_levs)
 
+        # make sure lists are definitely sorted by the float ind_var values, instead of their former strings
+        if has_levels:
+            curve_ind_vars, curve_stats, sub_vals_all, sub_secs_all, sub_levs_all \
+                = zip(*sorted(zip(curve_ind_vars, curve_stats, sub_vals_all, sub_secs_all, sub_levs_all)))
+        else:
+            curve_ind_vars, curve_stats, sub_vals_all, sub_secs_all \
+                = zip(*sorted(zip(curve_ind_vars, curve_stats, sub_vals_all, sub_secs_all)))
+
         n0_max = max(self.n0)
         n_times_max = max(self.n_times)
         loop_sum = 0
