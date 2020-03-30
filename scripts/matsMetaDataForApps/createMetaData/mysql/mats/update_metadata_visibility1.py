@@ -28,7 +28,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
         updated_utc = datetime.utcnow().strftime('%s')
         # if it's a new record, add it
         if record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, fcst_lens, trsh, truths, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, fcst_lens, trsh, truth, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(regions))
