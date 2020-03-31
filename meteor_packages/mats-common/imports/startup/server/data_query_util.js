@@ -64,6 +64,7 @@ const getModelCadence = function (pool, dataSource, startDate, endDate) {
                     const endCycles = cycles_raw[chosenEndTime];
                     cycles = _.union(startCycles, endCycles, middleCycles);
                 }
+                cycles.sort(function(a, b){return a-b});
             }
         }
     } catch (e) {
