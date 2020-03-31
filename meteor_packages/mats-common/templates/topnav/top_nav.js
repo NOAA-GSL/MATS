@@ -28,7 +28,7 @@ Template.topNav.helpers({
                 return "National Weather Service";
                 break;
             default:
-                return "Earth System Research Laboratory";
+                return "Global Systems Laboratory";
         }
     },
     agencyLink: function () {
@@ -37,7 +37,7 @@ Template.topNav.helpers({
                 return "https://www.weather.gov/";
                 break;
             default:
-                return "http://esrl.noaa.gov/gsd/mdb";
+                return "http://esrl.noaa.gov/gsd/";
         }
     },
     productText: function () {
@@ -46,7 +46,7 @@ Template.topNav.helpers({
                 return "METexpress";
                 break;
             default:
-                return "Model Analysis Tool Suite";
+                return "Model Analysis Tool Suite (MATS)";
         }
     },
     productLink: function () {
