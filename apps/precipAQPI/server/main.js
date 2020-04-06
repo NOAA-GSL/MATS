@@ -409,7 +409,7 @@ const doCurveParams = function () {
 
             'Ratio (Nhigh / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)), ";", m0.valid_time order by m0.valid_time) as sub_data, count(m0.yy) as N0', 'ctc', 'Ratio', null],
 
-            'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn), ";", m0.valid_time order by m0.valid_time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null]
+            'N per graph point': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn), ";", m0.valid_time order by m0.valid_time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null]
         };
         matsCollections.CurveParams.insert(
             {

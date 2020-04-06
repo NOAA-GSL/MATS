@@ -61,7 +61,11 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                         !appParams.matching)) {
                     if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
                         // assign recalculated statistic to data[di][1], which is the value to be plotted
-                        data.y[di] = errorResult.d_mean;
+                        if (statisticSelect === 'N' || statisticSelect === 'N per graph point') {
+                            data.y[di] = errorResult.sum;
+                        } else {
+                            data.y[di] = errorResult.d_mean;
+                        }
                     } else {
                         if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
                             // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
@@ -289,7 +293,11 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
             if (curveInfoParams.statType !== 'ctc') {
                 if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
-                    data.x[di] = errorResult.d_mean;
+                    if (statisticSelect === 'N' || statisticSelect === 'N per graph point') {
+                        data.x[di] = errorResult.sum;
+                    } else {
+                        data.x[di] = errorResult.d_mean;
+                    }
                 } else {
                     if (dataset[diffFrom[0]].x[di] !== null && dataset[diffFrom[1]].x[di] !== null) {
                         // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
