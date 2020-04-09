@@ -98,7 +98,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             // store statistics for this di datapoint
             data.stats[di] = {
                 raw_stat: rawStat,
-                d_mean: errorResult.d_mean,
+                d_mean: statisticSelect === 'N' || statisticSelect === 'N per graph point' ? errorResult.sum : errorResult.d_mean,
                 sd: errorResult.sd,
                 n_good: errorResult.n_good,
                 lag1: errorResult.lag1,
@@ -329,7 +329,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
             // store statistics for this di datapoint
             data.stats[di] = {
                 raw_stat: rawStat,
-                d_mean: errorResult.d_mean,
+                d_mean: statisticSelect === 'N' || statisticSelect === 'N per graph point' ? errorResult.sum : errorResult.d_mean,
                 sd: errorResult.sd,
                 n_good: errorResult.n_good,
                 lag1: errorResult.lag1,
