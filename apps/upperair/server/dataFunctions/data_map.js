@@ -48,22 +48,27 @@ dataMap = function (plotParams, plotFunction) {
     var queryTableClause = "from metadata as s, " + obsTable + " as o, " + model + " as m0 ";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var variableClause;
+    var orderOfMagnitude; // approximate 10^x OOM that the returned data will be on.
     if (variable[2] === "t" || variable[2] === "dp") {
         // stored in degC, and multiplied by 100.
         variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
         varUnits = '°C';
+        orderOfMagnitude = -1;
     } else if (variable[2] === "rh") {
         // stored in %.
         variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
         varUnits = 'RH (%)';
+        orderOfMagnitude = 0;
     } else if (variable[2] === "ws") {
         // stored in m/s, and multiplied by 100.
         variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
         varUnits = 'm/s';
+        orderOfMagnitude = -1;
     } else if (variable[2] === "z") {
         // stored in m.
         variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
         varUnits = 'm';
+        orderOfMagnitude = 1;
     } else {
         throw new Error("RHobT stats are not supported for single/multi station plots");
     }
@@ -126,7 +131,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryMapDB(modelPool, statement, model, variable, varUnits, siteMap);
+        queryResult = matsDataQueryUtils.queryMapDB(modelPool, statement, model, variable[2], varUnits, siteMap, orderOfMagnitude);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -159,7 +164,7 @@ dataMap = function (plotParams, plotFunction) {
         }
     }
 
-    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams);  // generate map with site data
+    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, orderOfMagnitude);  // generate map with site data
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blueCurveText, dBlue);  // generate blue text layer

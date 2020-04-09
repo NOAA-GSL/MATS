@@ -54,15 +54,19 @@ dataMap = function (plotParams, plotFunction) {
     var queryTableClause = "from metars as s, " + obsTable + " as o, " + modelTable + " as m0 ";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var variableClause;
+    var orderOfMagnitude; // approximate 10^x OOM that the returned data will be on.
     if (variable[2] === "temp" || variable[2] === "dp") {
         variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
         varUnits = '°C';
+        orderOfMagnitude = 0;
     } else if (variable[2] === "rh") {
         variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")/10";
         varUnits = 'RH (%)';
+        orderOfMagnitude = 0;
     } else {
         variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
         varUnits = 'm/s';
+        orderOfMagnitude = 0;
     }
     var statisticClause = 'avg({{variableClause}}) as stat, count(m0.time) as N0';
     statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
@@ -114,7 +118,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, model, variable, varUnits, siteMap);
+        queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, model, variable, varUnits, siteMap, orderOfMagnitude);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -147,7 +151,7 @@ dataMap = function (plotParams, plotFunction) {
         }
     }
 
-    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams);  // generate map with site data
+    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, orderOfMagnitude);  // generate map with site data
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blueCurveText, dBlue);  // generate blue text layer
