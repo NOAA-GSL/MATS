@@ -17,7 +17,7 @@ dataMap = function (plotParams, plotFunction) {
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
         "hideGaps": plotParams['noGapsCheck'],
-        "hasLevels": false
+        "hasLevels": true
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
@@ -39,53 +39,61 @@ dataMap = function (plotParams, plotFunction) {
     var variable = variableOptionsMap[variableStr];
     var validTimeClause = "";
     var forecastLength = curve['forecast-length'];
-    var forecastLengthClause = "";
+    var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
+    var top = curve['top'];
+    var bottom = curve['bottom'];
     var sitesClause = "";
     var varUnits;
-    var modelTable;
-    if (forecastLength === 1) {
-        modelTable = model + "qp1f";
-        forecastLengthClause = "";
-    } else {
-        modelTable = (model.includes('ret_') || model.includes('Ret_')) ? model + "p" : model + "qp";
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength + " "
-    }
-    var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
-    var queryTableClause = "from metars as s, " + obsTable + " as o, " + modelTable + " as m0 ";
+    var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
+    var queryTableClause = "from metadata as s, " + obsTable + " as o, " + model + " as m0 ";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var variableClause;
-    if (variable[2] === "temp" || variable[2] === "dp") {
-        variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
+    if (variable[2] === "t" || variable[2] === "dp") {
+        // stored in degC, and multiplied by 100.
+        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
         varUnits = '°C';
     } else if (variable[2] === "rh") {
-        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")/10";
+        // stored in %.
+        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
         varUnits = 'RH (%)';
-    } else {
-        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
+    } else if (variable[2] === "ws") {
+        // stored in m/s, and multiplied by 100.
+        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
         varUnits = 'm/s';
+    } else if (variable[2] === "z") {
+        // stored in m.
+        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
+        varUnits = 'm';
+    } else {
+        throw new Error("RHobT stats are not supported for single/multi station plots");
     }
-    var statisticClause = 'avg({{variableClause}}) as stat, count(m0.time) as N0';
+    var statisticClause = 'avg({{variableClause}}) as stat, count(unix_timestamp(m0.date)+3600*m0.hour) as N0';
     statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
     curves[0]['statistic'] = "Bias (Model - Obs)";
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
+        for (var sidx = 0; sidx < sitesList.length; sidx++) {
+            const possibleSiteNames = sitesList[sidx].match(/\(([^)]*)\)[^(]*$/);
+            sitesList[sidx] = possibleSiteNames === null ? sitesList[sidx] : possibleSiteNames[possibleSiteNames.length - 1];
+        }
         sitesClause = " and s.name in('" + sitesList.join("','") + "')";
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
-    var siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
-    var siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
-    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
-    }
+    var siteDateClause = "and unix_timestamp(o.date)+3600*o.hour + 1800 >= " + fromSecs + " and unix_timestamp(o.date)+3600*o.hour - 1800 <= " + toSecs;
+    var levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
+    var siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
+    var siteMatchClause = "and s.wmoid = m0.wmoid and s.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
+    var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
+    var validTimeStr = curve['valid-time'];
+    var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
+    validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
 
     var statement = "select s.name as sta_name, " +
-        "s.madis_id as sta_id, " +
-        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
-        "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
-        "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
+        "s.wmoid as sta_id, " +
+        "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
+        "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
+        "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +
@@ -95,6 +103,8 @@ dataMap = function (plotParams, plotFunction) {
         "{{siteDateClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
+        "{{levelClause}} " +
+        "{{siteLevelClause}} " +
         "group by sta_name " +
         "order by sta_name" +
         ";";
@@ -105,6 +115,8 @@ dataMap = function (plotParams, plotFunction) {
     statement = statement.replace('{{sitesClause}}', sitesClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+    statement = statement.replace('{{levelClause}}', levelClause);
+    statement = statement.replace('{{siteLevelClause}}', siteLevelClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
     dataRequests[label] = statement;
@@ -114,7 +126,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, model, variable, varUnits, siteMap);
+        queryResult = matsDataQueryUtils.queryMapDB(modelPool, statement, model, variable, varUnits, siteMap);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),

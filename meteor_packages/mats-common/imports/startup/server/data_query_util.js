@@ -437,7 +437,7 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
                     d.text.push(tooltips);
 
                     var thisSite = siteMap.find(obj => {
-                        return obj.name === site;
+                        return obj.origName === site;
                     });
                     d.lat.push(thisSite.point[0]);
                     d.lon.push(thisSite.point[1]);
