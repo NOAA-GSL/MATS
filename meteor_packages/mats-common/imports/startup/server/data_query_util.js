@@ -365,7 +365,7 @@ const queryDBSpecialtyCurve = function (pool, statement, appParams) {
 };
 
 // this method queries the database for map plots
-const queryMapDB = function (pool, statement, dataSource, variable, varUnits, siteMap) {
+const queryMapDB = function (pool, statement, dataSource, variable, varUnits, siteMap, orderOfMagnitude) {
     if (Meteor.isServer) {
         // d will contain the curve data
         var d = {
@@ -377,7 +377,7 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
             stats: [],
             text: []
         };
-        // for biases <= -1
+        // for biases <= -OOM
         var dBlue = {
             siteName: [],
             queryVal: [],
@@ -387,7 +387,7 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
             text: [],
             color: "rgb(0,0,255)"
         };
-        // for biases > -1 and < 1
+        // for biases > -OOM and < OOM
         var dBlack = {
             siteName: [],
             queryVal: [],
@@ -397,7 +397,7 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
             text: [],
             color: "rgb(0,0,0)"
         };
-        // for biases >= 1
+        // for biases >= OOM
         var dRed = {
             siteName: [],
             queryVal: [],
@@ -437,20 +437,21 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
                     d.text.push(tooltips);
 
                     var thisSite = siteMap.find(obj => {
-                        return obj.name === site;
+                        return obj.origName === site;
                     });
                     d.lat.push(thisSite.point[0]);
                     d.lon.push(thisSite.point[1]);
 
-                    var textMarker = queryVal === null ? "" : queryVal.toFixed(0);
-                    if (queryVal <= -1) {
+                    var displayLength = orderOfMagnitude >= 0 ? 0 : Math.abs(orderOfMagnitude);
+                    var textMarker = queryVal === null ? "" : queryVal.toFixed(displayLength);
+                    if (queryVal <= -1 * Math.pow(10, orderOfMagnitude)) {
                         d.color.push("rgb(0,0,255)");
                         dBlue.siteName.push(site);
                         dBlue.queryVal.push(queryVal);
                         dBlue.text.push(textMarker);
                         dBlue.lat.push(thisSite.point[0]);
                         dBlue.lon.push(thisSite.point[1]);
-                    } else if (queryVal >= 1) {
+                    } else if (queryVal >= Math.pow(10, orderOfMagnitude)) {
                         d.color.push("rgb(255,0,0)");
                         dRed.siteName.push(site);
                         dRed.queryVal.push(queryVal);

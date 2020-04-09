@@ -300,6 +300,7 @@ const doCurveParams = function () {
             var point = [site_lat, site_lon];
             var obj = {
                 name: name_string,
+                origName: site_name,
                 point: point,
                 elevation: site_elev,
                 options: {
@@ -968,6 +969,23 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.map,
+            textPattern: [
+                ['', 'data-source', ': '],
+                ['', 'sites', ': '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'top', ' '],
+                ['to ', 'bottom', ', '],
+                ['fcst_len: ', 'forecast-length', ' h '],
+                [' valid-time:', 'valid-time', '']
+            ],
+            displayParams: [
+                "data-source", "variable", "forecast-length", "top", "bottom", "valid-time", "sites", "sitesMap"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.histogram,
             textPattern: [
                 ['', 'label', ': '],
@@ -1058,6 +1076,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.map,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataMap",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({

@@ -333,10 +333,10 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
     return curveOptions;
 };
 
-const generateMapCurveOptions = function (curve, dataSeries, appParams) {
+const generateMapCurveOptions = function (curve, dataSeries, appParams, orderOfMagnitude) {
 
     const markerSizes = dataSeries.queryVal.map(function (val) {
-        var size = Math.ceil(Math.abs(val * 4)) + 2;
+        var size = Math.ceil(Math.abs(val * 4 / Math.pow(2, orderOfMagnitude))) + 2;
         size = size > 50 ? 50 : size; // prevent really massive bad data from obscuring map
         return size;
     });

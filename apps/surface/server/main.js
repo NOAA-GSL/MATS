@@ -304,6 +304,7 @@ const doCurveParams = function () {
             var point = [site_lat, site_lon];
             var obj = {
                 name: site_name,
+                origName: site_name,
                 point: point,
                 elevation: site_elev,
                 options: {
