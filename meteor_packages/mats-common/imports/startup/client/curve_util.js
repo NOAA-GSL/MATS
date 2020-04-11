@@ -709,7 +709,7 @@ const showMapFace = function () {
     var faceOptions = {
         'curve-dates': 'none',
         'dates': 'block',
-        'statistic': 'none',
+        'statistic': 'block',
         'threshold': 'block',
         'scale': 'block',
         'level': 'block',

@@ -64,7 +64,9 @@ const getModelCadence = function (pool, dataSource, startDate, endDate) {
                     const endCycles = cycles_raw[chosenEndTime];
                     cycles = _.union(startCycles, endCycles, middleCycles);
                 }
-                cycles.sort(function(a, b){return a-b});
+                cycles.sort(function (a, b) {
+                    return a - b
+                });
             }
         }
     } catch (e) {
@@ -478,6 +480,211 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
             data: d,    // [sub_values,sub_secs] as arrays
             dataBlue: dBlue,    // [sub_values,sub_secs] as arrays
             dataBlack: dBlack,    // [sub_values,sub_secs] as arrays
+            dataRed: dRed,    // [sub_values,sub_secs] as arrays
+            error: error,
+        };
+    }
+};
+
+// this method queries the database for map plots
+const queryMapDBctc = function (pool, statement, dataSource, statistic, siteMap) {
+    if (Meteor.isServer) {
+        // d will contain the curve data
+        var d = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            color: [],
+            stats: [],
+            text: []
+        };
+        // for skill scores <= 20
+        var dPurple = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(128,0,255)"
+        };
+        // for skill scores <= 40
+        var dBlue = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(0,0,255)"
+        };
+        // for skill scores <= 60
+        var dGreen = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(128,255,0)"
+        };
+        // for skill scores <= 80
+        var dOrange = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(255,128,0)"
+        };
+        // for skill scores <= 100
+        var dRed = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(255,0,0)"
+        };
+
+        var error = "";
+        const Future = require('fibers/future');
+        var pFuture = new Future();
+        pool.query(statement, function (err, rows) {
+            // query callback - build the curve data from the results - or set an error
+            if (err !== undefined && err !== null) {
+                error = err.message;
+            } else if (rows === undefined || rows === null || rows.length === 0) {
+                error = matsTypes.Messages.NO_DATA_FOUND;
+            } else {
+                var queryVal;
+                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    const site = rows[rowIndex].sta_id;
+                    const yy = Number(rows[rowIndex].yy);
+                    const yn = Number(rows[rowIndex].yn);
+                    const ny = Number(rows[rowIndex].ny);
+                    const nn = Number(rows[rowIndex].nn);
+                    switch (statistic) {
+                        case 'TSS (True Skill Score)':
+                            queryVal = (yy * nn - yn * ny) / ((yy + ny) * (yn + nn)) * 100;
+                            break;
+                        case 'PODy (POD of ceiling < threshold)':
+                            queryVal = yy / (yy + ny) * 100;
+                            break;
+                        case 'PODn (POD of ceiling > threshold)':
+                            queryVal = nn / (nn + yn) * 100;
+                            break;
+                        case 'FAR (False Alarm Ratio)':
+                            queryVal = yn / (yn + yy) * 100;
+                            break;
+                        case 'Bias (forecast/actual)':
+                            queryVal = (yy + yn) / (yy + ny);
+                            break;
+                        case 'CSI (Critical Success Index)':
+                            queryVal = yy / (yy + ny + yn) * 100;
+                            break;
+                        case 'HSS (Heidke Skill Score)':
+                            queryVal = 2 * (nn * yy - ny * yn) / ((nn + yn) * (yn + yy) + (nn + ny) * (ny + yy)) * 100;
+                            break;
+                        case 'ETS (Equitable Threat Score)':
+                            queryVal = (yy - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) / ((yy + yn + ny) - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) * 100;
+                            break;
+                        case 'Nlow (obs < threshold, avg per hr)':
+
+                            break;
+                        case 'Nhigh (obs > threshold, avg per hr)':
+
+                            break;
+                        case 'Ntot (total obs, avg per hr)':
+
+                            break;
+                        case 'Ratio (Nlow / Ntot)':
+                            queryVal = (yy + ny) / (yy + yn + ny + nn);
+                            break;
+                        case 'Ratio (Nhigh / Ntot)':
+                            queryVal = (nn + yn) / (yy + yn + ny + nn);
+                            break;
+                        case 'N per graph point':
+                            queryVal = yy + yn + ny + nn;
+                            break;
+                    }
+                    if (!isNaN(Number(queryVal))) {
+                        d.queryVal.push(queryVal);
+                        d.stats.push({
+                            N_times: rows[rowIndex].N_times,
+                            min_time: rows[rowIndex].min_secs,
+                            max_time: rows[rowIndex].max_secs
+                        });
+
+                        var thisSite = siteMap.find(obj => {
+                            return obj.options.id === site;
+                        });
+
+                        var tooltips = thisSite.origName +
+                            "<br>" + "model: " + dataSource +
+                            "<br>" + statistic + ": " + queryVal +
+                            "<br>" + "n: " + rows[rowIndex].N_times;
+                        d.text.push(tooltips);
+
+                        d.siteName.push(thisSite.origName);
+                        d.lat.push(thisSite.point[0]);
+                        d.lon.push(thisSite.point[1]);
+
+                        var textMarker = queryVal === null ? "" : queryVal.toFixed(0);
+                        if (queryVal <= 20) {
+                            d.color.push("rgb(128,0,255)");
+                            dPurple.siteName.push(thisSite.origName);
+                            dPurple.queryVal.push(queryVal);
+                            dPurple.text.push(textMarker);
+                            dPurple.lat.push(thisSite.point[0]);
+                            dPurple.lon.push(thisSite.point[1]);
+                        } else if (queryVal <= 40) {
+                            d.color.push("rgb(0,0,255)");
+                            dBlue.siteName.push(thisSite.origName);
+                            dBlue.queryVal.push(queryVal);
+                            dBlue.text.push(textMarker);
+                            dBlue.lat.push(thisSite.point[0]);
+                            dBlue.lon.push(thisSite.point[1]);
+                        } else if (queryVal <= 60) {
+                            d.color.push("rgb(128,255,0)");
+                            dGreen.siteName.push(thisSite.origName);
+                            dGreen.queryVal.push(queryVal);
+                            dGreen.text.push(textMarker);
+                            dGreen.lat.push(thisSite.point[0]);
+                            dGreen.lon.push(thisSite.point[1]);
+                        } else if (queryVal <= 80) {
+                            d.color.push("rgb(255,128,0)");
+                            dOrange.siteName.push(thisSite.origName);
+                            dOrange.queryVal.push(queryVal);
+                            dOrange.text.push(textMarker);
+                            dOrange.lat.push(thisSite.point[0]);
+                            dOrange.lon.push(thisSite.point[1]);
+                        } else {
+                            d.color.push("rgb(255,0,0)");
+                            dRed.siteName.push(thisSite.origName);
+                            dRed.queryVal.push(queryVal);
+                            dRed.text.push(textMarker);
+                            dRed.lat.push(thisSite.point[0]);
+                            dRed.lon.push(thisSite.point[1]);
+                        }
+                    }
+                }// end of loop row
+            }
+            // done waiting - have results
+            pFuture['return']();
+        });
+
+        // wait for future to finish
+        pFuture.wait();
+        return {
+            data: d,    // [sub_values,sub_secs] as arrays
+            dataPurple: dPurple,    // [sub_values,sub_secs] as arrays
+            dataBlue: dBlue,    // [sub_values,sub_secs] as arrays
+            dataGreen: dGreen,    // [sub_values,sub_secs] as arrays
+            dataOrange: dOrange,    // [sub_values,sub_secs] as arrays
             dataRed: dRed,    // [sub_values,sub_secs] as arrays
             error: error,
         };
@@ -1136,6 +1343,7 @@ export default matsDataQueryUtils = {
     queryDBTimeSeries: queryDBTimeSeries,
     queryDBSpecialtyCurve: queryDBSpecialtyCurve,
     queryMapDB: queryMapDB,
+    queryMapDBctc: queryMapDBctc,
     queryDBContour: queryDBContour
 
 }

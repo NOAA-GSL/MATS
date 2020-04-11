@@ -121,6 +121,11 @@ var ReservedWords = {
     blueCurveText: "Cold bias",
     blackCurveText: "Small bias",
     redCurveText: "Warm bias",
+    CTCPurpleCurveText: "<= 20% skill",
+    CTCBlueCurveText: "20% < skill <= 40%",
+    CTCGreenCurveText: "40% < skill <= 60%",
+    CTCOrangeCurveText: "60% < skill <= 80%",
+    CTCRedCurveText: "> 80% skill",
     contourSigLabel: "Curve1-Curve0 Significance"
 };
 

@@ -87,7 +87,11 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
         case matsTypes.PlotTypes.map:
             // maps need to have the region be station-select mode
             if (matsParamUtils.getParameterForName('region-type') !== undefined) {
-                matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations (bias only)');
+                if (matsParamUtils.getOptionsForParam('region-type').indexOf('Select stations (bias only)') !== -1) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations (bias only)');
+                } else {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations');
+                }
             }
             matsCurveUtils.showMapFace();
             break;

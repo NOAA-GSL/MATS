@@ -365,6 +365,36 @@ const generateMapCurveOptions = function (curve, dataSeries, appParams, orderOfM
     return curveOptions;
 };
 
+const generateCTCMapCurveOptions = function (curve, dataSeries, appParams) {
+
+    const markerSizes = dataSeries.queryVal.map(function (val) {
+        return 10;
+    });
+
+    const label = curve['label'];
+    const longLabel = matsPlotUtils.getCurveText(appParams.plotType, curve);
+
+    const curveOptions = {
+        ...{
+            label: label,
+            curveId: label,
+            name: longLabel,
+            type: 'scattermapbox',
+            mode: 'markers',
+            marker: {
+                color: dataSeries.color,
+                size: markerSizes,
+                opacity: 0
+            },
+            showlegend: true
+        }, ...dataSeries
+    };
+
+    delete curveOptions.color;
+
+    return curveOptions;
+};
+
 const generateMapColorTextOptions = function (label, dataSeries) {
 
     const curveOptions = {
@@ -523,6 +553,7 @@ export default matsDataCurveOpsUtils = {
     generateProfileCurveOptions: generateProfileCurveOptions,
     generateBarChartCurveOptions: generateBarChartCurveOptions,
     generateMapCurveOptions: generateMapCurveOptions,
+    generateCTCMapCurveOptions: generateCTCMapCurveOptions,
     generateMapColorTextOptions: generateMapColorTextOptions,
     generateContourCurveOptions: generateContourCurveOptions
 
