@@ -44,9 +44,6 @@ dataMap = function (plotParams, plotFunction) {
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     var statistic = curve['statistic'];
-    if (statistic.includes("Nlow") || statistic.includes("Nhigh") || statistic.includes("Ntot") || statistic.includes("N per graph point")) {
-        throw new Error("INFO:  The statistics [Nlow, Nhigh, Ntot, Ratio (Nlow / Ntot), Ratio (Nhigh / Ntot), N per graph point] are not currently supported for single/multi-station plots.");
-    }
     var statisticClause = 'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as yy,sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as nn, count(m0.ceil) as N0';
     statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
@@ -87,7 +84,7 @@ dataMap = function (plotParams, plotFunction) {
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
         "group by sta_id " +
-        "order by sta_id" +
+        "order by N0" +
         ";";
 
     statement = statement.replace('{{statisticClause}}', statisticClause);
@@ -105,7 +102,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryMapDBctc(modelPool, statement, modelTable, statistic, siteMap);
+        queryResult = matsDataQueryUtils.queryDBMapCTC(modelPool, statement, modelTable, statistic, siteMap);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
