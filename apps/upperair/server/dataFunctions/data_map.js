@@ -182,7 +182,7 @@ dataMap = function (plotParams, plotFunction) {
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.redCurveText, dRed);  // generate red text layer
     dataset.push(cOptions);
 
-    const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions();
+    const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(false);
     var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProcessingStart.format(),

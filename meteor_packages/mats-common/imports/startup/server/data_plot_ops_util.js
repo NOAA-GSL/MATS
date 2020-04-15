@@ -949,7 +949,7 @@ const generateROCPlotOptions = function () {
 };
 
 // sets plot options for map plots
-const generateMapPlotOptions = function () {
+const generateMapPlotOptions = function (extraLegendSpace) {
     const options = {
         autosize: true,
         hovermode: 'closest',
@@ -974,7 +974,7 @@ const generateMapPlotOptions = function () {
         legend: {
             orientation: "h",
             x: 0,
-            y: 1.07,
+            y: extraLegendSpace ? 1.2 : 1.1,
             font: {
                 size: 12,
                 color: '#000000'

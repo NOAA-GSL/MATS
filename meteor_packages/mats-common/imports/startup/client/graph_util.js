@@ -105,9 +105,16 @@ const setNoDataLabelsMap = function (dataset) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["color"] = "white";
             }
         } else {
-            Session.set(dataset[c].curveId + "heatMapButtonText", 'show heat map');
+            const appName = matsCollections.appName.findOne({}).app;
+            var heatMapText;
+            if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility"))) {
+                heatMapText = 'hide heat map';
+            } else {
+                heatMapText = 'show heat map';
+            }
+            Session.set(dataset[c].curveId + "heatMapButtonText", heatMapText);
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap')) {
-                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').value = 'show heat map';
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').value = heatMapText;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').disabled = false;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["background-color"] = "white";
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["border-color"] = "red";

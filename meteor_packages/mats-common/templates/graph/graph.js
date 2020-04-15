@@ -460,8 +460,13 @@ Template.graph.helpers({
     },
     heatMapButtonText: function () {
         var sval = this.label + "heatMapButtonText";
+        const appName = matsCollections.appName.findOne({}).app;
         if (Session.get(sval) === undefined) {
-            Session.set(sval, 'show heat map');
+            if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility"))) {
+                Session.set(sval, 'hide heat map');
+            } else {
+                Session.set(sval, 'show heat map');
+            }
         }
         return Session.get(sval);
     },
@@ -1376,7 +1381,7 @@ Template.graph.events({
                 curveOpsUpdate[0] = curveOpsUpdate[0] === undefined ? {} : curveOpsUpdate[0];
                 curveOpsUpdate[0]['marker____opacity'] = update['marker.opacity'];
                 update = {
-                    'visible': false
+                    'visible': 'legendonly'
                 };
                 for (didx = 1; didx < dataset.length; didx++) {
                     Plotly.restyle($("#placeholder")[0], update, didx);
