@@ -422,25 +422,26 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
             } else {
                 var queryVal;
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    const site = rows[rowIndex].sta_name;
+                    const site = rows[rowIndex].sta_id;
                     queryVal = rows[rowIndex].stat;
-                    d.siteName.push(site);
                     d.queryVal.push(queryVal);
                     d.stats.push({
                         N_times: rows[rowIndex].N_times,
                         min_time: rows[rowIndex].min_secs,
                         max_time: rows[rowIndex].max_secs
                     });
-                    var tooltips = site +
+
+                    var thisSite = siteMap.find(obj => {
+                        return obj.options.id === site;
+                    });
+
+                    var tooltips = thisSite.origName +
                         "<br>" + "variable: " + variable +
                         "<br>" + "model: " + dataSource +
                         "<br>" + "model-obs: " + queryVal + " " + varUnits +
                         "<br>" + "n: " + rows[rowIndex].N_times;
                     d.text.push(tooltips);
-
-                    var thisSite = siteMap.find(obj => {
-                        return obj.origName === site;
-                    });
+                    d.siteName.push(thisSite.origName);
                     d.lat.push(thisSite.point[0]);
                     d.lon.push(thisSite.point[1]);
 
@@ -448,21 +449,21 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
                     var textMarker = queryVal === null ? "" : queryVal.toFixed(displayLength);
                     if (queryVal <= -1 * Math.pow(10, orderOfMagnitude)) {
                         d.color.push("rgb(0,0,255)");
-                        dBlue.siteName.push(site);
+                        dBlue.siteName.push(thisSite.origName);
                         dBlue.queryVal.push(queryVal);
                         dBlue.text.push(textMarker);
                         dBlue.lat.push(thisSite.point[0]);
                         dBlue.lon.push(thisSite.point[1]);
                     } else if (queryVal >= Math.pow(10, orderOfMagnitude)) {
                         d.color.push("rgb(255,0,0)");
-                        dRed.siteName.push(site);
+                        dRed.siteName.push(thisSite.origName);
                         dRed.queryVal.push(queryVal);
                         dRed.text.push(textMarker);
                         dRed.lat.push(thisSite.point[0]);
                         dRed.lon.push(thisSite.point[1]);
                     } else {
                         d.color.push("rgb(0,0,0)");
-                        dBlack.siteName.push(site);
+                        dBlack.siteName.push(thisSite.origName);
                         dBlack.queryVal.push(queryVal);
                         dBlack.text.push(textMarker);
                         dBlack.lat.push(thisSite.point[0]);
@@ -499,7 +500,7 @@ const queryMapDBctc = function (pool, statement, dataSource, statistic, siteMap)
             stats: [],
             text: []
         };
-        // for skill scores <= 20
+        // for skill scores <= 10%
         var dPurple = {
             siteName: [],
             queryVal: [],
@@ -509,7 +510,17 @@ const queryMapDBctc = function (pool, statement, dataSource, statistic, siteMap)
             text: [],
             color: "rgb(128,0,255)"
         };
-        // for skill scores <= 40
+        // for skill scores <= 20%
+        var dPurpleBlue = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(64,0,255)"
+        };
+        // for skill scores <= 30%
         var dBlue = {
             siteName: [],
             queryVal: [],
@@ -519,7 +530,17 @@ const queryMapDBctc = function (pool, statement, dataSource, statistic, siteMap)
             text: [],
             color: "rgb(0,0,255)"
         };
-        // for skill scores <= 60
+        // for skill scores <= 40%
+        var dBlueGreen = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(64,128,128)"
+        };
+        // for skill scores <= 50%
         var dGreen = {
             siteName: [],
             queryVal: [],
@@ -529,7 +550,27 @@ const queryMapDBctc = function (pool, statement, dataSource, statistic, siteMap)
             text: [],
             color: "rgb(128,255,0)"
         };
-        // for skill scores <= 80
+        // for skill scores <= 60%
+        var dGreenYellow = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(160,224,0)"
+        };
+        // for skill scores <= 70%
+        var dYellow = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(192,192,0)"
+        };
+        // for skill scores <= 80%
         var dOrange = {
             siteName: [],
             queryVal: [],
@@ -539,7 +580,17 @@ const queryMapDBctc = function (pool, statement, dataSource, statistic, siteMap)
             text: [],
             color: "rgb(255,128,0)"
         };
-        // for skill scores <= 100
+        // for skill scores <= 90%
+        var dOrangeRed = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(255,64,0)"
+        };
+        // for skill scores <= 100%
         var dRed = {
             siteName: [],
             queryVal: [],
@@ -561,114 +612,151 @@ const queryMapDBctc = function (pool, statement, dataSource, statistic, siteMap)
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
                 var queryVal;
+                var lowLimit;
+                var highLimit;
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     const site = rows[rowIndex].sta_id;
                     const yy = Number(rows[rowIndex].yy);
                     const yn = Number(rows[rowIndex].yn);
                     const ny = Number(rows[rowIndex].ny);
                     const nn = Number(rows[rowIndex].nn);
-                    switch (statistic) {
-                        case 'TSS (True Skill Score)':
-                            queryVal = (yy * nn - yn * ny) / ((yy + ny) * (yn + nn)) * 100;
-                            break;
-                        case 'PODy (POD of ceiling < threshold)':
-                            queryVal = yy / (yy + ny) * 100;
-                            break;
-                        case 'PODn (POD of ceiling > threshold)':
-                            queryVal = nn / (nn + yn) * 100;
-                            break;
-                        case 'FAR (False Alarm Ratio)':
-                            queryVal = yn / (yn + yy) * 100;
-                            break;
-                        case 'Bias (forecast/actual)':
-                            queryVal = (yy + yn) / (yy + ny);
-                            break;
-                        case 'CSI (Critical Success Index)':
-                            queryVal = yy / (yy + ny + yn) * 100;
-                            break;
-                        case 'HSS (Heidke Skill Score)':
-                            queryVal = 2 * (nn * yy - ny * yn) / ((nn + yn) * (yn + yy) + (nn + ny) * (ny + yy)) * 100;
-                            break;
-                        case 'ETS (Equitable Threat Score)':
-                            queryVal = (yy - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) / ((yy + yn + ny) - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) * 100;
-                            break;
-                        case 'Nlow (obs < threshold, avg per hr)':
+                    if (yy + yn + ny + nn > 0) {
+                        switch (statistic) {
+                            case 'TSS (True Skill Score)':
+                                queryVal = (yy * nn - yn * ny) / ((yy + ny) * (yn + nn)) * 100;
+                                lowLimit = -100;
+                                highLimit = 100;
+                                break;
+                            case 'PODy (POD of ceiling < threshold)':
+                                queryVal = yy / (yy + ny) * 100;
+                                lowLimit = 0;
+                                highLimit = 100;
+                                break;
+                            case 'PODn (POD of ceiling > threshold)':
+                                queryVal = nn / (nn + yn) * 100;
+                                lowLimit = 0;
+                                highLimit = 100;
+                                break;
+                            case 'FAR (False Alarm Ratio)':
+                                queryVal = yn / (yn + yy) * 100;
+                                lowLimit = 0;
+                                highLimit = 100;
+                                break;
+                            case 'Bias (forecast/actual)':
+                                queryVal = (yy + yn) / (yy + ny);
+                                lowLimit = 0;
+                                highLimit = 2;
+                                break;
+                            case 'CSI (Critical Success Index)':
+                                queryVal = yy / (yy + ny + yn) * 100;
+                                lowLimit = 0;
+                                highLimit = 100;
+                                break;
+                            case 'HSS (Heidke Skill Score)':
+                                queryVal = 2 * (nn * yy - ny * yn) / ((nn + yn) * (yn + yy) + (nn + ny) * (ny + yy)) * 100;
+                                lowLimit = -100;
+                                highLimit = 100;
+                                break;
+                            case 'ETS (Equitable Threat Score)':
+                                queryVal = (yy - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) / ((yy + yn + ny) - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) * 100;
+                                lowLimit = -100/3;
+                                highLimit = 100;
+                                break;
+                        }
+                        if (!isNaN(Number(queryVal))) {
+                            d.queryVal.push(queryVal);
+                            d.stats.push({
+                                N_times: rows[rowIndex].N_times,
+                                min_time: rows[rowIndex].min_secs,
+                                max_time: rows[rowIndex].max_secs
+                            });
 
-                            break;
-                        case 'Nhigh (obs > threshold, avg per hr)':
+                            var thisSite = siteMap.find(obj => {
+                                return obj.options.id === site;
+                            });
 
-                            break;
-                        case 'Ntot (total obs, avg per hr)':
+                            var tooltips = thisSite.origName +
+                                "<br>" + "model: " + dataSource +
+                                "<br>" + statistic + ": " + queryVal +
+                                "<br>" + "n: " + rows[rowIndex].N_times;
+                            d.text.push(tooltips);
 
-                            break;
-                        case 'Ratio (Nlow / Ntot)':
-                            queryVal = (yy + ny) / (yy + yn + ny + nn);
-                            break;
-                        case 'Ratio (Nhigh / Ntot)':
-                            queryVal = (nn + yn) / (yy + yn + ny + nn);
-                            break;
-                        case 'N per graph point':
-                            queryVal = yy + yn + ny + nn;
-                            break;
-                    }
-                    if (!isNaN(Number(queryVal))) {
-                        d.queryVal.push(queryVal);
-                        d.stats.push({
-                            N_times: rows[rowIndex].N_times,
-                            min_time: rows[rowIndex].min_secs,
-                            max_time: rows[rowIndex].max_secs
-                        });
+                            d.siteName.push(thisSite.origName);
+                            d.lat.push(thisSite.point[0]);
+                            d.lon.push(thisSite.point[1]);
 
-                        var thisSite = siteMap.find(obj => {
-                            return obj.options.id === site;
-                        });
-
-                        var tooltips = thisSite.origName +
-                            "<br>" + "model: " + dataSource +
-                            "<br>" + statistic + ": " + queryVal +
-                            "<br>" + "n: " + rows[rowIndex].N_times;
-                        d.text.push(tooltips);
-
-                        d.siteName.push(thisSite.origName);
-                        d.lat.push(thisSite.point[0]);
-                        d.lon.push(thisSite.point[1]);
-
-                        var textMarker = queryVal === null ? "" : queryVal.toFixed(0);
-                        if (queryVal <= 20) {
-                            d.color.push("rgb(128,0,255)");
-                            dPurple.siteName.push(thisSite.origName);
-                            dPurple.queryVal.push(queryVal);
-                            dPurple.text.push(textMarker);
-                            dPurple.lat.push(thisSite.point[0]);
-                            dPurple.lon.push(thisSite.point[1]);
-                        } else if (queryVal <= 40) {
-                            d.color.push("rgb(0,0,255)");
-                            dBlue.siteName.push(thisSite.origName);
-                            dBlue.queryVal.push(queryVal);
-                            dBlue.text.push(textMarker);
-                            dBlue.lat.push(thisSite.point[0]);
-                            dBlue.lon.push(thisSite.point[1]);
-                        } else if (queryVal <= 60) {
-                            d.color.push("rgb(128,255,0)");
-                            dGreen.siteName.push(thisSite.origName);
-                            dGreen.queryVal.push(queryVal);
-                            dGreen.text.push(textMarker);
-                            dGreen.lat.push(thisSite.point[0]);
-                            dGreen.lon.push(thisSite.point[1]);
-                        } else if (queryVal <= 80) {
-                            d.color.push("rgb(255,128,0)");
-                            dOrange.siteName.push(thisSite.origName);
-                            dOrange.queryVal.push(queryVal);
-                            dOrange.text.push(textMarker);
-                            dOrange.lat.push(thisSite.point[0]);
-                            dOrange.lon.push(thisSite.point[1]);
-                        } else {
-                            d.color.push("rgb(255,0,0)");
-                            dRed.siteName.push(thisSite.origName);
-                            dRed.queryVal.push(queryVal);
-                            dRed.text.push(textMarker);
-                            dRed.lat.push(thisSite.point[0]);
-                            dRed.lon.push(thisSite.point[1]);
+                            var textMarker = queryVal === null ? "" : queryVal.toFixed(0);
+                            if (queryVal <= lowLimit + (highLimit - lowLimit) * .1) {
+                                d.color.push("rgb(128,0,255)");
+                                dPurple.siteName.push(thisSite.origName);
+                                dPurple.queryVal.push(queryVal);
+                                dPurple.text.push(textMarker);
+                                dPurple.lat.push(thisSite.point[0]);
+                                dPurple.lon.push(thisSite.point[1]);
+                            } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .2) {
+                                d.color.push("rgb(64,0,255)");
+                                dPurpleBlue.siteName.push(thisSite.origName);
+                                dPurpleBlue.queryVal.push(queryVal);
+                                dPurpleBlue.text.push(textMarker);
+                                dPurpleBlue.lat.push(thisSite.point[0]);
+                                dPurpleBlue.lon.push(thisSite.point[1]);
+                            } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .3) {
+                                d.color.push("rgb(0,0,255)");
+                                dBlue.siteName.push(thisSite.origName);
+                                dBlue.queryVal.push(queryVal);
+                                dBlue.text.push(textMarker);
+                                dBlue.lat.push(thisSite.point[0]);
+                                dBlue.lon.push(thisSite.point[1]);
+                            } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .4) {
+                                d.color.push("rgb(64,128,128)");
+                                dBlueGreen.siteName.push(thisSite.origName);
+                                dBlueGreen.queryVal.push(queryVal);
+                                dBlueGreen.text.push(textMarker);
+                                dBlueGreen.lat.push(thisSite.point[0]);
+                                dBlueGreen.lon.push(thisSite.point[1]);
+                            } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .5) {
+                                d.color.push("rgb(128,255,0)");
+                                dGreen.siteName.push(thisSite.origName);
+                                dGreen.queryVal.push(queryVal);
+                                dGreen.text.push(textMarker);
+                                dGreen.lat.push(thisSite.point[0]);
+                                dGreen.lon.push(thisSite.point[1]);
+                            } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .6) {
+                                d.color.push("rgb(160,224,0)");
+                                dGreenYellow.siteName.push(thisSite.origName);
+                                dGreenYellow.queryVal.push(queryVal);
+                                dGreenYellow.text.push(textMarker);
+                                dGreenYellow.lat.push(thisSite.point[0]);
+                                dGreenYellow.lon.push(thisSite.point[1]);
+                            } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .7) {
+                                d.color.push("rgb(192,192,0)");
+                                dYellow.siteName.push(thisSite.origName);
+                                dYellow.queryVal.push(queryVal);
+                                dYellow.text.push(textMarker);
+                                dYellow.lat.push(thisSite.point[0]);
+                                dYellow.lon.push(thisSite.point[1]);
+                            } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .8) {
+                                d.color.push("rgb(255,128,0)");
+                                dOrange.siteName.push(thisSite.origName);
+                                dOrange.queryVal.push(queryVal);
+                                dOrange.text.push(textMarker);
+                                dOrange.lat.push(thisSite.point[0]);
+                                dOrange.lon.push(thisSite.point[1]);
+                            } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .9) {
+                                d.color.push("rgb(255,64,0)");
+                                dOrangeRed.siteName.push(thisSite.origName);
+                                dOrangeRed.queryVal.push(queryVal);
+                                dOrangeRed.text.push(textMarker);
+                                dOrangeRed.lat.push(thisSite.point[0]);
+                                dOrangeRed.lon.push(thisSite.point[1]);
+                            } else {
+                                d.color.push("rgb(255,0,0)");
+                                dRed.siteName.push(thisSite.origName);
+                                dRed.queryVal.push(queryVal);
+                                dRed.text.push(textMarker);
+                                dRed.lat.push(thisSite.point[0]);
+                                dRed.lon.push(thisSite.point[1]);
+                            }
                         }
                     }
                 }// end of loop row
@@ -682,9 +770,14 @@ const queryMapDBctc = function (pool, statement, dataSource, statistic, siteMap)
         return {
             data: d,    // [sub_values,sub_secs] as arrays
             dataPurple: dPurple,    // [sub_values,sub_secs] as arrays
+            dataPurpleBlue: dPurpleBlue,    // [sub_values,sub_secs] as arrays
             dataBlue: dBlue,    // [sub_values,sub_secs] as arrays
+            dataBlueGreen: dBlueGreen,    // [sub_values,sub_secs] as arrays
             dataGreen: dGreen,    // [sub_values,sub_secs] as arrays
+            dataGreenYellow: dGreenYellow,    // [sub_values,sub_secs] as arrays
+            dataYellow: dYellow,    // [sub_values,sub_secs] as arrays
             dataOrange: dOrange,    // [sub_values,sub_secs] as arrays
+            dataOrangeRed: dOrangeRed,    // [sub_values,sub_secs] as arrays
             dataRed: dRed,    // [sub_values,sub_secs] as arrays
             error: error,
         };

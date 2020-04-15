@@ -121,11 +121,16 @@ var ReservedWords = {
     blueCurveText: "Cold bias",
     blackCurveText: "Small bias",
     redCurveText: "Warm bias",
-    CTCPurpleCurveText: "<= 20% skill",
-    CTCBlueCurveText: "20% < skill <= 40%",
-    CTCGreenCurveText: "40% < skill <= 60%",
-    CTCOrangeCurveText: "60% < skill <= 80%",
-    CTCRedCurveText: "> 80% skill",
+    CTCPurpleCurveText: "0-10th percentile of range",
+    CTCPurpleBlueCurveText: "10-20th percentile of range",
+    CTCBlueCurveText: "20-30th percentile of range",
+    CTCBlueGreenCurveText: "30-40th percentile of range",
+    CTCGreenCurveText: "40-50th percentile of range",
+    CTCGreenYellowCurveText: "50-60th percentile of range",
+    CTCYellowCurveText: "60-70th percentile of range",
+    CTCOrangeCurveText: "70-80th percentile of range",
+    CTCOrangeRedCurveText: "80-90th percentile of range",
+    CTCRedCurveText: "90-100th percentile of range",
     contourSigLabel: "Curve1-Curve0 Significance"
 };
 

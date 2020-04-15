@@ -44,6 +44,9 @@ dataMap = function (plotParams, plotFunction) {
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     var statistic = curve['statistic'];
+    if (statistic.includes("Nlow") || statistic.includes("Nhigh") || statistic.includes("Ntot") || statistic.includes("N per graph point")) {
+        throw new Error("INFO:  The statistics [Nlow, Nhigh, Ntot, Ratio (Nlow / Ntot), Ratio (Nhigh / Ntot), N per graph point] are not currently supported for single/multi-station plots.");
+    }
     var statisticClause = 'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as yy,sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as nn, count(m0.ceil) as N0';
     statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
@@ -139,13 +142,28 @@ dataMap = function (plotParams, plotFunction) {
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCPurpleCurveText, dPurple);  // generate purple text layer
     dataset.push(cOptions);
 
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCPurpleBlueCurveText, dPurple);  // generate purple text layer
+    dataset.push(cOptions);
+
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCBlueCurveText, dBlue);  // generate blue text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCBlueGreenCurveText, dBlue);  // generate blue text layer
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCGreenCurveText, dGreen);  // generate green text layer
     dataset.push(cOptions);
 
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCGreenYellowCurveText, dGreen);  // generate green text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCYellowCurveText, dGreen);  // generate green text layer
+    dataset.push(cOptions);
+
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCOrangeCurveText, dOrange);  // generate orange text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCOrangeRedCurveText, dOrange);  // generate orange text layer
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCRedCurveText, dRed);  // generate red text layer

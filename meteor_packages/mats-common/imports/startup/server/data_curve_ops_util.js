@@ -356,6 +356,7 @@ const generateMapCurveOptions = function (curve, dataSeries, appParams, orderOfM
                 size: markerSizes,
                 opacity: 0
             },
+            visible: false,
             showlegend: true
         }, ...dataSeries
     };
@@ -384,8 +385,9 @@ const generateCTCMapCurveOptions = function (curve, dataSeries, appParams) {
             marker: {
                 color: dataSeries.color,
                 size: markerSizes,
-                opacity: 0
+                opacity: 1
             },
+            visible: true,
             showlegend: true
         }, ...dataSeries
     };
@@ -413,7 +415,7 @@ const generateMapColorTextOptions = function (label, dataSeries) {
                 color: dataSeries.color
             },
             hoverinfo: 'skip',
-            visible: true,
+            visible: !label.includes("percentile"),
             showlegend: true
         }, ...dataSeries
     };
