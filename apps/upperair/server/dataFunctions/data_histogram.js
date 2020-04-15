@@ -73,18 +73,18 @@ dataHistogram = function (plotParams, plotFunction) {
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + tablePrefix + region + " as m0";
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+            var statisticSelect = curve['statistic'];
+            var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
             if (variableStr === 'winds') {
                 statisticClause = statisticOptionsMap[statisticSelect][1];
                 statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
             } else {
-            statisticClause = statisticOptionsMap[statisticSelect][0];
+                statisticClause = statisticOptionsMap[statisticSelect][0];
                 statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
-        }
-        statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
-        statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
+            }
+            statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+            statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
             var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
             varUnits = statVarUnitMap[statisticSelect][variableStr];
             levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
@@ -92,7 +92,8 @@ dataHistogram = function (plotParams, plotFunction) {
         } else {
             levelVar = "m0.press";
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
-            queryTableClause = "from metadata as s, " + obsTable + " as o, " + model + " as m0 ";
+            queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
+            var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
             var variableClause;
             if (variable[2] === "t" || variable[2] === "dp") {
                 // stored in degC, and multiplied by 100.
@@ -117,19 +118,26 @@ dataHistogram = function (plotParams, plotFunction) {
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+            var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
+                var thisSite;
+                var thisSiteObj;
                 for (var sidx = 0; sidx < sitesList.length; sidx++) {
                     const possibleSiteNames = sitesList[sidx].match(/\(([^)]*)\)[^(]*$/);
-                    sitesList[sidx] = possibleSiteNames === null ? sitesList[sidx] : possibleSiteNames[possibleSiteNames.length - 1];
+                    thisSite = possibleSiteNames === null ? sitesList[sidx] : possibleSiteNames[possibleSiteNames.length - 1];
+                    thisSiteObj = siteMap.find(obj => {
+                        return obj.origName === thisSite;
+                    });
+                    querySites.push(thisSiteObj.options.id);
                 }
-                sitesClause = " and s.name in('" + sitesList.join("','") + "')";
+                sitesClause = " and m0.wmoid in('" + querySites.join("','") + "')";
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
             siteDateClause = "and unix_timestamp(o.date)+3600*o.hour + 1800 >= " + fromSecs + " and unix_timestamp(o.date)+3600*o.hour - 1800 <= " + toSecs;
             levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
-            siteMatchClause = "and s.wmoid = m0.wmoid and s.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
+            siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
             queryPool = modelPool;
         }
         var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
