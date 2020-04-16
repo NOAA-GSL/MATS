@@ -3,6 +3,7 @@
  */
 
 import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
 
 // set the label for the hide show buttons (NO DATA) for the initial time here
 const setNoDataLabels = function (dataset) {
@@ -105,7 +106,7 @@ const setNoDataLabelsMap = function (dataset) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["color"] = "white";
             }
         } else {
-            const appName = matsCollections.appName.findOne({}).app;
+            const appName = matsCollections !== undefined ? matsCollections.appName.findOne({}).app : undefined;
             var heatMapText;
             if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility"))) {
                 heatMapText = 'hide heat map';
