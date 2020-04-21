@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
     var gaussianElimination = function(a, o) {
            var i = 0, j = 0, k = 0, maxrow = 0, tmp = 0, n = a.length - 1, x = new Array(o);

@@ -11,7 +11,7 @@ Usage: ["(c)nf_file=", "[(m)ats_metadata_database_name]",
 Author: Molly B Smith, heavily modified by Randy Pierce
 """
 
-#  Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+#  Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
 
 from __future__ import print_function
 
