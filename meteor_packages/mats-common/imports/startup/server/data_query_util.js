@@ -113,6 +113,56 @@ const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles)
     return ti;
 };
 
+// calculates the statistic for ctc station plots
+const calculateStatCTC = function (yy, yn, ny, nn, statistic) {
+    var queryVal;
+    switch (statistic) {
+        case 'TSS (True Skill Score)':
+            queryVal = ((yy * nn - yn * ny) / ((yy + ny) * (yn + nn))) * 100;
+            break;
+        case 'PODy (POD of ceiling < threshold)':
+            queryVal = yy / (yy + ny) * 100;
+            break;
+        case 'PODn (POD of ceiling > threshold)':
+            queryVal = nn / (nn + yn) * 100;
+            break;
+        case 'FAR (False Alarm Ratio)':
+            queryVal = yn / (yn + yy) * 100;
+            break;
+        case 'Bias (forecast/actual)':
+            queryVal = (yy + yn) / (yy + ny);
+            break;
+        case 'CSI (Critical Success Index)':
+            queryVal = yy / (yy + ny + yn) * 100;
+            break;
+        case 'HSS (Heidke Skill Score)':
+            queryVal = 2 * (nn * yy - ny * yn) / ((nn + yn) * (yn + yy) + (nn + ny) * (ny + yy)) * 100;
+            break;
+        case 'ETS (Equitable Threat Score)':
+            queryVal = (yy - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) / ((yy + yn + ny) - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) * 100;
+            break;
+        case 'Nlow (obs < threshold, avg per hr in predefined regions)':
+            queryVal = yy + ny;
+            break;
+        case 'Nhigh (obs > threshold, avg per hr in predefined regions)':
+            queryVal = nn + yn;
+            break;
+        case 'Ntot (total obs, avg per hr in predefined regions)':
+            queryVal = yy + yn + ny + nn;
+            break;
+        case 'Ratio (Nlow / Ntot)':
+            queryVal = (yy + ny) / (yy + yn + ny + nn);
+            break;
+        case 'Ratio (Nhigh / Ntot)':
+            queryVal = (nn + yn) / (yy + yn + ny + nn);
+            break;
+        case 'N per graph point':
+            queryVal = yy + yn + ny + nn;
+            break;
+    }
+    return queryVal;
+};
+
 // utility for querying the DB
 const simplePoolQueryWrapSynchronous = function (pool, statement) {
     /*
@@ -232,7 +282,7 @@ const queryDBPython = function (pool, statement, statLineType, statistic, appPar
 };
 
 // this method queries the database for timeseries plots
-const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, validTimes, appParams, forceRegularCadence) {
+const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, statisticStr, validTimes, appParams, forceRegularCadence) {
     // upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
     const Future = require('fibers/future');
 
@@ -286,7 +336,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
                     // the only reason to use the timeseries one is to correctly insert gaps for missing forecast cycles
                     parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
                 } else {
-                    parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, forecastOffset, cycles, regular);
+                    parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, statisticStr, forecastOffset, cycles, regular);
                 }
                 d = parsedData.d;
                 N0 = parsedData.N0;
@@ -659,7 +709,7 @@ const queryDBContour = function (pool, statement) {
 };
 
 // this method parses the returned query data for timeseries plots
-const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr, foreCastOffset, cycles, regular) {
+const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr, statisticStr, foreCastOffset, cycles, regular) {
     /*
         var d = {// d will contain the curve data
             x: [],
@@ -702,7 +752,21 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
         var avTime = avSeconds * 1000;
         xmin = avTime < xmin ? avTime : xmin;
         xmax = avTime > xmax ? avTime : xmax;
-        var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
+        var stat;
+        if (rows[rowIndex].stat === undefined && rows[rowIndex].yy !== undefined) {
+            const yy = Number(rows[rowIndex].yy);
+            const yn = Number(rows[rowIndex].yn);
+            const ny = Number(rows[rowIndex].ny);
+            const nn = Number(rows[rowIndex].nn);
+            if (yy + yn + ny + nn > 0) {
+                stat = calculateStatCTC(yy, yn, ny, nn, statisticStr);
+                stat = isNaN(Number(stat)) ? null : stat;
+            } else {
+                stat = null;
+            }
+        } else {
+            stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
+        }
         N0.push(rows[rowIndex].N0);             // number of values that go into a time series point
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a time series point
 
@@ -1107,68 +1171,47 @@ const parseQueryDataMapCTC = function (rows, d, dPurple, dPurpleBlue, dBlue, dBl
         const ny = Number(rows[rowIndex].ny);
         const nn = Number(rows[rowIndex].nn);
         if (yy + yn + ny + nn > 0) {
+            queryVal = calculateStatCTC(yy, yn, ny, nn, statistic);
             switch (statistic) {
                 case 'TSS (True Skill Score)':
-                    queryVal = (yy * nn - yn * ny) / ((yy + ny) * (yn + nn)) * 100;
                     lowLimit = -100;
                     highLimit = 100;
                     break;
                 case 'PODy (POD of ceiling < threshold)':
-                    queryVal = yy / (yy + ny) * 100;
                     lowLimit = 0;
                     highLimit = 100;
                     break;
                 case 'PODn (POD of ceiling > threshold)':
-                    queryVal = nn / (nn + yn) * 100;
                     lowLimit = 0;
                     highLimit = 100;
                     break;
                 case 'FAR (False Alarm Ratio)':
-                    queryVal = yn / (yn + yy) * 100;
                     lowLimit = 0;
                     highLimit = 100;
                     break;
                 case 'Bias (forecast/actual)':
-                    queryVal = (yy + yn) / (yy + ny);
                     lowLimit = 0;
                     highLimit = 2;
                     break;
                 case 'CSI (Critical Success Index)':
-                    queryVal = yy / (yy + ny + yn) * 100;
                     lowLimit = 0;
                     highLimit = 100;
                     break;
                 case 'HSS (Heidke Skill Score)':
-                    queryVal = 2 * (nn * yy - ny * yn) / ((nn + yn) * (yn + yy) + (nn + ny) * (ny + yy)) * 100;
                     lowLimit = -100;
                     highLimit = 100;
                     break;
                 case 'ETS (Equitable Threat Score)':
-                    queryVal = (yy - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) / ((yy + yn + ny) - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) * 100;
                     lowLimit = -100 / 3;
                     highLimit = 100;
                     break;
-                case 'Nlow (obs < threshold, avg per hr in predefined regions)':
-                    queryVal = yy + ny;
-                    break;
-                case 'Nhigh (obs > threshold, avg per hr in predefined regions)':
-                    queryVal = nn + yn;
-                    break;
-                case 'Ntot (total obs, avg per hr in predefined regions)':
-                    queryVal = yy + yn + ny + nn;
-                    break;
                 case 'Ratio (Nlow / Ntot)':
-                    queryVal = (yy + ny) / (yy + yn + ny + nn);
                     lowLimit = 0;
                     highLimit = 1;
                     break;
                 case 'Ratio (Nhigh / Ntot)':
-                    queryVal = (nn + yn) / (yy + yn + ny + nn);
                     lowLimit = 0;
                     highLimit = 1;
-                    break;
-                case 'N per graph point':
-                    queryVal = yy + yn + ny + nn;
                     break;
             }
             if (!isNaN(Number(queryVal))) {

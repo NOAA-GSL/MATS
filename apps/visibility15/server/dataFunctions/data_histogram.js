@@ -85,7 +85,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
                 const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                 if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    validTimeClause = validTimeClause + " and (m" + matchCurveIdx + ".time)%(24*3600)/3600 IN(" + validTimes + ")";
+                    validTimeClause = validTimeClause + " and (m" + matchCurveIdx + ".time)%(24*3600)/3600 IN(" + matchValidTimes + ")";
                 }
                 const matchForecastLength = Number(matchCurve['forecast-length']);
                 const matchForecastHour = Math.floor(matchForecastLength);
