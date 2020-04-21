@@ -334,7 +334,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
                 if (appParams.hideGaps) {
                     // if we don't care about gaps, use the general purpose curve parsing function.
                     // the only reason to use the timeseries one is to correctly insert gaps for missing forecast cycles
-                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams, statisticStr);
                 } else {
                     parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, statisticStr, forecastOffset, cycles, regular);
                 }
@@ -358,7 +358,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
 };
 
 // this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, grid scale plots, and histograms
-const queryDBSpecialtyCurve = function (pool, statement, appParams) {
+const queryDBSpecialtyCurve = function (pool, statement, appParams, statisticStr) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
 
@@ -393,7 +393,7 @@ const queryDBSpecialtyCurve = function (pool, statement, appParams) {
             } else {
                 var parsedData;
                 if (appParams.plotType !== matsTypes.PlotTypes.histogram) {
-                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams, statisticStr);
                 } else {
                     parsedData = parseQueryDataHistogram(rows, d, appParams);
                 }
@@ -899,7 +899,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
 };
 
 // this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, grid scale plots, and histograms
-const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
+const parseQueryDataSpecialtyCurve = function (rows, d, appParams, statisticStr) {
     /*
         var d = {// d will contain the curve data
             x: [],
@@ -957,7 +957,21 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
             default:
                 independentVar = Number(rows[rowIndex].avtime);
         }
-        var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
+        var stat;
+        if (rows[rowIndex].stat === undefined && rows[rowIndex].yy !== undefined) {
+            const yy = Number(rows[rowIndex].yy);
+            const yn = Number(rows[rowIndex].yn);
+            const ny = Number(rows[rowIndex].ny);
+            const nn = Number(rows[rowIndex].nn);
+            if (yy + yn + ny + nn > 0) {
+                stat = calculateStatCTC(yy, yn, ny, nn, statisticStr);
+                stat = isNaN(Number(stat)) ? null : stat;
+            } else {
+                stat = null;
+            }
+        } else {
+            stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
+        }
         N0.push(rows[rowIndex].N0);             // number of values that go into a point on the graph
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a point on the graph
 
