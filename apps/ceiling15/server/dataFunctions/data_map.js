@@ -64,8 +64,8 @@ dataMap = function (plotParams, plotFunction) {
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
-    var siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
+    var dateClause = "and m0.time + 300 >= " + fromSecs + " and m0.time - 300 <= " + toSecs;
+    var siteDateClause = "and o.time + 300 >= " + fromSecs + " and o.time - 300 <= " + toSecs;
     var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -73,9 +73,9 @@ dataMap = function (plotParams, plotFunction) {
     }
 
     var statement = "select m0.madis_id as sta_id, " +
-        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
-        "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
-        "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
+        "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +
+        "min(ceil(900*floor((m0.time+450)/900))) as min_secs, " +
+        "max(ceil(900*floor((m0.time+450)/900))) as max_secs, " +
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +

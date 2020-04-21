@@ -112,7 +112,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 matchCurveIdx++;
                 const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
                 const matchUtcCycleStart = Number(matchCurve['utc-cycle-start']);
-                utcCycleStartClause = utcCycleStartClause + " and ((m" + matchCurveIdx + ".time + 1800) - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
+                utcCycleStartClause = utcCycleStartClause + " and (m" + matchCurveIdx + ".time - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
                 forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len < 24";
                 const matchRegionType = matchCurve['region-type'];
                 if (matchRegionType === 'Predefined region') {
