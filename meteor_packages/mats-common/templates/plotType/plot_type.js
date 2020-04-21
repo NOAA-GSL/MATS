@@ -73,6 +73,10 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
             matsCurveUtils.showDieOffFace();
             break;
         case matsTypes.PlotTypes.threshold:
+            // thresholds need to have the region be in predefined mode
+            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            }
             matsCurveUtils.showThresholdFace();
             break;
         case matsTypes.PlotTypes.validtime:

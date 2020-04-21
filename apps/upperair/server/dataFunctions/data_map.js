@@ -38,6 +38,9 @@ dataMap = function (plotParams, plotFunction) {
     var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
     var validTimeClause = "";
+    var validTimeStr = curve['valid-time'];
+    var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
+    validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     var top = curve['top'];
@@ -97,9 +100,6 @@ dataMap = function (plotParams, plotFunction) {
     var siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
     var siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
     var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
-    var validTimeStr = curve['valid-time'];
-    var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
-    validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
 
     var statement = "select m0.wmoid as sta_id, " +
         "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +

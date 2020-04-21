@@ -48,11 +48,11 @@ dataValidTime = function (plotParams, plotFunction) {
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeVar;
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "";
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "";
         var timeVar;
         var dateClause;
         var siteDateClause = "";

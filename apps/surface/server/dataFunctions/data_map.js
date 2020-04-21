@@ -38,6 +38,10 @@ dataMap = function (plotParams, plotFunction) {
     var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
     var validTimeClause = "";
+    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+    }
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "";
     var sitesClause = "";
@@ -90,10 +94,6 @@ dataMap = function (plotParams, plotFunction) {
     var dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
     var siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
     var siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
-    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
-    }
 
     var statement = "select m0.sta_id as sta_id, " +
         "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +

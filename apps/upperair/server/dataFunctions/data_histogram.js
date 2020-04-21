@@ -50,11 +50,13 @@ dataHistogram = function (plotParams, plotFunction) {
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
+        var validTimeStr = curve['valid-time'];
+        validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var top = curve['top'];
         var bottom = curve['bottom'];
         var siteDateClause = "";
@@ -141,8 +143,6 @@ dataHistogram = function (plotParams, plotFunction) {
             queryPool = modelPool;
         }
         var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
-        var validTimeStr = curve['valid-time'];
-        validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.

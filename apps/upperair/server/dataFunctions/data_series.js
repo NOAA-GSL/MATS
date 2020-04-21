@@ -51,6 +51,9 @@ dataSeries = function (plotParams, plotFunction) {
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
+        var validTimeStr = curve['valid-time'];
+        var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
+        validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var top = curve['top'];
@@ -136,9 +139,6 @@ dataSeries = function (plotParams, plotFunction) {
             queryPool = modelPool;
         }
         var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
-        var validTimeStr = curve['valid-time'];
-        var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
-        validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];

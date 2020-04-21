@@ -51,6 +51,10 @@ dataSeries = function (plotParams, plotFunction) {
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         var thresholdClause = "";
         var validTimeClause = "";
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
+        }
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateClause;
@@ -98,10 +102,6 @@ dataSeries = function (plotParams, plotFunction) {
             siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
             siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
             queryPool = modelPool;
-        }
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
         }
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];

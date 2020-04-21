@@ -47,13 +47,13 @@ dataDieOff = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
         var forecastLengthStr = curve['dieoff-type'];
         var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
         var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
         var forecastLengthClause = "and m0.fcst_len >= 0";
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         var top = curve['top'];
         var bottom = curve['bottom'];
         var siteDateClause = "";
