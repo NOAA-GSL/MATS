@@ -400,6 +400,8 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
+            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn+m0.ny)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+
             'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.ny)*sum(m0.yn))/((sum(m0.yy)+sum(m0.yn))*(sum(m0.ny)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.ny*m0.yn)/((m0.yy+m0.yn)*(m0.ny+m0.nn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
 
             'PODy (POD of echo top > threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
@@ -409,8 +411,6 @@ const doCurveParams = function () {
             'FAR (False Alarm Ratio)': ['((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) * 100 as stat, group_concat(((m0.ny)/(m0.ny+m0.yy)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 0],
 
             'Bias (forecast/actual)': ['((sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn)), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Ratio', 1],
-
-            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn+m0.ny)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
 
             'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy)-sum(m0.yn)*sum(m0.ny))/((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.yn*m0.ny) / ((m0.nn+m0.ny)*(m0.ny+m0.yy) + (m0.nn+m0.yn)*(m0.yn+m0.yy))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
 
