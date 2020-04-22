@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {Meteor} from "meteor/meteor";
@@ -542,7 +542,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                         curveDataElement['Number of Times'] = data[0].stats[si].N_times;
                         curveDataElement['Start Date'] = moment.utc((data[0].stats[si].min_time) * 1000).format('YYYY-MM-DD HH:mm');
                         curveDataElement['End Date'] = moment.utc((data[0].stats[si].max_time) * 1000).format('YYYY-MM-DD HH:mm');
-                        curveDataElement['Average Difference'] = data[0].queryVal[si];
+                        curveDataElement['Stat'] = data[0].queryVal[si];
                         curveData.push(curveDataElement);
                     }
                     returnData.data[data[0].label] = curveData;

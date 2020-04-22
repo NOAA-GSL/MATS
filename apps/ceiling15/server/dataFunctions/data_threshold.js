@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsCollections} from 'meteor/randyp:mats-common';
@@ -43,6 +43,10 @@ dataThreshold = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var regionType = curve['region-type'];
+        if (regionType !== 'Predefined region') {
+            throw new Error("INFO:  Single/multi station plotting is not available for thresholds.");
+        }
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + model + "_" + region + " as m0";
@@ -76,7 +80,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
                 const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                 if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    validTimeClause = validTimeClause + " and (m" + matchCurveIdx + ".time)%(24*3600)/3600 IN(" + validTimes + ")";
+                    validTimeClause = validTimeClause + " and (m" + matchCurveIdx + ".time)%(24*3600)/3600 IN(" + matchValidTimes + ")";
                 }
                 const matchForecastLength = Number(matchCurve['forecast-length']);
                 const matchForecastHour = Math.floor(matchForecastLength);
@@ -137,7 +141,7 @@ dataThreshold = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

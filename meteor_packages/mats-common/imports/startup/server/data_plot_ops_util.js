@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsCollections} from 'meteor/randyp:mats-common';
@@ -949,7 +949,7 @@ const generateROCPlotOptions = function () {
 };
 
 // sets plot options for map plots
-const generateMapPlotOptions = function () {
+const generateMapPlotOptions = function (extraLegendSpace) {
     const options = {
         autosize: true,
         hovermode: 'closest',
@@ -974,7 +974,7 @@ const generateMapPlotOptions = function () {
         legend: {
             orientation: "h",
             x: 0,
-            y: 1.07,
+            y: extraLegendSpace ? 1.2 : 1.1,
             font: {
                 size: 12,
                 color: '#000000'

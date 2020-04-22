@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsCollections} from 'meteor/randyp:mats-common';
@@ -44,6 +44,10 @@ dataHistogram = function (plotParams, plotFunction) {
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var regionType = curve['region-type'];
+        if (regionType !== 'Predefined region') {
+            throw new Error("INFO:  Single/multi station plotting is not available for histograms.");
+        }
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + model + "_" + region + " as m0";
@@ -85,10 +89,10 @@ dataHistogram = function (plotParams, plotFunction) {
                 const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
                 const matchFromSecs = matchDateRange.fromSeconds;
                 const matchToSecs = matchDateRange.toSeconds;
-                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
-                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
+                        dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
+                    dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
+                }
             }
-        }
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause = statisticOptionsMap[statisticSelect][0];

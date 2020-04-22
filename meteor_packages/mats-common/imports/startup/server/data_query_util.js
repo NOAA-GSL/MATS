@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
@@ -64,7 +64,9 @@ const getModelCadence = function (pool, dataSource, startDate, endDate) {
                     const endCycles = cycles_raw[chosenEndTime];
                     cycles = _.union(startCycles, endCycles, middleCycles);
                 }
-                cycles.sort(function(a, b){return a-b});
+                cycles.sort(function (a, b) {
+                    return a - b
+                });
             }
         }
     } catch (e) {
@@ -109,6 +111,56 @@ const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles)
     }
 
     return ti;
+};
+
+// calculates the statistic for ctc station plots
+const calculateStatCTC = function (yy, yn, ny, nn, statistic) {
+    var queryVal;
+    switch (statistic) {
+        case 'TSS (True Skill Score)':
+            queryVal = ((yy * nn - yn * ny) / ((yy + ny) * (yn + nn))) * 100;
+            break;
+        case 'PODy (POD of ceiling < threshold)':
+            queryVal = yy / (yy + ny) * 100;
+            break;
+        case 'PODn (POD of ceiling > threshold)':
+            queryVal = nn / (nn + yn) * 100;
+            break;
+        case 'FAR (False Alarm Ratio)':
+            queryVal = yn / (yn + yy) * 100;
+            break;
+        case 'Bias (forecast/actual)':
+            queryVal = (yy + yn) / (yy + ny);
+            break;
+        case 'CSI (Critical Success Index)':
+            queryVal = yy / (yy + ny + yn) * 100;
+            break;
+        case 'HSS (Heidke Skill Score)':
+            queryVal = 2 * (nn * yy - ny * yn) / ((nn + yn) * (yn + yy) + (nn + ny) * (ny + yy)) * 100;
+            break;
+        case 'ETS (Equitable Threat Score)':
+            queryVal = (yy - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) / ((yy + yn + ny) - ((yy + yn) * (yy + ny) / (yy + yn + ny + nn))) * 100;
+            break;
+        case 'Nlow (obs < threshold, avg per hr in predefined regions)':
+            queryVal = yy + ny;
+            break;
+        case 'Nhigh (obs > threshold, avg per hr in predefined regions)':
+            queryVal = nn + yn;
+            break;
+        case 'Ntot (total obs, avg per hr in predefined regions)':
+            queryVal = yy + yn + ny + nn;
+            break;
+        case 'Ratio (Nlow / Ntot)':
+            queryVal = (yy + ny) / (yy + yn + ny + nn);
+            break;
+        case 'Ratio (Nhigh / Ntot)':
+            queryVal = (nn + yn) / (yy + yn + ny + nn);
+            break;
+        case 'N per graph point':
+            queryVal = yy + yn + ny + nn;
+            break;
+    }
+    return queryVal;
 };
 
 // utility for querying the DB
@@ -230,7 +282,7 @@ const queryDBPython = function (pool, statement, statLineType, statistic, appPar
 };
 
 // this method queries the database for timeseries plots
-const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, validTimes, appParams, forceRegularCadence) {
+const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, statisticStr, validTimes, appParams, forceRegularCadence) {
     // upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
     const Future = require('fibers/future');
 
@@ -282,9 +334,9 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
                 if (appParams.hideGaps) {
                     // if we don't care about gaps, use the general purpose curve parsing function.
                     // the only reason to use the timeseries one is to correctly insert gaps for missing forecast cycles
-                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams, statisticStr);
                 } else {
-                    parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, forecastOffset, cycles, regular);
+                    parsedData = parseQueryDataTimeSeries(pool, rows, d, appParams, averageStr, statisticStr, forecastOffset, cycles, regular);
                 }
                 d = parsedData.d;
                 N0 = parsedData.N0;
@@ -306,7 +358,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
 };
 
 // this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, grid scale plots, and histograms
-const queryDBSpecialtyCurve = function (pool, statement, appParams) {
+const queryDBSpecialtyCurve = function (pool, statement, appParams, statisticStr) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
 
@@ -341,7 +393,7 @@ const queryDBSpecialtyCurve = function (pool, statement, appParams) {
             } else {
                 var parsedData;
                 if (appParams.plotType !== matsTypes.PlotTypes.histogram) {
-                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams);
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, appParams, statisticStr);
                 } else {
                     parsedData = parseQueryDataHistogram(rows, d, appParams);
                 }
@@ -365,7 +417,7 @@ const queryDBSpecialtyCurve = function (pool, statement, appParams) {
 };
 
 // this method queries the database for map plots
-const queryMapDB = function (pool, statement, dataSource, variable, varUnits, siteMap, orderOfMagnitude) {
+const queryDBMap = function (pool, statement, dataSource, variable, varUnits, siteMap, orderOfMagnitude) {
     if (Meteor.isServer) {
         // d will contain the curve data
         var d = {
@@ -418,55 +470,12 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
             } else if (rows === undefined || rows === null || rows.length === 0) {
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
-                var queryVal;
-                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    const site = rows[rowIndex].sta_name;
-                    queryVal = rows[rowIndex].stat;
-                    d.siteName.push(site);
-                    d.queryVal.push(queryVal);
-                    d.stats.push({
-                        N_times: rows[rowIndex].N_times,
-                        min_time: rows[rowIndex].min_secs,
-                        max_time: rows[rowIndex].max_secs
-                    });
-                    var tooltips = site +
-                        "<br>" + "variable: " + variable +
-                        "<br>" + "model: " + dataSource +
-                        "<br>" + "model-obs: " + queryVal + " " + varUnits +
-                        "<br>" + "n: " + rows[rowIndex].N_times;
-                    d.text.push(tooltips);
-
-                    var thisSite = siteMap.find(obj => {
-                        return obj.origName === site;
-                    });
-                    d.lat.push(thisSite.point[0]);
-                    d.lon.push(thisSite.point[1]);
-
-                    var displayLength = orderOfMagnitude >= 0 ? 0 : Math.abs(orderOfMagnitude);
-                    var textMarker = queryVal === null ? "" : queryVal.toFixed(displayLength);
-                    if (queryVal <= -1 * Math.pow(10, orderOfMagnitude)) {
-                        d.color.push("rgb(0,0,255)");
-                        dBlue.siteName.push(site);
-                        dBlue.queryVal.push(queryVal);
-                        dBlue.text.push(textMarker);
-                        dBlue.lat.push(thisSite.point[0]);
-                        dBlue.lon.push(thisSite.point[1]);
-                    } else if (queryVal >= Math.pow(10, orderOfMagnitude)) {
-                        d.color.push("rgb(255,0,0)");
-                        dRed.siteName.push(site);
-                        dRed.queryVal.push(queryVal);
-                        dRed.text.push(textMarker);
-                        dRed.lat.push(thisSite.point[0]);
-                        dRed.lon.push(thisSite.point[1]);
-                    } else {
-                        d.color.push("rgb(0,0,0)");
-                        dBlack.siteName.push(site);
-                        dBlack.queryVal.push(queryVal);
-                        dBlack.text.push(textMarker);
-                        dBlack.lat.push(thisSite.point[0]);
-                        dBlack.lon.push(thisSite.point[1]);
-                    }
-                }// end of loop row
+                var parsedData;
+                parsedData = parseQueryDataMap(rows, d, dBlue, dRed, dBlack, dataSource, siteMap, variable, varUnits, orderOfMagnitude);
+                d = parsedData.d;
+                dBlue = parsedData.dBlue;
+                dBlack = parsedData.dBlack;
+                dRed = parsedData.dRed;
             }
             // done waiting - have results
             pFuture['return']();
@@ -475,11 +484,172 @@ const queryMapDB = function (pool, statement, dataSource, variable, varUnits, si
         // wait for future to finish
         pFuture.wait();
         return {
-            data: d,    // [sub_values,sub_secs] as arrays
-            dataBlue: dBlue,    // [sub_values,sub_secs] as arrays
-            dataBlack: dBlack,    // [sub_values,sub_secs] as arrays
-            dataRed: dRed,    // [sub_values,sub_secs] as arrays
-            error: error,
+            data: d,
+            dataBlue: dBlue,
+            dataBlack: dBlack,
+            dataRed: dRed,
+            error: error
+        };
+    }
+};
+
+// this method queries the database for map plots in CTC apps
+const queryDBMapCTC = function (pool, statement, dataSource, statistic, siteMap) {
+    if (Meteor.isServer) {
+        // d will contain the curve data
+        var d = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            color: [],
+            stats: [],
+            text: []
+        };
+        // for skill scores <= 10%
+        var dPurple = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(128,0,255)"
+        };
+        // for skill scores <= 20%
+        var dPurpleBlue = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(64,0,255)"
+        };
+        // for skill scores <= 30%
+        var dBlue = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(0,0,255)"
+        };
+        // for skill scores <= 40%
+        var dBlueGreen = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(64,128,128)"
+        };
+        // for skill scores <= 50%
+        var dGreen = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(128,255,0)"
+        };
+        // for skill scores <= 60%
+        var dGreenYellow = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(160,224,0)"
+        };
+        // for skill scores <= 70%
+        var dYellow = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(192,192,0)"
+        };
+        // for skill scores <= 80%
+        var dOrange = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(255,128,0)"
+        };
+        // for skill scores <= 90%
+        var dOrangeRed = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(255,64,0)"
+        };
+        // for skill scores <= 100%
+        var dRed = {
+            siteName: [],
+            queryVal: [],
+            lat: [],
+            lon: [],
+            stats: [],
+            text: [],
+            color: "rgb(255,0,0)"
+        };
+
+        var error = "";
+        const Future = require('fibers/future');
+        var pFuture = new Future();
+        pool.query(statement, function (err, rows) {
+            // query callback - build the curve data from the results - or set an error
+            if (err !== undefined && err !== null) {
+                error = err.message;
+            } else if (rows === undefined || rows === null || rows.length === 0) {
+                error = matsTypes.Messages.NO_DATA_FOUND;
+            } else {
+                var parsedData;
+                parsedData = parseQueryDataMapCTC(rows, d, dPurple, dPurpleBlue, dBlue, dBlueGreen, dGreen, dGreenYellow, dYellow, dOrange, dOrangeRed, dRed, dataSource, siteMap, statistic);
+                d = parsedData.d;
+                dPurple = parsedData.dPurple;
+                dPurpleBlue = parsedData.dPurpleBlue;
+                dBlue = parsedData.dBlue;
+                dBlueGreen = parsedData.dBlueGreen;
+                dGreen = parsedData.dGreen;
+                dGreenYellow = parsedData.dGreenYellow;
+                dYellow = parsedData.dYellow;
+                dOrange = parsedData.dOrange;
+                dOrangeRed = parsedData.dOrangeRed;
+                dRed = parsedData.dRed;
+            }
+            // done waiting - have results
+            pFuture['return']();
+        });
+
+        // wait for future to finish
+        pFuture.wait();
+        return {
+            data: d,
+            dataPurple: dPurple,
+            dataPurpleBlue: dPurpleBlue,
+            dataBlue: dBlue,
+            dataBlueGreen: dBlueGreen,
+            dataGreen: dGreen,
+            dataGreenYellow: dGreenYellow,
+            dataYellow: dYellow,
+            dataOrange: dOrange,
+            dataOrangeRed: dOrangeRed,
+            dataRed: dRed,
+            error: error
         };
     }
 };
@@ -539,7 +709,7 @@ const queryDBContour = function (pool, statement) {
 };
 
 // this method parses the returned query data for timeseries plots
-const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr, foreCastOffset, cycles, regular) {
+const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr, statisticStr, foreCastOffset, cycles, regular) {
     /*
         var d = {// d will contain the curve data
             x: [],
@@ -582,7 +752,21 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
         var avTime = avSeconds * 1000;
         xmin = avTime < xmin ? avTime : xmin;
         xmax = avTime > xmax ? avTime : xmax;
-        var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
+        var stat;
+        if (rows[rowIndex].stat === undefined && rows[rowIndex].yy !== undefined) {
+            const yy = Number(rows[rowIndex].yy);
+            const yn = Number(rows[rowIndex].yn);
+            const ny = Number(rows[rowIndex].ny);
+            const nn = Number(rows[rowIndex].nn);
+            if (yy + yn + ny + nn > 0) {
+                stat = calculateStatCTC(yy, yn, ny, nn, statisticStr);
+                stat = isNaN(Number(stat)) ? null : stat;
+            } else {
+                stat = null;
+            }
+        } else {
+            stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
+        }
         N0.push(rows[rowIndex].N0);             // number of values that go into a time series point
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a time series point
 
@@ -715,7 +899,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
 };
 
 // this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, grid scale plots, and histograms
-const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
+const parseQueryDataSpecialtyCurve = function (rows, d, appParams, statisticStr) {
     /*
         var d = {// d will contain the curve data
             x: [],
@@ -773,7 +957,21 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
             default:
                 independentVar = Number(rows[rowIndex].avtime);
         }
-        var stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
+        var stat;
+        if (rows[rowIndex].stat === undefined && rows[rowIndex].yy !== undefined) {
+            const yy = Number(rows[rowIndex].yy);
+            const yn = Number(rows[rowIndex].yn);
+            const ny = Number(rows[rowIndex].ny);
+            const nn = Number(rows[rowIndex].nn);
+            if (yy + yn + ny + nn > 0) {
+                stat = calculateStatCTC(yy, yn, ny, nn, statisticStr);
+                stat = isNaN(Number(stat)) ? null : stat;
+            } else {
+                stat = null;
+            }
+        } else {
+            stat = rows[rowIndex].stat === "NULL" ? null : rows[rowIndex].stat;
+        }
         N0.push(rows[rowIndex].N0);             // number of values that go into a point on the graph
         N_times.push(rows[rowIndex].N_times);   // number of times that go into a point on the graph
 
@@ -912,6 +1110,232 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams) {
         d: d,
         N0: N0,
         N_times: N_times
+    };
+};
+
+// this method parses the returned query data for maps
+const parseQueryDataMap = function (rows, d, dBlue, dRed, dBlack, dataSource, siteMap, variable, varUnits, orderOfMagnitude) {
+    var queryVal;
+    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        const site = rows[rowIndex].sta_id;
+        queryVal = rows[rowIndex].stat;
+        d.queryVal.push(queryVal);
+        d.stats.push({
+            N_times: rows[rowIndex].N_times,
+            min_time: rows[rowIndex].min_secs,
+            max_time: rows[rowIndex].max_secs
+        });
+
+        var thisSite = siteMap.find(obj => {
+            return obj.options.id === site;
+        });
+
+        var tooltips = thisSite.origName +
+            "<br>" + "variable: " + variable +
+            "<br>" + "model: " + dataSource +
+            "<br>" + "model-obs: " + queryVal + " " + varUnits +
+            "<br>" + "n: " + rows[rowIndex].N_times;
+        d.text.push(tooltips);
+        d.siteName.push(thisSite.origName);
+        d.lat.push(thisSite.point[0]);
+        d.lon.push(thisSite.point[1]);
+
+        var displayLength = orderOfMagnitude >= 0 ? 0 : Math.abs(orderOfMagnitude);
+        var textMarker = queryVal === null ? "" : queryVal.toFixed(displayLength);
+        if (queryVal <= -1 * Math.pow(10, orderOfMagnitude)) {
+            d.color.push("rgb(0,0,255)");
+            dBlue.siteName.push(thisSite.origName);
+            dBlue.queryVal.push(queryVal);
+            dBlue.text.push(textMarker);
+            dBlue.lat.push(thisSite.point[0]);
+            dBlue.lon.push(thisSite.point[1]);
+        } else if (queryVal >= Math.pow(10, orderOfMagnitude)) {
+            d.color.push("rgb(255,0,0)");
+            dRed.siteName.push(thisSite.origName);
+            dRed.queryVal.push(queryVal);
+            dRed.text.push(textMarker);
+            dRed.lat.push(thisSite.point[0]);
+            dRed.lon.push(thisSite.point[1]);
+        } else {
+            d.color.push("rgb(0,0,0)");
+            dBlack.siteName.push(thisSite.origName);
+            dBlack.queryVal.push(queryVal);
+            dBlack.text.push(textMarker);
+            dBlack.lat.push(thisSite.point[0]);
+            dBlack.lon.push(thisSite.point[1]);
+        }
+    }// end of loop row
+    return {
+        d: d,
+        dBlue: dBlue,
+        dRed: dRed,
+        dBlack: dBlack
+    };
+};
+
+// this method parses the returned query data for maps in CTC apps
+const parseQueryDataMapCTC = function (rows, d, dPurple, dPurpleBlue, dBlue, dBlueGreen, dGreen, dGreenYellow, dYellow, dOrange, dOrangeRed, dRed, dataSource, siteMap, statistic) {
+    var queryVal;
+    var lowLimit = Number(rows[0].N0);
+    var highLimit = Number(rows[rows.length - 1].N0);
+    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        const site = rows[rowIndex].sta_id;
+        const yy = Number(rows[rowIndex].yy);
+        const yn = Number(rows[rowIndex].yn);
+        const ny = Number(rows[rowIndex].ny);
+        const nn = Number(rows[rowIndex].nn);
+        if (yy + yn + ny + nn > 0) {
+            queryVal = calculateStatCTC(yy, yn, ny, nn, statistic);
+            switch (statistic) {
+                case 'TSS (True Skill Score)':
+                    lowLimit = -100;
+                    highLimit = 100;
+                    break;
+                case 'PODy (POD of ceiling < threshold)':
+                    lowLimit = 0;
+                    highLimit = 100;
+                    break;
+                case 'PODn (POD of ceiling > threshold)':
+                    lowLimit = 0;
+                    highLimit = 100;
+                    break;
+                case 'FAR (False Alarm Ratio)':
+                    lowLimit = 0;
+                    highLimit = 100;
+                    break;
+                case 'Bias (forecast/actual)':
+                    lowLimit = 0;
+                    highLimit = 2;
+                    break;
+                case 'CSI (Critical Success Index)':
+                    lowLimit = 0;
+                    highLimit = 100;
+                    break;
+                case 'HSS (Heidke Skill Score)':
+                    lowLimit = -100;
+                    highLimit = 100;
+                    break;
+                case 'ETS (Equitable Threat Score)':
+                    lowLimit = -100 / 3;
+                    highLimit = 100;
+                    break;
+                case 'Ratio (Nlow / Ntot)':
+                    lowLimit = 0;
+                    highLimit = 1;
+                    break;
+                case 'Ratio (Nhigh / Ntot)':
+                    lowLimit = 0;
+                    highLimit = 1;
+                    break;
+            }
+            if (!isNaN(Number(queryVal))) {
+                d.queryVal.push(queryVal);
+                d.stats.push({
+                    N_times: rows[rowIndex].N_times,
+                    min_time: rows[rowIndex].min_secs,
+                    max_time: rows[rowIndex].max_secs
+                });
+
+                var thisSite = siteMap.find(obj => {
+                    return obj.options.id === site;
+                });
+
+                var tooltips = thisSite.origName +
+                    "<br>" + "model: " + dataSource +
+                    "<br>" + statistic + ": " + queryVal +
+                    "<br>" + "n: " + rows[rowIndex].N_times;
+                d.text.push(tooltips);
+                d.siteName.push(thisSite.origName);
+                d.lat.push(thisSite.point[0]);
+                d.lon.push(thisSite.point[1]);
+
+                var textMarker = queryVal === null ? "" : queryVal.toFixed(0);
+                if (queryVal <= lowLimit + (highLimit - lowLimit) * .1) {
+                    d.color.push("rgb(128,0,255)");
+                    dPurple.siteName.push(thisSite.origName);
+                    dPurple.queryVal.push(queryVal);
+                    dPurple.text.push(textMarker);
+                    dPurple.lat.push(thisSite.point[0]);
+                    dPurple.lon.push(thisSite.point[1]);
+                } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .2) {
+                    d.color.push("rgb(64,0,255)");
+                    dPurpleBlue.siteName.push(thisSite.origName);
+                    dPurpleBlue.queryVal.push(queryVal);
+                    dPurpleBlue.text.push(textMarker);
+                    dPurpleBlue.lat.push(thisSite.point[0]);
+                    dPurpleBlue.lon.push(thisSite.point[1]);
+                } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .3) {
+                    d.color.push("rgb(0,0,255)");
+                    dBlue.siteName.push(thisSite.origName);
+                    dBlue.queryVal.push(queryVal);
+                    dBlue.text.push(textMarker);
+                    dBlue.lat.push(thisSite.point[0]);
+                    dBlue.lon.push(thisSite.point[1]);
+                } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .4) {
+                    d.color.push("rgb(64,128,128)");
+                    dBlueGreen.siteName.push(thisSite.origName);
+                    dBlueGreen.queryVal.push(queryVal);
+                    dBlueGreen.text.push(textMarker);
+                    dBlueGreen.lat.push(thisSite.point[0]);
+                    dBlueGreen.lon.push(thisSite.point[1]);
+                } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .5) {
+                    d.color.push("rgb(128,255,0)");
+                    dGreen.siteName.push(thisSite.origName);
+                    dGreen.queryVal.push(queryVal);
+                    dGreen.text.push(textMarker);
+                    dGreen.lat.push(thisSite.point[0]);
+                    dGreen.lon.push(thisSite.point[1]);
+                } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .6) {
+                    d.color.push("rgb(160,224,0)");
+                    dGreenYellow.siteName.push(thisSite.origName);
+                    dGreenYellow.queryVal.push(queryVal);
+                    dGreenYellow.text.push(textMarker);
+                    dGreenYellow.lat.push(thisSite.point[0]);
+                    dGreenYellow.lon.push(thisSite.point[1]);
+                } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .7) {
+                    d.color.push("rgb(192,192,0)");
+                    dYellow.siteName.push(thisSite.origName);
+                    dYellow.queryVal.push(queryVal);
+                    dYellow.text.push(textMarker);
+                    dYellow.lat.push(thisSite.point[0]);
+                    dYellow.lon.push(thisSite.point[1]);
+                } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .8) {
+                    d.color.push("rgb(255,128,0)");
+                    dOrange.siteName.push(thisSite.origName);
+                    dOrange.queryVal.push(queryVal);
+                    dOrange.text.push(textMarker);
+                    dOrange.lat.push(thisSite.point[0]);
+                    dOrange.lon.push(thisSite.point[1]);
+                } else if (queryVal <= lowLimit + (highLimit - lowLimit) * .9) {
+                    d.color.push("rgb(255,64,0)");
+                    dOrangeRed.siteName.push(thisSite.origName);
+                    dOrangeRed.queryVal.push(queryVal);
+                    dOrangeRed.text.push(textMarker);
+                    dOrangeRed.lat.push(thisSite.point[0]);
+                    dOrangeRed.lon.push(thisSite.point[1]);
+                } else {
+                    d.color.push("rgb(255,0,0)");
+                    dRed.siteName.push(thisSite.origName);
+                    dRed.queryVal.push(queryVal);
+                    dRed.text.push(textMarker);
+                    dRed.lat.push(thisSite.point[0]);
+                    dRed.lon.push(thisSite.point[1]);
+                }
+            }
+        }
+    }// end of loop row
+    return {
+        d: d,
+        dPurple: dPurple,
+        dPurpleBlue: dPurpleBlue,
+        dBlue: dBlue,
+        dBlueGreen: dBlueGreen,
+        dGreen: dGreen,
+        dGreenYellow: dGreenYellow,
+        dYellow: dYellow,
+        dOrange: dOrange,
+        dOrangeRed: dOrangeRed,
+        dRed: dRed
     };
 };
 
@@ -1135,7 +1559,8 @@ export default matsDataQueryUtils = {
     queryDBPython: queryDBPython,
     queryDBTimeSeries: queryDBTimeSeries,
     queryDBSpecialtyCurve: queryDBSpecialtyCurve,
-    queryMapDB: queryMapDB,
+    queryDBMap: queryDBMap,
+    queryDBMapCTC: queryDBMapCTC,
     queryDBContour: queryDBContour
 
 }

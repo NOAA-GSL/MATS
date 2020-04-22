@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {Meteor} from 'meteor/meteor';
@@ -408,6 +408,8 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
+            'CSI (Critical Success Index)': ['((sum(m0.hit)+0.00)/sum(m0.hit+m0.miss+m0.fa)) * 100 as stat, group_concat(((m0.hit)/(m0.hit+m0.miss+m0.fa)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+
             'TSS (True Skill Score)': ['((sum(m0.hit)*sum(m0.cn) - sum(m0.fa)*sum(m0.miss))/((sum(m0.hit)+sum(m0.miss))*(sum(m0.fa)+sum(m0.cn)))) * 100 as stat, group_concat(((m0.hit*m0.cn - m0.fa*m0.miss)/((m0.hit+m0.miss)*(m0.fa+m0.cn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
 
             'PODy (POD of precip > threshold)': ['((sum(m0.hit)+0.00)/sum(m0.hit+m0.miss)) * 100 as stat, group_concat(((m0.hit)/(m0.hit+m0.miss)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
@@ -417,8 +419,6 @@ const doCurveParams = function () {
             'FAR (False Alarm Ratio)': ['((sum(m0.fa)+0.00)/sum(m0.fa+m0.hit)) * 100 as stat, group_concat(((m0.fa)/(m0.fa+m0.hit)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 0],
 
             'Bias (forecast/actual)': ['((sum(m0.hit+m0.fa)+0.00)/sum(m0.hit+m0.miss)) as stat, group_concat(((m0.hit+m0.fa)/(m0.hit+m0.miss)), ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'Ratio', 1],
-
-            'CSI (Critical Success Index)': ['((sum(m0.hit)+0.00)/sum(m0.hit+m0.miss+m0.fa)) * 100 as stat, group_concat(((m0.hit)/(m0.hit+m0.miss+m0.fa)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
 
             'HSS (Heidke Skill Score)': ['(2*(sum(m0.cn+0.00)*sum(m0.hit)-sum(m0.miss)*sum(m0.fa))/((sum(m0.cn+0.00)+sum(m0.fa))*(sum(m0.fa)+sum(m0.hit))+(sum(m0.cn+0.00)+sum(m0.miss))*(sum(m0.miss)+sum(m0.hit)))) * 100 as stat, group_concat((2*(m0.cn*m0.hit - m0.miss*m0.fa) / ((m0.cn+m0.fa)*(m0.fa+m0.hit) + (m0.cn+m0.miss)*(m0.miss+m0.hit))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
 

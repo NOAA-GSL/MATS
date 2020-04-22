@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsCollections} from 'meteor/randyp:mats-common';
@@ -47,13 +47,13 @@ dataDieOff = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
         var forecastLengthStr = curve['dieoff-type'];
         var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
         var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
         var forecastLengthClause = "and m0.fcst_len >= 0";
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         var top = curve['top'];
         var bottom = curve['bottom'];
         var siteDateClause = "";
@@ -88,7 +88,8 @@ dataDieOff = function (plotParams, plotFunction) {
             queryPool = sumPool;
         } else {
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
-            queryTableClause = "from metadata as s, " + obsTable + " as o, " + model + " as m0 ";
+            queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
+            var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
             var variableClause;
             if (variable[2] === "t" || variable[2] === "dp") {
                 // stored in degC, and multiplied by 100.
@@ -113,19 +114,26 @@ dataDieOff = function (plotParams, plotFunction) {
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+            var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
+                var thisSite;
+                var thisSiteObj;
                 for (var sidx = 0; sidx < sitesList.length; sidx++) {
                     const possibleSiteNames = sitesList[sidx].match(/\(([^)]*)\)[^(]*$/);
-                    sitesList[sidx] = possibleSiteNames === null ? sitesList[sidx] : possibleSiteNames[possibleSiteNames.length - 1];
+                    thisSite = possibleSiteNames === null ? sitesList[sidx] : possibleSiteNames[possibleSiteNames.length - 1];
+                    thisSiteObj = siteMap.find(obj => {
+                        return obj.origName === thisSite;
+                    });
+                    querySites.push(thisSiteObj.options.id);
                 }
-                sitesClause = " and s.name in('" + sitesList.join("','") + "')";
+                sitesClause = " and m0.wmoid in('" + querySites.join("','") + "')";
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
             siteDateClause = "and unix_timestamp(o.date)+3600*o.hour + 1800 >= " + fromSecs + " and unix_timestamp(o.date)+3600*o.hour - 1800 <= " + toSecs;
             levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
-            siteMatchClause = "and s.wmoid = m0.wmoid and s.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
+            siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
             queryPool = modelPool;
         }
         var validTimeClause = "";
@@ -190,7 +198,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

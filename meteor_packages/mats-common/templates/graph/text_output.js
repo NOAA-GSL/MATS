@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsCollections, matsCurveUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
@@ -197,7 +197,7 @@ Template.textOutput.helpers({
                         <th>Number of Times</th>\
                         <th>Start Date</th>\
                         <th>End Date</th>\
-                        <th>Average Difference</th>";
+                        <th>Stat</th>";
                 break;
             case matsTypes.PlotTypes.histogram:
                 header += "<th>" + curve.label + "  bin range</th>\
@@ -336,7 +336,7 @@ Template.textOutput.helpers({
                     "<td>" + (element['Number of Times'] != undefined && element['Number of Times'] !== null ? element['Number of Times'] : fillStr) + "</td>" +
                     "<td>" + (element['Start Date'] != undefined && element['Start Date'] !== null ? element['Start Date'] : fillStr) + "</td>" +
                     "<td>" + (element['End Date'] != undefined && element['End Date'] !== null ? element['End Date'] : fillStr) + "</td>" +
-                    "<td>" + (element['Average Difference'] != undefined && element['Average Difference'] !== null ? element['Average Difference'] : fillStr) + "</td>";
+                    "<td>" + (element['Stat'] != undefined && element['Stat'] !== null ? element['Stat'] : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.histogram:
                 line += "<td>" + element[labelKey += " bin range"] + "</td>" +

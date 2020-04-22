@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsTypes} from 'meteor/randyp:mats-common';
@@ -513,6 +513,7 @@ const showDieOffFace = function () {
 
 // method to display the appropriate selectors for a threshold curve
 const showThresholdFace = function () {
+    const appName = matsCollections.appName.findOne({}).app;
     const plotType = matsTypes.PlotTypes.threshold;
     var faceOptions = {
         'curve-dates': 'block',
@@ -540,6 +541,10 @@ const showThresholdFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
+    // ctc thresholds need to have the region be in predefined mode
+    if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
+        faceOptions['region-type'] = 'none';
+    }
     setSelectorVisibility(plotType, faceOptions);
 };
 
@@ -709,7 +714,7 @@ const showMapFace = function () {
     var faceOptions = {
         'curve-dates': 'none',
         'dates': 'block',
-        'statistic': 'none',
+        'statistic': 'block',
         'threshold': 'block',
         'scale': 'block',
         'level': 'block',
@@ -737,6 +742,7 @@ const showMapFace = function () {
 
 // method to display the appropriate selectors for a histogram
 const showHistogramFace = function () {
+    const appName = matsCollections.appName.findOne({}).app;
     const plotType = matsTypes.PlotTypes.histogram;
     var faceOptions = {
         'curve-dates': 'block',
@@ -764,6 +770,10 @@ const showHistogramFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
+    // ctc thresholds need to have the region be in predefined mode
+    if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
+        faceOptions['region-type'] = 'none';
+    }
     setSelectorVisibility(plotType, faceOptions);
 };
 

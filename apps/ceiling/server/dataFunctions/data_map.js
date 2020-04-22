@@ -17,7 +17,7 @@ dataMap = function (plotParams, plotFunction) {
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
         "hideGaps": plotParams['noGapsCheck'],
-        "hasLevels": true
+        "hasLevels": false
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
@@ -33,78 +33,47 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-    var variableStr = curve['variable'];
-    var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-    var variable = variableOptionsMap[variableStr];
+    var modelTable = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var obsTable = (modelTable.includes('ret_') || modelTable.includes('Ret_')) ? 'obs_retro' : 'obs';
+    var queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
+    var sitesClause = "";
+    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
+    var thresholdStr = curve['threshold'];
+    var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
     var validTimeClause = "";
-    var validTimeStr = curve['valid-time'];
-    var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
-    validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+    }
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-    var top = curve['top'];
-    var bottom = curve['bottom'];
-    var sitesClause = "";
-    var varUnits;
-    var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
-    var queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
-    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
-    var variableClause;
-    var orderOfMagnitude; // approximate 10^x OOM that the returned data will be on.
-    if (variable[2] === "t" || variable[2] === "dp") {
-        // stored in degC, and multiplied by 100.
-        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
-        varUnits = '°C';
-        orderOfMagnitude = -1;
-    } else if (variable[2] === "rh") {
-        // stored in %.
-        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
-        varUnits = 'RH (%)';
-        orderOfMagnitude = 0;
-    } else if (variable[2] === "ws") {
-        // stored in m/s, and multiplied by 100.
-        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
-        varUnits = 'm/s';
-        orderOfMagnitude = -1;
-    } else if (variable[2] === "z") {
-        // stored in m.
-        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
-        varUnits = 'm';
-        orderOfMagnitude = 1;
-    } else {
-        throw new Error("RHobT stats are not supported for single/multi station plots");
-    }
-    var statisticClause = 'avg({{variableClause}}) as stat, count(unix_timestamp(m0.date)+3600*m0.hour) as N0';
-    statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
-    curves[0]['statistic'] = "Bias (Model - Obs)";
+    var statistic = curve['statistic'];
+    var statisticClause = 'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as yy,sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as nn, count(m0.ceil) as N0';
+    statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     var querySites = [];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         var thisSite;
         var thisSiteObj;
         for (var sidx = 0; sidx < sitesList.length; sidx++) {
-            const possibleSiteNames = sitesList[sidx].match(/\(([^)]*)\)[^(]*$/);
-            thisSite = possibleSiteNames === null ? sitesList[sidx] : possibleSiteNames[possibleSiteNames.length - 1];
+            thisSite = sitesList[sidx];
             thisSiteObj = siteMap.find(obj => {
                 return obj.origName === thisSite;
             });
             querySites.push(thisSiteObj.options.id);
         }
-        sitesClause = " and m0.wmoid in('" + querySites.join("','") + "')";
+        sitesClause = " and m0.madis_id in('" + querySites.join("','") + "')";
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var siteDateClause = "and unix_timestamp(o.date)+3600*o.hour + 1800 >= " + fromSecs + " and unix_timestamp(o.date)+3600*o.hour - 1800 <= " + toSecs;
-    var levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
-    var siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
-    var siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
-    var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
+    var dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
+    var siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
+    var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
 
-    var statement = "select m0.wmoid as sta_id, " +
-        "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
-        "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
-        "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
+    var statement = "select m0.madis_id as sta_id, " +
+        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
+        "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
+        "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +
@@ -114,10 +83,8 @@ dataMap = function (plotParams, plotFunction) {
         "{{siteDateClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "{{levelClause}} " +
-        "{{siteLevelClause}} " +
         "group by sta_id " +
-        "order by sta_id" +
+        "order by N0" +
         ";";
 
     statement = statement.replace('{{statisticClause}}', statisticClause);
@@ -126,8 +93,6 @@ dataMap = function (plotParams, plotFunction) {
     statement = statement.replace('{{sitesClause}}', sitesClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-    statement = statement.replace('{{levelClause}}', levelClause);
-    statement = statement.replace('{{siteLevelClause}}', siteLevelClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
     dataRequests[label] = statement;
@@ -137,7 +102,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMap(modelPool, statement, model, variable[2], varUnits, siteMap, orderOfMagnitude);
+        queryResult = matsDataQueryUtils.queryDBMapCTC(modelPool, statement, modelTable, statistic, siteMap);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -147,8 +112,10 @@ dataMap = function (plotParams, plotFunction) {
         };
         // get the data back from the query
         var d = queryResult.data;
+        var dPurple = queryResult.dataPurple;
         var dBlue = queryResult.dataBlue;
-        var dBlack = queryResult.dataBlack;
+        var dGreen = queryResult.dataGreen;
+        var dOrange = queryResult.dataOrange;
         var dRed = queryResult.dataRed;
     } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
@@ -162,27 +129,44 @@ dataMap = function (plotParams, plotFunction) {
         } else {
             // this is an error returned by the mysql database
             error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-            if (error.includes('Unknown column')) {
-                throw new Error("INFO:  The variable [" + variableStr + "] is not supported by the database for the model/sites [" + model + " and " + sitesList + "].");
-            } else {
-                throw new Error(error);
-            }
+            throw (new Error(error));
         }
     }
 
-    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, orderOfMagnitude);  // generate map with site data
+    var cOptions = matsDataCurveOpsUtils.generateCTCMapCurveOptions(curve, d, appParams);  // generate map with site data
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blueCurveText, dBlue);  // generate blue text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCPurpleCurveText, dPurple);  // generate purple text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blackCurveText, dBlack);  // generate black text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCPurpleBlueCurveText, dPurple);  // generate purple text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.redCurveText, dRed);  // generate red text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCBlueCurveText, dBlue);  // generate blue text layer
     dataset.push(cOptions);
 
-    const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(false);
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCBlueGreenCurveText, dBlue);  // generate blue text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCGreenCurveText, dGreen);  // generate green text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCGreenYellowCurveText, dGreen);  // generate green text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCYellowCurveText, dGreen);  // generate green text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCOrangeCurveText, dOrange);  // generate orange text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCOrangeRedCurveText, dOrange);  // generate orange text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.CTCRedCurveText, dRed);  // generate red text layer
+    dataset.push(cOptions);
+
+    const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(true);
     var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProcessingStart.format(),

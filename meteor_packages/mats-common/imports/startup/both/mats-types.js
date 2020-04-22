@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 /**
@@ -121,6 +121,16 @@ var ReservedWords = {
     blueCurveText: "Cold bias",
     blackCurveText: "Small bias",
     redCurveText: "Warm bias",
+    CTCPurpleCurveText: "0-10th percentile of possible range",
+    CTCPurpleBlueCurveText: "10-20th percentile of possible range",
+    CTCBlueCurveText: "20-30th percentile of possible range",
+    CTCBlueGreenCurveText: "30-40th percentile of possible range",
+    CTCGreenCurveText: "40-50th percentile of possible range",
+    CTCGreenYellowCurveText: "50-60th percentile of possible range",
+    CTCYellowCurveText: "60-70th percentile of possible range",
+    CTCOrangeCurveText: "70-80th percentile of possible range",
+    CTCOrangeRedCurveText: "80-90th percentile of possible range",
+    CTCRedCurveText: "90-100th percentile of possible range",
     contourSigLabel: "Curve1-Curve0 Significance"
 };
 

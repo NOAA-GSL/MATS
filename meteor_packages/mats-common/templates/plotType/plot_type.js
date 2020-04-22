@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsTypes} from 'meteor/randyp:mats-common';
@@ -56,6 +56,7 @@ const matchPlotTypeSelector = function (plotType) {
 const setDatesAndShowFace = function (plotType, dateSelector) {
     // display appropriate selectors for each plot type, and make sure the previous dates or curve-dates values
     // carry across to the appropriate new selector
+    const appName = matsCollections.appName.findOne({}).app;
     var oldDatesExist;
     if (dateSelector === 'dates') {
         oldDatesExist = matsParamUtils.isParamVisible('dates');
@@ -73,6 +74,10 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
             matsCurveUtils.showDieOffFace();
             break;
         case matsTypes.PlotTypes.threshold:
+            // ctc thresholds need to have the region be in predefined mode
+            if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            }
             matsCurveUtils.showThresholdFace();
             break;
         case matsTypes.PlotTypes.validtime:
@@ -87,7 +92,11 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
         case matsTypes.PlotTypes.map:
             // maps need to have the region be station-select mode
             if (matsParamUtils.getParameterForName('region-type') !== undefined) {
-                matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations (bias only)');
+                if (matsParamUtils.getOptionsForParam('region-type').indexOf('Select stations (bias only)') !== -1) {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations (bias only)');
+                } else {
+                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations');
+                }
             }
             matsCurveUtils.showMapFace();
             break;
@@ -98,6 +107,10 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
             matsCurveUtils.showROCFace();
             break;
         case matsTypes.PlotTypes.histogram:
+            // ctc histograms need to have the region be in predefined mode
+            if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            }
             matsCurveUtils.showHistogramFace();
             break;
         case matsTypes.PlotTypes.ensembleHistogram:

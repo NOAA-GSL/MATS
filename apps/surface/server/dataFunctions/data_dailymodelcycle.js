@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsCollections} from 'meteor/randyp:mats-common';
@@ -93,7 +93,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 modelTable = (model.includes('ret_') || model.includes('Ret_')) ? model + "p" : model + "qp";
             }
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
-            queryTableClause = "from metars as s, " + obsTable + " as o, " + modelTable + " as m0 ";
+            queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
+            var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
             var variableClause;
             if (variable[2] === "temp" || variable[2] === "dp") {
                 variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
@@ -109,14 +110,24 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+            var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-                sitesClause = " and s.name in('" + sitesList.join("','") + "')";
+                var thisSite;
+                var thisSiteObj;
+                for (var sidx = 0; sidx < sitesList.length; sidx++) {
+                    thisSite = sitesList[sidx];
+                    thisSiteObj = siteMap.find(obj => {
+                        return obj.origName === thisSite;
+                    });
+                    querySites.push(thisSiteObj.options.id);
+                }
+                sitesClause = " and m0.sta_id in('" + querySites.join("','") + "')";
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
             dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
             siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
-            siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
+            siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
             queryPool = sitePool;
         }
         var utcCycleStart = Number(curve['utc-cycle-start']);
@@ -170,7 +181,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

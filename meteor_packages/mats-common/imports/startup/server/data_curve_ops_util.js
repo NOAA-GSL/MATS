@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {
@@ -356,7 +356,37 @@ const generateMapCurveOptions = function (curve, dataSeries, appParams, orderOfM
                 size: markerSizes,
                 opacity: 0
             },
-            showlegend: true
+            showlegend: false
+        }, ...dataSeries
+    };
+
+    delete curveOptions.color;
+
+    return curveOptions;
+};
+
+const generateCTCMapCurveOptions = function (curve, dataSeries, appParams) {
+
+    const markerSizes = dataSeries.queryVal.map(function (val) {
+        return 10;
+    });
+
+    const label = curve['label'];
+    const longLabel = matsPlotUtils.getCurveText(appParams.plotType, curve);
+
+    const curveOptions = {
+        ...{
+            label: label,
+            curveId: label,
+            name: longLabel,
+            type: 'scattermapbox',
+            mode: 'markers',
+            marker: {
+                color: dataSeries.color,
+                size: markerSizes,
+                opacity: 1
+            },
+            showlegend: false
         }, ...dataSeries
     };
 
@@ -383,7 +413,7 @@ const generateMapColorTextOptions = function (label, dataSeries) {
                 color: dataSeries.color
             },
             hoverinfo: 'skip',
-            visible: true,
+            visible: label.includes("percentile") ? 'legendonly' : true,
             showlegend: true
         }, ...dataSeries
     };
@@ -523,6 +553,7 @@ export default matsDataCurveOpsUtils = {
     generateProfileCurveOptions: generateProfileCurveOptions,
     generateBarChartCurveOptions: generateBarChartCurveOptions,
     generateMapCurveOptions: generateMapCurveOptions,
+    generateCTCMapCurveOptions: generateCTCMapCurveOptions,
     generateMapColorTextOptions: generateMapColorTextOptions,
     generateContourCurveOptions: generateContourCurveOptions
 

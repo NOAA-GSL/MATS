@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ * Copyright (c) 2020 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
 import {matsCollections} from 'meteor/randyp:mats-common';
@@ -38,6 +38,10 @@ dataMap = function (plotParams, plotFunction) {
     var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
     var validTimeClause = "";
+    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+    }
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "";
     var sitesClause = "";
@@ -51,7 +55,7 @@ dataMap = function (plotParams, plotFunction) {
         forecastLengthClause = "and m0.fcst_len = " + forecastLength + " "
     }
     var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
-    var queryTableClause = "from metars as s, " + obsTable + " as o, " + modelTable + " as m0 ";
+    var queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var variableClause;
     var orderOfMagnitude; // approximate 10^x OOM that the returned data will be on.
@@ -72,21 +76,26 @@ dataMap = function (plotParams, plotFunction) {
     statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
     curves[0]['statistic'] = "Bias (Model - Obs)";
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+    var querySites = [];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        sitesClause = " and s.name in('" + sitesList.join("','") + "')";
+        var thisSite;
+        var thisSiteObj;
+        for (var sidx = 0; sidx < sitesList.length; sidx++) {
+            thisSite = sitesList[sidx];
+            thisSiteObj = siteMap.find(obj => {
+                return obj.origName === thisSite;
+            });
+            querySites.push(thisSiteObj.options.id);
+        }
+        sitesClause = " and m0.sta_id in('" + querySites.join("','") + "')";
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
     var dateClause = "and m0.time + 900 >= " + fromSecs + " and m0.time - 900 <= " + toSecs;
     var siteDateClause = "and o.time + 900 >= " + fromSecs + " and o.time - 900 <= " + toSecs;
-    var siteMatchClause = "and s.madis_id = m0.sta_id and s.madis_id = o.sta_id and m0.time = o.time";
-    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
-    }
+    var siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
 
-    var statement = "select s.name as sta_name, " +
-        "s.madis_id as sta_id, " +
+    var statement = "select m0.sta_id as sta_id, " +
         "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
         "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
         "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
@@ -99,8 +108,8 @@ dataMap = function (plotParams, plotFunction) {
         "{{siteDateClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "group by sta_name " +
-        "order by sta_name" +
+        "group by sta_id " +
+        "order by sta_id" +
         ";";
 
     statement = statement.replace('{{statisticClause}}', statisticClause);
@@ -118,7 +127,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, model, variable, varUnits, siteMap, orderOfMagnitude);
+        queryResult = matsDataQueryUtils.queryDBMap(sitePool, statement, model, variable, varUnits, siteMap, orderOfMagnitude);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -163,7 +172,7 @@ dataMap = function (plotParams, plotFunction) {
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.redCurveText, dRed);  // generate red text layer
     dataset.push(cOptions);
 
-    const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions();
+    const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(false);
     var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProcessingStart.format(),
