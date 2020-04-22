@@ -176,7 +176,7 @@ dataValidTime = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.time%(24*3600)/3600 as hr_of_day, " +
+            var statement = "select floor((m0.time+1800)%(24*3600)/3600) as hr_of_day, " +
                 "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +
                 "min(ceil(900*floor((m0.time+450)/900))) as min_secs, " +
                 "max(ceil(900*floor((m0.time+450)/900))) as max_secs, " +

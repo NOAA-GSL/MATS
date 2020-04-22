@@ -56,6 +56,7 @@ const matchPlotTypeSelector = function (plotType) {
 const setDatesAndShowFace = function (plotType, dateSelector) {
     // display appropriate selectors for each plot type, and make sure the previous dates or curve-dates values
     // carry across to the appropriate new selector
+    const appName = matsCollections.appName.findOne({}).app;
     var oldDatesExist;
     if (dateSelector === 'dates') {
         oldDatesExist = matsParamUtils.isParamVisible('dates');
@@ -73,8 +74,8 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
             matsCurveUtils.showDieOffFace();
             break;
         case matsTypes.PlotTypes.threshold:
-            // thresholds need to have the region be in predefined mode
-            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+            // ctc thresholds need to have the region be in predefined mode
+            if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
                 matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
             }
             matsCurveUtils.showThresholdFace();
@@ -106,6 +107,10 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
             matsCurveUtils.showROCFace();
             break;
         case matsTypes.PlotTypes.histogram:
+            // ctc histograms need to have the region be in predefined mode
+            if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
+            }
             matsCurveUtils.showHistogramFace();
             break;
         case matsTypes.PlotTypes.ensembleHistogram:
