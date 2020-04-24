@@ -312,6 +312,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
             subSecs: [],
             subLevs: [],
             stats: [],
+            ctc_stats: [],
             text: [],
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
@@ -372,6 +373,7 @@ const queryDBSpecialtyCurve = function (pool, statement, appParams, statisticStr
             subSecs: [],
             subLevs: [],
             stats: [],
+            ctc_stats: [],
             text: [],
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
@@ -714,14 +716,15 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
         var d = {// d will contain the curve data
             x: [],
             y: [],
-            error_x: [],   // curveTime
-            error_y: [],   // values
-            subVals: [],   // subVals
-            subSecs: [],   // subSecs
-            subLevs: [],   // subLevs
-            stats: [],     // pointStats
+            error_x: [],
+            error_y: [],
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            stats: [],
+            ctc_stats: [],
             text: [],
-            glob_stats: {},     // curveStats
+            glob_stats: {},
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
             ymin: Number.MAX_VALUE,
@@ -736,6 +739,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
     d.error_x = null;  // time series doesn't use x errorbars
     var N0 = [];
     var N_times = [];
+    var ctc_stats = [];
     var xmin = Number.MAX_VALUE;
     var xmax = -1 * Number.MAX_VALUE;
     var curveTime = [];
@@ -761,6 +765,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
             if (yy + yn + ny + nn > 0) {
                 stat = calculateStatCTC(yy, yn, ny, nn, statisticStr);
                 stat = isNaN(Number(stat)) ? null : stat;
+                ctc_stats.push({yy: yy, yn: yn, ny: ny, nn: nn, N0: rows[rowIndex].N0});
             } else {
                 stat = null;
             }
@@ -884,6 +889,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, appParams, averageStr,
         cycles = [time_interval];   // regular models will return one cycle cadence
     }
 
+    d.ctc_stats = ctc_stats;
     d.xmin = xmin;
     d.xmax = xmax;
     d.ymin = ymin;
@@ -904,14 +910,15 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams, statisticStr)
         var d = {// d will contain the curve data
             x: [],
             y: [],
-            error_x: [],   // curveTime
-            error_y: [],   // values
-            subVals: [],   // subVals
-            subSecs: [],   // subSecs
-            subLevs: [],   // subLevs
-            stats: [],     // pointStats
+            error_x: [],
+            error_y: [],
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            stats: [],
+            ctc_stats: [],
             text: [],
-            glob_stats: {},     // curveStats
+            glob_stats: {},
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
             ymin: Number.MAX_VALUE,
@@ -927,6 +934,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams, statisticStr)
     // initialize local variables
     var N0 = [];
     var N_times = [];
+    var ctc_stats = [];
     var curveIndependentVars = [];
     var curveStats = [];
     var subVals = [];
@@ -966,6 +974,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams, statisticStr)
             if (yy + yn + ny + nn > 0) {
                 stat = calculateStatCTC(yy, yn, ny, nn, statisticStr);
                 stat = isNaN(Number(stat)) ? null : stat;
+                ctc_stats.push({yy: yy, yn: yn, ny: ny, nn: nn, N0: rows[rowIndex].N0});
             } else {
                 stat = null;
             }
@@ -1104,6 +1113,8 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams, statisticStr)
         d.ymin = depVarMin;
         d.ymax = depVarMax;
     }
+
+    d.ctc_stats = ctc_stats;
     d.sum = sum;
 
     return {
