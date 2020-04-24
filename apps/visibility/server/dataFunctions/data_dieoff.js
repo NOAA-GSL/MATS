@@ -68,7 +68,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and (m0.time - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+            utcCycleStartClause = "and floor(((m0.time) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
         } else {
             dateClause = "and (m0.time - m0.fcst_len*3600) = " + fromSecs;
         }
@@ -102,7 +102,7 @@ dataDieOff = function (plotParams, plotFunction) {
                     dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
                 } else if (matchForecastLength === matsTypes.ForecastTypes.utcCycle) {
                     const matchUtcCycleStart = Number(matchCurve['utc-cycle-start']);
-                    utcCycleStartClause = utcCycleStartClause + " and (m" + matchCurveIdx + ".time - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
+                    utcCycleStartClause = utcCycleStartClause + " and floor(((m" + matchCurveIdx + ".time) - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600) IN(" + matchUtcCycleStart + ")";
                     dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
                 } else {
                     dateClause = dateClause + " and (m" + matchCurveIdx + ".time - m" + matchCurveIdx + ".fcst_len*3600) = " + matchFromSecs;

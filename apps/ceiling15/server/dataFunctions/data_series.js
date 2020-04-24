@@ -53,7 +53,7 @@ dataSeries = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")";
+            validTimeClause = "and floor((m0.time+450)%(24*3600)/900)/4 IN(" + validTimes + ")";
         }
         var forecastLength = Number(curve['forecast-length']);
         var forecastHour = Math.floor(forecastLength);
@@ -121,7 +121,7 @@ dataSeries = function (plotParams, plotFunction) {
                 const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
                 const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                 if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    validTimeClause = validTimeClause + " and (m" + matchCurveIdx + ".time)%(24*3600)/3600 IN(" + matchValidTimes + ")";
+                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time+450)%(24*3600)/900)/4 IN(" + matchValidTimes + ")";
                 }
                 const matchForecastLength = Number(matchCurve['forecast-length']);
                 const matchForecastHour = Math.floor(matchForecastLength);

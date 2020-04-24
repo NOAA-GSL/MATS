@@ -59,7 +59,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var thresholdClause = "and m0.thresh = " + threshold;
         var utcCycleStart = Number(curve['utc-cycle-start']);
         utcCycleStarts[curveIndex] = utcCycleStart;
-        var utcCycleStartClause = "and (m0.valid_time - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        var utcCycleStartClause = "and floor((m0.valid_time - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24";
         var dateClause = "and m0.valid_time >= " + fromSecs + " and m0.valid_time <= " + toSecs;
         // for contingency table apps, we currently have to deal with matching in the query.
@@ -83,7 +83,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 const matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
                 thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".thresh = " + matchThreshold;
                 const matchUtcCycleStart = Number(matchCurve['utc-cycle-start']);
-                utcCycleStartClause = utcCycleStartClause + " and (m" + matchCurveIdx + ".valid_time - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
+                utcCycleStartClause = utcCycleStartClause + " and floor((m" + matchCurveIdx + ".valid_time - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600) IN(" + matchUtcCycleStart + ")";
                 forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len < 24";
                 dateClause = "and m0.valid_time = m" + matchCurveIdx + ".valid_time " + dateClause;
                 dateClause = dateClause + " and m" + matchCurveIdx + ".valid_time >= " + fromSecs + " and m" + matchCurveIdx + ".valid_time <= " + toSecs;

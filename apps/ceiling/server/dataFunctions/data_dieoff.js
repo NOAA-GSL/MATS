@@ -178,7 +178,7 @@ dataDieOff = function (plotParams, plotFunction) {
                     dateClause = dateClause + " and m" + matchCurveIdx + ".time + 900 >= " + matchFromSecs + " and m" + matchCurveIdx + ".time - 900 <= " + matchToSecs;
                 } else if (matchForecastLength === matsTypes.ForecastTypes.utcCycle) {
                     const matchUtcCycleStart = Number(matchCurve['utc-cycle-start']);
-                    utcCycleStartClause = utcCycleStartClause + " and ((m" + matchCurveIdx + ".time + 1800) - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
+                    utcCycleStartClause = utcCycleStartClause + " and floor(((m" + matchCurveIdx + ".time+1800) - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600) IN(" + matchUtcCycleStart + ")";
                     dateClause = dateClause + " and m" + matchCurveIdx + ".time + 900 >= " + matchFromSecs + " and m" + matchCurveIdx + ".time - 900 <= " + matchToSecs;
                 } else {
                     dateClause = dateClause + " and (m" + matchCurveIdx + ".time - m" + matchCurveIdx + ".fcst_len*3600) = " + matchFromSecs;

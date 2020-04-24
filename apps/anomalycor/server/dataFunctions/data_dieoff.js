@@ -63,7 +63,7 @@ dataDieOff = function (plotParams, plotFunction) {
             validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+            utcCycleStartClause = "and floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
         } else {
             dateClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600) = " + fromSecs;
         }

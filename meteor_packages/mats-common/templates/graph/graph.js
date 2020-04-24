@@ -157,6 +157,8 @@ Template.graph.helpers({
                         localAnnotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                         break;
                     case matsTypes.PlotTypes.map:
+                        localAnnotation = "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].name + " </div><div></br></div>";
+                        break;
                     case matsTypes.PlotTypes.reliability:
                     case matsTypes.PlotTypes.roc:
                     case matsTypes.PlotTypes.histogram:
@@ -563,8 +565,8 @@ Template.graph.helpers({
             case matsTypes.PlotTypes.gridscale:
             case matsTypes.PlotTypes.dailyModelCycle:
             case matsTypes.PlotTypes.scatter2d:
-                return 'block';
             case matsTypes.PlotTypes.map:
+                return 'block';
             case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.roc:
             case matsTypes.PlotTypes.histogram:

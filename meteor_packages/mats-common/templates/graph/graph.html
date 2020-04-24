@@ -41,8 +41,8 @@
                                 <button id="showHideButton" type="button" class="showHideButton btn btn-primary fa fa-eye-slash" style="display:block;"  data-toggle="tooltip" data-placement="top" title="show/hide curves/point">&nbsp;&nbsp;<strong>Show/Hide</strong></button>
                             {{/if}}
                         {{/if}}
-                        <button id="legendTextButton" type="button" class="legendTextButton btn btn-primary fa fa-pencil" style="display:block;"  data-toggle="tooltip" data-placement="top" title="edit legend text">&nbsp;&nbsp;<strong>Edit Legend</strong></button>
                         {{#if isNotMap}}
+                            <button id="legendTextButton" type="button" class="legendTextButton btn btn-primary fa fa-pencil" style="display:block;"  data-toggle="tooltip" data-placement="top" title="edit legend text">&nbsp;&nbsp;<strong>Edit Legend</strong></button>
                             <button id="replotZoomButton" type="button" class="replotZoomButton btn btn-primary fa fa-line-chart" style="display:{{displayReplotZoom}};"  data-toggle="tooltip" data-placement="top" title="replot graph to current zoom setting">&nbsp;&nbsp;<strong>Re-sample</strong></button>
                         {{/if}}
                         <button id="reCacheButton" type="button" class="reCacheButton btn btn-primary fa fa-line-chart" style="display:block;"  data-toggle="tooltip" data-placement="top" title="replot graph and refresh cache with new data">&nbsp;&nbsp;<strong>Re-cache</strong></button>

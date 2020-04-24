@@ -66,11 +66,11 @@ dataDieOff = function (plotParams, plotFunction) {
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and (m0.valid_secs)%(24*3600)/3600 IN(" + validTimes + ")";
+                validTimeClause = "and floor((m0.valid_secs)%(24*3600)/900)/4 IN(" + validTimes + ")";
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and (m0.valid_secs - m0.fcst_len*60)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+            utcCycleStartClause = "and floor(((m0.valid_secs - m0.fcst_len*60))%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
         } else {
             dateClause = "and (m0.valid_secs - m0.fcst_len*60) = " + fromSecs;
         }

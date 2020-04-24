@@ -52,7 +52,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var thresholdClause = "";
         var utcCycleStart = Number(curve['utc-cycle-start']);
         utcCycleStarts[curveIndex] = utcCycleStart;
-        var utcCycleStartClause = "and (m0.time - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        var utcCycleStartClause = "and floor(((m0.time+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24";
         var dateClause;
         var siteDateClause = "";
@@ -112,7 +112,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 matchCurveIdx++;
                 const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
                 const matchUtcCycleStart = Number(matchCurve['utc-cycle-start']);
-                utcCycleStartClause = utcCycleStartClause + " and (m" + matchCurveIdx + ".time - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
+                utcCycleStartClause = utcCycleStartClause + " and floor(((m" + matchCurveIdx + ".time+1800) - m" + matchCurveIdx + ".fcst_len*3600)%(24*3600)/3600) IN(" + matchUtcCycleStart + ")";
                 forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len < 24";
                 const matchRegionType = matchCurve['region-type'];
                 if (matchRegionType === 'Predefined region') {
@@ -172,7 +172,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.time as avtime, " +
+            var statement = "select ceil(3600*floor((m0.time+1800)/3600)) as avtime, " +
                 "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
                 "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
                 "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +

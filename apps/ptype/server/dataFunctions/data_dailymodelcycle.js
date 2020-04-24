@@ -57,7 +57,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var variable = variableOptionsMap[variableStr];
         var utcCycleStart = Number(curve['utc-cycle-start']);
         utcCycleStarts[curveIndex] = utcCycleStart;
-        var utcCycleStartClause = "and (m0.valid_secs - m0.fcst_len*60)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        var utcCycleStartClause = "and floor(((m0.valid_secs - m0.fcst_len*60))%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24 * 60";
         var dateClause = "and m0.valid_secs >= " + fromSecs + " and m0.valid_secs <= " + toSecs;
         var statisticSelect = curve['statistic'];

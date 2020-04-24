@@ -871,7 +871,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "forecast-length", "valid-time", "sites", "sitesMap", "curve-dates"
+                "label", "data-source", "region", "statistic", "forecast-length", "valid-time", "curve-dates"
             ],
             groupSize: 6
         });
@@ -937,7 +937,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "threshold", "forecast-length", "valid-time", "sites", "sitesMap", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "curve-dates"
             ],
             groupSize: 6
         });

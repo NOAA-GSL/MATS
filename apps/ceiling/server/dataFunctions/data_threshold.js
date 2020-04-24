@@ -44,7 +44,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionType = curve['region-type'];
-        if (regionType !== 'Predefined region') {
+        if (regionType === 'Select stations') {
             throw new Error("INFO:  Single/multi station plotting is not available for thresholds.");
         }
         var regionStr = curve['region'];

@@ -52,7 +52,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var thresholdClause = "";
         var utcCycleStart = Number(curve['utc-cycle-start']);
         utcCycleStarts[curveIndex] = utcCycleStart;
-        var utcCycleStartClause = "and (m0.time - (m0.fcst_len*60+m0.fcst_min)*60)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        var utcCycleStartClause = "and floor(((m0.time+450) - (m0.fcst_len*60+m0.fcst_min)*60)%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24";
         var dateClause;
         var siteDateClause = "";
@@ -112,7 +112,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 matchCurveIdx++;
                 const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
                 const matchUtcCycleStart = Number(matchCurve['utc-cycle-start']);
-                utcCycleStartClause = utcCycleStartClause + " and (m" + matchCurveIdx + ".time - (m" + matchCurveIdx + ".fcst_len*60+m" + matchCurveIdx + ".fcst_min)*60)%(24*3600)/3600 IN(" + matchUtcCycleStart + ")";
+                utcCycleStartClause = utcCycleStartClause + " and floor(((m" + matchCurveIdx + ".time+450) - (m" + matchCurveIdx + ".fcst_len*60+m" + matchCurveIdx + ".fcst_min)*60)%(24*3600)/900)/4 IN(" + matchUtcCycleStart + ")";
                 forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len < 24";
                 const matchRegionType = matchCurve['region-type'];
                 if (matchRegionType === 'Predefined region') {

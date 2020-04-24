@@ -36,15 +36,19 @@ dataMap = function (plotParams, plotFunction) {
     var modelTable = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var obsTable = (modelTable.includes('ret_') || modelTable.includes('Ret_')) ? 'obs_retro' : 'obs';
     var queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
-    var sitesClause = "";
-    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var thresholdStr = curve['threshold'];
     var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
     var validTimeClause = "";
+    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and floor((m0.time+450)%(24*3600)/900)/4 IN(" + validTimes + ")";
+    }
     var forecastLength = Number(curve['forecast-length']);
     var forecastHour = Math.floor(forecastLength);
     var forecastMinute = (forecastLength - forecastHour) * 60;
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength + " and m0.fcst_min = " + forecastMinute;
+    var sitesClause = "";
+    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var statistic = curve['statistic'];
     var statisticClause = 'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as yy,sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as nn, count(m0.ceil) as N0';
     statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
@@ -67,10 +71,6 @@ dataMap = function (plotParams, plotFunction) {
     var dateClause = "and m0.time + 300 >= " + fromSecs + " and m0.time - 300 <= " + toSecs;
     var siteDateClause = "and o.time + 300 >= " + fromSecs + " and o.time - 300 <= " + toSecs;
     var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
-    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = "and (m0.time+1800)%(24*3600)/3600 IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
-    }
 
     var statement = "select m0.madis_id as sta_id, " +
         "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +

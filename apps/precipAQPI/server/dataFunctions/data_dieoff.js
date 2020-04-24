@@ -73,7 +73,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and (m0.valid_time - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+            utcCycleStartClause = "and floor((m0.valid_time - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
         } else {
             dateClause = "and (m0.valid_time - m0.fcst_len*3600) = " + fromSecs;
         }
