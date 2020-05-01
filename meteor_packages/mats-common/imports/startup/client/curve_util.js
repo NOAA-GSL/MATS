@@ -393,13 +393,18 @@ const checkDiffs = function () {
     }
 };
 
-const setSelectorVisibility = function(plotType, faceOptions) {
-    if (plotType === matsTypes.PlotTypes.contourDiff) {
-        faceOptions['significance'] = 'block';
-    }
+const setSelectorVisibility = function(plotType, faceOptions, selectorsToReset) {
     if (document.getElementById('plot-type-' + plotType).checked === true) {
-        const faceSelectors = Object.keys(faceOptions);
+        // reset selectors that may have been set to something invalid for the new plot type
+        const resetSelectors = Object.keys(selectorsToReset);
+        for (var ridx = 0; ridx < resetSelectors.length; ridx++) {
+            if (matsParamUtils.getParameterForName(resetSelectors[ridx]) !== undefined) {
+                matsParamUtils.setInputValueForParamAndTriggerChange(resetSelectors[ridx], selectorsToReset[resetSelectors[ridx]]);
+            }
+        }
+        // show/hide selectors appropriate to this plot type
         var elem;
+        const faceSelectors = Object.keys(faceOptions);
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
             elem = document.getElementById(faceSelectors[fidx] + '-item');
             if (elem && elem.style && (elem.purposelyHidden === undefined || !elem.purposelyHidden)) {
@@ -444,7 +449,11 @@ const showTimeseriesFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a profile curve
@@ -476,7 +485,11 @@ const showProfileFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a dieoff curve
@@ -508,7 +521,9 @@ const showDieOffFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {};
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a threshold curve
@@ -541,11 +556,16 @@ const showThresholdFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
     // ctc thresholds need to have the region be in predefined mode
     if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
         faceOptions['region-type'] = 'none';
+        selectorsToReset['region-type'] = 'Predefined region';
     }
-    setSelectorVisibility(plotType, faceOptions);
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a valid time curve
@@ -577,7 +597,11 @@ const showValidTimeFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a grid scale curve
@@ -609,7 +633,11 @@ const showGridScaleFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a daily model cycle curve
@@ -641,7 +669,11 @@ const showDailyModelCycleFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a reliability curve
@@ -673,7 +705,11 @@ const showReliabilityFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a ROC curve
@@ -705,7 +741,11 @@ const showROCFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a map
@@ -737,7 +777,19 @@ const showMapFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    // maps need to have the region be station-select mode
+    if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+        if (matsParamUtils.getOptionsForParam('region-type').indexOf('Select stations (bias only)') !== -1) {
+            selectorsToReset['region-type'] = 'Select stations (bias only)';
+        } else {
+            selectorsToReset['region-type'] = 'Select stations';
+        }
+    }
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a histogram
@@ -770,11 +822,16 @@ const showHistogramFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    // ctc thresholds need to have the region be in predefined mode
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    // ctc histograms need to have the region be in predefined mode
     if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
         faceOptions['region-type'] = 'none';
+        selectorsToReset['region-type'] = 'Predefined region';
     }
-    setSelectorVisibility(plotType, faceOptions);
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a histogram
@@ -806,7 +863,11 @@ const showEnsembleHistogramFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a contour plot
@@ -836,9 +897,17 @@ const showContourFace = function () {
         'region-type' : 'none',
         'x-axis-parameter': 'block',
         'y-axis-parameter': 'block',
-        'significance': 'none'
+        'significance': plotType === matsTypes.PlotTypes.contourDiff ? 'block' : 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    // contours need to have the region be in predefined mode
+    if (matsParamUtils.getParameterForName('region-type') !== undefined) {
+        selectorsToReset['region-type'] = 'Predefined region';
+    }
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 // method to display the appropriate selectors for a scatter plot
@@ -870,7 +939,11 @@ const showScatterFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    setSelectorVisibility(plotType, faceOptions);
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
+    setSelectorVisibility(plotType, faceOptions, selectorsToReset);
+    return selectorsToReset;
 };
 
 const showSpinner = function () {

@@ -63,89 +63,69 @@ const setDatesAndShowFace = function (plotType, dateSelector) {
     } else {
         oldDatesExist = matsParamUtils.isParamVisible('curve-dates');
     }
+    var selectorsToReset = {};
     switch (plotType) {
         case matsTypes.PlotTypes.timeSeries:
-            matsCurveUtils.showTimeseriesFace();
+            selectorsToReset = matsCurveUtils.showTimeseriesFace();
             break;
         case matsTypes.PlotTypes.profile:
-            matsCurveUtils.showProfileFace();
+            selectorsToReset = matsCurveUtils.showProfileFace();
             break;
         case matsTypes.PlotTypes.dieoff:
-            matsCurveUtils.showDieOffFace();
+            selectorsToReset = matsCurveUtils.showDieOffFace();
             break;
         case matsTypes.PlotTypes.threshold:
-            // ctc thresholds need to have the region be in predefined mode
-            if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
-                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
-            }
-            matsCurveUtils.showThresholdFace();
+            selectorsToReset = matsCurveUtils.showThresholdFace();
             break;
         case matsTypes.PlotTypes.validtime:
-            matsCurveUtils.showValidTimeFace();
+            selectorsToReset = matsCurveUtils.showValidTimeFace();
             break;
         case matsTypes.PlotTypes.gridscale:
-            matsCurveUtils.showGridScaleFace();
+            selectorsToReset = matsCurveUtils.showGridScaleFace();
             break;
         case matsTypes.PlotTypes.dailyModelCycle:
-            matsCurveUtils.showDailyModelCycleFace();
+            selectorsToReset = matsCurveUtils.showDailyModelCycleFace();
             break;
         case matsTypes.PlotTypes.map:
-            // maps need to have the region be station-select mode
-            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
-                if (matsParamUtils.getOptionsForParam('region-type').indexOf('Select stations (bias only)') !== -1) {
-                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations (bias only)');
-                } else {
-                    matsParamUtils.setInputValueForParamAndTriggerChange('region-type', 'Select stations');
-                }
-            }
-            matsCurveUtils.showMapFace();
+            selectorsToReset = matsCurveUtils.showMapFace();
             break;
         case matsTypes.PlotTypes.reliability:
-            matsCurveUtils.showReliabilityFace();
+            selectorsToReset = matsCurveUtils.showReliabilityFace();
             break;
         case matsTypes.PlotTypes.roc:
-            matsCurveUtils.showROCFace();
+            selectorsToReset = matsCurveUtils.showROCFace();
             break;
         case matsTypes.PlotTypes.histogram:
-            // ctc histograms need to have the region be in predefined mode
-            if (appName !== undefined && (appName.includes("ceiling") || appName.includes("visibility")) && matsParamUtils.getParameterForName('region-type') !== undefined) {
-                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
-            }
-            matsCurveUtils.showHistogramFace();
+            selectorsToReset = matsCurveUtils.showHistogramFace();
             break;
         case matsTypes.PlotTypes.ensembleHistogram:
-            matsCurveUtils.showEnsembleHistogramFace();
+            selectorsToReset = matsCurveUtils.showEnsembleHistogramFace();
             break;
         case matsTypes.PlotTypes.contour:
         case matsTypes.PlotTypes.contourDiff:
-            // contours need to have the region be in predefined mode
-            if (matsParamUtils.getParameterForName('region-type') !== undefined) {
-                matsParamUtils.setInputValueForParamAndTriggerChange('region-type','Predefined region');
-            }
-            matsCurveUtils.showContourFace();
+            selectorsToReset = matsCurveUtils.showContourFace();
             break;
         case matsTypes.PlotTypes.scatter2d:
-            matsCurveUtils.showScatterFace();
+            selectorsToReset = matsCurveUtils.showScatterFace();
             break;
     }
     if (dateSelector === 'dates') {
         if (!oldDatesExist) {
             const curveDate = $('#controlButton-curve-dates-value').text();
             matsParamUtils.setValueTextForParamName('dates', curveDate);
-            return curveDate;
+            return [curveDate, selectorsToReset];
         } else {
-            return 0;
+            return [0, selectorsToReset];
         }
     } else {
         if (!oldDatesExist) {
             const tsDate = $('#controlButton-dates-value').text();
             matsParamUtils.setValueTextForParamName('curve-dates', tsDate);
-            return tsDate;
+            return [tsDate, selectorsToReset];
         } else {
-            return 0;
+            return [0, selectorsToReset];
         }
     }
-
 };
 
 const changePlotType = function (plotType, selectorsToInitialize, dateSelector) {
@@ -156,13 +136,22 @@ const changePlotType = function (plotType, selectorsToInitialize, dateSelector) 
 
         // display appropriate selectors for this plot type, and make sure the previous dates or curve-dates values
         // carry across to the appropriate new selector
-        const newDate = setDatesAndShowFace(plotType, dateSelector);
+        var newDate = 0;
+        var selectorsToReset = {};
+        [newDate, selectorsToReset] = setDatesAndShowFace(plotType, dateSelector);
+        const resetSelectors = Object.keys(selectorsToReset);
 
         // make sure the curves already added also have the correct parameters displayed
         var curves = Session.get('Curves');
         if (curves.length > 0) {
-            // initialize parameters that may not have been used yet
             for (var ci = 0; ci < curves.length; ci++) {
+                // change options that were valid for the plot type where this curve was added but not for this one
+                for (var ri = 0; ri < resetSelectors.length; ri++) {
+                    if (curves[ci][resetSelectors[ri]] !== undefined) {
+                        curves[ci][resetSelectors[ri]] = selectorsToReset[resetSelectors[ri]];
+                    }
+                }
+                // initialize options for parameters not used in the plot type where this curve was added
                 for (var si = 0; si < selectorsToInitialize.length; si++) {
                     if (dateSelector === 'curve-dates' && newDate !== 0) {
                         curves[ci]['curve-dates'] = newDate;
@@ -250,7 +239,7 @@ Template.plotType.events({
     },
     'click .plot-type-Map': function (event) {
         const plotType = matsTypes.PlotTypes.map;
-        const selectorsToInitialize = ['threshold', 'scale', 'level', 'forecast-length', 'valid-time'];
+        const selectorsToInitialize = ['statistic', 'threshold', 'scale', 'level', 'forecast-length', 'valid-time'];
         const dateSelector = 'dates';
         changePlotType(plotType, selectorsToInitialize, dateSelector);
     },
