@@ -521,7 +521,9 @@ const showDieOffFace = function () {
         'y-axis-parameter': 'none',
         'significance': 'none'
     };
-    const selectorsToReset = {};
+    const selectorsToReset = {
+        'dieoff-type': 'Dieoff'
+    };
     setSelectorVisibility(plotType, faceOptions, selectorsToReset);
     return selectorsToReset;
 };
@@ -670,7 +672,7 @@ const showDailyModelCycleFace = function () {
         'significance': 'none'
     };
     const selectorsToReset = {
-        'dieoff-type': 'Dieoff'
+        'dieoff-type': 'Dieoff for a specified UTC cycle init hour'
     };
     setSelectorVisibility(plotType, faceOptions, selectorsToReset);
     return selectorsToReset;
