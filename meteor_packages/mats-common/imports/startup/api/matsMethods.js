@@ -365,7 +365,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                             curveDataElement['std dev'] = data[ci].stats[cdi].sd;
                             curveDataElement['std error'] = data[ci].stats[cdi].stde_betsy;
                             curveDataElement['lag1'] = data[ci].stats[cdi].lag1;
-                            curveDataElement['n'] = data[ci].ctc_stats.length > 0 ? data[ci].ctc_stats[cdi].N0 : data[ci].stats[cdi].n_good;
+                            curveDataElement['n'] = data[ci].ctc_stats !== undefined && data[ci].ctc_stats.length > 0 ? data[ci].ctc_stats[cdi].N0 : data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -401,7 +401,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                             curveDataElement['std dev'] = data[ci].stats[cdi].sd;
                             curveDataElement['std error'] = data[ci].stats[cdi].stde_betsy;
                             curveDataElement['lag1'] = data[ci].stats[cdi].lag1;
-                            curveDataElement['n'] = data[ci].ctc_stats.length > 0 ? data[ci].ctc_stats[cdi].N0 : data[ci].stats[cdi].n_good;
+                            curveDataElement['n'] = data[ci].ctc_stats !== undefined && data[ci].ctc_stats.length > 0 ? data[ci].ctc_stats[cdi].N0 : data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -451,7 +451,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                             curveDataElement['raw stat from query'] = data[ci].stats[cdi].raw_stat;
                             curveDataElement['mean stat'] = data[ci].stats[cdi].d_mean;
                             curveDataElement['std dev'] = data[ci].stats[cdi].sd;
-                            curveDataElement['n'] = data[ci].ctc_stats.length > 0 ? data[ci].ctc_stats[cdi].N0 : data[ci].stats[cdi].n_good;
+                            curveDataElement['n'] = data[ci].ctc_stats !== undefined && data[ci].ctc_stats.length > 0 ? data[ci].ctc_stats[cdi].N0 : data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
