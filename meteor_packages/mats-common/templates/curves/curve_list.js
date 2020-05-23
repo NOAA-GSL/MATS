@@ -82,17 +82,22 @@ Template.curveList.helpers({
         }
         var i;
         var truth;
+        var otherTruth;
         for (i = 0; i < curves.length; i++) {
             if (curves[i]["region-type"] === "Predefined region") {
                 truth = curves[i].truth;
                 break;
+            } else {
+                truth = 'METAR';
             }
         }
         for (i = 0; i < curves.length; i++) {
-            if (curves[i]["region-type"] !== "Predefined region") {
-                continue;
+            if (curves[i]["region-type"] === "Predefined region") {
+                otherTruth = curves[i].truth;
+            } else {
+                otherTruth = 'METAR';
             }
-            if (truth !== curves[i].truth) {
+            if (truth !== otherTruth) {
                 return "block";
             }
         }
