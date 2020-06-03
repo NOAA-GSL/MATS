@@ -10,7 +10,9 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a style="color:white" class="navbar-brand" href="{{homeUrl}}"><i style="color:cyan" class="fa fa-home fa-1x" aria-hidden="true"></i></a>
+                <a style="color:white" class="navbar-brand" href="{{homeUrl}}"><i style="color:cyan"
+                                                                                  class="fa fa-home fa-1x"
+                                                                                  aria-hidden="true"></i></a>
             </div>
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="navbar-collapse-1">
@@ -38,7 +40,7 @@
                     <span class="icon-bar"></span>
                 </button>
             </div>
-
+            <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="navbar-collapse-2">
                 <a class="nav navbar-nav navbar-left" href="/"><img src="{{transparentGif}}" alt="NOAA"
                                                                     style="max-height:80%; max-width:80%;"></a>
@@ -50,22 +52,23 @@
                             {{/if}}
                             {{#if isMats}}
                                 <a href="http://esrl.noaa.gov/gsd/"><span style="color:white;font-size: small;">Global Systems Laboratory</span></a><br>
-                                <a href={{homeUrl}}><span
-                                        style="color:white;font-size: x-large;">Model Analysis Tool Suite (MATS)</span></a><br>
+                                <a href={{homeUrl}}><span style="color:white;font-size: x-large;">Model Analysis Tool Suite (MATS)</span></a><br>
                             {{/if}}
                         </div>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a style="font-size: medium" href="{{homeUrl}}"><span style="color:white">Home</span></a></li>
-                    <li><a style="font-size: medium" href="mailto:mats.gsd@noaa.gov?Subject=Feedback from mats">
-                        <span style="color:white">Contact</span></a>
+                    <li><a style="font-size: medium" href="mailto:mats.gsd@noaa.gov?Subject=Feedback from MATS">
+                        <span style="color:white">Contact Us</span></a>
                     </li>
                 </ul>
             </div>
             <!-- /.navbar-collapse -->
         </nav>
         <div style="background-color: #dddddd;" class="container-fluid">
+            <div>
+                <!--h2><font color="red"> NOTE: Maintenance today (February 21) at 5 pm Eastern time, interruptions are likely. </font></h2>-->
+            </div>
             <ul class="nav navbar-nav navbar-left">
                 {{#if noGroups}}
                     <h1> There are no apps defined.</h1>
@@ -81,7 +84,7 @@
                                     {{setClass app}}
                                     <a class="{{class app}}" id="{{appReference app}}-button" type="button"
                                        style="display:inline-block;font-size:medium; background-color: {{color
-                                               app}}; font-weight: bold; border-radius:10px;"
+                                               app}}; font-weight: bold; border-radius:10px; margin: 2px 2px;"
                                        href="{{href app}}">{{title app}}</a>
                                 </li>
                             {{/each}}
@@ -101,6 +104,7 @@
                     <span class="icon-bar"></span>
                 </button>
             </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="navbar-collapse-3"
                  style="background-color: #dddddd;padding:0px; margin:0px;">
                 <ul class="nav navbar-nav" style="background-color: #dddddd;padding:0px; margin:0px;">
@@ -118,9 +122,9 @@
                         <li><a href="http://research.noaa.gov/" class="navbar-link"
                                style="padding:0px;margin-right:1em;">NOAA Research</a></li>
                         <li><a href="http://esrl.noaa.gov/" class="navbar-link" style="padding:0px;margin-right:1em;">Earth
-                            System Research Laboratory</a></li>
+                            System Research Laboratories</a></li>
                         <li><a href="http://esrl.noaa.gov/gsd/" class="navbar-link"
-                               style="padding:0px;margin-right:1em;">Global Systems Division</a></li>
+                               style="padding:0px;margin-right:1em;">Global Systems Laboratory</a></li>
                     {{/if}}
                     <li><a href="mailto:webmaster.hiwpp@noaa.gov" class="navbar-link"
                            style="padding:0px;margin-right:1em;">Contact the Webmaster</a></li>
