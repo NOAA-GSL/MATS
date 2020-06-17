@@ -15,19 +15,29 @@ import MySQLdb
 
 def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens, trshs, scales, display_category, display_order, mindate, maxdate, numrecs):
 
-    # see if this record already exists
+    # see if this record already exists in the build table
+    # (does not guarantee the result will be the same for the prod table)
     find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE model = '" + str(table_name) + "'"
     cursor.execute(find_rpm_rec)
-    record_id = int(0)
+    build_record_id = int(0)
     for row in cursor:
         val = row.values()[0]
-        record_id = int(val)
+        build_record_id = int(val)
+
+    # see if this record already exists in the prod table
+    # (does not guarantee the result will be the same for the build table)
+    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories WHERE model = '" + str(table_name) + "'"
+    cursor.execute(find_rpm_rec)
+    prod_record_id = int(0)
+    for row in cursor:
+        val = row.values()[0]
+        prod_record_id = int(val)
 
     if len(regions) > int(0) and len(fcst_lens) > int(0):
         qd = []
         updated_utc = datetime.utcnow().strftime('%s')
-        # if it's a new record, add it
-        if record_id == 0:
+        # if it's a new record for the build table, add it
+        if build_record_id == 0:
             insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, fcst_lens, trsh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
@@ -37,18 +47,15 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
             qd.append(str(scales))
             qd.append(display_category)
             qd.append(display_order)
-            qd.append(record_id)
+            qd.append(build_record_id)
             qd.append(mindate)
             qd.append(maxdate)
             qd.append(numrecs)
             qd.append(updated_utc)
             cursor.execute(insert_rpm_rec, qd)
             cnx.commit()
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, regions, fcst_lens, trsh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
-            cursor.execute(insert_rpm_rec, qd)
-            cnx.commit()
         else:
-            # if there's a pre-existing record, update it
+            # if there's a pre-existing record for the build table, update it
             update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET regions = %s, fcst_lens = %s, trsh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(regions))
             qd.append(str(fcst_lens))
@@ -60,10 +67,44 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
             qd.append(maxdate)
             qd.append(numrecs)
             qd.append(updated_utc)
-            qd.append(record_id)
+            qd.append(build_record_id)
             cursor.execute(update_rpm_rec, qd)
             cnx.commit()
+
+        # reset qd array
+        qd = []
+        # if it's a new record for the prod table, add it
+        if prod_record_id == 0:
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, regions, fcst_lens, trsh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            qd.append(str(table_name))
+            qd.append(str(display_text))
+            qd.append(str(regions))
+            qd.append(str(fcst_lens))
+            qd.append(str(trshs))
+            qd.append(str(scales))
+            qd.append(display_category)
+            qd.append(display_order)
+            qd.append(prod_record_id)
+            qd.append(mindate)
+            qd.append(maxdate)
+            qd.append(numrecs)
+            qd.append(updated_utc)
+            cursor.execute(insert_rpm_rec, qd)
+            cnx.commit()
+        else:
+            # if there's a pre-existing record for the prod table, update it
             update_rpm_rec = "UPDATE regions_per_model_mats_all_categories SET regions = %s, fcst_lens = %s, trsh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
+            qd.append(str(regions))
+            qd.append(str(fcst_lens))
+            qd.append(str(trshs))
+            qd.append(str(scales))
+            qd.append(display_category)
+            qd.append(display_order)
+            qd.append(mindate)
+            qd.append(maxdate)
+            qd.append(numrecs)
+            qd.append(updated_utc)
+            qd.append(prod_record_id)
             cursor.execute(update_rpm_rec, qd)
             cnx.commit()
 
