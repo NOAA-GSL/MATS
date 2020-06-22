@@ -122,7 +122,7 @@ def regions_per_model_mats_all_categories(mode):
             if tablename == "HRRR":
                 # days_ago_30 = str(int(time.mktime((datetime.now() - timedelta(days=30)).timetuple())))
                 # date_limit = " where secs >= " + days_ago_30
-                length_limit = " limit 1000000"
+                length_limit = " limit 100000"
             # get forecast lengths from this table
             get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + tablename + length_limit + ";")
             cursor.execute(get_fcst_lens)
