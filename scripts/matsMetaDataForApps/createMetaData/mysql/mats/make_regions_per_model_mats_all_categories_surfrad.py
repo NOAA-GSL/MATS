@@ -4,11 +4,12 @@
 
 # __future__ must come first
 from __future__ import print_function
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import sys
 import ast
 import MySQLdb
+import time
 
 
 ############################################################################
@@ -115,8 +116,13 @@ def regions_per_model_mats_all_categories(mode):
     # parse the other metadata contained in the tables
     if TScleaned:
         for tablename in per_table.keys():
+            # date limit necessary for the really huge HRRR table in this database
+            date_limit = ""
+            if tablename == "HRRR":
+                days_ago_30 = str(int(time.mktime((datetime.now() - timedelta(days=30)).timetuple())))
+                date_limit = " where secs >= " + days_ago_30
             # get forecast lengths from this table
-            get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + tablename + ";")
+            get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + tablename + date_limit + ";")
             cursor.execute(get_fcst_lens)
             per_table[tablename]['fcst_lens'] = []
             this_fcst_lens = []
@@ -128,7 +134,7 @@ def regions_per_model_mats_all_categories(mode):
             # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
 
             # get scales from this table
-            get_scales = ("SELECT DISTINCT scale FROM " + tablename + ";")
+            get_scales = ("SELECT DISTINCT scale FROM " + tablename + date_limit + ";")
             cursor.execute(get_scales)
             per_table[tablename]['scales'] = []
             this_scales = []
@@ -140,7 +146,7 @@ def regions_per_model_mats_all_categories(mode):
             # print(tablename + " scales: " + str(per_table[tablename]['scales']) )
 
             # get regions from this table
-            get_regions = ("SELECT DISTINCT id FROM " + tablename + ";")
+            get_regions = ("SELECT DISTINCT id FROM " + tablename + date_limit + ";")
             cursor.execute(get_regions)
             per_table[tablename]['regions'] = []
             this_regions = []
@@ -152,7 +158,7 @@ def regions_per_model_mats_all_categories(mode):
             # print(tablename + " regions: " + str(per_table[tablename]['regions']) )
 
             # get statistics for this table
-            get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + tablename + ";"
+            get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + tablename + date_limit + ";"
             cursor.execute(get_tablestats)
             stats = cursor.fetchall()[0]
             # print(tablename + " stats:\n" + str(stats) )
