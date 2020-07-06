@@ -36,11 +36,13 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
     do
         cd $app;
         pwd;
-        meteor reset
         rm -rf .meteor/local
-		meteor npm uninstall fibers
-		meteor npm install fibers
-		meteor npm audit fix --force
-		meteor npm list
-        cd ..;
+      	meteor reset
+        meteor update
+        meteor update --all-packages
+        meteor npm uninstall fibers
+        meteor npm install fibers
+        meteor npm audit fix --force
+        meteor npm list
+        cd ..
     done
