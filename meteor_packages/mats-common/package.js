@@ -17,9 +17,8 @@ Package.describe({
 Package.onUse(function (api) {
     api.versionsFrom('1.4.1.1');
     Npm.depends({
-        'fibers': '2.0.0',
         'fs-extra': '7.0.0',
-        "@babel/runtime": "7.3.1",
+        "@babel/runtime": "7.10.4",
         "meteor-node-stubs": "0.4.1",
         "url": "0.11.0",
         "jquery-ui": "1.12.1",
