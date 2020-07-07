@@ -374,7 +374,7 @@ WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
 RUN apk --update --no-cache add mongodb-tools make gcc g++ python python3 python3-dev mariadb-dev bash && \\
-    npm install -g npm@6.4.1 && \\
+    npm install -g npm@6.14.0 && \\
     npm cache clean -f && \\
     npm install -g n && \\
     npm install -g node-gyp && \\
