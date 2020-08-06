@@ -1018,7 +1018,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, appParams, statisticStr)
 
         // deal with missing forecast cycles for dailyModelCycle plot type
         if (plotType === matsTypes.PlotTypes.dailyModelCycle && rowIndex > 0 && (Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) > 3600 * 24 * 1000) {
-            const cycles_missing = Math.floor((Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) / (3600 * 24 * 1000));
+            const cycles_missing = Math.ceil((Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) / (3600 * 24 * 1000))-1;
             for (var missingIdx = cycles_missing; missingIdx > 0; missingIdx--) {
                 curveIndependentVars.push(independentVar - 3600 * 24 * 1000 * missingIdx);
                 curveStats.push(null);

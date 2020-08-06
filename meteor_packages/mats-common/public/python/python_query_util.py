@@ -947,8 +947,8 @@ class QueryUtil:
             # deal with missing forecast cycles for dailyModelCycle plot type
             if plot_type == 'DailyModelCycle' and row_idx > 0 and (
                     int(ind_var) - int(query_data[row_idx - 1]['avtime'] * 1000)) > 3600 * 24 * 1000:
-                cycles_missing = math.floor(
-                    int(ind_var) - int(query_data[row_idx - 1]['avtime'] * 1000) / (3600 * 24 * 1000))
+                cycles_missing = math.ceil(
+                    int(ind_var) - int(query_data[row_idx - 1]['avtime'] * 1000) / (3600 * 24 * 1000))-1
                 for missing_cycle in reversed(range(1, cycles_missing + 1)):
                     curve_ind_vars.append(ind_var - 3600 * 24 * 1000 * missing_cycle)
                     curve_stats.append('null')
