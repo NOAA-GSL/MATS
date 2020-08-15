@@ -357,9 +357,11 @@ const doCurveParams = function () {
             'N': ['sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0',
                 'sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0'],
             'Model average': ['sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat, stddev(m0.sum_model_{{variable1}}/m0.N_{{variable0}}) as stdev, m0.N_{{variable0}} as N0'],
+                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat, stddev(m0.sum_model_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0'],
             'Obs average': ['sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-                'sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0']
+                'sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0'],
+            'Std deviation': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))) as stdev, sum(m0.N_{{variable0}}) as N0',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))) as stdev, sum(m0.N_{{variable0}}) as N0']
         };
 
         const statAuxMap = {
@@ -373,6 +375,8 @@ const doCurveParams = function () {
             'Model average-other': 'group_concat((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}, ";", unix_timestamp(m0.date) + 3600 * m0.hour, ";", m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data',
             'Obs average-winds': 'group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}, ";", unix_timestamp(m0.date) + 3600 * m0.hour, ";", m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data',
             'Obs average-other': 'group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}, ";", unix_timestamp(m0.date) + 3600 * m0.hour, ";", m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data',
+            'Std deviation-winds': 'group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)), ";", unix_timestamp(m0.date) + 3600 * m0.hour, ";", m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data',
+            'Std deviation-other': 'group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)), ";", unix_timestamp(m0.date) + 3600 * m0.hour, ";", m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data',
         };
 
         matsCollections.CurveParams.insert(
@@ -421,6 +425,11 @@ const doCurveParams = function () {
                 'winds': 'm/s'
             },
             'Obs average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'winds': 'm/s'
+            },
+            'Std deviation': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
                 'winds': 'm/s'
