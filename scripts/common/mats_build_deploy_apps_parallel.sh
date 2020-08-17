@@ -367,7 +367,7 @@ buildApp() {
 # "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
 # and the MYSQL_CONF_PATH entry in the settings.json
 # Pull base image.
-FROM node:14.8-alpine3.11
+FROM node:14.8-alpine3.12
 # Create app directory
 ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
 WORKDIR /usr/app
