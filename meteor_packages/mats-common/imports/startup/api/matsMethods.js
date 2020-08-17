@@ -1599,6 +1599,7 @@ const resetApp = function (appRef) {
         const appColor = matsTypes.AppTypes.mats ? "#3366bb" : "darkorchid";
         const appTimeOut = 300;
         var dep_env = process.env.NODE_ENV;
+        var mapboxKey = "undefined";
 
         // if there isn't an app listing in matsCollections create one here so that the configuration-> applySettingsData won't fail
         if (matsCollections.appName.findOne({}) == undefined) {
@@ -1619,7 +1620,8 @@ const resetApp = function (appRef) {
             const settings = {
                 "private": {
                     "databases": [],
-                    "PYTHON_PATH": "/usr/bin/python3"
+                    "PYTHON_PATH": "/usr/bin/python3",
+                    "MAPBOX_KEY": mapboxKey
                 },
                 "public": {
                     "run_environment": dep_env,
@@ -1647,6 +1649,10 @@ const resetApp = function (appRef) {
             dep_env = Meteor.settings.public.run_environment;
         } else {
             dep_env = process.env.NODE_ENV;
+        }
+        // get the mapbox key out of the settings file, if it exists
+        if (Meteor.settings.private && Meteor.settings.private.MAPBOX_KEY) {
+            mapboxKey = Meteor.settings.private.MAPBOX_KEY;
         }
         // timeout in seconds
         var connectionTimeout = Meteor.settings.public.mysql_wait_timeout != undefined ? Meteor.settings.public.mysql_wait_timeout : 300;
@@ -1738,7 +1744,7 @@ const resetApp = function (appRef) {
         matsCollections.ColorScheme.remove({});
         matsDataUtils.doColorScheme();
         matsCollections.Settings.remove({});
-        matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType);
+        matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType, mapboxKey);
         matsCollections.CurveParams.remove({});
         matsCollections.PlotParams.remove({});
         matsCollections.CurveTextPatterns.remove({});

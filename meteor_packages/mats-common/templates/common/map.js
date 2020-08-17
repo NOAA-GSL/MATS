@@ -3,12 +3,14 @@
  */
 
 import {matsParamUtils} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
 
 Template.map.onRendered(function () {
 
     var defaultAttrs = this;    // save for when we need to reset to defaults
     var divElement;             // save so the event handlers can talk to the two selectors
     var targetElement;          // save so the event handlers can talk to the two selectors
+    var settings = matsCollections.Settings.findOne({});
 
     $.getScript("https://cdn.plot.ly/plotly-latest.min.js", function () {
         var targetId = '';
@@ -61,7 +63,7 @@ Template.map.onRendered(function () {
                     },
                     pitch: 0,
                     zoom: defaultZoomLevel,
-                    accesstoken: 'pk.eyJ1IjoibWF0cy1nc2QiLCJhIjoiY2pvN2l1N2MyMG9xdTN3bWR3ODV5a2E2ZiJ9.PtgcGhxaoD43N0OwJSNVMg',
+                    accesstoken: settings.mapboxKey,
                     style: 'light'
                 },
                 margin: {
@@ -109,6 +111,13 @@ Template.map.onRendered(function () {
 
         // call the above initialization for the first time
         initializeSelectorMap(defaultAttrs);
+
+        // make sure this instance of MATS actually has a key for mapbox
+        if (!layout.mapbox.accesstoken || layout.mapbox.accesstoken === "undefined") {
+            setError("The mapbox access token is currently undefined, so the sitesMap selector " +
+                "and map plots will not work as expected. To fix this, create an account at mapbox.com, " +
+                "generate a free access token, and add it to your settings.json file as private.MAPBOX_KEY.");
+        }
 
         // draw the map for the first time
         Plotly.newPlot($(divId)[0], [dataset], layout);
