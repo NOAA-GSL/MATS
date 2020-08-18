@@ -961,7 +961,7 @@ const generateMapPlotOptions = function (extraLegendSpace) {
             },
             pitch: 0,
             zoom: 2,
-            accesstoken: Meteor.settings.private.MAPBOX_KEY,
+            accesstoken: (Meteor.settings.private && Meteor.settings.private.MAPBOX_KEY) ? Meteor.settings.private.MAPBOX_KEY : "undefined",
             style: 'light'
         },
         margin: {
