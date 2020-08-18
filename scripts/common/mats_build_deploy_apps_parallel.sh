@@ -377,6 +377,7 @@ RUN apk --update --no-cache add mongodb-tools make gcc g++ python3 python3-dev m
     npm cache clean -f && \\
     npm install -g n && \\
     npm install -g node-gyp && \\
+    npm audit fix && \\
     node-gyp install && \\
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
