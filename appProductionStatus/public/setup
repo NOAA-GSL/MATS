@@ -301,6 +301,20 @@ defaultEntryPoints = ["http", "https"]
   filePath = "/logs/access.log"
 %ENDTRAEFIK
 
+    mapbox_key=""
+    read -p "Is there a mapbox key required for this deployment? (answer no for METexpress) y|n" -n 1 -r
+    echo -e ${NC}
+    mapbox_key="undefined"
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        echo -e "${GRN}Leaving mapbox_key undefined ${NC}"
+    else
+        echo -e ${RED}
+        read -p "Enter the mapbox key:" mapbox_key
+	      mapbox_key=${mapbox_key%/}  # remove any trailing slash
+        echo -e ${NC}
+        echo -e "${GRN}setting mapbox_key to ${mapbox_key}${NC}"
+    fi
+
     echo -e ${GRN}configuring applist...  ${apps[@]}${NC}
     # save the stable applist into the web/applist.json
     cp $tmpAppList web/applist.json
@@ -325,7 +339,7 @@ defaultEntryPoints = ["http", "https"]
         lim=$(( ${#dbroles[@]} - 1 ))
         echo -e ${GRN} creating settings file ./settings/${appref}/settings.json with database role ${dbroles[@]}
         echo '{"private":{"databases": [ ' > $tmpSettingsFile
-        # need a databse entry for each database role
+        # need a database entry for each database role
         for (( ri=0; ri<${#dbroles[@]}; ri++ )); do
             role=${dbroles[$ri]}
             if [[ -f "settings/${appref}/settings.json"  ]]; then
@@ -418,7 +432,7 @@ defaultEntryPoints = ["http", "https"]
               "password": "${password}",
               "database": "${database}",
               "connectionLimit": 4
-              } 
+              }
 %ENDPOOLS
             # add a comma if more than one and not on the last one
             if [[ $ri -lt ${lim} ]] && [[ ${#dbroles[@]} -gt 1 ]]; then
@@ -426,7 +440,7 @@ defaultEntryPoints = ["http", "https"]
             fi
         done
         #finish up the document
-        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}}" >> $tmpSettingsFile
+        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\", \"MAPBOX_KEY\":\"${mapbox_key}\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}}" >> $tmpSettingsFile
         jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
 
     done

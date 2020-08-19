@@ -950,7 +950,7 @@ const generateROCPlotOptions = function () {
 
 // sets plot options for map plots
 const generateMapPlotOptions = function (extraLegendSpace) {
-    const options = {
+    const layout = {
         autosize: true,
         hovermode: 'closest',
         mapbox: {
@@ -961,7 +961,7 @@ const generateMapPlotOptions = function (extraLegendSpace) {
             },
             pitch: 0,
             zoom: 2,
-            accesstoken: 'pk.eyJ1IjoibWF0cy1nc2QiLCJhIjoiY2pvN2l1N2MyMG9xdTN3bWR3ODV5a2E2ZiJ9.PtgcGhxaoD43N0OwJSNVMg',
+            accesstoken: (Meteor.settings.private && Meteor.settings.private.MAPBOX_KEY) ? Meteor.settings.private.MAPBOX_KEY : "undefined",
             style: 'light'
         },
         margin: {
@@ -981,7 +981,13 @@ const generateMapPlotOptions = function (extraLegendSpace) {
             }
         }
     };
-    return options;
+    // make sure this instance of MATS actually has a key for mapbox
+    if (!layout.mapbox.accesstoken || layout.mapbox.accesstoken === "undefined") {
+        throw new Error("The mapbox access token is currently undefined, so MATS cannot produce a map " +
+            "plot at this time. To fix this, create an account at mapbox.com, " +
+            "generate a free access token, and add it to your settings.json file as private.MAPBOX_KEY.");
+    }
+    return layout;
 };
 
 // sets plot options for histograms

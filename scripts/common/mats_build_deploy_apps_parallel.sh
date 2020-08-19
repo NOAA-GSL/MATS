@@ -367,14 +367,13 @@ buildApp() {
 # "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
 # and the MYSQL_CONF_PATH entry in the settings.json
 # Pull base image.
-FROM node:12-alpine
+FROM node:14.8-alpine3.12
 # Create app directory
 ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
 WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
-RUN apk --update --no-cache add mongodb-tools make gcc g++ python python3 python3-dev mariadb-dev bash && \\
-    npm install -g npm@6.14.0 && \\
+RUN apk --update --no-cache add mongodb-tools make gcc g++ python3 python3-dev mariadb-dev bash && \\
     npm cache clean -f && \\
     npm install -g n && \\
     npm install -g node-gyp && \\

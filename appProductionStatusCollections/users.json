@@ -8,7 +8,14 @@
       "bcrypt": "$2a$10$CB/EVGSW6IKRoDxY8yPlvOpxbQrqzb9/2K4G.9TeVp/TYodM538fm"
     },
     "resume": {
-      "loginTokens": []
+      "loginTokens": [
+        {
+          "when": {
+            "$date": "2020-08-18T21:51:33.922+0000"
+          },
+          "hashedToken": "nhs0QQNm/zHMYCTRIdn1w7+5kWA0o/e9RybT6/mSFjM="
+        }
+      ]
     }
   },
   "username": "randy.pierce@noaa.gov"
@@ -26,15 +33,15 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2020-05-15T23:10:48.019+0000"
+            "$date": "2020-08-18T21:50:31.343+0000"
           },
-          "hashedToken": "FIaFCdbo9xt13arACw/POl24jxjASf/hV2gDJPEREJI="
+          "hashedToken": "xo7Wuz6Vd2f32E0rFlgrBOMpXSuo6/4sni/m23WKSeo="
         },
         {
           "when": {
-            "$date": "2020-05-15T23:10:48.241+0000"
+            "$date": "2020-08-18T21:50:31.550+0000"
           },
-          "hashedToken": "FD6QDvXEZRqjntxOkj/3QEdiZiodBt35RpyVqSyZVvY="
+          "hashedToken": "jVYBL8VEZX0jgTDvIh/kenakkdGoFc3buuqbEhNNoUQ="
         }
       ]
     }
