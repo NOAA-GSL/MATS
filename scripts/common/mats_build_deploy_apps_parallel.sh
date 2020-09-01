@@ -2,6 +2,12 @@
 # This script builds and deploys an app, optionally takes the bundle that was already built and adds a dockerfile
 # and then builds the image from an appropriate node image that corresponds to the node verwsion of the app.
 #
+usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put them in \"\")] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
+	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
+	appReference is build only requested appReferences (like upperair ceiling), \n\
+	default is build changed apps, e is build environment (dev, int, prod, or exp), and i is build images also, \n\
+	environment exp is for experimental builds - which will be pushed to the experipental repository."
+
 # source the build environment and mongo utilities
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
 
@@ -17,35 +23,23 @@ fi
 
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
-logDir="/builds/buildArea/logs"
+logDir="./logs"
+mkdir -p logs
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put them in \"\")][-t tag] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
-	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
-	appReference is build only requested appReferences (like upperair ceiling), \n\
-	default is build changed apps, e is build environment (dev, int, prod, or exp), and i is build images also, \n\
-	environment exp is for experimental builds - which will be pushed to the experipental repository."
 requestedApp=""
 requestedTag=""
 requestedBranch=""
-tag=""
 build_env=""
 pushImage="yes"
 build_images="no"
-deploy_build="yes"
-WEB_DEPLOY_DIRECTORY="/web"
 roll_versions="yes"
 experimental="no"
-while getopts "alisr:e:t:b:" o; do
+while getopts "alisr:e:b:" o; do
     case "${o}" in
-        t)
-            tag=${OPTARG}
-            requestedTag="tags/${tag} -b ${tag} "
-            requestedApp=($(echo ${requestedTag} | cut -f1 -d'-'))
-        ;;
         a)
         #all apps
             requestedApp="all"
@@ -118,7 +112,6 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 #    "test_command" : "sh ./matsTest -b phantomjs -s mats-int.gsd.esrl.noaa.gov -f progress:/builds/buildArea/test_results/mats-int-`/bin/date +%Y.%m.%d.%H.%M.%S`",
 #    "test_result_directory" : "/builds/buildArea/test_results",
 
-cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  clone ${DEPLOYMENT_DIRECTORY}"
     cd ${DEPLOYMENT_DIRECTORY}
@@ -156,26 +149,6 @@ newCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to git the new HEAD commit - must exit now ${NC}"
     exit 1
-fi
-if [ "X${requestedTag}" == "X" ]; then
-    /usr/bin/git  rev-parse ${tag}
-    if [ $? -ne 0  ]; then
-        echo -e "${RED} ${failed} You requested a tag that does not exist ${tag} - can not continue ${NC}"
-        echo These tags exist...
-        /usr/bin/git show-ref --tags
-        exit 1
-    fi
-fi
-
-if [ "X${requestedTag}" == "X" ]; then
-     echo "building to current head ${currentCommit}"
-else
-     echo "building to ${requestedTag}"
-    /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
-    if [ $? -ne 0 ]; then
-        echo -e "${RED} ${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now ${NC}"
-        exit 1
-    fi
 fi
 
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
@@ -291,7 +264,10 @@ if [ "${build_images}" == "yes" ]; then
     docker system prune -af
 fi
 
-export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
+if [ "X${METEOR_PACKAGE_DIRS}" == "X" ]; then
+    echo -e "${RED}you have not defined METEOR_PACKAGE_DIRS - exiting${NC}"
+    exit 1
+fi
 APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
@@ -302,7 +278,7 @@ buildApp() {
     echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
     /usr/local/bin/meteor reset
-    BUNDLE_DIRECTORY=/builds/deployments/${myApp}
+    BUNDLE_DIRECTORY=${BUILD_DIRECTORY}/${myApp}
     if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
         mkdir -p ${BUNDLE_DIRECTORY}
     else
@@ -310,9 +286,6 @@ buildApp() {
     fi
     # do not know why I have to do these explicitly, but I do.
     /usr/local/bin/meteor npm install --save @babel/runtime
-    /usr/local/bin/meteor npm install --save bootstrap
-    /usr/local/bin/meteor npm audit fix
-
     /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
         echo -e "$0:${myApp}: ${RED} ${failed} to meteor build - must skip app ${myApp} ${NC}"
@@ -325,10 +298,6 @@ buildApp() {
     if [[ "${build_images}" == "yes" ]]; then
         echo -e "$0:${myApp}: Building image for ${myApp}"
         buildVer=$(getVersionForAppForServer ${myApp} ${SERVER})
-        #echo git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${myApp}-${buildVer}"
-        #echo git push origin +${tag}:${BUILD_CODE_BRANCH}
-        #echo -e tagged repo with ${GRN}${tag}${NC}
-
         # build container....
         export METEORD_DIR=/opt/meteord
         export MONGO_URL="mongodb://mongo"
@@ -355,7 +324,7 @@ buildApp() {
         # save and export the meteor node version for the build_app script
         export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
         export METEOR_NPM_VERSION=$(meteor npm -v)
-        cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
+        cp ../../scripts/common/docker_scripts/run_app.sh  .
         chmod +x run_app.sh
         # remove the node_modules to force rebuild in container
         rm -rf bundle/programs/server/node_modules
@@ -393,9 +362,9 @@ EXPOSE 80
 ENTRYPOINT ["/usr/app/run_app.sh"]
 LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodecommit}"
     # build container
-        #docker build --no-cache --rm -t ${REPO}:${APPNAME}-${buildVer} .
-        #docker tag ${REPO}:${APPNAME}-${buildVer} ${REPO}:${APPNAME}-${buildVer}
-        #docker push ${REPO}:${APPNAME}-${buildVer}
+        #docker build --no-cache --rm -t ${REPO}:${TAG} .
+        #docker tag ${REPO}:${TAG} ${REPO}:${TAG}
+        #docker push ${REPO}:${TAG}
 %EOFdockerfile
         echo "$0:${myApp}: docker build --no-cache --rm -t ${REPO}:${TAG} ."
         docker build --no-cache --rm -t ${REPO}:${TAG} .
@@ -405,21 +374,25 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
             echo ${matsapps_password} | docker login -u ${matsapps_user} --password-stdin
             echo "$0:${myApp}: pushing image ${REPO}:${TAG}"
             docker push ${REPO}:${TAG}
-            if [ $? -ne 0 ]; then
+            ret=$?
+            if [ $ret -ne 0 ]; then
                 # retry
                 echo -e "${RED} Error pushing image - need to retry${NC}"
                 docker push ${REPO}:${TAG}
+                ret=$?
+            fi
+            if [ $ret -eq 0 ]; then
+              # remove the docker image - conserve space for build
+              echo "${GRN} pushed the image! ${NC}"
+              docker rmi ${REPO}:${TAG}
+            else
+              echo "${RED} Failed to push the image! ${NC}"
             fi
         else
             echo "$0:${myApp}: NOT pushing image ${REPO}:${TAG}"
         fi
-        # example run command
-        echo "$0:${myApp}: to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
-        echo "$0:${myApp}: created container in ${BUNDLE_DIRECTORY}"
     fi
     rm -rf ${BUNDLE_DIRECTORY}/*
-    # remove the docker image - conserve space for build
-    docker rmi ${REPO}:${TAG}
 }
 
 # roll or promote versions
@@ -443,10 +416,10 @@ for app in ${apps[*]}; do
 done
 # persist and checkin new versions
 exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+/usr/bin/git commit -m"automated export" -- ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
 cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
 ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-/usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+/usr/bin/git commit -am"automated export"
 /usr/bin/git pull
 git push origin ${BUILD_CODE_BRANCH}
 
