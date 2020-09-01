@@ -763,9 +763,14 @@ class ParentMetadata:
             ctx.verify_mode = ssl.CERT_NONE
             urllib.request.urlopen(self.refresh_url, data=None, cafile=None, capath=None, cadefault=False, context=ctx)
         except Exception as ex:
-            print(self.script_name + ": Exception: " + str(ex))
-            traceback.print_stack()
-            self.update_status("failed", self.utc_start, str(datetime.utcnow()))
+            if "urlopen error [Errno 61] Connection refused" in str(ex):
+                print("The METexpress web server is currently unreachable. "
+                      "Its metadata will be refreshed when it next starts.")
+                self.update_status("succeeded", self.utc_start, str(datetime.utcnow()))
+            else:
+                print(self.script_name + ": Exception: " + str(ex))
+                traceback.print_stack()
+                self.update_status("failed", self.utc_start, str(datetime.utcnow()))
         finally:
             self.set_running(False)
             self.update_status("succeeded", self.utc_start, str(datetime.utcnow()))

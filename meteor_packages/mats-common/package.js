@@ -17,14 +17,15 @@ Package.describe({
 Package.onUse(function (api) {
     api.versionsFrom('1.4.1.1');
     Npm.depends({
-        'fs-extra': '7.0.0',
-        "@babel/runtime": "7.10.4",
-        "meteor-node-stubs": "0.4.1",
+        'fs-extra': '9.0.1',
+        "@babel/runtime": "7.11.2",
+        "meteor-node-stubs": "1.0.1",
         "url": "0.11.0",
         "jquery-ui": "1.12.1",
-        "csv-stringify": "4.3.1",
+        "csv-stringify": "5.5.1",
         "node-file-cache" : "1.0.2",
-        "python-shell": "1.0.8"
+        "python-shell": "2.0.1",
+	"bootstrap": "4.5.0"
     });
     api.mainModule("server/main.js", "server");
     api.mainModule("client/main.js", "client");
@@ -44,7 +45,6 @@ Package.onUse(function (api) {
     api.use("mdg:validated-method");
     api.use('session');
     api.imply('session');
-    api.use("twbs:bootstrap");
     api.use("fortawesome:fontawesome");
     api.use("msavin:mongol");
     api.use("differential:event-hooks");
