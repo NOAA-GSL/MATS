@@ -10,72 +10,72 @@
         }
     </style>
     <script type='text/javascript'> //<![CDATA[
-        loc=window.location.href;
-        function TCtrl($scope, $http) {
-            $scope.domain = ".localhost";
-            $scope.ROOT=window.location.href.slice(0,-1);
-            $scope.proxy_prefix="";
-            $scope.items = {};
-            $scope.groups = [];  // used to maintain the order from the applist.json
-            $http({method: "GET", url: loc + "environment.json"}).
-            // success callback
-            success(function (env) {
-                $scope.env=env.environment;
-                $scope.proxy_prefix=env.proxy_prefix;
-            }).
-            // error callback
-            error(function (data, status, headers, config) {
-                $scope.env="unknown";
-            });
+    loc = window.location.href;
 
-            $http({method: "GET", url: loc + "applist.json"}).
-            // success callback
-            success(function (data) {
-                for (var di=0; di < data.length;di++) {
-                    var itemColor = '#3366bb';
-                    if (data[di].group.startsWith("MET")) {
-                        itemColor = 'darkorchid';
-                    }
-                    data[di].itemColor = itemColor;
-                    if ($scope.items[data[di].group] == null) {
-                        $scope.items[data[di].group] = [data[di]];
-                        $scope.groups.push(data[di].group);
-                    } else {
-                        ($scope.items[data[di].group]).push(data[di]);
-                    }
-                }
-            }).
-            // error callback
-            error(function (data, status, headers, config) {
-                alert("Could not read application list: /applist.json \n(should be automatically generated)");
-            });
-        }
+    function TCtrl($scope, $http) {
+        $scope.domain = ".localhost";
+        $scope.ROOT = window.location.href.slice(0, -1);
+        $scope.proxy_prefix = "";
+        $scope.items = {};
+        $scope.groups = [];  // used to maintain the order from the applist.json
+        $http({method: "GET", url: loc + "environment.json"}).
+                // success callback
+                success(function (env) {
+                    $scope.env = env.environment;
+                    $scope.proxy_prefix = env.proxy_prefix;
+                }).
+                // error callback
+                error(function (data, status, headers, config) {
+                    $scope.env = "unknown";
+                });
 
-        function loadJsCssFile(filename, filetype){
-            if (filetype == "js"){ //if filename is a external JavaScript file
-                var fileref = document.createElement('script')
-                fileref.setAttribute("type","text/javascript")
-                fileref.setAttribute("src", filename)
-                // load files asynchronously because bootstrap depends on jquery etc.
-                fileref.async = false;
-            }
-            else if (filetype == "css"){ //if filename is an external css file
-                var fileref = document.createElement("link")
-                fileref.setAttribute("rel", "stylesheet")
-                fileref.setAttribute("type", "text/css")
-                fileref.setAttribute("href", filename)
-                fileref.async = false;
-            }
-            if (typeof fileref != "undefined"){
-                document.getElementsByTagName("head")[0].appendChild(fileref);
-            }
+        $http({method: "GET", url: loc + "applist.json"}).
+                // success callback
+                success(function (data) {
+                    for (var di = 0; di < data.length; di++) {
+                        data[di].itemColor = '#3366bb';
+                        if (data[di].group.startsWith("MET")) {
+                            data[di].itemColor = 'darkorchid';
+                        }
+                        if ($scope.items[data[di].group] == null) {
+                            $scope.items[data[di].group] = [data[di]];
+                            $scope.groups.push(data[di].group);
+                        } else {
+                            ($scope.items[data[di].group]).push(data[di]);
+                        }
+                    }
+                }).
+                // error callback
+                error(function (data, status, headers, config) {
+                    alert("Could not read application list: /applist.json \n(should be automatically generated)");
+                });
+    }
+
+    function loadJsCssFile(filename, filetype) {
+        if (filetype == "js") { //if filename is a external JavaScript file
+            var fileref = document.createElement('script')
+            fileref.setAttribute("type", "text/javascript")
+            fileref.setAttribute("src", filename)
+            // load files asynchronously because bootstrap depends on jquery etc.
+            fileref.async = false;
+        } else if (filetype == "css") { //if filename is an external css file
+            var fileref = document.createElement("link")
+            fileref.setAttribute("rel", "stylesheet")
+            fileref.setAttribute("type", "text/css")
+            fileref.setAttribute("href", filename)
+            fileref.async = false;
         }
-        // load the resources dynamically to avoid relative links. The proxies have a tendency to mess up relative links.
-        loadJsCssFile(loc + "js/jquery.min.js", "js");
-        loadJsCssFile(loc + "font-awesome-4.7.0/css/font-awesome.min.css", "css");
-        loadJsCssFile(loc + "css/bootstrap.min.css", "css");
-        loadJsCssFile(loc + "js/bootstrap.min.js", "js");
-        loadJsCssFile(loc + 'js/angular.min.js', "js");
+        if (typeof fileref != "undefined") {
+            document.getElementsByTagName("head")[0].appendChild(fileref);
+        }
+    }
+
+    // load the resources dynamically to avoid relative links. The proxies have a tendency to mess up relative links.
+    loadJsCssFile(loc + "js/jquery.min.js", "js");
+    loadJsCssFile(loc + "font-awesome-4.7.0/css/font-awesome.min.css", "css");
+    loadJsCssFile(loc + "css/bootstrap.min.css", "css");
+    loadJsCssFile(loc + "js/bootstrap.min.js", "js");
+    loadJsCssFile(loc + 'js/angular.min.js', "js");
     </script>
 </head>
 <body style="background-image: url('img/bg.png')">
@@ -93,9 +93,9 @@
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                         </button>
-                        <a style="color:white" class="navbar-brand" href="#">Custom MATS</a>
-                        <a style="color:white" class="navbar-brand" href="#"><i style="color:cyan" class="fa fa-home fa-lg" aria-hidden="true"></i></a>
-
+                        <a style="color:white" class="navbar-brand" href="#"><i style="color:cyan"
+                                                                                class="fa fa-home fa-lg"
+                                                                                aria-hidden="true"></i></a>
                     </div>
                     <!-- Collect the nav links, forms, and other content for toggling -->
                     <div class="collapse navbar-collapse" id="navbar-collapse-1">
@@ -126,7 +126,7 @@
                             <span class="icon-bar"></span>
                         </button>
                         <a style="margin-bottom:0;margin-top:0;padding: 0;" class="navbar-brand" href="#"><img
-                                style="height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right:1em;padding-bottom:0;padding-top:0;"
+                                style="height:100%;margin-bottom:0;margin-top:0;padding: 0 1em;"
                                 src="img/noaa_transparent.gif" alt="NOAA"></a>
                     </div>
                     <!-- Collect the nav links, forms, and other content for toggling -->
@@ -134,7 +134,8 @@
                         <ul class="nav navbar-nav">
                             <li>
                                 <div>
-                                    <a href="http://esrl.noaa.gov/"><span style="color:white;font-size: large;">Earth System Research Laboratory</span></a><br>
+                                    <a href="http://esrl.noaa.gov/gsd/"><span style="color:white;font-size: small;">Global Systems Laboratory</span></a><br>
+                                    <a href="/"><span style="color:white;font-size: x-large;">Model Analysis Tool Suite (MATS)</span></a><br>
                                 </div>
                             </li>
                         </ul>
@@ -143,7 +144,11 @@
                 </div>
                 <!-- /.container-fluid -->
             </nav>
-            <div style="background-color: #dddddd;height:100%;;margin-bottom:0;margin-top:0;padding-left:1em;padding-right:0" class="container-fluid">
+            <div style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-left:0;padding-right:0"
+                 class="container-fluid">
+                <div>
+                    <!--h2><font color="red"> NOTE: Maintenance today (February 21) at 5 pm Eastern time, interruptions are likely. </font></h2>-->
+                </div>
                 <ul class="nav navbar-nav navbar-left" style="min-height:10px;">
                     <div>
                         <li ng-repeat="group in groups">
@@ -152,7 +157,9 @@
                                     <h3>{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
                                         <h2>Embed URL: {{ROOT}}{{proxy_prefix}}/{{item.app}}</h2>
-                                        <a class="btn-sm btn-primary" type="button" style="font-size:medium; background-color: {{item.itemColor}}; font-weight: bold; border-radius:10px;"href="{{proxy_prefix}}/{{item.app}}">{{item.title}}</a>
+                                        <a class="btn-sm btn-primary" type="button"
+                                           style="font-size:medium; background-color: {{item.itemColor}}; font-weight: bold; border-radius:10px; margin: 2px 2px;"
+                                           href="{{proxy_prefix}}/{{item.app}}">{{item.title}}</a>
                                     </li>
                                 </ul>
                             </div>

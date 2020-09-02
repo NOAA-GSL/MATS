@@ -29,69 +29,20 @@ if [ ! -d MATS_for_EMB ]; then
 fi
 
 cd MATS_for_EMB/apps
-export METEOR_PACKAGE_DIRS=`ls -rt -d -1 "$PWD"/../meteor_packages/`
+#export METEOR_PACKAGE_DIRS=`ls -rt -d -1 "$PWD"/../meteor_packages/`
 
 # update all the apps
 for app in $(find . -maxdepth 1 -type d -not -path ".")
     do
         cd $app;
         pwd;
-        meteor reset
         rm -rf .meteor/local
-		meteor add meteorhacks:picker
-		meteor update --all-packages
-        rm -rf node_modules
-		meteor npm uninstall --save dom-to-image
-		meteor npm uninstall meteor-node-stubs
-		meteor npm uninstall readable-streams
-		meteor npm uninstall jsonexport --save
-		meteor npm install @babel/runtime@latest
-		meteor npm install git+https://github.com/pingec/downsample-lttb.git --save
-		meteor npm install --save object-sizeof
-		meteor npm install --save html2canvas
-		meteor npm install --save jspdf
-		meteor npm install -g csv-stringify --save
-	    meteor npm install
-		meteor npm audit fix
-		meteor npm list
-        cd ..;
+      	meteor reset
+        meteor update
+        meteor update --all-packages
+        meteor npm uninstall fibers
+        meteor npm install fibers
+        meteor npm audit fix --force
+        meteor npm list
+        cd ..
     done
-exit
-# clean up meteor releases for all the apps
-shopt -s nullglob
-releases=(`find . -name release | while read r; do cat $r | cut -d'@' -f2 | uniq; done | uniq | sed 's/\.\([^.]\)$/_\1/'`)
-ls -1 ~/.meteor/packages/meteor-tool/ | while read mt
-do
-	contained="false"
-	for i in "${releases[@]}"
-		do
-		if [[ "$i" = "$mt" ]]
-		then
-			contained="true"
-		fi
-	done
-	if [[ "$contained" = "false" ]]
-	then
-		echo removing "~/.meteor/packages/meteor-tool/$mt"
-		rm -rf ~/.meteor/packages/meteor-tool/$mt
-		echo removing "~/.meteor/packages/meteor-tool/.$mt.*/"
-		rm -rf ~/.meteor/packages/meteor-tool/.$mt.*/
-	else
-		echo leaving $mt
-	fi
-done
-
-# clean up /tmp files
-echo -e "cleaning up /tmp/npm-* files"
-rm -rf /tmp/npm-*
-
-nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
-npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
-
-rm -rf ~/.meteor/node
-rm -rf ~/.meteor/npm
-ln -sf $nodepath ~/.meteor/node
-ln -sf $npmpath ~/.meteor/npm
-
-cd ..
-
