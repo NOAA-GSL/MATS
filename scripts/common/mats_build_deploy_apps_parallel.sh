@@ -135,21 +135,20 @@ if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to git the current HEAD commit - must exit now ${NC}"
     exit 1
 fi
-/usr/bin/git pull -Xtheirs
+/usr/bin/git pull -Xtheirs --recurse-submodules=yes --commit
 if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to do git pull - must exit now ${NC}"
     exit 1
 fi
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED} ${failed} to /usr/bin/git fetch - must exit now ${NC}"
-    exit 1
-fi
 newCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to git the new HEAD commit - must exit now ${NC}"
     exit 1
 fi
+# link in METexpress apps from METexpress submodule
+rm -rf apps/met-*
+ln -sf METexpress/apps/* apps
 
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
