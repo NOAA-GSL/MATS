@@ -142,16 +142,11 @@ def regions_per_model_mats_all_categories(mode):
                 all_data_sources.append(model)
             per_table[tablename] = {}
             per_table[tablename]['model'] = model
-            temp = "^" + model + "_" 
+            temp = "^" + model + "_"
             region = re.sub(temp, "", tablename)
             region = re.sub("_sums", "", region)
             per_table[tablename]['region'] = region
-          #  temp1 = "^" + model + "_"
-          #  temp2 = "_" + region + "_sums$"
-          #  fcst_len = re.sub(temp1, "", tablename)
-          #  fcst_len = re.sub(temp2, "", fcst_len)
-          #  per_table[tablename]['fcst_len'] = fcst_len
-          #  print("model is " + model + ", region is " + region)
+            # print("model is " + model + ", region is " + region)
 
     # sys.exit(-1)
 
@@ -168,7 +163,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_fcst_lens.append(int(val))
             this_fcst_lens.sort(key=int)
             per_table[tablename]['fcst_lens'] = this_fcst_lens
-            print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
+            # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
 
             # get statistics for this table
             get_tablestats = "SELECT min(date) AS mindate, max(date) AS maxdate, count(date) AS numrecs FROM " + tablename + ";"
@@ -328,7 +323,7 @@ def regions_per_model_mats_all_categories(mode):
         # print( "these_regions:\n" + str(these_regions) )
 
         # get forecast lengths for all tables pertaining to this model
-        get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db + ".TABLESTATS_build where tablename like '" + model + "%' and model = '" + model + "' and numrecs > 0;"
+        get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db + ".TABLESTATS_build where tablename like '" + model + "%' and fcst_lens != '[]' and model = '" + model + "' and numrecs > 0 order by length(fcst_lens) desc;"
         cursor.execute(get_these_fcst_lens)
         these_fcst_lens = []
         for row in cursor:
