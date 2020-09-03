@@ -780,9 +780,9 @@ const doCurveParams = function () {
             'Fcst lead time': "select m0.fcst_len as xVal, ",
             'Pressure level': "select m0.mb10*10 as xVal, ",
             'Valid UTC hour': "select m0.hour as xVal, ",
-            'Init UTC hour': "select (unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select (unix_timestamp(m0.date)+3600*(m0.hour-m0.fcst_len))%(24*3600)/3600 as xVal, ",
             'Valid Date': "select unix_timestamp(m0.date)+3600*m0.hour as xVal, ",
-            'Init Date': "select unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 as xVal, "
+            'Init Date': "select unix_timestamp(m0.date)+3600*(m0.hour-m0.fcst_len) as xVal, "
         };
 
         matsCollections.CurveParams.insert(

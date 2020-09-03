@@ -43,13 +43,14 @@ dataValidTime = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var forecastLength = curve['forecast-length'];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + forecastLength + "_" + region + "_sums as m0";
+        var queryTableClause = "from " + model + "_" + region + "_sums as m0";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
@@ -86,7 +87,7 @@ dataValidTime = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select ((unix_timestamp(m0.date)+3600*m0.hour)%(24*3600)/3600) as hr_of_day, " +
+            var statement = "select m0.hour as hr_of_day, " +
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
@@ -94,6 +95,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 "{{queryTableClause}} " +
                 "where 1=1 " +
                 "{{dateClause}} " +
+                "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
                 "{{phaseClause}} " +
                 "group by hr_of_day " +
@@ -102,6 +104,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
             statement = statement.replace('{{phaseClause}}', phaseClause);
             statement = statement.replace('{{dateClause}}', dateClause);
