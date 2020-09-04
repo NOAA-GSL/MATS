@@ -1,7 +1,7 @@
 change the path as needed
 
 export METEOR_PACKAGE_DIRS=/Users/pierce/WebstormProjects/MATS_DEV/meteor_packages/
-pierce@pierce-lt upperair (development_v1.0) $ for i in ceiling upperair wfip2 anomalycor surface visibility; do cd $i; meteor reset; meteor update --all-packages; cd ..; done
+pierce@pierce-lt upperair (development) $ for i in ceiling upperair wfip2 anomalycor surface visibility; do cd $i; meteor reset; meteor update --all-packages; cd ..; done
 
 
 

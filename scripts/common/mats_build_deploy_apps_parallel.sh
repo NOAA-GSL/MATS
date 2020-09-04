@@ -113,8 +113,8 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 #    "test_result_directory" : "/builds/buildArea/test_results",
 
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
-    echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  clone ${DEPLOYMENT_DIRECTORY}"
-    cd ${DEPLOYMENT_DIRECTORY}
+    echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  must clone ${DEPLOYMENT_DIRECTORY}"
+    cd ${DEPLOYMENT_DIRECTORY}/..
     /usr/bin/git clone ${BUILD_GIT_REPO}
     if [ $? -ne 0 ]; then
         echo -e "${RED} ${failed} to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now ${NC}"
@@ -149,7 +149,7 @@ fi
 # link in METexpress apps from METexpress submodule
 rm -rf apps/met-*
 ln -sf METexpress/apps/* apps
-
+ln -sf METexpress/tests/src/features/* tests/src/features/*
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
@@ -263,8 +263,10 @@ if [ "${build_images}" == "yes" ]; then
     docker system prune -af
 fi
 
-if [ "X${METEOR_PACKAGE_DIRS}" == "X" ]; then
-    echo -e "${RED}you have not defined METEOR_PACKAGE_DIRS - exiting${NC}"
+# should be here from git submodule MATScommon
+export METEOR_PACKAGE_DIRS=${DEPLOYMENT_DIRECTORY}/MATScommon/meteor_packages
+if [ ! -d "{METEOR_PACKAGE_DIRS}" ]; then
+    echo -e "${RED}your ${METEOR_PACKAGE_DIRS} does not exist - exiting${NC}"
     exit 1
 fi
 APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps

@@ -1,0 +1,6 @@
+[submodule "METexpress"]
+	path = METexpress
+	url = https://github.com/dtcenter/METexpress
+[submodule "MATScommon"]
+	path = MATScommon
+	url = https://github.com/dtcenter/MATScommon

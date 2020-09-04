@@ -228,7 +228,7 @@
   "deployment_status": "active",
   "deployment_directory": "/builds/buildArea/MATS_for_EMB",
   "build_git_repo": "gerrit:MATS_for_EMB",
-  "build_code_branch": "development_v1.0",
+  "build_code_branch": "development",
   "build_directory": "/builds/buildArea/",
   "build_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e dev",
   "cmd_execute_server": "mats-dev.gsd.esrl.noaa.gov",
