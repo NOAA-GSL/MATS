@@ -11,10 +11,10 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
-dataDieOff = function (plotParams, plotFunction) {
+dataDailyModelCycle = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appParams = {
-        "plotType": matsTypes.PlotTypes.dieoff,
+        "plotType": matsTypes.PlotTypes.dailyModelCycle,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
@@ -25,6 +25,9 @@ dataDieOff = function (plotParams, plotFunction) {
     var dataFoundForCurve = true;
     var dataFoundForAnyCurve = false;
     var totalProcessingStart = moment();
+    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
+    var fromSecs = dateRange.fromSeconds;
+    var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
@@ -35,7 +38,7 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var idealValues = [100];
+    var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -45,70 +48,69 @@ dataDieOff = function (plotParams, plotFunction) {
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_anomcorr_" + region + " as m0";
-        var variable = curve['variable'];
-        var variableClause = "and m0.variable = '" + variable + "'";
-        var validTimeClause = "";
-        var utcCycleStart;
-        var utcCycleStartClause = "";
-        var forecastLengthStr = curve['dieoff-type'];
-        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
-        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
-        var dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '" + fromSecs + "' and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '" + toSecs + "' ";
-        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-            var validTimeStr = curve['valid-time'];
-            validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
-        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+        var queryTableClause = "from " + model + "_" + region + "_sums as m0";
+        var variableStr = curve['variable'];
+        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variable = variableOptionsMap[variableStr];
+        var utcCycleStart = Number(curve['utc-cycle-start']);
+        utcCycleStarts[curveIndex] = utcCycleStart;
+        var utcCycleStartClause = "and floor(((unix_timestamp(m0.date)+3600*m0.hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+        var forecastLengthClause = "and m0.fcst_len < 24";
+        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs;
+        var top = curve['top'];
+        var bottom = curve['bottom'];
+        var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
+        var phaseStr = curve['phase'];
+        var phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+        var phaseClause = phaseOptionsMap[phaseStr];
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
+        var statisticClause;
+        if (variableStr === 'winds') {
+            statisticClause = statisticOptionsMap[statisticSelect][1];
+            statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
         } else {
-            dateClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600) = " + fromSecs;
+            statisticClause = statisticOptionsMap[statisticSelect][0];
+            statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
         }
-        var levelClause = "";
-        var levels = curve['level'] === undefined ? [] : curve['level'];
-        if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
-            levelClause = "and m0.level IN(" + levels + ")";
-        }
-        var statisticClause = "avg(m0.wacorr/100) as stat, " +
-            "count(m0.wacorr) as N0, " +
-            "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data";
-        curves[curveIndex]['statistic'] = "Correlation";
+        statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
+        statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
+        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var varUnits = statVarUnitMap[statisticSelect][variableStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = "Correlation";
+        var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.fcst_len as fcst_lead, " +
-                "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
-                "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
-                "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
+            var statement = "select unix_timestamp(m0.date)+3600*m0.hour as avtime, " +
+                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
+                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
+                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statisticClause}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
                 "{{dateClause}} " +
-                "{{variableClause}} " +
-                "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
+                "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
-                "group by fcst_lead " +
-                "order by fcst_lead" +
+                "{{phaseClause}} " +
+                "group by avtime " +
+                "order by avtime" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{variableClause}}', variableClause);
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
+            statement = statement.replace('{{phaseClause}}', phaseClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 
@@ -117,7 +119,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, 'Anomaly Correlation');
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
@@ -139,7 +141,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 } else {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw (new Error(error));
+                    if (error.includes('Unknown column')) {
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                    } else {
+                        throw new Error(error);
+                    }
                 }
             } else {
                 dataFoundForAnyCurve = true;
