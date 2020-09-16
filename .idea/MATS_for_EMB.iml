@@ -3,6 +3,12 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/METexpress/apps/met-airquality/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/METexpress/apps/met-anomalycor/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/METexpress/apps/met-ensemble/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/METexpress/apps/met-precip/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/METexpress/apps/met-surface/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/METexpress/apps/met-upperair/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/appProductionStatus/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/aircraft/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/anomalycor/.meteor/local" />
