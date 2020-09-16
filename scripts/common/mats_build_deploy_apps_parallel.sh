@@ -127,6 +127,8 @@ cd ${DEPLOYMENT_DIRECTORY}
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
 # set the submodules branch
+git submodule init
+git submodule update
 git config .gitmodules submodule.MATScommon.branch ${BUILD_CODE_BRANCH}
 git config .gitmodules submodule.METexpress.branch ${BUILD_CODE_BRANCH}
 # checkout proper branch
