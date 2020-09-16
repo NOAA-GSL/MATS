@@ -116,7 +116,7 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  must clone ${DEPLOYMENT_DIRECTORY}"
     cd ${DEPLOYMENT_DIRECTORY}/..
-    /usr/bin/git clone --recurse-submodules ${BUILD_GIT_REPO}
+    /usr/bin/git clone --recurse-submodules --remote-submodules ${BUILD_GIT_REPO}
     /usr/bin/git submodule init
     /usr/bin/git submodule update
 
