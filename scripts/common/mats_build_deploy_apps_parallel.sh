@@ -138,7 +138,7 @@ if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to git the current HEAD commit - must exit now ${NC}"
     exit 1
 fi
-/usr/bin/git pull -Xtheirs --recurse-submodules=yes --commit
+/usr/bin/git pull -Xtheirs  --commit
 if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to do git pull - must exit now ${NC}"
     exit 1
