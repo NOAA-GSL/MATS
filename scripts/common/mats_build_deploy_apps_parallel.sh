@@ -146,10 +146,6 @@ if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to git the new HEAD commit - must exit now ${NC}"
     exit 1
 fi
-# link in METexpress apps from METexpress submodule
-rm -rf apps/met-*
-ln -sf METexpress/apps/* apps
-ln -sf METexpress/tests/src/features/* tests/src/features/*
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
