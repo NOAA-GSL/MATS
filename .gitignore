@@ -1,7 +1,7 @@
-node_modules
+node_modules/
 meteor_packages/mats-common/.npm/package/npm-shrinkwrap.json
-.idea
+.idea/
 .DS_Store
-logs/**
+logs/
 __pycache__
 venv
