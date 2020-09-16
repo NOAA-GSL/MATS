@@ -133,8 +133,8 @@ git reset --hard
 git submodule init
 git submodule update
 # checkout proper branch
-echo "git checkout ${BUILD_CODE_BRANCH}"
-git checkout ${BUILD_CODE_BRANCH}
+echo "git checkout -f ${BUILD_CODE_BRANCH}"
+git checkout -f ${BUILD_CODE_BRANCH}
 #update submodules
 git submodule update --remote
 git submodule foreach "git checkout ${BUILD_CODE_BRANCH}"
