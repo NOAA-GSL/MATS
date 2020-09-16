@@ -126,8 +126,9 @@ cd ${DEPLOYMENT_DIRECTORY}
 # throw away any local changes - after all, you are building
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
-# set the submodule branch
-git config .gitmodules submodule.DbConnector.branch ${BUILD_CODE_BRANCH}
+# set the submodules branch
+git config .gitmodules submodule.MATScommon.branch ${BUILD_CODE_BRANCH}
+git config .gitmodules submodule.METexpress.branch ${BUILD_CODE_BRANCH}
 # checkout proper branch
 echo "git checkout ${BUILD_CODE_BRANCH}"
 git checkout ${BUILD_CODE_BRANCH}
