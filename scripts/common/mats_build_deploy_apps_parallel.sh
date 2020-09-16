@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # This script builds and deploys an app, optionally takes the bundle that was already built and adds a dockerfile
 # and then builds the image from an appropriate node image that corresponds to the node verwsion of the app.
+# This script is dependent on two submodules MATScommon and METexpress
 #
 usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put them in \"\")] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
@@ -125,10 +126,13 @@ cd ${DEPLOYMENT_DIRECTORY}
 # throw away any local changes - after all, you are building
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
+# set the submodule branch
+git config .gitmodules submodule.DbConnector.branch ${BUILD_CODE_BRANCH}
 # checkout proper branch
 echo "git checkout ${BUILD_CODE_BRANCH}"
 git checkout ${BUILD_CODE_BRANCH}
-
+#update submodules
+git submodule update --remote
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
@@ -170,20 +174,19 @@ if [ "X${requestedApp}" == "X" -a ${ret} -ne 0 ]; then
 fi
 changedApps=( $(echo -e ${diffs} | grep apps | cut -f2 -d'/') )
 echo -e changedApps are ${GRN}${changedApps}${NC}
-meteor_package_changed=$(echo -e ${diffs} | grep meteor_packages | cut -f2 -d'/')
 
 if [ "${build_env}" == "int" ]; then
     cv=$(date +%Y.%m.%d)
-    echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
-    /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
-    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
+    /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
 elif [ "${build_env}" == "prod" ]; then
     cv=$(date +%Y.%m.%d)
-    echo -e "${GRN}setting pub date to $cv for /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
-    /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/<x-cr>$cv<\/x-cr>/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
-    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    echo -e "${GRN}setting pub date to $cv for /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
+    /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/<x-cr>$cv<\/x-cr>/g" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
 fi
@@ -206,20 +209,14 @@ if [ "X${requestedApp}" != "X" ]; then
     fi
 else
     # nothing was requested - build the changed apps unless force was used
-    if [ "X${meteor_package_changed}" != "X" ]; then
-        # common code changed so we have to build all the apps
-        echo -e common code changed  - must build all buildable apps
-        apps=${buildableApps}
-    else
-        # no common code changes or force so just build changed apps
-        l2=" ${changedApps[*]} "
-        for a in ${buildableApps[*]}; do
-            if [[ $l2 =~ " $a " ]]; then
-                apps+=( $a )
-            fi
-        done
-        echo -e modified and buildable apps are ${GRN}${apps[*]}${NC}
-    fi
+    # no common code changes or force so just build changed apps
+    l2=" ${changedApps[*]} "
+    for a in ${buildableApps[*]}; do
+        if [[ $l2 =~ " $a " ]]; then
+            apps+=( $a )
+        fi
+    done
+    echo -e modified and buildable apps are ${GRN}${apps[*]}${NC}
 fi
 if [ "X${apps}" == "X" ]; then
     echo -e "${RED}no apps to build - exiting${NC}"
@@ -419,7 +416,7 @@ done
 exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
 /usr/bin/git commit -m"automated export" -- ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
 cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
-${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/MATScommon/meteor_packages/mats-common/public/deployment/deployment.json
 /usr/bin/git commit -am"automated export"
 /usr/bin/git pull
 git push origin ${BUILD_CODE_BRANCH}
