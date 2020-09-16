@@ -129,9 +129,6 @@ cd ${DEPLOYMENT_DIRECTORY}
 # throw away any local changes - after all, you are building
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
-# set the submodules branch
-git submodule init
-git submodule update
 # checkout proper branch
 echo "git checkout -f ${BUILD_CODE_BRANCH}"
 git checkout -f ${BUILD_CODE_BRANCH}
