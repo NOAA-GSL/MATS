@@ -262,7 +262,7 @@ fi
 
 # should be here from git submodule MATScommon
 export METEOR_PACKAGE_DIRS=${DEPLOYMENT_DIRECTORY}/MATScommon/meteor_packages
-if [ ! -d "{METEOR_PACKAGE_DIRS}" ]; then
+if [ ! -d "${METEOR_PACKAGE_DIRS}" ]; then
     echo -e "${RED}your ${METEOR_PACKAGE_DIRS} does not exist - exiting${NC}"
     exit 1
 fi
