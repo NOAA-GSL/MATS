@@ -117,8 +117,6 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  must clone ${DEPLOYMENT_DIRECTORY}"
     cd ${DEPLOYMENT_DIRECTORY}/..
     /usr/bin/git clone --recurse-submodules --remote-submodules ${BUILD_GIT_REPO}
-    /usr/bin/git submodule init
-    /usr/bin/git submodule update
 
     if [ $? -ne 0 ]; then
         echo -e "${RED} ${failed} to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now ${NC}"
@@ -131,9 +129,8 @@ echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
 # checkout proper branch
 echo "git checkout -f ${BUILD_CODE_BRANCH}"
-git checkout -f ${BUILD_CODE_BRANCH}
-#update submodules
-git submodule update --remote
+git checkout --recurse-submodules -f ${BUILD_CODE_BRANCH}
+#checkout submodules
 git submodule foreach "git checkout ${BUILD_CODE_BRANCH}"
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 export currentCodeCommit=$(git rev-parse --short HEAD)
