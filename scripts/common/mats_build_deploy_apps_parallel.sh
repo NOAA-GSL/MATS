@@ -116,7 +116,10 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  must clone ${DEPLOYMENT_DIRECTORY}"
     cd ${DEPLOYMENT_DIRECTORY}/..
-    /usr/bin/git clone ${BUILD_GIT_REPO}
+    /usr/bin/git clone --recurse-submodules ${BUILD_GIT_REPO}
+    /usr/bin/git submodule init
+    /usr/bin/git submodule update
+
     if [ $? -ne 0 ]; then
         echo -e "${RED} ${failed} to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now ${NC}"
         exit 1
@@ -129,13 +132,12 @@ git reset --hard
 # set the submodules branch
 git submodule init
 git submodule update
-git config .gitmodules submodule.MATScommon.branch ${BUILD_CODE_BRANCH}
-git config .gitmodules submodule.METexpress.branch ${BUILD_CODE_BRANCH}
 # checkout proper branch
 echo "git checkout ${BUILD_CODE_BRANCH}"
 git checkout ${BUILD_CODE_BRANCH}
 #update submodules
 git submodule update --remote
+git submodule foreach "git checkout ${BUILD_CODE_BRANCH}"
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
