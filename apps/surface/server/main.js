@@ -1154,7 +1154,7 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    if (metadataSettings) {
+    if (metadataSettings)  {
         metadataPool = mysql.createPool(metadataSettings);
         allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
     }

@@ -45,9 +45,10 @@ dataHistogram = function (plotParams, plotFunction) {
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var forecastLength = curve['forecast-length'];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + "_sums as m0";
+        var queryTableClause = "from " + model + "_" + forecastLength + "_" + region + "_sums as m0";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
@@ -56,8 +57,6 @@ dataHistogram = function (plotParams, plotFunction) {
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and m0.hour IN(" + validTimes + ")";
         }
-        var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
@@ -105,7 +104,6 @@ dataHistogram = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{dateClause}} " +
                 "{{validTimeClause}} " +
-                "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
                 "{{phaseClause}} " +
                 "group by avtime " +
@@ -115,7 +113,6 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
             statement = statement.replace('{{phaseClause}}', phaseClause);
             statement = statement.replace('{{dateClause}}', dateClause);

@@ -485,42 +485,14 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'dieoff-type'}) == undefined) {
-        var dieoffOptionsMap = {
-            "Dieoff": [matsTypes.ForecastTypes.dieoff],
-            "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
-            "Single cycle forecast (uses first date in range)": [matsTypes.ForecastTypes.singleCycle]
-        };
-        matsCollections.CurveParams.insert(
-            {
-                name: 'dieoff-type',
-                type: matsTypes.InputTypes.select,
-                optionsMap: dieoffOptionsMap,
-                options: Object.keys(dieoffOptionsMap),
-                hideOtherFor: {
-                    'valid-time': ["Dieoff for a specified UTC cycle init hour", "Single cycle forecast (uses first date in range)"],
-                    'utc-cycle-start': ["Dieoff", "Single cycle forecast (uses first date in range)"],
-                },
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(dieoffOptionsMap)[0],
-                controlButtonVisibility: 'block',
-                controlButtonText: 'dieoff type',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 4
-            });
-    }
-
     if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
                 options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                controlButtonCovered: true,
                 selected: [],
+                controlButtonCovered: true,
                 unique: false,
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
@@ -529,24 +501,6 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true
-            });
-    }
-
-    if (matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}) == undefined) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'utc-cycle-start',
-                type: matsTypes.InputTypes.select,
-                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: 12,
-                controlButtonVisibility: 'block',
-                controlButtonText: "utc cycle init hour",
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 4,
             });
     }
 
@@ -651,12 +605,9 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}) == undefined) {
         const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len as xVal, ",
             'Pressure level': "select m0.mb10*10 as xVal, ",
             'Valid UTC hour': "select m0.hour as xVal, ",
-            'Init UTC hour': "select (unix_timestamp(m0.date)+3600*(m0.hour-m0.fcst_len))%(24*3600)/3600 as xVal, ",
             'Valid Date': "select unix_timestamp(m0.date)+3600*m0.hour as xVal, ",
-            'Init Date': "select unix_timestamp(m0.date)+3600*(m0.hour-m0.fcst_len) as xVal, "
         };
 
         matsCollections.CurveParams.insert(
@@ -668,7 +619,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: Object.keys(optionsMap)[1],
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -678,12 +629,9 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}) == undefined) {
         const optionsMap = {
-            'Fcst lead time': "m0.fcst_len as yVal, ",
-            'Pressure level': "m0.mb10*10 as yVal, ",
-            'Valid UTC hour': "m0.hour as yVal, ",
-            'Init UTC hour': "(unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
+            'Pressure level': "m0.mb10*10 as yVal,",
+            'Valid UTC hour': "m0.hour as yVal,",
             'Valid Date': "unix_timestamp(m0.date)+3600*m0.hour as yVal, ",
-            'Init Date': "unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 as yVal, "
         };
 
         matsCollections.CurveParams.insert(
@@ -695,7 +643,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[1],
+                default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
@@ -833,27 +781,6 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ' in '],
-                ['', 'region', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ', '],
-                ['level: ', 'top', ' '],
-                ['to ', 'bottom', ', '],
-                ['', 'dieoff-type', ', '],
-                ['valid-time: ', 'valid-time', ', '],
-                ['start utc: ', 'utc-cycle-start', ', '],
-                ['phase: ', 'phase', ', '],
-                ['', 'curve-dates', '']
-            ],
-            displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "top", "bottom", "curve-dates"
-            ],
-            groupSize: 6
-        });
-        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
                 ['', 'label', ': '],
@@ -869,24 +796,6 @@ const doCurveTextPatterns = function () {
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom", "curve-dates"
-            ],
-            groupSize: 6
-        });
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.dailyModelCycle,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ' in '],
-                ['', 'region', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ', '],
-                ['level: ', 'top', ' '],
-                ['to ', 'bottom', ', '],
-                ['start utc: ', 'utc-cycle-start', ', '],
-                ['phase: ', 'phase', ''],
-            ],
-            displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "utc-cycle-start", "phase", "top", "bottom"
             ],
             groupSize: 6
         });
@@ -978,21 +887,9 @@ const doPlotGraph = function () {
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphPlotly",
-            dataFunction: "dataDieOff",
-            checked: false
-        });
-        matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphPlotly",
             dataFunction: "dataValidTime",
-            checked: false
-        });
-        matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.dailyModelCycle,
-            graphFunction: "graphPlotly",
-            dataFunction: "dataDailyModelCycle",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
@@ -1068,7 +965,7 @@ Meteor.startup(function () {
 
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
-    mdr.addRecord("sumPool", "acars_RR2", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
     try {
         matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'aircraft', title: "Upper Air (AMDAR)", group: "Upper Air"});
     } catch (error) {
