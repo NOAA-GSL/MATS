@@ -149,10 +149,6 @@ if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to git the new HEAD commit - must exit now ${NC}"
     exit 1
 fi
-# link in METexpress apps from METexpress submodule
-rm -rf ${DEPLOYMENT_DIRECTORY}/apps/met-*
-ln -sf ${DEPLOYMENT_DIRECTORY}/METexpress/apps/* ${DEPLOYMENT_DIRECTORY}/apps
-ln -sf ${DEPLOYMENT_DIRECTORY}/METexpress/tests/src/features/* ${DEPLOYMENT_DIRECTORY}/tests/src/features
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
@@ -316,6 +312,7 @@ buildApp() {
         echo "$0:${myApp}: building container in ${BUNDLE_DIRECTORY}"
         # remove the container if it exists - force in case it is running
         docker rm -f ${REPO}:${TAG}
+
         # Create the Dockerfile
         echo "$0:${myApp}: => Creating Dockerfile..."
         # save and export the meteor node version for the build_app script
