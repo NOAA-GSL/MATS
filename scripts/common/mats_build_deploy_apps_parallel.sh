@@ -413,10 +413,12 @@ exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
 /usr/bin/git commit -m"automated export" -- ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
 cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
 ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/MATScommon/meteor_packages/mats-common/public/deployment/deployment.json
+currdir=$(pwd)
+cd ${DEPLOYMENT_DIRECTORY}/MATScommon
 /usr/bin/git commit -am"automated export"
 /usr/bin/git pull
 git push origin ${BUILD_CODE_BRANCH}
-
+cd ${currdir}
 # build all the apps
 i=0
 for app in ${apps[*]}; do
