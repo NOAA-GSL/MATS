@@ -174,16 +174,22 @@ if [ "${build_env}" == "int" ]; then
     cv=$(date +%Y.%m.%d)
     echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
     /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    curdir=$(pwd)
+    cd /builds/buildArea/MATS_for_EMB/MATScommon
     git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
+    cd $curdir
 elif [ "${build_env}" == "prod" ]; then
     cv=$(date +%Y.%m.%d)
     echo -e "${GRN}setting pub date to $cv for /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
     /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/<x-cr>$cv<\/x-cr>/g" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    curdir=$(pwd)
+    cd /builds/buildArea/MATS_for_EMB/MATScommon
     git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
+    cd $curdir
 fi
 
 unset apps
