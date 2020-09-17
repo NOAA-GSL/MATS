@@ -321,7 +321,7 @@ buildApp() {
         # save and export the meteor node version for the build_app script
         export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
         export METEOR_NPM_VERSION=$(meteor npm -v)
-        cp ../../scripts/common/docker_scripts/run_app.sh  .
+        cp ${DEPLOYMENT_DIRECTORY}/scripts/common/docker_scripts/run_app.sh  .
         chmod +x run_app.sh
         # remove the node_modules to force rebuild in container
         rm -rf bundle/programs/server/node_modules
