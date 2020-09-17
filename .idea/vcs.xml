@@ -2,5 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../MATScommon" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../METexpress" vcs="Git" />
   </component>
 </project>

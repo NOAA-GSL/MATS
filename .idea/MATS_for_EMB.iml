@@ -76,6 +76,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="R User Library" level="project" />
     <orderEntry type="library" name="R Skeletons" level="application" />
+    <orderEntry type="module" module-name="MATScommon" />
+    <orderEntry type="module" module-name="METexpress" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="" />
