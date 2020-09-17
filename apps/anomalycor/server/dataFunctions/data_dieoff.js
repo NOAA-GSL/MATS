@@ -35,7 +35,7 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var idealValues = [100];
+    var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve

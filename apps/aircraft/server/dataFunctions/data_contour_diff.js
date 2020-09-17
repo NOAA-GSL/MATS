@@ -51,14 +51,14 @@ dataContourDiff = function (plotParams, plotFunction) {
         var xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
         var yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var forecastLength = curve['forecast-length'];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + "_sums as m0";
+        var queryTableClause = "from " + model + "_" + forecastLength + "_" + region + "_sums as m0";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
-        var forecastLengthClause = "";
         var dateString = "";
         var dateClause = "";
         var levelClause = "";
@@ -69,11 +69,6 @@ dataContourDiff = function (plotParams, plotFunction) {
                 validTimeClause = "and m0.hour IN(" + validTimes + ")";
             }
         }
-        if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-            var forecastLength = curve['forecast-length'];
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-        }
-        forecastLengthClause = forecastLengthClause + " and m0.fcst_len >= 0";
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
             dateString = "unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600";
         } else {
@@ -100,21 +95,15 @@ dataContourDiff = function (plotParams, plotFunction) {
                 }
                 matchCurveIdx++;
                 const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchforecastLength = matchCurve['forecast-length'];
                 const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + "_sums as m" + matchCurveIdx;
+                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchforecastLength + "_" + matchRegion + "_sums as m" + matchCurveIdx;
                 if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                     const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                     if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
                         validTimeClause = validTimeClause + " and m" + matchCurveIdx + ".hour IN(" + matchValidTimes + ")";
                     }
                 }
-                if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-                    const matchForecastLength = matchCurve['forecast-length'];
-                    forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
-                } else {
-                    forecastLengthClause = forecastLengthClause + " and m0.fcst_len = m" + matchCurveIdx + ".fcst_len";
-                }
-                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len >= 0";
                 var matchDateString = "";
                 if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
                     matchDateString = "unix_timestamp(m" + matchCurveIdx + ".date)+3600*m" + matchCurveIdx + ".hour-m" + matchCurveIdx + ".fcst_len*3600";
@@ -167,7 +156,6 @@ dataContourDiff = function (plotParams, plotFunction) {
             "where 1=1 " +
             "{{dateClause}} " +
             "{{validTimeClause}} " +
-            "{{forecastLengthClause}} " +
             "{{levelClause}} " +
             "{{phaseClause}} " +
             "group by xVal,yVal " +
@@ -179,7 +167,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{statisticClause}}', statisticClause);
         statement = statement.replace('{{queryTableClause}}', queryTableClause);
         statement = statement.replace('{{validTimeClause}}', validTimeClause);
-        statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
         statement = statement.replace('{{levelClause}}', levelClause);
         statement = statement.replace('{{phaseClause}}', phaseClause);
         statement = statement.replace('{{dateClause}}', dateClause);
