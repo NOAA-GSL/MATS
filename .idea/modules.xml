@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/MATS_for_EMB.iml" filepath="$PROJECT_DIR$/.idea/MATS_for_EMB.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../MATScommon/.idea/MATScommon.iml" filepath="$PROJECT_DIR$/../MATScommon/.idea/MATScommon.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../METexpress/.idea/METexpress.iml" filepath="$PROJECT_DIR$/../METexpress/.idea/METexpress.iml" />
     </modules>
   </component>
 </project>
