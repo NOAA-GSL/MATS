@@ -6,7 +6,7 @@
   "homePage": "mats.html",
   "run_environment": "development",
   "servers": [
-    "mats-dev.gsd.esrl.noaa.gov"
+    "mats-docker-dev.gsd.esrl.noaa.gov"
   ],
   "apps": [
     {
@@ -336,7 +336,7 @@
   "homePage": "mats.html",
   "run_environment": "production",
   "servers": [
-    "mats.gsd.esrl.noaa.gov"
+    "mats-docker.gsd.esrl.noaa.gov"
   ],
   "apps": [
     {
@@ -666,7 +666,7 @@
   "homePage": "mats.html",
   "run_environment": "integration",
   "servers": [
-    "mats-int.gsd.esrl.noaa.gov"
+    "mats-docker-int.gsd.esrl.noaa.gov"
   ],
   "apps": [
     {
