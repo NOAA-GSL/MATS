@@ -12,8 +12,8 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "3.0.0-2020.09.24.18.01",
-      "buildDate": "2020.09.24.18.01",
+      "version": "3.0.0-2020.09.24.20.04",
+      "buildDate": "2020.09.24.20.04",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -303,8 +303,8 @@
     {
       "app": "met-ensemble",
       "title": "MET Ensemble",
-      "version": "3.0.0-2020.09.24.18.00",
-      "buildDate": "2020.09.24.18.00",
+      "version": "3.0.0-2020.09.24.19.55",
+      "buildDate": "2020.09.24.19.55",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
