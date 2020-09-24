@@ -444,7 +444,7 @@
   "_id": {
     "$oid": "59c2ecda146ff98462fe0412"
   },
-  "server": "mats.gsd.esrl.noaa.gov",
+  "server": "mats-docker.gsd.esrl.noaa.gov",
   "deployment_environment": "production",
   "deployment_status": "active",
   "deployment_directory": "/builds/buildArea/MATS_for_EMB",
@@ -453,7 +453,7 @@
   "build_directory": "/builds/buildArea/",
   "publish_int_directory": "/web",
   "publish_remote_directory": "/web/gsd/mats",
-  "publication_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/publish_app.sh mats.gsd.esrl.noaa.gov",
+  "publication_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/publish_app.sh mats-docker.gsd.esrl.noaa.gov",
   "cmd_execute_server": "mats-docker.gsd.esrl.noaa.gov",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_directory": "/builds/buildArea/test_results",
