@@ -238,6 +238,7 @@ getPublishableApps() {
 
 # This routine will update the app in the apps list of the deployment collection production deployment_environment document of the
 # appProductionStatus mongo database on mats.gsd.esrl.noaa.gov to match the corresponding version and build date from the integration server app
+# For each metexpress app it will also update the corresponding version entry in the METexpress/container_deployment/stableDeployment.json file.
 promoteApp() {
 	if [ $# -ne 1 ]; then
 		echo $0 - wrong number of params - usage: $0 appReference
