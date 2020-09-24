@@ -2,7 +2,7 @@
   "_id": {
     "$oid": "5963b438f53b9ee872a2a15c"
   },
-  "server": "mats-int.gsd.esrl.noaa.gov",
+  "server": "mats-docker-preint.gsd.esrl.noaa.gov",
   "deployment_environment": "integration",
   "deployment_status": "active",
   "deployment_directory": "/builds/buildArea/MATS_for_EMB",
@@ -10,7 +10,7 @@
   "build_code_branch": "master",
   "build_directory": "/builds/buildArea/",
   "build_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e int",
-  "cmd_execute_server": "mats-int.gsd.esrl.noaa.gov",
+  "cmd_execute_server": "mats-docker-preint.gsd.esrl.noaa.gov",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_code_branch": "master",
   "test_directory": "/builds/buildArea/mats-testing",
@@ -223,7 +223,7 @@
   "_id": {
     "$oid": "59c2e504146ff98462fe0411"
   },
-  "server": "mats-dev.gsd.esrl.noaa.gov",
+  "server": "mats-docker-dev.gsd.esrl.noaa.gov",
   "deployment_environment": "development",
   "deployment_status": "active",
   "deployment_directory": "/builds/buildArea/MATS_for_EMB",
@@ -231,7 +231,7 @@
   "build_code_branch": "development",
   "build_directory": "/builds/buildArea/",
   "build_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e dev",
-  "cmd_execute_server": "mats-dev.gsd.esrl.noaa.gov",
+  "cmd_execute_server": "mats-docker-dev.gsd.esrl.noaa.gov",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_code_branch": "master",
   "test_directory": "/builds/buildArea/mats-testing",
@@ -454,7 +454,7 @@
   "publish_int_directory": "/web",
   "publish_remote_directory": "/web/gsd/mats",
   "publication_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/publish_app.sh mats.gsd.esrl.noaa.gov",
-  "cmd_execute_server": "mats-int.gsd.esrl.noaa.gov",
+  "cmd_execute_server": "mats-docker.gsd.esrl.noaa.gov",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_directory": "/builds/buildArea/test_results",
   "test_command": "sh ./matsTest -b phantomjs -f progress:/builds/buildArea/test_results/mats-`/bin/date +%Y.%m.%d.%H.%M.%S`",
