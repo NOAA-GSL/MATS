@@ -75,7 +75,7 @@ function openTunnel() {
 	#if a tunnel exists this returns 1 else 0
 	pids=`ps -Awf | grep '27020:localhost:27017' | grep -v grep | tr -s ' ' | cut -f2 -d' '` > /dev/null 2>&1
 	if [[ "X$pids" == "X" ]]; then
-		ssh www-data@mats-docker.gsd.esrl.noaa.gov -C -Nf -L 27020:localhost:27017  > /dev/null 2>&1
+		ssh www-data@mats.gsd.esrl.noaa.gov -C -Nf -L 27020:localhost:27017  > /dev/null 2>&1
 	fi
 }
 
