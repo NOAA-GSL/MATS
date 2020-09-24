@@ -12,8 +12,8 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "3.0.0-2020.09.24.20.04",
-      "buildDate": "2020.09.24.20.04",
+      "version": "3.0.1-2020.09.24.20.34",
+      "buildDate": "2020.09.24.20.34",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -666,7 +666,8 @@
   "homePage": "mats.html",
   "run_environment": "integration",
   "servers": [
-    "mats-docker-int.gsd.esrl.noaa.gov"
+    "mats-docker-int.gsd.esrl.noaa.gov",
+    "mats-docker-preint.gsd.esrl.noaa.gov"
   ],
   "apps": [
     {
