@@ -1,7 +1,7 @@
 #!/bin/sh
 # app_production_utilities.source
-# bash function source file with utilities for retrieving and setting the mongo appProductionStatus databse on mats.gsd.esrl.noaa.gov
-# Each function will create a temporary tunnel to mats.gsd.esrl.noaa.gov for the mongo client to use, then close it when finished.
+# bash function source file with utilities for retrieving and setting the mongo appProductionStatus databse on mats-docker.gsd.esrl.noaa.gov
+# Each function will create a temporary tunnel to mats-docker.gsd.esrl.noaa.gov for the mongo client to use, then close it when finished.
 
 
 
@@ -60,8 +60,8 @@ function closeTunnel() {
 	kill -TERM `ps -Awf | grep '27020:localhost:27017' | grep -v grep | tr -s ' ' | cut -f2 -d' '` > /dev/null 2>&1
 }
 
-# establish the ssh tunnel to the server where the mongo db lives .e. mats.gsd.esrl.noaa.gov...
-# This routine assumes that the user www-data is configured and the ssh key for www-data on this machine has been shared in the mats.gsd.esrl.noaa.gov authorized keys
+# establish the ssh tunnel to the server where the mongo db lives .e. mats-docker.gsd.esrl.noaa.gov...
+# This routine assumes that the user www-data is configured and the ssh key for www-data on this machine has been shared in the mats-docker.gsd.esrl.noaa.gov authorized keys
 #PARAMETERS: none
 #RETURNS: none
 #TRANSFORMATION: closses any open ssh tunnels like 27020:localhost:27017 
@@ -81,10 +81,10 @@ function openTunnel() {
 
 # this routine will populate shell variables to represent the values for
 # server, deployment_environment,deployment_status,build_git_repo,build_code_branch,build_directory,and build_cmd
-# which are values that are defined in the buildConfiguration collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
-# and are indexed by the server keyword. There are a different set of variables for each of the servers, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
+# which are values that are defined in the buildConfiguration collection of the appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov
+# and are indexed by the server keyword. There are a different set of variables for each of the servers, i.e. mats-docker-dev.gsd.esrl.noaa.gov differ from mats-docker.gsd.esrl.noaa.gov.
 # The variables will be defined as local shell variables like this....
-# SERVER='mats-int.gsd.esrl.noaa.gov'
+# SERVER='mats-docker-int.gsd.esrl.noaa.gov'
 # DEPLOYMENT_ENVIRONMENT='production'
 # DEPLOYMENT_STATUS='active'
 # BUILD_GIT_REPO='gerrit:MATS_for_EMB'
@@ -132,8 +132,8 @@ setBuildConfigVarsForProductionServer() {
 }
 
 # this routine will populate shell ARRAYS to represent the VERSIONS and APPS values in the
-# deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
-# and are indexed by the servers keyword. There are a different set of variables for each of the servers entries, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
+# deployment collection of the appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov
+# and are indexed by the servers keyword. There are a different set of variables for each of the servers entries, i.e. mats-docker-dev.gsd.esrl.noaa.gov differ from mats-docker.gsd.esrl.noaa.gov.
 # the servers entry is actually a list of servers for which these values are configured.
 #PARAMETERS: server
 #RETURNS: none
@@ -156,7 +156,7 @@ setAppDeploymentVarsForServer() {
 }
 
 # This routine will output the list of ALL apps (app references not names) that are currently defined in the deployment collection of the 
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov for the server in the first parameter
+# appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov for the server in the first parameter
 #PARAMETERS: server
 #RETURNS: list of app references
 #TRANSFORMATION: none
@@ -179,7 +179,7 @@ getDeployedAppsForServer() {
 
 
 # This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the 
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled.
+# appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled.
 #PARAMETERS: server
 #RETURNS: list of app references with buildStatus enabled
 #TRANSFORMATION: none
@@ -208,7 +208,7 @@ getBuildableAppsForServer() {
 }
 
 # This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the production server defined and the deploymentStatus field set to enabled.
+# appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov and that have the production server defined and the deploymentStatus field set to enabled.
 #RETURNS: list of app references with buildStatus enabled
 #TRANSFORMATION: none
 
@@ -237,7 +237,8 @@ getPublishableApps() {
 
 
 # This routine will update the app in the apps list of the deployment collection production deployment_environment document of the
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov to match the corresponding version and build date from the integration server app
+# appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov to match the corresponding version and build date from the integration server app
+# For each metexpress app it will also update the corresponding version entry in the METexpress/container_deployment/stableDeployment.json file.
 promoteApp() {
 	if [ $# -ne 1 ]; then
 		echo $0 - wrong number of params - usage: $0 appReference
@@ -264,7 +265,7 @@ promoteApp() {
 
 
 # This routine will output apps (app references and displayNames) that are currently defined in the buildConfiguration collection of the
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled, in the correct order
+# appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled, in the correct order
 # according to how they are stored in the database. The data is output as a valid JSON array.... i.e.
 # [
 #   {
@@ -300,7 +301,7 @@ getApplistJSONForServer() {
 
 
 # This routine will set or update the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
+# mongo database on mats-docker.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
 #PARAMETERS: new version, app reference, server
 #RETURNS: mongo update message
 #TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
@@ -342,7 +343,7 @@ updateVersionForAppForServer() {
 }
 
 # This routine will set or update the buildDate field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
+# mongo database on mats-docker.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
 #PARAMETERS: new build date, app reference, server
 #RETURNS: mongo update message
 #TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
@@ -384,7 +385,7 @@ updateBuildDateForAppForServer() {
 }
 
 # This routine will set the deploymentStatus field in the app element identified by the app reference and server params in the deployment collection of the production document
-# of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov, setting the deploymentStaus to disabled.
+# of the appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov, setting the deploymentStaus to disabled.
 #PARAMETERS: new build date, app reference, server
 #RETURNS: mongo update message
 #TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
@@ -425,7 +426,7 @@ disablePublicationStatusForApp() {
 }
 
 # This routine will set the deploymentStatus field in the app element identified by the app reference and server params in the deployment collection of the production document
-# of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov, setting the deploymentStaus to ensabled.
+# of the appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov, setting the deploymentStaus to ensabled.
 #PARAMETERS: new build date, app reference, server
 #RETURNS: mongo update message
 #TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
@@ -466,7 +467,7 @@ enablePublicationStatusForApp() {
 }
 
 # This routine outputs the deployment_environment field for the server in the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov
+# mongo database on mats-docker.gsd.esrl.noaa.gov
 #PARAMETERS: server
 #RETURNS: deployment_environment
 #TRANSFORMATION: none
@@ -496,7 +497,7 @@ getDeploymentEnvironmentForServer() {
 
 
 # This routine outputs the apps list for the given deployment_environment field for the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov
+# mongo database on mats-docker.gsd.esrl.noaa.gov
 #PARAMETERS: deployment_environment
 #RETURNS: apps
 #TRANSFORMATION: none
@@ -573,7 +574,7 @@ getDevelopmentServer() {
 }
 
 # This routine outputs the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov
+# mongo database on mats-docker.gsd.esrl.noaa.gov
 #PARAMETERS: app reference, server
 #RETURNS: version
 #TRANSFORMATION: none
@@ -612,7 +613,7 @@ getVersionForAppForServer() {
 }
 
 # This routine outputs the buildDate field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov
+# mongo database on mats-docker.gsd.esrl.noaa.gov
 #PARAMETERS: app reference, server
 #RETURNS: buildDate
 #TRANSFORMATION: none
@@ -651,7 +652,7 @@ getBuildDateForAppForServer() {
 }
 
 # This routine will output apps (app references, titles, and versions) that are currently defined in the production deployment collection of the
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov for the given server, in the correct order
+# appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov for the given server, in the correct order
 # according to how they are stored in the database. The data is output as a valid JSON array.... i.e.
 # [
 #   {
@@ -718,7 +719,7 @@ getDeploymentAppsForServer() {
 # development version i.e. drop the date postfix. When the nightly build next runs it will roll the patch number and the date.
 
 # This routine will update the version and buildDate fields in the app element identified by the app reference and server params
-# in the deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov,
+# in the deployment collection of the appProductionStatus mongo database on mats-docker.gsd.esrl.noaa.gov,
 # according to the deployment_environment settings for the given server.
 # if deployment_environment is development, the date portion of the semver is modified and it is set to the current time stamp.
 # If the current patch number is not greater than the corresponding integration version then the patch number is also incremented.
@@ -761,7 +762,7 @@ rollDevelopmentVersionAndDateForAppForServer() {
 }
 
 # This routine updates the version and buildDate fields in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov according to the deployment_environment settings for the given server.
+# mongo database on mats-docker.gsd.esrl.noaa.gov according to the deployment_environment settings for the given server.
 # When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
 # development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number.
 #PARAMETERS: app reference, server
@@ -814,7 +815,7 @@ exportCollections() {
 }
 
 # This routine duplicates a collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov
+# mongo database on mats-docker.gsd.esrl.noaa.gov
 #PARAMETERS: existing collection, new collection name
 #RETURNS: success or an error message
 #TRANSFORMATION: makes a copy of the specified collection to the new name.
@@ -835,7 +836,7 @@ duplicateCollection() {
 }
 
 # This routine deletes a collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov
+# mongo database on mats-docker.gsd.esrl.noaa.gov
 #PARAMETERS: existing collection
 #RETURNS: success or an error message
 #TRANSFORMATION: deletes (drops) a collection
@@ -863,11 +864,11 @@ test () {
 	declare pattern
 	declare prodEnv
 	case "$host" in
-        mats.gsd.esrl.noaa.gov)
+        mats-docker.gsd.esrl.noaa.gov)
 		pattern="^[0-9]+\.[0-9]+\.[0-9]+$"
 		prodEnv="production"
             ;;
-        mats-int.gsd.esrl.noaa.gov)
+        mats-docker-int.gsd.esrl.noaa.gov)
 		pattern="^[0-9]+\.[0-9]+\.[0-9]+$"
 		prodEnv="integration"
            ;;
@@ -879,7 +880,7 @@ test () {
 
 	echo setBuildConfigVarsForDevelopmentServer
 	setBuildConfigVarsForDevelopmentServer
-	if [ "$SERVER" == "mats-dev.gsd.esrl.noaa.gov" ]; then
+	if [ "$SERVER" == "mats-docker-dev.gsd.esrl.noaa.gov" ]; then
 		echo -e setBuildConfigVarsDevelopmentForServer ${passed}
 	else
 		echo -e setBuildConfigVarsForServer ${failed}
@@ -896,7 +897,7 @@ test () {
 
     echo setBuildConfigVarsForIntegrationServer
     setBuildConfigVarsForIntegrationServer
-    if [ "$SERVER" == "mats-int.gsd.esrl.noaa.gov" ]; then
+    if [ "$SERVER" == "mats-docker-int.gsd.esrl.noaa.gov" ]; then
         echo -e setBuildConfigVarsForIntegrationServer ${passed}
     else
         echo -e setBuildConfigVarsForServer ${failed}
@@ -913,7 +914,7 @@ test () {
 
     echo setBuildConfigVarsForProductionServer
     setBuildConfigVarsForProductionServer
-    if [ "$SERVER" == "mats.gsd.esrl.noaa.gov" ]; then
+    if [ "$SERVER" == "mats-docker.gsd.esrl.noaa.gov" ]; then
         echo -e setBuildConfigVarsForProductionServer ${passed}
     else
         echo -e setBuildConfigVarsForProductionServer ${failed}
@@ -957,7 +958,7 @@ test () {
 	echo -e ---------
 	echo -e getBuildableAppsForServer
 	unset appList
-	appList=($(getBuildableAppsForServer mats-dev.gsd.esrl.noaa.gov))
+	appList=($(getBuildableAppsForServer mats-docker-dev.gsd.esrl.noaa.gov))
 	diff=()
 	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
 	for i in "${appList[@]}"; do
@@ -977,7 +978,7 @@ test () {
 
 	echo -e -----
 	unset appList
-	appList=($(getBuildableAppsForServer mats-int.gsd.esrl.noaa.gov))
+	appList=($(getBuildableAppsForServer mats-docker-int.gsd.esrl.noaa.gov))
 	diff=()
 	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
 	for i in "${appList[@]}"; do
@@ -997,7 +998,7 @@ test () {
 
 	echo -e -----
 	unset appList
-	appList=($(getBuildableAppsForServer mats.gsd.esrl.noaa.gov))
+	appList=($(getBuildableAppsForServer mats-docker.gsd.esrl.noaa.gov))
 	diff=()
 	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
 	for i in "${appList[@]}"; do
@@ -1008,57 +1009,57 @@ test () {
 	    [[ -n $skip ]] || diff+=("$i")
 	done
 	if [ ${#diff[@]} -eq 0 ]; then
-		echo -e getBuildableAppsForServer mats.gsd.esrl.noaa.gov ${passed}
+		echo -e getBuildableAppsForServer mats-docker.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e getBuildableAppsForServer mats.gsd.esrl.noaa.gov ${failed}
+		echo -e getBuildableAppsForServer mats-docker.gsd.esrl.noaa.gov ${failed}
 		echo -e found ${appList[@]} 
 		echo -e expec ${expectedApps[@]} 
 	fi
 
 	echo -e ---------
-	local ceilingCurrentVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
-	updateVersionForAppForServer "1.5.20-2017.09.26.16.16-test" ceiling mats.gsd.esrl.noaa.gov
-	local ceilingNewVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	local ceilingCurrentVersion=$(getVersionForAppForServer ceiling mats-docker.gsd.esrl.noaa.gov)
+	updateVersionForAppForServer "1.5.20-2017.09.26.16.16-test" ceiling mats-docker.gsd.esrl.noaa.gov
+	local ceilingNewVersion=$(getVersionForAppForServer ceiling mats-docker.gsd.esrl.noaa.gov)
 	if [ "1.5.20-2017.09.26.16.16-test" == "$ceilingNewVersion" ]; then
-		echo -e updateVersionForAppForServer mats.gsd.esrl.noaa.gov ${passed}
+		echo -e updateVersionForAppForServer mats-docker.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e updateVersionForAppForServer mats.gsd.esrl.noaa.gov ${failed}
+		echo -e updateVersionForAppForServer mats-docker.gsd.esrl.noaa.gov ${failed}
 		echo -e old version is ${ceilingCurrentVersion}
 		echo -e new version is ${ceilingNewVersion}
 		echo -e new version should be "1.5.20-2017.09.26.16.16-test"
 	fi
 
-	updateVersionForAppForServer $ceilingCurrentVersion ceiling mats.gsd.esrl.noaa.gov
-	local ceilingNewNewVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	updateVersionForAppForServer $ceilingCurrentVersion ceiling mats-docker.gsd.esrl.noaa.gov
+	local ceilingNewNewVersion=$(getVersionForAppForServer ceiling mats-docker.gsd.esrl.noaa.gov)
 	if [ "$ceilingCurrentVersion" == "$ceilingNewNewVersion" ]; then
-		echo -e updateVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov ${passed}
+		echo -e updateVersionForAppForServer version_reset mats-docker.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e updatupdatupdatupdateeeesetVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov ${failed}
+		echo -e updatupdatupdatupdateeeesetVersionForAppForServer version_reset mats-docker.gsd.esrl.noaa.gov ${failed}
 		echo -e old version is ${ceilingNewVersion}
 		echo -e new version is ${ceilingNewNewVersion}
 		echo -e new version should be "$ceilingCurrentVersion"
 	fi
 
 	echo -e ---------
-	local ceilingCurrentBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
-	updateBuildDateForAppForServer "at the moment" ceiling mats.gsd.esrl.noaa.gov
-	local ceilingNewBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	local ceilingCurrentBuildDate=$(getBuildDateForAppForServer ceiling mats-docker.gsd.esrl.noaa.gov)
+	updateBuildDateForAppForServer "at the moment" ceiling mats-docker.gsd.esrl.noaa.gov
+	local ceilingNewBuildDate=$(getBuildDateForAppForServer ceiling mats-docker.gsd.esrl.noaa.gov)
 	if [ "at the moment" == "$ceilingNewBuildDate" ]; then
-		echo -e updateBuildDateForAppForServer mats.gsd.esrl.noaa.gov ${passed}
+		echo -e updateBuildDateForAppForServer mats-docker.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e updateBuildDateForAppForServer mats.gsd.esrl.noaa.gov ${failed}
+		echo -e updateBuildDateForAppForServer mats-docker.gsd.esrl.noaa.gov ${failed}
 		echo -e old buildDate is ${ceilingCurrentBuildDate}
 		echo -e new buildDate is ${ceilingNewBuildDate}
 		echo -e new buildDate should be "at the moment"
 	fi
 
     echo -e ---------
-	updateBuildDateForAppForServer $ceilingCurrentBuildDate ceiling mats.gsd.esrl.noaa.gov
-	local ceilingNewNewBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	updateBuildDateForAppForServer $ceilingCurrentBuildDate ceiling mats-docker.gsd.esrl.noaa.gov
+	local ceilingNewNewBuildDate=$(getBuildDateForAppForServer ceiling mats-docker.gsd.esrl.noaa.gov)
 	if [ "$ceilingCurrentBuildDate" == "$ceilingNewNewBuildDate" ]; then
-		echo -e updateBuildDateForAppForServer buildDate reset mats.gsd.esrl.noaa.gov ${passed}
+		echo -e updateBuildDateForAppForServer buildDate reset mats-docker.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e updateBuildDateForAppForServer buildDate reset mats.gsd.esrl.noaa.gov ${failed}
+		echo -e updateBuildDateForAppForServer buildDate reset mats-docker.gsd.esrl.noaa.gov ${failed}
 		echo -e old buildDate is ${ceilingNewBuildDate}
 		echo -e new buildDate is ${ceilingNewNewBuildDate}
 		echo -e new buildDate should be "$ceilingCurrentBuildDate"
@@ -1066,26 +1067,26 @@ test () {
 
 	echo -e ---------
     local productionServer=$(getProductionServer)
-    if [ ${productionServer} == "mats.gsd.esrl.noaa.gov" ]; then
+    if [ ${productionServer} == "mats-docker.gsd.esrl.noaa.gov" ]; then
         echo -e getProductionServer ${passed}
     else
-        echo -e getProductionServer ${failed} ${productionServer} is not "mats.gsd.esrl.noaa.gov"
+        echo -e getProductionServer ${failed} ${productionServer} is not "mats-docker.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
     local integrationServer=$(getIntegrationServer)
-    if [ ${integrationServer} == "mats-int.gsd.esrl.noaa.gov" ]; then
+    if [ ${integrationServer} == "mats-docker-int.gsd.esrl.noaa.gov" ]; then
         echo -e getIntegrationServer ${passed}
     else
-        echo -e getIntegrationServer ${failed} ${integrationServer} is not "mats-int.gsd.esrl.noaa.gov"
+        echo -e getIntegrationServer ${failed} ${integrationServer} is not "mats-docker-int.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
     local developmentServer=$(getDevelopmentServer)
-    if [ ${developmentServer} == "mats-dev.gsd.esrl.noaa.gov" ]; then
+    if [ ${developmentServer} == "mats-docker-dev.gsd.esrl.noaa.gov" ]; then
         echo -e getDevelopmentServer ${passed}
     else
-        echo -e getDevelopmentServer ${failed} ${developmentServer} is not "mats-dev.gsd.esrl.noaa.gov"
+        echo -e getDevelopmentServer ${failed} ${developmentServer} is not "mats-docker-dev.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
@@ -1094,17 +1095,17 @@ test () {
     # but the build dates resolution is one minute so subsequent rolling operations actually
     # end up with the same build date.
     echo rollDevelopmentVersionAndDateForAppForServer
-    local currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local currentDevVersion=$(getVersionForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
     local currentDevVersionPart=$(echo -e ${currentDevVersion} | cut -f1 -d'-')
-    local currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    local currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    local currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
-    local buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    local currentIntVersion=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    local currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    rollDevelopmentVersionAndDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov
+    local buildVer=$(getVersionForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
     local buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
-    local buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    local intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    local intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    local buildDate=$(getBuildDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    local intVer=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    local intDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
     if [ "${currentIntBuildDate}" != "${intDate}" ]; then
@@ -1123,17 +1124,17 @@ test () {
 
     echo ---------
     echo rollIntegrationVersionAndDateForAppForServer
-    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
     currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
-    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
-    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    rollIntegrationVersionAndDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
     buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
-    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    buildDate=$(getBuildDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
     if [ "${currentDevVersion}" != "${buildVer}" ]; then
@@ -1153,17 +1154,17 @@ test () {
 
     echo ------------
     echo rollDevelopmentVersionAndDateForAppForServer again
-    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
     currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
-    rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
-    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    rollDevelopmentVersionAndDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
     buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
-    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    buildDate=$(getBuildDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
     if [ "${currentDevVersionPart}" != "${intVer}" ]; then
@@ -1175,19 +1176,19 @@ test () {
 
     echo -e ------------
     echo rollIntegrationVersionAndDateForAppForServer again
-    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
     currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
-    rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
-    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    rollIntegrationVersionAndDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
     buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
-    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    buildDate=$(getBuildDateForAppForServer ceiling mats-docker-dev.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-docker-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
     if [ "${currentIntVersion}" == "${intVer}" ]; then
