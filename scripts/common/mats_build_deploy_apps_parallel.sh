@@ -128,7 +128,6 @@ if [ "X${build_env}" == "X" ]; then
 	echo "${RED}Must exit now${NC}"
 	exit 1
 fi
-
 if [ "X${requestedBranch}" != "X" ]; then
     echo -e "overriding git branch with ${requestedBranch}"
     BUILD_CODE_BRANCH=${requestedBranch}
@@ -155,25 +154,18 @@ echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
 # checkout proper branch
 echo "git checkout -f ${BUILD_CODE_BRANCH}"
-git checkout -f ${BUILD_CODE_BRANCH}
-/usr/bin/git pull -Xtheirs  --commit
-if [ $? -ne 0 ]; then
-    echo -e "${RED} ${failed} to do git pull - must exit now ${NC}"
-    exit 1
-fi
+git checkout --recurse-submodules -f ${BUILD_CODE_BRANCH}
 #checkout submodules
-cd ${BUILD_DIRECTORY}/METexpress
-git checkout ${BUILD_CODE_BRANCH}
-git pull
-cd ${BUILD_DIRECTORY}/MATScommon
-git checkout ${BUILD_CODE_BRANCH}
-git pull
-cd $BUILD_DIRECTORY
-
+git submodule foreach "git checkout ${BUILD_CODE_BRANCH}"
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
     echo -e "${RED} ${failed} to git the current HEAD commit - must exit now ${NC}"
+    exit 1
+fi
+/usr/bin/git pull -Xtheirs  --commit
+if [ $? -ne 0 ]; then
+    echo -e "${RED} ${failed} to do git pull - must exit now ${NC}"
     exit 1
 fi
 
