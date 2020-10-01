@@ -65,7 +65,6 @@ exec > >( tee -i $logname )
 exec 2>&1
 
 requestedApp=""
-requestedTag=""
 requestedBranch=""
 build_env=""
 pushImage="yes"
@@ -129,10 +128,10 @@ if [ "X${build_env}" == "X" ]; then
 	exit 1
 fi
 if [ "X${requestedBranch}" != "X" ]; then
-    echo -e "overriding git branch with ${requestedBranch}"
+    echo -e "overriding git branch for the main project with ${requestedBranch} )"
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
-echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: date: $(/bin/date +%F_%T)"
+echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} : date: $(/bin/date +%F_%T)"
 # Environment vars are set from the appProduction database. Example for int....
 #    "server" : "mats-int.gsd.esrl.noaa.gov",
 #    "deployment_environment" : "integration",
@@ -154,6 +153,7 @@ echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
 # checkout proper branch
 echo "git checkout -f ${BUILD_CODE_BRANCH}"
+
 git checkout --recurse-submodules -f ${BUILD_CODE_BRANCH}
 #checkout submodules
 git submodule foreach "git checkout ${BUILD_CODE_BRANCH}"
