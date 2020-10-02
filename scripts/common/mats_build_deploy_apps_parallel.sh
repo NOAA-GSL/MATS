@@ -8,19 +8,52 @@ usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put 
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, e is build environment (dev, int, prod, or exp), and i is build images also, \n\
 	environment exp is for experimental builds - which will be pushed to the experipental repository."
+isGitRepo=$( git config --get remote.origin.url)
+rootOfRepo=$(git rev-parse --show-toplevel)
+BUILD_DIRECTORY=$(pwd)
+TMP_BUILD_DIRECTORY=$BUILD_DIRECTORY
+if [[ ${isGitRepo} != "gerrit:MATS_for_EMB" ]]; then
+  echo "you are not in a local repo cloned from vlab"
+  echo "I cannot go on.... exiting"
+  echo $usage
+  exit 1
+fi
 
+if [[ ${BUILD_DIRECTORY} != ${rootOfRepo} ]]; then
+  echo "you do not appear to be in the top of the repo"
+  echo "I cannot go on.... exiting"
+  echo $usage
+  exit 1
+fi
 # source the build environment and mongo utilities
-. /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
+. scripts/common/app_production_utilities.source
 
 # source the credentials for the matsapps account
 if [ ! -f ~/.matsapps_credentials ]; then
     echo "~/.matsapps_credentials file not found!"
     echo "you must creqate a ~/.matsapps_credentials file with the following entries.."
-    echo "export matsapps_user='matsapps user'"
-    echo "export matsapps_password='matsapps user password'"
+    echo "export matsapps_user='matsapps dockerhub user'"
+    echo "export matsapps_password='matsapps dockerhub user password'"
+    echo "export matsapps_custom_repo='custum dockerhub repo for experimental images [OPTIONAL]'"
+
     exit 1
 fi
 . ~/.matsapps_credentials
+if [ -z ${matsapps_user+x} ]; then
+  echo -e "${RED} your docker_user is not exported in your ~/.matsapps_credentials file ${NC}"
+  echo "I can't go on..."
+  exit 1
+fi
+if [ -z ${matsapps_password+x} ]; then
+  echo -e "${RED} your matsapps_password is not exported in your ~/.matsapps_credentials file ${NC}"
+  echo "I can't go on..."
+  exit 1
+fi
+if [ -z ${matsapps_custom_repo+x} ] && [ "${build_env}" == "exp" ]; then
+  echo -e "${RED} your matsapps_custom_repo is not exported in your ~/.matsapps_credentials file ${NC}"
+  echo "I can't go on..."
+  exit 1
+fi
 
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
@@ -86,6 +119,9 @@ while getopts "alisr:e:b:" o; do
     esac
 done
 shift $((OPTIND - 1))
+# TODO this is a kludge because we want to take BUILD_DIRECTORY out of the appProduction variables (setBuildConfigVarsFor...)
+# but it may not have happened yet so we are reassigning BUILD_DIRECTORY from what we saved earlier
+BUILD_DIRECTORY=$TMP_BUILD_DIRECTORY
 if [ "X${build_env}" == "X" ]; then
 	echo -e "${RED}You did not specify a build environment (-e dev|int|prod)${NC}"
 	echo -e $usage
@@ -113,17 +149,6 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 #    "test_command" : "sh ./matsTest -b phantomjs -s mats-int.gsd.esrl.noaa.gov -f progress:/builds/buildArea/test_results/mats-int-`/bin/date +%Y.%m.%d.%H.%M.%S`",
 #    "test_result_directory" : "/builds/buildArea/test_results",
 
-if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
-    echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  must clone ${DEPLOYMENT_DIRECTORY}"
-    cd ${DEPLOYMENT_DIRECTORY}/..
-    /usr/bin/git clone --recurse-submodules --remote-submodules ${BUILD_GIT_REPO}
-
-    if [ $? -ne 0 ]; then
-        echo -e "${RED} ${failed} to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now ${NC}"
-        exit 1
-    fi
-fi
-cd ${DEPLOYMENT_DIRECTORY}
 # throw away any local changes - after all, you are building
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
