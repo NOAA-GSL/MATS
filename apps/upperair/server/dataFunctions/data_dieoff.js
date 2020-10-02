@@ -130,7 +130,7 @@ dataDieOff = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            siteDateClause = "and unix_timestamp(o.date)+3600*o.hour + 1800 >= " + fromSecs + " and unix_timestamp(o.date)+3600*o.hour - 1800 <= " + toSecs;
+            siteDateClause = "and unix_timestamp(o.date)+3600*o.hour >= " + fromSecs + " - 1800 and unix_timestamp(o.date)+3600*o.hour <= " + toSecs + " + 1800";
             levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
             siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
@@ -139,7 +139,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
-        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
+        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs + " + 1800";
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             var validTimeStr = curve['valid-time'];
             validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
