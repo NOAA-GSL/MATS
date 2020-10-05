@@ -167,20 +167,20 @@ git reset --hard
 
 if [ ${BUILD_CODE_BRANCH}="development" ] || [ ${BUILD_CODE_BRANCH}="master" ]; then
   # checkout submodules at either development or master branch depending on build_code_branch
+  git submodule update --force
+  if [ $? -ne 0 ]; then
+      echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
+      exit 1
+  fi
   git submodule foreach git checkout ${BUILD_CODE_BRANCH}
   if [ $? -ne 0 ]; then
       echo -e "${RED} ${failed} to git checkout submodules - must exit now ${NC}"
       exit 1
   fi
-  git submodule foreach git pull --Xtheirs
-  if [ $? -ne 0 ]; then
-      echo -e "${RED} ${failed} to do git pull submodules - must exit now ${NC}"
-      exit 1
-  fi
 else
   # feature branch
   # checkout submodules at whatever hash the prent had checked in. Submodules will be DETACHED HEAD
-  git submodule update checkout --force ${BUILD_CODE_BRANCH}
+  git submodule update --force
   if [ $? -ne 0 ]; then
       echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
       exit 1
