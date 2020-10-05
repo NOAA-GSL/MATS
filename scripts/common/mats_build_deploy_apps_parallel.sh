@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 # This script builds and deploys an app, optionally takes the bundle that was already built and adds a dockerfile
-# and then builds the image from an appropriate node image that corresponds to the node verwsion of the app.
-# This script is dependent on two submodules MATScommon and METexpress
+# and then builds the image from an appropriate node image that corresponds to the node version of the app.
+# SUBMODULE NOTES:
+# This script is dependent on two submodules MATScommon and METexpress.
+# This script will modify the MATScommon/public/MATSReleaseNotes.html to set the build date.
+# This script will modify the MATScommon/public/deployment/deployment.json file to reflect any version
+# changes caused by the build rolling a version.
+# Normally a submodule is checked out HEADLESS at the exact same hash reference that the parent of the submodule
+# had for the submodule when the submodule reference in the parent was committed.
+# In our case it is possible that a submodule may have been updated outside the parent hash reference
+# and we want the build to always get the latest available submodule changes, not just the changes that were available
+# when the parent (MATS_for_EMB) was last checked in. This is important for nightly builds.
+# Therefore it is important for the build to actually checkout AND update both submodules METexpress and MATScommon,
+# each time the build is run. Since the submodules will get checked out (and MATScommon will always get updated with build
+# dates and versions), both submodule references MUST be added, committed, and pushed each time the build runs.
 #
 usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put them in \"\")] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
@@ -152,11 +164,29 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 git reset --hard
 # checkout proper branch
-echo "git checkout -f ${BUILD_CODE_BRANCH}"
 
-git checkout --recurse-submodules -f ${BUILD_CODE_BRANCH}
-#checkout submodules
-git submodule foreach "git checkout ${BUILD_CODE_BRANCH}"
+if [ ${BUILD_CODE_BRANCH}="development" ] || [ ${BUILD_CODE_BRANCH}="master" ]; then
+  # checkout submodules at either development or master branch depending on build_code_branch
+  git submodule foreach git checkout ${BUILD_CODE_BRANCH}
+  if [ $? -ne 0 ]; then
+      echo -e "${RED} ${failed} to git checkout submodules - must exit now ${NC}"
+      exit 1
+  fi
+  git submodule foreach git pull --Xtheirs
+  if [ $? -ne 0 ]; then
+      echo -e "${RED} ${failed} to do git pull submodules - must exit now ${NC}"
+      exit 1
+  fi
+else
+  # feature branch
+  # checkout submodules at whatever hash the prent had checked in. Submodules will be DETACHED HEAD
+  git submodule update checkout --force ${BUILD_CODE_BRANCH}
+  if [ $? -ne 0 ]; then
+      echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
+      exit 1
+  fi
+fi
+
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
 export currentCodeCommit=$(git rev-parse --short HEAD)
 if [ $? -ne 0 ]; then
