@@ -95,11 +95,11 @@ dataMap = function (plotParams, plotFunction) {
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var siteDateClause = "and unix_timestamp(o.date)+3600*o.hour + 1800 >= " + fromSecs + " and unix_timestamp(o.date)+3600*o.hour - 1800 <= " + toSecs;
+    var siteDateClause = "and unix_timestamp(o.date)+3600*o.hour >= " + fromSecs + " - 1800 and unix_timestamp(o.date)+3600*o.hour <= " + toSecs + " + 1800";
     var levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
     var siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
     var siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
-    var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour + 1800 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour - 1800 <= " + toSecs;
+    var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs + " + 1800";
 
     var statement = "select m0.wmoid as sta_id, " +
         "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +

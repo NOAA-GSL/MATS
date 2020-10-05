@@ -99,8 +99,8 @@ dataDieOff = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            dateClause = "and m0.time + 300 >= " + fromSecs + " and m0.time - 300 <= " + toSecs;
-            siteDateClause = "and o.time + 300 >= " + fromSecs + " and o.time - 300 <= " + toSecs;
+            dateClause = "and m0.time >= " + fromSecs + " - 300 and m0.time <= " + toSecs + " + 300";
+            siteDateClause = "and o.time >= " + fromSecs + " - 300 and o.time <= " + toSecs + " + 300";
             siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
             queryPool = modelPool;
         }
@@ -175,11 +175,11 @@ dataDieOff = function (plotParams, plotFunction) {
                     if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
                         validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time+450)%(24*3600)/900)/4 IN(" + matchValidTimes + ")";
                     }
-                    dateClause = dateClause + " and m" + matchCurveIdx + ".time + 300 >= " + matchFromSecs + " and m" + matchCurveIdx + ".time - 300 <= " + matchToSecs;
+                    dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " - 300 and m" + matchCurveIdx + ".time <= " + matchToSecs + " + 300";
                 } else if (matchForecastLength === matsTypes.ForecastTypes.utcCycle) {
                     const matchUtcCycleStart = Number(matchCurve['utc-cycle-start']);
                     utcCycleStartClause = utcCycleStartClause + " and floor(((m" + matchCurveIdx + ".time+450) - (m" + matchCurveIdx + ".fcst_len*60+m" + matchCurveIdx + ".fcst_min)*60)%(24*3600)/900)/4 IN(" + matchUtcCycleStart + ")";
-                    dateClause = dateClause + " and m" + matchCurveIdx + ".time + 300 >= " + matchFromSecs + " and m" + matchCurveIdx + ".time - 300 <= " + matchToSecs;
+                    dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " - 300 and m" + matchCurveIdx + ".time <= " + matchToSecs + " - 300";
                 } else {
                     dateClause = dateClause + " and (m" + matchCurveIdx + ".time - (m" + matchCurveIdx + ".fcst_len*60+m" + matchCurveIdx + ".fcst_min)*60) = " + matchFromSecs;
                 }

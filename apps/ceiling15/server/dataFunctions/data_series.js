@@ -100,8 +100,8 @@ dataSeries = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            dateClause = "and m0.time + 300 >= " + fromSecs + " and m0.time - 300 <= " + toSecs;
-            siteDateClause = "and o.time + 300 >= " + fromSecs + " and o.time - 300 <= " + toSecs;
+            dateClause = "and m0.time >= " + fromSecs + " - 300 and m0.time <= " + toSecs + " + 300";
+            siteDateClause = "and o.time >= " + fromSecs + " - 300 and o.time <= " + toSecs + " + 300";
             siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
             queryPool = modelPool;
         }
@@ -165,7 +165,7 @@ dataSeries = function (plotParams, plotFunction) {
                     } else {
                         dateClause = "and m0.time = ceil(900*floor((m" + matchCurveIdx + ".time+450)/900)) " + dateClause;
                     }
-                    dateClause = dateClause + " and m" + matchCurveIdx + ".time + 300 >= " + fromSecs + " and m" + matchCurveIdx + ".time - 300 <= " + toSecs;
+                    dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " - 300 and m" + matchCurveIdx + ".time <= " + toSecs + " + 300";
                 }
             }
         }

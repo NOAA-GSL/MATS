@@ -68,8 +68,8 @@ dataMap = function (plotParams, plotFunction) {
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var dateClause = "and m0.time + 300 >= " + fromSecs + " and m0.time - 300 <= " + toSecs;
-    var siteDateClause = "and o.time + 300 >= " + fromSecs + " and o.time - 300 <= " + toSecs;
+    var dateClause = "and m0.time >= " + fromSecs + " - 300 and m0.time <= " + toSecs + " + 300";
+    var siteDateClause = "and o.time >= " + fromSecs + " - 300 and o.time <= " + toSecs + " + 300";
     var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
 
     var statement = "select m0.madis_id as sta_id, " +
