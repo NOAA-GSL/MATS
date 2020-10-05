@@ -20,8 +20,8 @@ usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put 
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, e is build environment (dev, int, prod, or exp), and i is build images also, \n\
 	environment exp is for experimental builds - which will be pushed to the experipental repository."
-isGitRepo=$( git config --get remote.origin.url)
-rootOfRepo=$(git rev-parse --show-toplevel)
+isGitRepo=$(/usr/bin/git config --get remote.origin.url)
+rootOfRepo=$(/usr/bin/git rev-parse --show-toplevel)
 BUILD_DIRECTORY=$(pwd)
 TMP_BUILD_DIRECTORY=$BUILD_DIRECTORY
 if [[ ${isGitRepo} != "gerrit:MATS_for_EMB" ]]; then
@@ -162,17 +162,17 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 
 # throw away any local changes - after all, you are building
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
-git reset --hard
+/usr/bin/git reset --hard
 # checkout proper branch
 
 if [ ${BUILD_CODE_BRANCH}="development" ] || [ ${BUILD_CODE_BRANCH}="master" ]; then
   # checkout submodules at either development or master branch depending on build_code_branch
-  git submodule update --force
+  /usr/bin/git submodule update --force
   if [ $? -ne 0 ]; then
       echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
       exit 1
   fi
-  git submodule foreach git checkout ${BUILD_CODE_BRANCH}
+  /usr/bin/git submodule foreach git checkout ${BUILD_CODE_BRANCH}
   if [ $? -ne 0 ]; then
       echo -e "${RED} ${failed} to git checkout submodules - must exit now ${NC}"
       exit 1
@@ -180,7 +180,7 @@ if [ ${BUILD_CODE_BRANCH}="development" ] || [ ${BUILD_CODE_BRANCH}="master" ]; 
 else
   # feature branch
   # checkout submodules at whatever hash the prent had checked in. Submodules will be DETACHED HEAD
-  git submodule update --force
+  /usr/bin/git submodule update --force
   if [ $? -ne 0 ]; then
       echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
       exit 1
@@ -231,7 +231,8 @@ if [ "${build_env}" == "int" ]; then
     /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     curdir=$(pwd)
     cd /builds/buildArea/MATS_for_EMB/MATScommon
-    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/git add /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
     cd $curdir
@@ -241,7 +242,8 @@ elif [ "${build_env}" == "prod" ]; then
     /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/<x-cr>$cv<\/x-cr>/g" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     curdir=$(pwd)
     cd /builds/buildArea/MATS_for_EMB/MATScommon
-    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
     cd $curdir
@@ -471,14 +473,16 @@ for app in ${apps[*]}; do
 done
 # persist and checkin new versions
 exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
+/usr/bin/git add ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
 /usr/bin/git commit -m"automated export" -- ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
 cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
 ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/MATScommon/meteor_packages/mats-common/public/deployment/deployment.json
 currdir=$(pwd)
 cd ${DEPLOYMENT_DIRECTORY}/MATScommon
+/usr/bin/git add ${DEPLOYMENT_DIRECTORY}/MATScommon/meteor_packages/mats-common/public/deployment/deployment.json
 /usr/bin/git commit -am"automated export"
 /usr/bin/git pull
-git push origin ${BUILD_CODE_BRANCH}
+/usr/bin/git push origin ${BUILD_CODE_BRANCH}
 cd ${currdir}
 # build all the apps
 i=0
