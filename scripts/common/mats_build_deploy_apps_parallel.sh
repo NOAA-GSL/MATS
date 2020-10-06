@@ -15,7 +15,8 @@
 # each time the build is run. Since the submodules will get checked out (and MATScommon will always get updated with build
 # dates and versions), both submodule references MUST be added, committed, and pushed each time the build runs.
 #
-usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put them in \"\")] [-i] [-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
+usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put them in \"\")] [-i]
+[-l (local images only - do not push)]  [-b branch] [-s(static versions - do not roll versions)] \n\
 	where -a is force build all apps, -b branch lets you override the assigned branch (feature build)\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, e is build environment (dev, int, prod, or exp), and i is build images also, \n\
@@ -140,7 +141,7 @@ if [ "X${build_env}" == "X" ]; then
 	exit 1
 fi
 if [ "X${requestedBranch}" != "X" ]; then
-    echo -e "overriding git branch for the main project with ${requestedBranch} )"
+    echo -e "overriding git branch for the main project with ${requestedBranch}"
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
 echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} : date: $(/bin/date +%F_%T)"
@@ -165,7 +166,7 @@ echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 /usr/bin/git reset --hard
 # checkout proper branch
 
-if [ ${BUILD_CODE_BRANCH}="development" ] || [ ${BUILD_CODE_BRANCH}="master" ]; then
+if [ ${BUILD_CODE_BRANCH} = "development" ] || [ ${BUILD_CODE_BRANCH} = "master" ]; then
   # checkout submodules at either development or master branch depending on build_code_branch
   /usr/bin/git submodule update --force
   if [ $? -ne 0 ]; then
