@@ -89,7 +89,6 @@ function openTunnel() {
 # DEPLOYMENT_STATUS='active'
 # BUILD_GIT_REPO='gerrit:MATS_for_EMB'
 # BUILD_CODE_BRANCH='master'
-# BUILD_DIRECTORY='/builds/buildArea/'
 # BUILD_CMD='sh ./MATS_for_EMB/scripts/common/build-int.sh'
 
 #PARAMETERS: server

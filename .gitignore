@@ -1,5 +1,4 @@
 node_modules/
-meteor_packages/mats-common/.npm/package/npm-shrinkwrap.json
 .idea/
 .DS_Store
 logs/
