@@ -155,9 +155,11 @@ def regions_per_model_mats_all_categories(mode):
             # print(tablename + " regions: " + str(per_table[tablename]['regions']) )
 
             # get statistics for this table
-            get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + tablename + ";"
+            get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + length_limiter + ";"
             cursor.execute(get_tablestats)
             stats = cursor.fetchall()[0]
+            if tablename is "HRRR":
+                stats['maxdate'] = int(time.time())
             # print(tablename + " stats:\n" + str(stats) )
 
             replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, fcst_lens, scle, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s )"
