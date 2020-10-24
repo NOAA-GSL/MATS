@@ -164,7 +164,8 @@ def regions_per_model_mats_all_categories(mode):
             cursor.execute(get_tablestats)
             stats = cursor.fetchall()[0]
             if hits_length_limit:
-                stats['maxdate'] = int(time.time())
+                nowtime = int(time.time())
+                stats['maxdate'] = nowtime - (nowtime % 3600)
             # print(tablename + " stats:\n" + str(stats) )
 
             replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, fcst_lens, scle, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s )"
