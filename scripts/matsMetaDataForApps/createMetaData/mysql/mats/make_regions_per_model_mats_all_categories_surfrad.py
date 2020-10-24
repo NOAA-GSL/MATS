@@ -118,6 +118,10 @@ def regions_per_model_mats_all_categories(mode):
         for tablename in per_table.keys():
             # length limit necessary for the really huge tables in this database
             length_limiter = "(select * from " + tablename + " limit 1000000) as m0"
+            length_limiter_test = "select * from " + tablename + " limit 1000000"
+            cursor.execute(length_limiter_test)
+            cursor.fetchall()
+            hits_length_limit = cursor.rowcount == 1000000
             # get forecast lengths from this table
             get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + length_limiter + ";")
             cursor.execute(get_fcst_lens)
@@ -156,9 +160,10 @@ def regions_per_model_mats_all_categories(mode):
 
             # get statistics for this table
             get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + length_limiter + ";"
+
             cursor.execute(get_tablestats)
             stats = cursor.fetchall()[0]
-            if tablename is "HRRR":
+            if hits_length_limit:
                 stats['maxdate'] = int(time.time())
             # print(tablename + " stats:\n" + str(stats) )
 
