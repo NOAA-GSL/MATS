@@ -3,8 +3,8 @@
 # and then import it into your local appProductionStatus mongo collection for
 # development.
 # assumes that you have installed mongodb on your local system (to get mongo import) and
-# that you have cloned MATS_for_EMB into a ${HOME}/WebstormProjects/MATS_for_EMB directory
-. ${HOME}/WebstormProjects/MATS_for_EMB/scripts/common/app_production_utilities.source
+# that you have cloned MATS into a ${HOME}/WebstormProjects/MATS directory
+. ${HOME}/WebstormProjects/MATS/scripts/common/app_production_utilities.source
 localtmpfile=/tmp/appProductionStatusCollections
 mkdir -p ${localtmpfile}
 exportCollections ${localtmpfile}

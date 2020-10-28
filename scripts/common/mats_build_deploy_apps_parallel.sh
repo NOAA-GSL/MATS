@@ -10,7 +10,7 @@
 # had for the submodule when the submodule reference in the parent was committed.
 # In our case it is possible that a submodule may have been updated outside the parent hash reference
 # and we want the build to always get the latest available submodule changes, not just the changes that were available
-# when the parent (MATS_for_EMB) was last checked in. This is important for nightly builds.
+# when the parent (MATS) was last checked in. This is important for nightly builds.
 # Therefore it is important for the build to actually checkout AND update both submodules METexpress and MATScommon,
 # each time the build is run. Since the submodules will get checked out (and MATScommon will always get updated with build
 # dates and versions), both submodule references MUST be added, committed, and pushed each time the build runs.
@@ -25,7 +25,7 @@ isGitRepo=$(/usr/bin/git config --get remote.origin.url)
 rootOfRepo=$(/usr/bin/git rev-parse --show-toplevel)
 BUILD_DIRECTORY=$(pwd)
 TMP_BUILD_DIRECTORY=$BUILD_DIRECTORY
-if [[ ${isGitRepo} != "gerrit:MATS_for_EMB" ]]; then
+if [[ ${isGitRepo} != "git@github.com:NOAA-GSL/MATS.git" ]]; then
   echo "you are not in a local repo cloned from vlab"
   echo "I cannot go on.... exiting"
   echo $usage
@@ -149,11 +149,11 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 #    "server" : "mats-int.gsd.esrl.noaa.gov",
 #    "deployment_environment" : "integration",
 #    "deployment_status" : "active",
-#    "deployment_directory" : "/builds/buildArea/MATS_for_EMB",
-#    "build_git_repo" : "gerrit:MATS_for_EMB",
+#    "deployment_directory" : "/builds/buildArea/MATS",
+#    "build_git_repo" : "git@github.com:NOAA-GSL/MATS.git",
 #    "build_code_branch" : "master",
 #    "build_directory" : "/builds/buildArea/",
-#    "build_cmd" : "sh /builds/buildArea/MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e int",
+#    "build_cmd" : "sh /builds/buildArea/MATS/scripts/common/mats_build_deploy_apps.sh -e int",
 #    "cmd_execute_server" : "mats-int.gsd.esrl.noaa.gov",
 #    "test_git_repo" : "https://user@vlab.ncep.noaa.gov/git/mats-testing",
 #    "test_code_branch" : "master",
@@ -228,23 +228,23 @@ echo -e changedApps are ${GRN}${changedApps}${NC}
 
 if [ "${build_env}" == "int" ]; then
     cv=$(date +%Y.%m.%d)
-    echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
-    /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
+    /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     curdir=$(pwd)
-    cd /builds/buildArea/MATS_for_EMB/MATScommon
-    /usr/bin/git add /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
-    /usr/bin/git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    cd /builds/buildArea/MATS/MATScommon
+    /usr/bin/git add /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/git commit -m "Build automatically updated release notes" /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
     cd $curdir
 elif [ "${build_env}" == "prod" ]; then
     cv=$(date +%Y.%m.%d)
-    echo -e "${GRN}setting pub date to $cv for /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
-    /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/<x-cr>$cv<\/x-cr>/g" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    echo -e "${GRN}setting pub date to $cv for /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
+    /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/<x-cr>$cv<\/x-cr>/g" /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     curdir=$(pwd)
-    cd /builds/buildArea/MATS_for_EMB/MATScommon
-    /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
-    /usr/bin/git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    cd /builds/buildArea/MATS/MATScommon
+    /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/git commit -m "Build automatically updated release notes" /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     /usr/bin/git pull
     /usr/bin/git push
     cd $curdir

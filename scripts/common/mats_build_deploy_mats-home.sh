@@ -62,7 +62,7 @@ if [ "X${requestedBranch}" != "X" ]; then
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
 echo "Building home app - environment is ${build_env}: date: $(/bin/date +%F_%T)"
-export DEPLOYMENT_DIRECTORY="/builds/buildArea/MATS_for_EMB"
+export DEPLOYMENT_DIRECTORY="/builds/buildArea/MATS"
 export BUILD_DIRECTORY="/builds/buildArea/"
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then

@@ -87,9 +87,9 @@ function openTunnel() {
 # SERVER='mats-docker-int.gsd.esrl.noaa.gov'
 # DEPLOYMENT_ENVIRONMENT='production'
 # DEPLOYMENT_STATUS='active'
-# BUILD_GIT_REPO='gerrit:MATS_for_EMB'
+# BUILD_GIT_REPO='git@github.com:NOAA-GSL/MATS.git'
 # BUILD_CODE_BRANCH='master'
-# BUILD_CMD='sh ./MATS_for_EMB/scripts/common/build-int.sh'
+# BUILD_CMD='sh ./MATS/scripts/common/build-int.sh'
 
 #PARAMETERS: server
 #RETURNS: none

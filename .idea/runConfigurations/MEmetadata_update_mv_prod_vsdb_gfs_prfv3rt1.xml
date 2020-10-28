@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="MEmetadata_update_mv_prod_vsdb_gfs_prfv3rt1" type="PythonConfigurationType" factoryName="Python">
-    <module name="MATS_for_EMB" />
+    <module name="MATS" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>

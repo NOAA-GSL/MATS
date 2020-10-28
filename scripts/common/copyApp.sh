@@ -54,11 +54,11 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
-#test current dir is MATS_FOR_EMB
+#test current dir is MATS
 remote_origin=`/usr/bin/git config --get remote.origin.url`
-if [ "$remote_origin" != "gerrit:MATS_for_EMB" ]; then
-    echo "ERROR: You do not appear to be in a 'gerrit:MATS_for_EMB' clone"
-    echo "try 'git clone gerrit:MATS_for_EMB MATS_for_EMB'"
+if [ "$remote_origin" != "git@github.com:NOAA-GSL/MATS.git" ]; then
+    echo "ERROR: You do not appear to be in a 'git@github.com:NOAA-GSL/MATS.git' clone"
+    echo "try 'git clone git@github.com:NOAA-GSL/MATS.git'"
     echo "usage: $usage"
     echo "exiting"
     exit 1
