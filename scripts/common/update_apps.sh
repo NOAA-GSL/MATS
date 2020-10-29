@@ -24,7 +24,7 @@ echo "$0 ----------- started"
 date
 
 if [ ! -d MATS ]; then
-	echo "no MATS directory here - git clone gerrit:MATS"
+	echo "no MATS directory here - git clone git@github.com:NOAA-GSL/MATS.git"
 	exit 1
 fi
 
