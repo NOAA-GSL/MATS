@@ -78,7 +78,7 @@
     </content>
     <content url="file://$MODULE_DIR$/scripts/matsMetaDataForApps/createMetaData/mysql" />
     <content url="file://$MODULE_DIR$/scripts/matsMetaDataForApps/createMetaData/mysql/metexpress" />
-    <orderEntry type="jdk" jdkName="Python 3.7 (MATS_for_EMB)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.7 (MATS)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="R User Library" level="project" />
     <orderEntry type="library" name="R Skeletons" level="application" />

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # source the build environment and mongo utilities
-. /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
+. /builds/buildArea/MATS/scripts/common/app_production_utilities.source
 setBuildConfigVarsForIntegrationServer
 #
 # Used to copy all the existing meteor apps and part of .meteor to a production server

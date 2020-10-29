@@ -23,12 +23,12 @@ exec 2>&1
 echo "$0 ----------- started"
 date
 
-if [ ! -d MATS_for_EMB ]; then
-	echo "no MATS_for_EMB directory here - git clone gerrit:MATS_for_EMB"
+if [ ! -d MATS ]; then
+	echo "no MATS directory here - git clone git@github.com:NOAA-GSL/MATS.git"
 	exit 1
 fi
 
-cd MATS_for_EMB/apps
+cd MATS/apps
 #export METEOR_PACKAGE_DIRS=`ls -rt -d -1 "$PWD"/../meteor_packages/`
 
 # update all the apps

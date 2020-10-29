@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/MATS_for_EMB.iml" filepath="$PROJECT_DIR$/.idea/MATS_for_EMB.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/MATS.iml" filepath="$PROJECT_DIR$/.idea/MATS.iml" />
     </modules>
   </component>
 </project>
