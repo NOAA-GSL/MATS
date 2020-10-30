@@ -67,6 +67,12 @@ if [ -z ${matsapps_custom_repo+x} ] && [ "${build_env}" == "exp" ]; then
   exit 1
 fi
 
+# check for pidlist and if it exists kill all those pids and remove the list
+if [ -f /tmp/mats_build_pidlist ]; then
+  kill -TERM $(cat /tmp/mats_build_pidlist)
+  rm -rf /tmp/mats_build_pidlist
+fi
+
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
 logDir="./logs"
@@ -481,6 +487,8 @@ for app in ${apps[*]}; do
     sleep 10
 done
 
+# write out pidlist
+echo ${pids[*]} > /tmp/mats_build_pidlist
 # wait for all pids
 for pid in ${pids[*]}; do
     wait $pid
@@ -489,6 +497,6 @@ done
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
-
+rm -rf /tmp/mats_build_pidlist
 echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
 exit 0
