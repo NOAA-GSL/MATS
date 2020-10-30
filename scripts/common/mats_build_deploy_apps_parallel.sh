@@ -24,7 +24,6 @@ usage="USAGE $0 -e dev|int|prod|exp [-a][-r appReferences (if more than one put 
 isGitRepo=$(/usr/bin/git config --get remote.origin.url)
 rootOfRepo=$(/usr/bin/git rev-parse --show-toplevel)
 BUILD_DIRECTORY=$(pwd)
-TMP_BUILD_DIRECTORY=$BUILD_DIRECTORY
 if [[ ${isGitRepo} != "git@github.com:NOAA-GSL/MATS.git" ]]; then
   echo "you are not in a local repo cloned from vlab"
   echo "I cannot go on.... exiting"
@@ -106,7 +105,7 @@ while getopts "alisr:e:b:" o; do
         ;;
         r)
             requestedApp=(${OPTARG})
-            echo -e "requsted apps ${requestedApp[@]}"
+            echo -e "requsted apps" "${requestedApp[@]}"
         ;;
         e)
             build_env="${OPTARG}"
@@ -131,9 +130,6 @@ while getopts "alisr:e:b:" o; do
     esac
 done
 shift $((OPTIND - 1))
-# TODO this is a kludge because we want to take BUILD_DIRECTORY out of the appProduction variables (setBuildConfigVarsFor...)
-# but it may not have happened yet so we are reassigning BUILD_DIRECTORY from what we saved earlier
-BUILD_DIRECTORY=$TMP_BUILD_DIRECTORY
 if [ "X${build_env}" == "X" ]; then
 	echo -e "${RED}You did not specify a build environment (-e dev|int|prod)${NC}"
 	echo -e $usage
@@ -144,7 +140,7 @@ if [ "X${requestedBranch}" != "X" ]; then
     echo -e "overriding git branch for the main project with ${requestedBranch}"
     BUILD_CODE_BRANCH=${requestedBranch}
 fi
-echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} : date: $(/bin/date +%F_%T)"
+echo "Building Mats apps - environment is ${build_env} requestedApps " "${requestedApp[@]}" ": date: $(/bin/date +%F_%T)"
 # Environment vars are set from the appProduction database. Example for int....
 #    "server" : "mats-int.gsd.esrl.noaa.gov",
 #    "deployment_environment" : "integration",
@@ -152,14 +148,6 @@ echo "Building Mats apps - environment is ${build_env} requestedApps ${requested
 #    "deployment_directory" : "/builds/buildArea/MATS",
 #    "build_git_repo" : "git@github.com:NOAA-GSL/MATS.git",
 #    "build_code_branch" : "master",
-#    "build_directory" : "/builds/buildArea/",
-#    "build_cmd" : "sh /builds/buildArea/MATS/scripts/common/mats_build_deploy_apps.sh -e int",
-#    "cmd_execute_server" : "mats-int.gsd.esrl.noaa.gov",
-#    "test_git_repo" : "https://user@vlab.ncep.noaa.gov/git/mats-testing",
-#    "test_code_branch" : "master",
-#    "test_directory" : "/builds/buildArea/mats-testing",
-#    "test_command" : "sh ./matsTest -b phantomjs -s mats-int.gsd.esrl.noaa.gov -f progress:/builds/buildArea/test_results/mats-int-`/bin/date +%Y.%m.%d.%H.%M.%S`",
-#    "test_result_directory" : "/builds/buildArea/test_results",
 
 # throw away any local changes - after all, you are building
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
@@ -261,7 +249,7 @@ if [ "X${requestedApp}" != "X" ]; then
         echo -e specific apps requested - must build requested buildable apps
         l2=" ${requestedApp[*]} "
         for a in ${buildableApps[*]}; do
-            if [[ $l2 =~ " $a " ]]; then
+            if [[ $l2 =~ $a ]]; then
                 apps+=( $a )
             fi
         done
@@ -271,7 +259,7 @@ else
     # no common code changes or force so just build changed apps
     l2=" ${changedApps[*]} "
     for a in ${buildableApps[*]}; do
-        if [[ $l2 =~ " $a " ]]; then
+        if [[ $l2 =~ $a ]]; then
             apps+=( $a )
         fi
     done
@@ -329,13 +317,13 @@ APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 
-buildApp() {
+buildApp () {
     local myApp=$1
     cd ${APP_DIRECTORY}/${myApp}
     echo -e "$0:${myApp}: - building app ${GRN}${myApp}${NC}"
     rm -rf ./bundle
     /usr/local/bin/meteor reset
-    BUNDLE_DIRECTORY=${BUILD_DIRECTORY}/${myApp}
+    BUNDLE_DIRECTORY=${BUILD_DIRECTORY}/bundles/${myApp}
     if [ ! -d "${BUNDLE_DIRECTORY}" ]; then
         mkdir -p ${BUNDLE_DIRECTORY}
     else
@@ -346,7 +334,7 @@ buildApp() {
     /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
     if [ $? -ne 0 ]; then
         echo -e "$0:${myApp}: ${RED} ${failed} to meteor build - must skip app ${myApp} ${NC}"
-        continue
+        return
     fi
 
     cd ${BUNDLE_DIRECTORY}
@@ -365,7 +353,7 @@ buildApp() {
         export REPO=matsapps/production
         if [[ ${build_env} == "int" ]]; then
             REPO="matsapps/integration"
-        else if [[ ${build_env} == "dev" ]]; then
+        elif [[ ${build_env} == "dev" ]]; then
               REPO="matsapps/development"
               TAG="${myApp}-nightly"
             fi
@@ -449,7 +437,6 @@ LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newC
         else
             echo "$0:${myApp}: NOT pushing image ${REPO}:${TAG}"
         fi
-    fi
     rm -rf ${BUNDLE_DIRECTORY}/*
 }
 
