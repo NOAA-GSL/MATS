@@ -477,7 +477,14 @@ cd ${DEPLOYMENT_DIRECTORY}/MATScommon
 /usr/bin/git commit -am"automated export"
 /usr/bin/git pull
 /usr/bin/git push origin ${BUILD_CODE_BRANCH}
+
 cd ${currdir}
+
+git add ${DEPLOYMENT_DIRECTORY}/MATScommon
+git commit -m"automated export for submodule reference"
+/usr/bin/git pull
+/usr/bin/git push origin ${BUILD_CODE_BRANCH}
+
 # build all the apps
 i=0
 for app in ${apps[*]}; do
