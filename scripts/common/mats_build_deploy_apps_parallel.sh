@@ -491,7 +491,9 @@ for app in ${apps[*]}; do
     (buildApp ${app})&
     pids[${i}]=$!
     i=$((i+1))
-    sleep 10
+    if [ ${#apps[@]} -gt 1 ]; then
+      sleep 60
+    fi
 done
 
 # write out pidlist
