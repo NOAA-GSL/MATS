@@ -322,6 +322,7 @@ fi
 APP_DIRECTORY=${DEPLOYMENT_DIRECTORY}/apps
 cd ${APP_DIRECTORY}
 echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
+ME=`basename $0`;
 
 buildApp () {
     local myApp=$1
@@ -337,11 +338,21 @@ buildApp () {
     fi
     # do not know why I have to do these explicitly, but I do.
     /usr/local/bin/meteor npm install --save @babel/runtime
-    /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
-    if [ $? -ne 0 ]; then
-        echo -e "$0:${myApp}: ${RED} ${failed} to meteor build - must skip app ${myApp} ${NC}"
-        return
-    fi
+    # use a file lock to synchronize the meteor build.
+    # The build does not seem to be re-entrant
+    (
+        exec 8>/tmp/$ME.LCK;
+        flock -x 8
+        echo -e "$0:${myApp}: ${GRN} starting meteor build: ${myApp} ${NC}"
+        /usr/local/bin/meteor build --directory ${BUNDLE_DIRECTORY} --server-only --architecture=os.linux.x86_64
+        if [ $? -ne 0 ]; then
+            echo -e "$0:${myApp}: ${RED} ${failed} to meteor build - must skip app ${myApp} ${NC}"
+            flock -u 8
+            return
+        fi
+        flock -u 8
+        echo -e "$0:${myApp}: ${GRN} finished meteor build: ${myApp} ${NC}"
+    ) &
 
     cd ${BUNDLE_DIRECTORY}
     (cd bundle/programs/server && /usr/local/bin/meteor npm install && /usr/local/bin/meteor npm audit fix)
