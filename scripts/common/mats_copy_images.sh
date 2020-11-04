@@ -51,14 +51,14 @@ do
 done
 echo
 if [[ $found -eq 0  ]]; then
-  echo -e "${RED} $0 - not a valid repository! one of ${REPO_LIST[@]} - exiting ${NC}"
+  echo -e "${RED} $0 - not a valid repository! one of ${REPO_LIST[*]} - exiting ${NC}"
   exit 1
 fi
 
 #echo  build a list of all tags for repo
 IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${UNAME}/${repo}/tags/?page_size=10000 | jq -r '.results|.[]|.name'))
 FILTERED_IMAGE_TAGS=()
-for elem in ${IMAGE_TAGS[@]}
+for elem in "${IMAGE_TAGS[@]}"
 do
    if [[ ${elem} == *-${version} ]]; then
         FILTERED_IMAGE_TAGS+=" ${elem}"
@@ -69,7 +69,7 @@ IMAGE_TAGS=()
 IMAGE_TAGS=$FILTERED_IMAGE_TAGS
 #echo tags are ${IMAGE_TAGS[@]}
 
-for i in ${IMAGE_TAGS[@]}
+for i in "${IMAGE_TAGS[@]}"
 do
   echo ${i}
   echo "docker pull ${UNAME}/${repo}:$i"
