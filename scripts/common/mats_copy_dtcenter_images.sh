@@ -16,7 +16,7 @@ repo="$1"
 version="$2"
 
 repo_list=(development integration production)
-if [[ " ${repo_list[@]} " =~ " ${repo} " ]]; then
+if [[ " ${repo_list[*]} " =~ ${repo} ]]; then
 	echo 'using repo $repo' 
 else
 	echo "invalid repo - need one of development|integration|production - exiting"
@@ -45,7 +45,7 @@ TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'$
 #echo  build a list of all tags for mats repo
 IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/matsapps/${repo}/tags/?page_size=10000 | jq -r '.results|.[]|.name'))
 FILTERED_IMAGE_TAGS=()
-for elem in ${IMAGE_TAGS[@]}
+for elem in "${IMAGE_TAGS[@]}"
 do
 	if [[ $elem =~ ^met-* ]]; then
 	   if [[ ${elem} == *-${version} ]]; then
@@ -56,9 +56,9 @@ done
 #echo filtered tags are ${FILTERED_IMAGE_TAGS[@]}
 IMAGE_TAGS=()
 IMAGE_TAGS=$FILTERED_IMAGE_TAGS
-echo tags are ${IMAGE_TAGS[@]}
+echo tags are "${IMAGE_TAGS[@]}"
 
-for i in ${IMAGE_TAGS[@]}
+for i in "${IMAGE_TAGS[@]}"
 do
   echo ${i}
   echo "docker pull matsapps/${repo}:$i"
