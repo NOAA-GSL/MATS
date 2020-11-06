@@ -10,6 +10,7 @@
 ##/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip.py deploy
 ##/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip2.py deploy
 /home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip_aqpi.py deploy
+/home/amb-verif/mats_metadata/update_metadata_precip_aqpi.py persis
 /home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_ptype.py deploy
 /home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_cref.py deploy
 /home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_vil.py deploy
