@@ -58,7 +58,7 @@ IMAGE_TAGS=()
 IMAGE_TAGS=$FILTERED_IMAGE_TAGS
 echo tags are "${IMAGE_TAGS[@]}"
 
-for i in "${IMAGE_TAGS[@]}"
+for i in ${IMAGE_TAGS[@]}
 do
   echo ${i}
   echo "docker pull matsapps/${repo}:$i"
