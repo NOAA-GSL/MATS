@@ -9,4 +9,4 @@ rm -rf logs/*
 clear
 export HEADLESS="true"
 export NODE_OPTIONS=--max-old-space-size=16384
-npx wdio run wdio.conf.js "$@" 2> >(grep -v 'TIS/TSM')
+meteor npx wdio run wdio.conf.js "$@" 2> >(grep -v 'TIS/TSM')

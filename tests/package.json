@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "build": "^0.1.4",
-    "deepmerge": "^4.2.2"
+    "deepmerge": "^4.2.2",
+    "npx": "^10.2.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
