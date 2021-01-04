@@ -23,20 +23,7 @@
       "bcrypt": "$2a$10$MMIcStDMQ.a9ah3S9exage/5rbSXsXsHKXeSqk0jF4NNEB6Q5HCR."
     },
     "resume": {
-      "loginTokens": [
-        {
-          "when": {
-            "$date": "2020-10-06T22:23:37.979+0000"
-          },
-          "hashedToken": "WF5I3NbVqfUHDkoGb8HA7VdgHRP7VNtGiOo4T5J3fkE="
-        },
-        {
-          "when": {
-            "$date": "2020-10-06T22:23:38.140+0000"
-          },
-          "hashedToken": "v1uvtE5W9ztTvCHSp+TqlGsezlfJLb0vqhuanSZVXpw="
-        }
-      ]
+      "loginTokens": []
     }
   },
   "username": "molly.b.smith@noaa.gov"
