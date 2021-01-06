@@ -117,6 +117,7 @@ def regions_per_model_mats_all_categories(mode):
     if TScleaned:
         for tablename in per_table.keys():
             # length limit necessary for the really huge tables in this database
+            print(tablename)
             length_limiter = "(select * from " + tablename + " limit 1000000) as m0"
             length_limiter_test = "select * from " + tablename + " limit 1000000"
             cursor.execute(length_limiter_test)
