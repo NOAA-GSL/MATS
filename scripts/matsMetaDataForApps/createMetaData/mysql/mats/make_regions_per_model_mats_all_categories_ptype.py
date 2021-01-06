@@ -124,7 +124,7 @@ def regions_per_model_mats_all_categories(mode):
         print("NOT executing: " + str(clean_tablestats))
 
     # string of tables not to include in our search for metadata
-    skiptables = "ptype_descriptions regions_per_model_mats_all_categories regions_per_model_mats_all_categories_build scale_descriptions t1"
+    skiptables = "ptype_descriptions regions_per_model_mats_all_categories regions_per_model_mats_all_categories_build scale_descriptions t1 template tables_to_backup"
 
     # get an array of all relevant data sources in this db
     all_data_sources = []

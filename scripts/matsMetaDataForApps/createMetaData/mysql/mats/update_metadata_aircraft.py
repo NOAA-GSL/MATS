@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Updates the regions_per_model_mats_all_categories table for all models in acars_RR
+# Updates the regions_per_model_mats_all_categories table for all models in acars_RR2
 
 # __future__ must come first
 from __future__ import print_function
@@ -130,7 +130,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "acars_RR"
+    db = "acars_RR2"
     usedb = "use " + db
     cursor.execute(usedb)
     cursor2.execute(usedb)
@@ -221,7 +221,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         for row in cursor:
             tablename = row.values()[0]
             tablename = tablename.encode('ascii', 'ignore')
-            table_model = re.sub('_\d{1,2}_[A-Za-z]*_sums$', '', tablename)
+            table_model = re.sub('_[A-Za-z]*_sums$', '', tablename)
             if table_model == model:
                 # this is a table that does belong to this model
                 get_tablestats = "SELECT min(date) AS mindate, max(date) AS maxdate, count(date) AS numrecs FROM " + tablename + ";"
@@ -253,17 +253,20 @@ def reprocess_specific_metadata(models_to_reprocess):
 
                     per_model[model]['numrecs'] = per_model[model]['numrecs'] + int(stats['numrecs'])
 
-                    temp = "^" + model + "_\d{1,2}_"
+                    temp = "^" + model + "_"
                     region1 = re.sub(temp, "", tablename)
                     region = re.sub("_sums", "", region1)
                     if region not in per_model[model]['region']:
                         per_model[model]['region'].append(region)
-                    temp1 = "^" + model + "_"
-                    temp2 = "_" + region + "_sums$"
-                    fcst_len1 = re.sub(temp1, "", tablename)
-                    fcst_len = int(re.sub(temp2, "", fcst_len1))
-                    if fcst_len not in per_model[model]['fcst_len']:
-                        per_model[model]['fcst_len'].append(fcst_len)
+
+                    get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + tablename + ";")
+                    cursor2.execute(get_fcst_lens)
+                    thisfcst_lens = []
+                    for row2 in cursor2:
+                        val = row2.values()[0]
+                        thisfcst_lens.append(int(val))
+                    per_model[model]['fcst_len'] = list(set(per_model[model]['fcst_len']) | set(thisfcst_lens))
+                    per_model[model]['fcst_len'].sort(key=int)
 
         if per_model[model]['mindate'] == sys.float_info.max:
             per_model[model]['mindate'] = str(datetime.now().strftime('%s'))
@@ -275,8 +278,6 @@ def reprocess_specific_metadata(models_to_reprocess):
             for region in per_model[model]['region']:
                 region_orders.append(valid_region_orders[region])
             per_model[model]['region'] = [x for _, x in sorted(zip(region_orders, per_model[model]['region']))]
-
-        per_model[model]['fcst_len'].sort(key=int)
 
     print(per_model)
 

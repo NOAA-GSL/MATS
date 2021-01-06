@@ -126,7 +126,7 @@ def regions_per_model_mats_all_categories(mode):
         print("NOT executing: " + str(clean_tablestats))
 
     # string of tables not to include in our search for metadata
-    skiptables = "all_display_categories all_display_categories_build all_display_categories_dev regions_per_model_mats_all_categories regions_per_model_mats_all_categories_dev regions_per_model_mats_all_categories_build template TABLESTATS_build fcst_type_descriptions scale_descriptions threshold_descriptions"
+    skiptables = "all_display_categories all_display_categories_build all_display_categories_dev regions_per_model_mats_all_categories regions_per_model_mats_all_categories_dev regions_per_model_mats_all_categories_build template tables_to_backup TABLESTATS_build fcst_type_descriptions scale_descriptions threshold_descriptions"
 
     # get an array of all relevant data sources in this db
     all_data_sources = []

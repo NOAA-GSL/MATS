@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Creates a regions_per_model_mats_all_categories table for all models in acars_RR
+# Creates a regions_per_model_mats_all_categories table for all models in acars_RR2
 
 # __future__ must come first
 from __future__ import print_function
@@ -9,6 +9,7 @@ from datetime import datetime
 import time
 import re
 import sys
+import ast
 import MySQLdb
 
 
@@ -83,7 +84,7 @@ def regions_per_model_mats_all_categories(mode):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "acars_RR"
+    db = "acars_RR2"
     usedb = "use " + db
     cursor.execute(usedb)
 
@@ -122,7 +123,7 @@ def regions_per_model_mats_all_categories(mode):
         print("NOT executing: " + str(clean_tablestats))
 
     # string of tables not to include in our search for metadata
-    skiptables = "all_display_categories all_display_categories_build all_display_categories_dev regions_per_model_mats_all_categories regions_per_model_mats_all_categories_dev regions_per_model_mats_all_categories_build template TABLESTATS_build"
+    skiptables = "all_display_categories all_display_categories_build all_display_categories_dev regions_per_model_mats_all_categories regions_per_model_mats_all_categories_dev regions_per_model_mats_all_categories_build template template_sums tables_to_backup TABLESTATS_build"
 
     # get an array of all relevant data sources in this db
     all_data_sources = []
@@ -136,27 +137,34 @@ def regions_per_model_mats_all_categories(mode):
         # print( "tablename is " + tablename)
         if tablename not in skiptables:
             # parse the data sources, forecast lengths, and regions from the table names
-            model = re.sub('_\d{1,2}_[A-Za-z]*_sums$', '', tablename)
+            model = re.sub('_[A-Za-z]*_sums$', '', tablename)
             if model not in all_data_sources:
                 all_data_sources.append(model)
             per_table[tablename] = {}
             per_table[tablename]['model'] = model
-            temp = "^" + model + "_\d{1,2}_"
+            temp = "^" + model + "_"
             region = re.sub(temp, "", tablename)
             region = re.sub("_sums", "", region)
             per_table[tablename]['region'] = region
-            temp1 = "^" + model + "_"
-            temp2 = "_" + region + "_sums$"
-            fcst_len = re.sub(temp1, "", tablename)
-            fcst_len = re.sub(temp2, "", fcst_len)
-            per_table[tablename]['fcst_len'] = fcst_len
-            # print("model is " + model + ", region is " + region + ", fcst_len is " + fcst_len)
+            # print("model is " + model + ", region is " + region)
 
     # sys.exit(-1)
 
     # parse the other metadata contained in the tables
     if TScleaned:
         for tablename in per_table.keys():
+            # get forecast lengths from this table
+            get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + tablename + ";")
+            cursor.execute(get_fcst_lens)
+            per_table[tablename]['fcst_lens'] = []
+            this_fcst_lens = []
+            for row in cursor:
+                val = row.values()[0]
+                this_fcst_lens.append(int(val))
+            this_fcst_lens.sort(key=int)
+            per_table[tablename]['fcst_lens'] = this_fcst_lens
+            # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
+
             # get statistics for this table
             get_tablestats = "SELECT min(date) AS mindate, max(date) AS maxdate, count(date) AS numrecs FROM " + tablename + ";"
             cursor.execute(get_tablestats)
@@ -190,7 +198,7 @@ def regions_per_model_mats_all_categories(mode):
             qd.append(str(stats['maxdate']))
             qd.append(str(per_table[tablename]['model']))
             qd.append(str(per_table[tablename]['region']))
-            qd.append(str(per_table[tablename]['fcst_len']))
+            qd.append(str(per_table[tablename]['fcst_lens']))
             qd.append(str(stats['numrecs']))
             cursor.execute(replace_tablestats_rec, qd)
             cnx.commit()
@@ -214,7 +222,7 @@ def regions_per_model_mats_all_categories(mode):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "acars_RR"
+    db = "acars_RR2"
     usedb = "use " + db
     cursor.execute(usedb)
 
@@ -315,12 +323,14 @@ def regions_per_model_mats_all_categories(mode):
         # print( "these_regions:\n" + str(these_regions) )
 
         # get forecast lengths for all tables pertaining to this model
-        get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db + ".TABLESTATS_build where tablename like '" + model + "%' and model = '" + model + "' and numrecs > 0;"
+        get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db + ".TABLESTATS_build where tablename like '" + model + "%' and fcst_lens != '[]' and model = '" + model + "' and numrecs > 0 order by length(fcst_lens) desc;"
         cursor.execute(get_these_fcst_lens)
         these_fcst_lens = []
         for row in cursor:
-            val = row.values()[0]
-            these_fcst_lens.append(int(val))
+            val_array = ast.literal_eval(row.values()[0])
+            for val in val_array:
+                if val not in these_fcst_lens:
+                    these_fcst_lens.append(val)
         these_fcst_lens.sort(key=int)
         # print( "these_fcst_lens:\n" + str(these_fcst_lens) )
 
