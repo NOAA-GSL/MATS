@@ -65,10 +65,10 @@ do
         FILTERED_IMAGE_TAGS+=("${elem}")
    fi
 done
-echo filtered tags are ${FILTERED_IMAGE_TAGS[@]}
+echo filtered tags are "${FILTERED_IMAGE_TAGS[@]}"
 echo
 IMAGE_TAGS=("${FILTERED_IMAGE_TAGS[@]}")
-echo "image tags are ${IMAGE_TAGS[@]}"
+echo "image tags are " "${IMAGE_TAGS[@]}"
 echo
 
 for i in "${IMAGE_TAGS[@]}"

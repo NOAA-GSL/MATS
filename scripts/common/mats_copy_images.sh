@@ -60,17 +60,23 @@ IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2
 FILTERED_IMAGE_TAGS=()
 for elem in "${IMAGE_TAGS[@]}"
 do
+   echo $elem
    if [[ ${elem} == *-${version} ]]; then
         FILTERED_IMAGE_TAGS+=("${elem}")
    fi
 done
-#echo filtered tags are ${FILTERED_IMAGE_TAGS[@]}
+echo filtered tags are "${FILTERED_IMAGE_TAGS[@]}"
+echo
 IMAGE_TAGS=("${FILTERED_IMAGE_TAGS[@]}")
-echo "image tags are ${IMAGE_TAGS[@]}"
+echo "image tags are " "${IMAGE_TAGS[@]}"
+echo
 
 for i in "${IMAGE_TAGS[@]}"
 do
-  echo "image ${i}"
+  echo
+  echo "image $i"
+  echo
+  echo "pulling tag ${UNAME}/${repo}:${i}"
   echo "docker pull ${UNAME}/${repo}:$i"
   docker pull ${UNAME}/${repo}:$i
   echo "docker tag ${UNAME}/${repo}:${i} harbor-prod.gsd.esrl.noaa.gov/matsapps/${repo}:${i}"
