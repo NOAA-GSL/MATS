@@ -1,10 +1,10 @@
 #!/bin/bash
-# this script is used to copy images from a docker registry to harbor-prod.gsd.esrl.noaa.gov
-# you have to provide login credentials to harbor-prod.gsd.esrl.noaa.gov
+# this script is used to copy images from a docker registry to harbor-dev.gsd.esrl.noaa.gov
+# you have to provide login credentials to harbor-dev.gsd.esrl.noaa.gov
 
 
-echo "login for harbor-prod.gsd.esrl.noaa.gov"
-docker login harbor-prod.gsd.esrl.noaa.gov
+echo "login for harbor-dev.gsd.esrl.noaa.gov"
+docker login harbor-dev.gsd.esrl.noaa.gov
 
 export GRN='\033[0;32m'
 export RED='\033[0;31m'
@@ -60,23 +60,29 @@ IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2
 FILTERED_IMAGE_TAGS=()
 for elem in "${IMAGE_TAGS[@]}"
 do
+   echo $elem
    if [[ ${elem} == *-${version} ]]; then
         FILTERED_IMAGE_TAGS+=("${elem}")
    fi
 done
-#echo filtered tags are ${FILTERED_IMAGE_TAGS[@]}
+echo filtered tags are ${FILTERED_IMAGE_TAGS[@]}
+echo
 IMAGE_TAGS=("${FILTERED_IMAGE_TAGS[@]}")
 echo "image tags are ${IMAGE_TAGS[@]}"
+echo
 
 for i in "${IMAGE_TAGS[@]}"
 do
-  echo "image ${i}"
+  echo
+  echo "image $i"
+  echo
+  echo "pulling tag ${UNAME}/${repo}:${i}"
   echo "docker pull ${UNAME}/${repo}:$i"
   docker pull ${UNAME}/${repo}:$i
-  echo "docker tag ${UNAME}/${repo}:${i} harbor-prod.gsd.esrl.noaa.gov/matsapps/${repo}:${i}"
-  docker tag ${UNAME}/${repo}:${i} harbor-prod.gsd.esrl.noaa.gov/matsapps/${repo}:${i}
-  echo "docker push harbor-prod.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}"
-  docker push harbor-prod.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}
+  echo "docker tag ${UNAME}/${repo}:${i} harbor-dev.gsd.esrl.noaa.gov/matsapps/${repo}:${i}"
+  docker tag ${UNAME}/${repo}:${i} harbor-dev.gsd.esrl.noaa.gov/matsapps/${repo}:${i}
+  echo "docker push harbor-dev.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}"
+  docker push harbor-dev.gsd.esrl.noaa.gov/${UNAME}/${repo}:${i}
 done
 docker logout
 docker system prune -af
