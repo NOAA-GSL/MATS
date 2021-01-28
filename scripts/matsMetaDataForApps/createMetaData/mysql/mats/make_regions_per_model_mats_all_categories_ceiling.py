@@ -138,7 +138,7 @@ def regions_per_model_mats_all_categories(mode):
         print("NOT executing: " + str(clean_tablestats))
 
     # string of tables not to include in our search for metadata
-    skiptables = "metars threshold_descriptions template region fcst regions ruc obs fcst_lens_per_model obs_fixed2 obs_retro region_descriptions region_descriptions_dev regions_per_model ruc_metars thresholds_per_model regions_per_model_mats_all_categories regions_per_model_mats_all_categories_build regions_per_model_mats_all_categories_dev all_display_categories all_display_categories_build all_display_categories_dev tables_to_backup TABLESTATS TABLESTATS_build TABLESTATS_dev"
+    skiptables = " metars threshold_descriptions template region fcst regions ruc obs fcst_lens_per_model obs_fixed2 obs_retro region_descriptions region_descriptions_dev regions_per_model ruc_metars thresholds_per_model regions_per_model_mats_all_categories regions_per_model_mats_all_categories_build regions_per_model_mats_all_categories_dev all_display_categories all_display_categories_build all_display_categories_dev tables_to_backup TABLESTATS TABLESTATS_build TABLESTATS_dev "
 
     # get an array of all relevant data sources in this db
     all_data_sources = []
@@ -150,7 +150,7 @@ def regions_per_model_mats_all_categories(mode):
         tablename = row.values()[0]
         tablename = tablename.encode('ascii', 'ignore')
         # print( "tablename is " + tablename)
-        if tablename not in skiptables:
+        if " " + tablename + " " not in skiptables:
             # parse the data sources from the table names
             model = tablename
             if model not in all_data_sources:
