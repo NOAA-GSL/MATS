@@ -132,7 +132,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_fcst_lens.append(int(val))
             this_fcst_lens.sort(key=int)
             per_table[tablename]['fcst_lens'] = this_fcst_lens
-            # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
+            print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
 
             # get scales from this table
             get_scales = ("SELECT DISTINCT scale FROM " + length_limiter + ";")
@@ -144,7 +144,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_scales.append(int(val))
             this_scales.sort(key=int)
             per_table[tablename]['scales'] = this_scales
-            # print(tablename + " scales: " + str(per_table[tablename]['scales']) )
+            print(tablename + " scales: " + str(per_table[tablename]['scales']) )
 
             # get regions from this table
             get_regions = ("SELECT DISTINCT id FROM " + length_limiter + ";")
@@ -156,7 +156,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_regions.append(int(val))
             this_regions.sort(key=int)
             per_table[tablename]['regions'] = this_regions
-            # print(tablename + " regions: " + str(per_table[tablename]['regions']) )
+            print(tablename + " regions: " + str(per_table[tablename]['regions']) )
 
             # get statistics for this table
             get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + length_limiter + ";"
@@ -166,7 +166,7 @@ def regions_per_model_mats_all_categories(mode):
             if hits_length_limit:
                 nowtime = int(time.time())
                 stats['maxdate'] = nowtime - (nowtime % 3600)
-            # print(tablename + " stats:\n" + str(stats) )
+            print(tablename + " stats:\n" + str(stats) )
 
             replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, fcst_lens, scle, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s )"
             qd = []
