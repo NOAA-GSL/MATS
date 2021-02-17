@@ -127,7 +127,7 @@ def regions_per_model_mats_all_categories(mode):
         print("NOT executing: " + str(clean_tablestats))
 
     # string of tables not to include in our search for metadata
-    skiptables = "all_display_categories all_display_categories_build all_display_categories_dev regions_per_model_mats_all_categories regions_per_model_mats_all_categories_dev regions_per_model_mats_all_categories_build template tables_to_backup TABLESTATS_build Atemplate 1279152000 TABLESTATS clear cloudy"
+    skiptables = " all_display_categories all_display_categories_build all_display_categories_dev regions_per_model_mats_all_categories regions_per_model_mats_all_categories_dev regions_per_model_mats_all_categories_build template tables_to_backup TABLESTATS_build Atemplate 1279152000 TABLESTATS clear cloudy "
 
     # get an array of all relevant data sources in this db
     all_data_sources = []
@@ -139,7 +139,7 @@ def regions_per_model_mats_all_categories(mode):
         tablename = row.values()[0]
         tablename = tablename.encode('ascii', 'ignore')
         # print( "tablename is " + tablename)
-        if tablename not in skiptables and 'reg' in tablename and tablename[-1].isdigit():
+        if " " + tablename + " " not in skiptables and 'reg' in tablename and tablename[-1].isdigit():
             # parse the data sources, table_prefixes, and regions from the table names
             if '_Areg' in tablename:
                 model = re.sub('_Areg.*', '', tablename)

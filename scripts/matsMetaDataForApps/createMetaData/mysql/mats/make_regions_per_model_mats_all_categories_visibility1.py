@@ -140,7 +140,7 @@ def regions_per_model_mats_all_categories(mode):
         print("NOT executing: " + str(clean_tablestats))
 
     # string of tables not to include in our search for metadata
-    skiptables = "regions_per_model_mats_all_categories regions_per_model_mats_all_categories_dev regions_per_model_mats_all_categories_build template tables_to_backup TABLESTATS_build metars model_metadata obs"
+    skiptables = " regions_per_model_mats_all_categories regions_per_model_mats_all_categories_dev regions_per_model_mats_all_categories_build template tables_to_backup TABLESTATS_build metars model_metadata obs "
 
     # get an array of all relevant data sources in this db
     all_data_sources = []
@@ -152,7 +152,7 @@ def regions_per_model_mats_all_categories(mode):
         tablename = row.values()[0]
         tablename = tablename.encode('ascii', 'ignore')
         # print( "tablename is " + tablename)
-        if tablename not in skiptables:
+        if " " + tablename + " " not in skiptables:
             # parse the data sources from the table names
             model = tablename
             if model not in all_data_sources:

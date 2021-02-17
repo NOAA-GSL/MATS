@@ -124,7 +124,7 @@ def regions_per_model_mats_all_categories(mode):
         print("NOT executing: " + str(clean_tablestats))
 
     # string of tables not to include in our search for metadata
-    skiptables = "ptype_descriptions regions_per_model_mats_all_categories regions_per_model_mats_all_categories_build scale_descriptions t1 template tables_to_backup"
+    skiptables = " ptype_descriptions regions_per_model_mats_all_categories regions_per_model_mats_all_categories_build scale_descriptions t1 template tables_to_backup "
 
     # get an array of all relevant data sources in this db
     all_data_sources = []
@@ -136,7 +136,7 @@ def regions_per_model_mats_all_categories(mode):
         tablename = row.values()[0]
         tablename = tablename.encode('ascii', 'ignore')
         # print( "tablename is " + tablename)
-        if tablename not in skiptables:
+        if " " + tablename + " " not in skiptables:
             # parse the data sources and regions from the table names
             model = re.sub('_freq_.*', '', tablename)
             if model not in all_data_sources:
