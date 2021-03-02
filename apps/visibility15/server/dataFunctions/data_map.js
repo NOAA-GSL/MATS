@@ -38,17 +38,31 @@ dataMap = function (plotParams, plotFunction) {
     var queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
     var sitesClause = "";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
+    var truthStr = curve['truth'];
+    var truth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[key] === truthStr);
+    var truthClause = "";
     var thresholdStr = curve['threshold'];
     var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
     var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+        validTimeClause = "and floor((m0.time+450)%(24*3600)/900)/4 IN(" + validTimes + ")";
     }
-    var forecastLength = curve['forecast-length'];
-    var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
+    var forecastLength = Number(curve['forecast-length']);
+    var forecastHour = Math.floor(forecastLength);
+    var forecastMinute = (forecastLength - forecastHour) * 60;
+    var forecastLengthClause = "and m0.fcst_len = " + forecastLength + " and m0.fcst_min = " + forecastMinute;
     var statistic = curve['statistic'];
-    var statisticClause = 'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as yy,sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as nn, count(m0.ceil) as N0';
+    var statisticClause = 'sum(if(    (m0.vis100 < {{threshold}}) and     (o.vis_{{truth}} < {{threshold}}),1,0)) as yy, ' +
+        'sum(if(    (m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0)) as yn, ' +
+        'sum(if(NOT (m0.vis100 < {{threshold}}) and     (o.vis_{{truth}} < {{threshold}}),1,0)) as ny, ' +
+        'sum(if(NOT (m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0)) as nn, count(m0.vis100) as N0';
+    if (truth !== "qc") {
+        statisticClause = statisticClause.replace(/\{\{truth\}\}/g, truth);
+    } else {
+        statisticClause = statisticClause.replace(/\{\{truth\}\}/g, "closest");
+        truthClause = "and o.vis_std < 2.4";
+    }
     statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     var querySites = [];
@@ -66,14 +80,14 @@ dataMap = function (plotParams, plotFunction) {
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var dateClause = "and m0.time >= " + fromSecs + " - 900 and m0.time <= " + toSecs + " + 900";
-    var siteDateClause = "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
+    var dateClause = "and m0.time >= " + fromSecs + " - 300 and m0.time <= " + toSecs + " + 300";
+    var siteDateClause = "and o.time >= " + fromSecs + " - 300 and o.time <= " + toSecs + " + 300";
     var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
 
     var statement = "select m0.madis_id as sta_id, " +
-        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
-        "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
-        "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
+        "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +
+        "min(ceil(900*floor((m0.time+450)/900))) as min_secs, " +
+        "max(ceil(900*floor((m0.time+450)/900))) as max_secs, " +
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +
@@ -83,6 +97,7 @@ dataMap = function (plotParams, plotFunction) {
         "{{siteDateClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
+        "{{truthClause}} " +
         "group by sta_id " +
         "order by N0" +
         ";";
@@ -93,6 +108,7 @@ dataMap = function (plotParams, plotFunction) {
     statement = statement.replace('{{sitesClause}}', sitesClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+    statement = statement.replace('{{truthClause}}', truthClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
     dataRequests[label] = statement;

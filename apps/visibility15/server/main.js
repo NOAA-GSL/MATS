@@ -206,11 +206,16 @@ const doPlotParams = function () {
 const doCurveParams = function () {
     // force a reset if requested - simply remove all the existing params to force a reload
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.CurveParams.remove({});
+        const params = matsCollections.CurveParamsInfo.find({"curve_params": {"$exists": true}}).fetch()[0]["curve_params"];
+        for (var cp = 0; cp < params.length; cp++) {
+            matsCollections[params[cp]].remove({});
+        }
     }
     var modelOptionsMap = {};
     var modelDateRangeMap = {};
     var regionModelOptionsMap = {};
+    var siteOptionsMap = {};
+    var sitesLocationMap = [];
     var forecastLengthOptionsMap = {};
     var thresholdsModelOptionsMap = {};
     var truthsModelOptionsMap = {};
@@ -311,8 +316,53 @@ const doCurveParams = function () {
         console.log(err.message);
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
-        matsCollections.CurveParams.insert(
+    try {
+        matsCollections.SiteMap.remove({});
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "select madis_id,name,lat,lon,elev,description from madis3.metars_mats_global where lat > -16380 and lat < 16380 and lon > -32760 and lon < 32760 order by name;");
+        for (var i = 0; i < rows.length; i++) {
+
+            var site_name = rows[i].name;
+            var site_description = rows[i].description;
+            var site_id = rows[i].madis_id;
+            var site_lat = rows[i].lat / 182;
+            var site_lon = rows[i].lon / 182;
+            var site_elev = rows[i].elev;
+            siteOptionsMap[site_name] = [site_id];
+
+            var point = [site_lat, site_lon];
+            var obj = {
+                name: site_name,
+                origName: site_name,
+                point: point,
+                elevation: site_elev,
+                options: {
+                    title: site_description,
+                    color: 'red',
+                    size: 5,
+                    network: 'METAR',
+                    peerOption: site_name,
+                    id: site_id,
+                    highLightColor: 'blue'
+                }
+            };
+            sitesLocationMap.push(obj);
+
+            matsCollections.SiteMap.insert({siteName: site_name, siteId: site_id});
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    matsCollections.StationMap.remove({});
+    matsCollections.StationMap.insert(
+        {
+            name: 'stations',
+            optionsMap: sitesLocationMap,
+        }
+    );
+
+    if (matsCollections["label"].findOne({name: 'label'}) == undefined) {
+        matsCollections["label"].insert(
             {
                 name: 'label',
                 type: matsTypes.InputTypes.textInput,
@@ -330,8 +380,28 @@ const doCurveParams = function () {
         );
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'data-source'}) == undefined) {
-        matsCollections.CurveParams.insert(
+    if (matsCollections['region-type'].findOne({name: 'region-type'}) == undefined) {
+        matsCollections['region-type'].insert(
+            {
+                name: 'region-type',
+                type: matsTypes.InputTypes.select,
+                options: ['Predefined region', 'Select stations'],
+                default: 'Predefined region',
+                hideOtherFor: {
+                    'region': ["Select stations"],
+                    'sites': ["Predefined region"],
+                    'sitesMap': ["Predefined region"]
+                },
+                controlButtonCovered: true,
+                controlButtonText: 'Region mode',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+    }
+
+    if (matsCollections["data-source"].findOne({name: 'data-source'}) == undefined) {
+        matsCollections["data-source"].insert(
             {
                 name: 'data-source',
                 type: matsTypes.InputTypes.select,
@@ -343,17 +413,17 @@ const doCurveParams = function () {
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 1
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
+        var currentParam = matsCollections["data-source"].findOne({name: 'data-source'});
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
             (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap))) {
             // have to reload model data
-            matsCollections.CurveParams.update({name: 'data-source'}, {
+            matsCollections["data-source"].update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
                     dates: modelDateRangeMap,
@@ -364,8 +434,8 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
-        matsCollections.CurveParams.insert(
+    if (matsCollections["region"].findOne({name: 'region'}) == undefined) {
+        matsCollections["region"].insert(
             {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
@@ -377,17 +447,17 @@ const doCurveParams = function () {
                 unique: false,
                 default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
+        var currentParam = matsCollections["region"].findOne({name: 'region'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
             // have to reload region data
-            matsCollections.CurveParams.update({name: 'region'}, {
+            matsCollections["region"].update({name: 'region'}, {
                 $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
@@ -398,7 +468,7 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
+    if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
             'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
 
@@ -416,11 +486,11 @@ const doCurveParams = function () {
 
             'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn)))/(sum(m0.yy+m0.yn+m0.ny)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)))/((m0.yy+m0.yn+m0.ny)-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
 
-            'Nlow (obs < threshold, avg per 15 min)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null],
+            'Nlow (obs < threshold, avg per 15 min in predefined regions)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null],
 
-            'Nhigh (obs > threshold, avg per 15 min)': ['avg(m0.nn+m0.yn+0.000) as stat, group_concat((m0.nn+m0.yn), ";", m0.time order by m0.time) as sub_data, count(m0.nn) as N0', 'ctc', 'Number', null],
+            'Nhigh (obs > threshold, avg per 15 min in predefined regions)': ['avg(m0.nn+m0.yn+0.000) as stat, group_concat((m0.nn+m0.yn), ";", m0.time order by m0.time) as sub_data, count(m0.nn) as N0', 'ctc', 'Number', null],
 
-            'Ntot (total obs, avg per 15 min)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null],
+            'Ntot (total obs, avg per 15 min in predefined regions)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null],
 
             'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Ratio', null],
 
@@ -428,7 +498,7 @@ const doCurveParams = function () {
 
             'N per graph point': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null]
         };
-        matsCollections.CurveParams.insert(
+        matsCollections["statistic"].insert(
             {
                 name: 'statistic',
                 type: matsTypes.InputTypes.select,
@@ -438,14 +508,14 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 2
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'threshold'}) == undefined) {
-        matsCollections.CurveParams.insert(
+    if (matsCollections["threshold"].findOne({name: 'threshold'}) == undefined) {
+        matsCollections["threshold"].insert(
             {
                 name: 'threshold',
                 type: matsTypes.InputTypes.select,
@@ -463,11 +533,11 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'threshold'});
+        var currentParam = matsCollections["threshold"].findOne({name: 'threshold'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdsModelOptionsMap)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap))) {
             // have to reload threshold data
-            matsCollections.CurveParams.update({name: 'threshold'}, {
+            matsCollections["threshold"].update({name: 'threshold'}, {
                 $set: {
                     optionsMap: thresholdsModelOptionsMap,
                     valuesMap: masterThresholdValuesMap,
@@ -478,8 +548,8 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'truth'}) == undefined) {
-        matsCollections.CurveParams.insert(
+    if (matsCollections['truth'].findOne({name: 'truth'}) == undefined) {
+        matsCollections['truth'].insert(
             {
                 name: 'truth',
                 type: matsTypes.InputTypes.select,
@@ -489,7 +559,7 @@ const doCurveParams = function () {
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][1],
+                default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -497,11 +567,11 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'truth'});
+        var currentParam = matsCollections['truth'].findOne({name: 'truth'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthsModelOptionsMap)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterTruthValuesMap))) {
             // have to reload truth data
-            matsCollections.CurveParams.update({name: 'truth'}, {
+            matsCollections['truth'].update({name: 'truth'}, {
                 $set: {
                     optionsMap: truthsModelOptionsMap,
                     valuesMap: masterTruthValuesMap,
@@ -512,8 +582,8 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
-        matsCollections.CurveParams.insert(
+    if (matsCollections["forecast-length"].findOne({name: 'forecast-length'}) == undefined) {
+        matsCollections["forecast-length"].insert(
             {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
@@ -532,10 +602,10 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
+        var currentParam = matsCollections["forecast-length"].findOne({name: 'forecast-length'});
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
             // have to reload forecast length data
-            matsCollections.CurveParams.update({name: 'forecast-length'}, {
+            matsCollections["forecast-length"].update({name: 'forecast-length'}, {
                 $set: {
                     optionsMap: forecastLengthOptionsMap,
                     options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],
@@ -545,13 +615,13 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'dieoff-type'}) == undefined) {
+    if (matsCollections["dieoff-type"].findOne({name: 'dieoff-type'}) == undefined) {
         var dieoffOptionsMap = {
             "Dieoff": [matsTypes.ForecastTypes.dieoff],
             "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
             "Single cycle forecast (uses first date in range)": [matsTypes.ForecastTypes.singleCycle]
         };
-        matsCollections.CurveParams.insert(
+        matsCollections["dieoff-type"].insert(
             {
                 name: 'dieoff-type',
                 type: matsTypes.InputTypes.select,
@@ -567,17 +637,17 @@ const doCurveParams = function () {
                 default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 controlButtonText: 'dieoff type',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 4
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
+    if (matsCollections["valid-time"].findOne({name: 'valid-time'}) == undefined) {
         const optionsArrRaw = [...Array(96).keys()].map(x => x / 4);
         const optionsArr = optionsArrRaw.map(String);
 
-        matsCollections.CurveParams.insert(
+        matsCollections["valid-time"].insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
@@ -588,15 +658,15 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "valid utc hour",
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}) == undefined) {
-        matsCollections.CurveParams.insert(
+    if (matsCollections["utc-cycle-start"].findOne({name: 'utc-cycle-start'}) == undefined) {
+        matsCollections["utc-cycle-start"].insert(
             {
                 name: 'utc-cycle-start',
                 type: matsTypes.InputTypes.select,
@@ -607,13 +677,13 @@ const doCurveParams = function () {
                 default: 12,
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle init hour",
-                displayOrder: 3,
+                displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 4,
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
+    if (matsCollections["average"].findOne({name: 'average'}) == undefined) {
         const optionsMap = {
             'None': ['ceil(' + 900 + '*floor(((m0.time)+' + 900 + '/2)/' + 900 + '))'],
             '30m': ['ceil(' + 1800 + '*floor(((m0.time)+' + 1800 + '/2)/' + 1800 + '))'],
@@ -631,7 +701,7 @@ const doCurveParams = function () {
             '90D': ['ceil(' + 3600 * 24 * 90 + '*floor(((m0.time)+' + 3600 * 24 * 90 + '/2)/' + 3600 * 24 * 90 + '))'],
             '180D': ['ceil(' + 3600 * 24 * 180 + '*floor(((m0.time)+' + 3600 * 24 * 180 + '/2)/' + 3600 * 24 * 180 + '))'],
         };
-        matsCollections.CurveParams.insert(
+        matsCollections["average"].insert(
             {
                 name: 'average',
                 type: matsTypes.InputTypes.select,
@@ -648,7 +718,47 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}) == undefined) {
+    if (matsCollections["sites"].findOne({name: 'sites'}) == undefined) {
+        matsCollections["sites"].insert(
+            {
+                name: 'sites',
+                type: matsTypes.InputTypes.select,
+                optionsMap: siteOptionsMap,
+                options: Object.keys(siteOptionsMap),
+                peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 5,
+                multiple: true
+            });
+    }
+
+    if (matsCollections["sitesMap"].findOne({name: 'sitesMap'}) == undefined) {
+        matsCollections["sitesMap"].insert(
+            {
+                name: 'sitesMap',
+                type: matsTypes.InputTypes.selectMap,
+                optionsMap: sitesLocationMap,
+                options: Object.keys(sitesLocationMap),
+                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 5,
+                multiple: true,
+                defaultMapView: {point: [50, -92.5], zoomLevel: 1.25},
+                help: 'map-help.html'
+            });
+    }
+
+    if (matsCollections["x-axis-parameter"].findOne({name: 'x-axis-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "select m0.fcst_len+m0.fcst_min/60 as xVal, ",
             'Threshold': "select m0.trsh/100 as xVal, ",    // produces thresholds in mi
@@ -658,7 +768,7 @@ const doCurveParams = function () {
             'Init Date': "select m0.time-(m0.fcst_len*3600+m0.fcst_min*60) as xVal, "
         };
 
-        matsCollections.CurveParams.insert(
+        matsCollections["x-axis-parameter"].insert(
             {
                 name: 'x-axis-parameter',
                 type: matsTypes.InputTypes.select,
@@ -675,7 +785,7 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}) == undefined) {
+    if (matsCollections["y-axis-parameter"].findOne({name: 'y-axis-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "m0.fcst_len+m0.fcst_min/60 as yVal, ",
             'Threshold': "m0.trsh/100 as yVal, ",    // produces thresholds in mi
@@ -685,7 +795,7 @@ const doCurveParams = function () {
             'Init Date': "m0.time-(m0.fcst_len*3600+m0.fcst_min*60) as yVal, "
         };
 
-        matsCollections.CurveParams.insert(
+        matsCollections["y-axis-parameter"].insert(
             {
                 name: 'y-axis-parameter',
                 type: matsTypes.InputTypes.select,
@@ -703,8 +813,8 @@ const doCurveParams = function () {
     }
 
     // determine date defaults for dates and curveDates
-    const defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
+    modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
 
@@ -714,7 +824,7 @@ const doCurveParams = function () {
     maxDate = newDateRange.maxDate;
     dstr = moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm") + ' - ' + moment.utc(maxDate).format("MM/DD/YYYY HH:mm");
 
-    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+    if (matsCollections["curve-dates"].findOne({name: 'curve-dates'}) == undefined) {
         const optionsMap = {
             '1 day': ['1 day'],
             '3 days': ['3 days'],
@@ -724,7 +834,7 @@ const doCurveParams = function () {
             '180 days': ['180 days'],
             '365 days': ['365 days']
         };
-        matsCollections.CurveParams.insert(
+        matsCollections["curve-dates"].insert(
             {
                 name: 'curve-dates',
                 type: matsTypes.InputTypes.dateRange,
@@ -744,12 +854,12 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'curve-dates'});
+        var currentParam = matsCollections["curve-dates"].findOne({name: 'curve-dates'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
             // have to reload dates data
-            matsCollections.CurveParams.update({name: 'curve-dates'}, {
+            matsCollections["curve-dates"].update({name: 'curve-dates'}, {
                 $set: {
                     startDate: minDate,
                     stopDate: maxDate,
@@ -778,6 +888,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
@@ -787,7 +898,7 @@ const doCurveTextPatterns = function () {
                 ['', 'truth', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "average", "forecast-length", "valid-time", "truth"
+                "label", "data-source", "region-type", "region", "statistic", "threshold", "average", "forecast-length", "valid-time", "truth", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -796,6 +907,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
@@ -806,7 +918,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "truth", "curve-dates"
+                "label", "data-source", "region-type", "region", "statistic", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "truth", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -815,6 +927,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
@@ -832,6 +945,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
@@ -840,7 +954,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "truth", "curve-dates"
+                "label", "data-source", "region-type", "region", "statistic", "threshold", "forecast-length", "truth", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -849,6 +963,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
@@ -856,7 +971,23 @@ const doCurveTextPatterns = function () {
                 ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "utc-cycle-start", "truth"
+                "label", "data-source", "region-type", "region", "statistic", "threshold", "utc-cycle-start", "truth", "sites", "sitesMap"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.map,
+            textPattern: [
+                ['', 'data-source', ': '],
+                ['', 'sites', ': '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', ' h '],
+                [' valid-time:', 'valid-time', ', '],
+                ['', 'truth', '']
+            ],
+            displayParams: [
+                "data-source", "statistic", "threshold", "forecast-length", "valid-time", "truth", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -865,6 +996,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
@@ -957,6 +1089,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dailyModelCycle,
             graphFunction: "graphPlotly",
             dataFunction: "dataDailyModelCycle",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.map,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataMap",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
