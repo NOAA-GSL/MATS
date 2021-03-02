@@ -109,8 +109,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
             dateClause = "and m0.time >= " + fromSecs + " - 300 and m0.time <= " + toSecs + " + 300";
-            siteDateClause = "and o.time >= " + fromSecs + " - 300 and o.time <= " + toSecs + " + 300";
-            siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
+            siteDateClause = "and o.valid_time >= " + fromSecs + " - 300 and o.valid_time <= " + toSecs + " + 300";
+            siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.valid_time ";
             queryPool = modelPool;
         }
         // for contingency table apps, we currently have to deal with matching in the query.

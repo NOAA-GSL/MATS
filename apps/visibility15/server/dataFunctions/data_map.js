@@ -81,8 +81,8 @@ dataMap = function (plotParams, plotFunction) {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
     var dateClause = "and m0.time >= " + fromSecs + " - 300 and m0.time <= " + toSecs + " + 300";
-    var siteDateClause = "and o.time >= " + fromSecs + " - 300 and o.time <= " + toSecs + " + 300";
-    var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
+    var siteDateClause = "and o.valid_time >= " + fromSecs + " - 300 and o.valid_time <= " + toSecs + " + 300";
+    var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.valid_time";
 
     var statement = "select m0.madis_id as sta_id, " +
         "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +
