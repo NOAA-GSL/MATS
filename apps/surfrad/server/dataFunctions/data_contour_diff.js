@@ -48,11 +48,11 @@ dataContourDiff = function (plotParams, plotFunction) {
         var label = curve['label'];
         var xAxisParam = curve['x-axis-parameter'];
         var yAxisParam = curve['y-axis-parameter'];
-        var xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-        var yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var xValClause = matsCollections['x-axis-parameter'].findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+        var yValClause = matsCollections['y-axis-parameter'].findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var regionClause;
         if (region === 'all_stat') {
             regionClause = "";
@@ -64,11 +64,11 @@ dataContourDiff = function (plotParams, plotFunction) {
             regionClause = "and m0.id in(" + region + ") ";
         }
         var scaleStr = curve['scale'];
-        var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
+        var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var scaleClause = "and m0.scale = " + grid_scale;
         var queryTableClause = "from surfrad as ob0, " + model + " as m0";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
         var forecastLengthClause = "";
@@ -103,10 +103,10 @@ dataContourDiff = function (plotParams, plotFunction) {
                     continue;
                 }
                 matchCurveIdx++;
-                const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
                 queryTableClause = queryTableClause + ", " + matchModel + " as m" + matchCurveIdx;
                 matchClause = matchClause + " and m0.id = m" + matchCurveIdx + ".id";       // m0.secs and m?.secs are already matched in the date clause, so we just have to match ids here
-                const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
                 if (matchRegion === 'all_surf') {
                     regionClause = regionClause + " and m" + matchCurveIdx + ".id in(1,2,3,4,5,6,7)";
                 } else if (matchRegion === 'all_sol') {
@@ -114,7 +114,7 @@ dataContourDiff = function (plotParams, plotFunction) {
                 } else if (region !== 'all_stat'){
                     regionClause = regionClause + " and m" + matchCurveIdx + ".id in(" + matchRegion + ")";
                 }
-                const matchScale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
+                const matchScale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
                 scaleClause = scaleClause + " and m" + matchCurveIdx + ".scale = " + matchScale;
                 if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                     const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
@@ -139,12 +139,12 @@ dataContourDiff = function (plotParams, plotFunction) {
             }
         }
         var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause = statisticOptionsMap[statisticSelect][0];
         statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
         statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
         statisticClause = statisticClause.replace(/\{\{variable2\}\}/g, variable[2]);
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         showSignificance = curve['significance'] !== 'none' || showSignificance;
 
