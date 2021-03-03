@@ -15,8 +15,8 @@ Feature: Add Remove Curve
     Scenario: addRemoveCurve
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I set the dates to "06/28/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "03/02/2021 0:00 - 03/03/2021 0:00"
+        Then the dates value is "03/02/2021 0:00 - 03/03/2021 0:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
