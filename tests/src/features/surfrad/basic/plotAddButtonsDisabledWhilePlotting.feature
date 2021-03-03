@@ -15,14 +15,14 @@ Feature: Plot and Add buttons are disabled while plotting
     Scenario: plotAddButtonsDisabledWhilePlotting
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "data-source" parameter to "HRRR_GSL"
+        When I change the "data-source" parameter to "RAP_OPS_130"
         And I change the "region" parameter to "Table Mountain, CO"
         And I change the "average" parameter to "6hr"
-        Then the "data-source" parameter value matches "HRRR_GSL"
+        Then the "data-source" parameter value matches "RAP_OPS_130"
         And the "region" parameter value matches "Table Mountain, CO"
         And the "average" parameter value matches "6hr"
-        When I set the dates to "08/25/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "08/25/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "09/17/2019 0:00 - 09/24/2019 0:00"
+        Then the dates value is "09/17/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
