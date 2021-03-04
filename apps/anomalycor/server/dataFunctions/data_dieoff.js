@@ -42,9 +42,9 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + model + "_anomcorr_" + region + " as m0";
         var variable = curve['variable'];
         var variableClause = "and m0.variable = '" + variable + "'";
@@ -52,7 +52,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var utcCycleStart;
         var utcCycleStartClause = "";
         var forecastLengthStr = curve['dieoff-type'];
-        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
+        var forecastLengthOptionsMap = matsCollections['dieoff-type'].findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
         var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
@@ -60,7 +60,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '" + fromSecs + "' and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '" + toSecs + "' ";
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             var validTimeStr = curve['valid-time'];
-            validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+            validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = Number(curve['utc-cycle-start']);
             utcCycleStartClause = "and floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";

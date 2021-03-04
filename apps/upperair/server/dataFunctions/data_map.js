@@ -33,14 +33,13 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var variableStr = curve['variable'];
-    var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+    var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
     var validTimeClause = "";
     var validTimeStr = curve['valid-time'];
-    var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
-    validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+    validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     var top = curve['top'];

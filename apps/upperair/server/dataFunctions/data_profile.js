@@ -41,14 +41,14 @@ dataProfile = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var queryTableClause = "";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
         var validTimeStr = curve['valid-time'];
-        validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+        validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -68,13 +68,13 @@ dataProfile = function (plotParams, plotFunction) {
         var regionType = curve['region-type'];
         if (regionType === 'Predefined region') {
             levelVar = "m0.mb10*10";
-            var tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
+            var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
             var regionStr = curve['region'];
-            var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + tablePrefix + region + " as m0";
             var statisticSelect = curve['statistic'];
-            var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-            var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
+            var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+            var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
             if (variableStr === 'winds') {
                 statisticClause = statisticOptionsMap[statisticSelect][1];
                 statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
@@ -84,7 +84,7 @@ dataProfile = function (plotParams, plotFunction) {
             }
             statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
             statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
-            var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+            var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
             varUnits = statVarUnitMap[statisticSelect][variableStr];
             levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
             queryPool = sumPool;

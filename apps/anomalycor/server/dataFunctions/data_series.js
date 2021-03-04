@@ -45,15 +45,15 @@ dataSeries = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + model + "_anomcorr_" + region + " as m0";
         var variable = curve['variable'];
         var variableClause = "and m0.variable = '" + variable + "'";
         var validTimeStr = curve['valid-time'];
         var validTimes = validTimeStr === 'both' ? [] : [Number(validTimeStr.split('-')[0])];
-        var validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+        var validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= " + fromSecs + " and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= " + toSecs;
@@ -67,7 +67,7 @@ dataSeries = function (plotParams, plotFunction) {
             "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data";
         curves[curveIndex]['statistic'] = "Correlation";
         var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

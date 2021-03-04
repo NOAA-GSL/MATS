@@ -44,12 +44,12 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + model + "_" + region + "_sums as m0";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -66,11 +66,11 @@ dataHistogram = function (plotParams, plotFunction) {
         var bottom = curve['bottom'];
         var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
         var phaseStr = curve['phase'];
-        var phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+        var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
         var phaseClause = phaseOptionsMap[phaseStr];
         var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
+        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
         var statisticClause;
         if (variableStr === 'winds') {
             statisticClause = statisticOptionsMap[statisticSelect][1];
