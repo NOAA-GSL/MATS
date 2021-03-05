@@ -2,7 +2,7 @@ Feature: No Data Found Exception: invalid_times
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want to change the data-source to HRRR_GSL
+    I want to change the data-source to RAP_OPS
     I want to change the region to RUC
     I want to add one curve
     and I click plot unmatched

@@ -42,19 +42,19 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + model + "_" + region + "_sums as m0";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimes;
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
         var forecastLengthStr = curve['dieoff-type'];
-        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
+        var forecastLengthOptionsMap = matsCollections['dieoff-type'].findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
         var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
         var forecastLengthClause = "";
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -81,11 +81,11 @@ dataDieOff = function (plotParams, plotFunction) {
         var bottom = curve['bottom'];
         var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
         var phaseStr = curve['phase'];
-        var phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+        var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
         var phaseClause = phaseOptionsMap[phaseStr];
         var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
+        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
         var statisticClause;
         if (variableStr === 'winds') {
             statisticClause = statisticOptionsMap[statisticSelect][1];
@@ -96,7 +96,7 @@ dataDieOff = function (plotParams, plotFunction) {
         }
         statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
         statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

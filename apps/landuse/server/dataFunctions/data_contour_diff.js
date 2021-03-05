@@ -48,15 +48,15 @@ dataContourDiff = function (plotParams, plotFunction) {
         var label = curve['label'];
         var xAxisParam = curve['x-axis-parameter'];
         var yAxisParam = curve['y-axis-parameter'];
-        var xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-        var yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var xValClause = matsCollections['x-axis-parameter'].findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+        var yValClause = matsCollections['y-axis-parameter'].findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var vgtypStr = curve['vgtyp'];
-        var vgtyp = Object.keys(matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap[key] === vgtypStr);
+        var vgtyp = Object.keys(matsCollections['vgtyp'].findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections['vgtyp'].findOne({name: 'vgtyp'}).valuesMap[key] === vgtypStr);
         var vgtypClause = "and m0.vgtyp IN(" + vgtyp + ")";
         var queryTableClause = "from " + model + " as m0";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
         var forecastLengthClause = "";
@@ -88,9 +88,9 @@ dataContourDiff = function (plotParams, plotFunction) {
                     continue;
                 }
                 matchCurveIdx++;
-                const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
                 queryTableClause = queryTableClause + ", " + matchModel + " as m" + matchCurveIdx;
-                const matchVgtyp = Object.keys(matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap[key] === matchCurve['vgtyp']);
+                const matchVgtyp = Object.keys(matsCollections['vgtyp'].findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections['vgtyp'].findOne({name: 'vgtyp'}).valuesMap[key] === matchCurve['vgtyp']);
                 vgtypClause = vgtypClause + " and m" + matchCurveIdx + ".vgtyp IN(" + matchVgtyp + ")";
                 if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                     const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
@@ -115,7 +115,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             }
         }
         var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+    var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause;
         if (variableStr === 'temperature' || variableStr === 'dewpoint') {
             statisticClause = statisticOptionsMap[statisticSelect][0];
@@ -126,7 +126,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         }
         statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
         statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+    var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         showSignificance = curve['significance'] !== 'none' || showSignificance;
 

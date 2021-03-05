@@ -45,10 +45,10 @@ dataSeries = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var queryTableClause = "";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
         var forecastLength = curve['forecast-length'];
@@ -65,13 +65,13 @@ dataSeries = function (plotParams, plotFunction) {
         if (regionType === 'Predefined region') {
             timeVar = "m0.valid_day+3600*m0.hour";
             var metarStringStr = curve['truth'];
-            var metarString = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === metarStringStr);
+            var metarString = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[key] === metarStringStr);
             var regionStr = curve['region'];
-            var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + model + "_" + metarString + "_" + region + " as m0";
             forecastLengthClause = "and m0.fcst_len = " + forecastLength;
             var statisticSelect = curve['statistic'];
-            var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+            var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
                 statisticClause = statisticOptionsMap[statisticSelect][0];
             } else if (variableStr === '10m wind') {
@@ -81,7 +81,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
             statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
             statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
-            var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+            var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
             varUnits = statVarUnitMap[statisticSelect][variableStr];
             dateClause = "and m0.valid_day+3600*m0.hour >= " + fromSecs + " and m0.valid_day+3600*m0.hour <= " + toSecs;
             queryPool = sumPool;
@@ -138,7 +138,7 @@ dataSeries = function (plotParams, plotFunction) {
             validTimeClause = "and floor((" + timeVar + "+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
         }
         var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

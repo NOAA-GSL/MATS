@@ -39,15 +39,15 @@ dataContour = function (plotParams, plotFunction) {
     var label = curve['label'];
     var xAxisParam = curve['x-axis-parameter'];
     var yAxisParam = curve['y-axis-parameter'];
-    var xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-    var yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
-    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-    var tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
+    var xValClause = matsCollections['x-axis-parameter'].findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+    var yValClause = matsCollections['y-axis-parameter'].findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
     var regionStr = curve['region'];
-    var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+    var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
     var queryTableClause = "from " + tablePrefix + region + " as m0";
     var variableStr = curve['variable'];
-    var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+    var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
     var validTimeClause = "";
     var forecastLengthClause = "";
@@ -56,7 +56,7 @@ dataContour = function (plotParams, plotFunction) {
     var levelClause = "";
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimeStr = curve['valid-time'];
-        validTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+        validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
     }
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'];
@@ -75,8 +75,8 @@ dataContour = function (plotParams, plotFunction) {
         levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
     }
     var statisticSelect = curve['statistic'];
-    var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-    var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
+    var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+    var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
     var statisticClause;
     if (variableStr === 'winds') {
         statisticClause = statisticOptionsMap[statisticSelect][1];
@@ -87,7 +87,7 @@ dataContour = function (plotParams, plotFunction) {
     }
     statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
     statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
-    var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+    var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
     var varUnits = statVarUnitMap[statisticSelect][variableStr];
 
     // For contours, this functions as the colorbar label.

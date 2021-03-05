@@ -42,16 +42,14 @@ dataValidTime = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + " as m0";
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var queryTableClause = "";
         var truthStr = curve['truth'];
-        var truth = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === truthStr);
-        var truthClause = "and m0.truth = '" + truth + "'";
+        var truth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[key] === truthStr);
+        var truthClause = "";
         var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        var thresholdClause = "and m0.trsh = " + threshold;
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var thresholdClause = "";
         var forecastLength = Number(curve['forecast-length']);
         var forecastHour = Math.floor(forecastLength);
         var forecastMinute = (forecastLength - forecastHour) * 60;
@@ -59,7 +57,62 @@ dataValidTime = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
+        var dateClause;
+        var siteDateClause = "";
+        var siteMatchClause = "";
+        var sitesClause = "";
+        var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause;
+        var filterClause = "";
+        var queryPool;
+        var regionType = curve['region-type'];
+        if (regionType === 'Predefined region') {
+            var regionStr = curve['region'];
+            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
+            queryTableClause = "from " + model + "_" + region + " as m0";
+            truthClause = "and m0.truth = '" + truth + "'";
+            thresholdClause = "and m0.trsh = " + threshold;
+            statisticClause = statisticOptionsMap[statisticSelect][0];
+            dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
+            filterClause = "and m0.yy+m0.ny+m0.yn+m0.nn > 0";
+            queryPool = sumPool;
+        } else {
+            var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
+            queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
+            statisticClause = 'sum(if(    (m0.vis100 < {{threshold}}) and     (o.vis_{{truth}} < {{threshold}}),1,0)) as yy, ' +
+                              'sum(if(    (m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0)) as yn, ' +
+                              'sum(if(NOT (m0.vis100 < {{threshold}}) and     (o.vis_{{truth}} < {{threshold}}),1,0)) as ny, ' +
+                              'sum(if(NOT (m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0)) as nn, count(m0.vis100) as N0';
+            if (truth !== "qc") {
+                statisticClause = statisticClause.replace(/\{\{truth\}\}/g, truth);
+            } else {
+                statisticClause = statisticClause.replace(/\{\{truth\}\}/g, "closest");
+                truthClause = "and o.vis_std < 2.4";
+            }
+            statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
+            var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+            var querySites = [];
+            if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
+                var thisSite;
+                var thisSiteObj;
+                for (var sidx = 0; sidx < sitesList.length; sidx++) {
+                    thisSite = sitesList[sidx];
+                    thisSiteObj = siteMap.find(obj => {
+                        return obj.origName === thisSite;
+                    });
+                    querySites.push(thisSiteObj.options.id);
+                }
+                sitesClause = " and m0.madis_id in('" + querySites.join("','") + "')";
+            } else {
+                throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
+            }
+            dateClause = "and m0.time >= " + fromSecs + " - 300 and m0.time <= " + toSecs + " + 300";
+            siteDateClause = "and o.valid_time >= " + fromSecs + " - 300 and o.valid_time <= " + toSecs + " + 300";
+            siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.valid_time ";
+            queryPool = modelPool;
+        }
         // for contingency table apps, we currently have to deal with matching in the query.
         if (appParams.matching && curvesLength > 1) {
             var matchCurveIdx = 0;
@@ -70,13 +123,7 @@ dataValidTime = function (plotParams, plotFunction) {
                     continue;
                 }
                 matchCurveIdx++;
-                const matchModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
-                const matchRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
-                const matchTruth = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === matchCurve['truth']);
-                truthClause = truthClause + " and m" + matchCurveIdx + ".truth = '" + matchTruth + "'";
-                const matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
-                thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
+                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
                 const matchForecastLength = Number(matchCurve['forecast-length']);
                 const matchForecastHour = Math.floor(matchForecastLength);
                 const matchForecastMinute = (matchForecastLength - matchForecastHour) * 60;
@@ -84,13 +131,50 @@ dataValidTime = function (plotParams, plotFunction) {
                 const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
                 const matchFromSecs = matchDateRange.fromSeconds;
                 const matchToSecs = matchDateRange.toSeconds;
-                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
-                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
+                const matchRegionType = matchCurve['region-type'];
+                if (matchRegionType === 'Predefined region') {
+                    const queryDB = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}).database;
+                    const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                    queryTableClause = queryTableClause + ", " + queryDB + "." + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
+                    const matchTruth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[key] === matchCurve['truth']);
+                    truthClause = truthClause + " and m" + matchCurveIdx + ".truth = '" + matchTruth + "'";
+                    const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
+                    thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
+                    if (sitesClause.includes("m0.madis_id in")) {
+                        dateClause = "and ceil(900*floor((m0.time+450)/900)) = m" + matchCurveIdx + ".time " + dateClause;
+                    } else {
+                        dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
+                    }
+                    dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
+                } else {
+                    const queryDB = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}).database;
+                    queryTableClause = queryTableClause + ", " + queryDB + "." + matchModel + " as m" + matchCurveIdx;
+                    const matchSitesList = matchCurve['sites'] === undefined ? [] : matchCurve['sites'];
+                    var matchQuerySites = [];
+                    if (matchSitesList.length > 0 && matchSitesList !== matsTypes.InputTypes.unused) {
+                        var thisMatchSite;
+                        var thisMatchSiteObj;
+                        for (var msidx = 0; msidx < matchSitesList.length; msidx++) {
+                            thisMatchSite = matchSitesList[msidx];
+                            thisMatchSiteObj = siteMap.find(obj => {
+                                return obj.origName === thisMatchSite;
+                            });
+                            matchQuerySites.push(thisMatchSiteObj.options.id);
+                        }
+                        sitesClause = sitesClause + " and m" + matchCurveIdx + ".madis_id in('" + matchQuerySites.join("','") + "')";
+                    } else {
+                        throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
+                    }
+                    if (sitesClause.includes("m0.madis_id in")) {
+                        siteMatchClause = siteMatchClause + "and m" + matchCurveIdx + ".madis_id = m0.madis_id";
+                        dateClause = "and ceil(900*floor((m0.time+450)/900)) = ceil(900*floor((m" + matchCurveIdx + ".time+450)/900)) " + dateClause;
+                    } else {
+                        dateClause = "and m0.time = ceil(900*floor((m" + matchCurveIdx + ".time+450)/900)) " + dateClause;
+                    }
+                    dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " - 300 and m" + matchCurveIdx + ".time <= " + matchToSecs + " + 300";
+                }
             }
         }
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause = statisticOptionsMap[statisticSelect][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -107,28 +191,35 @@ dataValidTime = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select floor((m0.time)%(24*3600)/900)/4 as hr_of_day, " +
-                "count(distinct m0.time) as N_times, " +
-                "min(m0.time) as min_secs, " +
-                "max(m0.time) as max_secs, " +
+            var statement = "select floor((m0.time+450)%(24*3600)/900)/4 as hr_of_day, " +
+                "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +
+                "min(ceil(900*floor((m0.time+450)/900))) as min_secs, " +
+                "max(ceil(900*floor((m0.time+450)/900))) as max_secs, " +
                 "{{statisticClause}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+                "{{filterClause}} " +
+                "{{siteMatchClause}} " +
+                "{{sitesClause}} " +
                 "{{dateClause}} " +
-                "{{truthClause}} " +
+                "{{siteDateClause}} " +
                 "{{thresholdClause}} " +
                 "{{forecastLengthClause}} " +
+                "{{truthClause}} " +
                 "group by hr_of_day " +
                 "order by hr_of_day" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{truthClause}}', truthClause);
+            statement = statement.replace('{{filterClause}}', filterClause);
+            statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
+            statement = statement.replace('{{sitesClause}}', sitesClause);
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{truthClause}}', truthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
+            statement = statement.replace('{{siteDateClause}}', siteDateClause);
             dataRequests[label] = statement;
 
             var queryResult;
@@ -136,7 +227,7 @@ dataValidTime = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

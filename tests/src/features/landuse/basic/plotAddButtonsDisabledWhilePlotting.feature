@@ -15,9 +15,9 @@ Feature: Plot and Add buttons are disabled while plotting
     Scenario: plotAddButtonsDisabledWhilePlotting
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "data-source" parameter to "HRRR_GSL"
+        When I change the "data-source" parameter to "RAP_OPS"
         And I change the "average" parameter to "1D"
-        Then the "data-source" parameter value matches "HRRR_GSL"
+        Then the "data-source" parameter value matches "RAP_OPS"
         And the "average" parameter value matches "1D"
         When I set the dates to "03/28/2019 0:00 - 09/24/2019 0:00"
         Then the dates value is "03/28/2019 0:00 - 09/24/2019 0:00"
