@@ -109,8 +109,8 @@ def regions_per_model_mats_all_categories(mode):
         display_text = row['display_text']
         aircraft_metadata[display_text] = {}
         aircraft_metadata[display_text]['model'] = row['model']
-        aircraft_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ").strip("'")
-        aircraft_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ").strip("'")
+        aircraft_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ")
+        aircraft_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ")
         aircraft_metadata[display_text]['display_category'] = row['display_category']
         aircraft_metadata[display_text]['display_order'] = row['display_order']
         aircraft_metadata[display_text]['mindate'] = row['mindate']
@@ -131,8 +131,8 @@ def regions_per_model_mats_all_categories(mode):
         upperair_metadata[display_text] = {}
         upperair_metadata[display_text]['model'] = row['model']
         upperair_metadata[display_text]['table_name_prefix'] = row['table_name_prefix']
-        upperair_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ").strip("'")
-        upperair_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ").strip("'")
+        upperair_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ")
+        upperair_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ")
         upperair_metadata[display_text]['display_category'] = row['display_category']
         upperair_metadata[display_text]['display_order'] = row['display_order']
         upperair_metadata[display_text]['mindate'] = row['mindate']
