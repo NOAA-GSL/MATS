@@ -13,7 +13,7 @@
 #/home/amb-verif/mats_metadata/update_metadata_visibility.py persis
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_visibility1.py deploy
 #/home/amb-verif/mats_metadata/update_metadata_visibility1.py persis
-#/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip.py deploy
+/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip.py deploy
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip2.py deploy
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip_aqpi.py deploy
 #/home/amb-verif/mats_metadata/update_metadata_precip_aqpi.py persis
@@ -23,6 +23,7 @@
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_vil.py deploy
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_echotop.py deploy
 /home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_anomalycor.py deploy
-/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_aircraft.py deploy
+#/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_aircraft.py deploy
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_vgtyp.py deploy
 /home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_surfrad.py deploy
+#/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_raobamdar.py deploy

@@ -95,6 +95,12 @@ def regions_per_model_mats_all_categories(mode):
     usedb2 = "use " + db2
     cursor2.execute(usedb2)
 
+    # clean metadata build table
+    clean_rpmmac = "delete from regions_per_model_mats_all_categories_build"
+    cursor2.execute(clean_rpmmac)
+    set_ai = "alter table regions_per_model_mats_all_categories_build auto_increment = 1"
+    cursor2.execute(set_ai)
+
     # get all metadata for the aircraft app
     aircraft_metadata_query = "select * from regions_per_model_mats_all_categories;"
     cursor.execute(aircraft_metadata_query)
@@ -153,7 +159,7 @@ def regions_per_model_mats_all_categories(mode):
             combined_metadata[display_text]['fcst_lens'] = list(set(upperair_metadata[display_text]['fcst_lens']) | set(aircraft_metadata[display_text]['fcst_lens']))
             combined_metadata[display_text]['truths'] = ['RAOB', 'AMDAR']
             combined_metadata[display_text]['numrecs'] = int(upperair_metadata[display_text]['numrecs']) + int(aircraft_metadata[display_text]['numrecs'])
-            all_aircraft_models.pop()
+            all_aircraft_models.remove(display_text)
         else:
             combined_metadata[display_text]['aircraft_model'] = ""
             combined_metadata[display_text]['regions'] = upperair_metadata[display_text]['regions']
