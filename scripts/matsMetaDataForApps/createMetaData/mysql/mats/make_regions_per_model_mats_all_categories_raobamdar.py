@@ -109,8 +109,8 @@ def regions_per_model_mats_all_categories(mode):
         display_text = row['display_text']
         aircraft_metadata[display_text] = {}
         aircraft_metadata[display_text]['model'] = row['model']
-        aircraft_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ")
-        aircraft_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ")
+        aircraft_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ").strip("'")
+        aircraft_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ").strip("'")
         aircraft_metadata[display_text]['display_category'] = row['display_category']
         aircraft_metadata[display_text]['display_order'] = row['display_order']
         aircraft_metadata[display_text]['mindate'] = row['mindate']
@@ -131,8 +131,8 @@ def regions_per_model_mats_all_categories(mode):
         upperair_metadata[display_text] = {}
         upperair_metadata[display_text]['model'] = row['model']
         upperair_metadata[display_text]['table_name_prefix'] = row['table_name_prefix']
-        upperair_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ")
-        upperair_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ")
+        upperair_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ").strip("'")
+        upperair_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ").strip("'")
         upperair_metadata[display_text]['display_category'] = row['display_category']
         upperair_metadata[display_text]['display_order'] = row['display_order']
         upperair_metadata[display_text]['mindate'] = row['mindate']
@@ -195,14 +195,14 @@ def regions_per_model_mats_all_categories(mode):
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
     if 'deploy' in mode:
         clean_rpmmac = "delete from regions_per_model_mats_all_categories"
-        cursor.execute(clean_rpmmac)
-        cnx.commit()
+        cursor2.execute(clean_rpmmac)
+        cnx2.commit()
         set_ai = "alter table regions_per_model_mats_all_categories auto_increment = 1"
-        cursor.execute(set_ai)
-        cnx.commit()
+        cursor2.execute(set_ai)
+        cnx2.commit()
         sync_rpm = "insert into regions_per_model_mats_all_categories select * from regions_per_model_mats_all_categories_build"
-        cursor.execute(sync_rpm)
-        cnx.commit()
+        cursor2.execute(sync_rpm)
+        cnx2.commit()
         print("deploy " + db2 + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
     else:
         print("skipping deployment at " + str(updated_utc))
