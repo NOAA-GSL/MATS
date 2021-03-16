@@ -157,7 +157,7 @@ def regions_per_model_mats_all_categories(mode):
             combined_metadata[display_text]['aircraft_model'] = aircraft_metadata[display_text]['model']
             combined_metadata[display_text]['regions'] = list(set(upperair_metadata[display_text]['regions']) | set(aircraft_metadata[display_text]['regions']))
             combined_metadata[display_text]['fcst_lens'] = list(set(upperair_metadata[display_text]['fcst_lens']) | set(aircraft_metadata[display_text]['fcst_lens']))
-            combined_metadata[display_text]['truths'] = ['RAOB', 'AMDAR']
+            combined_metadata[display_text]['truths'] = ['RAOBs', 'AMDAR']
             combined_metadata[display_text]['numrecs'] = int(upperair_metadata[display_text]['numrecs']) + int(aircraft_metadata[display_text]['numrecs'])
             all_aircraft_models.remove(display_text)
         else:
