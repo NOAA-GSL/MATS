@@ -11,10 +11,10 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
-dataDieOff = function (plotParams, plotFunction) {
+dataProfile = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appParams = {
-        "plotType": matsTypes.PlotTypes.dieoff,
+        "plotType": matsTypes.PlotTypes.profile,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
@@ -29,7 +29,6 @@ dataDieOff = function (plotParams, plotFunction) {
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
-    var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = -1 * Number.MAX_VALUE;
     var ymax = -1 * Number.MAX_VALUE;
@@ -42,42 +41,44 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var truth = curve['truth'];
+        var modelIndex = truth === 'RAOBs' ? 0 : 1;
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][modelIndex];
         var regionStr = curve['region'];
-        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + "_sums as m0";
+        var region;
+        var queryTableClause;
+        var queryPool;
+        var phaseClause = "";
+        if (truth === 'RAOBs') {
+            region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMapU).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMapU[key] === regionStr);
+            var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
+            queryTableClause = "from " + tablePrefix + region + " as m0";
+            queryPool = sumPool;
+        } else {
+            region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMapA).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMapA[key] === regionStr);
+            queryTableClause = "from " + model + "_" + region + "_sums as m0";
+            queryPool = modelPool;
+            var phaseStr = curve['phase'];
+            var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+            phaseClause = phaseOptionsMap[phaseStr];
+        }
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var validTimes;
         var validTimeClause = "";
-        var utcCycleStart;
-        var utcCycleStartClause = "";
-        var forecastLengthStr = curve['dieoff-type'];
-        var forecastLengthOptionsMap = matsCollections['dieoff-type'].findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
-        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
-        var forecastLengthClause = "";
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.hour IN(" + validTimes + ")";
+        }
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= '" + fromSecs + "' and unix_timestamp(m0.date)+3600*m0.hour <= '" + toSecs + "' ";
-        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-            validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-            if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and m0.hour IN(" + validTimes + ")";
-            }
-        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor(((unix_timestamp(m0.date)+3600*m0.hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
-        } else {
-            dateClause = "and (unix_timestamp(m0.date)+3600*m0.hour - m0.fcst_len*3600) = " + fromSecs;
-        }
+        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs;
         var top = curve['top'];
         var bottom = curve['bottom'];
         var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
-        var phaseStr = curve['phase'];
-        var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
-        var phaseClause = phaseOptionsMap[phaseStr];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
@@ -104,7 +105,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.fcst_len as fcst_lead, " +
+            var statement = "select m0.mb10*10 as avVal, " +
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
@@ -113,17 +114,17 @@ dataDieOff = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{dateClause}} " +
                 "{{validTimeClause}} " +
-                "{{utcCycleStartClause}} " +
+                "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
                 "{{phaseClause}} " +
-                "group by fcst_lead " +
-                "order by fcst_lead" +
+                "group by avVal " +
+                "order by avVal" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
+            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
             statement = statement.replace('{{phaseClause}}', phaseClause);
             statement = statement.replace('{{dateClause}}', dateClause);
@@ -134,13 +135,13 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.x.length
+                    recordCount: queryResult.data.y.length
                 };
                 // get the data back from the query
                 d = queryResult.data;
@@ -186,7 +187,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
-        const mean = d.sum / d.x.length;
+        const mean = d.sum / d.y.length;
         const annotation = mean === undefined ? label + "- mean = NoData" : label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
@@ -194,7 +195,7 @@ dataDieOff = function (plotParams, plotFunction) {
         curve['ymin'] = d.ymin;
         curve['ymax'] = d.ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + label] = {
@@ -214,12 +215,9 @@ dataDieOff = function (plotParams, plotFunction) {
         "curves": curves,
         "curvesLength": curvesLength,
         "idealValues": idealValues,
-        "utcCycleStarts": utcCycleStarts,
-        "axisMap": axisMap,
-        "xmax": xmax,
-        "xmin": xmin
+        "axisMap": axisMap
     };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
-    var result = matsDataProcessUtils.processDataXYCurve(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
+    var result = matsDataProcessUtils.processDataProfile(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
 };

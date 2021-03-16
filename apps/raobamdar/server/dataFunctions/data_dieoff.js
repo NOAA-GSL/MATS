@@ -42,10 +42,27 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var truth = curve['truth'];
+        var modelIndex = truth === 'RAOBs' ? 0 : 1;
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][modelIndex];
         var regionStr = curve['region'];
-        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + "_sums as m0";
+        var region;
+        var queryTableClause;
+        var queryPool;
+        var phaseClause = "";
+        if (truth === 'RAOBs') {
+            region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMapU).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMapU[key] === regionStr);
+            var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
+            queryTableClause = "from " + tablePrefix + region + " as m0";
+            queryPool = sumPool;
+        } else {
+            region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMapA).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMapA[key] === regionStr);
+            queryTableClause = "from " + model + "_" + region + "_sums as m0";
+            queryPool = modelPool;
+            var phaseStr = curve['phase'];
+            var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+            phaseClause = phaseOptionsMap[phaseStr];
+        }
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
@@ -75,9 +92,6 @@ dataDieOff = function (plotParams, plotFunction) {
         var top = curve['top'];
         var bottom = curve['bottom'];
         var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
-        var phaseStr = curve['phase'];
-        var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
-        var phaseClause = phaseOptionsMap[phaseStr];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
@@ -134,7 +148,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
