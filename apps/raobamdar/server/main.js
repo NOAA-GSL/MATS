@@ -876,10 +876,11 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['phase: ', 'phase', ', '],
-                ['avg: ', 'average', ' ']
+                ['avg: ', 'average', ', '],
+                ['', 'truth', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "average", "top", "bottom"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "average", "top", "bottom"
             ],
             groupSize: 6
         });
@@ -896,10 +897,11 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['phase: ', 'phase', ', '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -917,10 +919,11 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['phase: ', 'phase', ', '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "truth", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -936,10 +939,11 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['phase: ', 'phase', ', '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "truth", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -954,10 +958,11 @@ const doCurveTextPatterns = function () {
                 ['level: ', 'top', ' '],
                 ['to ', 'bottom', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
-                ['phase: ', 'phase', ''],
+                ['phase: ', 'phase', ', '],
+                ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "utc-cycle-start", "phase", "top", "bottom"
+                "label", "data-source", "region", "statistic", "variable", "utc-cycle-start", "phase", "truth", "top", "bottom"
             ],
             groupSize: 6
         });
@@ -974,10 +979,11 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['phase: ', 'phase', ', '],
+                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -993,10 +999,11 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['phase: ', 'phase', ', ']
+                ['phase: ', 'phase', ', '],
+                ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
         });
@@ -1012,10 +1019,11 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['phase: ', 'phase', ', ']
+                ['phase: ', 'phase', ', '],
+                ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "x-axis-parameter", "y-axis-parameter", "significance"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "top", "bottom", "x-axis-parameter", "y-axis-parameter", "significance"
             ],
             groupSize: 6
         });
