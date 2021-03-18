@@ -11,7 +11,7 @@
     "downsample-lttb": "git+https://github.com/pingec/downsample-lttb.git",
     "fibers": "^5.0.0",
     "fs-extra": "^7.0.0",
-    "html2canvas": "^1.0.0-alpha.12",
+    "html2canvas": "^1.0.0-rc.7",
     "jquery": "^2.2.4",
     "jspdf": "^1.4.1",
     "modules": "^0.4.0",
