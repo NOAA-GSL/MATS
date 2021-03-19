@@ -15,6 +15,8 @@ Feature: Add Remove Profile
     Scenario: addRemoveProfile
         When I set the plot type to "Profile"
         Then the plot type should be "Profile"
+        When I change the "data-source" parameter to "GFS"
+        Then the "data-source" parameter value matches "GFS"
         When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         Then I change the "forecast-length" parameter to "144"

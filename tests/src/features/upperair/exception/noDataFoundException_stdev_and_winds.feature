@@ -19,6 +19,8 @@ Feature: No Data Found Exception: stdev_and_winds
     Scenario: noDataFoundException_stdev_and_winds
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
+        When I change the "data-source" parameter to "RAP_GSL"
+        Then the "data-source" parameter value matches "RAP_GSL"
         When I change the "statistic" parameter to "Std deviation"
         Then the "statistic" parameter value matches "Std deviation"
         When I change the "variable" parameter to "winds"

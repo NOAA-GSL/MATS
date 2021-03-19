@@ -15,10 +15,10 @@ Feature: Match Unmatch Diff Curves Dieoff
     Scenario: matchUnmatchDiffCurvesDieoff
         When I set the plot type to "DieOff"
         Then the plot type should be "DieOff"
+        When I change the "data-source" parameter to "HRRR_OPS"
+        Then the "data-source" parameter value matches "HRRR_OPS"
         When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
-        When I change the "region" parameter to "Eastern US"
-        Then the "region" parameter value matches "Eastern US"
         When I change the "dieoff-type" parameter to "Dieoff for a specified UTC cycle init hour"
         Then the "dieoff-type" parameter value matches "Dieoff for a specified UTC cycle init hour"
         When I click the "Add Curve" button

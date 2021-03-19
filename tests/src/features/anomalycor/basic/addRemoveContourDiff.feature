@@ -16,6 +16,8 @@ Feature: Add Remove ContourDiff
     Scenario: addRemoveContourDiff
         When I set the plot type to "ContourDiff"
         Then the plot type should be "ContourDiff"
+        When I change the "data-source" parameter to "GFS"
+        Then the "data-source" parameter value matches "GFS"
         When I set the dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         Then I change the "forecast-length" parameter to "144"
@@ -23,8 +25,8 @@ Feature: Add Remove ContourDiff
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "RT_CCPP_GSL"
-        Then the "data-source" parameter value matches "RT_CCPP_GSL"
+        When I change the "data-source" parameter to "FV3_CCPP_GSL"
+        Then the "data-source" parameter value matches "FV3_CCPP_GSL"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"

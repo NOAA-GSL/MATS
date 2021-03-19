@@ -16,6 +16,8 @@ Feature: Add Remove Histogram
     Scenario: addRemoveHistogram
         When I set the plot type to "Histogram"
         Then the plot type should be "Histogram"
+        When I change the "data-source" parameter to "RAP_GSL_iso"
+        Then the "data-source" parameter value matches "RAP_GSL_iso"
         When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button

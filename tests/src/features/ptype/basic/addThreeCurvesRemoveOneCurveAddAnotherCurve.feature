@@ -18,6 +18,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
     Scenario: addThreeCurvesRemoveOneCurveAddAnotherCurve
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
+        When I change the "data-source" parameter to "RAP_GSL_130"
+        Then the "data-source" parameter value matches "RAP_GSL_130"
         When I set the dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button
@@ -25,11 +27,11 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
 
         When I change the "data-source" parameter to "HRRR_GSL"
         Then the "data-source" parameter value matches "HRRR_GSL"
-        Then I click the "Add Curve" button
+        When I click the "Add Curve" button
         Then "Curve1" is added
 
-        When I change the "data-source" parameter to "RAP_GSL_130"
-        Then the "data-source" parameter value matches "RAP_GSL_130"
+        When I change the "data-source" parameter to "NAM_NEST_OPS_227"
+        Then the "data-source" parameter value matches "NAM_NEST_OPS_227"
         When I click the "Add Curve" button
         Then "Curve2" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve2"

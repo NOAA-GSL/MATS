@@ -19,6 +19,8 @@ Feature: No Data Found Exception: invalid_times
     Scenario: noDataFoundException_invalid_times
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
+        When I change the "data-source" parameter to "RAP_GSL_130"
+        Then the "data-source" parameter value matches "RAP_GSL_130"
         When I set the dates to "01/19/1995 12:00 - 06/19/1996 12:00"
         Then the dates value is "01/19/1995 12:00 - 06/19/1996 12:00"
         When I click the "Add Curve" button

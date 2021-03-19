@@ -15,6 +15,8 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
     Scenario: matchUnmatchDiffCurvesDailyModelCycle
         When I set the plot type to "DailyModelCycle"
         Then the plot type should be "DailyModelCycle"
+        When I change the "data-source" parameter to "RAP_GSL"
+        Then the "data-source" parameter value matches "RAP_GSL"
         When I set the dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         When I click the "Add Curve" button

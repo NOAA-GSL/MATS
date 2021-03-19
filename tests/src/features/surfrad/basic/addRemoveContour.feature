@@ -16,6 +16,8 @@ Feature: Add Remove Contour
     Scenario: addRemoveContour
         When I set the plot type to "Contour"
         Then the plot type should be "Contour"
+        When I change the "data-source" parameter to "RAP_GSL_130"
+        Then the "data-source" parameter value matches "RAP_GSL_130"
         When I set the dates to "09/17/2019 0:00 - 09/24/2019 0:00"
         Then the dates value is "09/17/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button

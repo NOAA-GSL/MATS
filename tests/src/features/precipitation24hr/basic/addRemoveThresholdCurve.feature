@@ -16,9 +16,10 @@ Feature: Add Remove Threshold Curve
     Scenario: addRemoveThresholdCurve
         When I set the plot type to "Threshold"
         Then the plot type should be "Threshold"
+        When I change the "data-source" parameter to "HRRR_OPS"
+        Then the "data-source" parameter value matches "HRRR_OPS"
         When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
-        When I change the "data-source" parameter to "HRRR_OPS"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"

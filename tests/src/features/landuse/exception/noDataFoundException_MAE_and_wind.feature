@@ -19,6 +19,8 @@ Feature: No Data Found Exception: MAE_and_wind
     Scenario: noDataFoundException_MAE_and_wind
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
+        When I change the "data-source" parameter to "RAP_GSL"
+        Then the "data-source" parameter value matches "RAP_GSL"
         When I change the "statistic" parameter to "MAE"
         Then the "statistic" parameter value matches "MAE"
         When I change the "variable" parameter to "wind"
