@@ -113,8 +113,8 @@ def regions_per_model_mats_all_categories(mode):
         aircraft_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ")
         aircraft_metadata[display_text]['display_category'] = row['display_category']
         aircraft_metadata[display_text]['display_order'] = row['display_order']
-        aircraft_metadata[display_text]['mindate'] = row['mindate']
-        aircraft_metadata[display_text]['maxdate'] = row['maxdate']
+        aircraft_metadata[display_text]['mindate'] = datetime.fromtimestamp(row['mindate']).strftime('%Y-%m-%d')
+        aircraft_metadata[display_text]['maxdate'] = datetime.fromtimestamp(row['maxdate']).strftime('%Y-%m-%d')
         aircraft_metadata[display_text]['numrecs'] = row['numrecs']
     all_aircraft_models = aircraft_metadata.keys()
 
