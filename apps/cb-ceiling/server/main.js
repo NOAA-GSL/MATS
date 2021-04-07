@@ -269,11 +269,11 @@ const doCurveParams = function () {
         matsCollections.SiteMap.remove({});
         rows = cbPool.searchStationsByBoundingBox( -180,89, 180,-89);
         for (var i = 0; i < rows.length; i++) {
-            var site_name = rows[i].name;
-            var site_description = rows[i].description;
-            var site_id = rows[i].madis_id;
-            var site_lat = rows[i].lat / 182;
-            var site_lon = rows[i].lon / 182;
+            var site_name = rows[i].fields.name;
+            var site_description = rows[i].fields.description;
+            //var site_id = rows[i].madis_id;
+            var site_lat = rows[i].fields.geo[1];
+            var site_lon = rows[i].fields.geo[0];
             var site_elev = rows[i].elev;
             siteOptionsMap[site_name] = [site_id];
             var point = [site_lat, site_lon];
@@ -1055,7 +1055,7 @@ const doPlotGraph = function () {
         matsMethods.resetApp({
             "appPools": allPools,
             appMdr: {},
-            appType: matsTypes.AppTypes.cbmats,
+            appType: matsTypes.AppTypes.cbMats,
             app: 'cb-ceiling',
             title: "CB-Ceiling",
             group: "Ceiling and Visibility"});
