@@ -219,11 +219,10 @@ const doCurveParams = function () {
     var thresholdsModelOptionsMap = {};
     var masterRegionValuesMap = {};
     var masterThresholdValuesMap = {};
-    var rows;
     try {
         var masterRegDescription;
         var masterShortName;
-        rows = cbPool.query('select name, description from mdata where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
+        const rows = cbPool.query('select name, description from mdata where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
         for (var j = 0; j < rows.length; j++) {
             masterRegDescription = rows[j].description.trim();
             masterShortName = rows[j].name.trim();
@@ -234,7 +233,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = cbPool.query('select raw thresholdDescriptions.ceiling from mdata where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
+        const rows = cbPool.query('select raw thresholdDescriptions.ceiling from mdata where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
         var masterDescription;
         var masterTrsh;
         for (var k = 0; k < Object.keys(rows[0]).length; k++) {
@@ -247,34 +246,38 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = cbPool.query('select mdata.model, mdata.displayText from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling"');
+        const rows = cbPool.query('select mdata.model, mdata.displayText from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling"');
         for (var i = 0; i < rows.length; i++) {
             var model_value = rows[i].model.trim();
             var model = rows[i].displayText.trim();
             modelOptionsMap[model] = [model_value];
-        }
-        rows = cbPool.query('SELECT mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds FROM mdata WHERE type="MD" AND docType="matsGui" AND subset="COMMON" AND version="V01" AND app="cb-ceiling"')
-        for (var i = 0; i < rows.length; i++) {
-            var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-            var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-            modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
-            forecastLengthOptionsMap[model] = rows[i].fcstLens.map(String);
-            thresholdsModelOptionsMap[model] = rows[i].thresholds;
-            regionModelOptionsMap[model] = rows[i].regions;
+            const rows1 = cbPool.query('SELECT mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds FROM mdata WHERE type="MD" AND docType="matsGui" AND subset="COMMON" AND version="V01" AND app="cb-ceiling"')
+            for (var j = 0; j < rows1.length; j++) {
+                var rowMinDate = moment.utc(rows1[j].mindate * 1000).format("MM/DD/YYYY HH:mm");
+                var rowMaxDate = moment.utc(rows1[j].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+                modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
+                forecastLengthOptionsMap[model] = rows1[j].fcstLens.map(String);
+                thresholdsModelOptionsMap[model] = [];
+                for (var k=0; k < rows1[j].thresholds.length; k++) {
+                    thresholdsModelOptionsMap[model].push(masterThresholdValuesMap[rows1[j].thresholds[k]/10]);
+                }
+                regionModelOptionsMap[model] = rows1[j].regions;
+            }
         }
     } catch (err) {
         console.log(err.message);
     }
     try {
         matsCollections.SiteMap.remove({});
-        rows = cbPool.searchStationsByBoundingBox( -180,89, 180,-89);
+        const rows = cbPool.searchStationsByBoundingBox( -180,89, 180,-89)
+            .sort((a,b)=>(a.fields.name > b.fields.name) ? 1 : -1);
         for (var i = 0; i < rows.length; i++) {
-            var site_name = rows[i].fields.name;
-            var site_description = rows[i].fields.description;
-            //var site_id = rows[i].madis_id;
-            var site_lat = rows[i].fields.geo[1];
-            var site_lon = rows[i].fields.geo[0];
-            var site_elev = rows[i].elev;
+            const site_id = rows[i].id;
+            const site_name = rows[i].fields.name == undefined ? "unknown": rows[i].fields.name;
+            const site_description = rows[i].fields.description == undefined ? "unknown":rows[i].fields.description;
+            const site_lat = rows[i].fields.geo == undefined ? undefined : rows[i].fields.geo[1];
+            const site_lon = rows[i].fields.geo == undefined ? undefined : rows[i].fields.geo[0];
+            const site_elev = rows[i].fields.elevation == undefined ? "unknown" : rows[i].fields.elevation;
             siteOptionsMap[site_name] = [site_id];
             var point = [site_lat, site_lon];
             var obj = {
