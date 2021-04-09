@@ -1054,18 +1054,32 @@ const doPlotGraph = function () {
         // to store the CBUtilities instance
     }
     allPools.push({pool:"cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
+     // create list of tables we need to monitor for update
+     const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
+         "MD:matsAux:COMMON:V01",
+         "MD:matsGui:cb-ceiling:HRRR:COMMON:V01",
+         "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
+         "MD:matsGui:cb-ceiling:RAP_OPS:COMMON:V01",
+         "MD:matsGui:cb-ceiling:RRFS_dev1:COMMON:V01",
+         "MD:V01:REGION:ALL_HRRR",
+         "MD:V01:REGION:E_HRRR",
+         "MD:V01:REGION:E_US",
+         "MD:V01:REGION:GtLk",
+         "MD:V01:REGION:W_HRRR"
+     ]);
     try {
         matsMethods.resetApp({
             "appPools": allPools,
-            appMdr: {},
-            appType: matsTypes.AppTypes.cbMats,
+            appMdr: mdr,
+            appType: matsTypes.AppTypes.mats,
             app: 'cb-ceiling',
+            dbType: matsTypes.DbTypes.couchbase,
             title: "CB-Ceiling",
             group: "Ceiling and Visibility"});
     } catch (error) {
         console.log(error.message);
     }
-});
+ });
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
