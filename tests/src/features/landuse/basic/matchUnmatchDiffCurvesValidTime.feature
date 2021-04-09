@@ -15,6 +15,8 @@ Feature: Match Unmatch Diff Curves Valid Time
     Scenario: matchUnmatchDiffCurvesValidTime
         When I set the plot type to "ValidTime"
         Then the plot type should be "ValidTime"
+        When I change the "data-source" parameter to "RAP_GSL"
+        Then the "data-source" parameter value matches "RAP_GSL"
         When I set the curve-dates to "03/02/2021 0:00 - 03/03/2021 0:00"
         Then the curve-dates value is "03/02/2021 0:00 - 03/03/2021 0:00"
         When I click the "Add Curve" button

@@ -16,9 +16,9 @@ Feature: Plot and Add buttons are disabled while plotting
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
         When I change the "data-source" parameter to "HRRR_GSL"
-        And I change the "average" parameter to "1D"
+        And I change the "average" parameter to "3hr"
         Then the "data-source" parameter value matches "HRRR_GSL"
-        And the "average" parameter value matches "1D"
+        And the "average" parameter value matches "3hr"
         When I set the dates to "03/28/2019 0:00 - 09/24/2019 0:00"
         Then the dates value is "03/28/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button

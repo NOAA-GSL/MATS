@@ -18,6 +18,8 @@ Feature: Add Remove Two Profiles
     Scenario: addRemoveTwoProfiles
         When I set the plot type to "Profile"
         Then the plot type should be "Profile"
+        When I change the "data-source" parameter to "RAP_GSL"
+        Then the "data-source" parameter value matches "RAP_GSL"
         When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button

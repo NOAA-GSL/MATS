@@ -72,11 +72,6 @@ dataDieOff = function (plotParams, plotFunction) {
         } else {
             dateClause = "and (unix_timestamp(m0.date)+3600*m0.hour - m0.fcst_len*3600) = " + fromSecs;
         }
-        var levelClause = "";
-        var levels = curve['level'] === undefined ? [] : curve['level'];
-        if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
-            levelClause = "and m0.level IN(" + levels + ")";
-        }
         var top = curve['top'];
         var bottom = curve['bottom'];
         var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";

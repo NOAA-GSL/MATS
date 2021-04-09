@@ -18,6 +18,8 @@ Feature: Add Remove Two Profiles
     Scenario: addRemoveTwoProfiles
         When I set the plot type to "Profile"
         Then the plot type should be "Profile"
+        When I change the "data-source" parameter to "GFS"
+        Then the "data-source" parameter value matches "GFS"
         When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         Then I change the "forecast-length" parameter to "144"
@@ -25,8 +27,8 @@ Feature: Add Remove Two Profiles
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "RT_CCPP_GSL"
-        Then the "data-source" parameter value matches "RT_CCPP_GSL"
+        When I change the "data-source" parameter to "FV3_CCPP_GSL"
+        Then the "data-source" parameter value matches "FV3_CCPP_GSL"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"

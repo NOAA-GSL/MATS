@@ -1,4 +1,5 @@
 Feature: Add Remove Curve
+
     As an unauthenticated user to the app,
     with the app in its default state,
     I want to add one curve
@@ -14,6 +15,8 @@ Feature: Add Remove Curve
     Scenario: addRemoveCurve
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
+        When I change the "data-source" parameter to "RAP_GSL"
+        Then the "data-source" parameter value matches "RAP_GSL"
         When I set the dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button

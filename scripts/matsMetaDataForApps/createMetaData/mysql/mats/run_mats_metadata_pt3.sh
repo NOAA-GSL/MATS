@@ -26,3 +26,4 @@ home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_ptype.py
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_aircraft.py deploy
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_vgtyp.py deploy
 #/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_surfrad.py deploy
+#/home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_raobamdar.py deploy
