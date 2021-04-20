@@ -6,7 +6,7 @@ import {Meteor} from 'meteor/meteor';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsCouchbaseUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
 // determined in doCurveParanms
@@ -202,7 +202,7 @@ const doPlotParams = function () {
     }
 };
 
-const doCurveParams = function () {
+const doCurveParams = async function () {
     // force a reset if requested - simply remove all the existing params to force a reload
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         const params = matsCollections.CurveParamsInfo.find({"curve_params": {"$exists": true}}).fetch()[0]["curve_params"];
@@ -219,10 +219,11 @@ const doCurveParams = function () {
     var thresholdsModelOptionsMap = {};
     var masterRegionValuesMap = {};
     var masterThresholdValuesMap = {};
+
     try {
+        const rows = await cbPool.queryCB('select name, description from mdata where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
         var masterRegDescription;
         var masterShortName;
-        const rows = cbPool.query('select name, description from mdata where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
         for (var j = 0; j < rows.length; j++) {
             masterRegDescription = rows[j].description.trim();
             masterShortName = rows[j].name.trim();
@@ -233,12 +234,12 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = cbPool.query('select raw thresholdDescriptions.ceiling from mdata where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
+        const rows = await cbPool.queryCB('select raw thresholdDescriptions.ceiling from mdata where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
         var masterDescription;
         var masterTrsh;
-        for (var k = 0; k < Object.keys(rows[0]).length; k++) {
-            masterDescription = rows[0][Object.keys(rows[0])[k]].trim();
-            masterTrsh = Object.keys(rows[0])[k].trim();
+        for (var j = 0; j < Object.keys(rows[0]).length; j++) {
+            masterDescription = rows[0][Object.keys(rows[0])[j]].trim();
+            masterTrsh = Object.keys(rows[0])[j].trim();
             masterThresholdValuesMap[masterTrsh] = masterDescription;
         }
     } catch (err) {
@@ -246,12 +247,12 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = cbPool.query('select mdata.model, mdata.displayText from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling"');
+        const rows = await cbPool.queryCB('select mdata.model, mdata.displayText from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling"');
         for (var i = 0; i < rows.length; i++) {
             var model_value = rows[i].model.trim();
             var model = rows[i].displayText.trim();
             modelOptionsMap[model] = [model_value];
-            const rows1 = cbPool.query('SELECT mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds FROM mdata WHERE type="MD" AND docType="matsGui" AND subset="COMMON" AND version="V01" AND app="cb-ceiling"')
+            const rows1 = await cbPool.queryCB('SELECT mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds FROM mdata WHERE type="MD" AND docType="matsGui" AND subset="COMMON" AND version="V01" AND app="cb-ceiling"')
             for (var j = 0; j < rows1.length; j++) {
                 var rowMinDate = moment.utc(rows1[j].mindate * 1000).format("MM/DD/YYYY HH:mm");
                 var rowMaxDate = moment.utc(rows1[j].maxdate * 1000).format("MM/DD/YYYY HH:mm");
@@ -267,10 +268,11 @@ const doCurveParams = function () {
     } catch (err) {
         console.log(err.message);
     }
+
     try {
         matsCollections.SiteMap.remove({});
-        const rows = cbPool.searchStationsByBoundingBox( -180,89, 180,-89)
-            .sort((a,b)=>(a.fields.name > b.fields.name) ? 1 : -1);
+        var rows = await cbPool.searchStationsByBoundingBox( -180,89, 180,-89);
+        rows = rows.sort((a,b)=>(a.fields.name > b.fields.name) ? 1 : -1);
         for (var i = 0; i < rows.length; i++) {
             const site_id = rows[i].id;
             const site_name = rows[i].fields.name == undefined ? "unknown": rows[i].fields.name;
@@ -1017,7 +1019,7 @@ const doPlotGraph = function () {
     }
 };
 
- Meteor.startup(function () {
+Meteor.startup(function () {
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() < 0) {
         console.log('main startup: corrupted Databases collection: dropping Databases collection');
@@ -1036,6 +1038,8 @@ const doPlotGraph = function () {
             }
         }
     }
+
+    // create list of all pools
     var allPools = [];
     // connect to the couchbase cluster
     const cbConnection = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.COUCHBASE, status: "active"}, {
@@ -1048,10 +1052,7 @@ const doPlotGraph = function () {
 
     // the cluster and bucket are intended to be global
     if (cbConnection) {
-        cbPool = new matsDataQueryUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.user, cbConnection.password)
-        cbPool.getConnection();
-        // Couchbase doesn't really have pools in this sense - it is used sort of generically here
-        // to store the CBUtilities instance
+        cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.user, cbConnection.password);
     }
     allPools.push({pool:"cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
      // create list of tables we need to monitor for update
@@ -1068,18 +1069,11 @@ const doPlotGraph = function () {
          "MD:V01:REGION:W_HRRR"
      ]);
     try {
-        matsMethods.resetApp({
-            "appPools": allPools,
-            appMdr: mdr,
-            appType: matsTypes.AppTypes.mats,
-            app: 'cb-ceiling',
-            dbType: matsTypes.DbTypes.couchbase,
-            title: "CB-Ceiling",
-            group: "Ceiling and Visibility"});
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'cb-ceiling', dbType: matsTypes.DbTypes.couchbase, title: "CB-Ceiling", group: "Ceiling and Visibility"});
     } catch (error) {
         console.log(error.message);
     }
- });
+});
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
