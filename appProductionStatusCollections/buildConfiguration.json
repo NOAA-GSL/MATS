@@ -437,6 +437,14 @@
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
+    },
+    {
+      "app": "met-tc",
+      "displayName": "MET TC",
+      "displayOrder": 26,
+      "group": "METexpress",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     }
   ]
 }
