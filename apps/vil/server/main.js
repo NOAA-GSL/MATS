@@ -892,6 +892,22 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.performanceDiagram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'scale', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ''],
+            ],
+            displayParams: [
+                "label", "data-source", "region", "threshold", "scale", "forecast-length", "valid-time", "bin-parameter"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.histogram,
             textPattern: [
                 ['', 'label', ': '],
@@ -943,22 +959,6 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.performanceDiagram,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ' in '],
-                ['', 'region', ', '],
-                ['', 'threshold', ' '],
-                ['', 'scale', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ''],
-            ],
-            displayParams: [
-                "label", "data-source", "region", "threshold", "scale", "forecast-length", "valid-time", "bin-parameter"
-            ],
-            groupSize: 6
-        });
     }
 };
 
@@ -1007,6 +1007,12 @@ const doPlotGraph = function () {
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.performanceDiagram,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataPerformanceDiagram",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
             graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
@@ -1022,12 +1028,6 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.contourDiff,
             graphFunction: "graphPlotly",
             dataFunction: "dataContourDiff",
-            checked: false
-        });
-        matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.performanceDiagram,
-            graphFunction: "graphPlotly",
-            dataFunction: "dataPerformanceDiagram",
             checked: false
         });
     }
