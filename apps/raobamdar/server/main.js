@@ -877,7 +877,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', ', '],
                 ['phase: ', 'phase', ', '],
                 ['avg: ', 'average', ', '],
-                ['', 'truth', ' ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "average", "top", "bottom"

@@ -751,7 +751,7 @@ const doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['avg: ', 'average', ' ']
+                ['avg: ', 'average', '']
             ],
             displayParams: [
                 "label", "data-source", "vgtyp", "statistic", "variable", "average", "forecast-length", "valid-time"
@@ -833,7 +833,7 @@ const doCurveTextPatterns = function () {
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ', ']
+                ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
                 "label", "data-source", "vgtyp", "statistic", "variable", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
@@ -849,7 +849,7 @@ const doCurveTextPatterns = function () {
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ', ']
+                ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
                 "label", "data-source", "vgtyp", "statistic", "variable", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter", "significance"

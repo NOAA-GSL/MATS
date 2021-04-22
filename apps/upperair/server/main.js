@@ -914,7 +914,7 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['avg: ', 'average', ' ']
+                ['avg: ', 'average', '']
             ],
             displayParams: [
                 "label", "data-source", "region-type", "region", "statistic", "variable", "valid-time", "average", "forecast-length", "top", "bottom", "sites", "sitesMap"

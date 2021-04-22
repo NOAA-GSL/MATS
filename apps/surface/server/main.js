@@ -928,7 +928,7 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['avg: ', 'average', ', '],
-                ['', 'truth', ' ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region-type", "region", "statistic", "variable", "average", "forecast-length", "valid-time", "truth", "sites", "sitesMap"
@@ -1034,7 +1034,7 @@ const doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['', 'truth', ', ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
@@ -1051,7 +1051,7 @@ const doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['', 'truth', ', ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter", "significance"

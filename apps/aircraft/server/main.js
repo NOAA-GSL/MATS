@@ -808,7 +808,7 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['phase: ', 'phase', ', '],
-                ['avg: ', 'average', ' ']
+                ['avg: ', 'average', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "average", "top", "bottom"
@@ -925,7 +925,7 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['phase: ', 'phase', ', ']
+                ['phase: ', 'phase', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "x-axis-parameter", "y-axis-parameter"
@@ -944,7 +944,7 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['phase: ', 'phase', ', ']
+                ['phase: ', 'phase', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "x-axis-parameter", "y-axis-parameter", "significance"

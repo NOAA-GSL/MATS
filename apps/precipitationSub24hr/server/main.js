@@ -750,7 +750,7 @@ const doCurveTextPatterns = function () {
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
                 ['fcst_type: ', 'forecast-type', ''],
-                ['avg: ', 'average', ' ']
+                ['avg: ', 'average', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "average", "forecast-type"
