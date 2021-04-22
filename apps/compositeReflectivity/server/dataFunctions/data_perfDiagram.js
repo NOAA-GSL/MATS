@@ -57,6 +57,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var dateClause = "";
         if (binParam !== 'Threshold') {
             var thresholdStr = curve['threshold'];
+            if (thresholdStr === undefined) {
+                throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
+            }
             var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
             thresholdClause = "and m0.trsh = " + threshold;
         }
@@ -68,6 +71,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         }
         if (binParam !== 'Fcst lead time') {
             var forecastLength = curve['forecast-length'];
+            if (forecastLength === undefined) {
+                throw new Error("INFO:  " + label + "'s forecast lead time is undefined. Please assign it a value.");
+            }
             forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         }
         if (binParam === 'Init Date') {
@@ -82,7 +88,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         // This axisKeySet object is used like a set and if a curve has the same
         // variable + statistic (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        curves[curveIndex].axisKey = binParam; // stash the axisKey to use it later for axis options
+        curves[curveIndex].axisKey = statisticSelect; // stash the axisKey to use it later for axis options
 
         var d;
         if (diffFrom == null) {
@@ -92,7 +98,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 "count(distinct {{dateString}}) as N_times, " +
                 "min({{dateString}}) as min_secs, " +
                 "max({{dateString}}) as max_secs, " +
-                "((sum(m0.ny)+0.00)/sum(m0.ny+m0.nn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, " +
+                "((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, " +
                 "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, count(m0.yy) as N0 " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
@@ -174,7 +180,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         curve['xmax'] = d.xmax;
         curve['ymin'] = d.ymin;
         curve['ymax'] = d.ymax;
-        curve['axisKey'] = binParam;
+        curve['axisKey'] = statisticSelect;
         const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
