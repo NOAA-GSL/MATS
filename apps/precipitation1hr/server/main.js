@@ -736,6 +736,38 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
+        const optionsMap = {
+            'Fcst lead time': "select m0.fcst_len as binVal, ",
+            'Threshold': "select m0.trsh as binVal, ",
+            'Valid UTC hour': "select m0.time%(24*3600)/3600 as binVal, ",
+            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
+            'Valid Date': "select m0.time as binVal, ",
+            'Init Date': "select m0.time-m0.fcst_len*3600 as binVal, "
+        };
+
+        matsCollections["bin-parameter"].insert(
+            {
+                name: 'bin-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                hideOtherFor: {
+                    'forecast-length': ["Fcst lead time"],
+                    'threshold': ["Threshold"],
+                    'valid-time': ["Valid UTC hour"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[4],
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
     // determine date defaults for dates and curveDates
     const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
     modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
@@ -819,7 +851,7 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['avg: ', 'average', ', '],
-                ['', 'truth', ' ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "average", "forecast-length", "valid-time", "truth"
@@ -892,7 +924,7 @@ const doCurveTextPatterns = function () {
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
-                ['', 'truth', ' ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "utc-cycle-start", "truth"
@@ -929,7 +961,7 @@ const doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['', 'truth', ', ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
@@ -947,10 +979,27 @@ const doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['', 'truth', ', ']
+                ['', 'truth', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.performanceDiagram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'scale', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'truth', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "threshold", "scale", "forecast-length", "valid-time", "truth", "bin-parameter"
             ],
             groupSize: 6
         });
@@ -1017,6 +1066,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.contourDiff,
             graphFunction: "graphPlotly",
             dataFunction: "dataContourDiff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.performanceDiagram,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataPerformanceDiagram",
             checked: false
         });
     }

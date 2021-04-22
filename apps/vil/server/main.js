@@ -725,7 +725,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[3],
+                default: Object.keys(optionsMap)[4],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,

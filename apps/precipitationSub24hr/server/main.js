@@ -643,6 +643,32 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
+        const optionsMap = {
+            'Threshold': "select m0.trsh as binVal, ",
+            'Valid Date': "select m0.time as binVal, "
+        };
+
+        matsCollections["bin-parameter"].insert(
+            {
+                name: 'bin-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                hideOtherFor: {
+                    'threshold': ["Threshold"]
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[1],
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
     // determine date defaults for dates and curveDates
     const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
     modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
@@ -723,7 +749,7 @@ const doCurveTextPatterns = function () {
                 ['', 'threshold', ' '],
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
-                ['fcst_type: ', 'forecast-type', ', '],
+                ['fcst_type: ', 'forecast-type', ''],
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
@@ -739,7 +765,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
-                ['fcst_type: ', 'forecast-type', ', '],
+                ['fcst_type: ', 'forecast-type', ''],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
@@ -756,7 +782,7 @@ const doCurveTextPatterns = function () {
                 ['', 'threshold', ' '],
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
-                ['fcst_type: ', 'forecast-type', ', '],
+                ['fcst_type: ', 'forecast-type', ''],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
@@ -773,7 +799,7 @@ const doCurveTextPatterns = function () {
                 ['', 'threshold', ' '],
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
-                ['fcst_type: ', 'forecast-type', ', ']
+                ['fcst_type: ', 'forecast-type', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-type", "x-axis-parameter", "y-axis-parameter"
@@ -789,10 +815,25 @@ const doCurveTextPatterns = function () {
                 ['', 'threshold', ' '],
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
-                ['fcst_type: ', 'forecast-type', ', ']
+                ['fcst_type: ', 'forecast-type', '']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-type", "x-axis-parameter", "y-axis-parameter"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.performanceDiagram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'scale', ', '],
+                ['fcst_type: ', 'forecast-type', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "threshold", "scale", "forecast-type", "bin-parameter"
             ],
             groupSize: 6
         });
@@ -841,6 +882,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.contourDiff,
             graphFunction: "graphPlotly",
             dataFunction: "dataContourDiff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.performanceDiagram,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataPerformanceDiagram",
             checked: false
         });
     }
