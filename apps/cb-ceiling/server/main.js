@@ -247,24 +247,23 @@ const doCurveParams = async function () {
     }
 
     try {
-        const rows = await cbPool.queryCB('select mdata.model, mdata.displayText from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling"');
+        const rows = await cbPool.queryCB('select mdata.model, mdata.displayText, mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling"');
         for (var i = 0; i < rows.length; i++) {
             var model_value = rows[i].model.trim();
             var model = rows[i].displayText.trim();
             modelOptionsMap[model] = [model_value];
-            const rows1 = await cbPool.queryCB('SELECT mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds FROM mdata WHERE type="MD" AND docType="matsGui" AND subset="COMMON" AND version="V01" AND app="cb-ceiling"')
-            for (var j = 0; j < rows1.length; j++) {
-                var rowMinDate = moment.utc(rows1[j].mindate * 1000).format("MM/DD/YYYY HH:mm");
-                var rowMaxDate = moment.utc(rows1[j].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-                modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
-                forecastLengthOptionsMap[model] = rows1[j].fcstLens.map(String);
-                thresholdsModelOptionsMap[model] = [];
-                for (var k=0; k < rows1[j].thresholds.length; k++) {
-                    thresholdsModelOptionsMap[model].push(masterThresholdValuesMap[rows1[j].thresholds[k]/10]);
-                }
-                regionModelOptionsMap[model] = rows1[j].regions;
+            var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+            var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+            modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
+            forecastLengthOptionsMap[model] = rows[i].fcstLens.map(String);
+            regionModelOptionsMap[model] = rows[i].regions;
+            // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
+            thresholdsModelOptionsMap[model] = thresholdsModelOptionsMap[model] ? thresholdsModelOptionsMap[model] : [];
+            for (var t = 0; t < rows[i].thresholds.length; t++) {
+                thresholdsModelOptionsMap[model].push(masterThresholdValuesMap[rows[i].thresholds[t]]);
             }
         }
+
     } catch (err) {
         console.log(err.message);
     }
@@ -422,34 +421,36 @@ const doCurveParams = async function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'CSI (Critical Success Index)': ['ROUND((sum(m0.data.["{{threshold}}"].hits)+0.00)/sum(0m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].false_alarms),6) * 100 as stat, TO_STRING(ROUND(m0.data.["{{threshold}}"].hits)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].false_alarms) * 100) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
 
-            'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'TSS (True Skill Score)': ['ROUND((sum(m0.data.["{{threshold}}"].hits)*sum(m0.data.["{{threshold}}"].correct_negatives) - sum(m0.data.["{{threshold}}"].false_alarms)*sum(m0.data.["{{threshold}}"].misses))/((sum(m0.data.["{{threshold}}"].hits)+sum(m0.data.["{{threshold}}"].misses))*(sum(m0.data.["{{threshold}}"].false_alarms)+sum(m0.data.["{{threshold}}"].correct_negatives))),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].hits*m0.data.["{{threshold}}"].correct_negatives - m0.data.["{{threshold}}"].false_alarms*m0.data.["{{threshold}}"].misses)/((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)*(m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].correct_negatives) * 100)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
 
-            'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'PODy (POD of ceiling < threshold)': ['ROUND((sum(m0.data.["{{threshold}}"].hits)+0.00)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].hits)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses) * 100) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
 
-            'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.yn)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.yn)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'PODn (POD of ceiling > threshold)': ['ROUND((sum(m0.data.["{{threshold}}"].correct_negatives)+0.00)/sum(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].correct_negatives)/(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms) * 100) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
 
-            'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat, group_concat(((m0.yn)/(m0.yn+m0.yy)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 0],
+            'FAR (False Alarm Ratio)': ['ROUND((sum(m0.data.["{{threshold}}"].false_alarms)+0.00)/sum(m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].hits),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].false_alarms)/(m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].hits) * 100) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 0],
 
-            'Bias (forecast/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Ratio', 1],
+            'Bias (forecast/actual)': ['ROUND((sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)+0.00)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses),6) as stat, TO_STRING((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Ratio', 1],
 
-            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy)-sum(m0.ny)*sum(m0.yn))/((sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)))) * 100 as stat, group_concat((2*(m0.nn*m0.yy - m0.ny*m0.yn) / ((m0.nn+m0.yn)*(m0.yn+m0.yy) + (m0.nn+m0.ny)*(m0.ny+m0.yy))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'HSS (Heidke Skill Score)': ['ROUND(2*(sum(m0.data.["{{threshold}}"].correct_negatives+0.00)*sum(m0.data.["{{threshold}}"].hits)-sum(m0.data.["{{threshold}}"].misses)*sum(m0.data.["{{threshold}}"].false_alarms))/((sum(m0.data.["{{threshold}}"].correct_negatives+0.00)+sum(m0.data.["{{threshold}}"].false_alarms))*(sum(m0.data.["{{threshold}}"].false_alarms)+sum(m0.data.["{{threshold}}"].hits))+(sum(m0.data.["{{threshold}}"].correct_negatives+0.00)+sum(m0.data.["{{threshold}}"].misses))*(sum(m0.data.["{{threshold}}"].misses)+sum(m0.data.["{{threshold}}"].hits))),6) * 100 as stat, TO_STRING((2*(m0.data.["{{threshold}}"].correct_negatives*m0.data.["{{threshold}}"].hits - m0.data.["{{threshold}}"].misses*m0.data.["{{threshold}}"].false_alarms) / ((m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms)*(m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].hits) + (m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].misses)*(m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].hits)) * 100)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
 
-            'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn)))/(sum(m0.yy+m0.yn+m0.ny)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)))/((m0.yy+m0.yn+m0.ny)-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'ETS (Equitable Threat Score)': ['ROUND(sum(m0.data.["{{threshold}}"].hits)-(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)*sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives))/(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses)-(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)*sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives))),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].hits-((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)*(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives)))/((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses)-((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)*(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives) * 100))) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
 
-            'Nlow (obs < threshold, avg per hr in predefined regions)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null],
+            'Nlow (obs < threshold, avg per hr in predefined regions)': ['ROUND(avg(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+0.000),6) as stat, TO_STRING(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Number', null],
 
-            'Nhigh (obs > threshold, avg per hr in predefined regions)': ['avg(m0.nn+m0.yn+0.000) as stat, group_concat((m0.nn+m0.yn), ";", m0.time order by m0.time) as sub_data, count(m0.nn) as N0', 'ctc', 'Number', null],
+            'Nhigh (obs > threshold, avg per hr in predefined regions)': ['ROUND(avg(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms+0.000),6) as stat, TO_STRING(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].correct_negatives) as N0', 'ctc', 'Number', null],
 
-            'Ntot (total obs, avg per hr in predefined regions)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null],
+            'Ntot (total obs, avg per hr in predefined regions)': ['ROUND(avg(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives+0.000),6) as stat, TO_STRING(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Number', null],
 
-            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Ratio', null],
+            'Ratio (Nlow / Ntot)': ['ROUND(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+0.000)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives+0.000),6) as stat, TO_STRING((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Ratio', null],
 
-            'Ratio (Nhigh / Ntot)': ['(sum(m0.nn+m0.yn+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.nn+m0.yn)/(m0.yy+m0.yn+m0.ny+m0.nn)), ";", m0.time order by m0.time) as sub_data, count(m0.nn) as N0', 'ctc', 'Ratio', null],
+            'Ratio (Nhigh / Ntot)': ['ROUND(sum(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms+0.000)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives+0.000),6) as stat, TO_STRING((m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].correct_negatives) as N0', 'ctc', 'Ratio', null],
 
-            'N per graph point': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null]
+            'N per graph point': ['ROUND(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].correct_negatives+0.000),6) as stat, TO_STRING(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].correct_negatives), ";", m0.time order by m0.time) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Number', null]
         };
+
+
         matsCollections["statistic"].insert(
             {
                 name: 'statistic',
@@ -599,17 +600,17 @@ const doCurveParams = async function () {
 
     if (matsCollections["average"].findOne({name: 'average'}) == undefined) {
         const optionsMap = {
-            'None': ['ceil(' + 3600 + '*floor(((m0.time)+' + 3600 + '/2)/' + 3600 + '))'],
-            '3hr': ['ceil(' + 3600 * 3 + '*floor(((m0.time)+' + 3600 * 3 + '/2)/' + 3600 * 3 + '))'],
-            '6hr': ['ceil(' + 3600 * 6 + '*floor(((m0.time)+' + 3600 * 6 + '/2)/' + 3600 * 6 + '))'],
-            '12hr': ['ceil(' + 3600 * 12 + '*floor(((m0.time)+' + 3600 * 12 + '/2)/' + 3600 * 12 + '))'],
-            '1D': ['ceil(' + 3600 * 24 + '*floor(((m0.time)+' + 3600 * 24 + '/2)/' + 3600 * 24 + '))'],
-            '3D': ['ceil(' + 3600 * 24 * 3 + '*floor(((m0.time)+' + 3600 * 24 * 3 + '/2)/' + 3600 * 24 * 3 + '))'],
-            '7D': ['ceil(' + 3600 * 24 * 7 + '*floor(((m0.time)+' + 3600 * 24 * 7 + '/2)/' + 3600 * 24 * 7 + '))'],
-            '30D': ['ceil(' + 3600 * 24 * 30 + '*floor(((m0.time)+' + 3600 * 24 * 30 + '/2)/' + 3600 * 24 * 30 + '))'],
-            '60D': ['ceil(' + 3600 * 24 * 60 + '*floor(((m0.time)+' + 3600 * 24 * 60 + '/2)/' + 3600 * 24 * 60 + '))'],
-            '90D': ['ceil(' + 3600 * 24 * 90 + '*floor(((m0.time)+' + 3600 * 24 * 90 + '/2)/' + 3600 * 24 * 90 + '))'],
-            '180D': ['ceil(' + 3600 * 24 * 180 + '*floor(((m0.time)+' + 3600 * 24 * 180 + '/2)/' + 3600 * 24 * 180 + '))'],
+            'None': ['ceil(' + 3600 + '*floor(((m0.fcstValidEpoch)+' + 3600 + '/2)/' + 3600 + '))'],
+            '3hr': ['ceil(' + 3600 * 3 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 3 + '/2)/' + 3600 * 3 + '))'],
+            '6hr': ['ceil(' + 3600 * 6 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 6 + '/2)/' + 3600 * 6 + '))'],
+            '12hr': ['ceil(' + 3600 * 12 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 12 + '/2)/' + 3600 * 12 + '))'],
+            '1D': ['ceil(' + 3600 * 24 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 24 + '/2)/' + 3600 * 24 + '))'],
+            '3D': ['ceil(' + 3600 * 24 * 3 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 24 * 3 + '/2)/' + 3600 * 24 * 3 + '))'],
+            '7D': ['ceil(' + 3600 * 24 * 7 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 24 * 7 + '/2)/' + 3600 * 24 * 7 + '))'],
+            '30D': ['ceil(' + 3600 * 24 * 30 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 24 * 30 + '/2)/' + 3600 * 24 * 30 + '))'],
+            '60D': ['ceil(' + 3600 * 24 * 60 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 24 * 60 + '/2)/' + 3600 * 24 * 60 + '))'],
+            '90D': ['ceil(' + 3600 * 24 * 90 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 24 * 90 + '/2)/' + 3600 * 24 * 90 + '))'],
+            '180D': ['ceil(' + 3600 * 24 * 180 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 24 * 180 + '/2)/' + 3600 * 24 * 180 + '))'],
         };
         matsCollections["average"].insert(
             {
@@ -672,10 +673,10 @@ const doCurveParams = async function () {
         const optionsMap = {
             'Fcst lead time': "select m0.fcst_len as xVal, ",
             'Threshold': "select m0.trsh/100 as xVal, ",    // produces thresholds in kft
-            'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
-            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select m0.time as xVal, ",
-            'Init Date': "select m0.time-m0.fcst_len*3600 as xVal, "
+            'Valid UTC hour': "select m0.fcstValidEpoch%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select (m0.fcstValidEpoch-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select m0.fcstValidEpoch as xVal, ",
+            'Init Date': "select m0.fcstValidEpoch-m0.fcst_len*3600 as xVal, "
         };
 
         matsCollections["x-axis-parameter"].insert(
@@ -699,10 +700,10 @@ const doCurveParams = async function () {
         const optionsMap = {
             'Fcst lead time': "m0.fcst_len as yVal, ",
             'Threshold': "m0.trsh/100 as yVal, ",    // produces thresholds in kft
-            'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
-            'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
-            'Valid Date': "m0.time as yVal, ",
-            'Init Date': "m0.time-m0.fcst_len*3600 as yVal, "
+            'Valid UTC hour': "m0.fcstValidEpoch%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "(m0.fcstValidEpoch-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "m0.fcstValidEpoch as yVal, ",
+            'Init Date': "m0.fcstValidEpoch-m0.fcst_len*3600 as yVal, "
         };
 
         matsCollections["y-axis-parameter"].insert(
@@ -802,7 +803,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['fcstLen: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['avg: ', 'average', ' ']
             ],
@@ -838,7 +839,7 @@ const doCurveTextPatterns = function () {
                 ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['fcstLen: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'curve-dates', '']
             ],
@@ -856,7 +857,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['fcstLen: ', 'forecast-length', 'h, '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
@@ -887,7 +888,7 @@ const doCurveTextPatterns = function () {
                 ['', 'sites', ': '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', ' h '],
+                ['fcstLen: ', 'forecast-length', ' h '],
                 [' valid-time:', 'valid-time', '']
             ],
             displayParams: [
@@ -904,7 +905,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['fcstLen: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'curve-dates', '']
             ],
@@ -921,7 +922,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['fcstLen: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', ']
             ],
             displayParams: [
@@ -937,7 +938,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['fcstLen: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', ']
             ],
             displayParams: [

@@ -2,13 +2,15 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
-import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
+import {
+    matsCollections,
+    matsDataCurveOpsUtils,
+    matsDataDiffUtils,
+    matsDataProcessUtils,
+    matsDataQueryUtils,
+    matsDataUtils,
+    matsTypes
+} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataSeries = function (plotParams, plotFunction) {
@@ -46,17 +48,15 @@ dataSeries = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var queryTableClause = "";
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        var thresholdClause = "";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
+            validTimeClause = "AND m0.fcstValidEpoch IN(" + validTimes + ")";
         }
         var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
+        var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
         var dateClause;
         var siteDateClause = "";
         var siteMatchClause = "";
@@ -68,18 +68,16 @@ dataSeries = function (plotParams, plotFunction) {
         var filterClause = "";
         var queryPool;
         var regionType = curve['region-type'];
+        var region;
         if (regionType === 'Predefined region') {
             var regionStr = curve['region'];
-            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-            queryTableClause = "from " + model + "_" + region + " as m0";
-            thresholdClause = "and m0.trsh = " + threshold;
+            region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             statisticClause = statisticOptionsMap[statisticSelect][0];
-            dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
-            filterClause = "and m0.yy+m0.ny+m0.yn+m0.nn > 0";
-            queryPool = sumPool;
+            dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
+            filterClause = "and m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses+m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].correct_negatives > 0";
+            queryPool = cbPool;
         } else {
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
-            queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
             statisticClause = 'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as yy,sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as nn, count(m0.ceil) as N0';
             statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
@@ -98,10 +96,10 @@ dataSeries = function (plotParams, plotFunction) {
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            dateClause = "and m0.time >= " + fromSecs + " - 900 and m0.time <= " + toSecs + " + 900";
+            dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " - 900 and m0.fcstValidEpoch <= " + toSecs + " + 900";
             siteDateClause = "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
-            siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
-            queryPool = modelPool;
+            siteMatchClause = "and m0.madis_id = o.madis_id and m0.fcstValidEpoch = o.time ";
+            queryPool = cbPool;
         }
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
@@ -127,18 +125,15 @@ dataSeries = function (plotParams, plotFunction) {
                 if (matchRegionType === 'Predefined region') {
                     const queryDB = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}).database;
                     const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                    queryTableClause = queryTableClause + ", " + queryDB + "." + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
                     const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
-                    thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
                     if (sitesClause.includes("m0.madis_id in")) {
-                        dateClause = "and ceil(3600*floor((m0.time+1800)/3600)) = m" + matchCurveIdx + ".time " + dateClause;
+                        dateClause = "and ceil(3600*floor((m0.fcstValidEpoch+1800)/3600)) = m" + matchCurveIdx + ".time " + dateClause;
                     } else {
-                        dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
+                        dateClause = "and m0.fcstValidEpoch = m" + matchCurveIdx + ".time " + dateClause;
                     }
                     dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " and m" + matchCurveIdx + ".time <= " + toSecs;
                 } else {
                     const queryDB = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}).database;
-                    queryTableClause = queryTableClause + ", " + queryDB + "." + matchModel + " as m" + matchCurveIdx;
                     const matchSitesList = matchCurve['sites'] === undefined ? [] : matchCurve['sites'];
                     var matchQuerySites = [];
                     if (matchSitesList.length > 0 && matchSitesList !== matsTypes.InputTypes.unused) {
@@ -157,9 +152,9 @@ dataSeries = function (plotParams, plotFunction) {
                     }
                     if (sitesClause.includes("m0.madis_id in")) {
                         siteMatchClause = siteMatchClause + "and m" + matchCurveIdx + ".madis_id = m0.madis_id";
-                        dateClause = "and ceil(3600*floor((m0.time+1800)/3600)) = ceil(3600*floor((m" + matchCurveIdx + ".time+1800)/3600)) " + dateClause;
+                        dateClause = "and ceil(3600*floor((m0.fcstValidEpoch+1800)/3600)) = ceil(3600*floor((m" + matchCurveIdx + ".time+1800)/3600)) " + dateClause;
                     } else {
-                        dateClause = "and m0.time = ceil(3600*floor((m" + matchCurveIdx + ".time+1800)/3600)) " + dateClause;
+                        dateClause = "and m0.fcstValidEpoch = ceil(3600*floor((m" + matchCurveIdx + ".time+1800)/3600)) " + dateClause;
                     }
                     dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " - 900 and m" + matchCurveIdx + ".time <= " + toSecs + " + 900";
                 }
@@ -181,36 +176,50 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select {{average}} as avtime, " +
-                "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
-                "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
-                "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
-                "{{statisticClause}} " +
-                "{{queryTableClause}} " +
-                "where 1=1 " +
-                "{{filterClause}} " +
-                "{{siteMatchClause}} " +
-                "{{sitesClause}} " +
-                "{{dateClause}} " +
-                "{{siteDateClause}} " +
-                "{{thresholdClause}} " +
-                "{{validTimeClause}} " +
-                "{{forecastLengthClause}} " +
-                "group by avtime " +
-                "order by avtime" +
-                ";";
+            var statement =
+                "SELECT " +
+                    "{{average}} avtime, " +
+                    "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+                    "{{forecastLength}} fcst_len, " +
+                    "{{threshold}} thrsh, " +
+                    "MIN(m0.fcstValidEpoch) min_secs, " +
+                    "MAX(m0.fcstValidEpoch) max_secs, " +
+                    "{{statisticClause}} " +
+                    "FROM mdata as m0 " +
+                    "WHERE " +
+                    "m0.type='DD' " +
+                    "AND m0.docType='CTC' " +
+                    "AND m0.subset='METAR' " +
+                    "AND m0.version='V01' " +
+                    "AND m0.model='" + model + "' " +
+                    "AND m0.region='" + regionStr + "' " +
+                    "{{filterClause}} " +
+                    "{{forecastLengthClause}} " +
+                    "{{siteMatchClause}} " +
+                    "{{sitesClause}} " +
+                    "{{dateClause}} " +
+                    "{{siteDateClause}} " +
+                    "{{validTimeClause}} " +
+                    "GROUP BY " +
+                    "m0.fcstValidEpoch, " +
+                    "m0.data.['{{threshold}}'].hits, " +
+                    "m0.data.['{{threshold}}'].misses, " +
+                    "m0.data.['{{threshold}}'].false_alarms, " +
+                    "m0.data.['{{threshold}}'].correct_negatives " +
+                    "ORDER BY m0.fcstValidEpoch;";
 
             statement = statement.replace('{{average}}', average);
+            statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{statisticClause}}', statisticClause);
-            statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{filterClause}}', filterClause);
             statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
             statement = statement.replace('{{sitesClause}}', sitesClause);
-            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
+            // leave the {{threshold}} for last because {{threshold}} exists in some of the other replacements
+            statement = statement.replace(/{{threshold}}/g, threshold);
             dataRequests[label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
