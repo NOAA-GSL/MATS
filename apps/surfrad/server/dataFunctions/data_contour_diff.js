@@ -24,7 +24,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var dataFoundForAnyCurve = false;
+    var dataNotFoundForAnyCurve = false;
     var showSignificance = false;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
@@ -218,8 +218,7 @@ dataContourDiff = function (plotParams, plotFunction) {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                 throw (new Error(error));
             }
-        } else {
-            dataFoundForAnyCurve = true;
+            dataNotFoundForAnyCurve = true;
         }
 
         var postQueryStartMoment = moment();

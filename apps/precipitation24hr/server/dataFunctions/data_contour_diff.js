@@ -24,7 +24,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var dataFoundForAnyCurve = false;
+    var dataNotFoundForAnyCurve = false;
     var showSignificance = false;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
@@ -58,22 +58,16 @@ dataContourDiff = function (plotParams, plotFunction) {
         var queryTableClause = "from " + model + '_' + grid_scale + '_' + region + " as m0";
         var thresholdClause = "";
         var forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
-        var forecastTypeStr = curve['forecast-type'];
-        var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
-        var forecastTypeClause = "and m0.num_fcsts = " + forecastType;
-        var dateString = "";
         var dateClause = "";
         if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
             var thresholdStr = curve['threshold'];
             var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
             thresholdClause = "and m0.trsh = " + threshold * 0.01;
         }
-        if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-            dateString = "m0.time-m0.fcst_len*3600";
-        } else {
-            dateString = "m0.time";
-        }
-        dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+        var forecastTypeStr = curve['forecast-type'];
+        var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
+        var forecastTypeClause = "and m0.num_fcsts = " + forecastType;
+        dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
         // for contingency table apps, we currently have to deal with matching in the query.
         if (appParams.matching && curvesLength > 1) {
             var matchCurveIdx = 0;
@@ -96,14 +90,8 @@ dataContourDiff = function (plotParams, plotFunction) {
                 }
                 const matchForecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === matchCurve['forecast-type']);
                 forecastTypeClause = forecastTypeClause + " and m" + matchCurveIdx + ".num_fcsts = " + matchForecastType;
-                var matchDateString = "";
-                if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-                    matchDateString = "m" + matchCurveIdx + ".time-m" + matchCurveIdx + ".fcst_len*3600";
-                } else {
-                    matchDateString = "m" + matchCurveIdx + ".time";
-                }
                 dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
-                dateClause = dateClause + " and " + matchDateString + " >= " + fromSecs + " and " + matchDateString + " <= " + toSecs;
+                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " and m" + matchCurveIdx + ".time <= " + toSecs;
             }
         }
         var statisticSelect = curve['statistic'];
@@ -117,9 +105,9 @@ dataContourDiff = function (plotParams, plotFunction) {
         // prepare the query from the above parameters
         var statement = "{{xValClause}} " +
             "{{yValClause}} " +
-            "count(distinct {{dateString}}) as N_times, " +
-            "min({{dateString}}) as min_secs, " +
-            "max({{dateString}}) as max_secs, " +
+            "count(distinct m0.time) as N_times, " +
+            "min(m0.time) as min_secs, " +
+            "max(m0.time) as max_secs, " +
             "{{statisticClause}} " +
             "{{queryTableClause}} " +
             "where 1=1 " +
@@ -138,7 +126,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{thresholdClause}}', thresholdClause);
         statement = statement.replace('{{forecastTypeClause}}', forecastTypeClause);
         statement = statement.replace('{{dateClause}}', dateClause);
-        statement = statement.split('{{dateString}}').join(dateString);
         dataRequests[label] = statement;
 
         // math is done on forecastLength later on -- set all analyses to 0
@@ -175,8 +162,7 @@ dataContourDiff = function (plotParams, plotFunction) {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                 throw (new Error(error));
             }
-        } else {
-            dataFoundForAnyCurve = true;
+            dataNotFoundForAnyCurve = true;
         }
 
         var postQueryStartMoment = moment();
@@ -204,9 +190,9 @@ dataContourDiff = function (plotParams, plotFunction) {
         };
     }  // end for curves
 
-    if (!dataFoundForAnyCurve) {
-        // we found no data for any curves so don't bother proceeding
-        throw new Error("INFO:  No valid data for any curves.");
+    if (dataNotFoundForAnyCurve) {
+        // we found no data for at least one curve so don't bother proceeding
+        throw new Error("INFO:  No valid data for at least one curve. Try making individual contour plots to determine which one.");
     }
 
     // turn the two contours into one difference contour

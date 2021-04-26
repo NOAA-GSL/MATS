@@ -49,22 +49,16 @@ dataContour = function (plotParams, plotFunction) {
     var queryTableClause = "from " + model + '_' + grid_scale + '_' + region + " as m0";
     var thresholdClause = "";
     var forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
-    var forecastTypeStr = curve['forecast-type'];
-    var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
-    var forecastTypeClause = "and m0.num_fcsts = " + forecastType;
-    var dateString = "";
     var dateClause = "";
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         thresholdClause = "and m0.trsh = " + threshold * 0.01;
     }
-    if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-        dateString = "m0.time-m0.fcst_len*3600";
-    } else {
-        dateString = "m0.time";
-    }
-    dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+    var forecastTypeStr = curve['forecast-type'];
+    var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
+    var forecastTypeClause = "and m0.num_fcsts = " + forecastType;
+    dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statisticClause = statisticOptionsMap[statisticSelect][0];
@@ -76,9 +70,9 @@ dataContour = function (plotParams, plotFunction) {
     // prepare the query from the above parameters
     var statement = "{{xValClause}} " +
         "{{yValClause}} " +
-        "count(distinct {{dateString}}) as N_times, " +
-        "min({{dateString}}) as min_secs, " +
-        "max({{dateString}}) as max_secs, " +
+        "count(distinct m0.time) as N_times, " +
+        "min(m0.time) as min_secs, " +
+        "max(m0.time) as max_secs, " +
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +
@@ -97,7 +91,6 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{thresholdClause}}', thresholdClause);
     statement = statement.replace('{{forecastTypeClause}}', forecastTypeClause);
     statement = statement.replace('{{dateClause}}', dateClause);
-    statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
 
     // math is done on forecastLength later on -- set all analyses to 0

@@ -24,7 +24,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var dataFoundForAnyCurve = false;
+    var dataNotFoundForAnyCurve = false;
     var showSignificance = false;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
@@ -200,8 +200,7 @@ dataContourDiff = function (plotParams, plotFunction) {
                     throw new Error(error);
                 }
             }
-        } else {
-            dataFoundForAnyCurve = true;
+            dataNotFoundForAnyCurve = true;
         }
 
         var postQueryStartMoment = moment();
@@ -229,9 +228,9 @@ dataContourDiff = function (plotParams, plotFunction) {
         };
     }  // end for curves
 
-    if (!dataFoundForAnyCurve) {
-        // we found no data for any curves so don't bother proceeding
-        throw new Error("INFO:  No valid data for any curves.");
+    if (dataNotFoundForAnyCurve) {
+        // we found no data for at least one curve so don't bother proceeding
+        throw new Error("INFO:  No valid data for at least one curve. Try making individual contour plots to determine which one.");
     }
 
     // turn the two contours into one difference contour
