@@ -82,6 +82,57 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             dateString = "m0.time";
         }
         dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+        // for contingency table apps, we currently have to deal with matching in the query.
+        if (appParams.matching && curvesLength > 1) {
+            var matchCurveIdx = 0;
+            var mcidx;
+            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
+                const matchCurve = curves[mcidx];
+                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
+                    continue;
+                }
+                matchCurveIdx++;
+                const matchLabel = matchCurve['label'];
+                const matchBinParam = matchCurve['bin-parameter'];
+                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                const matchScale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
+                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchScale + "_" + matchRegion + " as m" + matchCurveIdx;
+                if (matchBinParam !== 'Threshold') {
+                    const matchThresholdStr = matchCurve['threshold'];
+                    if (matchThresholdStr === undefined) {
+                        throw new Error("INFO:  " + matchLabel + "'s threshold is undefined. Please assign it a value.");
+                    }
+                    const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchThresholdStr);
+                    thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
+                } else {
+                    thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
+                }
+                if (matchBinParam !== 'Valid UTC hour') {
+                    const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
+                    if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
+                        validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + matchValidTimes + ")";
+                    }
+                }
+                if (matchBinParam !== 'Fcst lead time') {
+                    const matchForecastLength = matchCurve['forecast-length'];
+                    if (matchForecastLength === undefined) {
+                        throw new Error("INFO:  " + matchLabel + "'s forecast lead time is undefined. Please assign it a value.");
+                    }
+                    forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
+                } else {
+                    forecastLengthClause = forecastLengthClause + " and m0.fcst_len = m" + matchCurveIdx + ".fcst_len";
+                }
+                var matchDateString = "";
+                if (matchBinParam === 'Init Date') {
+                    matchDateString = "m" + matchCurveIdx + ".time-m" + matchCurveIdx + ".fcst_len*3600";
+                } else {
+                    matchDateString = "m" + matchCurveIdx + ".time";
+                }
+                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
+                dateClause = dateClause + " and " + matchDateString + " >= " + fromSecs + " and " + matchDateString + " <= " + toSecs;
+            }
+        }
         var statisticSelect = 'PerformanceDiagram';
         var statType = 'precalculated';
         // axisKey is used to determine which axis a curve should use.

@@ -51,8 +51,6 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var queryTableClause = "from " + model + '_' + grid_scale + '_' + region + " as m0";
         var thresholdClause = "";
-        var forecastTypeClause = "";
-        var dateString = "";
         var dateClause = "";
         if (binParam !== 'Threshold') {
             var thresholdStr = curve['threshold'];
@@ -64,9 +62,40 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         }
         var forecastTypeStr = curve['forecast-type'];
         var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
-        forecastTypeClause = "and m0.accum_len = " + forecastType;
-        dateString = "m0.time";
-        dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+        var forecastTypeClause = "and m0.accum_len = " + forecastType;
+        dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
+        // for contingency table apps, we currently have to deal with matching in the query.
+        if (appParams.matching && curvesLength > 1) {
+            var matchCurveIdx = 0;
+            var mcidx;
+            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
+                const matchCurve = curves[mcidx];
+                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
+                    continue;
+                }
+                matchCurveIdx++;
+                const matchLabel = matchCurve['label'];
+                const matchBinParam = matchCurve['bin-parameter'];
+                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                const matchScale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
+                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchScale + "_" + matchRegion + " as m" + matchCurveIdx;
+                if (matchBinParam !== 'Threshold') {
+                    const matchThresholdStr = matchCurve['threshold'];
+                    if (matchThresholdStr === undefined) {
+                        throw new Error("INFO:  " + matchLabel + "'s threshold is undefined. Please assign it a value.");
+                    }
+                    const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchThresholdStr);
+                    thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold * 0.01;
+                } else {
+                    thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
+                }
+                const matchForecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === matchCurve['forecast-type']);
+                forecastTypeClause = forecastTypeClause + " and m" + matchCurveIdx + ".accum_len = " + matchForecastType;
+                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
+                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " and m" + matchCurveIdx + ".time <= " + toSecs;
+            }
+        }
         var statisticSelect = 'PerformanceDiagram';
         var statType = 'precalculated';
         // axisKey is used to determine which axis a curve should use.
@@ -80,9 +109,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             var statement = "{{binClause}} " +
-                "count(distinct {{dateString}}) as N_times, " +
-                "min({{dateString}}) as min_secs, " +
-                "max({{dateString}}) as max_secs, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_secs, " +
+                "max(m0.time) as max_secs, " +
                 "((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, " +
                 "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, count(m0.yy) as N0 " +
                 "{{queryTableClause}} " +
@@ -100,7 +129,6 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{forecastTypeClause}}', forecastTypeClause);
             statement = statement.replace('{{dateClause}}', dateClause);
-            statement = statement.split('{{dateString}}').join(dateString);
             dataRequests[label] = statement;
 
             var queryResult;
