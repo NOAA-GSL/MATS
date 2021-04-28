@@ -37,6 +37,14 @@ Feature: Add Remove ContourDiff
         Then I should be on the main page
         And the "Plot Unmatched" button should be visible
 
+        When I click the "Plot Matched" button
+        Then I should be on the graph page
+        And I should have a "ContourDiff" plot
+
+        When I click the "Back" button
+        Then I should be on the main page
+        And the "Plot Matched" button should be visible
+
         When I click the "Remove All" button
         And the "Remove all the curves" button should be visible
         Then I click the "Remove all the curves" button

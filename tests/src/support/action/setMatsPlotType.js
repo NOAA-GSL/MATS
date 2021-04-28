@@ -25,11 +25,17 @@ export default (plotType) => {
         case 'DailyModelCycle':
             $('#plot-type-DailyModelCycle').click();
             break;
+        case 'YearToYear':
+            $('#plot-type-YearToYear').click();
+            break;
         case 'Reliability':
             $('#plot-type-Reliability').click();
             break;
         case 'ROC':
             $('#plot-type-ROC').click();
+            break;
+        case 'PerformanceDiagram':
+            $('#plot-type-PerformanceDiagram').click();
             break;
         case 'Map':
             $('#plot-type-Map').click();

@@ -1,23 +1,25 @@
-Feature: Add Remove ContourDiff
+Feature: Add Remove Performance Diagram Curve
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want click the ContourDiff radio button,
-    I want to add one curve.
+    I want click the performanceDiagram radio button,
+    I want to add one curve
     then plot that curve and see the graph,
     then go back to the curve management page,
     then delete that curve.
 
     Background:
-        Given I load the app "/ptype"
-        Then I expect the app title to be "Precipitation Type"
+        Given I load the app "/vil"
+        Then I expect the app title to be "Vertically Integrated Liquid"
 
     @watch
-    Scenario: addRemoveContourDiff
-        When I set the plot type to "ContourDiff"
-        Then the plot type should be "ContourDiff"
-        When I change the "data-source" parameter to "RAP_GSL_130"
-        Then the "data-source" parameter value matches "RAP_GSL_130"
+    Scenario: addRemovePerformanceDiagramCurve
+        When I set the plot type to "PerformanceDiagram"
+        Then the plot type should be "PerformanceDiagram"
+        When I change the "data-source" parameter to "RTMA_3D_GSL"
+        Then the "data-source" parameter value matches "RTMA_3D_GSL"
+        When I change the "bin-parameter" parameter to "Fcst lead time"
+        Then the "bin-parameter" parameter value matches "Fcst lead time"
         When I set the dates to "06/28/2019 0:00 - 09/24/2019 0:00"
         Then the dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button
@@ -31,7 +33,7 @@ Feature: Add Remove ContourDiff
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "ContourDiff" plot
+        And I should have a "Performance Diagram" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -39,7 +41,7 @@ Feature: Add Remove ContourDiff
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "ContourDiff" plot
+        And I should have a "Performance Diagram" plot
 
         When I click the "Back" button
         Then I should be on the main page
