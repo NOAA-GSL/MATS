@@ -57,6 +57,14 @@ dataSeries = function (plotParams, plotFunction) {
         }
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
+        var groupByClause = "GROUP BY " +
+            "m0.fcstValidEpoch, " +
+            "m0.data.['" + threshold + "'].hits, " +
+            "m0.data.['" + threshold + "'].misses, " +
+            "m0.data.['" + threshold + "'].false_alarms, " +
+            "m0.data.['" + threshold + "'].correct_negatives "+
+        "ORDER BY m0.fcstValidEpoch;";
+
         var dateClause;
         var siteDateClause = "";
         var siteMatchClause = "";
@@ -68,18 +76,21 @@ dataSeries = function (plotParams, plotFunction) {
         var filterClause = "";
         var queryPool;
         var regionType = curve['region-type'];
-        var region;
         if (regionType === 'Predefined region') {
             var regionStr = curve['region'];
-            region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
+            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             statisticClause = statisticOptionsMap[statisticSelect][0];
+            // threshold replacements must happen for each curve
+            const thRegExp = new RegExp('{{threshold}}','g');
+            statisticClause = statisticClause.replace(thRegExp,threshold);
+            // const ciRegExp = new RegExp('{{ci}}','g');
+            // statisticClause = statisticClause.replace(ciRegExp,curveIndex);
             dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
-            filterClause = "and m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses+m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].correct_negatives > 0";
+            filterClause = "and m0.data.['" + threshold + "'].hits+m0.data.['" + threshold + "'].misses+m0.data.['" + threshold + "'].false_alarms+m0.data.['" + threshold + "'].correct_negatives > 0";
             queryPool = cbPool;
         } else {
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
-            statisticClause = 'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as yy,sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as nn, count(m0.ceil) as N0';
-            statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
+            statisticClause = 'sum(if((m0.ceil < ' + threshold + ') and (o.ceil < ' + threshold + '),1,0)) as yy,sum(if((m0.ceil < ' + threshold + ') and NOT (o.ceil < ' + threshold + '),1,0)) as yn, sum(if(NOT (m0.ceil < ' + threshold + ') and (o.ceil < ' + threshold + '),1,0)) as ny, sum(if(NOT (m0.ceil < ' + threshold + ') and NOT (o.ceil < ' + threshold + '),1,0)) as nn, count(m0.ceil) as N0';
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -97,10 +108,19 @@ dataSeries = function (plotParams, plotFunction) {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
             dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " - 900 and m0.fcstValidEpoch <= " + toSecs + " + 900";
-            siteDateClause = "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
-            siteMatchClause = "and m0.madis_id = o.madis_id and m0.fcstValidEpoch = o.time ";
+            siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " - 900 and o.fcstValidEpoch <= " + toSecs + " + 900";
+            siteMatchClause = "and m0.madis_id = o.madis_id and m0.fcstValidEpoch = o.fcstValidEpoch ";
             queryPool = cbPool;
         }
+        var fromClause = "FROM mdata m0 ";
+        var whereClause = "WHERE " +
+            "m0.type='DD' " +
+            "AND m0.docType='CTC' " +
+            "AND m0.subset='METAR' " +
+            "AND m0.version='V01' " +
+            "AND m0.model='" + model + "' " +
+            "AND m0.region='" + regionStr + "' ";
+
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
@@ -114,26 +134,32 @@ dataSeries = function (plotParams, plotFunction) {
                     continue;
                 }
                 matchCurveIdx++;
-                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                fromClause = fromClause +
+                    "JOIN mdata m" + matchCurveIdx + " " +
+                    "ON m0" + ".fcstValidEpoch = m" + matchCurveIdx + ".fcstValidEpoch ";
+                    whereClause = whereClause +
+                    "AND m" + matchCurveIdx + ".type='DD' " +
+                    "AND m" + matchCurveIdx + ".docType='CTC' " +
+                    "AND m" + matchCurveIdx + ".subset='METAR' " +
+                    "AND m" + matchCurveIdx + ".version='V01' " +
+                    "AND m" + matchCurveIdx + ".model='" + model + "' " +
+                    "AND m" + matchCurveIdx + ".region='" + regionStr + "' ";
+                filterClause = filterClause + "AND m0.data.['" + threshold + "'].hits+m0.data.['" + threshold + "'].misses+m0.data.['" + threshold + "'].false_alarms+m0.data.['" + threshold + "'].correct_negatives > 0 ";
                 const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
                 if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time+1800)%(24*3600)/3600) IN(" + matchValidTimes + ")";
+                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".fcstValidEpoch+1800)%(24*3600)/3600) IN(" + matchValidTimes + ")";
                 }
                 const matchForecastLength = matchCurve['forecast-length'];
-                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
+                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcstLen = " + matchForecastLength;
                 const matchRegionType = matchCurve['region-type'];
                 if (matchRegionType === 'Predefined region') {
-                    const queryDB = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}).database;
-                    const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                    const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
                     if (sitesClause.includes("m0.madis_id in")) {
-                        dateClause = "and ceil(3600*floor((m0.fcstValidEpoch+1800)/3600)) = m" + matchCurveIdx + ".time " + dateClause;
+                        dateClause = "and ceil(3600*floor((m0.fcstValidEpoch+1800)/3600)) = m" + matchCurveIdx + ".fcstValidEpoch " + dateClause;
                     } else {
-                        dateClause = "and m0.fcstValidEpoch = m" + matchCurveIdx + ".time " + dateClause;
+                        dateClause = "and m0.fcstValidEpoch = m" + matchCurveIdx + ".fcstValidEpoch " + dateClause;
                     }
-                    dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " and m" + matchCurveIdx + ".time <= " + toSecs;
+                    dateClause = dateClause + " and m" + matchCurveIdx + ".fcstValidEpoch >= " + fromSecs + " and m" + matchCurveIdx + ".fcstValidEpoch <= " + toSecs;
                 } else {
-                    const queryDB = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}).database;
                     const matchSitesList = matchCurve['sites'] === undefined ? [] : matchCurve['sites'];
                     var matchQuerySites = [];
                     if (matchSitesList.length > 0 && matchSitesList !== matsTypes.InputTypes.unused) {
@@ -152,14 +178,15 @@ dataSeries = function (plotParams, plotFunction) {
                     }
                     if (sitesClause.includes("m0.madis_id in")) {
                         siteMatchClause = siteMatchClause + "and m" + matchCurveIdx + ".madis_id = m0.madis_id";
-                        dateClause = "and ceil(3600*floor((m0.fcstValidEpoch+1800)/3600)) = ceil(3600*floor((m" + matchCurveIdx + ".time+1800)/3600)) " + dateClause;
+                        dateClause = "and ceil(3600*floor((m0.fcstValidEpoch+1800)/3600)) = ceil(3600*floor((m" + matchCurveIdx + ".fcstValidEpoch+1800)/3600)) " + dateClause;
                     } else {
-                        dateClause = "and m0.fcstValidEpoch = ceil(3600*floor((m" + matchCurveIdx + ".time+1800)/3600)) " + dateClause;
+                        dateClause = "and m0.fcstValidEpoch = ceil(3600*floor((m" + matchCurveIdx + ".fcstValidEpoch+1800)/3600)) " + dateClause;
                     }
-                    dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " - 900 and m" + matchCurveIdx + ".time <= " + toSecs + " + 900";
+                    dateClause = dateClause + " and m" + matchCurveIdx + ".fcstValidEpoch >= " + fromSecs + " - 900 and m" + matchCurveIdx + ".fcstValidEpoch <= " + toSecs + " + 900";
                 }
             }
         }
+
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -180,19 +207,11 @@ dataSeries = function (plotParams, plotFunction) {
                 "SELECT " +
                     "{{average}} avtime, " +
                     "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
-                    "{{forecastLength}} fcst_len, " +
-                    "{{threshold}} thrsh, " +
                     "MIN(m0.fcstValidEpoch) min_secs, " +
                     "MAX(m0.fcstValidEpoch) max_secs, " +
                     "{{statisticClause}} " +
-                    "FROM mdata as m0 " +
-                    "WHERE " +
-                    "m0.type='DD' " +
-                    "AND m0.docType='CTC' " +
-                    "AND m0.subset='METAR' " +
-                    "AND m0.version='V01' " +
-                    "AND m0.model='" + model + "' " +
-                    "AND m0.region='" + regionStr + "' " +
+                    "{{fromClause}}" +
+                    "{{whereClause}}" +
                     "{{filterClause}} " +
                     "{{forecastLengthClause}} " +
                     "{{siteMatchClause}} " +
@@ -200,17 +219,13 @@ dataSeries = function (plotParams, plotFunction) {
                     "{{dateClause}} " +
                     "{{siteDateClause}} " +
                     "{{validTimeClause}} " +
-                    "GROUP BY " +
-                    "m0.fcstValidEpoch, " +
-                    "m0.data.['{{threshold}}'].hits, " +
-                    "m0.data.['{{threshold}}'].misses, " +
-                    "m0.data.['{{threshold}}'].false_alarms, " +
-                    "m0.data.['{{threshold}}'].correct_negatives " +
-                    "ORDER BY m0.fcstValidEpoch;";
+                    "{{groupByClause}}";
 
             statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{statisticClause}}', statisticClause);
+            statement = statement.replace('{{fromClause}}', fromClause);
+            statement = statement.replace('{{whereClause}}', whereClause);
             statement = statement.replace('{{filterClause}}', filterClause);
             statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
             statement = statement.replace('{{sitesClause}}', sitesClause);
@@ -218,8 +233,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            // leave the {{threshold}} for last because {{threshold}} exists in some of the other replacements
-            statement = statement.replace(/{{threshold}}/g, threshold);
+            statement = statement.replace('{{groupByClause}}', groupByClause);
             dataRequests[label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
@@ -232,6 +246,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
+                console.log(statement);
                 queryResult = matsDataQueryUtils.queryDBTimeSeries(queryPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, statisticSelect, validTimes, appParams, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
