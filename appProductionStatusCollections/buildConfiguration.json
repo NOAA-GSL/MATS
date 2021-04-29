@@ -7,7 +7,7 @@
   "deployment_status": "active",
   "deployment_directory": "/builds/buildArea/MATS",
   "build_git_repo": "git clone git@github.com:NOAA-GSL/MATS.git",
-  "build_code_branch": "master",
+  "build_code_branch": "main",
   "groupOrder": [
     "Upper Air",
     "Ceiling and Visibility",
@@ -213,6 +213,14 @@
       "app": "met-precip",
       "displayName": "MET Precipitation",
       "displayOrder": 25,
+      "group": "METexpress",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "met-tc",
+      "displayName": "MET TC",
+      "displayOrder": 26,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -457,7 +465,7 @@
   "deployment_status": "active",
   "deployment_directory": "/builds/buildArea/MATS",
   "build_git_repo": "git clone git@github.com:NOAA-GSL/MATS.git",
-  "build_code_branch": "master",
+  "build_code_branch": "main",
   "groupOrder": [
     "Upper Air",
     "Ceiling and Visibility",
