@@ -88,7 +88,7 @@ function openTunnel() {
 # DEPLOYMENT_ENVIRONMENT='production'
 # DEPLOYMENT_STATUS='active'
 # BUILD_GIT_REPO='git@github.com:NOAA-GSL/MATS.git'
-# BUILD_CODE_BRANCH='master'
+# BUILD_CODE_BRANCH='main'
 # BUILD_CMD='sh ./MATS/scripts/common/build-int.sh'
 
 #PARAMETERS: server

@@ -153,15 +153,15 @@ echo "Building Mats apps - environment is ${build_env} requestedApps " "${reques
 #    "deployment_status" : "active",
 #    "deployment_directory" : "/builds/buildArea/MATS",
 #    "build_git_repo" : "git@github.com:NOAA-GSL/MATS.git",
-#    "build_code_branch" : "master",
+#    "build_code_branch" : "main",
 
 # throw away any local changes - after all, you are building
 echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 /usr/bin/git reset --hard
 # checkout proper branch
 
-if [ ${BUILD_CODE_BRANCH} = "development" ] || [ ${BUILD_CODE_BRANCH} = "master" ]; then
-  # checkout submodules at either development or master branch depending on build_code_branch
+if [ ${BUILD_CODE_BRANCH} = "development" ] || [ ${BUILD_CODE_BRANCH} = "main" ]; then
+  # checkout submodules at either development or main branch depending on build_code_branch
   /usr/bin/git submodule update --force
   if [ $? -ne 0 ]; then
       echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
@@ -223,7 +223,7 @@ echo -e changedApps are ${GRN}${changedApps}${NC}
 if [ "${build_env}" == "int" ]; then
     cv=$(date +%Y.%m.%d)
     echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
-    /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/sed -i -e "s/<x-bd>.*<\/x-bd>/$cv/g" /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     curdir=$(pwd)
     cd /builds/buildArea/MATS/MATScommon
     /usr/bin/git add /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
@@ -234,7 +234,7 @@ if [ "${build_env}" == "int" ]; then
 elif [ "${build_env}" == "prod" ]; then
     cv=$(date +%Y.%m.%d)
     echo -e "${GRN}setting pub date to $cv for /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
-    /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/<x-cr>$cv<\/x-cr>/g" /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    /usr/bin/sed -i -e "s/<x-cr>.*<\/x-cr>/$cv/g" /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
     curdir=$(pwd)
     cd /builds/buildArea/MATS/MATScommon
     /builds/buildArea/MATS/MATScommon/meteor_packages/mats-common/public/MATSReleaseNotes.html
