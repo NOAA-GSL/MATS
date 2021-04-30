@@ -695,6 +695,19 @@
         "sums_data",
         "meta_data"
       ]
+    },
+    {
+      "app": "met-tc",
+      "title": "MET TC",
+      "version": "4.1.0",
+      "buildDate": "2021.04.29.21.22",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "METexpress",
+      "dbroles": [
+        "sums_data",
+        "meta_data"
+      ]
     }
   ]
 }
@@ -1134,6 +1147,19 @@
     {
       "app": "met-precip",
       "title": "MET Precipitation",
+      "version": "4.1.0",
+      "buildDate": "2021.04.29.21.22",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "METexpress",
+      "dbroles": [
+        "sums_data",
+        "meta_data"
+      ]
+    },
+    {
+      "app": "met-tc",
+      "title": "MET TC",
       "version": "4.1.0",
       "buildDate": "2021.04.29.21.22",
       "last_test_run": "",

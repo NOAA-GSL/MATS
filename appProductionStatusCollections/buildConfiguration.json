@@ -674,6 +674,14 @@
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
+    },
+    {
+      "app": "met-tc",
+      "displayName": "MET TC",
+      "displayOrder": 25,
+      "group": "MET Express",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     }
   ]
 }
