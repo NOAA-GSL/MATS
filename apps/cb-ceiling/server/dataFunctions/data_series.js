@@ -74,8 +74,9 @@ dataSeries = function (plotParams, plotFunction) {
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause;
         var filterClause = "";
-        var queryPool;
+        var queryPool = cbPool;
         var regionType = curve['region-type'];
+        var whereClause;
         if (regionType === 'Predefined region') {
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
@@ -87,9 +88,20 @@ dataSeries = function (plotParams, plotFunction) {
             // statisticClause = statisticClause.replace(ciRegExp,curveIndex);
             dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
             filterClause = "and m0.data.['" + threshold + "'].hits+m0.data.['" + threshold + "'].misses+m0.data.['" + threshold + "'].false_alarms+m0.data.['" + threshold + "'].correct_negatives > 0";
-            queryPool = cbPool;
+            whereClause = "WHERE " +
+                "m0.type='DD' " +
+                "AND m0.docType='CTC'" +
+                "AND m0.subset='METAR' " +
+                "AND m0.version='V01' " +
+                "AND m0.model='" + model + "' " +
+                "AND m0.region='" + region + "' ";
+
         } else {
-            var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
+            whereClause = "WHERE " +
+                "m0.type='DD' " +
+                "AND m0.docType='obs'" +
+                "AND m0.subset='METAR' " +
+                "AND m0.version='V01' ";
             statisticClause = 'sum(if((m0.ceil < ' + threshold + ') and (o.ceil < ' + threshold + '),1,0)) as yy,sum(if((m0.ceil < ' + threshold + ') and NOT (o.ceil < ' + threshold + '),1,0)) as yn, sum(if(NOT (m0.ceil < ' + threshold + ') and (o.ceil < ' + threshold + '),1,0)) as ny, sum(if(NOT (m0.ceil < ' + threshold + ') and NOT (o.ceil < ' + threshold + '),1,0)) as nn, count(m0.ceil) as N0';
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
@@ -103,24 +115,16 @@ dataSeries = function (plotParams, plotFunction) {
                     });
                     querySites.push(thisSiteObj.options.id);
                 }
-                sitesClause = " and m0.madis_id in('" + querySites.join("','") + "')";
+                sitesClause = " and m0.name in('" + querySites.join("','") + "')";
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
             dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " - 900 and m0.fcstValidEpoch <= " + toSecs + " + 900";
             siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " - 900 and o.fcstValidEpoch <= " + toSecs + " + 900";
             siteMatchClause = "and m0.madis_id = o.madis_id and m0.fcstValidEpoch = o.fcstValidEpoch ";
-            queryPool = cbPool;
         }
         var fromClause = "FROM mdata m0 ";
-        var whereClause = "WHERE " +
-            "m0.type='DD' " +
-            "AND m0.docType='CTC' " +
-            "AND m0.subset='METAR' " +
-            "AND m0.version='V01' " +
-            "AND m0.model='" + model + "' " +
-            "AND m0.region='" + regionStr + "' ";
-
+        var subqueryClause = "";
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
@@ -130,36 +134,28 @@ dataSeries = function (plotParams, plotFunction) {
             var mcidx;
             for (mcidx = 0; mcidx < curvesLength; mcidx++) {
                 const matchCurve = curves[mcidx];
+                const mModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
+                const mRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
+                const mFcstLen = Number(matchCurve['forecast-length']);
+                if (! subqueryClause) {
+                    subqueryClause = " AND m0.fcstValidEpoch IN (SELECT RAW TONUMBER(SPLIT(META().id,':')[4]) " +
+                        "    FROM mdata " +
+                        "    WHERE type='DD' " +
+                        "        AND docType='CTC' " +
+                        "        AND subset='METAR' " +
+                        "        AND version='V01' " +
+                        "        AND fcstValidEpoch >= " + fromSecs + " " +
+                        "        AND fcstValidEpoch <= " + toSecs + " " +
+                        "        AND model =  '" + mModel + "' " +
+                        "        AND region =  '" + mRegion + "' " +
+                        "        AND fcstLen =  " + mFcstLen + " ";
+                }
                 if (curveIndex === mcidx || matchCurve.diffFrom != null) {
                     continue;
                 }
                 matchCurveIdx++;
-                fromClause = fromClause +
-                    "JOIN mdata m" + matchCurveIdx + " " +
-                    "ON m0" + ".fcstValidEpoch = m" + matchCurveIdx + ".fcstValidEpoch ";
-                    whereClause = whereClause +
-                    "AND m" + matchCurveIdx + ".type='DD' " +
-                    "AND m" + matchCurveIdx + ".docType='CTC' " +
-                    "AND m" + matchCurveIdx + ".subset='METAR' " +
-                    "AND m" + matchCurveIdx + ".version='V01' " +
-                    "AND m" + matchCurveIdx + ".model='" + model + "' " +
-                    "AND m" + matchCurveIdx + ".region='" + regionStr + "' ";
-                filterClause = filterClause + "AND m0.data.['" + threshold + "'].hits+m0.data.['" + threshold + "'].misses+m0.data.['" + threshold + "'].false_alarms+m0.data.['" + threshold + "'].correct_negatives > 0 ";
-                const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
-                if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".fcstValidEpoch+1800)%(24*3600)/3600) IN(" + matchValidTimes + ")";
-                }
-                const matchForecastLength = matchCurve['forecast-length'];
-                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcstLen = " + matchForecastLength;
                 const matchRegionType = matchCurve['region-type'];
-                if (matchRegionType === 'Predefined region') {
-                    if (sitesClause.includes("m0.madis_id in")) {
-                        dateClause = "and ceil(3600*floor((m0.fcstValidEpoch+1800)/3600)) = m" + matchCurveIdx + ".fcstValidEpoch " + dateClause;
-                    } else {
-                        dateClause = "and m0.fcstValidEpoch = m" + matchCurveIdx + ".fcstValidEpoch " + dateClause;
-                    }
-                    dateClause = dateClause + " and m" + matchCurveIdx + ".fcstValidEpoch >= " + fromSecs + " and m" + matchCurveIdx + ".fcstValidEpoch <= " + toSecs;
-                } else {
+                if (matchRegionType !== 'Predefined region') {
                     const matchSitesList = matchCurve['sites'] === undefined ? [] : matchCurve['sites'];
                     var matchQuerySites = [];
                     if (matchSitesList.length > 0 && matchSitesList !== matsTypes.InputTypes.unused) {
@@ -182,9 +178,23 @@ dataSeries = function (plotParams, plotFunction) {
                     } else {
                         dateClause = "and m0.fcstValidEpoch = ceil(3600*floor((m" + matchCurveIdx + ".fcstValidEpoch+1800)/3600)) " + dateClause;
                     }
-                    dateClause = dateClause + " and m" + matchCurveIdx + ".fcstValidEpoch >= " + fromSecs + " - 900 and m" + matchCurveIdx + ".fcstValidEpoch <= " + toSecs + " + 900";
                 }
+                // this is used to qualify all the fcstValidEpochs for all the matched curves (avoids a join)
+                subqueryClause = subqueryClause +
+                    " INTERSECT " +
+                    "SELECT RAW TONUMBER(SPLIT(META().id,':')[4]) " +
+                    "    FROM mdata " +
+                    "    WHERE type='DD' " +
+                    "        AND docType='CTC' " +
+                    "        AND subset='METAR' " +
+                    "        AND version='V01' " +
+                    "        AND fcstValidEpoch >= " + fromSecs + " " +
+                    "        AND fcstValidEpoch <= " + toSecs + " " +
+                    "        AND model =  '" + mModel + "' " +
+                    "        AND region =  '" + mRegion + "' " +
+                    "        AND fcstLen =  " + mFcstLen + " ";
             }
+            subqueryClause = subqueryClause + ')';
         }
 
         // axisKey is used to determine which axis a curve should use.
@@ -219,6 +229,7 @@ dataSeries = function (plotParams, plotFunction) {
                     "{{dateClause}} " +
                     "{{siteDateClause}} " +
                     "{{validTimeClause}} " +
+                    "{{subqueryClause}}" +
                     "{{groupByClause}}";
 
             statement = statement.replace('{{average}}', average);
@@ -233,6 +244,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
+            statement = statement.replace('{{subqueryClause}}', subqueryClause);
             statement = statement.replace('{{groupByClause}}', groupByClause);
             dataRequests[label] = statement;
 

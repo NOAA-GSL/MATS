@@ -256,7 +256,11 @@ const doCurveParams = async function () {
             var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
             forecastLengthOptionsMap[model] = rows[i].fcstLens.map(String);
-            regionModelOptionsMap[model] = rows[i].regions;
+            var regionsArr = [];
+            for (var ri=0; ri< rows[i].regions.length;ri++) {
+                regionsArr.push(masterRegionValuesMap[rows[i].regions[ri]])
+            }
+            regionModelOptionsMap[model] = regionsArr;
             // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
             thresholdsModelOptionsMap[model] = thresholdsModelOptionsMap[model] ? thresholdsModelOptionsMap[model] : [];
             for (var t = 0; t < rows[i].thresholds.length; t++) {
@@ -270,15 +274,16 @@ const doCurveParams = async function () {
 
     try {
         matsCollections.SiteMap.remove({});
-        var rows = await cbPool.searchStationsByBoundingBox( -180,89, 180,-89);
-        rows = rows.sort((a,b)=>(a.fields.name > b.fields.name) ? 1 : -1);
+//        var rows = await cbPool.searchStationsByBoundingBox( -180,89, 180,-89);
+        var rows = await cbPool.queryCB('select meta().id, mdata.* from mdata where type="MD" and docType="station" and version = "V01"  and subset="METAR";');
+        rows = rows.sort((a,b)=>(a.name > b.name) ? 1 : -1);
         for (var i = 0; i < rows.length; i++) {
             const site_id = rows[i].id;
-            const site_name = rows[i].fields.name == undefined ? "unknown": rows[i].fields.name;
-            const site_description = rows[i].fields.description == undefined ? "unknown":rows[i].fields.description;
-            const site_lat = rows[i].fields.geo == undefined ? undefined : rows[i].fields.geo[1];
-            const site_lon = rows[i].fields.geo == undefined ? undefined : rows[i].fields.geo[0];
-            const site_elev = rows[i].fields.elevation == undefined ? "unknown" : rows[i].fields.elevation;
+            const site_name = rows[i].name == undefined ? "unknown": rows[i].name;
+            const site_description = rows[i].description == undefined ? "unknown":rows[i].description;
+            const site_lat = rows[i].geo == undefined ? undefined : rows[i].geo.lat;
+            const site_lon = rows[i].geo == undefined ? undefined : rows[i].geo.lon;
+            const site_elev = rows[i].geo == undefined ? "unknown" : rows[i].geo.elev;
             siteOptionsMap[site_name] = [site_id];
             var point = [site_lat, site_lon];
             var obj = {
