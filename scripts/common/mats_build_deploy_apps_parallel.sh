@@ -163,13 +163,8 @@ echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 if [ ${BUILD_CODE_BRANCH} = "development" ] || [ ${BUILD_CODE_BRANCH} = "main" ]; then
   # checkout submodules at either development or main branch depending on build_code_branch
   /usr/bin/git submodule update --force
-#  if [ $? -ne 0 ]; then
-#      echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
-#      exit 1
-#  fi
-  /usr/bin/git submodule foreach git fetch
   if [ $? -ne 0 ]; then
-      echo -e "${RED} ${failed} to git fetch submodules - must exit now ${NC}"
+      echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
       exit 1
   fi
   /usr/bin/git submodule foreach git checkout ${BUILD_CODE_BRANCH}
@@ -177,19 +172,14 @@ if [ ${BUILD_CODE_BRANCH} = "development" ] || [ ${BUILD_CODE_BRANCH} = "main" ]
       echo -e "${RED} ${failed} to git checkout submodules - must exit now ${NC}"
       exit 1
   fi
-  /usr/bin/git submodule foreach git pull ${BUILD_CODE_BRANCH}
-  if [ $? -ne 0 ]; then
-      echo -e "${RED} ${failed} to git checkout submodules - must exit now ${NC}"
-      exit 1
-  fi
-else
+#else
   # feature branch
   # checkout submodules at whatever hash the prent had checked in. Submodules will be DETACHED HEAD
-  /usr/bin/git submodule update --force
-  if [ $? -ne 0 ]; then
-      echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
-      exit 1
-  fi
+  #/usr/bin/git submodule update --force
+  #if [ $? -ne 0 ]; then
+  #    echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
+  #   exit 1
+  #fi
 fi
 
 export buildCodeBranch=$(git rev-parse --abbrev-ref HEAD)
@@ -513,7 +503,6 @@ cd ${currdir}
 
 git add ${DEPLOYMENT_DIRECTORY}/MATScommon
 git commit -m"automated export for submodule reference"
-/usr/bin/git fetch
 /usr/bin/git pull
 /usr/bin/git push origin ${BUILD_CODE_BRANCH}
 
