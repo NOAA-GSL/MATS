@@ -408,7 +408,6 @@ RUN apk --update --no-cache add mongodb-tools make gcc g++ python3 python3-dev m
     npm install -g n && \\
     npm install -g node-gyp && \\
     node-gyp install && \\
-    npm install -g couchbase && \\
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
     pip3 install numpy && \\
