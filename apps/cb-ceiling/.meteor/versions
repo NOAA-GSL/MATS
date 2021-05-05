@@ -18,6 +18,7 @@ caching-compiler@1.2.2
 caching-html-compiler@1.2.0
 callback-hook@1.3.0
 check@1.3.1
+coffeescript@1.0.17
 dangrossman:bootstrap-daterangepicker@2.1.13
 ddp@1.4.0
 ddp-client@2.4.0
@@ -56,6 +57,9 @@ mdg:validation-error@0.5.1
 meteor@1.9.3
 meteor-base@1.4.0
 meteorhacks:picker@1.0.3
+meteortesting:browser-tests@1.3.4
+meteortesting:mocha@2.0.1
+meteortesting:mocha-core@8.1.2
 meteortoys:toykit@10.0.0
 minifier-css@1.5.3
 minifier-js@2.6.0
@@ -79,6 +83,11 @@ observe-sequence@1.0.16
 ordered-dict@1.1.0
 ostrio:flow-router-extra@3.7.5
 pcel:mysql@0.1.0
+practicalmeteor:chai@2.1.0_1
+practicalmeteor:loglevel@1.2.0_2
+practicalmeteor:mocha@2.4.5_6
+practicalmeteor:mocha-core@1.0.1
+practicalmeteor:sinon@1.14.1_2
 promise@0.11.2
 random@1.2.0
 randyp:mats-common@2.1.0
@@ -102,6 +111,8 @@ templating@1.4.0
 templating-compiler@1.4.0
 templating-runtime@1.4.0
 templating-tools@1.2.0
+tinytest@1.1.0
+tmeasday:test-reporter-helpers@0.2.1
 tracker@1.2.0
 twbs:bootstrap@3.3.6
 ui@1.0.13
