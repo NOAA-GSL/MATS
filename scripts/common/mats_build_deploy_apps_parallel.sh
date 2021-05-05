@@ -163,11 +163,21 @@ echo -e "${RED} THROWING AWAY LOCAL CHANGES ${NC}"
 if [ ${BUILD_CODE_BRANCH} = "development" ] || [ ${BUILD_CODE_BRANCH} = "main" ]; then
   # checkout submodules at either development or main branch depending on build_code_branch
   /usr/bin/git submodule update --force
+#  if [ $? -ne 0 ]; then
+#      echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
+#      exit 1
+#  fi
+  /usr/bin/git submodule foreach git fetch
   if [ $? -ne 0 ]; then
-      echo -e "${RED} ${failed} to do update submodules - must exit now ${NC}"
+      echo -e "${RED} ${failed} to git fetch submodules - must exit now ${NC}"
       exit 1
   fi
   /usr/bin/git submodule foreach git checkout ${BUILD_CODE_BRANCH}
+  if [ $? -ne 0 ]; then
+      echo -e "${RED} ${failed} to git checkout submodules - must exit now ${NC}"
+      exit 1
+  fi
+  /usr/bin/git submodule foreach git pull ${BUILD_CODE_BRANCH}
   if [ $? -ne 0 ]; then
       echo -e "${RED} ${failed} to git checkout submodules - must exit now ${NC}"
       exit 1
@@ -408,6 +418,7 @@ RUN apk --update --no-cache add mongodb-tools make gcc g++ python3 python3-dev m
     npm install -g n && \\
     npm install -g node-gyp && \\
     node-gyp install && \\
+    npm install -g couchbase && \\
     python3 -m ensurepip && \\
     pip3 install --upgrade pip setuptools && \\
     pip3 install numpy && \\
@@ -487,10 +498,22 @@ cd ${DEPLOYMENT_DIRECTORY}/MATScommon
 /usr/bin/git pull
 /usr/bin/git push origin ${BUILD_CODE_BRANCH}
 
+# fetch and pull submodules
+cd ${DEPLOYMENT_DIRECTORY}/MATScommon
+/usr/bin/git fetch
+/usr/bin/git checkout ${BUILD_CODE_BRANCH}
+/usr/bin/git pull
+
+cd ${DEPLOYMENT_DIRECTORY}/METexpress
+/usr/bin/git fetch
+/usr/bin/git checkout ${BUILD_CODE_BRANCH}
+/usr/bin/git pull
+
 cd ${currdir}
 
 git add ${DEPLOYMENT_DIRECTORY}/MATScommon
 git commit -m"automated export for submodule reference"
+/usr/bin/git fetch
 /usr/bin/git pull
 /usr/bin/git push origin ${BUILD_CODE_BRANCH}
 
