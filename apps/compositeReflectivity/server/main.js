@@ -1082,8 +1082,25 @@ Meteor.startup(function () {
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "cref", ['threshold_descriptions', 'regions_per_model_mats_all_categories']);
+    const appCurveParams = [
+        "label",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "scale",
+        "forecast-length",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "bin-parameter",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'compositeReflectivity', title: "Composite Reflectivity", group: "Radar"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'compositeReflectivity', title: "Composite Reflectivity", group: "Radar"});
     } catch (error) {
         console.log(error.message);
     }

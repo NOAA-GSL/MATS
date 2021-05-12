@@ -965,8 +965,24 @@ Meteor.startup(function () {
 
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3", ['scale_descriptions', 'station_descriptions', 'regions_per_model_mats_all_categories']);
+    const appCurveParams = [
+        "label",
+        "data-source",
+        "region",
+        "statistic",
+        "variable",
+        "scale",
+        "forecast-length",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "significance",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surfrad', title: "Surface Radiation", group: "Surface"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surfrad', title: "Surface Radiation", group: "Surface"});
     } catch (error) {
         console.log(error.message);
     }

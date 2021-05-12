@@ -946,8 +946,22 @@ Meteor.startup(function () {
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "precip2", ['regions_per_model_mats_all_categories', 'threshold_descriptions', 'scale_descriptions', 'fcst_type_descriptions']);
+    const appCurveParams = [
+        "label",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "scale",
+        "forecast-type",
+        "average",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "bin-parameter",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipitationSub24hr', title: "Sub 24 Hour Precipitation", group: "Precipitation"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipitationSub24hr', title: "Sub 24 Hour Precipitation", group: "Precipitation"});
     } catch (error) {
         console.log(error.message);
     }
