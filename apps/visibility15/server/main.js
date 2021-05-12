@@ -1240,8 +1240,28 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("modelPool", "vis_1min", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "vis_1min_sums", ['regions_per_model_mats_all_categories']);
+    const appCurveParams = [
+        "label",
+        "region-type",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "truth",
+        "forecast-length",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "sites",
+        "sitesMap",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "bin-parameter",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'visibility15', title: "Visibility 15 Min", group: "Ceiling and Visibility"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'visibility15', title: "Visibility 15 Min", group: "Ceiling and Visibility"});
     } catch (error) {
         console.log(error.message);
     }

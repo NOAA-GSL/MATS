@@ -1077,8 +1077,25 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("modelPool", "precip_mesonets2", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "precip_mesonets2_sums", ['regions_per_model_mats_all_categories']);
+    const appCurveParams = [
+        "label",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "truth",
+        "forecast-length",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "bin-parameter",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipAQPI', title: "AQPI Precipitation", group: "Precipitation"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipAQPI', title: "AQPI Precipitation", group: "Precipitation"});
     } catch (error) {
         console.log(error.message);
     }

@@ -956,8 +956,24 @@ Meteor.startup(function () {
 
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories', 'vgtyp_descriptions']);
+    const appCurveParams = [
+        "label",
+        "data-source",
+        "vgtyp",
+        "statistic",
+        "variable",
+        "forecast-length",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "significance",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'landuse', title: "Surface Land Use", group: "Surface"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'landuse', title: "Surface Land Use", group: "Surface"});
     } catch (error) {
         console.log(error.message);
     }

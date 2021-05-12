@@ -1164,8 +1164,29 @@ Meteor.startup(function () {
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("modelPool", "ruc_ua", ['regions_per_model_mats_all_categories']);
+    const appCurveParams = [
+        "label",
+        "region-type",
+        "data-source",
+        "region",
+        "statistic",
+        "variable",
+        "forecast-length",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "top",
+        "bottom",
+        "sites",
+        "sitesMap",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "significance",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'upperair', title: "Upper Air (RAOBS)", group: "Upper Air"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'upperair', title: "Upper Air (RAOBS)", group: "Upper Air"});
     } catch (error) {
         console.log("upperair main - " + error.message);
     }

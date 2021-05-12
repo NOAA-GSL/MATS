@@ -1072,8 +1072,27 @@ Meteor.startup(function () {
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "acars_RR2", ['regions_per_model_mats_all_categories']);
+    const appCurveParams = [
+        "label",
+        "data-source",
+        "region",
+        "statistic",
+        "variable",
+        "forecast-length",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "top",
+        "bottom",
+        "phase",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "significance",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'aircraft', title: "Upper Air (AMDAR)", group: "Upper Air"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'aircraft', title: "Upper Air (AMDAR)", group: "Upper Air"});
     } catch (error) {
         console.log("aircraft main - " + error.message);
     }

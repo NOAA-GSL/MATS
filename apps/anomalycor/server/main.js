@@ -911,8 +911,24 @@ Meteor.startup(function () {
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "anom_corr2", ['regions_per_model_mats_all_categories']);
+    const appCurveParams = [
+        "label",
+        "data-source",
+        "region",
+        "variable",
+        "forecast-length",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "level",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "significance",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'anomalycor', title: "Anomaly Correlation", group: "Upper Air"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'anomalycor', title: "Anomaly Correlation", group: "Upper Air"});
     } catch (error) {
         console.log("anomalycor main - " + error.message);
     }

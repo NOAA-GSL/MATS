@@ -1193,8 +1193,28 @@ Meteor.startup(function () {
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
+    const appCurveParams = [
+        "label",
+        "region-type",
+        "data-source",
+        "region",
+        "statistic",
+        "variable",
+        "truth",
+        "forecast-length",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "average",
+        "sites",
+        "sitesMap",
+        "x-axis-parameter",
+        "y-axis-parameter",
+        "significance",
+        "curve-dates"
+    ];
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surface', title: "Surface", group: "Surface"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'surface', title: "Surface", group: "Surface"});
     } catch (error) {
         console.log(error.message);
     }
