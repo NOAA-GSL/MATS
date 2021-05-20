@@ -102,7 +102,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "AND m0.docType='obs'" +
                 "AND m0.subset='METAR' " +
                 "AND m0.version='V01' ";
-            statisticClause = 'sum(if((m0.ceil < ' + threshold + ') and (o.ceil < ' + threshold + '),1,0)) as yy,sum(if((m0.ceil < ' + threshold + ') and NOT (o.ceil < ' + threshold + '),1,0)) as yn, sum(if(NOT (m0.ceil < ' + threshold + ') and (o.ceil < ' + threshold + '),1,0)) as ny, sum(if(NOT (m0.ceil < ' + threshold + ') and NOT (o.ceil < ' + threshold + '),1,0)) as nn, count(m0.ceil) as N0';
+            statisticClause = 'sum(if((m0.ceil < ' + threshold + ') and (o.ceil < ' + threshold + '),1,0)) as yy, sum(if((m0.ceil < ' + threshold + ') and NOT (o.ceil < ' + threshold + '),1,0)) as yn, sum(if(NOT (m0.ceil < ' + threshold + ') and (o.ceil < ' + threshold + '),1,0)) as ny, sum(if(NOT (m0.ceil < ' + threshold + ') and NOT (o.ceil < ' + threshold + '),1,0)) as nn, count(m0.ceil) as N0';
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
