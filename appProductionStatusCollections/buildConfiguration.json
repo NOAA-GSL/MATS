@@ -344,7 +344,7 @@
     },
     {
       "app": "precipAQPI",
-      "displayName": "AQPI Precipitation",
+      "displayName": "Gauge Precipitation",
       "displayOrder": 12,
       "group": "Precipitation",
       "deploymentStatus": "enabled",
