@@ -10,7 +10,7 @@ Feature: Add Remove ContourDiff
 
     Background:
         Given I load the app "/precipAQPI"
-        Then I expect the app title to be "AQPI Precipitation"
+        Then I expect the app title to be "Gauge Precipitation"
 
     @watch
     Scenario: addRemoveContourDiff

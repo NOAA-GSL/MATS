@@ -9,7 +9,7 @@ Feature: Plot and Add buttons are disabled while plotting
 
     Background:
         Given I load the app "/precipAQPI"
-        Then I expect the app title to be "AQPI Precipitation"
+        Then I expect the app title to be "Gauge Precipitation"
 
     @watch
     Scenario: plotAddButtonsDisabledWhilePlotting
