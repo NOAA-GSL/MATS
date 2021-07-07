@@ -343,7 +343,7 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "precipAQPI",
+      "app": "precipGauge",
       "displayName": "Gauge Precipitation",
       "displayOrder": 12,
       "group": "Precipitation",
@@ -455,8 +455,8 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "met-tc",
-      "displayName": "MET TC",
+      "app": "met-cyclone",
+      "displayName": "MET Cyclone",
       "displayOrder": 26,
       "group": "METexpress",
       "deploymentStatus": "enabled",
