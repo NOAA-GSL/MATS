@@ -11,7 +11,7 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
     I should have no curves.
 
     Background:
-        Given I load the app "/precipAQPI"
+        Given I load the app "/precipGauge"
         Then I expect the app title to be "Gauge Precipitation"
 
     @watch

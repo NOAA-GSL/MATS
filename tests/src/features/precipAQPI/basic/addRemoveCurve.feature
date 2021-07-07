@@ -8,7 +8,7 @@ Feature: Add Remove Curve
     then delete that curve.
 
     Background:
-        Given I load the app "/precipAQPI"
+        Given I load the app "/precipGauge"
         Then I expect the app title to be "Gauge Precipitation"
 
     @watch

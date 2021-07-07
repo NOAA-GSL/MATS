@@ -12,7 +12,7 @@ Feature: No Data Found Exception: invalid_times
     and the plot buttons and add curve buttons are enabled.
 
     Background:
-        Given I load the app "/precipAQPI"
+        Given I load the app "/precipGauge"
         Then I expect the app title to be "Gauge Precipitation"
 
     @watch

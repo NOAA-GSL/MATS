@@ -7,7 +7,7 @@ Feature: Reload Reset To Defaults
     then I compare the default parameter values to the reloaded parameter values
 
     Background:
-        Given I load the app "/precipAQPI"
+        Given I load the app "/precipGauge"
         Then I expect the app title to be "Gauge Precipitation"
 
     @watch
@@ -31,7 +31,7 @@ Feature: Reload Reset To Defaults
         Then I should have 0 curves
 
         When I refresh the browser
-        And I load the app "/precipAQPI"
+        And I load the app "/precipGauge"
         And I click the "Add Curve" button
         Then "Curve0" is added
         Then I click the "Remove Curve0" button

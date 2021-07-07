@@ -15,8 +15,8 @@ echo -e "\nRefreshing metadata for echotop app at https://mats-docker.gsd.esrl.n
 curl https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/echotop/refreshMetadata
 echo -e "\nRefreshing metadata for landuse app at https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/landuse/refreshMetadata"
 curl https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/landuse/refreshMetadata
-echo -e "\nRefreshing metadata for precipAQPI app at https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/precipAQPI/refreshMetadata"
-curl https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/precipAQPI/refreshMetadata
+echo -e "\nRefreshing metadata for precipGauge app at https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/precipGauge/refreshMetadata"
+curl https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/precipGauge/refreshMetadata
 echo -e "\nRefreshing metadata for precipitation1hr app at https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/precipitation1hr/refreshMetadata"
 curl https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/precipitation1hr/refreshMetadata
 echo -e "\nRefreshing metadata for precipitation24hr app at https://mats-docker.gsd.esrl.noaa.gov/gsd/mats/precipitation24hr/refreshMetadata"

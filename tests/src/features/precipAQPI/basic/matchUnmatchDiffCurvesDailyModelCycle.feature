@@ -8,7 +8,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
     I want to end by removing all of the curves.
 
     Background:
-        Given I load the app "/precipAQPI"
+        Given I load the app "/precipGauge"
         Then I expect the app title to be "Gauge Precipitation"
 
     @watch

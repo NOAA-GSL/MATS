@@ -39,7 +39,7 @@
   "displayName": "Surface Radiation",
   "group": "Surface"
 }, {
-  "app": "precipAQPI",
+  "app": "precipGauge",
   "displayName": "AQPI Precipitation",
   "group": "Precipitation"
 }, {

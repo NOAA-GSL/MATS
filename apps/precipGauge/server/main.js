@@ -1095,7 +1095,7 @@ Meteor.startup(function () {
         "curve-dates"
     ];
     try {
-        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipAQPI', title: "Gauge Precipitation", group: "Precipitation"});
+        matsMethods.resetApp({appPools: allPools, appCurveParams: appCurveParams, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'precipGauge', title: "Gauge Precipitation", group: "Precipitation"});
     } catch (error) {
         console.log(error.message);
     }
