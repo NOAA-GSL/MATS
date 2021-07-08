@@ -312,10 +312,10 @@ if __name__ == '__main__':
     # args[1] should be a comma-separated list of models to reprocess
     if len(sys.argv) == 2:
         utcnow = str(datetime.now())
-        msg = 'PRECIP AQPI MATS METADATA START: ' + utcnow
+        msg = 'GAUGE PRECIP MATS METADATA START: ' + utcnow
         print(msg)
         models_to_reprocess = sys.argv[1].strip().split(',')
         reprocess_specific_metadata(models_to_reprocess)
         utcnow = str(datetime.now())
-        msg = 'PRECIP AQPI MATS METADATA END: ' + utcnow
+        msg = 'GAUGE PRECIP MATS METADATA END: ' + utcnow
         print(msg)
