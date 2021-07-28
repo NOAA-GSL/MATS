@@ -22,20 +22,18 @@ else
 	echo "invalid repo - need one of development|integration|production - exiting"
 	exit 1
 fi
+
 # docker logout
 docker logout
 
 #echo  set username and password
 read -p "What is the dockerhub username with access to push to dtcenter/met-* repositories? " userName
 UNAME=${userName}
-read -sp "What is the password for ${userName}? " password
-
-UPASS=${password}
 docker login --username $UNAME
 ret=$?
 if [[ $ret -ne 0 ]]; then
-	echo -e "${RED} login failed - exiting ${NC}"
-	exit 1
+        echo -e "${RED} login failed - exiting ${NC}"
+        exit 1
 fi
 
 docker system prune -af
