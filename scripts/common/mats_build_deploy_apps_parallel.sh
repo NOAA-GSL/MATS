@@ -425,16 +425,15 @@ RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy
               /tmp/* \\
               /var/cache/apk/* \\
               /usr/share/man \\
-              /tmp/* \\
               /var/cache/apk/* \\
               /root/.npm \\
               /root/.node-gyp \\
-              rm -r /root/.cache
+              /root/.cache
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV ROOT_URL=http://localhost:80/
 EXPOSE 80
 ENTRYPOINT ["/usr/app/run_app.sh"]
-LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodecommit}"
+LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodeCommit}"
 %EOFdockerfile
         echo "$0:${myApp}: docker build --no-cache --rm -t ${REPO}:${TAG} ."
         docker build --no-cache --rm -t ${REPO}:${TAG} .
