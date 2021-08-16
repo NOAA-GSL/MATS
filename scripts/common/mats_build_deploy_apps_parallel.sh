@@ -399,7 +399,7 @@ buildApp () {
 # Pull base image.
 FROM node:14.17-alpine3.14
 # Create app directory
-ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
+ENV APPNAME="${APPNAME}"
 WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
@@ -416,16 +416,11 @@ RUN apk --update --no-cache add mongodb-tools make gcc g++ python3 python3-dev m
     cd /usr/app/programs/server && npm install && npm audit fix && \\
     apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
     rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
-ENV APPNAME=${APPNAME}
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV ROOT_URL=http://localhost:80/
 EXPOSE 80
 ENTRYPOINT ["/usr/app/run_app.sh"]
 LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodecommit}"
-    # build container
-        #docker build --no-cache --rm -t ${REPO}:${TAG} .
-        #docker tag ${REPO}:${TAG} ${REPO}:${TAG}
-        #docker push ${REPO}:${TAG}
 %EOFdockerfile
         echo "$0:${myApp}: docker build --no-cache --rm -t ${REPO}:${TAG} ."
         docker build --no-cache --rm -t ${REPO}:${TAG} .
