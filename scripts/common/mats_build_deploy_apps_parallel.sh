@@ -404,29 +404,29 @@ WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
 RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy \\
-    # && apk --no-cache --update --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing add py3-pymysql \\
-    && npm install -g node-gyp \\
-    && node-gyp install \\
-    # TODO: use the apk package in place of pip for py3-pymysql when it is stable
-    && pip3 install pymysql \\
-    && chmod +x /usr/app/run_app.sh \\
-    && cd /usr/app/programs/server \\
-    && npm install \\
-    && npm audit fix \\
-    && apk del --purge make gcc g++ \\
-    && npm uninstall -g node-gyp \\
-    && rm -rf /usr/mysql-test \\
-              /usr/lib/libmysqld.a \\
-              /opt/meteord/bin \\
-              /usr/share/doc \\
-              /usr/share/man \\
-              /tmp/* \\
-              /var/cache/apk/* \\
-              /usr/share/man \\
-              /var/cache/apk/* \\
-              /root/.npm \\
-              /root/.node-gyp \\
-              /root/.cache
+	# && apk --no-cache --update --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing 	py3-pymysql \\
+	&& npm install -g node-gyp \\
+	&& node-gyp install \\
+	# TODO: use the apk package in place of pip for py3-pymysql when it is stable
+	&& pip3 install pymysql \\
+	&& chmod +x /usr/app/run_app.sh \\
+	&& cd /usr/app/programs/server \\
+	&& npm install \\
+	&& npm audit fix \\
+	&& apk del --purge make gcc g++ \\
+	&& npm uninstall -g node-gyp \\
+	&& rm -rf /usr/mysql-test \\
+			/usr/lib/libmysqld.a \\
+			/opt/meteord/bin \\
+			/usr/share/doc \\
+			/usr/share/man \\
+			/tmp/* \\
+			/var/cache/apk/* \\
+			/usr/share/man \\
+			/var/cache/apk/* \\
+			/root/.npm \\
+			/root/.node-gyp \\
+			/root/.cache
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV ROOT_URL=http://localhost:80/
 EXPOSE 80
