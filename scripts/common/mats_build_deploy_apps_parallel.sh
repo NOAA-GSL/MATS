@@ -403,20 +403,19 @@ ENV APPNAME="${APPNAME}"
 WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
-RUN apk --update --no-cache add mongodb-tools make gcc g++ python3 python3-dev mariadb-dev bash \\
+RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy \\
+    # && apk --no-cache --update --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing add py3-pymysql \\
     && npm cache clean -f \\
     && npm install -g n \\
     && npm install -g node-gyp \\
     && node-gyp install \\
-    && python3 -m ensurepip \\
-    && pip3 install --upgrade pip setuptools \\
-    && pip3 install numpy \\
+    # TODO: use the apk package in place of pip for py3-pymysql when it is stable
     && pip3 install pymysql \\
     && chmod +x /usr/app/run_app.sh \\
     && cd /usr/app/programs/server \\
     && npm install \\
     && npm audit fix \\
-    && apk del --purge  make gcc g++ bash python3-dev \\
+    && apk del --purge make gcc g++ \\
     && npm uninstall -g node-gyp \\
     && rm -rf /usr/mysql-test \\
               /usr/lib/libmysqld.a \\
