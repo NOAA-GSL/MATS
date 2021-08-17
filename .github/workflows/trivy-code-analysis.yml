@@ -10,7 +10,7 @@ on:
 
 jobs:
   analyze:
-    name: Build
+    name: Analyze
     runs-on: ubuntu-18.04
     permissions:
       actions: read
