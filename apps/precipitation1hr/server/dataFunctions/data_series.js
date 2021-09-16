@@ -67,6 +67,10 @@ dataSeries = function (plotParams, plotFunction) {
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
+        var averageMatchClause = "";
         // for contingency table apps, we currently have to deal with matching in the query.
         if (appParams.matching && curvesLength > 1) {
             var matchCurveIdx = 0;
@@ -94,6 +98,8 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 const matchForecastLength = matchCurve['forecast-length'];
                 forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
+                const matchAverage = averageOptionsMap[matchCurve['average']][0].split('m0').join("m" + matchCurveIdx);
+                averageMatchClause = "and " + average + " = " + matchAverage;
                 dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
                 dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " and m" + matchCurveIdx + ".time <= " + toSecs;
             }
@@ -101,9 +107,6 @@ dataSeries = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause = statisticOptionsMap[statisticSelect][0];
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -132,6 +135,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
+                "{{averageMatchClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -142,6 +146,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{averageMatchClause}}', averageMatchClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             dataRequests[label] = statement;
 

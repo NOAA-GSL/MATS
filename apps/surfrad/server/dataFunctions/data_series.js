@@ -75,6 +75,9 @@ dataSeries = function (plotParams, plotFunction) {
         var dateClause = "and ob0.secs >= " + fromSecs + " and ob0.secs <= " + toSecs;
         dateClause = dateClause + " and m0.secs >= " + fromSecs + " and m0.secs <= " + toSecs;
         var matchClause = "and m0.id = ob0.id and m0.secs = ob0.secs";
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause = statisticOptionsMap[statisticSelect][0];
@@ -83,9 +86,6 @@ dataSeries = function (plotParams, plotFunction) {
         statisticClause = statisticClause.replace(/\{\{variable2\}\}/g, variable[2]);
         var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
