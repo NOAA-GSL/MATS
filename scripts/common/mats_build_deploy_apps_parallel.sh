@@ -353,7 +353,8 @@ buildApp () {
     echo -e "$0:${myApp}: ${GRN} finished meteor build: ${myApp} ${NC}"
 
     cd ${BUNDLE_DIRECTORY}
-    (cd bundle/programs/server && /usr/local/bin/meteor npm install && /usr/local/bin/meteor npm audit fix)
+    # We don't need to actually install the npm modules - we just need to update the package lock file so the container correctly installs
+    (cd bundle/programs/server && /usr/local/bin/meteor npm install --package-lock-only && /usr/local/bin/meteor npm audit fix --package-lock-only)
 
     if [[ "${build_images}" == "yes" ]]; then
         echo -e "$0:${myApp}: Building image for ${myApp}"
@@ -387,7 +388,7 @@ buildApp () {
         export METEOR_NPM_VERSION=$(meteor npm -v)
         cp ${DEPLOYMENT_DIRECTORY}/scripts/common/docker_scripts/run_app.sh  .
         chmod +x run_app.sh
-        # remove the node_modules to force rebuild in container
+        # make sure the node_modules directory doesn't exist so the container correctly builds them
         rm -rf bundle/programs/server/node_modules
         #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
 
