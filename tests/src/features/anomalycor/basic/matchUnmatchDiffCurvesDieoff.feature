@@ -17,15 +17,15 @@ Feature: Match Unmatch Diff Curves Dieoff
         Then the plot type should be "DieOff"
         When I change the "data-source" parameter to "GFS"
         Then the "data-source" parameter value matches "GFS"
-        When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
-        Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
+        When I set the curve-dates to "02/28/2020 0:00 - 05/24/2020 0:00"
+        Then the curve-dates value is "02/28/2020 0:00 - 05/24/2020 0:00"
         When I change the "dieoff-type" parameter to "Dieoff for a specified UTC cycle init hour"
         Then the "dieoff-type" parameter value matches "Dieoff for a specified UTC cycle init hour"
         When I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "FV3_CCPP_GSL"
-        Then the "data-source" parameter value matches "FV3_CCPP_GSL"
+        When I change the "data-source" parameter to "FV3_GSL_L127"
+        Then the "data-source" parameter value matches "FV3_GSL_L127"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"
