@@ -121,6 +121,7 @@ dataSeries = function (plotParams, plotFunction) {
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
+        var averageMatchClause = "";
         // for contingency table apps, we currently have to deal with matching in the query.
         if (appParams.matching && curvesLength > 1) {
             var matchCurveIdx = 0;
@@ -140,6 +141,8 @@ dataSeries = function (plotParams, plotFunction) {
                 const matchForecastHour = Math.floor(matchForecastLength);
                 const matchForecastMinute = (matchForecastLength - matchForecastHour) * 60;
                 forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength + " and m" + matchCurveIdx + ".fcst_min = " + matchForecastMinute;
+                const matchAverage = averageOptionsMap[matchCurve['average']][0].split('m0').join("m" + matchCurveIdx);
+                averageMatchClause = "and " + average + " = " + matchAverage;
                 const matchRegionType = matchCurve['region-type'];
                 if (matchRegionType === 'Predefined region') {
                     const queryDB = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}).database;
@@ -216,6 +219,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
                 "{{truthClause}} " +
+                "{{averageMatchClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -230,6 +234,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{truthClause}}', truthClause);
+            statement = statement.replace('{{averageMatchClause}}', averageMatchClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
             dataRequests[label] = statement;

@@ -17,8 +17,8 @@ Feature: Add Remove Curve
         Then the plot type should be "TimeSeries"
         When I change the "data-source" parameter to "GFS"
         Then the "data-source" parameter value matches "GFS"
-        When I set the dates to "06/28/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "02/28/2020 0:00 - 05/24/2020 0:00"
+        Then the dates value is "02/28/2020 0:00 - 05/24/2020 0:00"
         Then I change the "forecast-length" parameter to "144"
         Then the "forecast-length" parameter value matches "144"
         Then I click the "Add Curve" button

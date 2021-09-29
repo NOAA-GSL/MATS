@@ -60,6 +60,9 @@ dataSeries = function (plotParams, plotFunction) {
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs;
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
         var top = curve['top'];
         var bottom = curve['bottom'];
         var levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
@@ -81,9 +84,6 @@ dataSeries = function (plotParams, plotFunction) {
         statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
         var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.

@@ -53,6 +53,9 @@ dataSeries = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "";
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
         var timeVar;
         var dateClause;
         var siteDateClause = "";
@@ -137,9 +140,6 @@ dataSeries = function (plotParams, plotFunction) {
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and floor((" + timeVar + "+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
         }
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
