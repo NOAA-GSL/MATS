@@ -6,8 +6,6 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.15.3",
-    "@popperjs/core": "^2.9.3",
-    "bootstrap": "^5.0.0",
     "chai": "^4.3.4",
     "downsample-lttb": "git+https://github.com/pingec/downsample-lttb.git",
     "fibers": "^5.0.0",
