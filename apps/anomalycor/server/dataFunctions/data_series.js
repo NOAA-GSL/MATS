@@ -57,6 +57,9 @@ dataSeries = function (plotParams, plotFunction) {
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= " + fromSecs + " and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= " + toSecs;
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
         var levelClause = "";
         var levels = curve['level'] === undefined ? [] : curve['level'];
         if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
@@ -66,9 +69,6 @@ dataSeries = function (plotParams, plotFunction) {
             "count(m0.wacorr) as N0, " +
             "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data";
         curves[curveIndex]['statistic'] = "Correlation";
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.

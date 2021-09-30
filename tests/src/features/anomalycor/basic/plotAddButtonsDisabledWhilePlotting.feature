@@ -21,8 +21,8 @@ Feature: Plot and Add buttons are disabled while plotting
         Then the "data-source" parameter value matches "GFS"
         And the "region" parameter value matches "Global (all lat/lon)"
         And the "forecast-length" parameter value matches "144"
-        When I set the dates to "03/28/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "03/28/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "02/28/2020 0:00 - 05/24/2020 0:00"
+        Then the dates value is "02/28/2020 0:00 - 05/24/2020 0:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 

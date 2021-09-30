@@ -353,7 +353,8 @@ buildApp () {
     echo -e "$0:${myApp}: ${GRN} finished meteor build: ${myApp} ${NC}"
 
     cd ${BUNDLE_DIRECTORY}
-    (cd bundle/programs/server && /usr/local/bin/meteor npm install && /usr/local/bin/meteor npm audit fix)
+    # We don't need to actually install the npm modules - we just need to update the package lock file so the container correctly installs
+    (cd bundle/programs/server && /usr/local/bin/meteor npm install --package-lock-only && /usr/local/bin/meteor npm audit fix --package-lock-only)
 
     if [[ "${build_images}" == "yes" ]]; then
         echo -e "$0:${myApp}: Building image for ${myApp}"
@@ -387,7 +388,7 @@ buildApp () {
         export METEOR_NPM_VERSION=$(meteor npm -v)
         cp ${DEPLOYMENT_DIRECTORY}/scripts/common/docker_scripts/run_app.sh  .
         chmod +x run_app.sh
-        # remove the node_modules to force rebuild in container
+        # make sure the node_modules directory doesn't exist so the container correctly builds them
         rm -rf bundle/programs/server/node_modules
         #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
 
@@ -397,35 +398,41 @@ buildApp () {
 # "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
 # and the MYSQL_CONF_PATH entry in the settings.json
 # Pull base image.
-FROM node:14.8-alpine3.12
+FROM node:14.17-alpine3.14
 # Create app directory
-ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
+ENV APPNAME="${APPNAME}"
 WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
-RUN apk --update --no-cache add mongodb-tools make gcc g++ python3 python3-dev mariadb-dev bash && \\
-    npm cache clean -f && \\
-    npm install -g n && \\
-    npm install -g node-gyp && \\
-    node-gyp install && \\
-    python3 -m ensurepip && \\
-    pip3 install --upgrade pip setuptools && \\
-    pip3 install numpy && \\
-    pip3 install pymysql && \\
-    chmod +x /usr/app/run_app.sh && \\
-    cd /usr/app/programs/server && npm install && npm audit fix && \\
-    apk del --purge  make gcc g++ bash python3-dev && npm uninstall -g node-gyp && \\
-    rm -rf /usr/mysql-test /usr/lib/libmysqld.a /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
-ENV APPNAME=${APPNAME}
+RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy \\
+	# && apk --no-cache --update --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing 	py3-pymysql \\
+	&& npm install -g node-gyp \\
+	&& node-gyp install \\
+	# TODO: use the apk package in place of pip for py3-pymysql when it is stable
+	&& pip3 install pymysql \\
+	&& chmod +x /usr/app/run_app.sh \\
+	&& cd /usr/app/programs/server \\
+	&& npm install \\
+	&& npm audit fix \\
+	&& apk del --purge make gcc g++ \\
+	&& npm uninstall -g node-gyp \\
+	&& rm -rf /usr/mysql-test \\
+			/usr/lib/libmysqld.a \\
+			/opt/meteord/bin \\
+			/usr/share/doc \\
+			/usr/share/man \\
+			/tmp/* \\
+			/var/cache/apk/* \\
+			/usr/share/man \\
+			/var/cache/apk/* \\
+			/root/.npm \\
+			/root/.node-gyp \\
+			/root/.cache
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV ROOT_URL=http://localhost:80/
 EXPOSE 80
 ENTRYPOINT ["/usr/app/run_app.sh"]
-LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodecommit}"
-    # build container
-        #docker build --no-cache --rm -t ${REPO}:${TAG} .
-        #docker tag ${REPO}:${TAG} ${REPO}:${TAG}
-        #docker push ${REPO}:${TAG}
+LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodeCommit}"
 %EOFdockerfile
         echo "$0:${myApp}: docker build --no-cache --rm -t ${REPO}:${TAG} ."
         docker build --no-cache --rm -t ${REPO}:${TAG} .

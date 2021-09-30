@@ -23,14 +23,7 @@
       "bcrypt": "$2a$10$MMIcStDMQ.a9ah3S9exage/5rbSXsXsHKXeSqk0jF4NNEB6Q5HCR."
     },
     "resume": {
-      "loginTokens": [
-        {
-          "when": {
-            "$date": "2021-06-15T20:14:58.165+0000"
-          },
-          "hashedToken": "PmQl7Awta8gIy7U3ZKDgSZVGRSQcu4q2FvPBn2yi1wo="
-        }
-      ]
+      "loginTokens": []
     }
   },
   "username": "molly.b.smith@noaa.gov"
