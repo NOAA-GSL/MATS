@@ -1075,7 +1075,7 @@ Meteor.startup(function () {
          "MD:V01:REGION:W_HRRR"
      ]);
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, app: 'cb-ceiling', dbType: matsTypes.DbTypes.couchbase, title: "CB-Ceiling", group: "Ceiling and Visibility"});
+        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, dbType: matsTypes.DbTypes.couchbase});
     } catch (error) {
         console.log(error.message);
     }
