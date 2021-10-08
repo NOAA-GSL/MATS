@@ -431,6 +431,8 @@ RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV ROOT_URL=http://localhost:80/
 EXPOSE 80
+RUN chown -R node:node /usr/app
+USER node
 ENTRYPOINT ["/usr/app/run_app.sh"]
 LABEL version="${buildVer}" code.branch="${buildCodeBranch}" code.commit="${newCodeCommit}"
 %EOFdockerfile
