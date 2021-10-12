@@ -29,10 +29,10 @@ jobs:
         run: |
           docker build \
             --build-arg APPNAME=${{ matrix.app }} \
-            --build-arg BUILDVER="${{ steps.git-info.output.version }}" \
-            --build-arg COMMITBRANCH=${{ steps.git-info.output.branch }} \
+            --build-arg BUILDVER="${{ steps.git-info.outputs.version }}" \
+            --build-arg COMMITBRANCH=${{ steps.git-info.outputs.branch }} \
             --build-arg COMMITSHA=${{ github.sha }} \
-            -t ${REGISTRY}/${{ matrix.app }}:${{ steps.git-info.output.branch }} \
+            -t ${REGISTRY}/${{ matrix.app }}:${{ steps.git-info.outputs.branch }} \
             .
 
       - name: Login to GitHub Container Registry
@@ -44,4 +44,4 @@ jobs:
 
       - name: Push container
         run: |
-          docker push ${REGISTRY}/${{ matrix.app }}:${{ steps.git-info.output.branch }}
+          docker push ${REGISTRY}/${{ matrix.app }}:${{ steps.git-info.outputs.branch }}
