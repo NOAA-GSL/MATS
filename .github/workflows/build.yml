@@ -22,8 +22,7 @@ jobs:
         shell: bash
         run: |
           echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
-          version=$(git describe --exact-match --tags HEAD)
-          echo "::set-output name=version::${version:-dev}"
+          echo "::set-output name=version::dev"
         id: git-info
 
       - name: Build container
