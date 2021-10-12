@@ -13,7 +13,7 @@ jobs:
       matrix:
         app: [aircraft, anomalycor]
     env:
-      REGISTRY: ghcr.io/matsapps/development
+      REGISTRY: ghcr.io/noaa-gsl/mats/development
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
