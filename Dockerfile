@@ -54,7 +54,7 @@ COPY --from=meteor-builder --chown=node:node ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}
 COPY --from=meteor-builder --chown=node:node /opt/bundle ${APP_BUNDLE_FOLDER}/
 
 # Copy in our launcher script
-COPY --chown=node:node docker/run_app.sh ${APP_FOLDER}/
+COPY --chown=node:node container-scripts/run_app.sh ${APP_FOLDER}/
 
 RUN bash ${SCRIPTS_FOLDER}/build-meteor-npm-dependencies.sh
 
