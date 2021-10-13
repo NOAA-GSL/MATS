@@ -11,7 +11,27 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        app: [aircraft, anomalycor]
+        app: 
+          - aircraft
+          - anomalycor
+          - cb-ceiling
+          - ceiling
+          - ceiling15
+          - compositeReflectivity
+          - echotop
+          - landuse
+          - precipGauge
+          - precipitation1hr
+          - precipitation24hr
+          - precipitationSub24hr
+          - ptype
+          - raobamdar
+          - surface
+          - surfrad
+          - upperair
+          - vil
+          - visibility
+          - visibility15
     env:
       REGISTRY: ghcr.io/noaa-gsl/mats/development
     steps:
