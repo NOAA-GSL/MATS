@@ -59,6 +59,13 @@ jobs:
           echo "::set-output name=version::dev"
         id: git-info
 
+      - name: Create lowercase app names
+        # Docker tags must be lowercase
+        env: 
+          APP: '${{ matrix.app }}'
+        run: |
+          echo "APP_LOWERCASE=${APP,,}" >> $GITHUB_ENV
+
       - name: Build container
         run: |
           docker build \
@@ -66,7 +73,7 @@ jobs:
             --build-arg BUILDVER="${{ steps.git-info.outputs.version }}" \
             --build-arg COMMITBRANCH=${{ steps.git-info.outputs.branch }} \
             --build-arg COMMITSHA=${{ github.sha }} \
-            -t ${REGISTRY}/${{ matrix.app }}:${{ steps.git-info.outputs.branch }} \
+            -t ${REGISTRY}/${APP_LOWERCASE}:${{ steps.git-info.outputs.branch }} \
             .
 
       - name: Login to GitHub Container Registry
@@ -78,4 +85,4 @@ jobs:
 
       - name: Push container
         run: |
-          docker push ${REGISTRY}/${{ matrix.app }}:${{ steps.git-info.outputs.branch }}
+          docker push ${REGISTRY}/${APP_LOWERCASE}:${{ steps.git-info.outputs.branch }}
