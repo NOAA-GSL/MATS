@@ -445,33 +445,33 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'CSI (Critical Success Index)': ['ctc', 'x100', 100],
 
-            'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'TSS (True Skill Score)': ['ctc', 'x100', 100],
 
-            'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'PODy (POD of ceiling < threshold)': ['ctc', 'x100', 100],
 
-            'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.yn)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.yn)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'PODn (POD of ceiling > threshold)': ['ctc', 'x100', 100],
 
-            'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat, group_concat(((m0.yn)/(m0.yn+m0.yy)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 0],
+            'FAR (False Alarm Ratio)': ['ctc', 'x100', 0],
 
-            'Bias (forecast/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Ratio', 1],
+            'Bias (forecast/actual)': ['ctc', 'Ratio', 1],
 
-            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy)-sum(m0.ny)*sum(m0.yn))/((sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)))) * 100 as stat, group_concat((2*(m0.nn*m0.yy - m0.ny*m0.yn) / ((m0.nn+m0.yn)*(m0.yn+m0.yy) + (m0.nn+m0.ny)*(m0.ny+m0.yy))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'HSS (Heidke Skill Score)': ['ctc', 'x100', 100],
 
-            'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn)))/(sum(m0.yy+m0.yn+m0.ny)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)))/((m0.yy+m0.yn+m0.ny)-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'x100', 100],
+            'ETS (Equitable Threat Score)': ['ctc', 'x100', 100],
 
-            'Nlow (obs < threshold, avg per hr in predefined regions)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null],
+            'Nlow (obs < threshold, avg per hr in predefined regions)': ['ctc', 'Number', null],
 
-            'Nhigh (obs > threshold, avg per hr in predefined regions)': ['avg(m0.nn+m0.yn+0.000) as stat, group_concat((m0.nn+m0.yn), ";", m0.time order by m0.time) as sub_data, count(m0.nn) as N0', 'ctc', 'Number', null],
+            'Nhigh (obs > threshold, avg per hr in predefined regions)': ['ctc', 'Number', null],
 
-            'Ntot (total obs, avg per hr in predefined regions)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null],
+            'Ntot (total obs, avg per hr in predefined regions)': ['ctc', 'Number', null],
 
-            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Ratio', null],
+            'Ratio (Nlow / Ntot)': ['ctc', 'Ratio', null],
 
-            'Ratio (Nhigh / Ntot)': ['(sum(m0.nn+m0.yn+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.nn+m0.yn)/(m0.yy+m0.yn+m0.ny+m0.nn)), ";", m0.time order by m0.time) as sub_data, count(m0.nn) as N0', 'ctc', 'Ratio', null],
+            'Ratio (Nhigh / Ntot)': ['ctc', 'Ratio', null],
 
-            'N per graph point': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn), ";", m0.time order by m0.time) as sub_data, count(m0.yy) as N0', 'ctc', 'Number', null]
+            'N per graph point': ['ctc', 'Number', null]
         };
         matsCollections["statistic"].insert(
             {
