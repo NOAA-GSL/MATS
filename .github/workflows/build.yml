@@ -2,6 +2,9 @@ name: "Build"
 on:
   push:
     branches: [main, development]
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'
   pull_request:
     branches: [main, development]
 
@@ -32,31 +35,48 @@ jobs:
           - vil
           - visibility
           - visibility15
-    env:
-      REGISTRY: ghcr.io/noaa-gsl/mats/development
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           submodules: recursive
 
-      - name: Get branch & tag name
+      - name: Set env variables
         shell: bash
         # Note - this doesn't support branch names with "/" in them
         run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+          RC_TAG="^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$"
+          RELEASE_TAG="^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$"
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            # PR build
+            echo "BRANCH=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+            echo "VERSION=dev-${{ github.sha }}" >> $GITHUB_ENV
+            echo "REGISTRY=ghcr.io/noaa-gsl/mats/development" >> $GITHUB_ENV
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
             # Handle differences between branches/tags
             if [[ "${GITHUB_REF}" == *"heads"* ]]; then
-              echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+              # branch build
+              echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+              echo "VERSION=dev-${{ github.sha }}" >> $GITHUB_ENV
+              echo "REGISTRY=ghcr.io/noaa-gsl/mats/development" >> $GITHUB_ENV
+            elif [[ "${GITHUB_REF}" =~ $RC_TAG ]]; then
+              # release candidate tag
+              echo "BRANCH=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+              echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+              echo "REGISTRY=ghcr.io/noaa-gsl/mats/development" >> $GITHUB_ENV
+            elif [[ "${GITHUB_REF}" =~ $RELEASE_TAG ]]; then
+              # production tag
+              echo "BRANCH=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+              echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+              echo "REGISTRY=ghcr.io/noaa-gsl/mats/production" >> $GITHUB_ENV
             else
-              echo "::set-output name=branch::${GITHUB_REF#refs/tags/}"
+              echo "ERROR: Unanticipated versioning"
+              exit 1
             fi
-          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            echo "::set-output name=branch::${GITHUB_HEAD_REF}"
           else
-            echo "::set-output name=branch::UNKNOWN"
+            echo "ERROR: Unanticipated versioning"
+            exit 1
           fi
-          echo "::set-output name=version::dev"
         id: git-info
 
       - name: Create lowercase app names
@@ -70,10 +90,10 @@ jobs:
         run: |
           docker build \
             --build-arg APPNAME=${{ matrix.app }} \
-            --build-arg BUILDVER="${{ steps.git-info.outputs.version }}" \
-            --build-arg COMMITBRANCH=${{ steps.git-info.outputs.branch }} \
+            --build-arg BUILDVER="${{ env.VERSION }}" \
+            --build-arg COMMITBRANCH=${{ env.BRANCH }} \
             --build-arg COMMITSHA=${{ github.sha }} \
-            -t ${REGISTRY}/${APP_LOWERCASE}:${{ steps.git-info.outputs.branch }} \
+            -t ${{ env.REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }} \
             .
 
       - name: Login to GitHub Container Registry
@@ -85,4 +105,4 @@ jobs:
 
       - name: Push container
         run: |
-          docker push ${REGISTRY}/${APP_LOWERCASE}:${{ steps.git-info.outputs.branch }}
+          docker push ${{ env.REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }}
