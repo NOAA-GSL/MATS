@@ -39,27 +39,37 @@ RUN apk --no-cache add \
     && pip3 --no-cache-dir install pymysql
 
 # Set Environment
-ENV APP_FOLDER /usr/app
-ENV APP_BUNDLE_FOLDER ${APP_FOLDER}/bundle
-ENV SCRIPTS_FOLDER /docker
+ENV APP_FOLDER=/usr/app
+ENV APP_BUNDLE_FOLDER=${APP_FOLDER}/bundle
+ENV SCRIPTS_FOLDER=/docker
 ENV APPNAME=${APPNAME}
+ENV SETTINGS_DIR=${APP_FOLDER}/settings/${APPNAME}
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV PORT=80
 ENV ROOT_URL=http://localhost:${PORT}/
 
 # Copy in helper scripts
-COPY --from=meteor-builder --chown=node:node ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
+COPY --from=meteor-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
 
 # Copy in app bundle
-COPY --from=meteor-builder --chown=node:node /opt/bundle ${APP_BUNDLE_FOLDER}/
+COPY --from=meteor-builder /opt/bundle ${APP_BUNDLE_FOLDER}/
 
 # Copy in our launcher script
-COPY --chown=node:node container-scripts/run_app.sh ${APP_FOLDER}/
+COPY container-scripts/run_app.sh ${APP_FOLDER}/
 
-RUN bash ${SCRIPTS_FOLDER}/build-meteor-npm-dependencies.sh
+# Build Meteor dependencies, and create a writeable settings dir and Node fileCache
+RUN bash ${SCRIPTS_FOLDER}/build-meteor-npm-dependencies.sh \
+    && mkdir -p ${SETTINGS_DIR} \
+    && chown -R node:node ${APP_FOLDER}/settings \
+    && chmod -R 755 ${APP_FOLDER}/settings \
+    && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
+    && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
+    && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache
 
 EXPOSE ${PORT}
 USER node
+
+WORKDIR ${APP_BUNDLE_FOLDER}/bundle
 
 # Start app
 # Note - meteor settings need to be mounted in as /usr/app/settings/${APPNAME} or else settings.json won't be picked up by run_app.sh

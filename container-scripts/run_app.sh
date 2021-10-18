@@ -13,38 +13,28 @@ fi
 # Honour already existing PORT setup
 export PORT=${PORT:-80}
 export NODE_ENV=production
+
 # check for persisted meteor settings and if not present create a template
-# secret settings are added to the persistent settings.json by the app itself durring configuration
-echo "run-app: make sure we have a ${APP_FOLDER}/settings/${APPNAME} directory.."
-if [ ! -d ${APP_FOLDER}/settings/${APPNAME} ]; then
-    echo "run-app: creating ${APP_FOLDER}/settings/${APPNAME}"
-    mkdir -p ${APP_FOLDER}/settings/${APPNAME}
-fi
-
-ls ${APP_FOLDER}/settings/${APPNAME}
-whoami
-
-if [ ! -f ${APP_FOLDER}/settings/${APPNAME}/settings.json ]; then
+# secret settings are added to the persistent settings.json by the app itself during configuration
+if [ ! -f ${SETTINGS_DIR}/settings.json ]; then
   # create a template - lets the app start up in configure mode
-  echo "run-app: creating empty settings file"
-cat << EOF > ${APP_FOLDER}/settings/${APPNAME}/settings.json
+  echo "run-app => creating empty settings file"
+cat << EOF > ${SETTINGS_DIR}/settings.json
 {
   "private": {},
   "public": {}
 }
 EOF
-  # make sure the settings directory and file are still modifiable.
-  chmod -R 777 ${APP_FOLDER}/settings/${APPNAME}
+  chmod 644 ${SETTINGS_DIR}/settings.json
 fi
 
-echo "MONGO URL is: " $MONGO_URL
+echo "run_app => MONGO URL is: " $MONGO_URL
 export METEOR_SETTINGS_DIR="${APP_FOLDER}/settings"
-METEOR_SETTINGS="$(cat ${APP_FOLDER}/settings/${APPNAME}/settings.json)"
+METEOR_SETTINGS="$(cat ${SETTINGS_DIR}/settings.json)"
 export METEOR_SETTINGS
 
 
 cd $APP_BUNDLE_FOLDER/bundle
-pwd
 
 if [ $DEBUG ]; then
     echo "run_app => Starting meteor app for DEBUG"
