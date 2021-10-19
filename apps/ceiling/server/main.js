@@ -449,9 +449,9 @@ const doCurveParams = function () {
 
             'TSS (True Skill Score)': ['ctc', 'x100', 100],
 
-            'PODy (POD of ceiling < threshold)': ['ctc', 'x100', 100],
+            'PODy (POD of value < threshold)': ['ctc', 'x100', 100],
 
-            'PODn (POD of ceiling > threshold)': ['ctc', 'x100', 100],
+            'PODn (POD of value > threshold)': ['ctc', 'x100', 100],
 
             'FAR (False Alarm Ratio)': ['ctc', 'x100', 0],
 

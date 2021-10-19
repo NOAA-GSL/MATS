@@ -415,9 +415,9 @@ const doCurveParams = function () {
 
             'TSS (True Skill Score)': ['((sum(m0.hit)*sum(m0.cn) - sum(m0.fa)*sum(m0.miss))/((sum(m0.hit)+sum(m0.miss))*(sum(m0.fa)+sum(m0.cn)))) * 100 as stat, group_concat(((m0.hit*m0.cn - m0.fa*m0.miss)/((m0.hit+m0.miss)*(m0.fa+m0.cn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
 
-            'PODy (POD of precip > threshold)': ['((sum(m0.hit)+0.00)/sum(m0.hit+m0.miss)) * 100 as stat, group_concat(((m0.hit)/(m0.hit+m0.miss)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+            'PODy (POD of value > threshold)': ['((sum(m0.hit)+0.00)/sum(m0.hit+m0.miss)) * 100 as stat, group_concat(((m0.hit)/(m0.hit+m0.miss)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
 
-            'PODn (POD of precip < threshold)': ['((sum(m0.cn)+0.00)/sum(m0.cn+m0.fa)) * 100 as stat, group_concat(((m0.cn)/(m0.cn+m0.fa)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+            'PODn (POD of value < threshold)': ['((sum(m0.cn)+0.00)/sum(m0.cn+m0.fa)) * 100 as stat, group_concat(((m0.cn)/(m0.cn+m0.fa)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
 
             'FAR (False Alarm Ratio)': ['((sum(m0.fa)+0.00)/sum(m0.fa+m0.hit)) * 100 as stat, group_concat(((m0.fa)/(m0.fa+m0.hit)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 0],
 
