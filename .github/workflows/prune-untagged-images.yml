@@ -42,4 +42,4 @@ jobs:
         account-type: org
         org-name: noaa-gsl
         untagged-only: true
-        token: ${{ secrets.PAT }}
+        token: ${{ secrets.GHCR_CLEANUP_PAT }}
