@@ -97,7 +97,7 @@ jobs:
             .
 
       - name: Scan container with Trivy
-        uses: aquasecurity/trivy-action@v0.0.20
+        uses: aquasecurity/trivy-action@0.0.20
         with:
           image-ref: '${{ env.REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }}'
           format: 'template'
