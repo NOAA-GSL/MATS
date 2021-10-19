@@ -1,3 +1,5 @@
+name: Cleanup PR images
+
 on: 
   pull_request:
     types: [closed]
