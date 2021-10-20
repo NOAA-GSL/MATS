@@ -1,0 +1,45 @@
+name: Cleanup Untagged GHCR Images
+
+on: 
+  workflow_dispatch: # Manually
+  schedule:
+    - cron: '0 0 * * *' # Every day at midnight
+
+jobs:
+  purge-untagged-images:
+    name: Delete image from ghcr.io
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - aircraft
+          - anomalycor
+          - cb-ceiling
+          - ceiling
+          - ceiling15
+          - compositeReflectivity
+          - echotop
+          - landuse
+          - precipGauge
+          - precipitation1hr
+          - precipitation24hr
+          - precipitationSub24hr
+          - ptype
+          - raobamdar
+          - surface
+          - surfrad
+          - upperair
+          - vil
+          - visibility
+          - visibility15
+    steps:
+      - name: Delete image
+        uses: snok/container-retention-policy@v1.1.0
+        with:
+          image-names: mats/development/${{ matrix.app }}
+          cut-off: 1 day ago
+          account-type: org
+          org-name: noaa-gsl
+          untagged-only: true
+          token: ${{ secrets.GHCR_CLEANUP_PAT }}

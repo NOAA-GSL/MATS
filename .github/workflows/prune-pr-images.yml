@@ -1,0 +1,48 @@
+name: Cleanup PR images
+
+on: 
+  pull_request:
+    types: [closed]
+
+jobs:
+  purge-images:
+    name: Cleanup PR images from ghcr.io
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: 
+          - aircraft
+          - anomalycor
+          - cb-ceiling
+          - ceiling
+          - ceiling15
+          - compositeReflectivity
+          - echotop
+          - landuse
+          - precipGauge
+          - precipitation1hr
+          - precipitation24hr
+          - precipitationSub24hr
+          - ptype
+          - raobamdar
+          - surface
+          - surfrad
+          - upperair
+          - vil
+          - visibility
+          - visibility15
+    steps:
+      - name: Get tag & appname
+        env: 
+          APP: '${{ matrix.app }}'
+        run: |
+          echo "BRANCH=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+          echo "APP_LOWERCASE=${APP,,}" >> $GITHUB_ENV
+      - name: Cleanup images
+        uses: bots-house/ghcr-delete-image-action@v1.0.1
+        with:
+          owner: noaa-gsl
+          name: mats/development/${{ env.APP_LOWERCASE }}
+          token: ${{ secrets.GHCR_CLEANUP_PAT }}
+          tag: ${{ env.BRANCH }}
