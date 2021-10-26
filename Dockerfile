@@ -45,7 +45,7 @@ ENV SCRIPTS_FOLDER=/docker
 ENV APPNAME=${APPNAME}
 ENV SETTINGS_DIR=${APP_FOLDER}/settings/${APPNAME}
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
-ENV PORT=80
+ENV PORT=9000
 ENV ROOT_URL=http://localhost:${PORT}/
 
 # Copy in helper scripts
