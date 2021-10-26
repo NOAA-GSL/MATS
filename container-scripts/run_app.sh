@@ -11,7 +11,7 @@ if [ $DELAY ]; then
 fi
 
 # Honour already existing PORT setup
-export PORT=${PORT:-80}
+export PORT=${PORT:-9000}
 export NODE_ENV=production
 
 # check for persisted meteor settings and if not present create a template

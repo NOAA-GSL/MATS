@@ -429,8 +429,8 @@ RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy
 			/root/.node-gyp \\
 			/root/.cache
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
-ENV ROOT_URL=http://localhost:80/
-EXPOSE 80
+ENV ROOT_URL=http://localhost:9000/
+EXPOSE 9000
 RUN chown -R node:node /usr/app
 USER node
 ENTRYPOINT ["/usr/app/run_app.sh"]
