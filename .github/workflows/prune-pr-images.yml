@@ -40,7 +40,7 @@ jobs:
           echo "BRANCH=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
           echo "APP_LOWERCASE=${APP,,}" >> $GITHUB_ENV
       - name: Cleanup images
-        if: ${{ env.BRANCH }} != "development" # don't prune images from the development branch
+        if: env.BRANCH != 'development' # don't prune images from the development branch
         uses: bots-house/ghcr-delete-image-action@v1.0.1
         with:
           owner: noaa-gsl
