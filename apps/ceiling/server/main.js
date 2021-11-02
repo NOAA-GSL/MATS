@@ -185,6 +185,56 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+
+        var optionsMap = {
+            'Fcst lead time': "select m0.fcst_len as xVal, ",
+            'Threshold': "select m0.trsh/100 as xVal, ",    // produces thresholds in kft
+            'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select m0.time as xVal, ",
+            'Init Date': "select m0.time-m0.fcst_len*3600 as xVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[2],
+                controlButtonVisibility: 'block',
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        optionsMap = {
+            'Fcst lead time': "m0.fcst_len as yVal, ",
+            'Threshold': "m0.trsh/100 as yVal, ",    // produces thresholds in kft
+            'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "m0.time as yVal, ",
+            'Init Date': "m0.time-m0.fcst_len*3600 as yVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 10,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
     } else {
         // need to update the dates selector if the metadata has changed
         var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
@@ -653,7 +703,7 @@ const doCurveParams = function () {
 
     if (matsCollections["sites"].findOne({name: 'sites'}) == undefined) {
         matsCollections["sites"].insert(
-             {
+            {
                 name: 'sites',
                 type: matsTypes.InputTypes.select,
                 optionsMap: siteOptionsMap,
@@ -691,60 +741,6 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections["x-axis-parameter"].findOne({name: 'x-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len as xVal, ",
-            'Threshold': "select m0.trsh/100 as xVal, ",    // produces thresholds in kft
-            'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
-            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select m0.time as xVal, ",
-            'Init Date': "select m0.time-m0.fcst_len*3600 as xVal, "
-        };
-
-        matsCollections["x-axis-parameter"].insert(
-            {
-                name: 'x-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[2],
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
-    if (matsCollections["y-axis-parameter"].findOne({name: 'y-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "m0.fcst_len as yVal, ",
-            'Threshold': "m0.trsh/100 as yVal, ",    // produces thresholds in kft
-            'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
-            'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
-            'Valid Date': "m0.time as yVal, ",
-            'Init Date': "m0.time-m0.fcst_len*3600 as yVal, "
-        };
-
-        matsCollections["y-axis-parameter"].insert(
-            {
-                name: 'y-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
     if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "select m0.fcst_len as binVal, ",
@@ -771,7 +767,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(optionsMap)[4],
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 6,
             });
@@ -995,7 +991,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });
@@ -1011,7 +1007,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });
@@ -1126,7 +1122,7 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    if (metadataSettings)  {
+    if (metadataSettings) {
         metadataPool = mysql.createPool(metadataSettings);
         allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
     }
