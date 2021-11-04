@@ -48,7 +48,8 @@ dataMap = function (plotParams, plotFunction) {
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     var statistic = curve['statistic'];
-    var statisticClause = 'sum(if((m0.vis100 < {{threshold}}) and (o.vis100 < {{threshold}}),1,0)) as yy, sum(if((m0.vis100 < {{threshold}}) and NOT (o.vis100 < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.vis100 < {{threshold}}) and (o.vis100 < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.vis100 < {{threshold}}) and NOT (o.vis100 < {{threshold}}),1,0)) as nn, count(m0.vis100) as N0';
+    var statisticClause = "sum(if((m0.vis100 < {{threshold}}) and (o.vis100 < {{threshold}}),1,0)) as hit, sum(if((m0.vis100 < {{threshold}}) and NOT (o.vis100 < {{threshold}}),1,0)) as fa, " +
+        "sum(if(NOT (m0.vis100 < {{threshold}}) and (o.vis100 < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.vis100 < {{threshold}}) and NOT (o.vis100 < {{threshold}}),1,0)) as cn, count(m0.vis100) as N0";
     statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     var querySites = [];

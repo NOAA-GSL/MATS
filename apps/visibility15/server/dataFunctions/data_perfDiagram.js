@@ -85,62 +85,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             dateString = "m0.time";
         }
         dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
-        // for contingency table apps, we currently have to deal with matching in the query.
-        if (appParams.matching && curvesLength > 1) {
-            var matchCurveIdx = 0;
-            var mcidx;
-            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
-                const matchCurve = curves[mcidx];
-                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
-                    continue;
-                }
-                matchCurveIdx++;
-                const matchLabel = matchCurve['label'];
-                const matchBinParam = matchCurve['bin-parameter'];
-                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
-                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
-                const matchTruth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[key] === matchCurve['truth']);
-                truthClause = truthClause + " and m" + matchCurveIdx + ".truth = '" + matchTruth + "'";
-                if (matchBinParam !== 'Threshold') {
-                    const matchThresholdStr = matchCurve['threshold'];
-                    if (matchThresholdStr === undefined) {
-                        throw new Error("INFO:  " + matchLabel + "'s threshold is undefined. Please assign it a value.");
-                    }
-                    const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchThresholdStr);
-                    thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
-                } else {
-                    thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
-                }
-                if (matchBinParam !== 'Valid UTC hour') {
-                    const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
-                    if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                        validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/900)/4 IN(" + matchValidTimes + ")";
-                    }
-                }
-                if (matchBinParam !== 'Fcst lead time') {
-                    const matchForecastLength = Number(matchCurve['forecast-length']);
-                    const matchForecastHour = Math.floor(matchForecastLength);
-                    const matchForecastMinute = (matchForecastLength - matchForecastHour) * 60;
-                    if (matchForecastLength === undefined) {
-                        throw new Error("INFO:  " + matchLabel + "'s forecast lead time is undefined. Please assign it a value.");
-                    }
-                    forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength + " and m" + matchCurveIdx + ".fcst_min = " + matchForecastMinute;
-                } else {
-                    forecastLengthClause = forecastLengthClause + " and m0.fcst_len = m" + matchCurveIdx + ".fcst_len and m0.fcst_min = m" + matchCurveIdx + ".fcst_min";
-                }
-                var matchDateString = "";
-                if (matchBinParam === 'Init Date') {
-                    matchDateString = "m" + matchCurveIdx + ".time-(m" + matchCurveIdx + ".fcst_len*3600+m" + matchCurveIdx + ".fcst_min*60)";
-                } else {
-                    matchDateString = "m" + matchCurveIdx + ".time";
-                }
-                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
-                dateClause = dateClause + " and " + matchDateString + " >= " + fromSecs + " and " + matchDateString + " <= " + toSecs;
-            }
-        }
         var statisticSelect = 'PerformanceDiagram';
-        var statType = 'precalculated';
+        var statType = 'ctc';
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable + statistic (axisKey) it will use the same axis.
@@ -156,7 +102,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 "min({{dateString}}) as min_secs, " +
                 "max({{dateString}}) as max_secs, " +
                 "((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) as pod, ((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) as far, " +
-                "sum(m0.yy+m0.ny) as oy_all, sum(m0.yn+m0.nn) as on_all, count(m0.yy) as N0 " +
+                "sum(m0.yy+m0.ny) as oy_all, sum(m0.yn+m0.nn) as on_all, group_concat(m0.yy, ';', m0.yn, ';', " +
+                "m0.ny, ';', m0.nn, ';', m0.time order by m0.time) as sub_data, count(m0.yy) as N0 " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
@@ -184,7 +131,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(sumPool, statement);
+                queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(sumPool, statement, appParams);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
