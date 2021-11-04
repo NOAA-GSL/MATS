@@ -47,6 +47,9 @@ ENV SETTINGS_DIR=${APP_FOLDER}/settings/${APPNAME}
 ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
 ENV PORT=9000
 ENV ROOT_URL=http://localhost:${PORT}/
+ENV VERSION=${BUILDVER}
+ENV BRANCH=${COMMITBRANCH}
+ENV COMMIT=${COMMITSHA}}
 
 # Copy in helper scripts
 COPY --from=meteor-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
