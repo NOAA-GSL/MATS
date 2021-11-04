@@ -124,7 +124,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var finishMoment;
         try {
             // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement, appParams, statisticSelect);
+            queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement, appParams, statisticSelect);
             finishMoment = moment();
             dataRequests["data retrieval (query) time - " + label] = {
                 begin: startMoment.format(),
