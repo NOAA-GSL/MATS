@@ -89,7 +89,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var statisticClause = "sum(m0.hit) as hit, sum(m0.fa) as fa, sum(m0.miss) as miss, sum(m0.cn) as cn, group_concat(m0.hit, ';', m0.fa, ';', m0.miss, ';', m0.cn, ';', m0.time order by m0.time) as sub_data, count(m0.hit) as N0";
         // For contours, this functions as the colorbar label.
         var statType = statisticOptionsMap[statisticSelect][0];
-        curves[curveIndex]['unitKey'] = statisticOptionsMap[statisticSelect][2];
+        curves[curveIndex]['unitKey'] = statisticOptionsMap[statisticSelect][1];
 
         var d;
         // this is a database driven curve, not a difference curve
