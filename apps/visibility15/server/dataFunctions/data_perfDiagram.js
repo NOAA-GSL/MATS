@@ -106,7 +106,6 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 "m0.ny, ';', m0.nn, ';', m0.time order by m0.time) as sub_data, count(m0.yy) as N0 " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "{{dateClause}} " +
                 "{{truthClause}} " +
                 "{{thresholdClause}} " +
