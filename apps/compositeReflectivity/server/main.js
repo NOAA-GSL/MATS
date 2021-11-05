@@ -469,11 +469,11 @@ const doCurveParams = function () {
 
             'ETS (Equitable Threat Score)': ['ctc', 'x100', 100],
 
-            'Nlow (obs < threshold, avg per hr in predefined regions)': ['ctc', 'Number', null],
+            'Nlow (obs < threshold, avg per hr)': ['ctc', 'Number', null],
 
-            'Nhigh (obs > threshold, avg per hr in predefined regions)': ['ctc', 'Number', null],
+            'Nhigh (obs > threshold, avg per hr)': ['ctc', 'Number', null],
 
-            'Ntot (total obs, avg per hr in predefined regions)': ['ctc', 'Number', null],
+            'Ntot (total obs, avg per hr)': ['ctc', 'Number', null],
 
             'Ratio (Nlow / Ntot)': ['ctc', 'Ratio', null],
 
