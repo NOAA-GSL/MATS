@@ -65,12 +65,16 @@ dataHistogram = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause;
-        if (variableStr === 'temperature' || variableStr === 'dewpoint') {
-            statisticClause = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr === 'wind') {
-            statisticClause = statisticOptionsMap[statisticSelect][2];
+        var statType;
+        if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
+            statisticClause = statisticOptionsMap[statisticSelect][0][0];
+            statType = statisticOptionsMap[statisticSelect][0][1];
+        } else if (variableStr === '10m wind') {
+            statisticClause = statisticOptionsMap[statisticSelect][2][0];
+            statType = statisticOptionsMap[statisticSelect][2][1];
         } else {
-            statisticClause = statisticOptionsMap[statisticSelect][1];
+            statisticClause = statisticOptionsMap[statisticSelect][1][0];
+            statType = statisticOptionsMap[statisticSelect][1][1];
         }
         statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
         statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
@@ -158,10 +162,12 @@ dataHistogram = function (plotParams, plotFunction) {
         throw new Error("INFO:  No valid data for any curves.");
     }
 
+    // process the data returned by the query
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
         "dataFoundForCurve": dataFoundForCurve,
+        "statType": statType,
         "axisMap": axisMap,
         "yAxisFormat": yAxisFormat
     };

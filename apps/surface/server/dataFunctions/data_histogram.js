@@ -60,6 +60,7 @@ dataHistogram = function (plotParams, plotFunction) {
         var siteMatchClause = "";
         var sitesClause = "";
         var statisticClause;
+        var statType;
         var queryPool;
         var regionType = curve['region-type'];
         if (regionType === 'Predefined region') {
@@ -73,11 +74,14 @@ dataHistogram = function (plotParams, plotFunction) {
             var statisticSelect = curve['statistic'];
             var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
-                statisticClause = statisticOptionsMap[statisticSelect][0];
+                statisticClause = statisticOptionsMap[statisticSelect][0][0];
+                statType = statisticOptionsMap[statisticSelect][0][1];
             } else if (variableStr === '10m wind') {
-                statisticClause = statisticOptionsMap[statisticSelect][2];
+                statisticClause = statisticOptionsMap[statisticSelect][2][0];
+                statType = statisticOptionsMap[statisticSelect][2][1];
             } else {
-                statisticClause = statisticOptionsMap[statisticSelect][1];
+                statisticClause = statisticOptionsMap[statisticSelect][1][0];
+                statType = statisticOptionsMap[statisticSelect][1][1];
             }
             statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
             statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
@@ -106,6 +110,7 @@ dataHistogram = function (plotParams, plotFunction) {
             }
             statisticClause = 'avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(m0.time) as N0, group_concat({{variableClause}}, ";", ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
+            statType = 'scalar';
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
@@ -221,10 +226,12 @@ dataHistogram = function (plotParams, plotFunction) {
         throw new Error("INFO:  No valid data for any curves.");
     }
 
+    // process the data returned by the query
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
         "dataFoundForCurve": dataFoundForCurve,
+        "statType": statType,
         "axisMap": axisMap,
         "yAxisFormat": yAxisFormat
     };

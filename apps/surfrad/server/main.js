@@ -445,13 +445,13 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            'MAE': ['avg(abs({{variable0}})) as stat, stddev(abs({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(abs({{variable0}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
-            'Bias (Model - Obs)': ['-1 * avg({{variable0}}) as stat, stddev(-1 * ({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
-            'N': ['count({{variable0}}) as stat, stddev(count({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(count({{variable0}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
-            'Model average': ['avg({{variable1}}) as stat, stddev({{variable1}}) as stdev, count({{variable1}}) as N0, group_concat(({{variable1}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
-            'Obs average': ['avg({{variable2}}) as stat, stddev({{variable2}}) as stdev, count({{variable2}}) as N0, group_concat(({{variable2}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
-            'Std deviation (do not plot matched)': ['std(-1*{{variable0}}) as stat, count({{variable0}}) as N0', 'scalar'],
-            'RMS (do not plot matched)': ['sqrt(avg(pow({{variable0}},2))) as stat, count({{variable0}}) as N0', 'scalar']
+            "MAE": ["avg(abs({{variable0}})) as stat, stddev(abs({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(abs({{variable0}}), ';', m0.secs order by m0.secs) as sub_data", "scalar"],
+            "Bias (Model - Obs)": ["-1 * avg({{variable0}}) as stat, stddev(-1 * ({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}), ';', m0.secs order by m0.secs) as sub_data", "scalar"],
+            "N": ["count({{variable0}}) as stat, stddev(count({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(count({{variable0}}), ';', m0.secs order by m0.secs) as sub_data", "scalar"],
+            "Model average": ["avg({{variable1}}) as stat, stddev({{variable1}}) as stdev, count({{variable1}}) as N0, group_concat(({{variable1}}), ';', m0.secs order by m0.secs) as sub_data", "scalar"],
+            "Obs average": ["avg({{variable2}}) as stat, stddev({{variable2}}) as stdev, count({{variable2}}) as N0, group_concat(({{variable2}}), ';', m0.secs order by m0.secs) as sub_data", "scalar"],
+            "Std deviation (do not plot matched)": ["std(-1*{{variable0}}) as stat, count({{variable0}}) as N0", "scalar"],
+            "RMS (do not plot matched)": ["sqrt(avg(pow({{variable0}},2))) as stat, count({{variable0}}) as N0", "scalar"]
 
         };
 
