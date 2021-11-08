@@ -25,19 +25,20 @@ dataContourDiff = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var dataNotFoundForAnyCurve = false;
-    var showSignificance = false;
+    var showSignificance = plotParams['significance'] !== 'none';
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
+    var xAxisParam = plotParams['x-axis-parameter'];
+    var yAxisParam = plotParams['y-axis-parameter'];
+    var xValClause = matsCollections.PlotParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+    var yValClause = matsCollections.PlotParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     if (curvesLength !== 2) {
         throw new Error("INFO:  There must be two added curves.");
-    }
-    if (curves[0]['x-axis-parameter'] !== curves[1]['x-axis-parameter'] || curves[0]['y-axis-parameter'] !== curves[1]['y-axis-parameter']) {
-        throw new Error("INFO:  The x-axis-parameter and y-axis-parameter must be consistent across both curves.");
     }
     var dataset = [];
     var axisMap = Object.create(null);
@@ -46,10 +47,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var label = curve['label'];
-        var xAxisParam = curve['x-axis-parameter'];
-        var yAxisParam = curve['y-axis-parameter'];
-        var xValClause = matsCollections['x-axis-parameter'].findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-        var yValClause = matsCollections['y-axis-parameter'].findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
@@ -93,51 +90,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         dateClause = "and ob0.secs >= " + fromSecs + " and ob0.secs <= " + toSecs;
         dateClause = dateClause + " and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
         matchClause = "and m0.id = ob0.id and m0.secs = ob0.secs";
-        // for two contours it's faster to just take care of matching in the query
-        if (appParams.matching) {
-            var matchCurveIdx = 0;
-            var mcidx;
-            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
-                const matchCurve = curves[mcidx];
-                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
-                    continue;
-                }
-                matchCurveIdx++;
-                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
-                queryTableClause = queryTableClause + ", " + matchModel + " as m" + matchCurveIdx;
-                matchClause = matchClause + " and m0.id = m" + matchCurveIdx + ".id";       // m0.secs and m?.secs are already matched in the date clause, so we just have to match ids here
-                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                if (matchRegion === 'all_surf') {
-                    regionClause = regionClause + " and m" + matchCurveIdx + ".id in(1,2,3,4,5,6,7)";
-                } else if (matchRegion === 'all_sol') {
-                    regionClause = regionClause + " and m" + matchCurveIdx + ".id in(8,9,10,11,12,13,14)";
-                } else if (region !== 'all_stat'){
-                    regionClause = regionClause + " and m" + matchCurveIdx + ".id in(" + matchRegion + ")";
-                }
-                const matchScale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
-                scaleClause = scaleClause + " and m" + matchCurveIdx + ".scale = " + matchScale;
-                if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-                    const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
-                    if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                        validTimeClause = validTimeClause + " and m" + matchCurveIdx + ".secs)%(24*3600)/3600 IN(" + matchValidTimes + ")";
-                    }
-                }
-                if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-                    const matchForecastLength = Number(matchCurve['forecast-length']) * 60;
-                    forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
-                } else {
-                    forecastLengthClause = forecastLengthClause + " and m0.fcst_len = m" + matchCurveIdx + ".fcst_len";
-                }
-                var matchDateString = "";
-                if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-                    matchDateString = "m" + matchCurveIdx + ".secs-m" + matchCurveIdx + ".fcst_len*3600";
-                } else {
-                    matchDateString = "m" + matchCurveIdx + ".secs";
-                }
-                dateClause = "and m0.secs = m" + matchCurveIdx + ".secs " + dateClause;
-                dateClause = dateClause + " and " + matchDateString + " >= " + fromSecs + " and " + matchDateString + " <= " + toSecs;
-            }
-        }
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause = statisticOptionsMap[statisticSelect][0];
@@ -146,9 +98,9 @@ dataContourDiff = function (plotParams, plotFunction) {
         statisticClause = statisticClause.replace(/\{\{variable2\}\}/g, variable[2]);
         var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        showSignificance = curve['significance'] !== 'none' || showSignificance;
 
         // For contours, this functions as the colorbar label.
+        var statType = statisticOptionsMap[statisticSelect][1];
         curves[curveIndex]['unitKey'] = varUnits;
 
         var d;
@@ -194,7 +146,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var finishMoment;
         try {
             // send the query statement to the query function
-            queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement);
+            queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement, appParams, statisticSelect);
             finishMoment = moment();
             dataRequests["data retrieval (query) time - " + label] = {
                 begin: startMoment.format(),
@@ -252,14 +204,14 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     // turn the two contours into one difference contour
-    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, showSignificance, curve['significance']);
+    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, appParams, showSignificance, undefined, statisticSelect, statType === "ctc");
     plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
     curves = plotParams.curves;
     dataset[0]['name'] = matsPlotUtils.getCurveText(matsTypes.PlotTypes.contourDiff, curves[0]);
     dataset[1] = matsDataCurveOpsUtils.getContourSignificanceLayer(dataset);
 
     // process the data returned by the query
-    const curveInfoParams = {"curve": curves, "axisMap": axisMap};
+    const curveInfoParams = {"curve": curves, "statType": statType, "axisMap": axisMap};
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataContour(dataset, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);

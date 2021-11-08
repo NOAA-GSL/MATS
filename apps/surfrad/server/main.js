@@ -185,6 +185,70 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+
+        var optionsMap = {
+            'Fcst lead time': "select m0.fcst_len/60 as xVal, ",
+            'Valid UTC hour': "select m0.secs%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select (m0.secs-m0.fcst_len*60)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select m0.secs as xVal, ",
+            'Init Date': "select m0.secs-m0.fcst_len*60 as xVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[1],
+                controlButtonVisibility: 'block',
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        optionsMap = {
+            'Fcst lead time': "m0.fcst_len/60 as yVal, ",
+            'Valid UTC hour': "m0.secs%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "(m0.secs-m0.fcst_len*60)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "m0.secs as yVal, ",
+            'Init Date': "m0.secs-m0.fcst_len*60 as yVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 10,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'significance',
+                type: matsTypes.InputTypes.select,
+                options: ['none', 'standard', 'assume infinite degrees of freedom'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 'none',
+                controlButtonVisibility: 'block',
+                controlButtonText: "overlay student's t-test",
+                displayOrder: 11,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
     } else {
         // need to update the dates selector if the metadata has changed
         var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
@@ -381,13 +445,13 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            'MAE': ['avg(abs({{variable0}})) as stat, stddev(abs({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(abs({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'Bias (Model - Obs)': ['-1 * avg({{variable0}}) as stat, stddev(-1 * ({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'N': ['count({{variable0}}) as stat, stddev(count({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(count({{variable0}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'Model average': ['avg({{variable1}}) as stat, stddev({{variable1}}) as stdev, count({{variable1}}) as N0, group_concat(({{variable1}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'Obs average': ['avg({{variable2}}) as stat, stddev({{variable2}}) as stdev, count({{variable2}}) as N0, group_concat(({{variable2}}), ";", m0.secs order by m0.secs) as sub_data'],
-            'Std deviation (do not plot matched)': ['std(-1*{{variable0}}) as stat, count({{variable0}}) as N0'],
-            'RMS (do not plot matched)': ['sqrt(avg(pow({{variable0}},2))) as stat, count({{variable0}}) as N0']
+            'MAE': ['avg(abs({{variable0}})) as stat, stddev(abs({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(abs({{variable0}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
+            'Bias (Model - Obs)': ['-1 * avg({{variable0}}) as stat, stddev(-1 * ({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
+            'N': ['count({{variable0}}) as stat, stddev(count({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(count({{variable0}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
+            'Model average': ['avg({{variable1}}) as stat, stddev({{variable1}}) as stdev, count({{variable1}}) as N0, group_concat(({{variable1}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
+            'Obs average': ['avg({{variable2}}) as stat, stddev({{variable2}}) as stdev, count({{variable2}}) as N0, group_concat(({{variable2}}), ";", m0.secs order by m0.secs) as sub_data', 'scalar'],
+            'Std deviation (do not plot matched)': ['std(-1*{{variable0}}) as stat, count({{variable0}}) as N0', 'scalar'],
+            'RMS (do not plot matched)': ['sqrt(avg(pow({{variable0}},2))) as stat, count({{variable0}}) as N0', 'scalar']
 
         };
 
@@ -627,76 +691,6 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections["x-axis-parameter"].findOne({name: 'x-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len/60 as xVal, ",
-            'Valid UTC hour': "select m0.secs%(24*3600)/3600 as xVal, ",
-            'Init UTC hour': "select (m0.secs-m0.fcst_len*60)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select m0.secs as xVal, ",
-            'Init Date': "select m0.secs-m0.fcst_len*60 as xVal, "
-        };
-
-        matsCollections["x-axis-parameter"].insert(
-            {
-                name: 'x-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[1],
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
-    if (matsCollections["y-axis-parameter"].findOne({name: 'y-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "m0.fcst_len/60 as yVal, ",
-            'Valid UTC hour': "m0.secs%(24*3600)/3600 as yVal, ",
-            'Init UTC hour': "(m0.secs-m0.fcst_len*60)%(24*3600)/3600 as yVal, ",
-            'Valid Date': "m0.secs as yVal, ",
-            'Init Date': "m0.secs-m0.fcst_len*60 as yVal, "
-        };
-
-        matsCollections["y-axis-parameter"].insert(
-            {
-                name: 'y-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
-    if (matsCollections['significance'].findOne({name: 'significance'}) == undefined) {
-        matsCollections['significance'].insert(
-            {
-                name: 'significance',
-                type: matsTypes.InputTypes.select,
-                options: ['none', 'standard', 'assume infinite degrees of freedom'],
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: 'none',
-                controlButtonVisibility: 'block',
-                controlButtonText: "overlay student's t-test",
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 7,
-            });
-    }
-
     // determine date defaults for dates and curveDates
     const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
     modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
@@ -850,7 +844,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });
@@ -867,7 +861,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter", "significance"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });
