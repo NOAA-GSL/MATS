@@ -700,7 +700,6 @@ const doCurveParams = function () {
             "EnR": "and m0.up_dn = 0 ",
             "Up": "and m0.up_dn = 1 ",
             "Dn": "and m0.up_dn = -1 "
-//            "R" : ""
         };
         matsCollections['phase'].insert(
             {

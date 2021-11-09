@@ -86,12 +86,15 @@ dataHistogram = function (plotParams, plotFunction) {
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
         var statisticClause;
+        var statType;
         if (variableStr === 'winds') {
-            statisticClause = statisticOptionsMap[statisticSelect][1];
+            statisticClause = statisticOptionsMap[statisticSelect][1][0];
             statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
+            statType = statisticOptionsMap[statisticSelect][1][1];
         } else {
-            statisticClause = statisticOptionsMap[statisticSelect][0];
+            statisticClause = statisticOptionsMap[statisticSelect][0][0];
             statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
+            statType = statisticOptionsMap[statisticSelect][0][1];
         }
         statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
         statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
@@ -182,10 +185,12 @@ dataHistogram = function (plotParams, plotFunction) {
         throw new Error("INFO:  No valid data for any curves.");
     }
 
+    // process the data returned by the query
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
         "dataFoundForCurve": dataFoundForCurve,
+        "statType": statType,
         "axisMap": axisMap,
         "yAxisFormat": yAxisFormat
     };

@@ -83,12 +83,15 @@ dataProfile = function (plotParams, plotFunction) {
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
         var statisticClause;
+        var statType;
         if (variableStr === 'winds') {
-            statisticClause = statisticOptionsMap[statisticSelect][1];
+            statisticClause = statisticOptionsMap[statisticSelect][1][0];
             statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
+            statType = statisticOptionsMap[statisticSelect][1][1];
         } else {
-            statisticClause = statisticOptionsMap[statisticSelect][0];
+            statisticClause = statisticOptionsMap[statisticSelect][0][0];
             statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
+            statType = statisticOptionsMap[statisticSelect][0][1];
         }
         statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
         statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
@@ -177,7 +180,7 @@ dataProfile = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc");
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -215,6 +218,7 @@ dataProfile = function (plotParams, plotFunction) {
         "curves": curves,
         "curvesLength": curvesLength,
         "idealValues": idealValues,
+        "statType": statType,
         "axisMap": axisMap
     };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
