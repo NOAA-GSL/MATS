@@ -2,15 +2,13 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {
-    matsCollections,
-    matsDataCurveOpsUtils,
-    matsDataDiffUtils,
-    matsDataProcessUtils,
-    matsDataQueryUtils,
-    matsDataUtils,
-    matsTypes
-} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataDieOff = function (plotParams, plotFunction) {
