@@ -61,6 +61,7 @@ dataProfile = function (plotParams, plotFunction) {
         var siteMatchClause = "";
         var sitesClause = "";
         var statisticClause;
+        var statType;
         var varUnits;
         var levelVar;
         var levelClause = "";
@@ -76,11 +77,13 @@ dataProfile = function (plotParams, plotFunction) {
             var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
             if (variableStr === 'winds') {
-                statisticClause = statisticOptionsMap[statisticSelect][1];
+                statisticClause = statisticOptionsMap[statisticSelect][1][0];
                 statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
+                statType = statisticOptionsMap[statisticSelect][1][1];
             } else {
-                statisticClause = statisticOptionsMap[statisticSelect][0];
+                statisticClause = statisticOptionsMap[statisticSelect][0][0];
                 statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
+                statType = statisticOptionsMap[statisticSelect][0][1];
             }
             statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
             statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
@@ -115,6 +118,7 @@ dataProfile = function (plotParams, plotFunction) {
             }
             statisticClause = 'avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(unix_timestamp(m0.date)+3600*m0.hour) as N0, group_concat({{variableClause}}, ";", ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), ";", m0.press order by ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), m0.press) as sub_data';
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
+            statType = 'scalar';
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
@@ -230,7 +234,7 @@ dataProfile = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc");
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -268,6 +272,7 @@ dataProfile = function (plotParams, plotFunction) {
         "curves": curves,
         "curvesLength": curvesLength,
         "idealValues": idealValues,
+        "statType": statType,
         "axisMap": axisMap
     };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};

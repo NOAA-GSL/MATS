@@ -26,6 +26,10 @@ dataContour = function (plotParams, plotFunction) {
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
+    var xAxisParam = plotParams['x-axis-parameter'];
+    var yAxisParam = plotParams['y-axis-parameter'];
+    var xValClause = matsCollections.PlotParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+    var yValClause = matsCollections.PlotParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     if (curves.length > 1) {
@@ -37,10 +41,6 @@ dataContour = function (plotParams, plotFunction) {
     // initialize variables specific to the curve
     var curve = curves[0];
     var label = curve['label'];
-    var xAxisParam = curve['x-axis-parameter'];
-    var yAxisParam = curve['y-axis-parameter'];
-    var xValClause = matsCollections['x-axis-parameter'].findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-    var yValClause = matsCollections['y-axis-parameter'].findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
     var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
     var regionStr = curve['region'];
@@ -78,12 +78,15 @@ dataContour = function (plotParams, plotFunction) {
     var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
     var statisticClause;
+    var statType;
     if (variableStr === 'winds') {
-        statisticClause = statisticOptionsMap[statisticSelect][1];
+        statisticClause = statisticOptionsMap[statisticSelect][1][0];
         statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
+        statType = statisticOptionsMap[statisticSelect][1][1];
     } else {
-        statisticClause = statisticOptionsMap[statisticSelect][0];
+        statisticClause = statisticOptionsMap[statisticSelect][0][0];
         statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
+        statType = statisticOptionsMap[statisticSelect][0][1];
     }
     statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
     statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
@@ -128,7 +131,7 @@ dataContour = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement);
+        queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement, appParams, statisticSelect);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -184,7 +187,7 @@ dataContour = function (plotParams, plotFunction) {
     };
 
     // process the data returned by the query
-    const curveInfoParams = {"curve": curves, "axisMap": axisMap};
+    const curveInfoParams = {"curve": curves, "statType": statType, "axisMap": axisMap};
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataContour(dataset, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
