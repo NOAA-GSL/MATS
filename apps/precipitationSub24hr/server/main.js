@@ -186,7 +186,7 @@ const doPlotParams = function () {
                 displayGroup: 2
             });
 
-        var optionsMap = {
+        const xOptionsMap = {
             'Threshold': "select m0.trsh as xVal, ",    // produces thresholds in in
             'Valid Date': "select m0.time as xVal, "
         };
@@ -195,19 +195,19 @@ const doPlotParams = function () {
             {
                 name: 'x-axis-parameter',
                 type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
+                options: Object.keys(xOptionsMap),
+                optionsMap: xOptionsMap,
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[1],
+                default: Object.keys(xOptionsMap)[1],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 2,
             });
 
-        optionsMap = {
+        const yOptionsMap = {
             'Threshold': "m0.trsh as yVal, ",    // produces thresholds in in
             'Valid Date': "m0.time as yVal, "
         };
@@ -216,12 +216,12 @@ const doPlotParams = function () {
             {
                 name: 'y-axis-parameter',
                 type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
+                options: Object.keys(yOptionsMap),
+                optionsMap: yOptionsMap,
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: Object.keys(yOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,

@@ -186,7 +186,7 @@ const doPlotParams = function () {
                 displayGroup: 2
             });
 
-        var optionsMap = {
+        const xOptionsMap = {
             'Fcst lead time': "select m0.fcst_len/60 as xVal, ",
             'Grid scale': "select m0.scale as xVal, ",
             'Valid UTC hour': "select m0.valid_secs%(24*3600)/3600 as xVal, ",
@@ -199,19 +199,19 @@ const doPlotParams = function () {
             {
                 name: 'x-axis-parameter',
                 type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
+                options: Object.keys(xOptionsMap),
+                optionsMap: xOptionsMap,
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[2],
+                default: Object.keys(xOptionsMap)[2],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 2,
             });
 
-        optionsMap = {
+        const yOptionsMap = {
             'Fcst lead time': "m0.fcst_len/60 as yVal, ",
             'Grid scale': "m0.scale as yVal, ",
             'Valid UTC hour': "m0.valid_secs%(24*3600)/3600 as yVal, ",
@@ -224,12 +224,12 @@ const doPlotParams = function () {
             {
                 name: 'y-axis-parameter',
                 type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
+                options: Object.keys(yOptionsMap),
+                optionsMap: yOptionsMap,
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: Object.keys(yOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,

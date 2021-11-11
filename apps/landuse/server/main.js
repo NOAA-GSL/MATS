@@ -186,7 +186,7 @@ const doPlotParams = function () {
                 displayGroup: 2
             });
 
-        var optionsMap = {
+        const xOptionsMap = {
             'Fcst lead time': "select m0.fcst_len as xVal, ",
             'Valid UTC hour': "select m0.hour as xVal, ",
             'Init UTC hour': "select (m0.valid_day+3600*m0.hour-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
@@ -198,19 +198,19 @@ const doPlotParams = function () {
             {
                 name: 'x-axis-parameter',
                 type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
+                options: Object.keys(xOptionsMap),
+                optionsMap: xOptionsMap,
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[1],
+                default: Object.keys(xOptionsMap)[1],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 2,
             });
 
-        optionsMap = {
+        const yOptionsMap = {
             'Fcst lead time': "m0.fcst_len as yVal, ",
             'Valid UTC hour': "m0.hour as yVal, ",
             'Init UTC hour': "(m0.valid_day+3600*m0.hour-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
@@ -222,12 +222,12 @@ const doPlotParams = function () {
             {
                 name: 'y-axis-parameter',
                 type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
+                options: Object.keys(yOptionsMap),
+                optionsMap: yOptionsMap,
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: Object.keys(yOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,
