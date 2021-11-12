@@ -64,40 +64,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
         var forecastTypeClause = "and m0.accum_len = " + forecastType;
         dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
-        // for contingency table apps, we currently have to deal with matching in the query.
-        if (appParams.matching && curvesLength > 1) {
-            var matchCurveIdx = 0;
-            var mcidx;
-            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
-                const matchCurve = curves[mcidx];
-                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
-                    continue;
-                }
-                matchCurveIdx++;
-                const matchLabel = matchCurve['label'];
-                const matchBinParam = matchCurve['bin-parameter'];
-                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
-                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                const matchScale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
-                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchScale + "_" + matchRegion + " as m" + matchCurveIdx;
-                if (matchBinParam !== 'Threshold') {
-                    const matchThresholdStr = matchCurve['threshold'];
-                    if (matchThresholdStr === undefined) {
-                        throw new Error("INFO:  " + matchLabel + "'s threshold is undefined. Please assign it a value.");
-                    }
-                    const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchThresholdStr);
-                    thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold * 0.01;
-                } else {
-                    thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
-                }
-                const matchForecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === matchCurve['forecast-type']);
-                forecastTypeClause = forecastTypeClause + " and m" + matchCurveIdx + ".accum_len = " + matchForecastType;
-                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
-                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + fromSecs + " and m" + matchCurveIdx + ".time <= " + toSecs;
-            }
-        }
         var statisticSelect = 'PerformanceDiagram';
-        var statType = 'precalculated';
+        var statType = 'ctc';
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable + statistic (axisKey) it will use the same axis.
@@ -113,10 +81,10 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +
                 "((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, " +
-                "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, count(m0.yy) as N0 " +
+                "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, group_concat(m0.yy, ';', m0.ny, ';', " +
+                "m0.yn, ';', m0.nn, ';', m0.time order by m0.time) as sub_data, count(m0.yy) as N0 " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "{{dateClause}} " +
                 "{{thresholdClause}} " +
                 "{{forecastTypeClause}} " +
@@ -136,7 +104,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(sumPool, statement);
+                queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(sumPool, statement, appParams);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

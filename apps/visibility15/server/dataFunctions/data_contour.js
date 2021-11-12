@@ -26,6 +26,10 @@ dataContour = function (plotParams, plotFunction) {
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
+    var xAxisParam = plotParams['x-axis-parameter'];
+    var yAxisParam = plotParams['y-axis-parameter'];
+    var xValClause = matsCollections.PlotParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+    var yValClause = matsCollections.PlotParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     if (curves.length > 1) {
@@ -37,10 +41,6 @@ dataContour = function (plotParams, plotFunction) {
     // initialize variables specific to the curve
     var curve = curves[0];
     var label = curve['label'];
-    var xAxisParam = curve['x-axis-parameter'];
-    var yAxisParam = curve['y-axis-parameter'];
-    var xValClause = matsCollections['x-axis-parameter'].findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-    var yValClause = matsCollections['y-axis-parameter'].findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
     var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var regionStr = curve['region'];
     var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
@@ -78,9 +78,10 @@ dataContour = function (plotParams, plotFunction) {
     dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-    var statisticClause = statisticOptionsMap[statisticSelect][0];
+    var statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn, ';', m0.time order by m0.time) as sub_data, count(m0.yy) as N0";
     // For contours, this functions as the colorbar label.
-    curve['unitKey'] = statisticOptionsMap[statisticSelect][2];
+    var statType = statisticOptionsMap[statisticSelect][0];
+    curve['unitKey'] = statisticOptionsMap[statisticSelect][1];
 
     var d;
     // this is a database driven curve, not a difference curve
@@ -93,7 +94,6 @@ dataContour = function (plotParams, plotFunction) {
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +
-        "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
         "{{dateClause}} " +
         "{{truthClause}} " +
         "{{thresholdClause}} " +
@@ -125,7 +125,7 @@ dataContour = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement);
+        queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement, appParams, statisticSelect);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -181,7 +181,7 @@ dataContour = function (plotParams, plotFunction) {
     };
 
     // process the data returned by the query
-    const curveInfoParams = {"curve": curves, "axisMap": axisMap};
+    const curveInfoParams = {"curve": curves, "statType": statType, "axisMap": axisMap};
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataContour(dataset, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);

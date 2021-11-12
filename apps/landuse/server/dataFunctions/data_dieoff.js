@@ -2,15 +2,13 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {
-    matsCollections,
-    matsDataCurveOpsUtils,
-    matsDataDiffUtils,
-    matsDataProcessUtils,
-    matsDataQueryUtils,
-    matsDataUtils,
-    matsTypes
-} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataDieOff = function (plotParams, plotFunction) {
@@ -77,12 +75,16 @@ dataDieOff = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause;
-        if (variableStr === 'temperature' || variableStr === 'dewpoint') {
-            statisticClause = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr === 'wind') {
-            statisticClause = statisticOptionsMap[statisticSelect][2];
+        var statType;
+        if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
+            statisticClause = statisticOptionsMap[statisticSelect][0][0];
+            statType = statisticOptionsMap[statisticSelect][0][1];
+        } else if (variableStr === '10m wind') {
+            statisticClause = statisticOptionsMap[statisticSelect][2][0];
+            statType = statisticOptionsMap[statisticSelect][2][1];
         } else {
-            statisticClause = statisticOptionsMap[statisticSelect][1];
+            statisticClause = statisticOptionsMap[statisticSelect][1][0];
+            statType = statisticOptionsMap[statisticSelect][1][1];
         }
         statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
         statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
@@ -169,7 +171,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc");
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -208,6 +210,7 @@ dataDieOff = function (plotParams, plotFunction) {
         "curvesLength": curvesLength,
         "idealValues": idealValues,
         "utcCycleStarts": utcCycleStarts,
+        "statType": statType,
         "axisMap": axisMap,
         "xmax": xmax,
         "xmin": xmin

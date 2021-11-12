@@ -68,48 +68,14 @@ dataHistogram = function (plotParams, plotFunction) {
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
         var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
-        // for contingency table apps, we currently have to deal with matching in the query.
-        if (appParams.matching && curvesLength > 1) {
-            var matchCurveIdx = 0;
-            var mcidx;
-            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
-                const matchCurve = curves[mcidx];
-                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
-                    continue;
-                }
-                matchCurveIdx++;
-                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
-                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                const matchScale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === matchCurve['scale']);
-                const matchSource = curve['truth'];
-                var matchSourceStr = "";
-                if (matchSource !== "All") {
-                    matchSourceStr = "_" + matchSource;
-                }
-                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchScale + matchSourceStr + "_" + matchRegion + " as m" + matchCurveIdx;
-                const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
-                thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold * 0.01;
-                const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
-                if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + matchValidTimes + ")";
-                }
-                const matchForecastLength = matchCurve['forecast-length'];
-                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
-                const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
-                const matchFromSecs = matchDateRange.fromSeconds;
-                const matchToSecs = matchDateRange.toSeconds;
-                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
-                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
-            }
-        }
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause = statisticOptionsMap[statisticSelect][0];
+        var statisticClause = "sum(m0.hit) as hit, sum(m0.fa) as fa, sum(m0.miss) as miss, sum(m0.cn) as cn, group_concat(m0.hit, ';', m0.fa, ';', m0.miss, ';', m0.cn, ';', m0.time order by m0.time) as sub_data, count(m0.hit) as N0";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var statType = statisticOptionsMap[statisticSelect][1];
+        var statType = statisticOptionsMap[statisticSelect][0];
         var axisKey = yAxisFormat;
         if (yAxisFormat === 'Relative frequency') {
             axisKey = axisKey + " (x100)"
@@ -128,7 +94,6 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{statisticClause}} " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
-                "and m0.hit+m0.fa+m0.miss+m0.cn > 0 " +
                 "{{dateClause}} " +
                 "{{thresholdClause}} " +
                 "{{validTimeClause}} " +

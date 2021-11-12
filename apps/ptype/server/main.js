@@ -185,6 +185,56 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+
+        const xOptionsMap = {
+            'Fcst lead time': "select m0.fcst_len/60 as xVal, ",
+            'Grid scale': "select m0.scale as xVal, ",
+            'Valid UTC hour': "select m0.valid_secs%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select (m0.valid_secs-m0.fcst_len*60)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select m0.valid_secs as xVal, ",
+            'Init Date': "select m0.valid_secs-m0.fcst_len*60 as xVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(xOptionsMap),
+                optionsMap: xOptionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(xOptionsMap)[2],
+                controlButtonVisibility: 'block',
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        const yOptionsMap = {
+            'Fcst lead time': "m0.fcst_len/60 as yVal, ",
+            'Grid scale': "m0.scale as yVal, ",
+            'Valid UTC hour': "m0.valid_secs%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "(m0.valid_secs-m0.fcst_len*60)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "m0.valid_secs as yVal, ",
+            'Init Date': "m0.valid_secs-m0.fcst_len*60 as yVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(yOptionsMap),
+                optionsMap: yOptionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(yOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 10,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
     } else {
         // need to update the dates selector if the metadata has changed
         var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
@@ -392,8 +442,8 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            'Frequency': ['avg(m0.{{variable}}) as stat, group_concat(m0.{{variable}}, ";", m0.valid_secs order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0', 'Frequency', null],
-            'Number of stations': ['avg(m0.{{variable}} * m0.N) as stat, group_concat(m0.{{variable}} * m0.N, ";", m0.valid_secs order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0', 'Number', null]
+            'Frequency': ['avg(m0.{{variable}}) as stat, group_concat(m0.{{variable}}, ";", m0.valid_secs order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0', 'scalar', 'Frequency', null],
+            'Number of stations': ['avg(m0.{{variable}} * m0.N) as stat, group_concat(m0.{{variable}} * m0.N, ";", m0.valid_secs order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0', 'scalar', 'Number', null]
         };
 
         matsCollections["statistic"].insert(
@@ -612,60 +662,6 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections["x-axis-parameter"].findOne({name: 'x-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len/60 as xVal, ",
-            'Grid scale': "select m0.scale as xVal, ",
-            'Valid UTC hour': "select m0.valid_secs%(24*3600)/3600 as xVal, ",
-            'Init UTC hour': "select (m0.valid_secs-m0.fcst_len*60)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select m0.valid_secs as xVal, ",
-            'Init Date': "select m0.valid_secs-m0.fcst_len*60 as xVal, "
-        };
-
-        matsCollections["x-axis-parameter"].insert(
-            {
-                name: 'x-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[2],
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
-    if (matsCollections["y-axis-parameter"].findOne({name: 'y-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "m0.fcst_len/60 as yVal, ",
-            'Grid scale': "m0.scale as yVal, ",
-            'Valid UTC hour': "m0.valid_secs%(24*3600)/3600 as yVal, ",
-            'Init UTC hour': "(m0.valid_secs-m0.fcst_len*60)%(24*3600)/3600 as yVal, ",
-            'Valid Date': "m0.valid_secs as yVal, ",
-            'Init Date': "m0.valid_secs-m0.fcst_len*60 as yVal, "
-        };
-
-        matsCollections["y-axis-parameter"].insert(
-            {
-                name: 'y-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
     // determine date defaults for dates and curveDates
     const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
     modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
@@ -838,7 +834,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });
@@ -855,7 +851,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });
@@ -952,7 +948,7 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    if (metadataSettings)  {
+    if (metadataSettings) {
         metadataPool = mysql.createPool(metadataSettings);
         allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
     }

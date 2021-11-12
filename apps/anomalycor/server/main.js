@@ -185,6 +185,72 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+
+        const xOptionsMap = {
+            'Fcst lead time': "select m0.fcst_len as xVal, ",
+            'Pressure level': "select m0.level as xVal, ",
+            'Valid UTC hour': "select m0.valid_hour as xVal, ",
+            'Init UTC hour': "select (unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour as xVal, ",
+            'Init Date': "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 as xVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(xOptionsMap),
+                optionsMap: xOptionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(xOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        const yOptionsMap = {
+            'Fcst lead time': "m0.fcst_len as yVal, ",
+            'Pressure level': "m0.level as yVal, ",
+            'Valid UTC hour': "m0.valid_hour as yVal, ",
+            'Init UTC hour': "(unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "unix_timestamp(m0.valid_date)+3600*m0.valid_hour as yVal, ",
+            'Init Date': "unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 as yVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(yOptionsMap),
+                optionsMap: yOptionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(yOptionsMap)[1],
+                controlButtonVisibility: 'block',
+                displayOrder: 10,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'significance',
+                type: matsTypes.InputTypes.select,
+                options: ['none', 'standard', 'assume infinite degrees of freedom'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 'none',
+                controlButtonVisibility: 'block',
+                controlButtonText: "overlay student's t-test",
+                displayOrder: 11,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
     } else {
         // need to update the dates selector if the metadata has changed
         var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
@@ -559,78 +625,6 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections["x-axis-parameter"].findOne({name: 'x-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len as xVal, ",
-            'Pressure level': "select m0.level as xVal, ",
-            'Valid UTC hour': "select m0.valid_hour as xVal, ",
-            'Init UTC hour': "select (unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour as xVal, ",
-            'Init Date': "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 as xVal, "
-        };
-
-        matsCollections["x-axis-parameter"].insert(
-            {
-                name: 'x-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
-    if (matsCollections["y-axis-parameter"].findOne({name: 'y-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "m0.fcst_len as yVal,",
-            'Pressure level': "m0.level as yVal,",
-            'Valid UTC hour': "m0.valid_hour as yVal,",
-            'Init UTC hour': "(unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600)%(24*3600)/3600 as yVal,",
-            'Valid Date': "unix_timestamp(m0.valid_date)+3600*m0.valid_hour as yVal, ",
-            'Init Date': "unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 as yVal, "
-        };
-
-        matsCollections["y-axis-parameter"].insert(
-            {
-                name: 'y-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[1],
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
-    if (matsCollections['significance'].findOne({name: 'significance'}) == undefined) {
-        matsCollections['significance'].insert(
-            {
-                name: 'significance',
-                type: matsTypes.InputTypes.select,
-                options: ['none', 'standard', 'assume infinite degrees of freedom'],
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: 'none',
-                controlButtonVisibility: 'block',
-                controlButtonText: "overlay student's t-test",
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 7,
-            });
-    }
-
     // determine date defaults for dates and curveDates
     const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
     modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
@@ -782,7 +776,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "level", "forecast-length", "valid-time", "utc-cycle-start", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "variable", "level", "forecast-length", "valid-time", "utc-cycle-start"
             ],
             groupSize: 6
         });
@@ -798,7 +792,7 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "level", "forecast-length", "valid-time", "utc-cycle-start", "x-axis-parameter", "y-axis-parameter", "significance"
+                "label", "data-source", "region", "variable", "level", "forecast-length", "valid-time", "utc-cycle-start"
             ],
             groupSize: 6
         });

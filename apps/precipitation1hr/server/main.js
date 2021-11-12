@@ -185,6 +185,56 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+
+        const xOptionsMap = {
+            'Fcst lead time': "select m0.fcst_len as xVal, ",
+            'Threshold': "select m0.trsh as xVal, ",    // produces thresholds in in
+            'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select m0.time as xVal, ",
+            'Init Date': "select m0.time-m0.fcst_len*3600 as xVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(xOptionsMap),
+                optionsMap: xOptionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(xOptionsMap)[2],
+                controlButtonVisibility: 'block',
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        const yOptionsMap = {
+            'Fcst lead time': "m0.fcst_len as yVal, ",
+            'Threshold': "m0.trsh as yVal, ",    // produces thresholds in in
+            'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "m0.time as yVal, ",
+            'Init Date': "m0.time-m0.fcst_len*3600 as yVal, "
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(yOptionsMap),
+                optionsMap: yOptionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(yOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 10,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
     } else {
         // need to update the dates selector if the metadata has changed
         var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
@@ -411,33 +461,33 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            'CSI (Critical Success Index)': ['((sum(m0.hit)+0.00)/sum(m0.hit+m0.miss+m0.fa)) * 100 as stat, group_concat(((m0.hit)/(m0.hit+m0.miss+m0.fa)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+            'CSI (Critical Success Index)': ['ctc', 'x100', 100],
 
-            'TSS (True Skill Score)': ['((sum(m0.hit)*sum(m0.cn) - sum(m0.fa)*sum(m0.miss))/((sum(m0.hit)+sum(m0.miss))*(sum(m0.fa)+sum(m0.cn)))) * 100 as stat, group_concat(((m0.hit*m0.cn - m0.fa*m0.miss)/((m0.hit+m0.miss)*(m0.fa+m0.cn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+            'TSS (True Skill Score)': ['ctc', 'x100', 100],
 
-            'PODy (POD of precip > threshold)': ['((sum(m0.hit)+0.00)/sum(m0.hit+m0.miss)) * 100 as stat, group_concat(((m0.hit)/(m0.hit+m0.miss)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+            'PODy (POD of value > threshold)': ['ctc', 'x100', 100],
 
-            'PODn (POD of precip < threshold)': ['((sum(m0.cn)+0.00)/sum(m0.cn+m0.fa)) * 100 as stat, group_concat(((m0.cn)/(m0.cn+m0.fa)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+            'PODn (POD of value < threshold)': ['ctc', 'x100', 100],
 
-            'FAR (False Alarm Ratio)': ['((sum(m0.fa)+0.00)/sum(m0.fa+m0.hit)) * 100 as stat, group_concat(((m0.fa)/(m0.fa+m0.hit)) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 0],
+            'FAR (False Alarm Ratio)': ['ctc', 'x100', 0],
 
-            'Bias (forecast/actual)': ['((sum(m0.hit+m0.fa)+0.00)/sum(m0.hit+m0.miss)) as stat, group_concat(((m0.hit+m0.fa)/(m0.hit+m0.miss)), ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'Ratio', 1],
+            'Bias (forecast/actual)': ['ctc', 'Ratio', 1],
 
-            'HSS (Heidke Skill Score)': ['(2*(sum(m0.cn+0.00)*sum(m0.hit)-sum(m0.miss)*sum(m0.fa))/((sum(m0.cn+0.00)+sum(m0.fa))*(sum(m0.fa)+sum(m0.hit))+(sum(m0.cn+0.00)+sum(m0.miss))*(sum(m0.miss)+sum(m0.hit)))) * 100 as stat, group_concat((2*(m0.cn*m0.hit - m0.miss*m0.fa) / ((m0.cn+m0.fa)*(m0.fa+m0.hit) + (m0.cn+m0.miss)*(m0.miss+m0.hit))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+            'HSS (Heidke Skill Score)': ['ctc', 'x100', 100],
 
-            'ETS (Equitable Threat Score)': ['(sum(m0.hit)-(sum(m0.hit+m0.fa)*sum(m0.hit+m0.miss)/sum(m0.hit+m0.fa+m0.miss+m0.cn)))/(sum(m0.hit+m0.fa+m0.miss)-(sum(m0.hit+m0.fa)*sum(m0.hit+m0.miss)/sum(m0.hit+m0.fa+m0.miss+m0.cn))) * 100 as stat, group_concat((m0.hit-((m0.hit+m0.fa)*(m0.hit+m0.miss)/(m0.hit+m0.fa+m0.miss+m0.cn)))/((m0.hit+m0.fa+m0.miss)-((m0.hit+m0.fa)*(m0.hit+m0.miss)/(m0.hit+m0.fa+m0.miss+m0.cn))) * 100, ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'x100', 100],
+            'ETS (Equitable Threat Score)': ['ctc', 'x100', 100],
 
-            'Nlow (obs < threshold, avg per hr)': ['avg(m0.cn+m0.fa+0.000) as stat, group_concat((m0.cn+m0.fa), ";", m0.time order by m0.time) as sub_data, count(m0.cn) as N0', 'ctc', 'Number', null],
+            'Nlow (obs < threshold, avg per hr)': ['ctc', 'Number', null],
 
-            'Nhigh (obs > threshold, avg per hr)': ['avg(m0.hit+m0.miss+0.000) as stat, group_concat((m0.hit+m0.miss), ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'Number', null],
+            'Nhigh (obs > threshold, avg per hr)': ['ctc', 'Number', null],
 
-            'Ntot (total obs, avg per hr)': ['avg(m0.hit+m0.fa+m0.miss+m0.cn+0.000) as stat, group_concat((m0.hit+m0.fa+m0.miss+m0.cn), ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'Number', null],
+            'Ntot (total obs, avg per hr)': ['ctc', 'Number', null],
 
-            'Ratio (Nlow / Ntot)': ['(sum(m0.cn+m0.fa+0.000)/sum(m0.hit+m0.fa+m0.miss+m0.cn+0.000)) as stat, group_concat(((m0.cn+m0.fa)/(m0.hit+m0.fa+m0.miss+m0.cn)), ";", m0.time order by m0.time) as sub_data, count(m0.cn) as N0', 'ctc', 'Ratio', null],
+            'Ratio (Nlow / Ntot)': ['ctc', 'Ratio', null],
 
-            'Ratio (Nhigh / Ntot)': ['(sum(m0.hit+m0.miss+0.000)/sum(m0.hit+m0.fa+m0.miss+m0.cn+0.000)) as stat, group_concat(((m0.hit+m0.miss)/(m0.hit+m0.fa+m0.miss+m0.cn)), ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'Ratio', null],
+            'Ratio (Nhigh / Ntot)': ['ctc', 'Ratio', null],
 
-            'N per graph point': ['sum(m0.hit+m0.miss+m0.fa+m0.cn+0.000) as stat, group_concat((m0.hit+m0.miss+m0.fa+m0.cn), ";", m0.time order by m0.time) as sub_data, count(m0.hit) as N0', 'ctc', 'Number', null]
+            'N per graph point': ['ctc', 'Number', null]
         };
         matsCollections["statistic"].insert(
             {
@@ -682,60 +732,6 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections["x-axis-parameter"].findOne({name: 'x-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len as xVal, ",
-            'Threshold': "select m0.trsh as xVal, ",    // produces thresholds in in
-            'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
-            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select m0.time as xVal, ",
-            'Init Date': "select m0.time-m0.fcst_len*3600 as xVal, "
-        };
-
-        matsCollections["x-axis-parameter"].insert(
-            {
-                name: 'x-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[2],
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
-    if (matsCollections["y-axis-parameter"].findOne({name: 'y-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "m0.fcst_len as yVal, ",
-            'Threshold': "m0.trsh as yVal, ",    // produces thresholds in in
-            'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
-            'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
-            'Valid Date': "m0.time as yVal, ",
-            'Init Date': "m0.time-m0.fcst_len*3600 as yVal, "
-        };
-
-        matsCollections["y-axis-parameter"].insert(
-            {
-                name: 'y-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
     if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
         const optionsMap = {
             'Fcst lead time': "select m0.fcst_len as binVal, ",
@@ -762,7 +758,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(optionsMap)[4],
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 6,
             });
@@ -981,7 +977,7 @@ const doCurveTextPatterns = function () {
                 ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length", "valid-time", "truth"
             ],
             groupSize: 6
         });
@@ -999,7 +995,7 @@ const doCurveTextPatterns = function () {
                 ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length", "valid-time", "truth", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length", "valid-time", "truth"
             ],
             groupSize: 6
         });
@@ -1108,7 +1104,7 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    if (metadataSettings)  {
+    if (metadataSettings) {
         metadataPool = mysql.createPool(metadataSettings);
         allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
     }

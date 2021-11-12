@@ -74,6 +74,7 @@ dataMap = function (plotParams, plotFunction) {
     }
     var statisticClause = 'avg({{variableClause}}) as stat, count(m0.time) as N0';
     statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
+    var statType = 'scalar';
     curves[0]['statistic'] = "Bias (Model - Obs)";
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     var querySites = [];
