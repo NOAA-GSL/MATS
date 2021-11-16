@@ -188,7 +188,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     // turn the two contours into one difference contour
-    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, appParams, showSignificance, curve['significance'], 'Anomaly Correlation', statType === "ctc");
+    dataset = matsDataDiffUtils.getDataForDiffContour(dataset, appParams, showSignificance, plotParams['significance'], 'Anomaly Correlation', statType === "ctc");
     plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
     curves = plotParams.curves;
     dataset[0]['name'] = matsPlotUtils.getCurveText(matsTypes.PlotTypes.contourDiff, curves[0]);

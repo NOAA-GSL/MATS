@@ -227,6 +227,22 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2,
             });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'significance',
+                type: matsTypes.InputTypes.select,
+                options: ['none', 'significance at 95th percentile'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 'none',
+                controlButtonVisibility: 'block',
+                controlButtonText: "overlay significance",
+                displayOrder: 11,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
     } else {
         // need to update the dates selector if the metadata has changed
         var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
