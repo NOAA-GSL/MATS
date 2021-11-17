@@ -53,8 +53,8 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "4.2.1-2021.11.17.18.05",
-      "buildDate": "2021.11.17.18.05",
+      "version": "4.2.1-2021.11.17.21.49",
+      "buildDate": "2021.11.17.21.49",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -290,8 +290,8 @@
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "4.2.1-2021.11.17.18.05",
-      "buildDate": "2021.11.17.18.05",
+      "version": "4.2.1-2021.11.17.21.49",
+      "buildDate": "2021.11.17.21.49",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
