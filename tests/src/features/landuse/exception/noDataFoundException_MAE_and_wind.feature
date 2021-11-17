@@ -23,15 +23,15 @@ Feature: No Data Found Exception: MAE_and_wind
         Then the "data-source" parameter value matches "RAP_GSL"
         When I change the "statistic" parameter to "MAE"
         Then the "statistic" parameter value matches "MAE"
-        When I change the "variable" parameter to "wind"
-        Then the "variable" parameter value matches "wind"
+        When I change the "variable" parameter to "10m wind"
+        Then the "variable" parameter value matches "10m wind"
         When I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
 
         When I click the "Plot Unmatched" button
         Then the "info" dialog should be visible
-        And I should see "INFO:  The statistic/variable combination [MAE and wind] is not supported by the database for the model/vgtyp [RR1h and Evergreen Needleleaf Forest]." in the "info" dialog
+        And I should see "INFO:  The statistic/variable combination [MAE and 10m wind] is not supported by the database for the model/vgtyp [RR1h and Evergreen Needleleaf Forest]." in the "info" dialog
 
         When I click the "Clear" button
         Then the "info" dialog should not be visible

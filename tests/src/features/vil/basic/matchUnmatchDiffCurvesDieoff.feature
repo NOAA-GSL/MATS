@@ -17,8 +17,8 @@ Feature: Match Unmatch Diff Curves Dieoff
         Then the plot type should be "DieOff"
         When I change the "data-source" parameter to "RTMA_3D_GSL"
         Then the "data-source" parameter value matches "RTMA_3D_GSL"
-        When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
-        Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
+        When I set the curve-dates to "09/21/2019 0:00 - 09/24/2019 0:00"
+        Then the curve-dates value is "09/21/2019 0:00 - 09/24/2019 0:00"
         When I change the "dieoff-type" parameter to "Dieoff for a specified UTC cycle init hour"
         Then the "dieoff-type" parameter value matches "Dieoff for a specified UTC cycle init hour"
         When I click the "Add Curve" button

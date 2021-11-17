@@ -17,8 +17,8 @@ Feature: Match Unmatch Diff Curves Threshold
         Then the plot type should be "Threshold"
         When I change the "data-source" parameter to "RAP_GSL"
         Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the curve-dates to "06/28/2019 0:00 - 09/24/2019 0:00"
-        Then the curve-dates value is "06/28/2019 0:00 - 09/24/2019 0:00"
+        When I set the curve-dates to "09/21/2019 0:00 - 09/24/2019 0:00"
+        Then the curve-dates value is "09/21/2019 0:00 - 09/24/2019 0:00"
         When I click the "Add Curve" button
         Then "Curve0" is added
 

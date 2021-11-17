@@ -21,8 +21,8 @@ Feature: Plot and Add buttons are disabled while plotting
         And the "region" parameter value matches "Table Mountain, CO"
         And I change the "average" parameter to "6hr"
         And the "average" parameter value matches "6hr"
-        When I set the dates to "09/17/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "09/17/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "09/21/2019 0:00 - 09/24/2019 0:00"
+        Then the dates value is "09/21/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
