@@ -29,7 +29,9 @@ docker logout
 #echo  set username and password
 read -p "What is the dockerhub username with access to push to dtcenter/met-* repositories? " userName
 UNAME=${userName}
-docker login --username $UNAME
+read -s -p "What is the dockerhub password for username ${userName} to push to dtcenter/met-* repositories? " upass
+UPASS=${upass}
+docker login --username $UNAME --password $UPASS
 ret=$?
 if [[ $ret -ne 0 ]]; then
         echo -e "${RED} login failed - exiting ${NC}"
@@ -39,7 +41,7 @@ fi
 docker system prune -af
 #echo  get token to be able to talk to Docker Hub
 TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'${UNAME}'", "password": "'${UPASS}'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
-
+echo "TOKEN is ${TOKEN}"
 #echo  build a list of all tags for mats repo
 IMAGE_TAGS=($(curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/matsapps/${repo}/tags/?page_size=10000 | jq -r '.results|.[]|.name'))
 FILTERED_IMAGE_TAGS=()
