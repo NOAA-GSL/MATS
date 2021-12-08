@@ -75,7 +75,7 @@ dataContour = function (plotParams, plotFunction) {
     dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-    var statisticClause = "sum(m0.yy) as hit, sum(m0.ny) as fa, sum(m0.yn) as miss, sum(m0.nn) as cn, group_concat(m0.yy, ';', m0.ny, ';', m0.yn, ';', m0.nn, ';', m0.time order by m0.time) as sub_data, count(m0.yy) as N0";
+    var statisticClause = "sum(m0.yy) as hit, sum(m0.ny) as fa, sum(m0.yn) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.ny, ';', m0.yn, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
     // For contours, this functions as the colorbar label.
     var statType = statisticOptionsMap[statisticSelect][0];
     curve['unitKey'] = statisticOptionsMap[statisticSelect][1];
