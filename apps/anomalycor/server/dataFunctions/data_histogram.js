@@ -65,7 +65,8 @@ dataHistogram = function (plotParams, plotFunction) {
         }
         var statisticClause = "avg(m0.wacorr/100) as stat, " +
             "count(m0.wacorr) as N0, " +
-            "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data";
+            "group_concat(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level, ';', m0.wacorr / 100 " +
+            "order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data";
         var statType = "ACC";
         curves[curveIndex]['statistic'] = "Correlation";
         // axisKey is used to determine which axis a curve should use.
