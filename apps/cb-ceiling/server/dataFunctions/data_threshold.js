@@ -2,13 +2,15 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
-import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
+import {
+    matsCollections,
+    matsTypes,
+    matsDataUtils,
+    matsDataQueryUtils,
+    matsDataDiffUtils,
+    matsDataCurveOpsUtils,
+    matsDataProcessUtils
+} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataThreshold = function (plotParams, plotFunction) {
@@ -37,145 +39,157 @@ dataThreshold = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
     var idealValues = [];
 
+    // catalogue the thresholds now, we'll need to do a separate query for each
+    const allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).sort(function (a, b) {
+        return Number(a) - Number(b)
+    });
+
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var modelClause = "AND m0.model='" + model + "' ";
+        var queryTableClause = "FROM mdata m0";
+        var validTimeClause = "";
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+        }
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var regionType = curve['region-type'];
         if (regionType === 'Select stations') {
             throw new Error("INFO:  Single/multi station plotting is not available for thresholds.");
         }
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + " as m0";
-        var thresholdClause = "";
-        var validTimeClause = "";
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
-        }
-        var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
-        var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
-        // for contingency table apps, we currently have to deal with matching in the query.
-        if (appParams.matching && curvesLength > 1) {
-            var matchCurveIdx = 0;
-            var mcidx;
-            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
-                const matchCurve = curves[mcidx];
-                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
-                    continue;
-                }
-                matchCurveIdx++;
-                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
-                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
-                thresholdClause = thresholdClause + " and m0.trsh = m" + matchCurveIdx + ".trsh";
-                const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
-                if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + matchValidTimes + ")";
-                }
-                const matchForecastLength = matchCurve['forecast-length'];
-                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
-                const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
-                const matchFromSecs = matchDateRange.fromSeconds;
-                const matchToSecs = matchDateRange.toSeconds;
-                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
-                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
-            }
-        }
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause = statisticOptionsMap[statisticSelect][0];
+        var regionClause = "AND m0.region='" + region + "' ";
+        var statisticClause = "sum(m0.data.['{{threshold}}'].hits) hit, sum(m0.data.['{{threshold}}'].false_alarms) fa, " +
+            "sum(m0.data.['{{threshold}}'].misses) miss, sum(m0.data.['{{threshold}}'].correct_negatives) cn, " +
+            "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['{{threshold}}'].hits) || ';' || " +
+            "TO_STRING(m0.data.['{{threshold}}'].false_alarms) || ';' || TO_STRING(m0.data.['{{threshold}}'].misses) || ';' || " +
+            "TO_STRING(m0.data.['{{threshold}}'].correct_negatives))) sub_data, count(m0.data.['{{threshold}}'].hits) N0 ";
+        var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
+        var whereClause = "WHERE " +
+            "m0.type='DD' " +
+            "AND m0.docType='CTC'" +
+            "AND m0.subset='METAR' " +
+            "AND m0.version='V01' ";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var statType = statisticOptionsMap[statisticSelect][1];
-        var axisKey = statisticOptionsMap[statisticSelect][2];
+        var statType = statisticOptionsMap[statisticSelect][0];
+        var axisKey = statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var idealVal = statisticOptionsMap[statisticSelect][3];
+        var idealVal = statisticOptionsMap[statisticSelect][2];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
             idealValues.push(idealVal);
         }
 
-        var d;
+        var d = {};
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            // prepare the query from the above parameters
-            var statement = "select m0.trsh/100 as thresh, " +      // produces thresholds in kft
-                "count(distinct m0.time) as N_times, " +
-                "min(m0.time) as min_secs, " +
-                "max(m0.time) as max_secs, " +
-                "{{statisticClause}} " +
-                "{{queryTableClause}} " +
-                "where 1=1 " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "{{dateClause}} " +
-                "{{thresholdClause}} " +
-                "{{validTimeClause}} " +
-                "{{forecastLengthClause}} " +
-                "group by thresh " +
-                "order by thresh" +
-                ";";
+            for (var thresholdIndex = 0; thresholdIndex < allThresholds.length; thresholdIndex++) {
+                var threshold = allThresholds[thresholdIndex];
+                // prepare the query from the above parameters
+                var statement = "select {{threshold}} as thresh, " +      // produces thresholds in kft
+                    "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+                    "MIN(m0.fcstValidEpoch) min_secs, " +
+                    "MAX(m0.fcstValidEpoch) max_secs, " +
+                    "{{statisticClause}} " +
+                    "{{queryTableClause}} " +
+                    "{{whereClause}}" +
+                    "{{modelClause}}" +
+                    "{{regionClause}}" +
+                    "{{dateClause}} " +
+                    "{{validTimeClause}} " +
+                    "{{forecastLengthClause}} " +
+                    "group by {{threshold}} " +
+                    "order by thresh" +
+                    ";";
 
-            statement = statement.replace('{{statisticClause}}', statisticClause);
-            statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{thresholdClause}}', thresholdClause);
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-            statement = statement.replace('{{dateClause}}', dateClause);
-            dataRequests[label] = statement;
+                statement = statement.replace('{{statisticClause}}', statisticClause);
+                statement = statement.replace('{{queryTableClause}}', queryTableClause);
+                statement = statement.replace('{{whereClause}}', whereClause);
+                statement = statement.replace('{{modelClause}}', modelClause);
+                statement = statement.replace('{{regionClause}}', regionClause);
+                statement = statement.split('{{threshold}}').join(threshold);
+                statement = statement.replace('{{validTimeClause}}', validTimeClause);
+                statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+                statement = statement.replace('{{dateClause}}', dateClause);
+                dataRequests[label] = statement;
 
-            var queryResult;
-            var startMoment = moment();
-            var finishMoment;
-            try {
-                // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + label] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.x.length
-                };
-                // get the data back from the query
-                d = queryResult.data;
-            } catch (e) {
-                // this is an error produced by a bug in the query function, not an error returned by the mysql database
-                e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
-                throw new Error(e.message);
-            }
-            if (queryResult.error !== undefined && queryResult.error !== "") {
-                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-                    // this is NOT an error just a no data condition
-                    dataFoundForCurve = false;
-                } else {
-                    // this is an error returned by the mysql database
-                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw (new Error(error));
+                var queryResult;
+                var startMoment = moment();
+                var finishMoment;
+                try {
+                    // send the query statement to the query function
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(cbPool, statement, appParams, statisticSelect);
+                    finishMoment = moment();
+                    dataRequests["data retrieval (query) time - " + label] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                        recordCount: queryResult.data.x.length
+                    };
+                    // get the data back from the query
+                    var dTemp = queryResult.data;
+                } catch (e) {
+                    // this is an error produced by a bug in the query function, not an error returned by the mysql database
+                    e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+                    throw new Error(e.message);
                 }
-            } else {
-                dataFoundForAnyCurve = true;
-            }
-
-            // set axis limits based on returned data
-            var postQueryStartMoment = moment();
-            if (dataFoundForCurve) {
-                xmin = xmin < d.xmin ? xmin : d.xmin;
-                xmax = xmax > d.xmax ? xmax : d.xmax;
-                ymin = ymin < d.ymin ? ymin : d.ymin;
-                ymax = ymax > d.ymax ? ymax : d.ymax;
+                if (queryResult.error !== undefined && queryResult.error !== "") {
+                    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                        // this is NOT an error just a no data condition
+                        dataFoundForCurve = false;
+                    } else {
+                        // this is an error returned by the mysql database
+                        error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                        throw (new Error(error));
+                    }
+                } else {
+                    dataFoundForAnyCurve = true;
+                }
+                // set axis limits based on returned data
+                var postQueryStartMoment = moment();
+                if (dataFoundForCurve) {
+                    xmin = xmin < dTemp.xmin ? xmin : dTemp.xmin;
+                    xmax = xmax > dTemp.xmax ? xmax : dTemp.xmax;
+                    ymin = ymin < dTemp.ymin ? ymin : dTemp.ymin;
+                    ymax = ymax > dTemp.ymax ? ymax : dTemp.ymax;
+                }
+                // consolidate data
+                if (Object.keys(d).length === 0) {
+                    d = dTemp;
+                } else {
+                    d.x.push(dTemp.x[0]);
+                    d.y.push(dTemp.y[0]);
+                    d.error_y.push(dTemp.error_y[0]);
+                    d.subHit.push(dTemp.subHit[0]);
+                    d.subFa.push(dTemp.subFa[0]);
+                    d.subMiss.push(dTemp.subMiss[0]);
+                    d.subCn.push(dTemp.subCn[0]);
+                    d.subVals.push(dTemp.subVals[0]);
+                    d.subSecs.push(dTemp.subSecs[0]);
+                    d.xmin = d.xmin < dTemp.xmin ? d.xmin : dTemp.xmin;
+                    d.xmax = d.xmax > dTemp.xmax ? d.xmax : dTemp.xmax;
+                    d.ymin = d.ymin < dTemp.ymin ? d.ymin : dTemp.ymin;
+                    d.ymax = d.ymax > dTemp.ymax ? d.ymax : dTemp.ymax;
+                    d.sum = d.sum + dTemp.sum;
+                }
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc");
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;

@@ -187,7 +187,6 @@ const doPlotParams = function () {
 
         const xOptionsMap = {
             'Fcst lead time': "select m0.fcst_len as xVal, ",
-            'Threshold': "select m0.trsh/100 as xVal, ",    // produces thresholds in kft
             'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
             'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
             'Valid Date': "select m0.time as xVal, ",
@@ -203,7 +202,7 @@ const doPlotParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(xOptionsMap)[2],
+                default: Object.keys(xOptionsMap)[1],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -212,7 +211,6 @@ const doPlotParams = function () {
 
         const yOptionsMap = {
             'Fcst lead time': "m0.fcst_len as yVal, ",
-            'Threshold': "m0.trsh/100 as yVal, ",    // produces thresholds in kft
             'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
             'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
             'Valid Date': "m0.time as yVal, ",
@@ -676,7 +674,7 @@ const doCurveParams = async function () {
 
     if (matsCollections["average"].findOne({name: 'average'}) == undefined) {
         const optionsMap = {
-            'None': ['ceil(' + 3600 + '*floor(((m0.fcstValidEpoch)+' + 3600 + '/2)/' + 3600 + '))'],
+            'None': ['m0.fcstValidEpoch'],
             '3hr': ['ceil(' + 3600 * 3 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 3 + '/2)/' + 3600 * 3 + '))'],
             '6hr': ['ceil(' + 3600 * 6 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 6 + '/2)/' + 3600 * 6 + '))'],
             '12hr': ['ceil(' + 3600 * 12 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 12 + '/2)/' + 3600 * 12 + '))'],
