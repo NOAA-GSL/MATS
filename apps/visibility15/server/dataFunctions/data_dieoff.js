@@ -77,7 +77,7 @@ dataDieOff = function (plotParams, plotFunction) {
             queryTableClause = "from " + model + "_" + region + " as m0";
             truthClause = "and m0.truth = '" + truth + "'";
             thresholdClause = "and m0.trsh = " + threshold;
-            statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn, ';', m0.time order by m0.time) as sub_data, count(m0.yy) as N0";
+            statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";;
             dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
             queryPool = sumPool;
         } else {
@@ -85,9 +85,9 @@ dataDieOff = function (plotParams, plotFunction) {
             queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
             statisticClause = "sum(if((m0.vis100 < {{threshold}}) and (o.vis_{{truth}} < {{threshold}}),1,0)) as hit, sum(if((m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0)) as fa, " +
                 "sum(if(NOT (m0.vis100 < {{threshold}}) and (o.vis_{{truth}} < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0)) as cn, " +
-                "group_concat(if((m0.vis100 < {{threshold}}) and (o.vis_{{truth}} < {{threshold}}),1,0), ';', if((m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0), ';', " +
-                "if(NOT (m0.vis100 < {{threshold}}) and (o.vis_{{truth}} < {{threshold}}),1,0), ';', if(NOT (m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0), ';', " +
-                "ceil(3600*floor((m0.time+1800)/3600)) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.vis100) as N0";
+                "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.vis100 < {{threshold}}) and (o.vis_{{truth}} < {{threshold}}),1,0), ';', " +
+                "if((m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0), ';', if(NOT (m0.vis100 < {{threshold}}) and (o.vis_{{truth}} < {{threshold}}),1,0), ';', " +
+                "if(NOT (m0.vis100 < {{threshold}}) and NOT (o.vis_{{truth}} < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.vis100) as N0";
             if (truth !== "qc") {
                 statisticClause = statisticClause.replace(/\{\{truth\}\}/g, truth);
             } else {
