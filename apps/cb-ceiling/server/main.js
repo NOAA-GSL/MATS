@@ -745,12 +745,12 @@ const doCurveParams = async function () {
 
     if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
         const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len as binVal, ",
-            'Threshold': "select m0.trsh/100 as binVal, ",
-            'Valid UTC hour': "select m0.time%(24*3600)/3600 as binVal, ",
-            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
-            'Valid Date': "select m0.time as binVal, ",
-            'Init Date': "select m0.time-m0.fcst_len*3600 as binVal, "
+            'Fcst lead time': "m0.fcstLen",
+            'Threshold': "'{{threshold}}'",
+            'Valid UTC hour': "m0.fcstValidEpoch%(24*3600)/3600",
+            'Init UTC hour': "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+            'Valid Date': "m0.fcstValidEpoch",
+            'Init Date': "m0.fcstValidEpoch-m0.fcstLen*3600"
         };
 
         matsCollections["bin-parameter"].insert(
