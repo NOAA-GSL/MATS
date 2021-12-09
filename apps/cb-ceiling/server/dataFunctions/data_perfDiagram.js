@@ -39,11 +39,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
 
-    // catalogue the thresholds now, we'll need to do a separate query for each
-    var allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).sort(function (a, b) {
-        return Number(a) - Number(b)
-    });
-
+    var allThresholds;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
@@ -64,6 +60,11 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             }
             var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
             allThresholds = [threshold];
+        } else {
+            // catalogue the thresholds now, we'll need to do a separate query for each
+            allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).sort(function (a, b) {
+                return Number(a) - Number(b)
+            });
         }
         if (binParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -78,7 +79,11 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             }
             forecastLengthClause = "and m0.fcstLen = " + forecastLength;
         }
-        var statisticSelect = 'PerformanceDiagram';
+        if (binParam === 'Init Date') {
+            dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
+        } else {
+            dateString = "m0.fcstValidEpoch";
+        }
         var regionType = curve['region-type'];
         if (regionType === 'Select stations') {
             throw new Error("INFO:  Single/multi station plotting is not available for performance diagrams.");
@@ -86,11 +91,14 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var regionClause = "AND m0.region='" + region + "' ";
-        if (binParam === 'Init Date') {
-            dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
-        } else {
-            dateString = "m0.fcstValidEpoch";
-        }
+        var statisticSelect = 'PerformanceDiagram';
+        var statisticClause = "((sum(m0.data.['{{threshold}}'].hits))/sum(m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses)) as pod, " +
+            "((sum(m0.data.['{{threshold}}'].false_alarms))/sum(m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].hits)) as far, " +
+            "sum(m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses) as oy_all, " +
+            "sum(m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].correct_negatives) as on_all, " +
+            "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['{{threshold}}'].hits) || ';' || " +
+            "TO_STRING(m0.data.['{{threshold}}'].false_alarms) || ';' || TO_STRING(m0.data.['{{threshold}}'].misses) || ';' || " +
+            "TO_STRING(m0.data.['{{threshold}}'].correct_negatives))) sub_data, count(m0.data.['{{threshold}}'].hits) N0 ";
         var dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
         var whereClause = "WHERE " +
             "m0.type='DD' " +
@@ -110,17 +118,11 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             for (var thresholdIndex = 0; thresholdIndex < allThresholds.length; thresholdIndex++) {
                 threshold = allThresholds[thresholdIndex];
                 // prepare the query from the above parameters
-                var statement = "select {{binClause}} as binVal, " +
+                var statement = "SELECT {{binClause}} as binVal, " +
                     "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
                     "MIN(m0.fcstValidEpoch) min_secs, " +
                     "MAX(m0.fcstValidEpoch) max_secs, " +
-                    "((sum(m0.data.['{{threshold}}'].hits))/sum(m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses)) as pod, " +
-                    "((sum(m0.data.['{{threshold}}'].false_alarms))/sum(m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].hits)) as far, " +
-                    "sum(m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses) as oy_all, " +
-                    "sum(m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].correct_negatives) as on_all, " +
-                    "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['{{threshold}}'].hits) || ';' || " +
-                    "TO_STRING(m0.data.['{{threshold}}'].false_alarms) || ';' || TO_STRING(m0.data.['{{threshold}}'].misses) || ';' || " +
-                    "TO_STRING(m0.data.['{{threshold}}'].correct_negatives))) sub_data, count(m0.data.['{{threshold}}'].hits) N0 " +
+                    "{{statisticClause}} " +
                     "{{queryTableClause}} " +
                     "{{whereClause}}" +
                     "{{modelClause}}" +
@@ -133,6 +135,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                     ";";
 
                 statement = statement.split('{{binClause}}').join(binClause);
+                statement = statement.replace('{{statisticClause}}', statisticClause);
                 statement = statement.replace('{{queryTableClause}}', queryTableClause);
                 statement = statement.replace('{{whereClause}}', whereClause);
                 statement = statement.replace('{{modelClause}}', modelClause);

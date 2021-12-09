@@ -70,7 +70,7 @@ dataMap = function (plotParams, plotFunction) {
     var siteDateClause = "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
     var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
 
-    var statement = "select m0.madis_id as sta_id, " +
+    var statement = "SELECT m0.madis_id as sta_id, " +
         "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
         "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
         "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
