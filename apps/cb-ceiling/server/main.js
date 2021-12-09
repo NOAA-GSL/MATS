@@ -186,11 +186,11 @@ const doPlotParams = function () {
             });
 
         const xOptionsMap = {
-            'Fcst lead time': "select m0.fcst_len as xVal, ",
-            'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
-            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select m0.time as xVal, ",
-            'Init Date': "select m0.time-m0.fcst_len*3600 as xVal, "
+            'Fcst lead time': "m0.fcstLen",
+            'Valid UTC hour': "m0.fcstValidEpoch%(24*3600)/3600",
+            'Init UTC hour': "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+            'Valid Date': "m0.fcstValidEpoch",
+            'Init Date': "m0.fcstValidEpoch-m0.fcstLen*3600"
         };
 
         matsCollections.PlotParams.insert(
@@ -210,11 +210,11 @@ const doPlotParams = function () {
             });
 
         const yOptionsMap = {
-            'Fcst lead time': "m0.fcst_len as yVal, ",
-            'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
-            'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
-            'Valid Date': "m0.time as yVal, ",
-            'Init Date': "m0.time-m0.fcst_len*3600 as yVal, "
+            'Fcst lead time': "m0.fcstLen",
+            'Valid UTC hour': "m0.fcstValidEpoch%(24*3600)/3600",
+            'Init UTC hour': "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+            'Valid Date': "m0.fcstValidEpoch",
+            'Init Date': "m0.fcstValidEpoch-m0.fcstLen*3600"
         };
 
         matsCollections.PlotParams.insert(
@@ -326,13 +326,15 @@ const doCurveParams = async function () {
 
             // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
             thresholdsModelOptionsMap[model] = thresholdsModelOptionsMap[model] ? thresholdsModelOptionsMap[model] : [];
-            rows[i].thresholds.sort(function(a, b){return Number(a)-Number(b)});
+            rows[i].thresholds.sort(function (a, b) {
+                return Number(a) - Number(b)
+            });
             for (var t = 0; t < rows[i].thresholds.length; t++) {
                 thresholdsModelOptionsMap[model].push(masterThresholdValuesMap[rows[i].thresholds[t]]);
             }
 
             var regionsArr = [];
-            for (var ri=0; ri< rows[i].regions.length;ri++) {
+            for (var ri = 0; ri < rows[i].regions.length; ri++) {
                 regionsArr.push(masterRegionValuesMap[rows[i].regions[ri]])
             }
             regionModelOptionsMap[model] = regionsArr;
@@ -346,11 +348,11 @@ const doCurveParams = async function () {
         matsCollections.SiteMap.remove({});
 //        var rows = await cbPool.searchStationsByBoundingBox( -180,89, 180,-89);
         var rows = await cbPool.queryCB('select meta().id, mdata.* from mdata where type="MD" and docType="station" and version = "V01"  and subset="METAR";');
-        rows = rows.sort((a,b)=>(a.name > b.name) ? 1 : -1);
+        rows = rows.sort((a, b) => (a.name > b.name) ? 1 : -1);
         for (var i = 0; i < rows.length; i++) {
             const site_id = rows[i].id;
-            const site_name = rows[i].name == undefined ? "unknown": rows[i].name;
-            const site_description = rows[i].description == undefined ? "unknown":rows[i].description;
+            const site_name = rows[i].name == undefined ? "unknown" : rows[i].name;
+            const site_description = rows[i].description == undefined ? "unknown" : rows[i].description;
             const site_lat = rows[i].geo == undefined ? undefined : rows[i].geo.lat;
             const site_lon = rows[i].geo == undefined ? undefined : rows[i].geo.lon;
             const site_elev = rows[i].geo == undefined ? "unknown" : rows[i].geo.elev;
@@ -776,8 +778,8 @@ const doCurveParams = async function () {
     }
 
     // determine date defaults for dates and curveDates
-    const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({name: "data-source"}, {default: 1}).default;
+    modelDateRangeMap = matsCollections["data-source"].findOne({name: "data-source"}, {dates: 1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
 
@@ -1116,7 +1118,10 @@ Meteor.startup(function () {
     // create list of all pools
     var allPools = [];
     // connect to the couchbase cluster
-    const cbConnection = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.COUCHBASE, status: "active"}, {
+    const cbConnection = matsCollections.Databases.findOne({
+        role: matsTypes.DatabaseRoles.COUCHBASE,
+        status: "active"
+    }, {
         host: 1,
         port: 1,
         bucket: 1,
@@ -1128,8 +1133,8 @@ Meteor.startup(function () {
     if (cbConnection) {
         cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.user, cbConnection.password);
     }
-    allPools.push({pool:"cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
-     // create list of tables we need to monitor for update
+    allPools.push({pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
+    // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
         "MD:matsAux:COMMON:V01",
         "MD:matsGui:cb-ceiling:HRRR:COMMON:V01",
@@ -1143,7 +1148,12 @@ Meteor.startup(function () {
         "MD:V01:REGION:W_HRRR"
     ]);
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, dbType: matsTypes.DbTypes.couchbase});
+        matsMethods.resetApp({
+            appPools: allPools,
+            appMdr: mdr,
+            appType: matsTypes.AppTypes.mats,
+            dbType: matsTypes.DbTypes.couchbase
+        });
     } catch (error) {
         console.log(error.message);
     }

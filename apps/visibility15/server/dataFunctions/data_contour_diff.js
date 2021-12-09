@@ -121,11 +121,6 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.split('{{dateString}}').join(dateString);
         dataRequests[label] = statement;
 
-        // math is done on forecastLength later on -- set all analyses to 0
-        if (forecastLength === "-99") {
-            forecastLength = "0";
-        }
-
         var queryResult;
         var startMoment = moment();
         var finishMoment;

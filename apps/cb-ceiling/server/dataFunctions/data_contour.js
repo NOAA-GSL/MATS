@@ -2,12 +2,14 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
-import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
+import {
+    matsCollections,
+    matsTypes,
+    matsDataUtils,
+    matsDataQueryUtils,
+    matsDataCurveOpsUtils,
+    matsDataProcessUtils
+} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataContour = function (plotParams, plotFunction) {
@@ -26,6 +28,10 @@ dataContour = function (plotParams, plotFunction) {
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
+    var xAxisParam = plotParams['x-axis-parameter'];
+    var yAxisParam = plotParams['y-axis-parameter'];
+    var xValClause = matsCollections.PlotParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+    var yValClause = matsCollections.PlotParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     if (curves.length > 1) {
@@ -37,88 +43,99 @@ dataContour = function (plotParams, plotFunction) {
     // initialize variables specific to the curve
     var curve = curves[0];
     var label = curve['label'];
-    var xAxisParam = curve['x-axis-parameter'];
-    var yAxisParam = curve['y-axis-parameter'];
-    var xValClause = matsCollections['x-axis-parameter'].findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-    var yValClause = matsCollections['y-axis-parameter'].findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
     var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-    var regionStr = curve['region'];
-    var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-    var queryTableClause = "from " + model + "_" + region + " as m0";
-    var thresholdClause = "";
+    var modelClause = "AND m0.model='" + model + "' ";
+    var queryTableClause = "FROM mdata m0";
     var validTimeClause = "";
     var forecastLengthClause = "";
     var dateString = "";
-    var dateClause = "";
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
+        if (thresholdStr === undefined) {
+            throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
+        }
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        thresholdClause = "and m0.trsh = " + threshold;
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and m0.time%(24*3600)/3600 IN(" + validTimes + ")";
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
         }
     }
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'];
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength;
+        if (forecastLength === undefined) {
+            throw new Error("INFO:  " + label + "'s forecast lead time is undefined. Please assign it a value.");
+        }
+        forecastLengthClause = "and m0.fcstLen = " + forecastLength;
     }
     if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-        dateString = "m0.time-m0.fcst_len*3600";
+        dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
     } else {
-        dateString = "m0.time";
+        dateString = "m0.fcstValidEpoch";
     }
-    dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+    var regionType = curve['region-type'];
+    if (regionType === 'Select stations') {
+        throw new Error("INFO:  Single/multi station plotting is not available for performance diagrams.");
+    }
+    var regionStr = curve['region'];
+    var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
+    var regionClause = "AND m0.region='" + region + "' ";
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-    var statisticClause = statisticOptionsMap[statisticSelect][0];
+    var statisticClause = "sum(m0.data.['" + threshold + "'].hits) hit, sum(m0.data.['" + threshold + "'].false_alarms) fa, " +
+        "sum(m0.data.['" + threshold + "'].misses) miss, sum(m0.data.['" + threshold + "'].correct_negatives) cn, " +
+        "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['" + threshold + "'].hits) || ';' || " +
+        "TO_STRING(m0.data.['" + threshold + "'].false_alarms) || ';' || TO_STRING(m0.data.['" + threshold + "'].misses) || ';' || " +
+        "TO_STRING(m0.data.['" + threshold + "'].correct_negatives))) sub_data, count(m0.data.['" + threshold + "'].hits) N0 ";
+    var dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+    var whereClause = "WHERE " +
+        "m0.type='DD' " +
+        "AND m0.docType='CTC'" +
+        "AND m0.subset='METAR' " +
+        "AND m0.version='V01' ";
     // For contours, this functions as the colorbar label.
-    curve['unitKey'] = statisticOptionsMap[statisticSelect][2];
+    var statType = statisticOptionsMap[statisticSelect][0];
+    curve['unitKey'] = statisticOptionsMap[statisticSelect][1];
 
-    var d;
+    var d = {};
     // this is a database driven curve, not a difference curve
     // prepare the query from the above parameters
-    var statement = "{{xValClause}} " +
-        "{{yValClause}} " +
-        "count(distinct {{dateString}}) as N_times, " +
-        "min({{dateString}}) as min_secs, " +
-        "max({{dateString}}) as max_secs, " +
+    var statement = "SELECT {{xValClause}} as xVal, " +
+        "{{yValClause}} yVal, " +
+        "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+        "MIN(m0.fcstValidEpoch) min_secs, " +
+        "MAX(m0.fcstValidEpoch) max_secs, " +
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
-        "where 1=1 " +
-        "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+        "{{whereClause}}" +
+        "{{modelClause}}" +
+        "{{regionClause}}" +
         "{{dateClause}} " +
-        "{{thresholdClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "group by xVal,yVal " +
+        "group by {{xValClause}}, {{yValClause}} " +
         "order by xVal,yVal" +
         ";";
 
-    statement = statement.replace('{{xValClause}}', xValClause);
-    statement = statement.replace('{{yValClause}}', yValClause);
+    statement = statement.split('{{xValClause}}').join(xValClause);
+    statement = statement.split('{{yValClause}}').join(yValClause);
     statement = statement.replace('{{statisticClause}}', statisticClause);
     statement = statement.replace('{{queryTableClause}}', queryTableClause);
-    statement = statement.replace('{{thresholdClause}}', thresholdClause);
+    statement = statement.replace('{{whereClause}}', whereClause);
+    statement = statement.replace('{{modelClause}}', modelClause);
+    statement = statement.replace('{{regionClause}}', regionClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{dateClause}}', dateClause);
-    statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
-
-    // math is done on forecastLength later on -- set all analyses to 0
-    if (forecastLength === "-99") {
-        forecastLength = "0";
-    }
 
     var queryResult;
     var startMoment = moment();
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement);
+        queryResult = matsDataQueryUtils.queryDBContour(cbPool, statement, appParams, statisticSelect);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -150,7 +167,6 @@ dataContour = function (plotParams, plotFunction) {
     }
 
     var postQueryStartMoment = moment();
-
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
     const mean = d.glob_stats.mean;
@@ -174,7 +190,7 @@ dataContour = function (plotParams, plotFunction) {
     };
 
     // process the data returned by the query
-    const curveInfoParams = {"curve": curves, "axisMap": axisMap};
+    const curveInfoParams = {"curve": curves, "statType": statType, "axisMap": axisMap};
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataContour(dataset, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
