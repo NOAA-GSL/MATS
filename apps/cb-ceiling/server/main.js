@@ -286,6 +286,10 @@ const doCurveParams = async function () {
 
     try {
         const rows = await cbPool.queryCB('select name, description from mdata where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
+        if (rows.includes("queryCB ERROR: ")) {
+            // have this local try catch fail properly if the metadata isn't there
+            throw new Error(rows);
+        }
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -299,6 +303,10 @@ const doCurveParams = async function () {
 
     try {
         const rows = await cbPool.queryCB('select raw thresholdDescriptions.ceiling from mdata where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
+        if (rows.includes("queryCB ERROR: ")) {
+            // have this local try catch fail properly if the metadata isn't there
+            throw new Error(rows);
+        }
         var masterDescription;
         var masterTrsh;
         for (var j = 0; j < Object.keys(rows[0]).length; j++) {
@@ -312,6 +320,10 @@ const doCurveParams = async function () {
 
     try {
         const rows = await cbPool.queryCB('select mdata.model, mdata.displayText, mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0');
+        if (rows.includes("queryCB ERROR: ")) {
+            // have this local try catch fail properly if the metadata isn't there
+            throw new Error(rows);
+        }
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -346,8 +358,11 @@ const doCurveParams = async function () {
 
     try {
         matsCollections.SiteMap.remove({});
-//        var rows = await cbPool.searchStationsByBoundingBox( -180,89, 180,-89);
         var rows = await cbPool.queryCB('select meta().id, mdata.* from mdata where type="MD" and docType="station" and version = "V01"  and subset="METAR";');
+        if (rows.includes("queryCB ERROR: ")) {
+            // have this local try catch fail properly if the metadata isn't there
+            throw new Error(rows);
+        }
         rows = rows.sort((a, b) => (a.name > b.name) ? 1 : -1);
         for (var i = 0; i < rows.length; i++) {
             const site_id = rows[i].id;
