@@ -2,12 +2,14 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
-import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
+import {
+    matsCollections,
+    matsTypes,
+    matsDataUtils,
+    matsDataQueryUtils,
+    matsDataCurveOpsUtils,
+    matsDataPlotOpsUtils
+} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataMap = function (plotParams, plotFunction) {
@@ -33,68 +35,83 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-    var modelTable = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-    var obsTable = (modelTable.includes('ret_') || modelTable.includes('Ret_')) ? 'obs_retro' : 'obs';
-    var queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
-    var sitesClause = "";
-    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var modelClause = "AND m0.model='" + model + "' ";
+    var queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc)\n " +
+        "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) ON o.fcstValidEpoch = m0.fcstValidEpoch\n " +
+        "LET pairs = ARRAY {'modelName':model.name,\n " +
+        "                   'modelValue':model.Ceiling,\n " +
+        "                   'observationName':FIRST observation.name FOR observation IN o.data WHEN observation.name = model.name END,\n " +
+        "                   'observationValue':FIRST observation.Ceiling FOR observation IN o.data WHEN observation.name = model.name END\n " +
+        "                   } FOR model IN m0.data WHEN model.name IN ['{{sitesList}}'] END,\n " +
+        "   validPairs = ARRAY {'modelName':pair.modelName, 'observationName':pair.observationName} For pair IN pairs WHEN pair.modelName IS NOT missing AND pair.observationName IS NOT missing END\n";
     var thresholdStr = curve['threshold'];
     var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
     var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
     }
     var forecastLength = curve['forecast-length'];
-    var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-    var statistic = curve['statistic'];
-    var statisticClause = 'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as yy, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as yn, sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as ny, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as nn, count(m0.ceil) as N0';
-    statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
+    var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
-    var querySites = [];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        var thisSite;
-        var thisSiteObj;
-        for (var sidx = 0; sidx < sitesList.length; sidx++) {
-            thisSite = sitesList[sidx];
-            thisSiteObj = siteMap.find(obj => {
-                return obj.origName === thisSite;
-            });
-            querySites.push(thisSiteObj.options.id);
-        }
-        sitesClause = " and m0.madis_id in('" + querySites.join("','") + "')";
+        queryTableClause = queryTableClause.replace(/\{\{sitesList\}\}/g, sitesList.join("','"));
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var dateClause = "and m0.time >= " + fromSecs + " - 900 and m0.time <= " + toSecs + " + 900";
-    var siteDateClause = "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
-    var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
+    var statistic = curve['statistic'];
+    var statisticClause = "ARRAY_LENGTH(validPairs) AS N0,\n " +
+        "ARRAY_SUM(ARRAY CASE WHEN (pair.modelValue < " + threshold + " " +
+        "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS hit,\n " +
+        "ARRAY_SUM(ARRAY CASE WHEN (pair.modelValue < " + threshold + " " +
+        "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS fa,\n " +
+        "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
+        "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS miss,\n " +
+        "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
+        "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS cn\n " +
+        "--validPairs";
+    var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs + " and m0.fcstValidEpoch = o.fcstValidEpoch";
+    var whereClause = "AND " +
+        "m0.type='DD'\n " +
+        "AND m0.docType='model'\n " +
+        "AND m0.subset='METAR'\n " +
+        "AND m0.version='V01'\n ";
+    var siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " and o.fcstValidEpoch <= " + toSecs;
+    var siteWhereClause = "WHERE " +
+        "o.type='DD'\n " +
+        "AND o.docType='obs'\n " +
+        "AND o.subset='METAR'\n " +
+        "AND o.version='V01'\n ";
+    var groupByClause = "group by m0.data[*].name, pairs, validPairs";
 
-    var statement = "select m0.madis_id as sta_id, " +
-        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
-        "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
-        "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "where 1=1 " +
-        "{{siteMatchClause}} " +
-        "{{sitesClause}} " +
-        "{{dateClause}} " +
-        "{{siteDateClause}} " +
-        "{{validTimeClause}} " +
-        "{{forecastLengthClause}} " +
-        "group by sta_id " +
-        "order by N0" +
+    var statement = "SELECT m0.data[*].name as sta_id,\n " +
+        "COUNT(DISTINCT m0.fcstValidEpoch) N_times,\n " +
+        "MIN(m0.fcstValidEpoch) min_secs,\n " +
+        "MAX(m0.fcstValidEpoch) max_secs,\n " +
+        "{{statisticClause}}\n " +
+        "{{queryTableClause}}\n " +
+        "{{siteWhereClause}}\n " +
+        "{{whereClause}}\n " +
+        "{{modelClause}}\n " +
+        "{{validTimeClause}}\n " +
+        "{{forecastLengthClause}}\n " +
+        "{{siteDateClause}}\n " +
+        "{{dateClause}}\n " +
+        "{{groupByClause}}\n " +
+        "order by sta_id" +
         ";";
 
     statement = statement.replace('{{statisticClause}}', statisticClause);
     statement = statement.replace('{{queryTableClause}}', queryTableClause);
-    statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-    statement = statement.replace('{{sitesClause}}', sitesClause);
+    statement = statement.replace('{{whereClause}}', whereClause);
+    statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
+    statement = statement.replace('{{modelClause}}', modelClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
+    statement = statement.replace('{{groupByClause}}', groupByClause);
     dataRequests[label] = statement;
 
     var queryResult;

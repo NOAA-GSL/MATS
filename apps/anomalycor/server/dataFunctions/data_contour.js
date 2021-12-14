@@ -74,7 +74,8 @@ dataContour = function (plotParams, plotFunction) {
     }
     var statisticClause = "avg(m0.wacorr/100) as stat, " +
         "stddev(m0.wacorr/100) as stdev, " +
-        "group_concat(m0.wacorr / 100, ';', unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) as sub_data, " +
+        "group_concat(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level, ';', m0.wacorr / 100 " +
+        "order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data, " +
         "count(m0.wacorr) as N0";
     var statType = "ACC";
     curve['statistic'] = "Correlation";
@@ -113,11 +114,6 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
-
-    // math is done on forecastLength later on -- set all analyses to 0
-    if (forecastLength === "-99") {
-        forecastLength = "0";
-    }
 
     var queryResult;
     var startMoment = moment();

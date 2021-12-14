@@ -80,7 +80,7 @@ dataContour = function (plotParams, plotFunction) {
     dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-    var statisticClause = "sum(m0.hit) as hit, sum(m0.fa) as fa, sum(m0.miss) as miss, sum(m0.cn) as cn, group_concat(m0.hit, ';', m0.fa, ';', m0.miss, ';', m0.cn, ';', m0.time order by m0.time) as sub_data, count(m0.hit) as N0";
+    var statisticClause = "sum(m0.hit) as hit, sum(m0.fa) as fa, sum(m0.miss) as miss, sum(m0.cn) as cn, group_concat(m0.time, ';', m0.hit, ';', m0.fa, ';', m0.miss, ';', m0.cn order by m0.time) as sub_data, count(m0.hit) as N0";
     // For contours, this functions as the colorbar label.
     var statType = statisticOptionsMap[statisticSelect][0];
     curve['unitKey'] = statisticOptionsMap[statisticSelect][1];
@@ -114,11 +114,6 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
-
-    // math is done on forecastLength later on -- set all analyses to 0
-    if (forecastLength === "-99") {
-        forecastLength = "0";
-    }
 
     var queryResult;
     var startMoment = moment();

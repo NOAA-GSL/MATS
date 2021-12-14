@@ -434,18 +434,18 @@ const doCurveParams = function () {
         };
 
         const statAuxMap = {
-            "RMS-winds": "group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}), ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "RMS-other": "group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}), ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Bias (Model - Obs)-winds": "group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}, ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Bias (Model - Obs)-other": "group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}}, ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "N-winds": "group_concat(m0.N_{{variable0}}, ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "N-other": "group_concat(m0.N_{{variable0}}, ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Model average-winds": "group_concat(m0.sum_model_{{variable1}}/m0.N_{{variable0}}, ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Model average-other": "group_concat((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}, ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Obs average-winds": "group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}, ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Obs average-other": "group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}, ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Std deviation-winds": "group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)), ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Std deviation-other": "group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)), ';', unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10 order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "RMS-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "RMS-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Bias (Model - Obs)-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', (m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Bias (Model - Obs)-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', -m0.sum_{{variable0}}/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "N-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "N-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Model average-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.sum_model_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Model average-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', (m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Obs average-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Obs average-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Std deviation-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)) order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Std deviation-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)) order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
         };
 
         matsCollections["statistic"].insert(

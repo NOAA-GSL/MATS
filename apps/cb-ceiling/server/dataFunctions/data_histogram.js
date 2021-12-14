@@ -2,11 +2,13 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
+import {
+    matsCollections,
+    matsTypes,
+    matsDataUtils,
+    matsDataQueryUtils,
+    matsDataProcessUtils
+} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataHistogram = function (plotParams, plotFunction) {
@@ -44,63 +46,45 @@ dataHistogram = function (plotParams, plotFunction) {
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var modelClause = "AND m0.model='" + model + "' ";
+        var queryTableClause = "FROM mdata m0";
+        var thresholdStr = curve['threshold'];
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var validTimeClause = "";
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+        }
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var regionType = curve['region-type'];
         if (regionType === 'Select stations') {
             throw new Error("INFO:  Single/multi station plotting is not available for histograms.");
         }
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + " as m0";
-        var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        var thresholdClause = "and m0.trsh = " + threshold;
-        var validTimeClause = "";
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
-        }
-        var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
-        var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
-        // for contingency table apps, we currently have to deal with matching in the query.
-        if (appParams.matching && curvesLength > 1) {
-            var matchCurveIdx = 0;
-            var mcidx;
-            for (mcidx = 0; mcidx < curvesLength; mcidx++) {
-                const matchCurve = curves[mcidx];
-                if (curveIndex === mcidx || matchCurve.diffFrom != null) {
-                    continue;
-                }
-                matchCurveIdx++;
-                const matchModel = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[matchCurve['data-source']][0];
-                const matchRegion = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === matchCurve['region']);
-                queryTableClause = queryTableClause + ", " + matchModel + "_" + matchRegion + " as m" + matchCurveIdx;
-                const matchThreshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === matchCurve['threshold']);
-                thresholdClause = thresholdClause + " and m" + matchCurveIdx + ".trsh = " + matchThreshold;
-                const matchValidTimes = matchCurve['valid-time'] === undefined ? [] : matchCurve['valid-time'];
-                if (matchValidTimes.length !== 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    validTimeClause = validTimeClause + " and floor((m" + matchCurveIdx + ".time)%(24*3600)/3600) IN(" + matchValidTimes + ")";
-                }
-                const matchForecastLength = matchCurve['forecast-length'];
-                forecastLengthClause = forecastLengthClause + " and m" + matchCurveIdx + ".fcst_len = " + matchForecastLength;
-                const matchDateRange = matsDataUtils.getDateRange(matchCurve['curve-dates']);
-                const matchFromSecs = matchDateRange.fromSeconds;
-                const matchToSecs = matchDateRange.toSeconds;
-                dateClause = "and m0.time = m" + matchCurveIdx + ".time " + dateClause;
-                dateClause = dateClause + " and m" + matchCurveIdx + ".time >= " + matchFromSecs + " and m" + matchCurveIdx + ".time <= " + matchToSecs;
-            }
-        }
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause = statisticOptionsMap[statisticSelect][0];
+        var regionClause = "AND m0.region='" + region + "' ";
+        var statisticClause = "sum(m0.data.['" + threshold + "'].hits) hit, sum(m0.data.['" + threshold + "'].false_alarms) fa, " +
+            "sum(m0.data.['" + threshold + "'].misses) miss, sum(m0.data.['" + threshold + "'].correct_negatives) cn, " +
+            "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['" + threshold + "'].hits) || ';' || " +
+            "TO_STRING(m0.data.['" + threshold + "'].false_alarms) || ';' || TO_STRING(m0.data.['" + threshold + "'].misses) || ';' || " +
+            "TO_STRING(m0.data.['" + threshold + "'].correct_negatives))) sub_data, count(m0.data.['" + threshold + "'].hits) N0 ";
+        var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
+        var whereClause = "WHERE " +
+            "m0.type='DD' " +
+            "AND m0.docType='CTC'" +
+            "AND m0.subset='METAR' " +
+            "AND m0.version='V01' ";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var statType = statisticOptionsMap[statisticSelect][1];
+        var statType = statisticOptionsMap[statisticSelect][0];
         var axisKey = yAxisFormat;
         if (yAxisFormat === 'Relative frequency') {
             axisKey = axisKey + " (x100)"
@@ -112,25 +96,27 @@ dataHistogram = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.time as avtime, " +
-                "count(distinct m0.time) as N_times, " +
-                "min(m0.time) as min_secs, " +
-                "max(m0.time) as max_secs, " +
+            var statement = "SELECT m0.fcstValidEpoch avtime, " +
+                "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+                "MIN(m0.fcstValidEpoch) min_secs, " +
+                "MAX(m0.fcstValidEpoch) max_secs, " +
                 "{{statisticClause}} " +
                 "{{queryTableClause}} " +
-                "where 1=1 " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+                "{{whereClause}}" +
+                "{{modelClause}}" +
+                "{{regionClause}}" +
                 "{{dateClause}} " +
-                "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
-                "group by avtime " +
+                "group by m0.fcstValidEpoch " +
                 "order by avtime" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{thresholdClause}}', thresholdClause);
+            statement = statement.replace('{{whereClause}}', whereClause);
+            statement = statement.replace('{{modelClause}}', modelClause);
+            statement = statement.replace('{{regionClause}}', regionClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
@@ -141,7 +127,7 @@ dataHistogram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(cbPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

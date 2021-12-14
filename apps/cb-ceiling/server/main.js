@@ -184,6 +184,70 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+
+        const xOptionsMap = {
+            'Fcst lead time': "m0.fcstLen",
+            'Valid UTC hour': "m0.fcstValidEpoch%(24*3600)/3600",
+            'Init UTC hour': "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+            'Valid Date': "m0.fcstValidEpoch",
+            'Init Date': "m0.fcstValidEpoch-m0.fcstLen*3600"
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(xOptionsMap),
+                optionsMap: xOptionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(xOptionsMap)[1],
+                controlButtonVisibility: 'block',
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        const yOptionsMap = {
+            'Fcst lead time': "m0.fcstLen",
+            'Valid UTC hour': "m0.fcstValidEpoch%(24*3600)/3600",
+            'Init UTC hour': "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+            'Valid Date': "m0.fcstValidEpoch",
+            'Init Date': "m0.fcstValidEpoch-m0.fcstLen*3600"
+        };
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(yOptionsMap),
+                optionsMap: yOptionsMap,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(yOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 10,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'significance',
+                type: matsTypes.InputTypes.select,
+                options: ['none', 'significance at 95th percentile'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: 'none',
+                controlButtonVisibility: 'block',
+                controlButtonText: "overlay significance",
+                displayOrder: 11,
+                displayPriority: 1,
+                displayGroup: 2,
+            });
     } else {
         // need to update the dates selector if the metadata has changed
         var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
@@ -222,6 +286,10 @@ const doCurveParams = async function () {
 
     try {
         const rows = await cbPool.queryCB('select name, description from mdata where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
+        if (rows.includes("queryCB ERROR: ")) {
+            // have this local try catch fail properly if the metadata isn't there
+            throw new Error(rows);
+        }
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -235,6 +303,10 @@ const doCurveParams = async function () {
 
     try {
         const rows = await cbPool.queryCB('select raw thresholdDescriptions.ceiling from mdata where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
+        if (rows.includes("queryCB ERROR: ")) {
+            // have this local try catch fail properly if the metadata isn't there
+            throw new Error(rows);
+        }
         var masterDescription;
         var masterTrsh;
         for (var j = 0; j < Object.keys(rows[0]).length; j++) {
@@ -247,25 +319,37 @@ const doCurveParams = async function () {
     }
 
     try {
-        const rows = await cbPool.queryCB('select mdata.model, mdata.displayText, mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling"');
+        const rows = await cbPool.queryCB('select mdata.model, mdata.displayText, mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0');
+        if (rows.includes("queryCB ERROR: ")) {
+            // have this local try catch fail properly if the metadata isn't there
+            throw new Error(rows);
+        }
         for (var i = 0; i < rows.length; i++) {
+
             var model_value = rows[i].model.trim();
             var model = rows[i].displayText.trim();
             modelOptionsMap[model] = [model_value];
+
             var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
             var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
+
             forecastLengthOptionsMap[model] = rows[i].fcstLens.map(String);
-            var regionsArr = [];
-            for (var ri=0; ri< rows[i].regions.length;ri++) {
-                regionsArr.push(masterRegionValuesMap[rows[i].regions[ri]])
-            }
-            regionModelOptionsMap[model] = regionsArr;
+
             // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
             thresholdsModelOptionsMap[model] = thresholdsModelOptionsMap[model] ? thresholdsModelOptionsMap[model] : [];
+            rows[i].thresholds.sort(function (a, b) {
+                return Number(a) - Number(b)
+            });
             for (var t = 0; t < rows[i].thresholds.length; t++) {
                 thresholdsModelOptionsMap[model].push(masterThresholdValuesMap[rows[i].thresholds[t]]);
             }
+
+            var regionsArr = [];
+            for (var ri = 0; ri < rows[i].regions.length; ri++) {
+                regionsArr.push(masterRegionValuesMap[rows[i].regions[ri]])
+            }
+            regionModelOptionsMap[model] = regionsArr;
         }
 
     } catch (err) {
@@ -274,17 +358,21 @@ const doCurveParams = async function () {
 
     try {
         matsCollections.SiteMap.remove({});
-//        var rows = await cbPool.searchStationsByBoundingBox( -180,89, 180,-89);
         var rows = await cbPool.queryCB('select meta().id, mdata.* from mdata where type="MD" and docType="station" and version = "V01"  and subset="METAR";');
-        rows = rows.sort((a,b)=>(a.name > b.name) ? 1 : -1);
+        if (rows.includes("queryCB ERROR: ")) {
+            // have this local try catch fail properly if the metadata isn't there
+            throw new Error(rows);
+        }
+        rows = rows.sort((a, b) => (a.name > b.name) ? 1 : -1);
         for (var i = 0; i < rows.length; i++) {
             const site_id = rows[i].id;
-            const site_name = rows[i].name == undefined ? "unknown": rows[i].name;
-            const site_description = rows[i].description == undefined ? "unknown":rows[i].description;
+            const site_name = rows[i].name == undefined ? "unknown" : rows[i].name;
+            const site_description = rows[i].description == undefined ? "unknown" : rows[i].description;
             const site_lat = rows[i].geo == undefined ? undefined : rows[i].geo.lat;
             const site_lon = rows[i].geo == undefined ? undefined : rows[i].geo.lon;
             const site_elev = rows[i].geo == undefined ? "unknown" : rows[i].geo.elev;
             siteOptionsMap[site_name] = [site_id];
+
             var point = [site_lat, site_lon];
             var obj = {
                 name: site_name,
@@ -426,36 +514,34 @@ const doCurveParams = async function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            'CSI (Critical Success Index)': ['ROUND((sum(m0.data.["{{threshold}}"].hits)+0.00)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].false_alarms),6) * 100 as stat, TO_STRING(ROUND(m0.data.["{{threshold}}"].hits)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].false_alarms) * 100) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
+            'CSI (Critical Success Index)': ['ctc', 'x100', 100],
 
-            'TSS (True Skill Score)': ['ROUND((sum(m0.data.["{{threshold}}"].hits)*sum(m0.data.["{{threshold}}"].correct_negatives) - sum(m0.data.["{{threshold}}"].false_alarms)*sum(m0.data.["{{threshold}}"].misses))/((sum(m0.data.["{{threshold}}"].hits)+sum(m0.data.["{{threshold}}"].misses))*(sum(m0.data.["{{threshold}}"].false_alarms)+sum(m0.data.["{{threshold}}"].correct_negatives))),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].hits*m0.data.["{{threshold}}"].correct_negatives - m0.data.["{{threshold}}"].false_alarms*m0.data.["{{threshold}}"].misses)/((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)*(m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].correct_negatives) * 100)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
+            'TSS (True Skill Score)': ['ctc', 'x100', 100],
 
-            'PODy (POD of value < threshold)': ['ROUND((sum(m0.data.["{{threshold}}"].hits)+0.00)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].hits)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses) * 100) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
+            'PODy (POD of value < threshold)': ['ctc', 'x100', 100],
 
-            'PODn (POD of value > threshold)': ['ROUND((sum(m0.data.["{{threshold}}"].correct_negatives)+0.00)/sum(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].correct_negatives)/(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms) * 100) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
+            'PODn (POD of value > threshold)': ['ctc', 'x100', 100],
 
-            'FAR (False Alarm Ratio)': ['ROUND((sum(m0.data.["{{threshold}}"].false_alarms)+0.00)/sum(m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].hits),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].false_alarms)/(m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].hits) * 100) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 0],
+            'FAR (False Alarm Ratio)': ['ctc', 'x100', 0],
 
-            'Bias (forecast/actual)': ['ROUND((sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)+0.00)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses),6) as stat, TO_STRING((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Ratio', 1],
+            'Bias (forecast/actual)': ['ctc', 'Ratio', 1],
 
-            'HSS (Heidke Skill Score)': ['ROUND(2*(sum(m0.data.["{{threshold}}"].correct_negatives+0.00)*sum(m0.data.["{{threshold}}"].hits)-sum(m0.data.["{{threshold}}"].misses)*sum(m0.data.["{{threshold}}"].false_alarms))/((sum(m0.data.["{{threshold}}"].correct_negatives+0.00)+sum(m0.data.["{{threshold}}"].false_alarms))*(sum(m0.data.["{{threshold}}"].false_alarms)+sum(m0.data.["{{threshold}}"].hits))+(sum(m0.data.["{{threshold}}"].correct_negatives+0.00)+sum(m0.data.["{{threshold}}"].misses))*(sum(m0.data.["{{threshold}}"].misses)+sum(m0.data.["{{threshold}}"].hits))),6) * 100 as stat, TO_STRING((2*(m0.data.["{{threshold}}"].correct_negatives*m0.data.["{{threshold}}"].hits - m0.data.["{{threshold}}"].misses*m0.data.["{{threshold}}"].false_alarms) / ((m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms)*(m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].hits) + (m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].misses)*(m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].hits)) * 100)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
+            'HSS (Heidke Skill Score)': ['ctc', 'x100', 100],
 
-            'ETS (Equitable Threat Score)': ['ROUND(sum(m0.data.["{{threshold}}"].hits)-(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)*sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives))/(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses)-(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)*sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives))),6) * 100 as stat, TO_STRING((m0.data.["{{threshold}}"].hits-((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)*(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives)))/((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses)-((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms)*(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives) * 100))) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'x100', 100],
+            'ETS (Equitable Threat Score)': ['ctc', 'x100', 100],
 
-            'Nlow (obs < threshold, avg per hr in predefined regions)': ['ROUND(avg(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+0.000),6) as stat, TO_STRING(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Number', null],
+            'Nlow (obs < threshold, avg per hr in predefined regions)': ['ctc', 'Number', null],
 
-            'Nhigh (obs > threshold, avg per hr in predefined regions)': ['ROUND(avg(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms+0.000),6) as stat, TO_STRING(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].correct_negatives) as N0', 'ctc', 'Number', null],
+            'Nhigh (obs > threshold, avg per hr in predefined regions)': ['ctc', 'Number', null],
 
-            'Ntot (total obs, avg per hr in predefined regions)': ['ROUND(avg(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives+0.000),6) as stat, TO_STRING(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Number', null],
+            'Ntot (total obs, avg per hr in predefined regions)': ['ctc', 'Number', null],
 
-            'Ratio (Nlow / Ntot)': ['ROUND(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+0.000)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives+0.000),6) as stat, TO_STRING((m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Ratio', null],
+            'Ratio (Nlow / Ntot)': ['ctc', 'Ratio', null],
 
-            'Ratio (Nhigh / Ntot)': ['ROUND(sum(m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms+0.000)/sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives+0.000),6) as stat, TO_STRING((m0.data.["{{threshold}}"].correct_negatives+m0.data.["{{threshold}}"].false_alarms)/(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].correct_negatives)) || ";" || TO_STRING(m0.fcstValidEpoch) as sub_data, count(m0.data.["{{threshold}}"].correct_negatives) as N0', 'ctc', 'Ratio', null],
+            'Ratio (Nhigh / Ntot)': ['ctc', 'Ratio', null],
 
-            'N per graph point': ['ROUND(sum(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].correct_negatives+0.000),6) as stat, TO_STRING(m0.data.["{{threshold}}"].hits+m0.data.["{{threshold}}"].misses+m0.data.["{{threshold}}"].false_alarms+m0.data.["{{threshold}}"].correct_negatives), ";", m0.time order by m0.time) as sub_data, count(m0.data.["{{threshold}}"].hits) as N0', 'ctc', 'Number', null]
+            'N per graph point': ['ctc', 'Number', null]
         };
-
-
         matsCollections["statistic"].insert(
             {
                 name: 'statistic',
@@ -605,7 +691,7 @@ const doCurveParams = async function () {
 
     if (matsCollections["average"].findOne({name: 'average'}) == undefined) {
         const optionsMap = {
-            'None': ['ceil(' + 3600 + '*floor(((m0.fcstValidEpoch)+' + 3600 + '/2)/' + 3600 + '))'],
+            'None': ['m0.fcstValidEpoch'],
             '3hr': ['ceil(' + 3600 * 3 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 3 + '/2)/' + 3600 * 3 + '))'],
             '6hr': ['ceil(' + 3600 * 6 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 6 + '/2)/' + 3600 * 6 + '))'],
             '12hr': ['ceil(' + 3600 * 12 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 12 + '/2)/' + 3600 * 12 + '))'],
@@ -636,7 +722,7 @@ const doCurveParams = async function () {
 
     if (matsCollections["sites"].findOne({name: 'sites'}) == undefined) {
         matsCollections["sites"].insert(
-             {
+            {
                 name: 'sites',
                 type: matsTypes.InputTypes.select,
                 optionsMap: siteOptionsMap,
@@ -674,26 +760,31 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["x-axis-parameter"].findOne({name: 'x-axis-parameter'}) == undefined) {
+    if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
         const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len as xVal, ",
-            'Threshold': "select m0.trsh/100 as xVal, ",    // produces thresholds in kft
-            'Valid UTC hour': "select m0.fcstValidEpoch%(24*3600)/3600 as xVal, ",
-            'Init UTC hour': "select (m0.fcstValidEpoch-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-            'Valid Date': "select m0.fcstValidEpoch as xVal, ",
-            'Init Date': "select m0.fcstValidEpoch-m0.fcst_len*3600 as xVal, "
+            'Fcst lead time': "m0.fcstLen",
+            'Threshold': "'{{threshold}}'",
+            'Valid UTC hour': "m0.fcstValidEpoch%(24*3600)/3600",
+            'Init UTC hour': "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+            'Valid Date': "m0.fcstValidEpoch",
+            'Init Date': "m0.fcstValidEpoch-m0.fcstLen*3600"
         };
 
-        matsCollections["x-axis-parameter"].insert(
+        matsCollections["bin-parameter"].insert(
             {
-                name: 'x-axis-parameter',
+                name: 'bin-parameter',
                 type: matsTypes.InputTypes.select,
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
+                hideOtherFor: {
+                    'forecast-length': ["Fcst lead time"],
+                    'threshold': ["Threshold"],
+                    'valid-time': ["Valid UTC hour"],
+                },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[2],
+                default: Object.keys(optionsMap)[4],
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -701,36 +792,9 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["y-axis-parameter"].findOne({name: 'y-axis-parameter'}) == undefined) {
-        const optionsMap = {
-            'Fcst lead time': "m0.fcst_len as yVal, ",
-            'Threshold': "m0.trsh/100 as yVal, ",    // produces thresholds in kft
-            'Valid UTC hour': "m0.fcstValidEpoch%(24*3600)/3600 as yVal, ",
-            'Init UTC hour': "(m0.fcstValidEpoch-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
-            'Valid Date': "m0.fcstValidEpoch as yVal, ",
-            'Init Date': "m0.fcstValidEpoch-m0.fcst_len*3600 as yVal, "
-        };
-
-        matsCollections["y-axis-parameter"].insert(
-            {
-                name: 'y-axis-parameter',
-                type: matsTypes.InputTypes.select,
-                options: Object.keys(optionsMap),
-                optionsMap: optionsMap,
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(optionsMap)[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6,
-            });
-    }
-
     // determine date defaults for dates and curveDates
-    const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({name: "data-source"}, {default: 1}).default;
+    modelDateRangeMap = matsCollections["data-source"].findOne({name: "data-source"}, {dates: 1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
 
@@ -808,9 +872,9 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcstLen: ', 'forecast-length', 'h, '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['avg: ', 'average', ' ']
+                ['avg: ', 'average', '']
             ],
             displayParams: [
                 "label", "data-source", "region-type", "region", "statistic", "threshold", "average", "forecast-length", "valid-time", "sites", "sitesMap"
@@ -844,7 +908,7 @@ const doCurveTextPatterns = function () {
                 ['', 'sites', ': '],
                 ['', 'region', ', '],
                 ['', 'statistic', ', '],
-                ['fcstLen: ', 'forecast-length', 'h, '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'curve-dates', '']
             ],
@@ -862,7 +926,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcstLen: ', 'forecast-length', 'h, '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
@@ -887,13 +951,28 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.performanceDiagram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ''],
+            ],
+            displayParams: [
+                "label", "data-source", "region", "threshold", "forecast-length", "valid-time", "bin-parameter"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.map,
             textPattern: [
                 ['', 'data-source', ': '],
                 ['', 'sites', ': '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcstLen: ', 'forecast-length', ' h '],
+                ['fcst_len: ', 'forecast-length', ' h '],
                 [' valid-time:', 'valid-time', '']
             ],
             displayParams: [
@@ -910,7 +989,7 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcstLen: ', 'forecast-length', 'h, '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'curve-dates', '']
             ],
@@ -927,11 +1006,11 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcstLen: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ', ']
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });
@@ -943,11 +1022,11 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcstLen: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ', ']
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });
@@ -996,6 +1075,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dailyModelCycle,
             graphFunction: "graphPlotly",
             dataFunction: "dataDailyModelCycle",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.performanceDiagram,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataPerformanceDiagram",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
@@ -1048,7 +1133,10 @@ Meteor.startup(function () {
     // create list of all pools
     var allPools = [];
     // connect to the couchbase cluster
-    const cbConnection = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.COUCHBASE, status: "active"}, {
+    const cbConnection = matsCollections.Databases.findOne({
+        role: matsTypes.DatabaseRoles.COUCHBASE,
+        status: "active"
+    }, {
         host: 1,
         port: 1,
         bucket: 1,
@@ -1060,22 +1148,27 @@ Meteor.startup(function () {
     if (cbConnection) {
         cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.user, cbConnection.password);
     }
-    allPools.push({pool:"cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
-     // create list of tables we need to monitor for update
-     const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
-         "MD:matsAux:COMMON:V01",
-         "MD:matsGui:cb-ceiling:HRRR:COMMON:V01",
-         "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
-         "MD:matsGui:cb-ceiling:RAP_OPS:COMMON:V01",
-         "MD:matsGui:cb-ceiling:RRFS_dev1:COMMON:V01",
-         "MD:V01:REGION:ALL_HRRR",
-         "MD:V01:REGION:E_HRRR",
-         "MD:V01:REGION:E_US",
-         "MD:V01:REGION:GtLk",
-         "MD:V01:REGION:W_HRRR"
-     ]);
+    allPools.push({pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
+    // create list of tables we need to monitor for update
+    const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
+        "MD:matsAux:COMMON:V01",
+        "MD:matsGui:cb-ceiling:HRRR:COMMON:V01",
+        "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
+        "MD:matsGui:cb-ceiling:RAP_OPS:COMMON:V01",
+        "MD:matsGui:cb-ceiling:RRFS_dev1:COMMON:V01",
+        "MD:V01:REGION:ALL_HRRR",
+        "MD:V01:REGION:E_HRRR",
+        "MD:V01:REGION:E_US",
+        "MD:V01:REGION:GtLk",
+        "MD:V01:REGION:W_HRRR"
+    ]);
     try {
-        matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats, dbType: matsTypes.DbTypes.couchbase});
+        matsMethods.resetApp({
+            appPools: allPools,
+            appMdr: mdr,
+            appType: matsTypes.AppTypes.mats,
+            dbType: matsTypes.DbTypes.couchbase
+        });
     } catch (error) {
         console.log(error.message);
     }

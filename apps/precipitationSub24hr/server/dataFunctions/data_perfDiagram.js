@@ -81,8 +81,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +
                 "((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, " +
-                "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, group_concat(m0.yy, ';', m0.ny, ';', " +
-                "m0.yn, ';', m0.nn, ';', m0.time order by m0.time) as sub_data, count(m0.yy) as N0 " +
+                "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, group_concat(m0.time, ';', m0.yy, ';', " +
+                "m0.ny, ';', m0.yn, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0 " +
                 "{{queryTableClause}} " +
                 "where 1=1 " +
                 "{{dateClause}} " +
