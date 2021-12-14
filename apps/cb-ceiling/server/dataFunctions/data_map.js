@@ -37,14 +37,14 @@ dataMap = function (plotParams, plotFunction) {
     var label = curve['label'];
     var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
     var modelClause = "AND m0.model='" + model + "' ";
-    var queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc) " +
-        "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) ON o.fcstValidEpoch = m0.fcstValidEpoch " +
-        "LET pairs = ARRAY {'modelName':model.name, " +
-        "                   'modelValue':model.Ceiling, " +
-        "                   'observationName':FIRST observation.name FOR observation IN o.data WHEN observation.name = model.name END, " +
-        "                   'observationValue':FIRST observation.Ceiling FOR observation IN o.data WHEN observation.name = model.name END " +
-        "                   } FOR model IN m0.data WHEN model.name IN ['{{sitesList}}'] END, " +
-        "   validPairs = ARRAY {'modelName':pair.modelName, 'observationName':pair.observationName} For pair IN pairs WHEN pair.modelName IS NOT missing AND pair.observationName IS NOT missing END";
+    var queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc)\n " +
+        "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) ON o.fcstValidEpoch = m0.fcstValidEpoch\n " +
+        "LET pairs = ARRAY {'modelName':model.name,\n " +
+        "                   'modelValue':model.Ceiling,\n " +
+        "                   'observationName':FIRST observation.name FOR observation IN o.data WHEN observation.name = model.name END,\n " +
+        "                   'observationValue':FIRST observation.Ceiling FOR observation IN o.data WHEN observation.name = model.name END\n " +
+        "                   } FOR model IN m0.data WHEN model.name IN ['{{sitesList}}'] END,\n " +
+        "   validPairs = ARRAY {'modelName':pair.modelName, 'observationName':pair.observationName} For pair IN pairs WHEN pair.modelName IS NOT missing AND pair.observationName IS NOT missing END\n";
     var thresholdStr = curve['threshold'];
     var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
     var validTimeClause = "";
@@ -61,45 +61,44 @@ dataMap = function (plotParams, plotFunction) {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
     var statistic = curve['statistic'];
-    var statisticClause = "ARRAY_LENGTH(validPairs) AS N0, " +
+    var statisticClause = "ARRAY_LENGTH(validPairs) AS N0,\n " +
         "ARRAY_SUM(ARRAY CASE WHEN (pair.modelValue < " + threshold + " " +
-        "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS hit, " +
+        "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS hit,\n " +
         "ARRAY_SUM(ARRAY CASE WHEN (pair.modelValue < " + threshold + " " +
-        "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS fa, " +
+        "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS fa,\n " +
         "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
-        "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS miss, " +
+        "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS miss,\n " +
         "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
-        "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS cn " +
+        "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS cn\n " +
         "--validPairs";
     var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs + " and m0.fcstValidEpoch = o.fcstValidEpoch";
     var whereClause = "AND " +
-        "m0.type='DD' " +
-        "AND m0.docType='model' " +
-        "AND m0.subset='METAR' " +
-        "AND m0.version='V01' ";
+        "m0.type='DD'\n " +
+        "AND m0.docType='model'\n " +
+        "AND m0.subset='METAR'\n " +
+        "AND m0.version='V01'\n ";
     var siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " and o.fcstValidEpoch <= " + toSecs;
     var siteWhereClause = "WHERE " +
-        "o.type='DD' " +
-        "AND o.docType='obs' " +
-        "AND o.subset='METAR' " +
-        "AND o.version='V01' ";
-    var groupByClause = "group by {{average}}, pairs, validPairs";
+        "o.type='DD'\n " +
+        "AND o.docType='obs'\n " +
+        "AND o.subset='METAR'\n " +
+        "AND o.version='V01'\n ";
+    var groupByClause = "group by m0.data[*].name, pairs, validPairs";
 
-    var statement = "SELECT m0.data.model.name as sta_id, " +
-        "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
-        "MIN(m0.fcstValidEpoch) min_secs, " +
-        "MAX(m0.fcstValidEpoch) max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "{{siteWhereClause}} " +
-        "{{whereClause}}" +
-        "{{modelClause}}" +
-        "{{validTimeClause}} " +
-        "{{forecastLengthClause}} " +
-        "{{siteDateClause}} " +
-        "{{dateClause}} " +
-        "{{groupByClause}} " +
-        "group by m0.data.model.name " +
+    var statement = "SELECT m0.data[*].name as sta_id,\n " +
+        "COUNT(DISTINCT m0.fcstValidEpoch) N_times,\n " +
+        "MIN(m0.fcstValidEpoch) min_secs,\n " +
+        "MAX(m0.fcstValidEpoch) max_secs,\n " +
+        "{{statisticClause}}\n " +
+        "{{queryTableClause}}\n " +
+        "{{siteWhereClause}}\n " +
+        "{{whereClause}}\n " +
+        "{{modelClause}}\n " +
+        "{{validTimeClause}}\n " +
+        "{{forecastLengthClause}}\n " +
+        "{{siteDateClause}}\n " +
+        "{{dateClause}}\n " +
+        "{{groupByClause}}\n " +
         "order by sta_id" +
         ";";
 
