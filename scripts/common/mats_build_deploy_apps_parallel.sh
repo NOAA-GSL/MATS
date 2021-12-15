@@ -404,7 +404,7 @@ ENV APPNAME="${APPNAME}"
 WORKDIR /usr/app
 ADD bundle /usr/app
 COPY run_app.sh /usr/app
-RUN apk --update --no-cache add mongodb-tools make g++ python python3 py3-pip py3-numpy \\
+RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy \\
 	# && apk --no-cache --update --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing 	py3-pymysql \\
 	&& npm install -g node-gyp \\
 	&& node-gyp install \\
@@ -412,7 +412,7 @@ RUN apk --update --no-cache add mongodb-tools make g++ python python3 py3-pip py
 	&& pip3 install pymysql \\
 	&& chmod +x /usr/app/run_app.sh \\
 	&& cd /usr/app/programs/server \\
-	&& npm install -g couchbase \\
+	&& npm install couchbase \\
 	&& npm install \\
 	&& npm audit fix \\
 	&& apk del --purge make gcc g++ \\
