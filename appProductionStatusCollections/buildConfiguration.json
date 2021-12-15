@@ -295,14 +295,6 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "cb-ceiling",
-      "displayName": "CB-Ceiling",
-      "displayOrder": 5,
-      "group": "Ceiling and Visibility for Couchbase",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
       "app": "visibility",
       "displayName": "Visibility",
       "displayOrder": 7,
@@ -459,6 +451,14 @@
       "displayName": "MET Cyclone",
       "displayOrder": 26,
       "group": "METexpress",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "cb-ceiling",
+      "displayName": "CB-Ceiling",
+      "displayOrder": 27,
+      "group": "Couchbase",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     }
