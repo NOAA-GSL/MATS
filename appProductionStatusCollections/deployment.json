@@ -66,8 +66,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "4.3.1-2021.12.14.19.10",
-      "buildDate": "2021.12.14.19.10",
+      "version": "4.3.1-2021.12.15.00.37",
+      "buildDate": "2021.12.15.00.37",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
@@ -94,11 +94,11 @@
     {
       "app": "cb-ceiling",
       "title": "CB-Ceiling",
-      "version": "4.3.0-2021.12.14.19.09",
-      "buildDate": "2021.12.14.19.09",
+      "version": "4.3.0-2021.12.15.00.36",
+      "buildDate": "2021.12.15.00.36",
       "last_test_run": "",
       "last_test_status": "",
-      "group": "Ceiling and Visibility for Couchbase",
+      "group": "Couchbase",
       "dbroles": [
         "couchbase"
       ]
