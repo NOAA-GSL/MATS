@@ -406,6 +406,7 @@ ADD bundle /usr/app
 COPY run_app.sh /usr/app
 RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy \\
 	# && apk --no-cache --update --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing 	py3-pymysql \\
+	&& npm install -g couchbase \\
 	&& npm install -g node-gyp \\
 	&& node-gyp install \\
 	# TODO: use the apk package in place of pip for py3-pymysql when it is stable
