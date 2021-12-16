@@ -793,10 +793,11 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'scale', ', '],
-                ['fcst_type: ', 'forecast-type', '']
+                ['fcst_type: ', 'forecast-type', ''],
+                ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "threshold", "scale", "forecast-type", "bin-parameter"
+                "label", "data-source", "region", "threshold", "scale", "forecast-type", "bin-parameter", "curve-dates"
             ],
             groupSize: 6
         });

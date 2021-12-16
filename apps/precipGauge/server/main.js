@@ -888,10 +888,11 @@ const doCurveTextPatterns = function () {
                 ['', 'threshold', ' '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['', 'truth', '']
+                ['', 'truth', ', '],
+                ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "threshold", "forecast-length", "valid-time", "truth", "bin-parameter"
+                "label", "data-source", "region", "threshold", "forecast-length", "valid-time", "truth", "bin-parameter", "curve-dates"
             ],
             groupSize: 6
         });
