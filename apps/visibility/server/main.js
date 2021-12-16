@@ -537,7 +537,7 @@ const doCurveParams = function () {
 
             'Ratio (Nhigh / Ntot)': ['ctc', 'Ratio', null],
 
-            'N per graph point': ['ctc', 'Number', null]
+            'N times*levels(*stations if station plot) per graph point': ['ctc', 'Number', null]
         };
         matsCollections["statistic"].insert(
             {
