@@ -489,15 +489,15 @@ const doCurveParams = function () {
 
             'ETS (Equitable Threat Score)': ['ctc', 'x100', 100],
 
-            'Nlow (obs < threshold, avg per hr)': ['ctc', 'Number', null],
+            'Nlow (Number of obs < threshold (false alarms + correct nulls))': ['ctc', 'Number', null],
 
-            'Nhigh (obs > threshold, avg per hr)': ['ctc', 'Number', null],
+            'Nhigh (Number of obs > threshold (hits + misses))': ['ctc', 'Number', null],
 
-            'Ntot (total obs, avg per hr)': ['ctc', 'Number', null],
+            'Ntot (Total number of obs, (Nlow + Nhigh))': ['ctc', 'Number', null],
 
-            'Ratio (Nlow / Ntot)': ['ctc', 'Ratio', null],
+            'Ratio Nlow / Ntot ((fa + cn)/(hit + miss + fa + cn))': ['ctc', 'Ratio', null],
 
-            'Ratio (Nhigh / Ntot)': ['ctc', 'Ratio', null],
+            'Ratio Nhigh / Ntot ((hit + miss)/(hit + miss + fa + cn))': ['ctc', 'Ratio', null],
 
             'N times*levels(*stations if station plot) per graph point': ['ctc', 'Number', null]
         };
