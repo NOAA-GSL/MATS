@@ -412,7 +412,7 @@ RUN apk --update --no-cache add mongodb-tools make g++ python3 py3-pip py3-numpy
 	&& pip3 install pymysql \\
 	&& chmod +x /usr/app/run_app.sh \\
 	&& cd /usr/app/programs/server \\
-	&& npm install couchbase \\
+#	&& npm install couchbase \\
 	&& npm install \\
 	&& npm audit fix \\
 	&& apk del --purge make gcc g++ \\
