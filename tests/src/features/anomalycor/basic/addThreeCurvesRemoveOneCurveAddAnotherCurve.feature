@@ -32,8 +32,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         When I click the "Add Curve" button
         Then "Curve1" is added
 
-        When I change the "data-source" parameter to "FV3_GSL_L64"
-        Then the "data-source" parameter value matches "FV3_GSL_L64"
+        When I change the "data-source" parameter to "FV3_GSL_C384"
+        Then the "data-source" parameter value matches "FV3_GSL_C384"
         When I click the "Add Curve" button
         Then "Curve2" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve2"
@@ -49,8 +49,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         Then I click the "Remove curve Curve1" button
         And I should see a list of curves containing "Curve0,Curve2"
 
-        When I change the "data-source" parameter to "FV3_EMC_L64"
-        Then the "data-source" parameter value matches "FV3_EMC_L64"
+        When I change the "data-source" parameter to "FV3_GSL_Chem"
+        Then the "data-source" parameter value matches "FV3_GSL_Chem"
         When I click the "Add Curve" button
         Then "Curve3" is added
 
