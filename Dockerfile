@@ -1,5 +1,5 @@
 # This tag here should match the app's Meteor version, per .meteor/release
-FROM geoffreybooth/meteor-base:2.3.6 AS meteor-builder
+FROM geoffreybooth/meteor-base:2.5 AS meteor-builder
 
 ARG APPNAME
 
@@ -19,7 +19,7 @@ RUN bash ${SCRIPTS_FOLDER}/build-meteor-bundle.sh
 
 
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
-FROM node:14.17-alpine3.14
+FROM node:14.18-alpine3.15
 
 # Set Build ARGS
 ARG APPNAME
