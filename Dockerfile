@@ -18,6 +18,29 @@ COPY MATScommon /MATScommon
 RUN bash ${SCRIPTS_FOLDER}/build-meteor-bundle.sh
 
 
+# Install OS build dependencies
+FROM node:14.18-alpine3.15 AS native-builder
+
+ENV APP_FOLDER=/usr/app
+ENV APP_BUNDLE_FOLDER=${APP_FOLDER}/bundle
+ENV SCRIPTS_FOLDER /docker
+
+# Install OS build dependencies, which stay with this intermediate image but don’t become part of the final published image
+RUN apk --no-cache add \
+	bash \
+	g++ \
+	make \
+	python3
+
+# Copy in entrypoint
+COPY --from=meteor-builder $SCRIPTS_FOLDER $SCRIPTS_FOLDER/
+
+# Copy in app bundle
+COPY --from=meteor-builder /opt/bundle $APP_BUNDLE_FOLDER/
+
+RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source
+
+
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
 FROM node:14.18-alpine3.15
 
@@ -51,18 +74,17 @@ ENV VERSION=${BUILDVER}
 ENV BRANCH=${COMMITBRANCH}
 ENV COMMIT=${COMMITSHA}
 
-# Copy in helper scripts
-COPY --from=meteor-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
+# Copy in helper scripts with the built and installed dependencies from the previous image
+COPY --from=native-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
 
-# Copy in app bundle
-COPY --from=meteor-builder /opt/bundle ${APP_BUNDLE_FOLDER}/
+# Copy in app bundle with the built and installed dependencies from the previous image
+COPY --from=native-builder ${APP_BUNDLE_FOLDER}/ ${APP_BUNDLE_FOLDER}/
 
 # Copy in our launcher script
 COPY container-scripts/run_app.sh ${APP_FOLDER}/
 
-# Build Meteor dependencies, and create a writeable settings dir and Node fileCache
-RUN bash ${SCRIPTS_FOLDER}/build-meteor-npm-dependencies.sh \
-    && mkdir -p ${SETTINGS_DIR} \
+# Create a writeable settings dir and Node fileCache
+RUN mkdir -p ${SETTINGS_DIR} \
     && chown -R node:node ${APP_FOLDER}/settings \
     && chmod -R 755 ${APP_FOLDER}/settings \
     && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
