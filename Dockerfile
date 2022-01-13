@@ -104,3 +104,12 @@ CMD ["node", "main.js"]
 
 # Add Labels
 LABEL version=${BUILDVER} code.branch=${COMMITBRANCH} code.commit=${COMMITSHA}
+
+
+# Create a stage with the root user for debugging
+# Note - you'll need to override the entrypoint if you want a shell (docker run --entrypoint /bin/bash ...)
+FROM production AS debug
+USER root
+
+# Use the production stage by default
+FROM production
