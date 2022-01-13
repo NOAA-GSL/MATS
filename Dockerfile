@@ -27,10 +27,10 @@ ENV SCRIPTS_FOLDER /docker
 
 # Install OS build dependencies, which stay with this intermediate image but don’t become part of the final published image
 RUN apk --no-cache add \
-	bash \
-	g++ \
-	make \
-	python3
+    bash \
+    g++ \
+    make \
+    python3
 
 # Copy in entrypoint
 COPY --from=meteor-builder $SCRIPTS_FOLDER $SCRIPTS_FOLDER/
@@ -42,7 +42,7 @@ RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source
 
 
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
-FROM node:14.18-alpine3.15
+FROM node:14.18-alpine3.15 AS production
 
 # Set Build ARGS
 ARG APPNAME
@@ -52,13 +52,13 @@ ARG COMMITSHA
 
 # Install runtime dependencies
 RUN apk --no-cache add \
-                    bash \
-                    ca-certificates \
-                    mariadb \
-                    mongodb-tools \
-                    python3 \
-                    py3-numpy \
-                    py3-pip \
+    bash \
+    ca-certificates \
+    mariadb \
+    mongodb-tools \
+    python3 \
+    py3-numpy \
+    py3-pip \
     && pip3 --no-cache-dir install pymysql
 
 # Set Environment
