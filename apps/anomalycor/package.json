@@ -8,7 +8,7 @@
     "@babel/runtime": "^7.14.6",
     "bootstrap": "^4.5.2",
     "chai": "^4.2.0",
-    "downsample-lttb": "git+https://github.com/pingec/downsample-lttb.git",
+    "downsample-lttb": "0.0.1",
     "fibers": "^5.0.0",
     "fs-extra": "^7.0.0",
     "html2canvas": "^1.3.2",
