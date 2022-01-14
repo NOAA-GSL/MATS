@@ -9,7 +9,7 @@
     "bootstrap": "^4.6.1",
     "chai": "^4.3.4",
     "couchbase": "^3.2.3",
-    "downsample-lttb": "git+https://github.com/pingec/downsample-lttb.git",
+    "downsample-lttb": "0.0.1",
     "fibers": "^5.0.0",
     "fs": "0.0.1-security",
     "fs-extra": "^7.0.1",
