@@ -3,7 +3,7 @@ FROM geoffreybooth/meteor-base:2.5 AS meteor-builder
 
 ARG APPNAME
 
-# Make MATScommon discoverable
+# Make MATScommon discoverable by Meteor
 ENV METEOR_PACKAGE_DIRS=/MATScommon/meteor_packages
 
 # Assume we're passed the repo root as build context
@@ -16,7 +16,6 @@ COPY apps/${APPNAME} ${APP_SOURCE_FOLDER}/
 COPY MATScommon /MATScommon
 
 RUN bash ${SCRIPTS_FOLDER}/build-meteor-bundle.sh
-
 
 # Install OS build dependencies
 FROM node:14.18-alpine3.15 AS native-builder
@@ -32,14 +31,18 @@ RUN apk --no-cache add \
     make \
     python3
 
-# Copy in entrypoint
+# Copy in build scripts & entrypoint
 COPY --from=meteor-builder $SCRIPTS_FOLDER $SCRIPTS_FOLDER/
 
 # Copy in app bundle
 COPY --from=meteor-builder /opt/bundle $APP_BUNDLE_FOLDER/
 
-RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source
-
+# Build the native dependencies
+# NOTE - the randyp_mats-common atmosphere package pulls in a native npm couchbase dependency
+# so we need to force an npm rebuild in the node_modules directory there as well
+RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source \
+&& cd $APP_BUNDLE_FOLDER/bundle/programs/server/npm/node_modules/meteor/randyp_mats-common \
+&& npm rebuild --build-from-source
 
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
 FROM node:14.18-alpine3.15 AS production
@@ -80,10 +83,10 @@ COPY --from=native-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
 # Copy in app bundle with the built and installed dependencies from the previous image
 COPY --from=native-builder ${APP_BUNDLE_FOLDER}/ ${APP_BUNDLE_FOLDER}/
 
-# Copy in our launcher script
+# We want to use our own launcher script
 COPY container-scripts/run_app.sh ${APP_FOLDER}/
 
-# Create a writeable settings dir and Node fileCache
+# The app won't work without a writeable settings dir and local Node fileCache
 RUN mkdir -p ${SETTINGS_DIR} \
     && chown -R node:node ${APP_FOLDER}/settings \
     && chmod -R 755 ${APP_FOLDER}/settings \
@@ -102,7 +105,6 @@ ENTRYPOINT ["/usr/app/run_app.sh"]
 
 CMD ["node", "main.js"]
 
-# Add Labels
 LABEL version=${BUILDVER} code.branch=${COMMITBRANCH} code.commit=${COMMITSHA}
 
 
