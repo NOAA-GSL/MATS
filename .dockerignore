@@ -6,6 +6,7 @@ RELEASE.txt
 appProduction*
 bundle*
 node_modules
+.npm
 cache*
 container_deployment
 home
