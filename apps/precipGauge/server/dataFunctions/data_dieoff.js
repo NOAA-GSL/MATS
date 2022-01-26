@@ -65,17 +65,21 @@ dataDieOff = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var dateClause = "and m0.valid_time >= " + fromSecs + " and m0.valid_time <= " + toSecs;
+        var dateClause;
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
                 validTimeClause = "and floor((m0.valid_time)%(24*3600)/3600) IN(" + validTimes + ")";
             }
+            dateClause = "and m0.valid_time >= " + fromSecs + " and m0.valid_time <= " + toSecs;
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor((m0.valid_time - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and floor(((m0.valid_time) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            }
+            dateClause = "and m0.valid_time-m0.fcst_len*3600 >= " + fromSecs + " and m0.valid_time-m0.fcst_len*3600 <= " + toSecs;
         } else {
-            dateClause = "and (m0.valid_time - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and m0.valid_time-m0.fcst_len*3600 = " + fromSecs;
         }
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];

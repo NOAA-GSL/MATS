@@ -69,7 +69,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var utcCycleStart = Number(curve['utc-cycle-start']);
+        if (curve['utc-cycle-start'].length !== 1) {
+            throw new Error("INFO:  Please select exactly one UTC Cycle Init Hour for this plot type.");
+        }
+        var utcCycleStart = Number(curve['utc-cycle-start'][0]);
         utcCycleStarts[curveIndex] = utcCycleStart;
         var utcCycleStartClause = "and floor(((unix_timestamp(m0.date)+3600*m0.hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24";

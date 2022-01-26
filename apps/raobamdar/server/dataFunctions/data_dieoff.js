@@ -77,17 +77,21 @@ dataDieOff = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= '" + fromSecs + "' and unix_timestamp(m0.date)+3600*m0.hour <= '" + toSecs + "' ";
+        var dateClause;
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
                 validTimeClause = "and m0.hour IN(" + validTimes + ")";
             }
+            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= '" + fromSecs + "' and unix_timestamp(m0.date)+3600*m0.hour <= '" + toSecs + "' ";
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor(((unix_timestamp(m0.date)+3600*m0.hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and floor(((unix_timestamp(m0.date)+3600*m0.hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+            }
+            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 <= " + toSecs;
         } else {
-            dateClause = "and (unix_timestamp(m0.date)+3600*m0.hour - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 = " + fromSecs;
         }
         var top = curve['top'];
         var bottom = curve['bottom'];

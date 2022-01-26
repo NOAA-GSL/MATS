@@ -135,7 +135,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
             queryPool = sitePool;
         }
-        var utcCycleStart = Number(curve['utc-cycle-start']);
+        if (curve['utc-cycle-start'].length !== 1) {
+            throw new Error("INFO:  Please select exactly one UTC Cycle Init Hour for this plot type.");
+        }
+        var utcCycleStart = Number(curve['utc-cycle-start'][0]);
         utcCycleStarts[curveIndex] = utcCycleStart;
         if (forecastLength === 1) {
             utcCycleStartClause = "and floor(((" + timeVar + "+1800)-3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour

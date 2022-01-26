@@ -59,7 +59,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         var thresholdClause = "and m0.trsh = " + threshold * 0.01;
-        var utcCycleStart = Number(curve['utc-cycle-start']);
+        if (curve['utc-cycle-start'].length !== 1) {
+            throw new Error("INFO:  Please select exactly one UTC Cycle Init Hour for this plot type.");
+        }
+        var utcCycleStart = Number(curve['utc-cycle-start'][0]);
         utcCycleStarts[curveIndex] = utcCycleStart;
         var utcCycleStartClause = "and floor((m0.time - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24";

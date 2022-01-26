@@ -55,7 +55,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var utcCycleStart = Number(curve['utc-cycle-start']);
+        if (curve['utc-cycle-start'].length !== 1) {
+            throw new Error("INFO:  Please select exactly one UTC Cycle Init Hour for this plot type.");
+        }
+        var utcCycleStart = Number(curve['utc-cycle-start'][0]);
         utcCycleStarts[curveIndex] = utcCycleStart;
         var utcCycleStartClause = "and floor(((m0.valid_secs - m0.fcst_len*60))%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24 * 60";
@@ -63,8 +66,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause = statisticOptionsMap[statisticSelect][0];
-        var utcCycleStart = Number(curve['utc-cycle-start']);
-        utcCycleStarts[curveIndex] = utcCycleStart;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
