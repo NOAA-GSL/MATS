@@ -685,6 +685,7 @@ const doCurveParams = function () {
                 displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 4,
+                multiple: true
             });
     }
 

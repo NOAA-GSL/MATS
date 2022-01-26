@@ -73,7 +73,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + model + "_" + region + " as m0";
             thresholdClause = "and m0.trsh = " + threshold;
-            statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";;
+            statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
             dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
             queryPool = sumPool;
         } else {
@@ -112,10 +112,17 @@ dataDieOff = function (plotParams, plotFunction) {
                 validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor(((m0.time+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and floor(((m0.time+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            }
+            if (regionType === 'Predefined region') {
+                dateClause = "and m0.time-m0.fcst_len*3600 >= " + fromSecs + " and m0.time-m0.fcst_len*3600 <= " + toSecs;
+            } else {
+                dateClause = "and m0.time-m0.fcst_len*3600 >= " + fromSecs + " - 900 and m0.time-m0.fcst_len*3600 <= " + toSecs + " + 900";
+            }
         } else {
-            dateClause = "and (m0.time - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and m0.time-m0.fcst_len*3600 = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

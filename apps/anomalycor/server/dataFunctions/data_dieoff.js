@@ -57,15 +57,19 @@ dataDieOff = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '" + fromSecs + "' and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '" + toSecs + "' ";
+        var dateClause;
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             var validTimeStr = curve['valid-time'];
             validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+            dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '" + fromSecs + "' and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '" + toSecs + "' ";
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+            }
+            dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 >= " + fromSecs + " and unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 <= " + toSecs;
         } else {
-            dateClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 = " + fromSecs;
         }
         var levelClause = "";
         var levels = curve['level'] === undefined ? [] : curve['level'];

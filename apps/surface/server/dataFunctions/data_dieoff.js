@@ -140,10 +140,17 @@ dataDieOff = function (plotParams, plotFunction) {
                 validTimeClause = "and floor((" + timeVar + "+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor(((" + timeVar + "+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and floor(((" + timeVar + "+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            }
+            if (regionType === 'Predefined region') {
+                dateClause = "and " + timeVar + "-m0.fcst_len*3600 >= " + fromSecs + " and " + timeVar + "-m0.fcst_len*3600 <= " + toSecs;
+            } else {
+                dateClause = "and " + timeVar + "-m0.fcst_len*3600 >= " + fromSecs + " - 900 and " + timeVar + "-m0.fcst_len*3600 <= " + toSecs + " + 900";
+            }
         } else {
-            dateClause = "and (" + timeVar + " - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and " + timeVar + "-m0.fcst_len*3600 = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

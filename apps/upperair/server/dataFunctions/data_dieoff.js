@@ -143,15 +143,19 @@ dataDieOff = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
-        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs + " + 1800";
+        var dateClause;
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             var validTimeStr = curve['valid-time'];
             validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= '" + fromSecs + "' - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= '" + toSecs + "' + 1800";
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor((unix_timestamp(m0.date)+3600*m0.hour - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and floor(((unix_timestamp(m0.date)+3600*m0.hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
+            }
+            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 <= " + toSecs;
         } else {
-            dateClause = "and (unix_timestamp(m0.date)+3600*m0.hour - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

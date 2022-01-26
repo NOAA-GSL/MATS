@@ -73,7 +73,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + model + "_" + region + " as m0";
             thresholdClause = "and m0.trsh = " + threshold;
-            statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";;
+            statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
             dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
             queryPool = sumPool;
         } else {
@@ -84,7 +84,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
                 "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
                 "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0";
-statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
+            statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -112,10 +112,17 @@ statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
                 validTimeClause = "and floor((m0.time+450)%(24*3600)/900)/4 IN(" + validTimes + ")";
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor(((m0.time+450) - (m0.fcst_len*60+m0.fcst_min)*60)%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and floor(((m0.time+450) - (m0.fcst_len*60+m0.fcst_min)*60)%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
+            }
+            if (regionType === 'Predefined region') {
+                dateClause = "and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 >= " + fromSecs + " and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 <= " + toSecs;
+            } else {
+                dateClause = "and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 >= " + fromSecs + " - 300 and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 <= " + toSecs + " + 300";
+            }
         } else {
-            dateClause = "and (m0.time - (m0.fcst_len*60+m0.fcst_min)*60) = " + fromSecs;
+            dateClause = "and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

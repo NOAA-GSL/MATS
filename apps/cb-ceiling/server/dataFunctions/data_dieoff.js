@@ -79,7 +79,6 @@ dataDieOff = function (plotParams, plotFunction) {
                 "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['" + threshold + "'].hits) || ';' || " +
                 "TO_STRING(m0.data.['" + threshold + "'].false_alarms) || ';' || TO_STRING(m0.data.['" + threshold + "'].misses) || ';' || " +
                 "TO_STRING(m0.data.['" + threshold + "'].correct_negatives))) sub_data,\n count(m0.data.['" + threshold + "'].hits) N0 ";
-            dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
             whereClause = "WHERE " +
                 "m0.type='DD'\n " +
                 "AND m0.docType='CTC'\n " +
@@ -111,7 +110,6 @@ dataDieOff = function (plotParams, plotFunction) {
                 "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
                 "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS cn\n " +
                 "--validPairs";
-            dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs + " and m0.fcstValidEpoch = o.fcstValidEpoch";
             whereClause = "AND " +
                 "m0.type='DD'\n " +
                 "AND m0.docType='model'\n " +
@@ -130,11 +128,18 @@ dataDieOff = function (plotParams, plotFunction) {
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
                 validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
             }
+            dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and (m0.fcstValidEpoch - m0.fcstLen*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and (m0.fcstValidEpoch - m0.fcstLen*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+            }
+            dateClause = "and m0.fcstValidEpoch-m0.fcstLen*3600 >= " + fromSecs + " and m0.fcstValidEpoch-m0.fcstLen*3600 <= " + toSecs;
         } else {
-            dateClause = "and (m0.fcstValidEpoch - m0.fcst_len*3600) = " + fromSecs;
+            dateClause = "and m0.fcstValidEpoch-m0.fcstLen*3600 = " + fromSecs;
+        }
+        if (regionType !== 'Predefined region') {
+            dateClause = dateClause + " and m0.fcstValidEpoch = o.fcstValidEpoch";
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

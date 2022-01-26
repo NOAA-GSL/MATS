@@ -122,10 +122,17 @@ dataDieOff = function (plotParams, plotFunction) {
                 validTimeClause = "and floor((m0.time+450)%(24*3600)/900)/4 IN(" + validTimes + ")";
             }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = Number(curve['utc-cycle-start']);
-            utcCycleStartClause = "and floor(((m0.time+450) - (m0.fcst_len*60+m0.fcst_min)*60)%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
+            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+                utcCycleStartClause = "and floor(((m0.time+450) - (m0.fcst_len*60+m0.fcst_min)*60)%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
+            }
+            if (regionType === 'Predefined region') {
+                dateClause = "and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 >= " + fromSecs + " and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 <= " + toSecs;
+            } else {
+                dateClause = "and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 >= " + fromSecs + " - 300 and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 <= " + toSecs + " + 300";
+            }
         } else {
-            dateClause = "and (m0.time - (m0.fcst_len*60+m0.fcst_min)*60) = " + fromSecs;
+            dateClause = "and m0.time-(m0.fcst_len*60+m0.fcst_min)*60 = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
