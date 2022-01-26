@@ -238,8 +238,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "4.3.2-2022.01.26.09.00",
-      "buildDate": "2022.01.26.09.00",
+      "version": "4.3.2-2022.01.26.19.43",
+      "buildDate": "2022.01.26.19.43",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
@@ -251,8 +251,8 @@
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "4.3.2-2022.01.26.09.00",
-      "buildDate": "2022.01.26.09.00",
+      "version": "4.3.2-2022.01.26.19.43",
+      "buildDate": "2022.01.26.19.43",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
@@ -264,8 +264,8 @@
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "4.3.2-2022.01.26.09.00",
-      "buildDate": "2022.01.26.09.00",
+      "version": "4.3.2-2022.01.26.19.43",
+      "buildDate": "2022.01.26.19.43",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
