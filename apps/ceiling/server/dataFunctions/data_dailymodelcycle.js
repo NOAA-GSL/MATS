@@ -50,7 +50,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         var thresholdClause = "";
-        var utcCycleStart = Number(curve['utc-cycle-start']);
+        if (curve['utc-cycle-start'].length !== 1) {
+            throw new Error("INFO:  Please select exactly one UTC Cycle Init Hour for this plot type.");
+        }
+        var utcCycleStart = Number(curve['utc-cycle-start'][0]);
         utcCycleStarts[curveIndex] = utcCycleStart;
         var utcCycleStartClause = "and floor(((m0.time+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24";
@@ -80,7 +83,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
                 "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
                 "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0";
-statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
+            statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
