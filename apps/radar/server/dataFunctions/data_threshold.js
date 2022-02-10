@@ -42,13 +42,14 @@ dataThreshold = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var database = curve['database'];
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var scaleStr = curve['scale'];
-        var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === scaleStr);
-        var queryTableClause = "from " + model + '_' + grid_scale + '_' + region + " as m0";
-        var thresholdClause = "";
+        var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database]).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database][key] === scaleStr);
+        var queryTableClause = "from " + databaseRef + "." + model + '_' + grid_scale + '_' + region + " as m0";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -87,7 +88,6 @@ dataThreshold = function (plotParams, plotFunction) {
                 "{{queryTableClause}} " +
                 "where 1=1 " +
                 "{{dateClause}} " +
-                "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
                 "group by thresh " +
@@ -96,7 +96,6 @@ dataThreshold = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);

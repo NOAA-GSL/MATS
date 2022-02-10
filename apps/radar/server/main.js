@@ -279,8 +279,8 @@ const doCurveParams = function () {
     }
 
     // This app combines three previous apps, cref, echotop, and vil.
-    // This is where we store the hard-coded settings from the previous apps.
-    const dbNames = {"Composite Reflectivity": "cref", "Echotop": "echotop", "Vertically Integrated Liquid": "vil"};
+    // This is where we store the databases referenced by those apps.
+    const dbNames = {"Composite Reflectivity": "cref", "Echo Top": "echotop", "Vertically Integrated Liquid": "vil"};
     const databases = Object.keys(dbNames);
 
     var modelOptionsMap = {};
