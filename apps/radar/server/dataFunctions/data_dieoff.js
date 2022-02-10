@@ -50,7 +50,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var queryTableClause = "from " + model + '_' + grid_scale + '_' + region + " as m0";
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        var thresholdClause = "and m0.trsh = " + threshold;
+        var thresholdClause = "and m0.trsh = " + threshold / 10000;
         var validTimes;
         var validTimeClause = "";
         var utcCycleStart;

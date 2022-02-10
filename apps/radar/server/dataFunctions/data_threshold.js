@@ -79,7 +79,7 @@ dataThreshold = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.trsh as thresh, " +      // produces thresholds in dBz
+            var statement = "select m0.trsh as thresh, " +
                 "count(distinct m0.time) as N_times, " +
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +

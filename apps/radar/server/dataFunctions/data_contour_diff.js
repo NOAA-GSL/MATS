@@ -61,7 +61,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
             var thresholdStr = curve['threshold'];
             var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-            thresholdClause = "and m0.trsh = " + threshold;
+            thresholdClause = "and m0.trsh = " + threshold / 10000;
         }
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];

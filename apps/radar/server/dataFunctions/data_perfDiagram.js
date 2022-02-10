@@ -61,7 +61,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
             var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-            thresholdClause = "and m0.trsh = " + threshold;
+            thresholdClause = "and m0.trsh = " + threshold / 10000;
         }
         if (binParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
