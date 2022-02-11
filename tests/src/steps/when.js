@@ -27,7 +27,7 @@ import matsRefreshBrowser from '../support/action/matsRefreshBrowser';
 import matsRefreshPage from '../support/action/matsRefreshPage';
 import matsClearParameter from '../support/action/matsClearParameter';
 
-const { When } = require('cucumber');
+const { When } = require('@cucumber/cucumber');
 
 When(
     /^I clear the "([^"]*)?" parameter$/,
