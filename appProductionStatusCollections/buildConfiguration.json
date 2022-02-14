@@ -375,25 +375,9 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "compositeReflectivity",
-      "displayName": "Composite Reflectivity",
+      "app": "radar",
+      "displayName": "Radar",
       "displayOrder": 17,
-      "group": "Radar",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "echotop",
-      "displayName": "Echo Top",
-      "displayOrder": 18,
-      "group": "Radar",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "vil",
-      "displayName": "Vertically Integrated Liquid",
-      "displayOrder": 19,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -401,7 +385,7 @@
     {
       "app": "met-upperair",
       "displayName": "MET Upper Air",
-      "displayOrder": 20,
+      "displayOrder": 18,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -409,7 +393,7 @@
     {
       "app": "met-anomalycor",
       "displayName": "MET Anomaly Correlation",
-      "displayOrder": 21,
+      "displayOrder": 19,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -417,7 +401,7 @@
     {
       "app": "met-surface",
       "displayName": "MET Surface",
-      "displayOrder": 22,
+      "displayOrder": 20,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -425,7 +409,7 @@
     {
       "app": "met-airquality",
       "displayName": "MET Air Quality",
-      "displayOrder": 23,
+      "displayOrder": 21,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -433,7 +417,7 @@
     {
       "app": "met-ensemble",
       "displayName": "MET Ensemble",
-      "displayOrder": 24,
+      "displayOrder": 22,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -441,7 +425,7 @@
     {
       "app": "met-precip",
       "displayName": "MET Precipitation",
-      "displayOrder": 25,
+      "displayOrder": 23,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -449,7 +433,7 @@
     {
       "app": "met-cyclone",
       "displayName": "MET Cyclone",
-      "displayOrder": 26,
+      "displayOrder": 24,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -457,7 +441,7 @@
     {
       "app": "cb-ceiling",
       "displayName": "CB-Ceiling",
-      "displayOrder": 27,
+      "displayOrder": 25,
       "group": "Couchbase",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
