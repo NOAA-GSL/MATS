@@ -3,8 +3,6 @@ FROM geoffreybooth/meteor-base:2.5 AS meteor-builder
 
 ARG APPNAME
 
-RUN apt update && apt install -y ssh-client
-
 # Make MATScommon discoverable by Meteor
 ENV METEOR_PACKAGE_DIRS=/MATScommon/meteor_packages
 
