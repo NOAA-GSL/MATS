@@ -23,19 +23,17 @@ jobs:
           - cb-ceiling
           - ceiling
           - ceiling15
-          - compositeReflectivity
-          - echotop
           - landuse
           - precipGauge
           - precipitation1hr
           - precipitation24hr
           - precipitationSub24hr
           - ptype
+          - radar
           - raobamdar
           - surface
           - surfrad
           - upperair
-          - vil
           - visibility
           - visibility15
     steps:
@@ -48,17 +46,17 @@ jobs:
         shell: bash
         # Note - this doesn't support branch names with "/" in them
         run: |
-
+          DATE=$(git show -s --format=%cd --date=format:'%Y-%m-%d.%H:%M:%S.%z' ${{ github.sha }})
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             # PR build
             echo "BRANCH=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
-            echo "VERSION=dev-${{ github.sha }}" >> $GITHUB_ENV
+            echo "VERSION=dev-${{ github.sha }}-$DATE" >> $GITHUB_ENV
           elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
             # Handle differences between branches/tags
             if [[ "${GITHUB_REF}" == *"heads"* ]]; then
               # Branch build
               echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-              echo "VERSION=dev-${{ github.sha }}" >> $GITHUB_ENV
+              echo "VERSION=dev-${{ github.sha }}-$DATE" >> $GITHUB_ENV
             elif [[ "${GITHUB_REF}" == *"tags"* ]]; then
               # Tag build
               echo "BRANCH=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
