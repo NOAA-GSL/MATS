@@ -7,6 +7,8 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'
   pull_request:
     branches: [main, development]
+env:
+  DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
 
 jobs:
   build:
@@ -21,19 +23,17 @@ jobs:
           - cb-ceiling
           - ceiling
           - ceiling15
-          - compositeReflectivity
-          - echotop
           - landuse
           - precipGauge
           - precipitation1hr
           - precipitation24hr
           - precipitationSub24hr
           - ptype
+          - radar
           - raobamdar
           - surface
           - surfrad
           - upperair
-          - vil
           - visibility
           - visibility15
     steps:
@@ -46,30 +46,21 @@ jobs:
         shell: bash
         # Note - this doesn't support branch names with "/" in them
         run: |
-          RC_TAG="^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$"
-          RELEASE_TAG="^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$"
+          DATE=$(git show -s --format=%cd --date=format:'%Y-%m-%d.%H:%M:%S.%z' ${{ github.sha }})
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             # PR build
             echo "BRANCH=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
-            echo "VERSION=dev-${{ github.sha }}" >> $GITHUB_ENV
-            echo "REGISTRY=ghcr.io/noaa-gsl/mats/development" >> $GITHUB_ENV
+            echo "VERSION=dev-${{ github.sha }}-$DATE" >> $GITHUB_ENV
           elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
             # Handle differences between branches/tags
             if [[ "${GITHUB_REF}" == *"heads"* ]]; then
-              # branch build
+              # Branch build
               echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-              echo "VERSION=dev-${{ github.sha }}" >> $GITHUB_ENV
-              echo "REGISTRY=ghcr.io/noaa-gsl/mats/development" >> $GITHUB_ENV
-            elif [[ "${GITHUB_REF}" =~ $RC_TAG ]]; then
-              # release candidate tag
+              echo "VERSION=dev-${{ github.sha }}-$DATE" >> $GITHUB_ENV
+            elif [[ "${GITHUB_REF}" == *"tags"* ]]; then
+              # Tag build
               echo "BRANCH=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
               echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-              echo "REGISTRY=ghcr.io/noaa-gsl/mats/development" >> $GITHUB_ENV
-            elif [[ "${GITHUB_REF}" =~ $RELEASE_TAG ]]; then
-              # production tag
-              echo "BRANCH=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-              echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-              echo "REGISTRY=ghcr.io/noaa-gsl/mats/production" >> $GITHUB_ENV
             else
               echo "ERROR: Unanticipated Git Ref"
               exit 1
@@ -78,7 +69,6 @@ jobs:
             echo "ERROR: Unanticipated GitHub Event"
             exit 1
           fi
-        id: git-info
 
       - name: Create lowercase app names
         # Docker tags must be lowercase
@@ -87,20 +77,20 @@ jobs:
         run: |
           echo "APP_LOWERCASE=${APP,,}" >> $GITHUB_ENV
 
-      - name: Build container
+      - name: Build image
         run: |
           docker build \
             --build-arg APPNAME=${{ matrix.app }} \
             --build-arg BUILDVER="${{ env.VERSION }}" \
             --build-arg COMMITBRANCH=${{ env.BRANCH }} \
             --build-arg COMMITSHA=${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }} \
+            -t ${{ env.DEV_REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }} \
             .
 
-      - name: Scan container with Trivy
+      - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ env.REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }}'
+          image-ref: '${{ env.DEV_REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }}'
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results-${{ env.APP_LOWERCASE }}.sarif'
@@ -118,6 +108,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push container
+      - name: Push image to dev registry
         run: |
-          docker push ${{ env.REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }}
+            docker push ${{ env.DEV_REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }}

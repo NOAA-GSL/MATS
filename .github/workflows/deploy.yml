@@ -1,0 +1,62 @@
+name: "Deploy to Production Registry"
+on:
+  release:
+    types: [published]
+  # GITHUB_REF should be the tag - https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+env:
+  DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
+  PROD_REGISTRY: ghcr.io/noaa-gsl/mats/production
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: true
+      matrix:
+        deploy: # List of apps to deploy
+          - aircraft
+          - anomalycor
+          # - cb-ceiling # Don't push this until its ready
+          - ceiling
+          - ceiling15
+          - landuse
+          - precipGauge
+          - precipitation1hr
+          - precipitation24hr
+          - precipitationSub24hr
+          - ptype
+          - radar
+          - raobamdar
+          - surface
+          - surfrad
+          - upperair
+          - visibility
+          - visibility15
+    steps:
+      - name: Create lowercase app names
+        # Docker tags must be lowercase
+        env: 
+          APP: '${{ matrix.deploy }}'
+        run: |
+          echo "APP_NAME=${APP,,}" >> $GITHUB_ENV
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image
+        run: |
+          docker pull ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
+
+      - name: Retag image
+        run: |
+          docker tag ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }} \
+                     ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
+
+      - name: Push image
+        run: |
+          docker push ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
