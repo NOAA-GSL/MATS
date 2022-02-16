@@ -5,10 +5,10 @@
   "homepage": "https://esrl.noaa.gov/gsd/mats",
   "repository": {
     "type": "git",
-    "getUrl": "https://vlab.ncep.noaa.gov/git/mats-testing"
+    "getUrl": "https://github.com/NOAA-GSL/MATS"
   },
   "bugs": {
-    "getUrl": "https://vlab.ncep.noaa.gov/redmine/projects/emb-mats"
+    "getUrl": "https://github.com/NOAA-GSL/MATS/issues"
   },
   "scripts": {
     "clean-logs": "rm -rf logs/*",
@@ -17,38 +17,31 @@
     "test:debug": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" npx wdio run wdio.conf.js",
     "test:debug:headless": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" HEADLESS=\"true\" npx wdio run wdio.conf.js"
   },
-  "dependencies": {
-    "build": "^0.1.4",
-    "deepmerge": "^4.2.2",
-    "npx": "^10.2.2"
-  },
   "devDependencies": {
-    "@babel/cli": "^7.14.5",
-    "@babel/core": "^7.11.0",
+    "@babel/cli": "^7.17.3",
+    "@babel/core": "^7.17.4",
     "@babel/plugin-proposal-export-default-from": "^7.8.3",
     "@babel/preset-env": "^7.11.0",
     "@babel/register": "^7.10.5",
-    "@types/cucumber": "^6.0.1",
-    "@wdio/cli": "^6.12.1",
-    "@wdio/config": "^6.4.7",
-    "@wdio/cucumber-framework": "^6.5.0",
-    "@wdio/local-runner": "^6.5.0",
-    "@wdio/mocha-framework": "^6.5.0",
-    "@wdio/selenium-standalone-service": "^6.4.7",
-    "@wdio/spec-reporter": "^6.4.7",
-    "@wdio/static-server-service": "^6.4.7",
-    "@wdio/sync": "^6.5.0",
+    "@wdio/cli": "^7.16.14",
+    "@wdio/config": "^7.16.14",
+    "@wdio/cucumber-framework": "^7.16.14",
+    "@wdio/junit-reporter": "^7.16.14",
+    "@wdio/local-runner": "^7.16.14",
+    "@wdio/mocha-framework": "^7.16.14",
+    "@wdio/selenium-standalone-service": "^7.16.14",
+    "@wdio/spec-reporter": "^7.16.14",
+    "@wdio/static-server-service": "^7.16.14",
+    "@wdio/sync": "^7.16.14",
     "babel-eslint": "^10.1.0",
-    "babel-jest": "^26.2.2",
-    "chromedriver": "^96.0.0",
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-wdio": "^6.0.8",
-    "http-server": "^0.12.1",
-    "jest": "^25.2.4",
+    "chromedriver": "^98.0.1",
+    "eslint": "^8.9.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-wdio": "^7.4.2",
+    "http-server": "^14.1.0",
     "npm-run-all": "^4.1.5",
-    "wdio-chromedriver-service": "^6.0.4",
-    "webdriverio": "^6.3.6"
+    "wdio-chromedriver-service": "^7.2.8",
+    "webdriverio": "^7.16.15"
   }
 }
