@@ -17,6 +17,7 @@ COPY MATScommon /MATScommon
 
 RUN bash ${SCRIPTS_FOLDER}/build-meteor-bundle.sh
 
+
 # Install OS build dependencies
 FROM node:14.18-alpine3.15 AS native-builder
 
@@ -43,6 +44,7 @@ COPY --from=meteor-builder /opt/bundle $APP_BUNDLE_FOLDER/
 RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source \
 && cd $APP_BUNDLE_FOLDER/bundle/programs/server/npm/node_modules/meteor/randyp_mats-common \
 && npm rebuild --build-from-source
+
 
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
 FROM node:14.18-alpine3.15 AS production
@@ -81,7 +83,7 @@ ENV COMMIT=${COMMITSHA}
 COPY --from=native-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
 
 # Copy in app bundle with the built and installed dependencies from the previous image
-COPY --from=native-builder ${APP_BUNDLE_FOLDER}/ ${APP_BUNDLE_FOLDER}/
+COPY --from=native-builder ${APP_BUNDLE_FOLDER} ${APP_BUNDLE_FOLDER}/
 
 # We want to use our own launcher script
 COPY container-scripts/run_app.sh ${APP_FOLDER}/
