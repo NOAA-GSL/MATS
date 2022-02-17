@@ -505,6 +505,7 @@ const doCurveParams = function () {
                 default: dbs[0],
                 unique: false,
                 controlButtonVisibility: 'block',
+                controlButtonText: "variable",
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 1
@@ -536,9 +537,9 @@ const doCurveParams = function () {
                 },
                 controlButtonCovered: true,
                 controlButtonText: 'Region mode',
-                displayOrder: 3,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     }
 
@@ -648,9 +649,9 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
     }
 
@@ -701,9 +702,9 @@ const doCurveParams = function () {
                 unique: false,
                 default: truthsModelOptionsMap[dbs[0]][Object.keys(truthsModelOptionsMap[dbs[0]])[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 5
             });
     } else {
         // it is defined but check for necessary update
@@ -1002,15 +1003,16 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'sites', ': '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
-                ['', 'statistic', ', '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['avg: ', 'average', ''],
                 [', ', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "threshold", "average", "forecast-length", "valid-time", "truth", "sites", "sitesMap"
+                "label", "database", "data-source", "region-type", "region", "statistic", "threshold", "average", "forecast-length", "valid-time", "truth", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -1021,8 +1023,9 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'sites', ': '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
-                ['', 'statistic', ', '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
@@ -1030,7 +1033,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "truth", "sites", "sitesMap", "curve-dates"
+                "label", "database", "data-source", "region-type", "region", "statistic", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "truth", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1041,6 +1044,7 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'sites', ': '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
@@ -1048,7 +1052,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "forecast-length", "valid-time", "truth", "curve-dates"
+                "label", "database", "data-source", "region", "statistic", "forecast-length", "valid-time", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1059,14 +1063,15 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'sites', ': '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
-                ['', 'statistic', ', '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "threshold", "forecast-length", "truth", "sites", "sitesMap", "curve-dates"
+                "label", "database", "data-source", "region-type", "region", "statistic", "threshold", "forecast-length", "truth", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1077,13 +1082,14 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'sites', ': '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
-                ['', 'statistic', ', '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "threshold", "utc-cycle-start", "truth", "sites", "sitesMap"
+                "label", "database", "data-source", "region-type", "region", "statistic", "threshold", "utc-cycle-start", "truth", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -1093,14 +1099,16 @@ const doCurveTextPatterns = function () {
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "threshold", "forecast-length", "valid-time", "truth", "bin-parameter", "curve-dates"
+                "label", "database", "data-source", "region", "threshold", "forecast-length", "valid-time", "truth", "bin-parameter", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1109,14 +1117,15 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'data-source', ': '],
                 ['', 'sites', ': '],
-                ['', 'threshold', ' '],
-                ['', 'statistic', ', '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['fcst_len: ', 'forecast-length', ' h '],
                 [' valid-time:', 'valid-time', ', '],
                 ['', 'truth', '']
             ],
             displayParams: [
-                "data-source", "statistic", "threshold", "forecast-length", "valid-time", "truth", "sites", "sitesMap"
+                "database", "data-source", "statistic", "threshold", "forecast-length", "valid-time", "truth", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -1127,15 +1136,16 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'sites', ': '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
-                ['', 'statistic', ', '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth", "curve-dates"
+                "label", "database", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1145,14 +1155,15 @@ const doCurveTextPatterns = function () {
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
-                ['', 'statistic', ', '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth"
+                "label", "database", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth"
             ],
             groupSize: 6
         });
@@ -1162,14 +1173,15 @@ const doCurveTextPatterns = function () {
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ' '],
-                ['', 'statistic', ', '],
+                ['', 'database', ' '],
+                ['', 'statistic', ' at '],
+                ['', 'threshold', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'truth', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth"
+                "label", "database", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "truth"
             ],
             groupSize: 6
         });
