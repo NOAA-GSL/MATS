@@ -72,9 +72,6 @@ dataSeries = function (plotParams, plotFunction) {
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
-            if (database === "15 Minute Visibility") {
-                truthClause = "and m0.truth = '" + truth + "'";
-            }
             thresholdClause = "and m0.trsh = " + threshold;
             statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
             dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;

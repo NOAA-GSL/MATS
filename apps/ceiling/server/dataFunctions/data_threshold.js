@@ -55,7 +55,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
+            validTimeClause = "and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
         }
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
