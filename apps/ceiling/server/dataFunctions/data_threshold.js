@@ -52,32 +52,13 @@ dataThreshold = function (plotParams, plotFunction) {
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + databaseRef + "." + model + "_" + region + " as m0";
-        var truthClause = "";
-        if (database === "15 Minute Visibility") {
-            var truthStr = curve['truth'];
-            var truth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database]).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database][key] === truthStr);
-            truthClause = "and m0.truth = '" + truth + "'";
-        }
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            if (database.includes("15 Minute")) {
-                validTimeClause = "and floor((m0.time)%(24*3600)/900)/4 IN(" + validTimes + ")";
-            } else {
-                validTimeClause = "and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
-            }
+            validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
         }
-        var forecastLength;
-        var forecastLengthClause;
-        if (database.includes("15 Minute")) {
-            forecastLength = Number(curve['forecast-length']);
-            var forecastHour = Math.floor(forecastLength);
-            var forecastMinute = (forecastLength - forecastHour) * 60;
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength + " and m0.fcst_min = " + forecastMinute;
-        } else {
-            forecastLength = curve['forecast-length'];
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-        }
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
@@ -109,7 +90,6 @@ dataThreshold = function (plotParams, plotFunction) {
                 "{{queryTableClause}} " +
                 "where 1=1 " +
                 "{{dateClause}} " +
-                "{{truthClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
                 "group by thresh " +
@@ -118,7 +98,6 @@ dataThreshold = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{truthClause}}', truthClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);

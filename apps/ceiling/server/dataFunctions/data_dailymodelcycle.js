@@ -10,7 +10,6 @@ import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
-import toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
 
 dataDailyModelCycle = function (plotParams, plotFunction) {
     // initialize variables common to all curves
@@ -50,11 +49,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var queryTableClause = "";
-        var truthClause = "";
-        if (database === "15 Minute Visibility") {
-            var truthStr = curve['truth'];
-            var truth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database]).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database][key] === truthStr);
-        }
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
         var thresholdClause = "";
@@ -63,12 +57,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         }
         var utcCycleStart = Number(curve['utc-cycle-start'][0]);
         utcCycleStarts[curveIndex] = utcCycleStart;
-        var utcCycleStartClause;
-        if (database.includes("15 Minute")) {
-            utcCycleStartClause = "and floor(((m0.time+450) - (m0.fcst_len*60+m0.fcst_min)*60)%(24*3600)/900)/4 IN(" + utcCycleStart + ")";
-        } else {
-            utcCycleStartClause = "and floor(((m0.time+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
-        }
+        var utcCycleStartClause = "and floor(((m0.time+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
         var forecastLengthClause = "and m0.fcst_len < 24";
         var dateClause;
         var siteDateClause = "";
@@ -101,14 +90,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             if (database.includes("Visibility")) {
                 statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
                 statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
-                if (database === "15 Minute Visibility") {
-                    if (truth !== "qc") {
-                        statisticClause = statisticClause.replace(/o\.vis100/g, "o.vis_" + truth);
-                    } else {
-                        statisticClause = statisticClause.replace(/o\.vis100/g, "o.vis_closest");
-                        truthClause = "and o.vis_std < 2.4";
-                    }
-                }
             }
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
@@ -160,7 +141,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "{{utcCycleStartClause}} " +
                 "{{thresholdClause}} " +
                 "{{forecastLengthClause}} " +
-                "{{truthClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -172,12 +152,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-            statement = statement.replace('{{truthClause}}', truthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            if (database === "15 Minute Visibility") {
-                statement = statement.replace(/o\.time/g, "o.valid_time");
-            }
             dataRequests[label] = statement;
 
             var queryResult;

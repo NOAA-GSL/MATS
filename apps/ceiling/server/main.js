@@ -13,10 +13,8 @@ import {matsParamUtils} from 'meteor/randyp:mats-common';
 // This app combines four previous apps, ceiling, ceiling15, visibility, and visibility15.
 // This is where we store the databases referenced by those apps.
 const dbNames = {
-    "Hourly Ceiling": {"modelDB": "ceiling2", "sumsDB": "ceiling_sums2"},
-    "15 Minute Ceiling": {"modelDB": "ceiling_5min", "sumsDB": "ceiling_5min_sums"},
-    "Hourly Visibility": {"modelDB": "visibility", "sumsDB": "visibility_sums2"},
-    "15 Minute Visibility": {"modelDB": "vis_1min", "sumsDB": "vis_1min_sums"}
+    "Ceiling": {"modelDB": "ceiling2", "sumsDB": "ceiling_sums2"},
+    "Visibility": {"modelDB": "visibility", "sumsDB": "visibility_sums2"},
 };
 const dbs = Object.keys(dbNames);
 
@@ -295,7 +293,6 @@ const doCurveParams = function () {
     var sitesLocationMap = [];
     var forecastLengthOptionsMap = {};
     var thresholdsModelOptionsMap = {};
-    var truthsModelOptionsMap = {};
     var masterRegionValuesMap = {};
     var masterThresholdValuesMap = {};
     var masterTruthValuesMap = {};
@@ -334,38 +331,13 @@ const doCurveParams = function () {
 
     try {
         for (didx = 0; didx < dbs.length; didx++) {
-            masterTruthValuesMap[dbs[didx]] = {};
-            if (dbs[didx] === "15 Minute Visibility") {
-                rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select truth,description from " + dbNames[dbs[didx]].modelDB + ".truth_descriptions;");
-                var masterDescription;
-                var masterTruth;
-                for (var j = 0; j < rows.length; j++) {
-                    masterDescription = rows[j].description.trim();
-                    masterTruth = rows[j].truth.trim();
-                    masterTruthValuesMap[dbs[didx]][masterTruth] = masterDescription;
-                }
-            } else {
-                masterTruthValuesMap[dbs[didx]]["default"] = "Default truth data source";
-            }
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
-
-    try {
-        for (didx=0; didx < dbs.length; didx++) {
             modelOptionsMap[dbs[didx]] = {};
             modelDateRangeMap[dbs[didx]] = {};
             forecastLengthOptionsMap[dbs[didx]] = {};
             thresholdsModelOptionsMap[dbs[didx]] = {};
-            truthsModelOptionsMap[dbs[didx]] = {};
             regionModelOptionsMap[dbs[didx]] = {};
 
-            if (dbs[didx] === "15 Minute Visibility") {
-                rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,truth,mindate,maxdate from " + dbNames[dbs[didx]].sumsDB + ".regions_per_model_mats_all_categories order by display_category, display_order;");
-            } else {
-                rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,mindate,maxdate from " + dbNames[dbs[didx]].sumsDB + ".regions_per_model_mats_all_categories order by display_category, display_order;");
-            }
+            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,mindate,maxdate from " + dbNames[dbs[didx]].sumsDB + ".regions_per_model_mats_all_categories order by display_category, display_order;");
             for (var i = 0; i < rows.length; i++) {
                 var model_value = rows[i].model.trim();
                 var model = rows[i].display_text.trim();
@@ -375,28 +347,10 @@ const doCurveParams = function () {
                 var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
                 modelDateRangeMap[dbs[didx]][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
 
-                var truthsArr = [];
-                if (dbs[didx] === "15 Minute Visibility") {
-                    var truths = rows[i].truth;
-                    var truthsArrRaw = truths.split(',').map(Function.prototype.call, String.prototype.trim);
-                    var dummyTruth;
-                    for (var j = 0; j < truthsArrRaw.length; j++) {
-                        dummyTruth = truthsArrRaw[j].replace(/'|\[|\]/g, "");
-                        truthsArr.push(masterTruthValuesMap[dbs[didx]][dummyTruth]);
-                    }
-                } else {
-                    truthsArr.push(masterTruthValuesMap[dbs[didx]]["default"]);
-                }
-                truthsModelOptionsMap[dbs[didx]][model] = truthsArr;
-
                 var forecastLengths = rows[i].fcst_lens;
                 var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
                 for (var j = 0; j < forecastLengthArr.length; j++) {
-                    if (dbs[didx].includes("15 Minute")) {
-                        forecastLengthArr[j] = (Number(forecastLengthArr[j].replace(/'|\[|\]/g, "")) / 60).toString();
-                    } else {
-                        forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
-                    }
+                    forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
                 }
                 forecastLengthOptionsMap[dbs[didx]][model] = forecastLengthArr;
 
@@ -498,9 +452,6 @@ const doCurveParams = function () {
                 options: dbs,
                 dates: modelDateRangeMap,
                 dependentNames: ["data-source"],
-                hideOtherFor: {
-                    'truth': ["Hourly Ceiling", "15 Minute Ceiling", "Hourly Visibility"]
-                },
                 controlButtonCovered: true,
                 default: dbs[0],
                 unique: false,
@@ -551,7 +502,7 @@ const doCurveParams = function () {
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap[dbs[0]]),
                 superiorNames: ["database"],
-                dependentNames: ["region", "forecast-length", "threshold", "truth", "dates", "curve-dates"],
+                dependentNames: ["region", "forecast-length", "threshold", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap[dbs[0]])[0],
                 unique: false,
@@ -684,40 +635,6 @@ const doCurveParams = function () {
                     valuesMap: masterThresholdValuesMap,
                     options: thresholdsModelOptionsMap[dbs[0]][Object.keys(thresholdsModelOptionsMap[dbs[0]])[0]],
                     default: thresholdsModelOptionsMap[dbs[0]][Object.keys(thresholdsModelOptionsMap[dbs[0]])[0]][0]
-                }
-            });
-        }
-    }
-
-    if (matsCollections['truth'].findOne({name: 'truth'}) == undefined) {
-        matsCollections['truth'].insert(
-            {
-                name: 'truth',
-                type: matsTypes.InputTypes.select,
-                optionsMap: truthsModelOptionsMap,
-                options: truthsModelOptionsMap[dbs[0]][Object.keys(truthsModelOptionsMap[dbs[0]])[0]],
-                valuesMap: masterTruthValuesMap,
-                superiorNames: ['database', 'data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: truthsModelOptionsMap[dbs[0]][Object.keys(truthsModelOptionsMap[dbs[0]])[0]][0],
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 5
-            });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections['truth'].findOne({name: 'truth'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthsModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterTruthValuesMap))) {
-            // have to reload truth data
-            matsCollections['truth'].update({name: 'truth'}, {
-                $set: {
-                    optionsMap: truthsModelOptionsMap,
-                    valuesMap: masterTruthValuesMap,
-                    options: truthsModelOptionsMap[dbs[0]][Object.keys(truthsModelOptionsMap[dbs[0]])[0]],
-                    default: truthsModelOptionsMap[dbs[0]][Object.keys(truthsModelOptionsMap[dbs[0]])[0]][1]
                 }
             });
         }
@@ -926,8 +843,8 @@ const doCurveParams = function () {
 
     // determine date defaults for dates and curveDates
     const defaultDb = matsCollections["database"].findOne({name: "database"}, {default: 1}).default;
-    modelDateRangeMap = matsCollections["database"].findOne({name:"database"},{dates:1}).dates;
-    const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
+    modelDateRangeMap = matsCollections["database"].findOne({name: "database"}, {dates: 1}).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({name: "data-source"}, {default: 1}).default;
     minDate = modelDateRangeMap[dbs[0]][defaultDataSource].minDate;
     maxDate = modelDateRangeMap[dbs[0]][defaultDataSource].maxDate;
 
@@ -1287,7 +1204,10 @@ Meteor.startup(function () {
 
     // create list of all pools
     var allPools = [];
-    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
+    const metadataSettings = matsCollections.Databases.findOne({
+        role: matsTypes.DatabaseRoles.META_DATA,
+        status: "active"
+    }, {
         host: 1,
         port: 1,
         user: 1,

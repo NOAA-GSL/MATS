@@ -49,34 +49,16 @@ dataSeries = function (plotParams, plotFunction) {
         var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var queryTableClause = "";
-        var truthClause = "";
-        if (database === "15 Minute Visibility") {
-            var truthStr = curve['truth'];
-            var truth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database]).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database][key] === truthStr);
-        }
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
         var thresholdClause = "";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            if (database.includes("15 Minute")) {
-                validTimeClause = "and floor((m0.time+450)%(24*3600)/900)/4 IN(" + validTimes + ")";
-            } else {
-                validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
-            }
+            validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
         }
-        var forecastLength;
-        var forecastLengthClause;
-        if (database.includes("15 Minute")) {
-            forecastLength = Number(curve['forecast-length']);
-            var forecastHour = Math.floor(forecastLength);
-            var forecastMinute = (forecastLength - forecastHour) * 60;
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength + " and m0.fcst_min = " + forecastMinute;
-        } else {
-            forecastLength = curve['forecast-length'];
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-        }
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateClause;
         var siteDateClause = "";
         var siteMatchClause = "";
@@ -108,14 +90,6 @@ dataSeries = function (plotParams, plotFunction) {
             if (database.includes("Visibility")) {
                 statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
                 statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
-                if (database === "15 Minute Visibility") {
-                    if (truth !== "qc") {
-                        statisticClause = statisticClause.replace(/o\.vis100/g, "o.vis_" + truth);
-                    } else {
-                        statisticClause = statisticClause.replace(/o\.vis100/g, "o.vis_closest");
-                        truthClause = "and o.vis_std < 2.4";
-                    }
-                }
             }
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
@@ -170,7 +144,6 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{thresholdClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
-                "{{truthClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -183,12 +156,8 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-            statement = statement.replace('{{truthClause}}', truthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            if (database === "15 Minute Visibility") {
-                statement = statement.replace(/o\.time/g, "o.valid_time");
-            }
             dataRequests[label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
