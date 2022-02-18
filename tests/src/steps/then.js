@@ -52,7 +52,7 @@ import checkMatsInfoMessage from '../support/check/checkMatsInfoMessage';
 import matsDebug from '../support/action/matsDebug';
 import isMatsButtonEnabled from '../support/check/isMatsButtonEnabled';
 
-const { Then } = require('cucumber');
+const { Then } = require('@cucumber/cucumber');
 
 Then(/^I debug$/, matsDebug);
 

@@ -1,4 +1,4 @@
-import { Given } from 'cucumber';
+const { Given } = require('@cucumber/cucumber');
 
 import checkContainsAnyText from '../support/check/checkContainsAnyText';
 import checkIsEmpty from '../support/check/checkIsEmpty';

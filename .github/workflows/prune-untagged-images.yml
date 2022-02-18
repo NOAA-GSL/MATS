@@ -18,19 +18,17 @@ jobs:
           - cb-ceiling
           - ceiling
           - ceiling15
-          - compositeReflectivity
-          - echotop
           - landuse
           - precipGauge
           - precipitation1hr
           - precipitation24hr
           - precipitationSub24hr
           - ptype
+          - radar
           - raobamdar
           - surface
           - surfrad
           - upperair
-          - vil
           - visibility
           - visibility15
     steps:
