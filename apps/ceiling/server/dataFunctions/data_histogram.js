@@ -43,16 +43,18 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var database = curve['database'];
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var regionType = curve['region-type'];
         if (regionType === 'Select stations') {
             throw new Error("INFO:  Single/multi station plotting is not available for histograms.");
         }
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + " as m0";
+        var queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
         var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
         var thresholdClause = "and m0.trsh = " + threshold;
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -67,7 +69,7 @@ dataHistogram = function (plotParams, plotFunction) {
         var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";;
+        var statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
