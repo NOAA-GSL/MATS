@@ -1,5 +1,5 @@
 {
-  "name": "ceiling",
+  "name": "ceil-vis",
   "private": true,
   "scripts": {
     "start": "meteor run"
