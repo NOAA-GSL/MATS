@@ -43,7 +43,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var database = curve['database'];
-        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database].sumsDB;
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var regionType = curve['region-type'];
         if (regionType === 'Select stations') {
@@ -51,7 +51,7 @@ dataThreshold = function (plotParams, plotFunction) {
         }
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + databaseRef + "." + model + "_" + region + " as m0";
+        var queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
