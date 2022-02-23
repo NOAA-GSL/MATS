@@ -42,10 +42,17 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var database = curve['database'];
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var queryTableClause = "";
+        var truthClause = "";
+        if (database === "15 Minute Visibility") {
+            var truthStr = curve['truth'];
+            var truth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database]).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database][key] === truthStr);
+        }
         var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
         var thresholdClause = "";
         var validTimes;
         var validTimeClause = "";
@@ -66,25 +73,35 @@ dataDieOff = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause;
-        var queryPool;
         var regionType = curve['region-type'];
         if (regionType === 'Predefined region') {
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-            queryTableClause = "from " + model + "_" + region + " as m0";
+            queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
+            if (database === "15 Minute Visibility") {
+                truthClause = "and m0.truth = '" + truth + "'";
+            }
             thresholdClause = "and m0.trsh = " + threshold;
             statisticClause = "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
             dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
-            queryPool = sumPool;
         } else {
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
-            queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
+            queryTableClause = "from " + databaseRef.modelDB + "." + obsTable + " as o, " + databaseRef.modelDB + "." + model + " as m0 ";
             statisticClause = "sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, " +
                 "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, " +
                 "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
                 "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
                 "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0";
             statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
+            if (database.includes("Visibility")) {
+                statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
+                if (truth !== "qc") {
+                    statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis_" + truth);
+                } else {
+                    statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis_closest");
+                    truthClause = "and o.vis_std < 2.4";
+                }
+            }
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -104,7 +121,6 @@ dataDieOff = function (plotParams, plotFunction) {
             dateClause = "and m0.time >= " + fromSecs + " - 300 and m0.time <= " + toSecs + " + 300";
             siteDateClause = "and o.time >= " + fromSecs + " - 300 and o.time <= " + toSecs + " + 300";
             siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
-            queryPool = modelPool;
         }
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -155,6 +171,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
                 "{{utcCycleStartClause}} " +
+                "{{truthClause}} " +
                 "group by fcst_lead " +
                 "order by fcst_lead" +
                 ";";
@@ -166,9 +183,13 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+            statement = statement.replace('{{truthClause}}', truthClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
+            if (database.includes("Visibility")) {
+                statement = statement.replace(/o\.time/g, "o.valid_time");
+            }
             dataRequests[label] = statement;
 
             var queryResult;
@@ -176,7 +197,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

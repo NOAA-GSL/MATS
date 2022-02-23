@@ -41,11 +41,19 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var label = curve['label'];
         var binParam = curve['bin-parameter'];
         var binClause = matsCollections['bin-parameter'].findOne({name: 'bin-parameter'}).optionsMap[binParam];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var database = curve['database'];
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var queryTableClause = "from " + model + "_" + region + " as m0";
+        var queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
         var thresholdClause = "";
+        var truthClause = "";
+        if (database === "15 Minute Visibility") {
+            var truthStr = curve['truth'];
+            var truth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database]).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database][key] === truthStr);
+            truthClause = "and m0.truth = '" + truth + "'";
+        }
         var validTimeClause = "";
         var forecastLengthClause = "";
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -58,7 +66,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             if (thresholdStr === undefined) {
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
-            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
             thresholdClause = "and m0.trsh = " + threshold;
         }
         if (binParam !== 'Valid UTC hour') {
@@ -105,6 +113,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{dateClause}} " +
                 "{{thresholdClause}} " +
+                "{{truthClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
                 "group by binVal " +
@@ -114,6 +123,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             statement = statement.replace('{{binClause}}', binClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{thresholdClause}}', thresholdClause);
+            statement = statement.replace('{{truthClause}}', truthClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);

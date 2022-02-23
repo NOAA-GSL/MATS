@@ -172,7 +172,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{truthClause}}', truthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            if (database === "15 Minute Visibility") {
+            if (database.includes("Visibility")) {
                 statement = statement.replace(/o\.time/g, "o.valid_time");
             }
             dataRequests[label] = statement;

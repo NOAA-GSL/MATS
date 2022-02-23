@@ -33,13 +33,20 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-    var modelTable = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var database = curve['database'];
+    var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+    var modelTable = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
     var obsTable = (modelTable.includes('ret_') || modelTable.includes('Ret_')) ? 'obs_retro' : 'obs';
-    var queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
+    var queryTableClause = "from " + databaseRef.modelDB + "." + obsTable + " as o, " + databaseRef.modelDB + "." + modelTable + " as m0 ";
     var sitesClause = "";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
+    var truthClause = "";
+    if (database === "15 Minute Visibility") {
+        var truthStr = curve['truth'];
+        var truth = Object.keys(matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database]).find(key => matsCollections['truth'].findOne({name: 'truth'}).valuesMap[database][key] === truthStr);
+    }
     var thresholdStr = curve['threshold'];
-    var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+    var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
     var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -53,6 +60,15 @@ dataMap = function (plotParams, plotFunction) {
     var statisticClause = "sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, " +
         "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, count(m0.ceil) as N0";
     statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
+    if (database.includes("Visibility")) {
+        statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
+        if (truth !== "qc") {
+            statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis_" + truth);
+        } else {
+            statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis_closest");
+            truthClause = "and o.vis_std < 2.4";
+        }
+    }
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     var querySites = [];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -86,6 +102,7 @@ dataMap = function (plotParams, plotFunction) {
         "{{siteDateClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
+        "{{truthClause}} " +
         "group by sta_id " +
         "order by N0" +
         ";";
@@ -96,8 +113,12 @@ dataMap = function (plotParams, plotFunction) {
     statement = statement.replace('{{sitesClause}}', sitesClause);
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+    statement = statement.replace('{{truthClause}}', truthClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
+    if (database.includes("Visibility")) {
+        statement = statement.replace(/o\.time/g, "o.valid_time");
+    }
     dataRequests[label] = statement;
 
     var queryResult;
@@ -105,7 +126,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMapCTC(modelPool, statement, modelTable, statistic, siteMap);
+        queryResult = matsDataQueryUtils.queryDBMapCTC(sumPool, statement, modelTable, statistic, siteMap);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),

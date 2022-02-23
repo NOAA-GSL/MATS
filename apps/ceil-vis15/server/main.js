@@ -10,7 +10,7 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
-// This app combines four previous apps, ceiling, ceiling15, visibility, and visibility15.
+// This app combines two previous apps, ceiling15 and visibility15.
 // This is where we store the databases referenced by those apps.
 const dbNames = {
     "15 Minute Ceiling": {"modelDB": "ceiling_5min", "sumsDB": "ceiling_5min_sums"},

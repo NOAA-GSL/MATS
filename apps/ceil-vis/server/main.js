@@ -14,7 +14,7 @@ import {matsParamUtils} from 'meteor/randyp:mats-common';
 // This is where we store the databases referenced by those apps.
 const dbNames = {
     "Ceiling": {"modelDB": "ceiling2", "sumsDB": "ceiling_sums2"},
-    "Visibility": {"modelDB": "visibility", "sumsDB": "visibility_sums2"},
+    "Visibility": {"modelDB": "visibility", "sumsDB": "visibility_sums2"}
 };
 const dbs = Object.keys(dbNames);
 
