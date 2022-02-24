@@ -18,8 +18,8 @@ jobs:
           - aircraft
           - anomalycor
           # - cb-ceiling # Don't push this until its ready
-          - ceiling
-          - ceiling15
+          - ceil-vis
+          - ceil-vis15
           - landuse
           - precipGauge
           - precipitation1hr
@@ -31,8 +31,6 @@ jobs:
           - surface
           - surfrad
           - upperair
-          - visibility
-          - visibility15
     steps:
       - name: Create lowercase app names
         # Docker tags must be lowercase
