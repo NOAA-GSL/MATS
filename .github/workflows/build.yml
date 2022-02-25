@@ -21,8 +21,8 @@ jobs:
           - aircraft
           - anomalycor
           - cb-ceiling
-          - ceiling
-          - ceiling15
+          - ceil-vis
+          - ceil-vis15
           - landuse
           - precipGauge
           - precipitation1hr
@@ -34,8 +34,6 @@ jobs:
           - surface
           - surfrad
           - upperair
-          - visibility
-          - visibility15
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

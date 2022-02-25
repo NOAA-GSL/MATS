@@ -6,8 +6,8 @@ apps=(
     "aircraft"
     "anomalycor"
     "cb-ceiling"
-    "ceiling"
-    "ceiling15"
+    "ceil-vis"
+    "ceil-vis15"
     "landuse"
     "precipGauge"
     "precipitation1hr"
@@ -19,8 +19,6 @@ apps=(
     "surface"
     "surfrad"
     "upperair"
-    "visibility"
-    "visibility15"
 )
 branch=$(git branch --show-current)
 commit=$(git rev-parse HEAD)
