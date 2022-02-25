@@ -990,7 +990,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "sites", "sitesMap", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
