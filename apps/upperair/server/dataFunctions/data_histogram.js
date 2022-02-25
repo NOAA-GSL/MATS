@@ -69,7 +69,8 @@ dataHistogram = function (plotParams, plotFunction) {
         var levelVar;
         var levelClause = "";
         var queryPool;
-        var regionType = curve['region-type'];
+        // var regionType = curve['region-type'];
+        var regionType = 'Predefined region';   // station plots will be re-allowed when the statistics are taken out of the query for partial sums plots
         if (regionType === 'Predefined region') {
             levelVar = "m0.mb10*10";
             var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];

@@ -62,7 +62,8 @@ dataHistogram = function (plotParams, plotFunction) {
         var statisticClause;
         var statType;
         var queryPool;
-        var regionType = curve['region-type'];
+        // var regionType = curve['region-type'];
+        var regionType = 'Predefined region';   // station plots will be re-allowed when the statistics are taken out of the query for partial sums plots
         if (regionType === 'Predefined region') {
             timeVar = "m0.valid_day+3600*m0.hour";
             var metarStringStr = curve['truth'];

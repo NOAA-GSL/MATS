@@ -45,10 +45,6 @@ dataThreshold = function (plotParams, plotFunction) {
         var database = curve['database'];
         var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-        var regionType = curve['region-type'];
-        if (regionType === 'Select stations') {
-            throw new Error("INFO:  Single/multi station plotting is not available for thresholds.");
-        }
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
