@@ -12,8 +12,8 @@ Feature: No Data Found Exception: invalid_times
     and the plot buttons and add curve buttons are enabled.
 
     Background:
-        Given I load the app "/visibility15"
-        Then I expect the app title to be "Visibility 15 Min"
+        Given I load the app "/ceil-vis15"
+        Then I expect the app title to be "15 Minute Ceiling and Visibility"
 
     @watch
     Scenario: noDataFoundException_invalid_times
