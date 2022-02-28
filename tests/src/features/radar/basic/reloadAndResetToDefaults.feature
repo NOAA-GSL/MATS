@@ -31,7 +31,7 @@ Feature: Reload Reset To Defaults
         Then I should have 0 curves
 
         When I refresh the browser
-        And I load the app "/compositeReflectivity"
+        And I load the app "/radar"
         And I click the "Add Curve" button
         Then "Curve0" is added
         Then I click the "Remove Curve0" button

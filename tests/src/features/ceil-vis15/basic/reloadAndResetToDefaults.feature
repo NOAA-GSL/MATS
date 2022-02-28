@@ -7,8 +7,8 @@ Feature: Reload Reset To Defaults
     then I compare the default parameter values to the reloaded parameter values
 
     Background:
-        Given I load the app "/visibility15"
-        Then I expect the app title to be "Visibility 15 Min"
+        Given I load the app "/ceil-vis15"
+        Then I expect the app title to be "15 Minute Ceiling and Visibility"
 
     @watch
     Scenario: reloadAndResetToDefaults
@@ -31,7 +31,7 @@ Feature: Reload Reset To Defaults
         Then I should have 0 curves
 
         When I refresh the browser
-        And I load the app "/visibility15"
+        And I load the app "/ceil-vis15"
         And I click the "Add Curve" button
         Then "Curve0" is added
         Then I click the "Remove Curve0" button
