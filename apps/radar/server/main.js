@@ -1160,7 +1160,7 @@ Meteor.startup(function () {
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     for (var didx = 0; didx < dbs.length; didx++) {
-        mdr.addRecord("sumPool", dbNames[dbs[didx]], ['threshold_descriptions', 'regions_per_model_mats_all_categories']);
+        mdr.addRecord("sumPool", dbNames[dbs[didx]], ['threshold_descriptions', 'scale_descriptions', 'regions_per_model_mats_all_categories']);
     }
     try {
         matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats});
