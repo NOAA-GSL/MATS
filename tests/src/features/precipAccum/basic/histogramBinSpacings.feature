@@ -10,13 +10,15 @@ Feature: Histogram Bin Spacings
     then delete the curves.
 
     Background:
-        Given I load the app "/precipitationSub24hr"
-        Then I expect the app title to be "Sub 24 Hour Precipitation"
+        Given I load the app "/precipAccum"
+        Then I expect the app title to be "24 Hour / Sub 24 Hour Precipitation"
 
     @watch
     Scenario: histogramBinSpacings
         When I set the plot type to "Histogram"
         Then the plot type should be "Histogram"
+        When I change the "database" parameter to "24 Hour Precipitation"
+        Then the "database" parameter value matches "24 Hour Precipitation"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I set the curve-dates to "09/21/2019 0:00 - 09/24/2019 0:00"
@@ -24,8 +26,8 @@ Feature: Histogram Bin Spacings
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "RAP_OPS"
-        Then the "data-source" parameter value matches "RAP_OPS"
+        When I change the "data-source" parameter to "HRRR_GSL"
+        Then the "data-source" parameter value matches "HRRR_GSL"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"
