@@ -26,8 +26,7 @@ jobs:
           - landuse
           - precipGauge
           - precipitation1hr
-          - precipitation24hr
-          - precipitationSub24hr
+          - precipAccum
           - ptype
           - radar
           - raobamdar
