@@ -41,12 +41,14 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var label = curve['label'];
         var binParam = curve['bin-parameter'];
         var binClause = matsCollections['bin-parameter'].findOne({name: 'bin-parameter'}).optionsMap[binParam];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var database = curve['database'];
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var scaleStr = curve['scale'];
-        var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === scaleStr);
-        var queryTableClause = "from " + model + '_' + grid_scale + '_' + region + " as m0";
+        var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database]).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database][key] === scaleStr);
+        var queryTableClause = "from " + databaseRef + "." + model + '_' + grid_scale + '_' + region + " as m0";
         var thresholdClause = "";
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
@@ -57,12 +59,17 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             if (thresholdStr === undefined) {
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
-            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
             thresholdClause = "and m0.trsh = " + threshold * 0.01;
         }
         var forecastTypeStr = curve['forecast-type'];
-        var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
-        var forecastTypeClause = "and m0.num_fcsts = " + forecastType;
+        var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[database]).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[database][key] === forecastTypeStr);
+        var forecastTypeClause;
+        if (databaseRef === "precip") {
+            forecastTypeClause = "and m0.num_fcsts = " + forecastType;
+        } else {
+            forecastTypeClause = "and m0.accum_len = " + forecastType;
+        }
         dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
         var statisticSelect = 'PerformanceDiagram';
         var statType = 'ctc';

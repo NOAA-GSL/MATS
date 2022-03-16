@@ -308,11 +308,9 @@ const doCurveParams = function () {
             rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select trsh,description from " + dbNames[dbs[didx]] + ".threshold_descriptions;");
             var masterDescription;
             var masterTrsh;
-            var trshTemp;
             for (var j = 0; j < rows.length; j++) {
                 masterDescription = rows[j].description.trim();
-                trshTemp = rows[j].trsh.trim();
-                masterTrsh = trshTemp * 10000;
+                masterTrsh = rows[j].trsh.trim();
                 masterThresholdValuesMap[dbs[didx]][masterTrsh] = masterDescription;
             }
         }
@@ -386,7 +384,7 @@ const doCurveParams = function () {
                 var thresholdsArr = [];
                 var dummyThresh;
                 for (var j = 0; j < thresholdsArrRaw.length; j++) {
-                    dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "") * 10000;
+                    dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "");
                     thresholdsArr.push(masterThresholdValuesMap[dbs[didx]][dummyThresh]);
                 }
                 thresholdsModelOptionsMap[dbs[didx]][model] = thresholdsArr;
