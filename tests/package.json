@@ -34,14 +34,14 @@
     "@wdio/static-server-service": "^7.16.14",
     "@wdio/sync": "^7.16.14",
     "babel-eslint": "^10.1.0",
-    "chromedriver": "^98.0.1",
+    "chromedriver": "^99.0.0",
     "eslint": "^8.9.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-wdio": "^7.4.2",
     "http-server": "^14.1.0",
     "npm-run-all": "^4.1.5",
-    "wdio-chromedriver-service": "^7.2.8",
+    "wdio-chromedriver-service": "^7.3.1",
     "webdriverio": "^7.16.15"
   }
 }
