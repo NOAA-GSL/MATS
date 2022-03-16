@@ -319,25 +319,17 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "precipGauge",
-      "displayName": "Gauge Precipitation",
+      "app": "precipAccum",
+      "displayName": "24 Hour / Sub 24 Hour Precipitation",
       "displayOrder": 10,
       "group": "Precipitation",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
-      "app": "precipitation24hr",
-      "displayName": "24 Hour Precipitation",
+      "app": "precipGauge",
+      "displayName": "Gauge Precipitation",
       "displayOrder": 11,
-      "group": "Precipitation",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "precipitationSub24hr",
-      "displayName": "Sub 24 Hour Precipitation",
-      "displayOrder": 12,
       "group": "Precipitation",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -345,7 +337,7 @@
     {
       "app": "precipitation1hr",
       "displayName": "1 Hour Precipitation",
-      "displayOrder": 13,
+      "displayOrder": 12,
       "group": "Precipitation",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -353,7 +345,7 @@
     {
       "app": "ptype",
       "displayName": "Precipitation Type",
-      "displayOrder": 14,
+      "displayOrder": 13,
       "group": "Precipitation",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -361,7 +353,7 @@
     {
       "app": "radar",
       "displayName": "Radar",
-      "displayOrder": 15,
+      "displayOrder": 14,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -369,7 +361,7 @@
     {
       "app": "met-upperair",
       "displayName": "MET Upper Air",
-      "displayOrder": 16,
+      "displayOrder": 15,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -377,7 +369,7 @@
     {
       "app": "met-anomalycor",
       "displayName": "MET Anomaly Correlation",
-      "displayOrder": 17,
+      "displayOrder": 16,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -385,7 +377,7 @@
     {
       "app": "met-surface",
       "displayName": "MET Surface",
-      "displayOrder": 18,
+      "displayOrder": 17,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -393,7 +385,7 @@
     {
       "app": "met-airquality",
       "displayName": "MET Air Quality",
-      "displayOrder": 19,
+      "displayOrder": 18,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -401,7 +393,7 @@
     {
       "app": "met-ensemble",
       "displayName": "MET Ensemble",
-      "displayOrder": 20,
+      "displayOrder": 19,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -409,7 +401,7 @@
     {
       "app": "met-precip",
       "displayName": "MET Precipitation",
-      "displayOrder": 21,
+      "displayOrder": 20,
       "group": "METexpress",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -417,6 +409,14 @@
     {
       "app": "met-cyclone",
       "displayName": "MET Cyclone",
+      "displayOrder": 21,
+      "group": "METexpress",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "met-object",
+      "displayName": "MET Objects",
       "displayOrder": 22,
       "group": "METexpress",
       "deploymentStatus": "enabled",
