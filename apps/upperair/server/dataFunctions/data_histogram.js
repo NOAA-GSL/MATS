@@ -120,7 +120,7 @@ dataHistogram = function (plotParams, plotFunction) {
             } else {
                 throw new Error("RHobT stats are not supported for single/multi station plots");
             }
-            statisticClause = 'avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(unix_timestamp(m0.date)+3600*m0.hour) as N0, group_concat(ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), ";", m0.press, ";", {{variableClause}} order by ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), m0.press) as sub_data';
+            statisticClause = "avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(unix_timestamp(m0.date)+3600*m0.hour) as N0, group_concat(ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), ';', m0.press, ';', {{variableClause}} order by ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), m0.press) as sub_data";
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             statType = 'scalar';
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";

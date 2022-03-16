@@ -72,7 +72,7 @@ dataMap = function (plotParams, plotFunction) {
         varUnits = 'm/s';
         orderOfMagnitude = 0;
     }
-    var statisticClause = 'avg({{variableClause}}) as stat, count(m0.time) as N0';
+    var statisticClause = "avg({{variableClause}}) as stat, count(m0.time) as N0";
     statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
     var statType = 'scalar';
     curves[0]['statistic'] = "Bias (Model - Obs)";

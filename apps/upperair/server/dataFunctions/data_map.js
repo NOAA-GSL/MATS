@@ -74,7 +74,7 @@ dataMap = function (plotParams, plotFunction) {
     } else {
         throw new Error("RHobT stats are not supported for single/multi station plots");
     }
-    var statisticClause = 'avg({{variableClause}}) as stat, count(unix_timestamp(m0.date)+3600*m0.hour) as N0';
+    var statisticClause = "avg({{variableClause}}) as stat, count(unix_timestamp(m0.date)+3600*m0.hour) as N0";
     statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
     var statType = 'scalar';
     curves[0]['statistic'] = "Bias (Model - Obs)";

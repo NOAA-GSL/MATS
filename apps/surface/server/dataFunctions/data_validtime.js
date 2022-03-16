@@ -115,7 +115,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
                 varUnits = 'm/s';
             }
-            statisticClause = 'avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(m0.time) as N0, group_concat(ceil(3600*floor((m0.time+1800)/3600)), ";", {{variableClause}} order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
+            statisticClause = "avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(m0.time) as N0, group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', {{variableClause}} order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data";
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             statType = 'scalar';
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
