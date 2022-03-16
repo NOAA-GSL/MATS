@@ -18,9 +18,9 @@ jobs:
           - ceil-vis
           - ceil-vis15
           - landuse
+          - precipAccum
           - precipGauge
           - precipitation1hr
-          - precipAccum
           - ptype
           - radar
           - raobamdar
