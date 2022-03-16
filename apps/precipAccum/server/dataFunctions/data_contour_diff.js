@@ -56,31 +56,22 @@ dataContourDiff = function (plotParams, plotFunction) {
         var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database]).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database][key] === scaleStr);
         var queryTableClause = "from " + databaseRef + "." + model + '_' + grid_scale + '_' + region + " as m0";
         var thresholdClause = "";
-        var validTimeClause = "";
-        var forecastLengthClause = "";
-        var dateString = "";
+        var forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
         var dateClause = "";
         if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
             var thresholdStr = curve['threshold'];
             var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
-            thresholdClause = "and m0.trsh = " + threshold / 10000;
+            thresholdClause = "and m0.trsh = " + threshold * 0.01;
         }
-        if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-            var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and m0.time%(24*3600)/3600 IN(" + validTimes + ")";
-            }
-        }
-        if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-            var forecastLength = curve['forecast-length'];
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-        }
-        if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-            dateString = "m0.time-m0.fcst_len*3600";
+        var forecastTypeStr = curve['forecast-type'];
+        var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[database]).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[database][key] === forecastTypeStr);
+        var forecastTypeClause;
+        if (databaseRef === "precip") {
+            forecastTypeClause = "and m0.num_fcsts = " + forecastType;
         } else {
-            dateString = "m0.time";
+            forecastTypeClause = "and m0.accum_len = " + forecastType;
         }
-        dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
+        dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause = "sum(m0.yy) as hit, sum(m0.ny) as fa, sum(m0.yn) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.ny, ';', m0.yn, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
@@ -93,16 +84,15 @@ dataContourDiff = function (plotParams, plotFunction) {
         // prepare the query from the above parameters
         var statement = "{{xValClause}} " +
             "{{yValClause}} " +
-            "count(distinct {{dateString}}) as N_times, " +
-            "min({{dateString}}) as min_secs, " +
-            "max({{dateString}}) as max_secs, " +
+            "count(distinct m0.time) as N_times, " +
+            "min(m0.time) as min_secs, " +
+            "max(m0.time) as max_secs, " +
             "{{statisticClause}} " +
             "{{queryTableClause}} " +
             "where 1=1 " +
             "{{dateClause}} " +
             "{{thresholdClause}} " +
-            "{{validTimeClause}} " +
-            "{{forecastLengthClause}} " +
+            "{{forecastTypeClause}} " +
             "group by xVal,yVal " +
             "order by xVal,yVal" +
             ";";
@@ -112,10 +102,8 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{statisticClause}}', statisticClause);
         statement = statement.replace('{{queryTableClause}}', queryTableClause);
         statement = statement.replace('{{thresholdClause}}', thresholdClause);
-        statement = statement.replace('{{validTimeClause}}', validTimeClause);
-        statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+        statement = statement.replace('{{forecastTypeClause}}', forecastTypeClause);
         statement = statement.replace('{{dateClause}}', dateClause);
-        statement = statement.split('{{dateString}}').join(dateString);
         dataRequests[label] = statement;
 
         var queryResult;
@@ -145,12 +133,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             } else {
                 // this is an error returned by the mysql database
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                if (error.includes('ER_NO_SUCH_TABLE')) {
-                    throw new Error("INFO:  The region/scale combination [" + regionStr + " and " + scaleStr + "] is not supported by the database for the model [" + model + "]. " +
-                        "Choose a different scale to continue using this region.");
-                } else {
-                    throw new Error(error);
-                }
+                throw (new Error(error));
             }
             dataNotFoundForAnyCurve = true;
         }
