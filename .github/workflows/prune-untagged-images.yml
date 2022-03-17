@@ -30,7 +30,7 @@ jobs:
           - upperair
     steps:
       - name: Delete image
-        uses: snok/container-retention-policy@v1.1.0
+        uses: snok/container-retention-policy@v1.4.1
         with:
           image-names: mats/development/${{ matrix.app }}
           cut-off: 1 day ago MST
