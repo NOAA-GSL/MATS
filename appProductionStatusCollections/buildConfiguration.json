@@ -452,33 +452,17 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "ceiling",
-      "displayName": "Ceiling",
+      "app": "ceil-vis",
+      "displayName": "Ceiling and Visibility",
       "displayOrder": 5,
       "group": "Ceiling and Visibility",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
-      "app": "ceiling15",
-      "displayName": "Ceiling 15 Min",
+      "app": "ceil-vis15",
+      "displayName": "15 Minute Ceiling and Visibility",
       "displayOrder": 6,
-      "group": "Ceiling and Visibility",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "visibility",
-      "displayName": "Visibility",
-      "displayOrder": 7,
-      "group": "Ceiling and Visibility",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "visibility15",
-      "displayName": "Visibility 15 Min",
-      "displayOrder": 8,
       "group": "Ceiling and Visibility",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -486,7 +470,7 @@
     {
       "app": "surface",
       "displayName": "Surface",
-      "displayOrder": 9,
+      "displayOrder": 7,
       "group": "Surface",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -494,7 +478,7 @@
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
-      "displayOrder": 10,
+      "displayOrder": 8,
       "group": "Surface",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -502,31 +486,23 @@
     {
       "app": "surfrad",
       "displayName": "Surface Radiation",
-      "displayOrder": 11,
+      "displayOrder": 9,
       "group": "Surface",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "precipAccum",
+      "displayName": "24 Hour / Sub 24 Hour Precipitation",
+      "displayOrder": 10,
+      "group": "Precipitation",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "precipGauge",
       "displayName": "Gauge Precipitation",
-      "displayOrder": 12,
-      "group": "Precipitation",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "precipitation24hr",
-      "displayName": "24 Hour Precipitation",
-      "displayOrder": 13,
-      "group": "Precipitation",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "precipitationSub24hr",
-      "displayName": "Sub 24 Hour Precipitation",
-      "displayOrder": 14,
+      "displayOrder": 11,
       "group": "Precipitation",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -534,7 +510,7 @@
     {
       "app": "precipitation1hr",
       "displayName": "1 Hour Precipitation",
-      "displayOrder": 15,
+      "displayOrder": 12,
       "group": "Precipitation",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -542,31 +518,15 @@
     {
       "app": "ptype",
       "displayName": "Precipitation Type",
-      "displayOrder": 16,
+      "displayOrder": 13,
       "group": "Precipitation",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
-      "app": "compositeReflectivity",
-      "displayName": "Composite Reflectivity",
-      "displayOrder": 17,
-      "group": "Radar",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "echotop",
-      "displayName": "Echo Top",
-      "displayOrder": 18,
-      "group": "Radar",
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
-      "app": "vil",
-      "displayName": "Vertically Integrated Liquid",
-      "displayOrder": 19,
+      "app": "radar",
+      "displayName": "Radar",
+      "displayOrder": 14,
       "group": "Radar",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -574,7 +534,7 @@
     {
       "app": "met-upperair",
       "displayName": "MET Upper Air",
-      "displayOrder": 20,
+      "displayOrder": 15,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -582,7 +542,7 @@
     {
       "app": "met-anomalycor",
       "displayName": "MET Anomaly Correlation",
-      "displayOrder": 21,
+      "displayOrder": 16,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -590,7 +550,7 @@
     {
       "app": "met-surface",
       "displayName": "MET Surface",
-      "displayOrder": 22,
+      "displayOrder": 17,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -598,7 +558,7 @@
     {
       "app": "met-airquality",
       "displayName": "MET Air Quality",
-      "displayOrder": 23,
+      "displayOrder": 18,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -606,7 +566,7 @@
     {
       "app": "met-ensemble",
       "displayName": "MET Ensemble",
-      "displayOrder": 24,
+      "displayOrder": 19,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -614,7 +574,7 @@
     {
       "app": "met-precip",
       "displayName": "MET Precipitation",
-      "displayOrder": 25,
+      "displayOrder": 20,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -622,7 +582,15 @@
     {
       "app": "met-cyclone",
       "displayName": "MET Cyclone",
-      "displayOrder": 26,
+      "displayOrder": 21,
+      "group": "MET Express",
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "met-object",
+      "displayName": "MET Objects",
+      "displayOrder": 22,
       "group": "MET Express",
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"

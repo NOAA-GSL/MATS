@@ -317,8 +317,8 @@
     {
       "app": "upperair",
       "title": "Upper Air (RAOBS)",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.53",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -331,8 +331,8 @@
     {
       "app": "aircraft",
       "title": "Upper Air (AMDAR)",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -344,12 +344,13 @@
     {
       "app": "raobamdar",
       "title": "Upper Air (Combo)",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.53",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
       "dbroles": [
+        "model_data",
         "sums_data",
         "meta_data"
       ]
@@ -357,8 +358,8 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.53",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Upper Air",
@@ -368,57 +369,27 @@
       ]
     },
     {
-      "app": "ceiling",
-      "title": "Ceiling",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "app": "ceil-vis",
+      "title": "Ceiling and Visibility",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
       "dbroles": [
-        "model_data",
         "sums_data",
         "meta_data"
       ]
     },
     {
-      "app": "ceiling15",
-      "title": "Ceiling 15 Min",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "app": "ceil-vis15",
+      "title": "15 Minute Ceiling and Visibility",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Ceiling and Visibility",
       "dbroles": [
-        "model_data",
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
-      "app": "visibility",
-      "title": "Visibility",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Ceiling and Visibility",
-      "dbroles": [
-        "model_data",
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
-      "app": "visibility15",
-      "title": "Visibility 15 Min",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Ceiling and Visibility",
-      "dbroles": [
-        "model_data",
         "sums_data",
         "meta_data"
       ]
@@ -426,8 +397,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -440,8 +411,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -452,8 +423,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Surface",
@@ -462,10 +433,23 @@
       ]
     },
     {
+      "app": "precipAccum",
+      "title": "24 Hour / Sub 24 Hour Precipitation",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "Precipitation",
+      "dbroles": [
+        "sums_data",
+        "meta_data"
+      ]
+    },
+    {
       "app": "precipGauge",
       "title": "Gauge Precipitation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
@@ -476,36 +460,10 @@
       ]
     },
     {
-      "app": "precipitation24hr",
-      "title": "24 Hour Precipitation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Precipitation",
-      "dbroles": [
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
-      "app": "precipitationSub24hr",
-      "title": "Sub 24 Hour Precipitation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Precipitation",
-      "dbroles": [
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
       "app": "precipitation1hr",
       "title": "1 Hour Precipitation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
@@ -517,8 +475,8 @@
     {
       "app": "ptype",
       "title": "Precipitation Type",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Precipitation",
@@ -528,36 +486,10 @@
       ]
     },
     {
-      "app": "compositeReflectivity",
-      "title": "Composite Reflectivity",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Radar",
-      "dbroles": [
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
-      "app": "echotop",
-      "title": "Echo Top",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
-      "last_test_run": "",
-      "last_test_status": "",
-      "group": "Radar",
-      "dbroles": [
-        "sums_data",
-        "meta_data"
-      ]
-    },
-    {
-      "app": "vil",
-      "title": "Vertically Integrated Liquid",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "app": "radar",
+      "title": "Radar",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "Radar",
@@ -569,92 +501,97 @@
     {
       "app": "met-upperair",
       "title": "MET Upper Air",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.51",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-airquality",
       "title": "MET Air Quality",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.51",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-ensemble",
       "title": "MET Ensemble",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.51",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-precip",
       "title": "MET Precipitation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-cyclone",
       "title": "MET Cyclone",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.53",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
+      ]
+    },
+    {
+      "app": "met-object",
+      "title": "MET Objects",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "METexpress",
+      "dbroles": [
+        "sums_data"
       ]
     }
   ]
@@ -967,92 +904,97 @@
     {
       "app": "met-upperair",
       "title": "MET Upper Air",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-anomalycor",
       "title": "MET Anomaly Correlation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.51",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-airquality",
       "title": "MET Air Quality",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.51",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-ensemble",
       "title": "MET Ensemble",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.51",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-precip",
       "title": "MET Precipitation",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.52",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
       ]
     },
     {
       "app": "met-cyclone",
       "title": "MET Cyclone",
-      "version": "4.3.1",
-      "buildDate": "2022.01.07.19.53",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.29",
       "last_test_run": "",
       "last_test_status": "",
       "group": "METexpress",
       "dbroles": [
-        "sums_data",
-        "meta_data"
+        "sums_data"
+      ]
+    },
+    {
+      "app": "met-object",
+      "title": "MET Objects",
+      "version": "4.4.0",
+      "buildDate": "2022.03.21.20.28",
+      "last_test_run": "",
+      "last_test_status": "",
+      "group": "METexpress",
+      "dbroles": [
+        "sums_data"
       ]
     }
   ]
