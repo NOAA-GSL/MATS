@@ -309,7 +309,7 @@ const doCurveParams = function () {
             masterId = rows[j].id;
             masterSn = rows[j].short_name;
             masterRegionValuesMap["ID"][masterId] = masterRegDescription;
-            masterRegionValuesMap["shortName"][masterSn] = masterRegDescription;
+            masterRegionValuesMap["shortName"]["_" + masterSn + "_sums"] = masterRegDescription;
         }
     } catch (err) {
         console.log(err.message);
@@ -364,7 +364,7 @@ const doCurveParams = function () {
                     if (dbs[didx] === "RAOBs") {
                         regionsArr.push(masterRegionValuesMap["ID"][dummyRegion]);
                     } else {
-                        regionsArr.push(masterRegionValuesMap["shortName"][dummyRegion]);
+                        regionsArr.push(masterRegionValuesMap["shortName"]["_" + dummyRegion + "_sums"]);
                     }
                 }
                 regionModelOptionsMap[dbs[didx]][model] = regionsArr;

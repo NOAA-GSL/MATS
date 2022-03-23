@@ -47,26 +47,17 @@ dataContourDiff = function (plotParams, plotFunction) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var label = curve['label'];
-        var truth = curve['truth'];
-        var modelIndex = truth === 'RAOBs' ? 0 : 1;
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][modelIndex];
+        var database = curve['database'];
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var regionStr = curve['region'];
-        var region;
-        var queryTableClause;
-        var queryPool;
+        var regionDB = database === "RAOBs" ? "ID" : "shortName";
+        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB]).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB][key] === regionStr);
+        var queryTableClause = "from " + databaseRef.sumsDB + "." + model + region + " as m0";
         var phaseClause = "";
-        var phaseOptionsMap;
-        if (truth === 'RAOBs') {
-            region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMapU).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMapU[key] === regionStr);
-            var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
-            queryTableClause = "from " + tablePrefix + region + " as m0";
-            queryPool = sumPool;
-        } else {
-            region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMapA).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMapA[key] === regionStr);
-            queryTableClause = "from " + model + "_" + region + "_sums as m0";
-            queryPool = modelPool;
+        if (database === 'AMDAR') {
             var phaseStr = curve['phase'];
-            phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+            var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
             phaseClause = phaseOptionsMap[phaseStr];
         }
         var variableStr = curve['variable'];
@@ -78,7 +69,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var dateClause = "";
         var levelClause = "";
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+            var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
                 validTimeClause = "and m0.hour IN(" + validTimes + ")";
             }
@@ -99,7 +90,6 @@ dataContourDiff = function (plotParams, plotFunction) {
             var bottom = curve['bottom'];
             levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
         }
-
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
@@ -159,7 +149,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var finishMoment;
         try {
             // send the query statement to the query function
-            queryResult = matsDataQueryUtils.queryDBContour(queryPool, statement, appParams, statisticSelect);
+            queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement, appParams, statisticSelect);
             finishMoment = moment();
             dataRequests["data retrieval (query) time - " + label] = {
                 begin: startMoment.format(),
