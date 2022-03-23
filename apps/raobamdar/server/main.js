@@ -10,6 +10,14 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
+// This app combines two previous apps, upperair and aircraft.
+// This is where we store the databases referenced by those apps.
+const dbNames = {
+    "RAOBs": {"modelDB": "ruc_ua", "sumsDB": "ruc_ua_sums2"},
+    "AMDAR": {"modelDB": "acars_RR2", "sumsDB": "acars_RR2"}
+};
+const dbs = Object.keys(dbNames);
+
 // determined in doCurveParanms
 var minDate;
 var maxDate;
@@ -27,7 +35,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: minDate,
                 stopDate: maxDate,
-                superiorNames: ['data-source'],
+                superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -277,17 +285,22 @@ const doCurveParams = function () {
             matsCollections[params[cp]].remove({});
         }
     }
+
     var modelOptionsMap = {};
-    var regionModelOptionsMap = {};
-    var forecastLengthOptionsMap = {};
-    var truthsModelOptionsMap = {};
-    var masterRegionValuesMapU = {};
-    var masterRegionValuesMapA = {};
-    var modelTableMap = {};
     var modelDateRangeMap = {};
+    var regionModelOptionsMap = {};
+    var siteOptionsMap = {};
+    var sitesLocationMap = [];
+    var forecastLengthOptionsMap = {};
+    var masterRegionValuesMap = {};
+
+    var rows;
+    var didx;
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select short_name,id,description from region_descriptions;");
+        masterRegionValuesMap["ID"] = {};
+        masterRegionValuesMap["shortName"] = {};
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select short_name,id,description from region_descriptions;");
         var masterRegDescription;
         var masterId;
         var masterSn;
@@ -295,68 +308,117 @@ const doCurveParams = function () {
             masterRegDescription = rows[j].description.trim();
             masterId = rows[j].id;
             masterSn = rows[j].short_name;
-            masterRegionValuesMapU[masterId] = masterRegDescription;
-            masterRegionValuesMapA[masterSn] = masterRegDescription;
+            masterRegionValuesMap["ID"][masterId] = masterRegDescription;
+            masterRegionValuesMap["shortName"][masterSn] = masterRegDescription;
         }
     } catch (err) {
         console.log(err.message);
     }
 
     try {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select upperair_model,aircraft_model,regions,table_name_prefix,display_text,fcst_lens,truths,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
-        for (var i = 0; i < rows.length; i++) {
+        for (didx = 0; didx < dbs.length; didx++) {
+            modelOptionsMap[dbs[didx]] = {};
+            modelDateRangeMap[dbs[didx]] = {};
+            forecastLengthOptionsMap[dbs[didx]] = {};
+            regionModelOptionsMap[dbs[didx]] = {};
 
-            var model_u_value = rows[i].upperair_model.trim();
-            var model_a_value = rows[i].aircraft_model.trim();
-            var model = rows[i].display_text.trim();
-            modelOptionsMap[model] = [model_u_value, model_a_value];
-
-            var rowMinDate = moment.utc(rows[i].mindate).format("MM/DD/YYYY HH:mm");
-            var rowMaxDate = moment.utc(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
-            modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
-
-            var tableNamePrefix = rows[i].table_name_prefix.trim();
-            modelTableMap[model] = tableNamePrefix;
-
-            var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
-            for (var j = 0; j < forecastLengthArr.length; j++) {
-                forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]|\"/g, "");
+            if (dbs[didx] === "RAOBs") {
+                rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select table_name_prefix,display_text,regions,fcst_lens,display_order,display_category,mindate,minhour,maxdate,maxhour,numrecs from " + dbNames[dbs[didx]].modelDB + ".regions_per_model_mats_all_categories order by display_category, display_order;");
+            } else {
+                rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,display_text,regions,fcst_lens,mindate,maxdate from " + dbNames[dbs[didx]].modelDB + ".regions_per_model_mats_all_categories order by display_category, display_order;");
             }
-            forecastLengthOptionsMap[model] = forecastLengthArr;
-
-            var regions = rows[i].regions;
-            var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
-            var regionsArrU = [];
-            var regionsArrA = [];
-            var dummyRegion;
-            for (var j = 0; j < regionsArrRaw.length; j++) {
-                dummyRegion = regionsArrRaw[j].replace(/'|\[|\]|\"/g, "");
-                if (isNaN(dummyRegion)) {
-                    regionsArrA.push(masterRegionValuesMapA[dummyRegion]);
+            for (var i = 0; i < rows.length; i++) {
+                var model_value;
+                if (dbs[didx] === "RAOBs") {
+                    model_value = rows[i].table_name_prefix.trim();
                 } else {
-                    regionsArrU.push(masterRegionValuesMapU[dummyRegion]);
+                    model_value = rows[i].model.trim();
                 }
-            }
-            regionModelOptionsMap[model] = {}
-            if (regionsArrU.length > 0) {
-                regionModelOptionsMap[model]["RAOBs"] = regionsArrU;
-            }
-            if (regionsArrA.length > 0) {
-                regionModelOptionsMap[model]["AMDAR"] = regionsArrA;
-            }
+                var model = rows[i].display_text.trim();
+                modelOptionsMap[dbs[didx]][model] = [model_value];
 
-            var truths = rows[i].truths;
-            var truthArr = truths.split(',').map(Function.prototype.call, String.prototype.trim);
-            for (var j = 0; j < truthArr.length; j++) {
-                truthArr[j] = truthArr[j].replace(/'|\[|\]|\"/g, "");
+                var rowMinDate;
+                var rowMaxDate;
+                if (dbs[didx] === "RAOBs") {
+                    rowMinDate = moment.utc(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
+                    rowMaxDate = moment.utc(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
+                } else {
+                    rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+                    rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+                }
+                modelDateRangeMap[dbs[didx]][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
+
+                var forecastLengths = rows[i].fcst_lens;
+                var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
+                for (var j = 0; j < forecastLengthArr.length; j++) {
+                    forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]|\"/g, "");
+                }
+                forecastLengthOptionsMap[dbs[didx]][model] = forecastLengthArr;
+
+                var regions = rows[i].regions;
+                var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+                var regionsArr = [];
+                var dummyRegion;
+                for (var j = 0; j < regionsArrRaw.length; j++) {
+                    dummyRegion = regionsArrRaw[j].replace(/'|\[|\]|\"/g, "");
+                    if (dbs[didx] === "RAOBs") {
+                        regionsArr.push(masterRegionValuesMap["ID"][dummyRegion]);
+                    } else {
+                        regionsArr.push(masterRegionValuesMap["shortName"][dummyRegion]);
+                    }
+                }
+                regionModelOptionsMap[dbs[didx]][model] = regionsArr;
             }
-            truthsModelOptionsMap[model] = truthArr;
         }
-
     } catch (err) {
         console.log(err.message);
     }
+
+    try {
+        matsCollections.SiteMap.remove({});
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select wmoid,name,lat,lon,elev,descript from ruc_ua.metadata where lat > -9000 and lat < 9000 and lon > -18000 and lon < 18000 order by descript;");
+        for (var i = 0; i < rows.length; i++) {
+
+            var site_name = rows[i].name;
+            var site_description = rows[i].descript !== null ? rows[i].descript.replace(/\./g, "") : site_name;
+            var name_string = site_description !== site_name ? site_description + " (" + site_name + ")" : site_name;
+            var site_id = rows[i].wmoid;
+            var site_lat = rows[i].lat / 100;
+            var site_lon = rows[i].lon / 100;
+            var site_elev = rows[i].elev;
+            siteOptionsMap[name_string] = [site_id];
+
+            var point = [site_lat, site_lon];
+            var obj = {
+                name: name_string,
+                origName: site_name,
+                point: point,
+                elevation: site_elev,
+                options: {
+                    title: name_string,
+                    color: 'red',
+                    size: 5,
+                    network: 'RAOB',
+                    peerOption: name_string,
+                    id: site_id,
+                    highLightColor: 'blue'
+                }
+            };
+            sitesLocationMap.push(obj);
+
+            matsCollections.SiteMap.insert({siteName: name_string, siteId: site_id});
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    matsCollections.StationMap.remove({});
+    matsCollections.StationMap.insert(
+        {
+            name: 'stations',
+            optionsMap: sitesLocationMap,
+        }
+    );
 
     if (matsCollections["label"].findOne({name: 'label'}) == undefined) {
         matsCollections["label"].insert(
@@ -377,38 +439,87 @@ const doCurveParams = function () {
         );
     }
 
-    if (matsCollections["data-source"].findOne({name: 'data-source'}) == undefined) {
-        matsCollections["data-source"].insert(
+    if (matsCollections["database"].findOne({name: 'database'}) == undefined) {
+        matsCollections["database"].insert(
             {
-                name: 'data-source',
+                name: 'database',
                 type: matsTypes.InputTypes.select,
-                optionsMap: modelOptionsMap,
-                tableMap: modelTableMap,
+                optionsMap: dbNames,
+                options: dbs,
                 dates: modelDateRangeMap,
-                options: Object.keys(modelOptionsMap),
-                dependentNames: ["truth", "forecast-length", "dates", "curve-dates"],
+                dependentNames: ["data-source"],
                 controlButtonCovered: true,
-                default: Object.keys(modelOptionsMap)[0],
+                default: dbs[0],
+                hideOtherFor: {
+                    'phase': ["RAOBs"]
+                },
                 unique: false,
                 controlButtonVisibility: 'block',
+                controlButtonText: "truth",
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 1
             });
     } else {
         // it is defined but check for necessary update
+        var currentParam = matsCollections["database"].findOne({name: 'database'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
+            // have to reload database data
+            matsCollections["database"].update({name: 'database'}, {
+                $set: {
+                    dates: modelDateRangeMap
+                }
+            });
+        }
+    }
+
+    if (matsCollections['region-type'].findOne({name: 'region-type'}) == undefined) {
+        matsCollections['region-type'].insert(
+            {
+                name: 'region-type',
+                type: matsTypes.InputTypes.select,
+                options: ['Predefined region', 'Select stations'],
+                default: 'Predefined region',
+                hideOtherFor: {
+                    'region': ["Select stations"],
+                    'sites': ["Predefined region"],
+                    'sitesMap': ["Predefined region"]
+                },
+                controlButtonCovered: true,
+                controlButtonText: 'Region mode',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
+
+    if (matsCollections["data-source"].findOne({name: 'data-source'}) == undefined) {
+        matsCollections["data-source"].insert(
+            {
+                name: 'data-source',
+                type: matsTypes.InputTypes.select,
+                optionsMap: modelOptionsMap,
+                options: Object.keys(modelOptionsMap[dbs[0]]),
+                superiorNames: ["database"],
+                dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
+                controlButtonCovered: true,
+                default: Object.keys(modelOptionsMap[dbs[0]])[0],
+                unique: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+    } else {
+        // it is defined but check for necessary update
         var currentParam = matsCollections["data-source"].findOne({name: 'data-source'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.tableMap, modelTableMap))) {
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
             // have to reload model data
             matsCollections["data-source"].update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
-                    tableMap: modelTableMap,
-                    dates: modelDateRangeMap,
-                    options: Object.keys(modelOptionsMap),
-                    default: Object.keys(modelOptionsMap)[0]
+                    options: Object.keys(modelOptionsMap[dbs[0]]),
+                    default: Object.keys(modelOptionsMap[dbs[0]])[0]
                 }
             });
         }
@@ -420,32 +531,29 @@ const doCurveParams = function () {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
-                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]['RAOBs'],
-                valuesMapU: masterRegionValuesMapU,
-                valuesMapA: masterRegionValuesMapA,
-                superiorNames: ['data-source', 'truth'],
+                options: regionModelOptionsMap[dbs[0]][Object.keys(regionModelOptionsMap[dbs[0]])[0]],
+                valuesMap: masterRegionValuesMap,
+                superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]['RAOBs'][0],
+                default: regionModelOptionsMap[dbs[0]][Object.keys(regionModelOptionsMap[dbs[0]])[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["region"].findOne({name: 'region'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMapU, masterRegionValuesMapU)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMapA, masterRegionValuesMapA))) {
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
             // have to reload region data
             matsCollections["region"].update({name: 'region'}, {
                 $set: {
                     optionsMap: regionModelOptionsMap,
-                    valuesMapU: masterRegionValuesMapU,
-                    valuesMapA: masterRegionValuesMapA,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]['RAOBs'],
-                    default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]['RAOBs'][0]
+                    valuesMap: masterRegionValuesMap,
+                    options: regionModelOptionsMap[dbs[0]][Object.keys(regionModelOptionsMap[dbs[0]])[0]],
+                    default: regionModelOptionsMap[dbs[0]][Object.keys(regionModelOptionsMap[dbs[0]])[0]][0]
                 }
             });
         }
@@ -493,9 +601,9 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
     }
 
@@ -550,45 +658,10 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(statVarOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 2
-            });
-    }
-
-    if (matsCollections['truth'].findOne({name: 'truth'}) == undefined) {
-        matsCollections['truth'].insert(
-            {
-                name: 'truth',
-                type: matsTypes.InputTypes.select,
-                optionsMap: truthsModelOptionsMap,
-                options: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]],
-                superiorNames: ['data-source'],
-                dependentNames: ['region'],
-                hideOtherFor: {
-                    'phase': ["RAOBs"]
-                },
-                controlButtonCovered: true,
-                unique: false,
-                default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][0],
-                controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 3
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections['truth'].findOne({name: 'truth'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthsModelOptionsMap)) {
-            // have to reload truth data
-            matsCollections['truth'].update({name: 'truth'}, {
-                $set: {
-                    optionsMap: truthsModelOptionsMap,
-                    options: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]],
-                    default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][0]
-                }
-            });
-        }
     }
 
     if (matsCollections["forecast-length"].findOne({name: 'forecast-length'}) == undefined) {
@@ -597,8 +670,8 @@ const doCurveParams = function () {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
-                options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],
-                superiorNames: ['data-source'],
+                options: forecastLengthOptionsMap[dbs[0]][Object.keys(forecastLengthOptionsMap[dbs[0]])[0]],
+                superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -617,19 +690,19 @@ const doCurveParams = function () {
             matsCollections["forecast-length"].update({name: 'forecast-length'}, {
                 $set: {
                     optionsMap: forecastLengthOptionsMap,
-                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]
+                    options: forecastLengthOptionsMap[dbs[0]][Object.keys(forecastLengthOptionsMap[dbs[0]])[0]]
                 }
             });
         }
     }
 
-    if (matsCollections['dieoff-type'].findOne({name: 'dieoff-type'}) == undefined) {
+    if (matsCollections["dieoff-type"].findOne({name: 'dieoff-type'}) == undefined) {
         var dieoffOptionsMap = {
             "Dieoff": [matsTypes.ForecastTypes.dieoff],
             "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
             "Single cycle forecast (uses first date in range)": [matsTypes.ForecastTypes.singleCycle]
         };
-        matsCollections['dieoff-type'].insert(
+        matsCollections["dieoff-type"].insert(
             {
                 name: 'dieoff-type',
                 type: matsTypes.InputTypes.select,
@@ -787,11 +860,52 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["sites"].findOne({name: 'sites'}) == undefined) {
+        matsCollections["sites"].insert(
+            {
+                name: 'sites',
+                type: matsTypes.InputTypes.select,
+                optionsMap: siteOptionsMap,
+                options: Object.keys(siteOptionsMap),
+                peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 5,
+                multiple: true
+            });
+    }
+
+    if (matsCollections["sitesMap"].findOne({name: 'sitesMap'}) == undefined) {
+        matsCollections["sitesMap"].insert(
+            {
+                name: 'sitesMap',
+                type: matsTypes.InputTypes.selectMap,
+                optionsMap: sitesLocationMap,
+                options: Object.keys(sitesLocationMap),
+                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                displayOrder: 6,
+                displayPriority: 1,
+                displayGroup: 5,
+                multiple: true,
+                defaultMapView: {point: [50, -92.5], zoomLevel: 1.25},
+                help: 'map-help.html'
+            });
+    }
+
     // determine date defaults for dates and curveDates
-    const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
-    minDate = modelDateRangeMap[defaultDataSource].minDate;
-    maxDate = modelDateRangeMap[defaultDataSource].maxDate;
+    const defaultDb = matsCollections["database"].findOne({name: "database"}, {default: 1}).default;
+    modelDateRangeMap = matsCollections["database"].findOne({name: "database"}, {dates: 1}).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({name: "data-source"}, {default: 1}).default;
+    minDate = modelDateRangeMap[dbs[0]][defaultDataSource].minDate;
+    maxDate = modelDateRangeMap[dbs[0]][defaultDataSource].maxDate;
 
     // need to turn the raw max and min from the metadata into the last valid month of data
     const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
@@ -817,7 +931,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap).sort(),
                 startDate: minDate,
                 stopDate: maxDate,
-                superiorNames: ['data-source'],
+                superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,
@@ -863,7 +977,9 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
@@ -871,11 +987,10 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['phase: ', 'phase', ', '],
-                ['avg: ', 'average', ', '],
-                ['', 'truth', '']
+                ['avg: ', 'average', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "average", "top", "bottom"
+                "label", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "average", "top", "bottom", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -884,7 +999,9 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
@@ -892,11 +1009,10 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['phase: ', 'phase', ', '],
-                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "top", "bottom", "curve-dates"
+                "label", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -905,7 +1021,9 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
@@ -914,11 +1032,10 @@ const doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['phase: ', 'phase', ', '],
-                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "truth", "top", "bottom", "curve-dates"
+                "label", "database", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -927,18 +1044,19 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['phase: ', 'phase', ', '],
-                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "truth", "top", "bottom", "curve-dates"
+                "label", "database", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -947,17 +1065,35 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
                 ['to ', 'bottom', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
-                ['phase: ', 'phase', ', '],
-                ['', 'truth', '']
+                ['phase: ', 'phase', ', ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "utc-cycle-start", "phase", "truth", "top", "bottom"
+                "label", "database", "data-source", "region", "statistic", "variable", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.map,
+            textPattern: [
+                ['', 'data-source', ': '],
+                ['', 'sites', ': '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'top', ' '],
+                ['to ', 'bottom', ', '],
+                ['fcst_len: ', 'forecast-length', ' h '],
+                [' valid-time:', 'valid-time', '']
+            ],
+            displayParams: [
+                "label", "database", "data-source", "variable", "forecast-length", "top", "bottom", "valid-time", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -966,7 +1102,9 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
+                ['', 'sites', ': '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
@@ -974,11 +1112,10 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['phase: ', 'phase', ', '],
-                ['', 'truth', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -988,17 +1125,17 @@ const doCurveTextPatterns = function () {
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['phase: ', 'phase', ', '],
-                ['', 'truth', '']
+                ['phase: ', 'phase', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "top", "bottom"
+                "label", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom"
             ],
             groupSize: 6
         });
@@ -1008,17 +1145,17 @@ const doCurveTextPatterns = function () {
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
+                ['', 'database', ' '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
                 ['to ', 'bottom', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['phase: ', 'phase', ', '],
-                ['', 'truth', '']
+                ['phase: ', 'phase', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "truth", "top", "bottom"
+                "label", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom"
             ],
             groupSize: 6
         });
@@ -1070,6 +1207,12 @@ const doPlotGraph = function () {
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.map,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataMap",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
             graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
@@ -1112,7 +1255,10 @@ Meteor.startup(function () {
 
     // create list of all pools
     var allPools = [];
-    const metadataSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.META_DATA, status: "active"}, {
+    const metadataSettings = matsCollections.Databases.findOne({
+        role: matsTypes.DatabaseRoles.META_DATA,
+        status: "active"
+    }, {
         host: 1,
         port: 1,
         user: 1,
@@ -1125,20 +1271,6 @@ Meteor.startup(function () {
         metadataPool = mysql.createPool(metadataSettings);
         allPools.push({pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA});
     }
-
-    const modelSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active"}, {
-        host: 1,
-        port: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    // the pool is intended to be global
-    if (modelSettings) {
-        modelPool = mysql.createPool(modelSettings);
-        allPools.push({pool: "modelPool", role: matsTypes.DatabaseRoles.MODEL_DATA});
-    };
 
     const sumSettings = matsCollections.Databases.findOne({role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active"}, {
         host: 1,
@@ -1156,7 +1288,9 @@ Meteor.startup(function () {
 
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
-    mdr.addRecord("sumPool", "ruc_ua_sums2", ['regions_per_model_mats_all_categories']);
+    for (var didx = 0; didx < dbs.length; didx++) {
+        mdr.addRecord("sumPool", dbNames[dbs[didx]].modelDB, ['regions_per_model_mats_all_categories']);
+    }
     try {
         matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats});
     } catch (error) {
