@@ -36,3 +36,4 @@ until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
 done
 echo -e "${ORNG}please be patient!!${NC}"
 docker system prune -af
+docker swarm leave --force

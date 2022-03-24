@@ -14,14 +14,15 @@ if docker node ls > /dev/null 2>&1; then
     echo -e "${GRN}running in swarm mode${NC}"
 else
     echo -e "${GRN}initializing swarm mode${NC}"
-    docker swarm init
+    docker swarm init --advertise-addr eth0
 fi
 docker network create -d overlay web
-dockercompose=$(find ~ -type f -name docker-compose.yml 2>/dev/null)
+dockercompose=$(find ~/container_deployment -type f -name docker-compose.yml 2>/dev/null)
 echo -e "${GRN}Retrieving images - be patient ${NC}"
 grep image ${dockercompose} | awk '{print $2}' | while read i
 do
-  if [[ $i == "matsapps"* ]]; then
+  if [[ $i == "ghcr.io"* ]]; then
+  # if [[ $i == "matsapps"* ]]; then
     echo -e "${ORNG} pulling $i ${NC}"
     docker pull --disable-content-trust ${i}
   fi

@@ -24,4 +24,4 @@ else
     exit 1
 fi
 
- docker stack ps ${stack}
+docker stack ps ${stack}
