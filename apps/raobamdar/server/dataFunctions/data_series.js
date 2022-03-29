@@ -49,7 +49,7 @@ dataSeries = function (plotParams, plotFunction) {
         var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var regionStr = curve['region'];
-        var regionDB = database === "RAOBs" ? "ID" : "shortName";
+        var regionDB = database.includes("RAOBs") ? "ID" : "shortName";
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB]).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB][key] === regionStr);
         var queryTableClause = "from " + databaseRef.sumsDB + "." + model + region + " as m0";
         var phaseClause = "";

@@ -13,7 +13,8 @@ import {matsParamUtils} from 'meteor/randyp:mats-common';
 // This app combines two previous apps, upperair and aircraft.
 // This is where we store the databases referenced by those apps.
 const dbNames = {
-    "RAOBs": {"modelDB": "ruc_ua", "sumsDB": "ruc_ua_sums2"},
+    "RAOBs (Traditional)": {"modelDB": "ruc_ua", "sumsDB": "ruc_ua_sums2"},
+    "RAOBs (PREPBUFR)": {"modelDB": "ruc_ua_pb", "sumsDB": "ruc_ua_pb_sums2"},
     "AMDAR": {"modelDB": "acars_RR2", "sumsDB": "acars_RR2"}
 };
 const dbs = Object.keys(dbNames);
@@ -322,14 +323,14 @@ const doCurveParams = function () {
             forecastLengthOptionsMap[dbs[didx]] = {};
             regionModelOptionsMap[dbs[didx]] = {};
 
-            if (dbs[didx] === "RAOBs") {
+            if (dbs[didx].includes("RAOBs")) {
                 rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select table_name_prefix,display_text,regions,fcst_lens,display_order,display_category,mindate,minhour,maxdate,maxhour,numrecs from " + dbNames[dbs[didx]].modelDB + ".regions_per_model_mats_all_categories order by display_category, display_order;");
             } else {
                 rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,display_text,regions,fcst_lens,mindate,maxdate from " + dbNames[dbs[didx]].modelDB + ".regions_per_model_mats_all_categories order by display_category, display_order;");
             }
             for (var i = 0; i < rows.length; i++) {
                 var model_value;
-                if (dbs[didx] === "RAOBs") {
+                if (dbs[didx].includes("RAOBs")) {
                     model_value = rows[i].table_name_prefix.trim();
                 } else {
                     model_value = rows[i].model.trim();
@@ -339,7 +340,7 @@ const doCurveParams = function () {
 
                 var rowMinDate;
                 var rowMaxDate;
-                if (dbs[didx] === "RAOBs") {
+                if (dbs[didx].includes("RAOBs")) {
                     rowMinDate = moment.utc(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
                     rowMaxDate = moment.utc(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
                 } else {
@@ -361,7 +362,7 @@ const doCurveParams = function () {
                 var dummyRegion;
                 for (var j = 0; j < regionsArrRaw.length; j++) {
                     dummyRegion = regionsArrRaw[j].replace(/'|\[|\]|\"/g, "");
-                    if (dbs[didx] === "RAOBs") {
+                    if (dbs[didx].includes("RAOBs")) {
                         regionsArr.push(masterRegionValuesMap["ID"][dummyRegion]);
                     } else {
                         regionsArr.push(masterRegionValuesMap["shortName"]["_" + dummyRegion + "_sums"]);
@@ -451,7 +452,7 @@ const doCurveParams = function () {
                 controlButtonCovered: true,
                 default: dbs[0],
                 hideOtherFor: {
-                    'phase': ["RAOBs"]
+                    'phase': ["RAOBs (Traditional)", "RAOBs (PREPBUFR)"]
                 },
                 unique: false,
                 controlButtonVisibility: 'block',
