@@ -8,7 +8,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
     I want to end by removing all of the curves.
 
     Background:
-        Given I load the app "/aircraft"
+        Given I load the app "/upperair"
         Then I expect the app title to be "Upper Air"
 
     @watch

@@ -440,9 +440,6 @@ defaultEntryPoints = ["http", "https"]
             fi
         done
         curveParams="[]"
-        if [[ "${appref}"  == "aircraft" ]]; then
-            curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"top\",\"bottom\",\"phase\",\"curve-dates\"]"
-        fi
         if [[ "${appref}"  == "anomalycor" ]]; then
             curveParams="[\"label\",\"data-source\",\"region\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"curve-dates\"]"
         fi
@@ -497,9 +494,6 @@ defaultEntryPoints = ["http", "https"]
         if [[ "${appref}"  == "radar" ]]; then
             curveParams="[\"label\",\"database\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
         fi
-        if [[ "${appref}"  == "raobamdar" ]]; then
-            curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"variable\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"top\",\"bottom\",\"phase\",\"curve-dates\"]"
-        fi
         if [[ "${appref}"  == "surface" ]]; then
             curveParams="[\"label\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"variable\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"curve-dates\"]"
         fi
@@ -507,7 +501,7 @@ defaultEntryPoints = ["http", "https"]
             curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"variable\",\"scale\",\"forecast-length\",\"valid-time\",\"utc-cycle-start\",\"average\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "upperair" ]]; then
-            curveParams="[\"label\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"top\",\"bottom\",\"sites\",\"sitesMap\",\"curve-dates\"]"
+            curveParams="[\"label\",\"database\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"top\",\"bottom\",\"phase\",\"sites\",\"sitesMap\",\"curve-dates\"]"
         fi
         #finish up the document
         echo "], \"PYTHON_PATH\":\"/usr/bin/python3\", \"MAPBOX_KEY\":\"${mapbox_key}\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"curve_params\":${curveParams},\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile

@@ -9,7 +9,7 @@ Feature: Add Remove DailyModelCycle Curve
     then delete that curve.
 
     Background:
-        Given I load the app "/aircraft"
+        Given I load the app "/upperair"
         Then I expect the app title to be "Upper Air"
 
     @watch

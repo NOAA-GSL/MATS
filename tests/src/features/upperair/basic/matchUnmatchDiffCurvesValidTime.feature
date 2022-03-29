@@ -8,8 +8,8 @@ Feature: Match Unmatch Diff Curves Valid Time
     I want to end by removing all of the curves.
 
     Background:
-        Given I load the app "/aircraft"
-        Then I expect the app title to be "Upper Air (AMDAR)"
+        Given I load the app "/upperair"
+        Then I expect the app title to be "Upper Air"
 
     @watch
     Scenario: matchUnmatchDiffCurvesValidTime

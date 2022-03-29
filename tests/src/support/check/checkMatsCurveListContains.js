@@ -1,3 +1,5 @@
+import pause from "../action/pause";
+
 /**
  * Check if the given elements contains text
  * @param  {String}   expected  The textual list to check against
@@ -9,6 +11,7 @@ export default (expected) => {
      */
     const expectedList = expected.split(',').sort();
     $('.displayItemLabelSpan').waitForDisplayed();
+    pause(1000);
     const actualList = $$('.displayItemLabelSpan').map(
         (elem) => elem.getText()
     ).sort();
