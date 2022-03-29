@@ -3,7 +3,6 @@
 set -euo pipefail
 
 apps=(
-    "aircraft"
     "anomalycor"
     "cb-ceiling"
     "ceil-vis"
@@ -14,7 +13,6 @@ apps=(
     "precipitation1hr"
     "ptype"
     "radar"
-    "raobamdar"
     "surface"
     "surfrad"
     "upperair"
