@@ -11,10 +11,10 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
-dataDieOff = function (plotParams, plotFunction) {
+dataValidTime = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appParams = {
-        "plotType": matsTypes.PlotTypes.dieoff,
+        "plotType": matsTypes.PlotTypes.validtime,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
@@ -49,10 +49,8 @@ dataDieOff = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var forecastLengthStr = curve['dieoff-type'];
-        var forecastLengthOptionsMap = matsCollections['dieoff-type'].findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
-        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
-        var forecastLengthClause = "and m0.fcst_len >= 0";
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
@@ -156,26 +154,7 @@ dataDieOff = function (plotParams, plotFunction) {
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
             siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
         }
-        var validTimes;
-        var validTimeClause = "";
-        var utcCycleStart;
-        var utcCycleStartClause = "";
-        var dateClause;
-        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-            validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-            if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and m0.hour IN(" + validTimes + ")";
-            }
-            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= '" + fromSecs + "' - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= '" + toSecs + "' + 1800";
-        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-            utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
-            if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
-                utcCycleStartClause = "and floor(((unix_timestamp(m0.date)+3600*m0.hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(" + utcCycleStart + ")";
-            }
-            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 >= " + fromSecs + " and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 <= " + toSecs;
-        } else {
-            dateClause = "and unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600 = " + fromSecs;
-        }
+        var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs + " + 1800";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -187,7 +166,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.fcst_len as fcst_lead, " +
+            var statement = "select m0.hour as hr_of_day, " +
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
@@ -198,22 +177,18 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{sitesClause}} " +
                 "{{dateClause}} " +
                 "{{siteDateClause}} " +
-                "{{validTimeClause}} " +
-                "{{utcCycleStartClause}} " +
                 "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
                 "{{siteLevelClause}} " +
                 "{{phaseClause}} " +
-                "group by fcst_lead " +
-                "order by fcst_lead" +
+                "group by hr_of_day " +
+                "order by hr_of_day" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
             statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
             statement = statement.replace('{{sitesClause}}', sitesClause);
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
             statement = statement.replace('{{siteLevelClause}}', siteLevelClause);

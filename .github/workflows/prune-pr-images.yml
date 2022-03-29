@@ -12,7 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         app:
-          - aircraft
           - anomalycor
           - cb-ceiling
           - ceil-vis
@@ -23,7 +22,6 @@ jobs:
           - precipitation1hr
           - ptype
           - radar
-          - raobamdar
           - surface
           - surfrad
           - upperair

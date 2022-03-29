@@ -1,23 +1,25 @@
-Feature: Add Remove Histogram
+Feature: Add Remove Valid Time Curve
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want click the histogram radio button,
+    I want click the validtime radio button,
     I want to add one curve
     then plot that curve and see the graph,
     then go back to the curve management page,
     then delete that curve.
 
     Background:
-        Given I load the app "/upperair"
+        Given I load the app "/aircraft"
         Then I expect the app title to be "Upper Air"
 
     @watch
-    Scenario: addRemoveHistogram
-        When I set the plot type to "Histogram"
-        Then the plot type should be "Histogram"
-        When I change the "data-source" parameter to "RAP_GSL"
-        Then the "data-source" parameter value matches "RAP_GSL"
+    Scenario: addRemoveValidTimeCurve
+        When I set the plot type to "ValidTime"
+        Then the plot type should be "ValidTime"
+        When I change the "database" parameter to "AMDAR"
+        Then the "database" parameter value matches "AMDAR"
+        When I change the "data-source" parameter to "RAP_GSL_iso"
+        Then the "data-source" parameter value matches "RAP_GSL_iso"
         When I set the curve-dates to "09/21/2019 0:00 - 09/24/2019 0:00"
         Then the curve-dates value is "09/21/2019 0:00 - 09/24/2019 0:00"
         Then I click the "Add Curve" button
@@ -26,7 +28,7 @@ Feature: Add Remove Histogram
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Histogram" plot
+        And I should have a "ValidTime" plot
 
         When I click the "Back" button
         Then I should be on the main page

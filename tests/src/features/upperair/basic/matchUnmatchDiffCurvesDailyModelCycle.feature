@@ -1,36 +1,38 @@
-Feature: Match Unmatch Diff Curves Profile
+Feature: Match Unmatch Diff Curves DailyModelCycle
 
     As an unauthenticated user to the app,
-    with the app in its default state so that the plots are time series,
+    with the app in its default state so that the plots are DailyModelCycle,
     I want to add two curves, plot unmatched, and then return to the main page.
     I then want to add a matched difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
     I then want to add a piecewise difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
     I want to end by removing all of the curves.
 
     Background:
-        Given I load the app "/upperair"
+        Given I load the app "/aircraft"
         Then I expect the app title to be "Upper Air"
 
     @watch
-    Scenario: matchUnmatchDiffCurvesProfile
-        When I set the plot type to "Profile"
-        Then the plot type should be "Profile"
-        When I change the "data-source" parameter to "RAP_GSL"
-        Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the curve-dates to "09/21/2019 0:00 - 09/24/2019 0:00"
-        Then the curve-dates value is "09/21/2019 0:00 - 09/24/2019 0:00"
+    Scenario: matchUnmatchDiffCurvesDailyModelCycle
+        When I set the plot type to "DailyModelCycle"
+        Then the plot type should be "DailyModelCycle"
+        When I change the "database" parameter to "AMDAR"
+        Then the "database" parameter value matches "AMDAR"
+        When I change the "data-source" parameter to "RAP_GSL_iso"
+        Then the "data-source" parameter value matches "RAP_GSL_iso"
+        When I set the dates to "09/21/2019 0:00 - 09/24/2019 0:00"
+        Then the dates value is "09/21/2019 0:00 - 09/24/2019 0:00"
         When I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "HRRR_GSL"
-        Then the "data-source" parameter value matches "HRRR_GSL"
+        When I change the "data-source" parameter to "HRRR_GSL_iso"
+        Then the "data-source" parameter value matches "HRRR_GSL_iso"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Profile" plot
+        And I should have a "DailyModelCycle" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -38,7 +40,7 @@ Feature: Match Unmatch Diff Curves Profile
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Profile" plot
+        And I should have a "DailyModelCycle" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -50,7 +52,7 @@ Feature: Match Unmatch Diff Curves Profile
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Profile" plot
+        And I should have a "DailyModelCycle" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -58,7 +60,7 @@ Feature: Match Unmatch Diff Curves Profile
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Profile" plot
+        And I should have a "DailyModelCycle" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -71,7 +73,7 @@ Feature: Match Unmatch Diff Curves Profile
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Profile" plot
+        And I should have a "DailyModelCycle" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -79,7 +81,7 @@ Feature: Match Unmatch Diff Curves Profile
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Profile" plot
+        And I should have a "DailyModelCycle" plot
 
         When I click the "Back" button
         Then I should be on the main page

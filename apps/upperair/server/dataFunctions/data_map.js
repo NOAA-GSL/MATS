@@ -33,21 +33,36 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var database = curve['database'];
+    var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
     var variableStr = curve['variable'];
     var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
     var validTimeClause = "";
-    var validTimeStr = curve['valid-time'];
-    validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+    var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+        validTimeClause = "and m0.hour IN(" + validTimes + ")";
+    }
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
     var top = curve['top'];
     var bottom = curve['bottom'];
     var sitesClause = "";
     var varUnits;
+    if (database === 'AMDAR') {
+        throw new Error("Single/multi-station plotting is not supported by the AMDAR databse.");
+    }
+    // remove table prefixes
+    const model_components = model.split("_");
+    model = model_components[0];
+    if (model_components.length > 1) {
+        for (var midx = 1; midx < model_components.length - 1; midx++) {
+            model = model + "_" + model_components[midx];
+        }
+    }
     var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
-    var queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
+    var queryTableClause = "from " + databaseRef.modelDB + "." + obsTable + " as o, " + databaseRef.modelDB + "." + model + " as m0 ";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var variableClause;
     var orderOfMagnitude; // approximate 10^x OOM that the returned data will be on.
@@ -137,7 +152,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMap(modelPool, statement, model, variable[2], varUnits, siteMap, orderOfMagnitude);
+        queryResult = matsDataQueryUtils.queryDBMap(sumPool, statement, model, variable[2], varUnits, siteMap, orderOfMagnitude);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
