@@ -378,9 +378,9 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         if sys.argv[1] == 'deploy':
             utcnow = str(datetime.now())
-            msg = 'UPPER AIR MATS METADATA START: ' + utcnow
+            msg = 'UPPER AIR (PREPBUFR) MATS METADATA START: ' + utcnow
             print(msg)
             regions_per_model_mats_all_categories('deploy')
             utcnow = str(datetime.now())
-            msg = 'UPPER AIR MATS METADATA END: ' + utcnow
+            msg = 'UPPER AIR (PREPBUFR) MATS METADATA END: ' + utcnow
             print(msg)
