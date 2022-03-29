@@ -15,7 +15,6 @@ jobs:
       fail-fast: true
       matrix:
         deploy: # List of apps to deploy
-          - aircraft
           - anomalycor
           # - cb-ceiling # Don't push this until its ready
           - ceil-vis
@@ -26,7 +25,6 @@ jobs:
           - precipitation1hr
           - ptype
           - radar
-          - raobamdar
           - surface
           - surfrad
           - upperair
