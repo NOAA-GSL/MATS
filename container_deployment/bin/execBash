@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+serviceNames=($(docker service ls --format "{{.Name}}"))
+if [ $# -ne 1 ]; then
+	echo "$0 - wrong number of params - usage: $0 serviceName (one of ${serviceNames[*]}))"
+	exit 1
+fi
+serviceName=$1
+if [[ ${serviceNames[$serviceName]} ]]; then 
+	containerId=$(docker container ls | grep $serviceName | awk '{print $1}')
+	docker exec -it $containerId /bin/sh
+else
+	echo "not a valid serviceName (one of ${serviceNames[@]})"
+	exit 0
+fi 

@@ -37,3 +37,4 @@ until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
     limit="$((limit-1))"
     printf "${GRN}.${NC}"
 done
+docker swarm leave --force
