@@ -44,14 +44,18 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var database = curve['database'];
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var queryTableClause = "";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
-        var validTimeStr = curve['valid-time'];
-        validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.hour IN(" + validTimes + ")";
+        }
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -59,6 +63,12 @@ dataHistogram = function (plotParams, plotFunction) {
         var toSecs = dateRange.toSeconds;
         var top = curve['top'];
         var bottom = curve['bottom'];
+        var phaseClause = "";
+        if (database === 'AMDAR') {
+            var phaseStr = curve['phase'];
+            var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+            phaseClause = phaseOptionsMap[phaseStr];
+        }
         var siteDateClause = "";
         var siteLevelClause = "";
         var siteMatchClause = "";
@@ -68,15 +78,14 @@ dataHistogram = function (plotParams, plotFunction) {
         var varUnits;
         var levelVar;
         var levelClause = "";
-        var queryPool;
         // var regionType = curve['region-type'];
         var regionType = 'Predefined region';   // station plots will be re-allowed when the statistics are taken out of the query for partial sums plots
         if (regionType === 'Predefined region') {
             levelVar = "m0.mb10*10";
-            var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
             var regionStr = curve['region'];
-            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-            queryTableClause = "from " + tablePrefix + region + " as m0";
+            var regionDB = database.includes("RAOBs") ? "ID" : "shortName";
+            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB]).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB][key] === regionStr);
+            queryTableClause = "from " + databaseRef.sumsDB + "." + model + region + " as m0";
             var statisticSelect = curve['statistic'];
             var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
@@ -94,11 +103,21 @@ dataHistogram = function (plotParams, plotFunction) {
             var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
             varUnits = statVarUnitMap[statisticSelect][variableStr];
             levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
-            queryPool = sumPool;
         } else {
             levelVar = "m0.press";
+            if (database === 'AMDAR') {
+                throw new Error("Single/multi-station plotting is not supported by the AMDAR databse.");
+            }
+            // remove table prefixes
+            const model_components = model.split("_");
+            model = model_components[0];
+            if (model_components.length > 1) {
+                for (var midx = 1; midx < model_components.length - 1; midx++) {
+                    model = model + "_" + model_components[midx];
+                }
+            }
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
-            queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
+            queryTableClause = "from " + databaseRef.modelDB + "." + obsTable + " as o, " + databaseRef.modelDB + "." + model + " as m0 ";
             var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
             var variableClause;
             if (variable[2] === "t" || variable[2] === "dp") {
@@ -145,7 +164,6 @@ dataHistogram = function (plotParams, plotFunction) {
             levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
             siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
-            queryPool = modelPool;
         }
         var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs + " + 1800";
         // axisKey is used to determine which axis a curve should use.
@@ -178,6 +196,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
                 "{{siteLevelClause}} " +
+                "{{phaseClause}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -190,6 +209,7 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
             statement = statement.replace('{{siteLevelClause}}', siteLevelClause);
+            statement = statement.replace('{{phaseClause}}', phaseClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
             dataRequests[label] = statement;
@@ -199,7 +219,7 @@ dataHistogram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

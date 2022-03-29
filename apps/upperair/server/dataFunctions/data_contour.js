@@ -41,11 +41,19 @@ dataContour = function (plotParams, plotFunction) {
     // initialize variables specific to the curve
     var curve = curves[0];
     var label = curve['label'];
-    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-    var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
+    var database = curve['database'];
+    var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
     var regionStr = curve['region'];
-    var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-    var queryTableClause = "from " + tablePrefix + region + " as m0";
+    var regionDB = database.includes("RAOBs") ? "ID" : "shortName";
+    var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB]).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB][key] === regionStr);
+    var queryTableClause = "from " + databaseRef.sumsDB + "." + model + region + " as m0";
+    var phaseClause = "";
+    if (database === 'AMDAR') {
+        var phaseStr = curve['phase'];
+        var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+        phaseClause = phaseOptionsMap[phaseStr];
+    }
     var variableStr = curve['variable'];
     var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
     var variable = variableOptionsMap[variableStr];
@@ -55,8 +63,10 @@ dataContour = function (plotParams, plotFunction) {
     var dateClause = "";
     var levelClause = "";
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-        var validTimeStr = curve['valid-time'];
-        validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.hour IN(" + validTimes + ")";
+        }
     }
     if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
         var forecastLength = curve['forecast-length'];
@@ -111,6 +121,7 @@ dataContour = function (plotParams, plotFunction) {
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
         "{{levelClause}} " +
+        "{{phaseClause}} " +
         "group by xVal,yVal " +
         "order by xVal,yVal" +
         ";";
@@ -122,6 +133,7 @@ dataContour = function (plotParams, plotFunction) {
     statement = statement.replace('{{validTimeClause}}', validTimeClause);
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{levelClause}}', levelClause);
+    statement = statement.replace('{{phaseClause}}', phaseClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.split('{{dateString}}').join(dateString);
     dataRequests[label] = statement;
