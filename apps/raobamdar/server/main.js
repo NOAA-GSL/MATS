@@ -610,41 +610,55 @@ const doCurveParams = function () {
 
     if (matsCollections['variable'].findOne({name: 'variable'}) == undefined) {
         const statVarOptionsMap = {
-            'temperature': ['dt', 't'],
-            'RH': ['dR', 'R'],
-            'winds': ['dw', 'ws']
+            'temperature': ['dt', 't', 't'],
+            'RH': ['dR', 'R', 'rh'],
+            'RHobT': ['dRoT', 'RoT', 'rhot'],
+            'winds': ['dw', 'ws', 'ws'],
+            'height': ['dH', 'H', 'z']
         };
 
         const statVarUnitMap = {
             'RMS': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
-                'winds': 'm/s'
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
             },
             'Bias (Model - Obs)': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
-                'winds': 'm/s'
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
             },
             'N': {
                 'temperature': 'Number',
                 'RH': 'Number',
-                'winds': 'Number'
+                'RHobT': 'Number',
+                'winds': 'Number',
+                'height': 'Number'
             },
             'Model average': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
-                'winds': 'm/s'
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
             },
             'Obs average': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
-                'winds': 'm/s'
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
             },
             'Std deviation': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
-                'winds': 'm/s'
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
             }
         };
 
