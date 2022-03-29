@@ -1,9 +1,8 @@
-Feature: Add Remove DieOff Curve
+Feature: Add Remove Valid Time Curve
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want click the dieoff radio button,
-    I want to set the forecast-length selector to dieoff
+    I want click the validtime radio button,
     I want to add one curve
     then plot that curve and see the graph,
     then go back to the curve management page,
@@ -11,12 +10,14 @@ Feature: Add Remove DieOff Curve
 
     Background:
         Given I load the app "/aircraft"
-        Then I expect the app title to be "Upper Air (AMDAR)"
+        Then I expect the app title to be "Upper Air"
 
     @watch
-    Scenario: addRemoveDieOffCurve
-        When I set the plot type to "DieOff"
-        Then the plot type should be "DieOff"
+    Scenario: addRemoveValidTimeCurve
+        When I set the plot type to "ValidTime"
+        Then the plot type should be "ValidTime"
+        When I change the "database" parameter to "AMDAR"
+        Then the "database" parameter value matches "AMDAR"
         When I change the "data-source" parameter to "RAP_GSL_iso"
         Then the "data-source" parameter value matches "RAP_GSL_iso"
         When I set the curve-dates to "09/21/2019 0:00 - 09/24/2019 0:00"
@@ -27,7 +28,7 @@ Feature: Add Remove DieOff Curve
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "DieOff" plot
+        And I should have a "ValidTime" plot
 
         When I click the "Back" button
         Then I should be on the main page

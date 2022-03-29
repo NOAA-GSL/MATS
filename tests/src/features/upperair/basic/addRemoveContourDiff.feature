@@ -10,7 +10,7 @@ Feature: Add Remove ContourDiff
 
     Background:
         Given I load the app "/upperair"
-        Then I expect the app title to be "Upper Air (RAOBS)"
+        Then I expect the app title to be "Upper Air"
 
     @watch
     Scenario: addRemoveContourDiff

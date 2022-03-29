@@ -8,7 +8,7 @@ Feature: Reload Reset To Defaults
 
     Background:
         Given I load the app "/upperair"
-        Then I expect the app title to be "Upper Air (RAOBS)"
+        Then I expect the app title to be "Upper Air"
 
     @watch
     Scenario: reloadAndResetToDefaults
