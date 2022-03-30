@@ -377,7 +377,7 @@ const doCurveParams = function () {
 
     try {
         matsCollections.SiteMap.remove({});
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select wmoid,name,lat,lon,elev,descript from ruc_ua.metadata where lat > -9000 and lat < 9000 and lon > -18000 and lon < 18000 order by descript;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select wmoid,name,lat,lon,elev,descript from ruc_ua_pb.metadata where lat > -9000 and lat < 9000 and lon > -18000 and lon < 18000 order by descript;");
         for (var i = 0; i < rows.length; i++) {
 
             var site_name = rows[i].name;
