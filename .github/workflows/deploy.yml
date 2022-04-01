@@ -45,13 +45,13 @@ jobs:
 
       - name: Pull image
         run: |
-          docker pull ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
+          docker pull ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${ GITHUB_REF }
 
       - name: Retag image
         run: |
-          docker tag ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }} \
-                     ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
+          docker tag ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${ GITHUB_REF } \
+                     ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${ GITHUB_REF }
 
       - name: Push image
         run: |
-          docker push ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
+          docker push ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${ GITHUB_REF }
