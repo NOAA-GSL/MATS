@@ -19,7 +19,7 @@ RUN bash ${SCRIPTS_FOLDER}/build-meteor-bundle.sh
 
 
 # Install OS build dependencies
-FROM node:14.18-alpine3.15 AS native-builder
+FROM node:14-alpine AS native-builder
 
 ENV APP_FOLDER=/usr/app
 ENV APP_BUNDLE_FOLDER=${APP_FOLDER}/bundle
@@ -47,7 +47,7 @@ RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source \
 
 
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
-FROM node:14.18-alpine3.15 AS production
+FROM node:14-alpine AS production
 
 # Set Build ARGS
 ARG APPNAME
@@ -60,7 +60,6 @@ RUN apk --no-cache add \
     bash \
     ca-certificates \
     mariadb \
-    mongodb-tools \
     python3 \
     py3-numpy \
     py3-pip \
