@@ -7,14 +7,29 @@ html, body {
     height: 100%;
 }
 
+@font-face {
+    font-family: 'PublicSans-Regular';
+    src: url("/packages/randyp_mats-common/public/fonts/PublicSans-Regular.ttf");
+}
+
+@font-face {
+    font-family: 'PublicSans-SemiBold';
+    src: url("/packages/randyp_mats-common/public/fonts/PublicSans-SemiBold.ttf");
+}
+
+@font-face {
+    font-family: 'PublicSans-Medium';
+    src: url("/packages/randyp_mats-common/public/fonts/PublicSans-Medium.ttf");
+}
+
 body {
     margin-top: 1%;
     margin-left: 2%;
     margin-right: 2%;
     margin-bottom: 1%;
     padding: 0;
-    background: url(img/bg.png) repeat;
-    font-family: Arial, Helvetica, sans-serif;
+    background: url("/packages/randyp_mats-common/public/img/bg.png") repeat;
+    font-family: PublicSans-Regular, Arial, Helvetica, serif;
     font-size: 15px;
     color: #333333; /*#545454;*/
 }
@@ -24,7 +39,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: white;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: PublicSans-Regular, Arial, Helvetica, serif;
     font-size: 15px;
 }
 
@@ -33,19 +48,19 @@ body {
 }
 
 .modal-header {
-    background-image: url(img/subtle_grunge_@2X.png);
+    background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
 }
 
 .modal-body {
-    background-image: url(img/texturetastic_gray.png);
+    background-image: url("/packages/randyp_mats-common/public/img/texturetastic_gray.png");
 }
 
 .modal-content {
-    background-image: url(img/subtle_grunge_@2X.png);
+    background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
 }
 
 .modal-footer {
-    background-image: url(img/subtle_grunge_@2X.png);
+    background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
 }
 
 #Mongol.Mongol_expand {
@@ -98,4 +113,16 @@ hr {
 .select2-selection--multiple {
     max-height: 200px;
     overflow: auto
+}
+
+.boldedPublicSans {
+    font-family: PublicSans-SemiBold, Arial, Helvetica, serif;
+}
+
+.regularPublicSans {
+    font-family: PublicSans-Regular, Arial, Helvetica, serif;
+}
+
+.mediumPublicSans {
+    font-family: PublicSans-Medium, Arial, Helvetica, serif;
 }
