@@ -28,7 +28,7 @@ body {
     margin-right: 2%;
     margin-bottom: 1%;
     padding: 0;
-    background: url(img/bg.png) repeat;
+    background: url("/packages/randyp_mats-common/public/img/bg.png") repeat;
     font-family: PublicSans-Regular, Arial, Helvetica, serif;
     font-size: 15px;
     color: #333333; /*#545454;*/
@@ -48,19 +48,19 @@ body {
 }
 
 .modal-header {
-    background-image: url(img/subtle_grunge_@2X.png);
+    background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
 }
 
 .modal-body {
-    background-image: url(img/texturetastic_gray.png);
+    background-image: url("/packages/randyp_mats-common/public/img/texturetastic_gray.png");
 }
 
 .modal-content {
-    background-image: url(img/subtle_grunge_@2X.png);
+    background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
 }
 
 .modal-footer {
-    background-image: url(img/subtle_grunge_@2X.png);
+    background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
 }
 
 #Mongol.Mongol_expand {
