@@ -657,6 +657,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: fcstTypeModelOptionsMap[dbs[0]][Object.keys(fcstTypeModelOptionsMap[dbs[0]])[0]][0],
                 controlButtonVisibility: 'block',
+                controlButtonText: "forecast type",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4

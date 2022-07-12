@@ -633,7 +633,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: 6,
                 controlButtonVisibility: 'block',
-                controlButtonText: "forecast lead time",
+                controlButtonText: "forecast lead time (h)",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4

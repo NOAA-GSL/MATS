@@ -478,7 +478,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: 12,
                 controlButtonVisibility: 'block',
-                controlButtonText: "forecast lead time",
+                controlButtonText: "forecast lead time (h)",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4
@@ -605,7 +605,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: levelOptionsMap[Object.keys(levelOptionsMap)[0]][2],
                 controlButtonVisibility: 'block',
-                controlButtonText: "Pressure Level",
+                controlButtonText: "Pressure Level (hPa)",
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 5,
