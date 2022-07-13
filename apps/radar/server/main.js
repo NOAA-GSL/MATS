@@ -10,6 +10,11 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
+// This app combines three previous apps, cref, echotop, and vil.
+// This is where we store the databases referenced by those apps.
+const dbNames = {"Composite Reflectivity": "cref", "Echo Top": "echotop", "Vertically Integrated Liquid": "vil"};
+const dbs = Object.keys(dbNames);
+
 // determined in doCurveParanms
 var minDate;
 var maxDate;
@@ -188,7 +193,7 @@ const doPlotParams = function () {
 
         const xOptionsMap = {
             'Fcst lead time': "select m0.fcst_len as xVal, ",
-            'Threshold': "select m0.trsh as xVal, ",    // produces thresholds in dBz
+            'Threshold': "select m0.trsh as xVal, ",
             'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
             'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
             'Valid Date': "select m0.time as xVal, ",
@@ -213,7 +218,7 @@ const doPlotParams = function () {
 
         const yOptionsMap = {
             'Fcst lead time': "m0.fcst_len as yVal, ",
-            'Threshold': "m0.trsh as yVal, ",    // produces thresholds in dBz
+            'Threshold': "m0.trsh as yVal, ",
             'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
             'Init UTC hour': "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
             'Valid Date': "m0.time as yVal, ",
@@ -278,11 +283,6 @@ const doCurveParams = function () {
         }
     }
 
-    // This app combines three previous apps, cref, echotop, and vil.
-    // This is where we store the databases referenced by those apps.
-    const dbNames = {"Composite Reflectivity": "cref", "Echo Top": "echotop", "Vertically Integrated Liquid": "vil"};
-    const databases = Object.keys(dbNames);
-
     var modelOptionsMap = {};
     var modelDateRangeMap = {};
     var regionModelOptionsMap = {};
@@ -310,9 +310,9 @@ const doCurveParams = function () {
     var didx;
 
     try {
-        for (didx=0; didx < databases.length; didx++) {
-            masterThresholdValuesMap[databases[didx]] = {};
-            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select trsh,description from " + dbNames[databases[didx]] + ".threshold_descriptions;");
+        for (didx = 0; didx < dbs.length; didx++) {
+            masterThresholdValuesMap[dbs[didx]] = {};
+            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select trsh,description from " + dbNames[dbs[didx]] + ".threshold_descriptions;");
             var masterDescription;
             var masterTrsh;
             var trshTemp;
@@ -320,7 +320,7 @@ const doCurveParams = function () {
                 masterDescription = rows[j].description.trim();
                 trshTemp = rows[j].trsh.trim();
                 masterTrsh = trshTemp * 10000;
-                masterThresholdValuesMap[databases[didx]][masterTrsh] = masterDescription;
+                masterThresholdValuesMap[dbs[didx]][masterTrsh] = masterDescription;
             }
         }
     } catch (err) {
@@ -328,15 +328,15 @@ const doCurveParams = function () {
     }
 
     try {
-        for (didx=0; didx < databases.length; didx++) {
-            masterScaleValuesMap[databases[didx]] = {};
-            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select scale,description from " + dbNames[databases[didx]] + ".scale_descriptions;");
+        for (didx=0; didx < dbs.length; didx++) {
+            masterScaleValuesMap[dbs[didx]] = {};
+            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select scale,description from " + dbNames[dbs[didx]] + ".scale_descriptions;");
             var masterDescription;
             var masterScale;
             for (var j = 0; j < rows.length; j++) {
                 masterDescription = rows[j].description.trim();
                 masterScale = rows[j].scale.trim();
-                masterScaleValuesMap[databases[didx]][masterScale] = masterDescription;
+                masterScaleValuesMap[dbs[didx]][masterScale] = masterDescription;
             }
         }
     } catch (err) {
@@ -344,30 +344,30 @@ const doCurveParams = function () {
     }
 
     try {
-        for (didx=0; didx < databases.length; didx++) {
-            modelOptionsMap[databases[didx]] = {};
-            modelDateRangeMap[databases[didx]] = {};
-            forecastLengthOptionsMap[databases[didx]] = {};
-            thresholdsModelOptionsMap[databases[didx]] = {};
-            scaleModelOptionsMap[databases[didx]] = {};
-            regionModelOptionsMap[databases[didx]] = {};
+        for (didx=0; didx < dbs.length; didx++) {
+            modelOptionsMap[dbs[didx]] = {};
+            modelDateRangeMap[dbs[didx]] = {};
+            forecastLengthOptionsMap[dbs[didx]] = {};
+            thresholdsModelOptionsMap[dbs[didx]] = {};
+            scaleModelOptionsMap[dbs[didx]] = {};
+            regionModelOptionsMap[dbs[didx]] = {};
 
-            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from " + dbNames[databases[didx]] + ".regions_per_model_mats_all_categories order by display_category, display_order;");
+            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from " + dbNames[dbs[didx]] + ".regions_per_model_mats_all_categories order by display_category, display_order;");
             for (var i = 0; i < rows.length; i++) {
                 var model_value = rows[i].model.trim();
                 var model = rows[i].display_text.trim();
-                modelOptionsMap[databases[didx]][model] = [model_value];
+                modelOptionsMap[dbs[didx]][model] = [model_value];
 
                 var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
                 var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-                modelDateRangeMap[databases[didx]][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
+                modelDateRangeMap[dbs[didx]][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
 
                 var forecastLengths = rows[i].fcst_lens;
                 var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
                 for (var j = 0; j < forecastLengthArr.length; j++) {
                     forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
                 }
-                forecastLengthOptionsMap[databases[didx]][model] = forecastLengthArr;
+                forecastLengthOptionsMap[dbs[didx]][model] = forecastLengthArr;
 
                 var thresholds = rows[i].trsh;
                 var thresholdsArrRaw = thresholds.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -375,9 +375,9 @@ const doCurveParams = function () {
                 var dummyThresh;
                 for (var j = 0; j < thresholdsArrRaw.length; j++) {
                     dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "") * 10000;
-                    thresholdsArr.push(masterThresholdValuesMap[databases[didx]][dummyThresh]);
+                    thresholdsArr.push(masterThresholdValuesMap[dbs[didx]][dummyThresh]);
                 }
-                thresholdsModelOptionsMap[databases[didx]][model] = thresholdsArr;
+                thresholdsModelOptionsMap[dbs[didx]][model] = thresholdsArr;
 
                 var scales = rows[i].scale;
                 var scalesArrRaw = scales.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -385,9 +385,9 @@ const doCurveParams = function () {
                 var dummyScale;
                 for (var j = 0; j < scalesArrRaw.length; j++) {
                     dummyScale = scalesArrRaw[j].replace(/'|\[|\]/g, "");
-                    scalesArr.push(masterScaleValuesMap[databases[didx]][dummyScale]);
+                    scalesArr.push(masterScaleValuesMap[dbs[didx]][dummyScale]);
                 }
-                scaleModelOptionsMap[databases[didx]][model] = scalesArr;
+                scaleModelOptionsMap[dbs[didx]][model] = scalesArr;
 
                 var regions = rows[i].regions;
                 var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -397,7 +397,7 @@ const doCurveParams = function () {
                     dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
                     regionsArr.push(masterRegionValuesMap[dummyRegion]);
                 }
-                regionModelOptionsMap[databases[didx]][model] = regionsArr;
+                regionModelOptionsMap[dbs[didx]][model] = regionsArr;
             }
         }
     } catch (err) {
@@ -429,13 +429,14 @@ const doCurveParams = function () {
                 name: 'database',
                 type: matsTypes.InputTypes.select,
                 optionsMap: dbNames,
-                options: databases,
+                options: dbs,
                 dates: modelDateRangeMap,
                 dependentNames: ["data-source"],
                 controlButtonCovered: true,
-                default: databases[0],
+                default: dbs[0],
                 unique: false,
                 controlButtonVisibility: 'block',
+                controlButtonText: "variable",
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 1
@@ -459,11 +460,11 @@ const doCurveParams = function () {
                 name: 'data-source',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
-                options: Object.keys(modelOptionsMap[databases[0]]),
+                options: Object.keys(modelOptionsMap[dbs[0]]),
                 superiorNames: ["database"],
                 dependentNames: ["region", "forecast-length", "threshold", "scale", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: Object.keys(modelOptionsMap[databases[0]])[0],
+                default: Object.keys(modelOptionsMap[dbs[0]])[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
@@ -478,8 +479,8 @@ const doCurveParams = function () {
             matsCollections["data-source"].update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
-                    options: Object.keys(modelOptionsMap[databases[0]]),
-                    default: Object.keys(modelOptionsMap[databases[0]])[0]
+                    options: Object.keys(modelOptionsMap[dbs[0]]),
+                    default: Object.keys(modelOptionsMap[dbs[0]])[0]
                 }
             });
         }
@@ -491,12 +492,12 @@ const doCurveParams = function () {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
-                options: regionModelOptionsMap[databases[0]][Object.keys(regionModelOptionsMap[databases[0]])[0]],
+                options: regionModelOptionsMap[dbs[0]][Object.keys(regionModelOptionsMap[dbs[0]])[0]],
                 valuesMap: masterRegionValuesMap,
                 superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[databases[0]][Object.keys(regionModelOptionsMap[databases[0]])[0]][0],
+                default: regionModelOptionsMap[dbs[0]][Object.keys(regionModelOptionsMap[dbs[0]])[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
@@ -512,8 +513,8 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
-                    options: regionModelOptionsMap[databases[0]][Object.keys(regionModelOptionsMap[databases[0]])[0]],
-                    default: regionModelOptionsMap[databases[0]][Object.keys(regionModelOptionsMap[databases[0]])[0]][0]
+                    options: regionModelOptionsMap[dbs[0]][Object.keys(regionModelOptionsMap[dbs[0]])[0]],
+                    default: regionModelOptionsMap[dbs[0]][Object.keys(regionModelOptionsMap[dbs[0]])[0]][0]
                 }
             });
         }
@@ -571,12 +572,12 @@ const doCurveParams = function () {
                 name: 'threshold',
                 type: matsTypes.InputTypes.select,
                 optionsMap: thresholdsModelOptionsMap,
-                options: thresholdsModelOptionsMap[databases[0]][Object.keys(thresholdsModelOptionsMap[databases[0]])[0]],
+                options: thresholdsModelOptionsMap[dbs[0]][Object.keys(thresholdsModelOptionsMap[dbs[0]])[0]],
                 valuesMap: masterThresholdValuesMap,
                 superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: thresholdsModelOptionsMap[databases[0]][Object.keys(thresholdsModelOptionsMap[databases[0]])[0]][0],
+                default: thresholdsModelOptionsMap[dbs[0]][Object.keys(thresholdsModelOptionsMap[dbs[0]])[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -592,8 +593,8 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: thresholdsModelOptionsMap,
                     valuesMap: masterThresholdValuesMap,
-                    options: thresholdsModelOptionsMap[databases[0]][Object.keys(thresholdsModelOptionsMap[databases[0]])[0]],
-                    default: thresholdsModelOptionsMap[databases[0]][Object.keys(thresholdsModelOptionsMap[databases[0]])[0]][0]
+                    options: thresholdsModelOptionsMap[dbs[0]][Object.keys(thresholdsModelOptionsMap[dbs[0]])[0]],
+                    default: thresholdsModelOptionsMap[dbs[0]][Object.keys(thresholdsModelOptionsMap[dbs[0]])[0]][0]
                 }
             });
         }
@@ -605,12 +606,12 @@ const doCurveParams = function () {
                 name: 'scale',
                 type: matsTypes.InputTypes.select,
                 optionsMap: scaleModelOptionsMap,
-                options: scaleModelOptionsMap[databases[0]][Object.keys(scaleModelOptionsMap[databases[0]])[0]],
+                options: scaleModelOptionsMap[dbs[0]][Object.keys(scaleModelOptionsMap[dbs[0]])[0]],
                 valuesMap: masterScaleValuesMap,
                 superiorNames: ['database', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: scaleModelOptionsMap[databases[0]][Object.keys(scaleModelOptionsMap[databases[0]])[0]][0],
+                default: scaleModelOptionsMap[dbs[0]][Object.keys(scaleModelOptionsMap[dbs[0]])[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
@@ -626,8 +627,8 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: scaleModelOptionsMap,
                     valuesMap: masterScaleValuesMap,
-                    options: scaleModelOptionsMap[databases[0]][Object.keys(scaleModelOptionsMap[databases[0]])[0]],
-                    default: scaleModelOptionsMap[databases[0]][Object.keys(scaleModelOptionsMap[databases[0]])[0]][0],
+                    options: scaleModelOptionsMap[dbs[0]][Object.keys(scaleModelOptionsMap[dbs[0]])[0]],
+                    default: scaleModelOptionsMap[dbs[0]][Object.keys(scaleModelOptionsMap[dbs[0]])[0]][0],
                 }
             });
         }
@@ -639,14 +640,14 @@ const doCurveParams = function () {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
-                options: forecastLengthOptionsMap[databases[0]][Object.keys(forecastLengthOptionsMap[databases[0]])[0]],
+                options: forecastLengthOptionsMap[dbs[0]][Object.keys(forecastLengthOptionsMap[dbs[0]])[0]],
                 superiorNames: ['database', 'data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: 6,
                 controlButtonVisibility: 'block',
-                controlButtonText: "forecast lead time",
+                controlButtonText: "forecast lead time (h)",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4
@@ -659,7 +660,7 @@ const doCurveParams = function () {
             matsCollections["forecast-length"].update({name: 'forecast-length'}, {
                 $set: {
                     optionsMap: forecastLengthOptionsMap,
-                    options: forecastLengthOptionsMap[databases[0]][Object.keys(forecastLengthOptionsMap[databases[0]])[0]]
+                    options: forecastLengthOptionsMap[dbs[0]][Object.keys(forecastLengthOptionsMap[dbs[0]])[0]]
                 }
             });
         }
@@ -721,7 +722,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: 12,
+                default: ['12'],
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle init hour",
                 displayOrder: 4,
@@ -798,8 +799,8 @@ const doCurveParams = function () {
     const defaultDb = matsCollections["database"].findOne({name: "database"}, {default: 1}).default;
     modelDateRangeMap = matsCollections["database"].findOne({name:"database"},{dates:1}).dates;
     const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
-    minDate = modelDateRangeMap[databases[0]][defaultDataSource].minDate;
-    maxDate = modelDateRangeMap[databases[0]][defaultDataSource].maxDate;
+    minDate = modelDateRangeMap[dbs[0]][defaultDataSource].minDate;
+    maxDate = modelDateRangeMap[dbs[0]][defaultDataSource].maxDate;
 
     // need to turn the raw max and min from the metadata into the last valid month of data
     const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
@@ -965,8 +966,7 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ' '],
-                ['', 'database', ' '],
-                ['', 'statistic', ' at '],
+                ['', 'database', ' at '],
                 ['', 'threshold', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
@@ -1158,7 +1158,9 @@ Meteor.startup(function () {
 
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
-    mdr.addRecord("sumPool", "cref", ['threshold_descriptions', 'regions_per_model_mats_all_categories']);
+    for (var didx = 0; didx < dbs.length; didx++) {
+        mdr.addRecord("sumPool", dbNames[dbs[didx]], ['threshold_descriptions', 'scale_descriptions', 'regions_per_model_mats_all_categories']);
+    }
     try {
         matsMethods.resetApp({appPools: allPools, appMdr: mdr, appType: matsTypes.AppTypes.mats});
     } catch (error) {

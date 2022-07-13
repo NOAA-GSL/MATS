@@ -11,27 +11,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: 
-          - aircraft
+        app:
           - anomalycor
           - cb-ceiling
-          - ceiling
-          - ceiling15
-          - compositeReflectivity
-          - echotop
+          - ceil-vis
+          - ceil-vis15
           - landuse
+          - precipAccum
           - precipGauge
           - precipitation1hr
-          - precipitation24hr
-          - precipitationSub24hr
           - ptype
-          - raobamdar
+          - radar
           - surface
           - surfrad
           - upperair
-          - vil
-          - visibility
-          - visibility15
     steps:
       - name: Get tag & appname
         env: 

@@ -25,3 +25,4 @@ until [ -z "$(docker stack ps ${stack}} -q)" ] || [ "$limit" -lt 0 ]; do
 done
 echo please be patient
 docker system prune -af
+docker swarm leave --force

@@ -15,24 +15,19 @@ jobs:
       fail-fast: true
       matrix:
         deploy: # List of apps to deploy
-          - aircraft
           - anomalycor
           # - cb-ceiling # Don't push this until its ready
-          - ceiling
-          - ceiling15
+          - ceil-vis
+          - ceil-vis15
           - landuse
+          - precipAccum
           - precipGauge
           - precipitation1hr
-          - precipitation24hr
-          - precipitationSub24hr
           - ptype
           - radar
-          - raobamdar
           - surface
           - surfrad
           - upperair
-          - visibility
-          - visibility15
     steps:
       - name: Create lowercase app names
         # Docker tags must be lowercase
@@ -50,13 +45,13 @@ jobs:
 
       - name: Pull image
         run: |
-          docker pull ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
+          docker pull ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${GITHUB_REF#refs/tags/}
 
       - name: Retag image
         run: |
-          docker tag ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }} \
-                     ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
+          docker tag ${{ env.DEV_REGISTRY }}/${{ env.APP_NAME }}:${GITHUB_REF#refs/tags/} \
+                     ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${GITHUB_REF#refs/tags/}
 
       - name: Push image
         run: |
-          docker push ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${{ GITHUB_REF }}
+          docker push ${{ env.PROD_REGISTRY }}/${{ env.APP_NAME }}:${GITHUB_REF#refs/tags/}

@@ -18,24 +18,19 @@ jobs:
       fail-fast: true
       matrix:
         app: 
-          - aircraft
           - anomalycor
           - cb-ceiling
-          - ceiling
-          - ceiling15
+          - ceil-vis
+          - ceil-vis15
           - landuse
+          - precipAccum
           - precipGauge
           - precipitation1hr
-          - precipitation24hr
-          - precipitationSub24hr
           - ptype
           - radar
-          - raobamdar
           - surface
           - surfrad
           - upperair
-          - visibility
-          - visibility15
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -91,8 +86,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: '${{ env.DEV_REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
+          format: 'sarif'
           output: 'trivy-results-${{ env.APP_LOWERCASE }}.sarif'
           ignore-unfixed: true
 

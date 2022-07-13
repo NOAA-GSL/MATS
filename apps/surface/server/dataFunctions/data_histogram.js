@@ -62,7 +62,8 @@ dataHistogram = function (plotParams, plotFunction) {
         var statisticClause;
         var statType;
         var queryPool;
-        var regionType = curve['region-type'];
+        // var regionType = curve['region-type'];
+        var regionType = 'Predefined region';   // station plots will be re-allowed when the statistics are taken out of the query for partial sums plots
         if (regionType === 'Predefined region') {
             timeVar = "m0.valid_day+3600*m0.hour";
             var metarStringStr = curve['truth'];
@@ -108,7 +109,7 @@ dataHistogram = function (plotParams, plotFunction) {
             } else {
                 variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
             }
-            statisticClause = 'avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(m0.time) as N0, group_concat(ceil(3600*floor((m0.time+1800)/3600)), ";", {{variableClause}} order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data';
+            statisticClause = "avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(m0.time) as N0, group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', {{variableClause}} order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data";
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             statType = 'scalar';
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";

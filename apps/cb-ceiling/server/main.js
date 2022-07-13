@@ -605,7 +605,7 @@ const doCurveParams = async function () {
                 unique: false,
                 default: 6,
                 controlButtonVisibility: 'block',
-                controlButtonText: "forecast lead time",
+                controlButtonText: "forecast lead time (h)",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4
@@ -680,7 +680,7 @@ const doCurveParams = async function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: 12,
+                default: ['12'],
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle init hour",
                 displayOrder: 4,

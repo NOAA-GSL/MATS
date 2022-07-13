@@ -13,7 +13,7 @@ Feature: No Data Found Exception: stdev_and_winds
 
     Background:
         Given I load the app "/upperair"
-        Then I expect the app title to be "Upper Air (RAOBS)"
+        Then I expect the app title to be "Upper Air"
 
     @watch
     Scenario: noDataFoundException_stdev_and_winds
@@ -31,7 +31,7 @@ Feature: No Data Found Exception: stdev_and_winds
 
         When I click the "Plot Unmatched" button
         Then the "info" dialog should be visible
-        And I should see "INFO:  The statistic/variable combination [Std deviation and winds] is not supported by the database for the model/region [RAP and 14]." in the "info" dialog
+        And I should see "INFO:  The statistic/variable combination [Std deviation and winds] is not supported by the database for the model/region [RAP_Areg and 14]." in the "info" dialog
 
         When I click the "Clear" button
         Then the "info" dialog should not be visible

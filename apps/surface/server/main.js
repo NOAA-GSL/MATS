@@ -683,7 +683,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: 6,
                 controlButtonVisibility: 'block',
-                controlButtonText: "forecast lead time",
+                controlButtonText: "forecast lead time (h)",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4
@@ -758,7 +758,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: 12,
+                default: ['12'],
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle init hour",
                 displayOrder: 4,
@@ -1014,7 +1014,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region-type", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "sites", "sitesMap", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "curve-dates"
             ],
             groupSize: 6
         });

@@ -42,7 +42,9 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var database = curve['database'];
+        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var queryTableClause = "";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
@@ -56,6 +58,12 @@ dataDieOff = function (plotParams, plotFunction) {
         var toSecs = dateRange.toSeconds;
         var top = curve['top'];
         var bottom = curve['bottom'];
+        var phaseClause = "";
+        if (database === 'AMDAR') {
+            var phaseStr = curve['phase'];
+            var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+            phaseClause = phaseOptionsMap[phaseStr];
+        }
         var siteDateClause = "";
         var siteLevelClause = "";
         var siteMatchClause = "";
@@ -64,13 +72,12 @@ dataDieOff = function (plotParams, plotFunction) {
         var statType;
         var varUnits;
         var levelClause = "";
-        var queryPool;
         var regionType = curve['region-type'];
         if (regionType === 'Predefined region') {
-            var tablePrefix = matsCollections['data-source'].findOne({name: 'data-source'}).tableMap[curve['data-source']];
             var regionStr = curve['region'];
-            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-            queryTableClause = "from " + tablePrefix + region + " as m0";
+            var regionDB = database.includes("RAOBs") ? "ID" : "shortName";
+            var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB]).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB][key] === regionStr);
+            queryTableClause = "from " + databaseRef.sumsDB + "." + model + region + " as m0";
             var statisticSelect = curve['statistic'];
             var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
             var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
@@ -88,10 +95,20 @@ dataDieOff = function (plotParams, plotFunction) {
             var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
             varUnits = statVarUnitMap[statisticSelect][variableStr];
             levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
-            queryPool = sumPool;
         } else {
+            if (database === 'AMDAR') {
+                throw new Error("Single/multi-station plotting is not supported by the AMDAR databse.");
+            }
+            // remove table prefixes
+            const model_components = model.split("_");
+            model = model_components[0];
+            if (model_components.length > 1) {
+                for (var midx = 1; midx < model_components.length - 1; midx++) {
+                    model = model + "_" + model_components[midx];
+                }
+            }
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
-            queryTableClause = "from " + obsTable + " as o, " + model + " as m0 ";
+            queryTableClause = "from " + databaseRef.modelDB + "." + obsTable + " as o, " + databaseRef.modelDB + "." + model + " as m0 ";
             var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
             var variableClause;
             if (variable[2] === "t" || variable[2] === "dp") {
@@ -113,7 +130,7 @@ dataDieOff = function (plotParams, plotFunction) {
             } else {
                 throw new Error("RHobT stats are not supported for single/multi station plots");
             }
-            statisticClause = 'avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(unix_timestamp(m0.date)+3600*m0.hour) as N0, group_concat({{variableClause}}, ";", ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), ";", m0.press order by ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), m0.press) as sub_data';
+            statisticClause = "avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(unix_timestamp(m0.date)+3600*m0.hour) as N0, group_concat(ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), ';', m0.press, ';', {{variableClause}} order by ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), m0.press) as sub_data";
             statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
             statType = 'scalar';
             curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
@@ -138,15 +155,17 @@ dataDieOff = function (plotParams, plotFunction) {
             levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
             siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
-            queryPool = modelPool;
         }
+        var validTimes;
         var validTimeClause = "";
         var utcCycleStart;
         var utcCycleStartClause = "";
         var dateClause;
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-            var validTimeStr = curve['valid-time'];
-            validTimeClause = matsCollections['valid-time'].findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][validTimeStr][0];
+            validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+            if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+                validTimeClause = "and m0.hour IN(" + validTimes + ")";
+            }
             dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= '" + fromSecs + "' - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= '" + toSecs + "' + 1800";
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
@@ -184,6 +203,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{forecastLengthClause}} " +
                 "{{levelClause}} " +
                 "{{siteLevelClause}} " +
+                "{{phaseClause}} " +
                 "group by fcst_lead " +
                 "order by fcst_lead" +
                 ";";
@@ -197,6 +217,7 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{levelClause}}', levelClause);
             statement = statement.replace('{{siteLevelClause}}', siteLevelClause);
+            statement = statement.replace('{{phaseClause}}', phaseClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
             dataRequests[label] = statement;
@@ -206,7 +227,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),

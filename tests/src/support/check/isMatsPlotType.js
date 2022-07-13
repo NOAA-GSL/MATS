@@ -8,9 +8,6 @@ export default (value) => {
      * The selected state
      * @type {Boolean}
      */
-    const selected = $$('input[name=plot-type]').find(
-        (elem) => elem.isSelected()
-    );
-    const selectedValue = $(selected).getValue();
+    const selectedValue = $("#plotTypes-selector").getValue();
     expect(selectedValue).toBe(value, `"plot type" should be ${value} and is ${selectedValue}`);
 };

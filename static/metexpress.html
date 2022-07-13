@@ -8,6 +8,20 @@
         input {
             max-width: 100%;
         }
+        @font-face {
+            font-family: 'PublicSans-Regular';
+            src: url("fonts/PublicSans-Regular.ttf");
+        }
+
+        @font-face {
+            font-family: 'PublicSans-SemiBold';
+            src: url("fonts/PublicSans-SemiBold.ttf");
+        }
+
+        @font-face {
+            font-family: 'PublicSans-Medium';
+            src: url("fonts/PublicSans-Medium.ttf");
+        }
     </style>
     <script type='text/javascript'> //<![CDATA[
     loc = window.location.href;
@@ -99,7 +113,7 @@
     loadJsCssFile(loc + 'js/angular.min.js', "js");
     </script>
 </head>
-<body style="background-image: url('img/bg.png')">
+<body style="background-image: url('img/bg.png'); font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;">
 <div ng-app ng-controller="TCtrl">
     <div id='main' class="main container-fluid">
         <div id="navbar" style="display:block;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
@@ -177,10 +191,10 @@
                         <li ng-repeat="group in groups">
                             <div class="container-fluid">
                                 <ul class="nav navbar-nav navbar-left" style="width:100%;">
-                                    <h3>{{group}} apps:</h3>
+                                    <h3 style="font-family: PublicSans-Medium, Arial, Helvetica, sans-serif;">{{group}}</h3>
                                     <li ng-repeat="item in items[group]" class="col-xs-6 col-xs-offset-3">
                                         <a class="btn-sm btn-primary" type="button"
-                                           style="font-size:medium; background-color: {{item.itemColor}}; font-weight: bold; border-radius:10px; margin: 0.25em 0.25em;"
+                                           style="font-size:medium; font-family: PublicSans-SemiBold, Arial, Helvetica, sans-serif; background-color: {{item.itemColor}}; border-radius:10px; margin: 0.25em 0.25em;"
                                            href="{{proxy_prefix}}/{{item.app}}">{{item.title}}</a>
                                     </li>
                                 </ul>
