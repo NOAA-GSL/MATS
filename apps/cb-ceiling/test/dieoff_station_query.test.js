@@ -17,6 +17,8 @@ const { Console } = require('console');
         const statement = `SELECT m0.fcstLen,
         COUNT(DISTINCT m0.fcstValidEpoch) AS N_times,
         COUNT(odata.name) * COUNT(DISTINCT m0.fcstValidEpoch) AS N0,
+        ARRAY_AGG (m0data.Ceiling) as mSubValues,
+        ARRAY_AGG (odata.Ceiling) as oSubValues,
         SUM (CASE WHEN m0data.Ceiling < 500 AND odata.Ceiling < 500 THEN 1 ELSE 0 END) AS hit,
         SUM (CASE WHEN m0data.Ceiling < 500 AND NOT odata.Ceiling < 500 THEN 1 ELSE 0 END) AS false_alarm,
         SUM (CASE WHEN NOT m0data.Ceiling < 500 AND odata.Ceiling < 500 THEN 1 ELSE 0 END) AS miss,
