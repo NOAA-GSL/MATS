@@ -424,12 +424,11 @@ const doCurveParams = function () {
             {
                 name: 'region-type',
                 type: matsTypes.InputTypes.select,
-                options: ['Predefined region', 'Select stations (bias only)'],
+                options: ['Predefined region', 'Select stations'],
                 default: 'Predefined region',
                 hideOtherFor: {
-                    'region': ["Select stations (bias only)"],
-                    'truth': ["Select stations (bias only)"],
-                    'statistic': ["Select stations (bias only)"],
+                    'region': ["Select stations"],
+                    'truth': ["Select stations"],
                     'sites': ["Predefined region"],
                     'sitesMap': ["Predefined region"]
                 },
@@ -511,34 +510,19 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            "RMS": [["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/1.8 as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/1.8) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/1.8 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/2.23693629 as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/2.23693629) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/2.23693629 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"]
-            ],
-            "Bias (Model - Obs)": [["-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, stddev(-m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', -m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, stddev(-m0.sum_{{variable0}}/m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', -m0.sum_{{variable0}}/m0.N_{{variable0}} order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, stddev((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', (m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"]
-            ],
-            "N": [["sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', m0.N_{{variable0}} order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', m0.N_{{variable0}} order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', m0.N_{{variable0}} order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"]
-            ],
-            "Model average": [["(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, stddev(((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}-32.)/1.8) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', ((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}-32.)/1.8 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})) as stat, stddev((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', (m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}} order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, stddev(m0.sum_model_{{variable1}}/m0.N_{{variable0}}/2.23693629) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', m0.sum_model_{{variable1}}/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"]
-            ],
-            "Obs average": [["(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, stddev((m0.sum_ob_{{variable1}}/m0.N_{{variable0}}-32.)/1.8) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', (m0.sum_ob_{{variable1}}/m0.N_{{variable0}}-32.)/1.8 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}))/ as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}/2.23693629) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', m0.sum_ob_{{variable1}}/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"]
-            ],
-            "Std deviation": [["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/1.8 as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/1.8) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/1.8 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)) order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/2.23693629 as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/2.23693629) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/2.23693629 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"]
-            ],
-            "MAE": [["sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8 as stat, stddev((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', (m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}})) as stat, stddev((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', (m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}})) order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"],
-                ["sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629 as stat, stddev((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629) as stdev, sum(m0.N_{{variable0}}) as N0, group_concat((m0.valid_day) + 3600 * m0.hour, ';', (m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629 order by (m0.valid_day) + 3600 * m0.hour) as sub_data", "scalar"]]
+            "RMSE": "scalar",
 
+            "Bias (Model - Obs)": "scalar",
+
+            "N": "scalar",
+
+            "Model average": "scalar",
+
+            "Obs average": "scalar",
+
+            "Std deviation": "scalar",
+
+            "MAE (temp and dewpoint only)": "scalar"
         };
 
         matsCollections["statistic"].insert(
@@ -559,14 +543,21 @@ const doCurveParams = function () {
 
     if (matsCollections['variable'].findOne({name: 'variable'}) == undefined) {
         const statVarOptionsMap = {
-            '2m temperature': ['dt', 't', 'temp'],
-            '2m RH': ['drh', 'rh', 'rh'],
-            '2m dewpoint': ['dTd', 'td', 'dp'],
-            '10m wind': ['dw', 'ws', 'ws'],
+            // ARRAY ITEMS BY INDEX:
+            // 0: sum of squared x-x_bar difference for RMSE/STDEV
+            // 1: number of values in sum
+            // 2: sum of obs-model difference (-1 * bias * N)
+            // 3: sum of model values
+            // 4: sum of obs values
+            // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
+            '2m temperature': [['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m0.sum_ob_t)', 'm0.sum_ob_t', 'm0.sum_adt'], ['pow(o.temp - m0.temp,2)/100', '(o.temp - m0.temp)', '(o.temp - m0.temp)/10', '(if(o.temp is not null,m0.temp,null))/10', '(if(m0.temp is not null,o.temp,null))/10', '(abs(o.temp - m0.temp))/10']],
+            '2m RH': [['m0.sum2_drh', 'm0.N_drh', 'm0.sum_drh', '-1 * (m0.sum_drh-m0.sum_ob_rh)', 'm0.sum_ob_rh', '0'], ['(pow(o.rh - m0.rh,2))/100', '(o.rh - m0.rh)', '(o.rh - m0.rh)/10', '(if(o.rh is not null,m0.rh,null))/10', '(if(m0.rh is not null,o.rh,null))/10', '(abs(o.rh - m0.rh))/10']],
+            '2m dewpoint': [['m0.sum2_dtd', 'm0.N_dtd', 'm0.sum_dtd', '-1 * (m0.sum_dTd-m0.sum_ob_td)', 'm0.sum_ob_td', 'm0.sum_adtd'], ['(pow(o.dp - m0.dp,2))/100', '(o.dp - m0.dp)', '(o.dp - m0.dp)/10', '(if(o.dp is not null,m0.dp,null))/10', '(if(m0.dp is not null,o.dp,null))/10', '(abs(o.dp - m0.dp))/10']],
+            '10m wind': [['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0'], ['(pow(o.ws,2)+pow(m0.ws,2)-  2*o.ws*m0.ws*cos((o.wd-m0.wd)/57.2958))', '(o.ws + m0.ws)', '(o.ws - m0.ws)', '(if(o.ws is not null,m0.ws,null))', '(if(m0.ws is not null,o.ws,null))', '(abs(o.ws - m0.ws))']],
         };
 
         const statVarUnitMap = {
-            'RMS': {
+            'RMSE': {
                 '2m temperature': '°C',
                 '2m RH': 'RH (%)',
                 '2m dewpoint': '°C',
@@ -602,16 +593,7 @@ const doCurveParams = function () {
                 '2m dewpoint': '°C',
                 '10m wind': 'm/s'
             },
-            'MAE': {
-                '2m temperature': '°C',
-                '2m RH': 'RH (%)',
-                '2m dewpoint': '°C',
-                '10m wind': 'm/s'
-            }
-        };
-
-        const mapVarUnitMap = {
-            'diff': {
+            'MAE (temp and dewpoint only)': {
                 '2m temperature': '°C',
                 '2m RH': 'RH (%)',
                 '2m dewpoint': '°C',
@@ -625,7 +607,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                mapVarUnitMap: mapVarUnitMap,
                 options: Object.keys(statVarOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
