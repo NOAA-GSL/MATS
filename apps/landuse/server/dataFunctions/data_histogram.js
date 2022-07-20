@@ -64,20 +64,9 @@ dataHistogram = function (plotParams, plotFunction) {
         var dateClause = "and m0.valid_day+3600*m0.hour >= " + fromSecs + " and m0.valid_day+3600*m0.hour <= " + toSecs;
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause;
-        var statType;
-        if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
-            statisticClause = statisticOptionsMap[statisticSelect][0][0];
-            statType = statisticOptionsMap[statisticSelect][0][1];
-        } else if (variableStr === '10m wind') {
-            statisticClause = statisticOptionsMap[statisticSelect][2][0];
-            statType = statisticOptionsMap[statisticSelect][2][1];
-        } else {
-            statisticClause = statisticOptionsMap[statisticSelect][1][0];
-            statType = statisticOptionsMap[statisticSelect][1][1];
-        }
-        statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
-        statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
+        var statisticClause = "sum(" + variable[0] + ") as square_diff_sum, sum(" + variable[1] + ") as N_sum, sum(" + variable[2] + ") as obs_model_diff_sum, sum(" + variable[3] + ") as model_sum, sum(" + variable[4] + ") as obs_sum, sum(" + variable[5] + ") as abs_sum, " +
+            "group_concat(m0.valid_day+3600*m0.hour, ';', " + variable[0] + ", ';', " + variable[1] + ", ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by m0.valid_day+3600*m0.hour) as sub_data, count(" + variable[0] + ") as N0";
+        var statType = statisticOptionsMap[statisticSelect];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -121,7 +110,7 @@ dataHistogram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect + "_" + variableStr);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
