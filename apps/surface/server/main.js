@@ -968,6 +968,7 @@ const doCurveTextPatterns = function () {
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.map,
             textPattern: [
+                ['', 'label', ': '],
                 ['', 'data-source', ': '],
                 ['', 'sites', ': '],
                 ['', 'variable', ' '],
@@ -976,7 +977,7 @@ const doCurveTextPatterns = function () {
                 [' valid-time:', 'valid-time', '']
             ],
             displayParams: [
-                "data-source", "variable", "forecast-length", "valid-time", "sites", "sitesMap"
+                "label", "data-source", "statistic", "variable", "forecast-length", "valid-time", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -995,7 +996,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "curve-dates"
+                "label", "data-source", "region-type", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });

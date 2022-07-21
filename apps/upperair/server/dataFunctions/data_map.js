@@ -152,7 +152,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMap(sumPool, statement, model, variable[2], varUnits, siteMap, orderOfMagnitude);
+        queryResult = matsDataQueryUtils.queryDBMapScalar(sumPool, statement, model, variable[2], varUnits, siteMap, orderOfMagnitude);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
