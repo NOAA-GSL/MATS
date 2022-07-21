@@ -59,11 +59,11 @@ dataHistogram = function (plotParams, plotFunction) {
         var siteDateClause = "";
         var siteMatchClause = "";
         var sitesClause = "";
-        var statisticClause;
-        var statType;
+        var varIndex;
+        var NAggregate;
+        var NClause;
         var queryPool;
-        // var regionType = curve['region-type'];
-        var regionType = 'Predefined region';   // station plots will be re-allowed when the statistics are taken out of the query for partial sums plots
+        var regionType = curve['region-type'];
         if (regionType === 'Predefined region') {
             timeVar = "m0.valid_day+3600*m0.hour";
             var metarStringStr = curve['truth'];
@@ -72,21 +72,10 @@ dataHistogram = function (plotParams, plotFunction) {
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + model + "_" + metarString + "_" + region + " as m0";
             forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-            var statisticSelect = curve['statistic'];
-            var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-            if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
-                statisticClause = statisticOptionsMap[statisticSelect][0][0];
-                statType = statisticOptionsMap[statisticSelect][0][1];
-            } else if (variableStr === '10m wind') {
-                statisticClause = statisticOptionsMap[statisticSelect][2][0];
-                statType = statisticOptionsMap[statisticSelect][2][1];
-            } else {
-                statisticClause = statisticOptionsMap[statisticSelect][1][0];
-                statType = statisticOptionsMap[statisticSelect][1][1];
-            }
-            statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
-            statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
             dateClause = "and m0.valid_day+3600*m0.hour >= " + fromSecs + " and m0.valid_day+3600*m0.hour <= " + toSecs;
+            varIndex = 0;
+            NAggregate = 'sum';
+            NClause = variable[varIndex][1];
             queryPool = sumPool;
         } else {
             timeVar = "m0.time";
@@ -101,18 +90,6 @@ dataHistogram = function (plotParams, plotFunction) {
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
             queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
             var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
-            var variableClause;
-            if (variable[2] === "temp" || variable[2] === "dp") {
-                variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
-            } else if (variable[2] === "rh") {
-                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")/10";
-            } else {
-                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
-            }
-            statisticClause = "avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(m0.time) as N0, group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', {{variableClause}} order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data";
-            statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
-            statType = 'scalar';
-            curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -132,12 +109,22 @@ dataHistogram = function (plotParams, plotFunction) {
             dateClause = "and m0.time >= " + fromSecs + " - 900 and m0.time <= " + toSecs + " + 900";
             siteDateClause = "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
             siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
+            varIndex = 1;
+            NAggregate = 'count';
+            NClause = '1';
             queryPool = sitePool;
         }
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = "and floor((" + timeVar + "+1800)%(24*3600)/3600) IN(" + validTimes + ")";   // adjust by 1800 seconds to center obs at the top of the hour
         }
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause = "sum(" + variable[varIndex][0] + ") as square_diff_sum, " + NAggregate + "(" + variable[varIndex][1] + ") as N_sum, sum(" + variable[varIndex][2] + ") as obs_model_diff_sum, sum(" + variable[varIndex][3] + ") as model_sum, sum(" + variable[varIndex][4] + ") as obs_sum, sum(" + variable[varIndex][5] + ") as abs_sum, " +
+            "group_concat(" + timeVar + ", ';', " + variable[varIndex][0] + ", ';', " + NClause + ", ';', " + variable[varIndex][2] + ", ';', " + variable[varIndex][3] + ", ';', " + variable[varIndex][4] + ", ';', " + variable[varIndex][5] + " order by " + timeVar + ") as sub_data, count(" + variable[varIndex][0] + ") as N0";
+        var statType = statisticOptionsMap[statisticSelect];
+        var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var varUnits = statVarUnitMap[statisticSelect][variableStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -186,7 +173,7 @@ dataHistogram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(queryPool, statement, appParams, statisticSelect + "_" + variableStr);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
@@ -234,7 +221,8 @@ dataHistogram = function (plotParams, plotFunction) {
         "dataFoundForCurve": dataFoundForCurve,
         "statType": statType,
         "axisMap": axisMap,
-        "yAxisFormat": yAxisFormat
+        "yAxisFormat": yAxisFormat,
+        "varUnits" : varUnits
     };
     const bookkeepingParams = {
         "alreadyMatched": alreadyMatched,

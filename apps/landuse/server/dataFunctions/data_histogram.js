@@ -67,6 +67,8 @@ dataHistogram = function (plotParams, plotFunction) {
         var statisticClause = "sum(" + variable[0] + ") as square_diff_sum, sum(" + variable[1] + ") as N_sum, sum(" + variable[2] + ") as obs_model_diff_sum, sum(" + variable[3] + ") as model_sum, sum(" + variable[4] + ") as obs_sum, sum(" + variable[5] + ") as abs_sum, " +
             "group_concat(m0.valid_day+3600*m0.hour, ';', " + variable[0] + ", ';', " + variable[1] + ", ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by m0.valid_day+3600*m0.hour) as sub_data, count(" + variable[0] + ") as N0";
         var statType = statisticOptionsMap[statisticSelect];
+        var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var varUnits = statVarUnitMap[statisticSelect][variableStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -158,7 +160,8 @@ dataHistogram = function (plotParams, plotFunction) {
         "dataFoundForCurve": dataFoundForCurve,
         "statType": statType,
         "axisMap": axisMap,
-        "yAxisFormat": yAxisFormat
+        "yAxisFormat": yAxisFormat,
+        "varUnits" : varUnits
     };
     const bookkeepingParams = {
         "alreadyMatched": alreadyMatched,
