@@ -425,6 +425,7 @@ const doCurveParams = function () {
                 name: 'region-type',
                 type: matsTypes.InputTypes.select,
                 options: ['Predefined region', 'Select stations'],
+                dependentNames: ["variable"],
                 default: 'Predefined region',
                 hideOtherFor: {
                     'region': ["Select stations"],
@@ -543,6 +544,10 @@ const doCurveParams = function () {
 
     if (matsCollections['variable'].findOne({name: 'variable'}) == undefined) {
         const statVarOptionsMap = {
+            // THIS IS KEYED BY REGION-TYPE BECAUSE OUR MYSQL OBS TABLE DOESN'T HAVE RH
+            // FOR SOME REASON OR OTHER, SO IT NEEDS TO BE EXCLUDED AS A VARIABLE
+            // FROM STATION PLOTS. SIGH.
+            //
             // ARRAY ITEMS BY INDEX:
             // 0: sum of squared x-x_bar difference for RMSE/STDEV
             // 1: number of values in sum
@@ -550,10 +555,17 @@ const doCurveParams = function () {
             // 3: sum of model values
             // 4: sum of obs values
             // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
-            '2m temperature': [['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m0.sum_ob_t)', 'm0.sum_ob_t', 'm0.sum_adt'], ['pow(o.temp - m0.temp,2)/100', '(o.temp - m0.temp)', '(o.temp - m0.temp)/10', '(if(o.temp is not null,m0.temp,null))/10', '(if(m0.temp is not null,o.temp,null))/10', '(abs(o.temp - m0.temp))/10']],
-            '2m RH': [['m0.sum2_drh', 'm0.N_drh', 'm0.sum_drh', '-1 * (m0.sum_drh-m0.sum_ob_rh)', 'm0.sum_ob_rh', '0'], ['(pow(o.rh - m0.rh,2))/100', '(o.rh - m0.rh)', '(o.rh - m0.rh)/10', '(if(o.rh is not null,m0.rh,null))/10', '(if(m0.rh is not null,o.rh,null))/10', '(abs(o.rh - m0.rh))/10']],
-            '2m dewpoint': [['m0.sum2_dtd', 'm0.N_dtd', 'm0.sum_dtd', '-1 * (m0.sum_dTd-m0.sum_ob_td)', 'm0.sum_ob_td', 'm0.sum_adtd'], ['(pow(o.dp - m0.dp,2))/100', '(o.dp - m0.dp)', '(o.dp - m0.dp)/10', '(if(o.dp is not null,m0.dp,null))/10', '(if(m0.dp is not null,o.dp,null))/10', '(abs(o.dp - m0.dp))/10']],
-            '10m wind': [['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0'], ['(pow(o.ws,2)+pow(m0.ws,2)-  2*o.ws*m0.ws*cos((o.wd-m0.wd)/57.2958))', '(o.ws + m0.ws)', '(o.ws - m0.ws)', '(if(o.ws is not null,m0.ws,null))', '(if(m0.ws is not null,o.ws,null))', '(abs(o.ws - m0.ws))']],
+            'Predefined region': {
+                '2m temperature': [['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m0.sum_ob_t)', 'm0.sum_ob_t', 'm0.sum_adt'], ['pow(o.temp - m0.temp,2)/100', '(o.temp - m0.temp)', '(o.temp - m0.temp)/10', '(if(o.temp is not null,m0.temp,null))/10', '(if(m0.temp is not null,o.temp,null))/10', '(abs(o.temp - m0.temp))/10']],
+                '2m RH': [['m0.sum2_drh', 'm0.N_drh', 'm0.sum_drh', '-1 * (m0.sum_drh-m0.sum_ob_rh)', 'm0.sum_ob_rh', '0'], ['(pow(o.rh - m0.rh,2))/100', '(o.rh - m0.rh)', '(o.rh - m0.rh)/10', '(if(o.rh is not null,m0.rh,null))/10', '(if(m0.rh is not null,o.rh,null))/10', '(abs(o.rh - m0.rh))/10']],
+                '2m dewpoint': [['m0.sum2_dtd', 'm0.N_dtd', 'm0.sum_dtd', '-1 * (m0.sum_dTd-m0.sum_ob_td)', 'm0.sum_ob_td', 'm0.sum_adtd'], ['(pow(o.dp - m0.dp,2))/100', '(o.dp - m0.dp)', '(o.dp - m0.dp)/10', '(if(o.dp is not null,m0.dp,null))/10', '(if(m0.dp is not null,o.dp,null))/10', '(abs(o.dp - m0.dp))/10']],
+                '10m wind': [['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0'], ['(pow(o.ws,2)+pow(m0.ws,2)-  2*o.ws*m0.ws*cos((o.wd-m0.wd)/57.2958))', '(o.ws + m0.ws)', '(o.ws - m0.ws)', '(if(o.ws is not null,m0.ws,null))', '(if(m0.ws is not null,o.ws,null))', '(abs(o.ws - m0.ws))']]
+            },
+            'Select stations' : {
+                '2m temperature': [['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m0.sum_ob_t)', 'm0.sum_ob_t', 'm0.sum_adt'], ['pow(o.temp - m0.temp,2)/100', '(o.temp - m0.temp)', '(o.temp - m0.temp)/10', '(if(o.temp is not null,m0.temp,null))/10', '(if(m0.temp is not null,o.temp,null))/10', '(abs(o.temp - m0.temp))/10']],
+                '2m dewpoint': [['m0.sum2_dtd', 'm0.N_dtd', 'm0.sum_dtd', '-1 * (m0.sum_dTd-m0.sum_ob_td)', 'm0.sum_ob_td', 'm0.sum_adtd'], ['(pow(o.dp - m0.dp,2))/100', '(o.dp - m0.dp)', '(o.dp - m0.dp)/10', '(if(o.dp is not null,m0.dp,null))/10', '(if(m0.dp is not null,o.dp,null))/10', '(abs(o.dp - m0.dp))/10']],
+                '10m wind': [['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0'], ['(pow(o.ws,2)+pow(m0.ws,2)-  2*o.ws*m0.ws*cos((o.wd-m0.wd)/57.2958))', '(o.ws + m0.ws)', '(o.ws - m0.ws)', '(if(o.ws is not null,m0.ws,null))', '(if(m0.ws is not null,o.ws,null))', '(abs(o.ws - m0.ws))']]
+            }
         };
 
         const statVarUnitMap = {
@@ -605,12 +617,13 @@ const doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
+                superiorNames: ['region-type'],
                 optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                options: Object.keys(statVarOptionsMap),
+                options: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]],
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(statVarOptionsMap)[0],
+                default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,

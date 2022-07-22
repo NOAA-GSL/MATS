@@ -44,9 +44,10 @@ dataValidTime = function (plotParams, plotFunction) {
         var label = curve['label'];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var queryTableClause = "";
+        var regionType = curve['region-type'];
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-        var variable = variableOptionsMap[variableStr];
+        var variable = variableOptionsMap[regionType][variableStr];
         var validTimeVar;
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "";
@@ -62,7 +63,6 @@ dataValidTime = function (plotParams, plotFunction) {
         var NAggregate;
         var NClause;
         var queryPool;
-        var regionType = curve['region-type'];
         if (regionType === 'Predefined region') {
             timeVar = "m0.valid_day+3600*m0.hour";
             validTimeVar = "m0.hour";

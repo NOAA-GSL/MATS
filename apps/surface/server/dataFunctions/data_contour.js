@@ -47,9 +47,10 @@ dataContour = function (plotParams, plotFunction) {
     var regionStr = curve['region'];
     var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
     var queryTableClause = "from " + model + "_" + metarString + "_" + region + " as m0";
+    var regionType = 'Predefined region';
     var variableStr = curve['variable'];
     var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-    var variable = variableOptionsMap[variableStr];
+    var variable = variableOptionsMap[regionType][variableStr];
     var validTimeClause = "";
     var forecastLengthClause = "";
     var dateString = "";
