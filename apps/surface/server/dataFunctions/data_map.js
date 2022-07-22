@@ -82,7 +82,6 @@ dataMap = function (plotParams, plotFunction) {
     var statType = statisticOptionsMap[statisticSelect];
     var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
     var varUnits = statVarUnitMap[statisticSelect][variableStr];
-    var orderOfMagnitude = 0;
 
     var statement = "select m0.sta_id as sta_id, " +
         "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
@@ -116,7 +115,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMapScalar(sitePool, statement, model, statisticSelect, variableStr, varUnits, siteMap, orderOfMagnitude, appParams);
+        queryResult = matsDataQueryUtils.queryDBMapScalar(sitePool, statement, model, statisticSelect, variableStr, varUnits, siteMap, appParams);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -151,7 +150,7 @@ dataMap = function (plotParams, plotFunction) {
         }
     }
 
-    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, orderOfMagnitude);  // generate map with site data
+    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, 0);  // generate map with site data
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions("Lowest", dPurple);  // generate blue text layer
