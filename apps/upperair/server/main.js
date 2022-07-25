@@ -910,7 +910,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 multiple: true
             });
     }
@@ -929,7 +929,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 multiple: true,
                 defaultMapView: {point: [50, -92.5], zoomLevel: 1.25},
                 help: 'map-help.html'
