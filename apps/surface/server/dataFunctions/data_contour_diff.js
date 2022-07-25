@@ -79,8 +79,8 @@ dataContourDiff = function (plotParams, plotFunction) {
         dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause = "sum(" + variable[0][0] + ") as square_diff_sum, sum(" + variable[0][1] + ") as N_sum, sum(" + variable[0][2] + ") as obs_model_diff_sum, sum(" + variable[0][3] + ") as model_sum, sum(" + variable[0][4] + ") as obs_sum, sum(" + variable[0][5] + ") as abs_sum, " +
-            "group_concat(m0.valid_day+3600*m0.hour, ';', " + variable[0][0] + ", ';', " + variable[0][1] + ", ';', " + variable[0][2] + ", ';', " + variable[0][3] + ", ';', " + variable[0][4] + ", ';', " + variable[0][5] + " order by m0.valid_day+3600*m0.hour) as sub_data, count(" + variable[0][0] + ") as N0";
+        var statisticClause = "sum(" + variable[0] + ") as square_diff_sum, sum(" + variable[1] + ") as N_sum, sum(" + variable[2] + ") as obs_model_diff_sum, sum(" + variable[3] + ") as model_sum, sum(" + variable[4] + ") as obs_sum, sum(" + variable[5] + ") as abs_sum, " +
+        "group_concat(m0.valid_day+3600*m0.hour, ';', " + variable[0] + ", ';', " + variable[1] + ", ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by m0.valid_day+3600*m0.hour) as sub_data, count(" + variable[0] + ") as N0";
         var statType = statisticOptionsMap[statisticSelect];
         var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];

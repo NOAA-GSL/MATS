@@ -59,7 +59,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var siteDateClause = "";
         var siteMatchClause = "";
         var sitesClause = "";
-        var varIndex;
         var NAggregate;
         var NClause;
         var queryPool;
@@ -71,9 +70,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             queryTableClause = "from " + model + "_" + metarString + "_" + region + " as m0";
             dateClause = "and m0.valid_day+3600*m0.hour >= " + fromSecs + " and m0.valid_day+3600*m0.hour <= " + toSecs;
-            varIndex = 0;
             NAggregate = 'sum';
-            NClause = variable[varIndex][1];
+            NClause = variable[1];
             queryPool = sumPool;
         } else {
             timeVar = "m0.time";
@@ -105,7 +103,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             dateClause = "and m0.time >= " + fromSecs + " - 900 and m0.time <= " + toSecs + " + 900";
             siteDateClause = "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
             siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
-            varIndex = 1;
             NAggregate = 'count';
             NClause = '1';
             queryPool = sitePool;
@@ -122,8 +119,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         }
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause = "sum(" + variable[varIndex][0] + ") as square_diff_sum, " + NAggregate + "(" + variable[varIndex][1] + ") as N_sum, sum(" + variable[varIndex][2] + ") as obs_model_diff_sum, sum(" + variable[varIndex][3] + ") as model_sum, sum(" + variable[varIndex][4] + ") as obs_sum, sum(" + variable[varIndex][5] + ") as abs_sum, " +
-            "group_concat(" + timeVar + ", ';', " + variable[varIndex][0] + ", ';', " + NClause + ", ';', " + variable[varIndex][2] + ", ';', " + variable[varIndex][3] + ", ';', " + variable[varIndex][4] + ", ';', " + variable[varIndex][5] + " order by " + timeVar + ") as sub_data, count(" + variable[varIndex][0] + ") as N0";
+        var statisticClause = "sum(" + variable[0] + ") as square_diff_sum, " + NAggregate + "(" + variable[1] + ") as N_sum, sum(" + variable[2] + ") as obs_model_diff_sum, sum(" + variable[3] + ") as model_sum, sum(" + variable[4] + ") as obs_sum, sum(" + variable[5] + ") as abs_sum, " +
+            "group_concat(" + timeVar + ", ';', " + variable[0] + ", ';', " + NClause + ", ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by " + timeVar + ") as sub_data, count(" + variable[0] + ") as N0";
         var statType = statisticOptionsMap[statisticSelect];
         var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
