@@ -1119,6 +1119,7 @@ const doCurveTextPatterns = function () {
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.map,
             textPattern: [
+                ['', 'label', ': '],
                 ['', 'data-source', ': '],
                 ['', 'sites', ': '],
                 ['', 'variable', ' '],
@@ -1129,7 +1130,7 @@ const doCurveTextPatterns = function () {
                 [' valid-time:', 'valid-time', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "variable", "forecast-length", "top", "bottom", "valid-time", "sites", "sitesMap"
+                "label", "database", "data-source", "statistic", "variable", "forecast-length", "top", "bottom", "valid-time", "sites", "sitesMap"
             ],
             groupSize: 6
         });

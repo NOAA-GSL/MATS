@@ -45,62 +45,61 @@ dataProfile = function (plotParams, plotFunction) {
         var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var queryTableClause = "";
-        var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-        var variable = variableOptionsMap[variableStr];
-        var validTimeClause = "";
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and m0.hour IN(" + validTimes + ")";
-        }
-        var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromSecs = dateRange.fromSeconds;
-        var toSecs = dateRange.toSeconds;
-        var top = curve['top'];
-        var bottom = curve['bottom'];
+        var regionType = curve['region-type'];
         var phaseClause = "";
         if (database === 'AMDAR') {
             var phaseStr = curve['phase'];
             var phaseOptionsMap = matsCollections['phase'].findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
             phaseClause = phaseOptionsMap[phaseStr];
         }
+        var variableStr = curve['variable'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variable = variableOptionsMap[regionType][variableStr];
+        var validTimeClause = "";
+        var forecastLength = curve['forecast-length'];
+        var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        if (database.includes("RAOBs") && regionType === 'Predefined region') {
+            // we're just getting the obs from table m1, so only need fcst_len = 0
+            forecastLengthClause = forecastLengthClause + " and m1.fcst_len = 0";
+        }
+        var levelVar;
+        var top = curve['top'];
+        var bottom = curve['bottom'];
         var siteDateClause = "";
         var siteLevelClause = "";
         var siteMatchClause = "";
         var sitesClause = "";
-        var statisticClause;
-        var statType;
-        var varUnits;
-        var levelVar;
+        var NAggregate;
+        var NClause;
         var levelClause = "";
-        var regionType = curve['region-type'];
         if (regionType === 'Predefined region') {
-            levelVar = "m0.mb10*10";
             var regionStr = curve['region'];
             var regionDB = database.includes("RAOBs") ? "ID" : "shortName";
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB]).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[regionDB][key] === regionStr);
             queryTableClause = "from " + databaseRef.sumsDB + "." + model + region + " as m0";
-            var statisticSelect = curve['statistic'];
-            var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-            var statAuxMap = matsCollections['statistic'].findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
-            if (variableStr === 'winds') {
-                statisticClause = statisticOptionsMap[statisticSelect][1][0];
-                statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-winds'];
-                statType = statisticOptionsMap[statisticSelect][1][1];
+            if (database.includes("RAOBs")) {
+                // Most of the RAOBs tables don't store a model sum or an obs sum for some reason.
+                // So, we get the obs sum from HRRR_OPS, HRRR_HI, or GFS, because the obs are the same across all models.
+                // Then we get the model sum by adding the obs sum to the bias sum (bias = model-obs).
+                if (['5', '14', '15', '16', '17', '18'].includes(region.toString())) {
+                    queryTableClause = queryTableClause + ", " + databaseRef.sumsDB + ".HRRR_OPS_Areg" + region + " as m1";
+                } else if (region.toString() === '19') {
+                    queryTableClause = queryTableClause + ", " + databaseRef.sumsDB + ".HRRR_HI_Areg" + region + " as m1";
             } else {
-                statisticClause = statisticOptionsMap[statisticSelect][0][0];
-                statisticClause = statisticClause + "," + statAuxMap[statisticSelect + '-other'];
-                statType = statisticOptionsMap[statisticSelect][0][1];
+                    queryTableClause = queryTableClause + ", " + databaseRef.sumsDB + ".GFS_Areg" + region + " as m1";
             }
-            statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
-            statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
-            var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
-            varUnits = statVarUnitMap[statisticSelect][variableStr];
+            }
             levelClause = "and m0.mb10 >= " + top + "/10 and m0.mb10 <= " + bottom + "/10";
+            if (database.includes("RAOBs")) {
+                siteMatchClause = "and m0.date = m1.date and m0.hour = m1.hour and m0.mb10 = m1.mb10";
+            }
+            NAggregate = 'sum';
+            NClause = variable[1];
+            levelVar = "m0.mb10 * 10";
         } else {
-            levelVar = "m0.press";
             if (database === 'AMDAR') {
                 throw new Error("Single/multi-station plotting is not supported by the AMDAR databse.");
             }
@@ -115,30 +114,6 @@ dataProfile = function (plotParams, plotFunction) {
             var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
             queryTableClause = "from " + databaseRef.modelDB + "." + obsTable + " as o, " + databaseRef.modelDB + "." + model + " as m0 ";
             var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
-            var variableClause;
-            if (variable[2] === "t" || variable[2] === "dp") {
-                // stored in degC, and multiplied by 100.
-                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
-                varUnits = '°C';
-            } else if (variable[2] === "rh") {
-                // stored in %.
-                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
-                varUnits = 'RH (%)';
-            } else if (variable[2] === "ws") {
-                // stored in m/s, and multiplied by 100.
-                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ") * 0.01";
-                varUnits = 'm/s';
-            } else if (variable[2] === "z") {
-                // stored in m.
-                variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")";
-                varUnits = 'm';
-            } else {
-                throw new Error("RHobT stats are not supported for single/multi station plots");
-            }
-            statisticClause = "avg({{variableClause}}) as stat, stddev({{variableClause}}) as stdev, count(unix_timestamp(m0.date)+3600*m0.hour) as N0, group_concat(ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), ';', m0.press, ';', {{variableClause}} order by ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)), m0.press) as sub_data";
-            statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
-            statType = 'scalar';
-            curves[curveIndex]['statistic'] = "Bias (Model - Obs)";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             var querySites = [];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -160,7 +135,21 @@ dataProfile = function (plotParams, plotFunction) {
             levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
             siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
             siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
+            NAggregate = 'count';
+            NClause = '1';
+            levelVar = "m0.press";
         }
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            validTimeClause = "and m0.hour IN(" + validTimes + ")";
+        }
+        var statisticSelect = curve['statistic'];
+        var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statisticClause = "sum(" + variable[0] + ") as square_diff_sum, " + NAggregate + "(" + variable[1] + ") as N_sum, sum(" + variable[2] + ") as obs_model_diff_sum, sum(" + variable[3] + ") as model_sum, sum(" + variable[4] + ") as obs_sum, sum(" + variable[5] + ") as abs_sum, " +
+            "group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', " + levelVar + ", ';', " + variable[0] + ", ';', " + NClause + ", ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by unix_timestamp(m0.date)+3600*m0.hour, " + levelVar + ") as sub_data, count(" + variable[0] + ") as N0";
+        var statType = statisticOptionsMap[statisticSelect];
+        var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var dateClause = "and unix_timestamp(m0.date)+3600*m0.hour >= " + fromSecs + " - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= " + toSecs + " + 1800";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -205,6 +194,10 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement.replace('{{phaseClause}}', phaseClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
+            if (database === 'AMDAR') {
+                // AMDAR tables have all partial sums so we can get them all from the main table
+                statement = statement.split('m1').join('m0');
+            }
             dataRequests[label] = statement;
 
             var queryResult;
@@ -212,7 +205,7 @@ dataProfile = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, appParams, statisticSelect + "_" + variableStr);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
@@ -235,7 +228,7 @@ dataProfile = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + curve['data-source'] + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }
@@ -254,7 +247,7 @@ dataProfile = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc");
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc", statType === "scalar");
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
