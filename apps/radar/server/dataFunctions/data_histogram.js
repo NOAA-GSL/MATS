@@ -73,6 +73,7 @@ dataHistogram = function (plotParams, plotFunction) {
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         var statType = statisticOptionsMap[statisticSelect][0];
+        var varUnits = statisticOptionsMap[statisticSelect][1];
         var axisKey = yAxisFormat;
         if (yAxisFormat === 'Relative frequency') {
             axisKey = axisKey + " (x100)"
@@ -161,7 +162,8 @@ dataHistogram = function (plotParams, plotFunction) {
         "dataFoundForCurve": dataFoundForCurve,
         "statType": statType,
         "axisMap": axisMap,
-        "yAxisFormat": yAxisFormat
+        "yAxisFormat": yAxisFormat,
+        "varUnits" : varUnits
     };
     const bookkeepingParams = {
         "alreadyMatched": alreadyMatched,
