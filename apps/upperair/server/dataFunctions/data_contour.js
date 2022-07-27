@@ -60,6 +60,7 @@ dataContour = function (plotParams, plotFunction) {
             queryTableClause = queryTableClause + ", " + databaseRef.sumsDB + ".GFS_Areg" + region + " as m1";
         }
     }
+    // contours are only for predefined regions--no station plots
     var regionType = 'Predefined region';
     var phaseClause = "";
     if (database === 'AMDAR') {

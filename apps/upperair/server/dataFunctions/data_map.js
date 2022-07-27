@@ -36,6 +36,7 @@ dataMap = function (plotParams, plotFunction) {
     var database = curve['database'];
     var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
     var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+    // map plots are only for stations--no predefined regions
     var regionType = 'Select stations';
     var variableStr = curve['variable'];
     var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
