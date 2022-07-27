@@ -126,7 +126,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMapCTC(sumPool, statement, modelTable, statistic, siteMap);
+        queryResult = matsDataQueryUtils.queryDBMapCTC(sumPool, statement, modelTable, statistic, siteMap, appParams);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
