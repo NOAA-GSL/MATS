@@ -863,7 +863,7 @@ const doCurveParams = function () {
                 step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: 1050,
+                default: 1000,
                 controlButtonVisibility: 'block',
                 controlButtonText: 'bottom (hPa)',
                 displayOrder: 3,
