@@ -169,7 +169,7 @@ dataMap = function (plotParams, plotFunction) {
     var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, .0001);  // generate map with site data
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarPurpleCurveText, dPurple);  // generate blue text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarPurpleCurveText, dPurple);  // generate dark blue (purple) text layer
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarBlueCurveText, dBlue);  // generate blue text layer
@@ -178,7 +178,7 @@ dataMap = function (plotParams, plotFunction) {
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarBlackCurveText, dBlack);  // generate black text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarOrangeCurveText, dOrange);  // generate red text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarOrangeCurveText, dOrange);  // generate orange text layer
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarRedCurveText, dRed);  // generate red text layer
