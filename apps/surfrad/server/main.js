@@ -419,6 +419,7 @@ const doCurveParams = function () {
                 valuesMap: masterRegionValuesMap,
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
+                controlButtonText: "site",
                 unique: false,
                 default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',

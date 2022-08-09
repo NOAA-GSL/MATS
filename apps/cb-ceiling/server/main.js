@@ -274,6 +274,7 @@ const doCurveParams = async function () {
             matsCollections[params[cp]].remove({});
         }
     }
+
     var modelOptionsMap = {};
     var modelDateRangeMap = {};
     var regionModelOptionsMap = {};
@@ -450,7 +451,6 @@ const doCurveParams = async function () {
                 name: 'data-source',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
-                dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap),
                 dependentNames: ["region", "forecast-length", "threshold", "dates", "curve-dates"],
                 controlButtonCovered: true,
@@ -464,13 +464,11 @@ const doCurveParams = async function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["data-source"].findOne({name: 'data-source'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap))) {
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
             // have to reload model data
             matsCollections["data-source"].update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
-                    dates: modelDateRangeMap,
                     options: Object.keys(modelOptionsMap),
                     default: Object.keys(modelOptionsMap)[0]
                 }
@@ -752,6 +750,7 @@ const doCurveParams = async function () {
                 unique: false,
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
+                controlButtonText: "sites (Map display)",
                 displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 5,
