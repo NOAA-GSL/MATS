@@ -185,7 +185,7 @@ const doPlotParams = function () {
                 options: [],
                 default: ' ',
                 controlButtonCovered: true,
-                controlButtonText: "bin bounds (enter numbers separated by commas)",
+                controlButtonText: "bin bounds (Enter numbers separated by commas)",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 2

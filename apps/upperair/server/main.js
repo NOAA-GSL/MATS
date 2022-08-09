@@ -189,7 +189,7 @@ const doPlotParams = function () {
                 options: [],
                 default: ' ',
                 controlButtonCovered: true,
-                controlButtonText: "bin bounds (enter numbers separated by commas)",
+                controlButtonText: "bin bounds (Enter numbers separated by commas)",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 2
@@ -843,11 +843,10 @@ const doCurveParams = function () {
                 unique: false,
                 default: 1,
                 controlButtonVisibility: 'block',
-                controlButtonText: 'top (hPa)',
+                controlButtonText: 'top level limit (hPa)',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 5,
-                help: 'top-help.html'
+                displayGroup: 5
             });
     }
 
@@ -865,11 +864,10 @@ const doCurveParams = function () {
                 unique: false,
                 default: 1000,
                 controlButtonVisibility: 'block',
-                controlButtonText: 'bottom (hPa)',
+                controlButtonText: 'bottom level limit (hPa)',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 5,
-                help: 'bottom-help.html'
+                displayGroup: 5
             });
     }
 
@@ -927,6 +925,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
+                controlButtonText: "sites (Map display)",
                 displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 6,
