@@ -460,10 +460,10 @@ const doCurveParams = function () {
             // 3: sum of model values
             // 4: sum of obs values
             // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
-            '2m temperature': ['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m0.sum_ob_t)', 'm0.sum_ob_t', 'm0.sum_adt'],
+            '2m temperature': ['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m0.sum_ob_t)', 'm0.sum_ob_t', '(if(m0.sum_adt is not null,m0.sum_adt,0))'],
             '2m RH': ['m0.sum2_drh', 'm0.N_drh', 'm0.sum_drh', '-1 * (m0.sum_drh-m0.sum_ob_rh)', 'm0.sum_ob_rh', '0'],
-            '2m dewpoint': ['m0.sum2_dtd', 'm0.N_dtd', 'm0.sum_dtd', '-1 * (m0.sum_dTd-m0.sum_ob_td)', 'm0.sum_ob_td', 'm0.sum_adtd'],
-            '10m wind': ['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0'],
+            '2m dewpoint': ['m0.sum2_dtd', 'm0.N_dtd', 'm0.sum_dtd', '-1 * (m0.sum_dtd-m0.sum_ob_td)', 'm0.sum_ob_td', '(if(m0.sum_adtd is not null,m0.sum_adtd,0))'],
+            '10m wind': ['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0']
         };
 
         const statVarUnitMap = {
