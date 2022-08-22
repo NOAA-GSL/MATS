@@ -15,7 +15,7 @@ dataMap = function (plotParams, plotFunction) {
         "plotType": matsTypes.PlotTypes.map,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
         "completeness": plotParams['completeness'],
-        "outliers": plotParams['outliers'],
+        "outliers": plotParams['outliers-lite'],
         "hideGaps": plotParams['noGapsCheck'],
         "hasLevels": false
     };
@@ -34,9 +34,11 @@ dataMap = function (plotParams, plotFunction) {
     var curve = curves[0];
     var label = curve['label'];
     var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    // map plots are only for stations--no predefined regions
+    var regionType = 'Select stations';
     var variableStr = curve['variable'];
     var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-    var variable = variableOptionsMap[variableStr];
+    var variable = variableOptionsMap[regionType][variableStr];
     var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -45,7 +47,6 @@ dataMap = function (plotParams, plotFunction) {
     var forecastLength = curve['forecast-length'];
     var forecastLengthClause = "";
     var sitesClause = "";
-    var varUnits;
     var modelTable;
     if (forecastLength === 1) {
         modelTable = model + "qp1f";
@@ -57,25 +58,6 @@ dataMap = function (plotParams, plotFunction) {
     var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
     var queryTableClause = "from " + obsTable + " as o, " + modelTable + " as m0 ";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
-    var variableClause;
-    var orderOfMagnitude; // approximate 10^x OOM that the returned data will be on.
-    if (variable[2] === "temp" || variable[2] === "dp") {
-        variableClause = "(((m0." + variable[2] + "/10)-32)*(5/9)) - (((o." + variable[2] + "/10)-32)*(5/9))";
-        varUnits = '°C';
-        orderOfMagnitude = 0;
-    } else if (variable[2] === "rh") {
-        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")/10";
-        varUnits = 'RH (%)';
-        orderOfMagnitude = 0;
-    } else {
-        variableClause = "(m0." + variable[2] + " - o." + variable[2] + ")*0.44704";
-        varUnits = 'm/s';
-        orderOfMagnitude = 0;
-    }
-    var statisticClause = "avg({{variableClause}}) as stat, count(m0.time) as N0";
-    statisticClause = statisticClause.replace(/\{\{variableClause\}\}/g, variableClause);
-    var statType = 'scalar';
-    curves[0]['statistic'] = "Bias (Model - Obs)";
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     var querySites = [];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
@@ -95,6 +77,13 @@ dataMap = function (plotParams, plotFunction) {
     var dateClause = "and m0.time >= " + fromSecs + " - 900 and m0.time <= " + toSecs + " + 900";
     var siteDateClause = "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
     var siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
+    var statisticSelect = curve['statistic'];
+    var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+    var statisticClause = "sum(" + variable[0] + ") as square_diff_sum, count(" + variable[1] + ") as N_sum, sum(" + variable[2] + ") as obs_model_diff_sum, sum(" + variable[3] + ") as model_sum, sum(" + variable[4] + ") as obs_sum, sum(" + variable[5] + ") as abs_sum, " +
+        "group_concat(m0.time, ';', " + variable[0] + ", ';', 1, ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by m0.time) as sub_data, count(" + variable[0] + ") as N0";
+    var statType = statisticOptionsMap[statisticSelect];
+    var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+    var varUnits = statVarUnitMap[statisticSelect][variableStr];
 
     var statement = "select m0.sta_id as sta_id, " +
         "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
@@ -128,7 +117,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMap(sitePool, statement, model, variable, varUnits, siteMap, orderOfMagnitude);
+        queryResult = matsDataQueryUtils.queryDBMapScalar(sitePool, statement, model, statisticSelect, variableStr, varUnits, siteMap, appParams);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
@@ -138,8 +127,10 @@ dataMap = function (plotParams, plotFunction) {
         };
         // get the data back from the query
         var d = queryResult.data;
+        var dPurple = queryResult.dataPurple;
         var dBlue = queryResult.dataBlue;
         var dBlack = queryResult.dataBlack;
+        var dOrange = queryResult.dataOrange;
         var dRed = queryResult.dataRed;
     } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
@@ -161,16 +152,22 @@ dataMap = function (plotParams, plotFunction) {
         }
     }
 
-    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, orderOfMagnitude);  // generate map with site data
+    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, 0);  // generate map with site data
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blueCurveText, dBlue);  // generate blue text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarPurpleCurveText, dPurple);  // generate dark blue (purple) text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blackCurveText, dBlack);  // generate black text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarBlueCurveText, dBlue);  // generate blue text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.redCurveText, dRed);  // generate red text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarBlackCurveText, dBlack);  // generate black text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarOrangeCurveText, dOrange);  // generate orange text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarRedCurveText, dRed);  // generate red text layer
     dataset.push(cOptions);
 
     const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(false);

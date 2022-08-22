@@ -180,7 +180,7 @@ const doPlotParams = function () {
                 options: [],
                 default: ' ',
                 controlButtonCovered: true,
-                controlButtonText: "bin bounds (enter numbers separated by commas)",
+                controlButtonText: "bin bounds (Enter numbers separated by commas)",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 2
@@ -442,8 +442,8 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            'Frequency': ["avg(m0.{{variable}}) as stat, group_concat(m0.valid_secs, ';', m0.{{variable}} order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0", "scalar", "Frequency", null],
-            'Number of stations': ["avg(m0.{{variable}} * m0.N) as stat, group_concat(m0.valid_secs, ';', m0.{{variable}} * m0.N order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0", "scalar", "Number", null]
+            'Frequency': ["avg(m0.{{variable}}) as stat, group_concat(m0.valid_secs, ';', m0.{{variable}} order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0", "modelObsPair", "Frequency", null],
+            'Number of stations': ["avg(m0.{{variable}} * m0.N) as stat, group_concat(m0.valid_secs, ';', m0.{{variable}} * m0.N order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0", "modelObsPair", "Number", null]
         };
 
         matsCollections["statistic"].insert(

@@ -58,7 +58,10 @@ dataMap = function (plotParams, plotFunction) {
     var forecastLengthClause = "and m0.fcst_len = " + forecastLength + " and m0.fcst_min = " + forecastMinute;
     var statistic = curve['statistic'];
     var statisticClause = "sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, " +
-        "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, count(m0.ceil) as N0";
+        "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, " +
+        "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
+        "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
+        "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0";
     statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
     if (database.includes("Visibility")) {
         statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
@@ -126,7 +129,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMapCTC(sumPool, statement, modelTable, statistic, siteMap);
+        queryResult = matsDataQueryUtils.queryDBMapCTC(sumPool, statement, modelTable, statistic, siteMap, appParams);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),

@@ -180,7 +180,7 @@ const doPlotParams = function () {
                 options: [],
                 default: ' ',
                 controlButtonCovered: true,
-                controlButtonText: "bin bounds (enter numbers separated by commas)",
+                controlButtonText: "bin bounds (Enter numbers separated by commas)",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 2
@@ -419,6 +419,7 @@ const doCurveParams = function () {
                 valuesMap: masterRegionValuesMap,
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
+                controlButtonText: "site",
                 unique: false,
                 default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
@@ -445,14 +446,19 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            "MAE": ["avg(abs({{variable0}})) as stat, stddev(abs({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(m0.secs, ';', abs({{variable0}}) order by m0.secs) as sub_data", "scalar"],
-            "Bias (Model - Obs)": ["-1 * avg({{variable0}}) as stat, stddev(-1 * ({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(m0.secs, ';', -1 * ({{variable0}}) order by m0.secs) as sub_data", "scalar"],
-            "N": ["count({{variable0}}) as stat, stddev(count({{variable0}})) as stdev, count({{variable0}}) as N0, group_concat(m0.secs, ';', count({{variable0}}) order by m0.secs) as sub_data", "scalar"],
-            "Model average": ["avg({{variable1}}) as stat, stddev({{variable1}}) as stdev, count({{variable1}}) as N0, group_concat(m0.secs, ';', ({{variable1}}) order by m0.secs) as sub_data", "scalar"],
-            "Obs average": ["avg({{variable2}}) as stat, stddev({{variable2}}) as stdev, count({{variable2}}) as N0, group_concat(m0.secs, ';', ({{variable2}}) order by m0.secs) as sub_data", "scalar"],
-            "Std deviation (do not plot matched)": ["std(-1*{{variable0}}) as stat, count({{variable0}}) as N0", "scalar"],
-            "RMS (do not plot matched)": ["sqrt(avg(pow({{variable0}},2))) as stat, count({{variable0}}) as N0", "scalar"]
+            "RMSE": "scalar",
 
+            "Bias (Model - Obs)": "scalar",
+
+            "N": "scalar",
+
+            "Model average": "scalar",
+
+            "Obs average": "scalar",
+
+            "Std deviation": "scalar",
+
+            "MAE": "scalar"
         };
 
         matsCollections["statistic"].insert(
@@ -473,15 +479,22 @@ const doCurveParams = function () {
 
     if (matsCollections['variable'].findOne({name: 'variable'}) == undefined) {
         const statVarOptionsMap = {
-            'dswrf': ['ob0.direct + ob0.diffuse - m0.dswrf', 'm0.dswrf', 'ob0.direct + ob0.diffuse'],
-            'direct (experimental HRRR only)': ['ob0.direct - m0.direct', 'm0.direct', 'ob0.direct'],
-            'diffuse (experimental HRRR only)': ['ob0.diffuse - m0.diffuse', 'm0.diffuse', 'ob0.diffuse'],
-            '15 min avg dswrf (experimental HRRR only)': ['ob0.direct + ob0.diffuse - m0.dswrf15', 'm0.dswrf15', 'ob0.direct + ob0.diffuse'],
-            '15 min avg direct (experimental HRRR only)': ['ob0.direct - m0.direct15', 'm0.direct15', 'ob0.direct']
+            // ARRAY ITEMS BY INDEX:
+            // 0: sum of squared x-x_bar difference for RMSE/STDEV
+            // 1: number of values in sum
+            // 2: sum of obs-model difference (-1 * bias * N)
+            // 3: sum of model values
+            // 4: sum of obs values
+            // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
+            'dswrf': ['pow(o.direct + o.diffuse - m0.dswrf,2)', '(o.direct + o.diffuse - m0.dswrf)', '(o.direct + o.diffuse - m0.dswrf)', '(if(o.direct + o.diffuse is not null,m0.dswrf,null))', '(if(m0.dswrf is not null,o.direct + o.diffuse,null))', '(abs(o.direct + o.diffuse - m0.dswrf))'],
+            'direct (experimental HRRR only)': ['pow(o.direct - m0.direct,2)', '(o.direct - m0.direct)', '(o.direct - m0.direct)', '(if(o.direct is not null,m0.direct,null))', '(if(m0.direct is not null,o.direct,null))', '(abs(o.direct - m0.direct))'],
+            'diffuse (experimental HRRR only)': ['pow(o.diffuse - m0.diffuse,2)', '(o.diffuse - m0.diffuse)', '(o.diffuse - m0.diffuse)', '(if(o.diffuse is not null,m0.diffuse,null))', '(if(m0.diffuse is not null,o.diffuse,null))', '(abs(o.diffuse - m0.diffuse))'],
+            '15 min avg dswrf (experimental HRRR only)': ['pow(o.direct + o.diffuse - m0.dswrf15,2)', '(o.direct + o.diffuse - m0.dswrf15)', '(o.direct + o.diffuse - m0.dswrf15)', '(if(o.direct + o.diffuse is not null,m0.dswrf15,null))', '(if(m0.dswrf15 is not null,o.direct + o.diffuse,null))', '(abs(o.direct + o.diffuse - m0.dswrf15))'],
+            '15 min avg direct (experimental HRRR only)': ['pow(o.direct - m0.direct15,2)', '(o.direct - m0.direct15)', '(o.direct - m0.direct15)', '(if(o.direct is not null,m0.direct15,null))', '(if(m0.direct15 is not null,o.direct,null))', '(abs(o.direct - m0.direct15))']
         };
 
         const statVarUnitMap = {
-            'MAE': {
+            'RMSE': {
                 'dswrf': 'W/m2',
                 'direct (experimental HRRR only)': 'W/m2',
                 'diffuse (experimental HRRR only)': 'W/m2',
@@ -516,14 +529,14 @@ const doCurveParams = function () {
                 '15 min avg dswrf (experimental HRRR only)': 'W/m2',
                 '15 min avg direct (experimental HRRR only)': 'W/m2'
             },
-            'Std deviation (do not plot matched)': {
+            'Std deviation': {
                 'dswrf': 'W/m2',
                 'direct (experimental HRRR only)': 'W/m2',
                 'diffuse (experimental HRRR only)': 'W/m2',
                 '15 min avg dswrf (experimental HRRR only)': 'W/m2',
                 '15 min avg direct (experimental HRRR only)': 'W/m2'
             },
-            'RMS (do not plot matched)': {
+            'MAE': {
                 'dswrf': 'W/m2',
                 'direct (experimental HRRR only)': 'W/m2',
                 'diffuse (experimental HRRR only)': 'W/m2',

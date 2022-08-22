@@ -61,7 +61,7 @@ dataSeries = function (plotParams, plotFunction) {
         var scaleStr = curve['scale'];
         var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var scaleClause = "and m0.scale = " + grid_scale;
-        var queryTableClause = "from surfrad as ob0, " + model + " as m0";
+        var queryTableClause = "from surfrad as o, " + model + " as m0";
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
@@ -72,25 +72,23 @@ dataSeries = function (plotParams, plotFunction) {
         }
         var forecastLength = Number(curve['forecast-length']) * 60;
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-        var dateClause = "and ob0.secs >= " + fromSecs + " and ob0.secs <= " + toSecs;
+        var dateClause = "and o.secs >= " + fromSecs + " and o.secs <= " + toSecs;
         dateClause = dateClause + " and m0.secs >= " + fromSecs + " and m0.secs <= " + toSecs;
-        var matchClause = "and m0.id = ob0.id and m0.secs = ob0.secs";
+        var matchClause = "and m0.id = o.id and m0.secs = o.secs";
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statisticClause = statisticOptionsMap[statisticSelect][0];
-        statisticClause = statisticClause.replace(/\{\{variable0\}\}/g, variable[0]);
-        statisticClause = statisticClause.replace(/\{\{variable1\}\}/g, variable[1]);
-        statisticClause = statisticClause.replace(/\{\{variable2\}\}/g, variable[2]);
+        var statisticClause = "sum(" + variable[0] + ") as square_diff_sum, count(" + variable[1] + ") as N_sum, sum(" + variable[2] + ") as obs_model_diff_sum, sum(" + variable[3] + ") as model_sum, sum(" + variable[4] + ") as obs_sum, sum(" + variable[5] + ") as abs_sum, " +
+            "group_concat(m0.secs, ';', " + variable[0] + ", ';', 1, ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by m0.secs) as sub_data, count(" + variable[0] + ") as N0";
+        var statType = statisticOptionsMap[statisticSelect];
         var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var statType = statisticOptionsMap[statisticSelect][1];
         var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
@@ -140,7 +138,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, statisticSelect, validTimes, appParams, false);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, statisticSelect + "_" + variableStr, validTimes, appParams, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
@@ -178,7 +176,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc");
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc", statType === "scalar");
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;

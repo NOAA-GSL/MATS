@@ -189,7 +189,7 @@ const doPlotParams = function () {
                 options: [],
                 default: ' ',
                 controlButtonCovered: true,
-                controlButtonText: "bin bounds (enter numbers separated by commas)",
+                controlButtonText: "bin bounds (Enter numbers separated by commas)",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 2
@@ -480,6 +480,7 @@ const doCurveParams = function () {
                 name: 'region-type',
                 type: matsTypes.InputTypes.select,
                 options: ['Predefined region', 'Select stations'],
+                dependentNames: ["variable"],
                 default: 'Predefined region',
                 hideOtherFor: {
                     'region': ["Select stations"],
@@ -562,33 +563,19 @@ const doCurveParams = function () {
 
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
         const optionsMap = {
-            "RMS": [["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})) as stdev, sum(m0.N_{{variable0}}) as N0", "scalar"],
-                ["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, stddev(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})) as stdev, sum(m0.N_{{variable0}}) as N0", "scalar"]],
-            "Bias (Model - Obs)": [["-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, stddev(-m0.sum_{{variable0}}/m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0", "scalar"],
-                ["sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}) as stat, stddev((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0", "scalar"]],
-            "N": [["sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0", "scalar"],
-                ["sum(m0.N_{{variable0}}) as stat, stddev(m0.N_{{variable0}}) as stdev, sum(m0.N_{{variable0}}) as N0", "scalar"]],
-            "Model average": [["sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0", "scalar"],
-                ["sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat, stddev(m0.sum_model_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0", "scalar"]],
-            "Obs average": [["sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0", "scalar"],
-                ["sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, stddev(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}) as stdev, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0", "scalar"]],
-            "Std deviation": [["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))) as stdev, sum(m0.N_{{variable0}}) as N0", "scalar"],
-                ["sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, stddev(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))) as stdev, sum(m0.N_{{variable0}}) as N0", "scalar"]]
-        };
+            "RMSE": "scalar",
 
-        const statAuxMap = {
-            "RMS-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "RMS-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Bias (Model - Obs)-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', (m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Bias (Model - Obs)-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', -m0.sum_{{variable0}}/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "N-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "N-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Model average-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.sum_model_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Model average-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', (m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Obs average-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Obs average-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Std deviation-winds": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)) order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
-            "Std deviation-other": "group_concat(unix_timestamp(m0.date) + 3600 * m0.hour, ';', m0.mb10 * 10, ';', sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)) order by unix_timestamp(m0.date) + 3600 * m0.hour, m0.mb10) as sub_data",
+            "Bias (Model - Obs)": "scalar",
+
+            "N": "scalar",
+
+            "Model average": "scalar",
+
+            "Obs average": "scalar",
+
+            "Std deviation": "scalar",
+
+            "MAE (station plots only)": "scalar"
         };
 
         matsCollections["statistic"].insert(
@@ -596,7 +583,6 @@ const doCurveParams = function () {
                 name: 'statistic',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                statAuxMap: statAuxMap,
                 options: Object.keys(optionsMap),
                 controlButtonCovered: true,
                 unique: false,
@@ -610,55 +596,89 @@ const doCurveParams = function () {
 
     if (matsCollections['variable'].findOne({name: 'variable'}) == undefined) {
         const statVarOptionsMap = {
-            'temperature': ['dt', 't', 't'],
-            'RH': ['dR', 'R', 'rh'],
-            'RHobT': ['dRoT', 'RoT', 'rhot'],
-            'winds': ['dw', 'ws', 'ws'],
-            'height': ['dH', 'H', 'z']
+            // THIS IS KEYED BY REGION-TYPE BECAUSE OUR MYSQL OBS TABLE DOESN'T HAVE RH
+            // FOR SOME REASON OR OTHER, SO IT NEEDS TO BE EXCLUDED AS A VARIABLE
+            // FROM STATION PLOTS. SIGH.
+            //
+            // ARRAY ITEMS BY INDEX:
+            // 0: sum of squared x-x_bar difference for RMSE/STDEV
+            // 1: number of values in sum
+            // 2: sum of obs-model difference (-1 * bias * N)
+            // 3: sum of model values
+            // 4: sum of obs values
+            // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
+            'Predefined region': {
+                'Temperature': ['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m1.sum_ob_t)', 'm1.sum_ob_t', '0'],
+                'RH': ['m0.sum2_dR', 'm0.N_dR', 'm0.sum_dR', '-1 * (m0.sum_dR-m1.sum_ob_R)', 'm1.sum_ob_R', '0'],
+                'RHobT': ['m0.sum2_dRoT', 'm0.N_dRoT', 'm0.sum_dRoT', '-1 * (m0.sum_dRoT-m1.sum_ob_R)', 'm1.sum_ob_R', '0'],
+                'Wind': ['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0'],
+            },
+            'Select stations' : {
+                'Temperature': ['pow(o.t - m0.t,2)/10000', '(o.t - m0.t)/100', '(o.t - m0.t)/100', '(if(o.t is not null,m0.t,null))/100', '(if(m0.t is not null,o.t,null))/100', '(abs(o.t - m0.t))/100'],
+                'RH': ['(pow(o.rh - m0.rh,2))', '(o.rh - m0.rh)', '(o.rh - m0.rh)', '(if(o.rh is not null,m0.rh,null))', '(if(m0.rh is not null,o.rh,null))', '(abs(o.rh - m0.rh))'],
+                'RHobT': ['(pow(o.rhot - m0.rhot,2))', '(o.rhot - m0.rhot)', '(o.rhot - m0.rhot)', '(if(o.rhot is not null,m0.rhot,null))', '(if(m0.rhot is not null,o.rhot,null))', '(abs(o.rhot - m0.rhot))'],
+                'Dewpoint': ['(pow(o.dp - m0.dp,2))/10000', '(o.dp - m0.dp)/100', '(o.dp - m0.dp)/100', '(if(o.dp is not null,m0.dp,null))/100', '(if(m0.dp is not null,o.dp,null))/100', '(abs(o.dp - m0.dp))/100'],
+                'Wind': ['(pow(o.ws,2)+pow(m0.ws,2)-2*o.ws*m0.ws*cos(o.wd-m0.wd))/10000', '(o.ws + m0.ws)/100', '(o.ws - m0.ws)/100', '(if(o.ws is not null,m0.ws,null))/100', '(if(m0.ws is not null,o.ws,null))/100', '(abs(o.ws - m0.ws))/100'],
+                'Height': ['pow(o.z - m0.z,2)', '(o.z - m0.z)', '(o.z - m0.z)', '(if(o.z is not null,m0.z,null))', '(if(m0.z is not null,o.z,null))', '(abs(o.z - m0.z))']
+            }
         };
 
         const statVarUnitMap = {
-            'RMS': {
-                'temperature': '°C',
+            'RMSE': {
+                'Temperature': '°C',
                 'RH': 'RH (%)',
                 'RHobT': 'RH (%)',
-                'winds': 'm/s',
-                'height': 'm'
+                'Dewpoint': '°C',
+                'Wind': 'm/s',
+                'Height': 'z'
             },
             'Bias (Model - Obs)': {
-                'temperature': '°C',
+                'Temperature': '°C',
                 'RH': 'RH (%)',
                 'RHobT': 'RH (%)',
-                'winds': 'm/s',
-                'height': 'm'
+                'Dewpoint': '°C',
+                'Wind': 'm/s',
+                'Height': 'z'
             },
             'N': {
-                'temperature': 'Number',
+                'Temperature': 'Number',
                 'RH': 'Number',
                 'RHobT': 'Number',
-                'winds': 'Number',
-                'height': 'Number'
+                'Dewpoint': 'Number',
+                'Wind': 'Number',
+                'Height': 'Number'
             },
             'Model average': {
-                'temperature': '°C',
+                'Temperature': '°C',
                 'RH': 'RH (%)',
                 'RHobT': 'RH (%)',
-                'winds': 'm/s',
-                'height': 'm'
+                'Dewpoint': '°C',
+                'Wind': 'm/s',
+                'Height': 'z'
             },
             'Obs average': {
-                'temperature': '°C',
+                'Temperature': '°C',
                 'RH': 'RH (%)',
                 'RHobT': 'RH (%)',
-                'winds': 'm/s',
-                'height': 'm'
+                'Dewpoint': '°C',
+                'Wind': 'm/s',
+                'Height': 'z'
             },
             'Std deviation': {
-                'temperature': '°C',
+                'Temperature': '°C',
                 'RH': 'RH (%)',
                 'RHobT': 'RH (%)',
-                'winds': 'm/s',
-                'height': 'm'
+                'Dewpoint': '°C',
+                'Wind': 'm/s',
+                'Height': 'z'
+            },
+            'MAE (station plots only)': {
+                'Temperature': '°C',
+                'RH': 'RH (%)',
+                'RHobT': 'RH (%)',
+                'Dewpoint': '°C',
+                'Wind': 'm/s',
+                'Height': 'z'
             }
         };
 
@@ -666,12 +686,13 @@ const doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
+                superiorNames: ['region-type'],
                 optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                options: Object.keys(statVarOptionsMap),
+                options: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]],
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(statVarOptionsMap)[0],
+                default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -822,11 +843,10 @@ const doCurveParams = function () {
                 unique: false,
                 default: 1,
                 controlButtonVisibility: 'block',
-                controlButtonText: 'top (hPa)',
+                controlButtonText: 'top level limit (hPa)',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 5,
-                help: 'top-help.html'
+                displayGroup: 5
             });
     }
 
@@ -842,13 +862,12 @@ const doCurveParams = function () {
                 step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: 1050,
+                default: 1000,
                 controlButtonVisibility: 'block',
-                controlButtonText: 'bottom (hPa)',
+                controlButtonText: 'bottom level limit (hPa)',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 5,
-                help: 'bottom-help.html'
+                displayGroup: 5
             });
     }
 
@@ -889,7 +908,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 multiple: true
             });
     }
@@ -906,9 +925,10 @@ const doCurveParams = function () {
                 unique: false,
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
+                controlButtonText: "sites (Map display)",
                 displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 multiple: true,
                 defaultMapView: {point: [50, -92.5], zoomLevel: 1.25},
                 help: 'map-help.html'
@@ -1098,6 +1118,7 @@ const doCurveTextPatterns = function () {
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.map,
             textPattern: [
+                ['', 'label', ': '],
                 ['', 'data-source', ': '],
                 ['', 'sites', ': '],
                 ['', 'variable', ' '],
@@ -1108,7 +1129,7 @@ const doCurveTextPatterns = function () {
                 [' valid-time:', 'valid-time', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "variable", "forecast-length", "top", "bottom", "valid-time", "sites", "sitesMap"
+                "label", "database", "data-source", "statistic", "variable", "forecast-length", "top", "bottom", "valid-time", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -1130,7 +1151,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "curve-dates"
+                "label", "data-source", "region-type", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
