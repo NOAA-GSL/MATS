@@ -320,7 +320,7 @@ const doCurveParams = async function () {
     }
 
     try {
-        const rows = await cbPool.queryCB('select mdata.model, mdata.displayText, mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0');
+        const rows = await cbPool.queryCB('select mdata.model, mdata.displayText, mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0 ORDER BY mdata.displayCategory, mdata.displayOrder');
         if (rows.includes("queryCB ERROR: ")) {
             // have this local try catch fail properly if the metadata isn't there
             throw new Error(rows);
