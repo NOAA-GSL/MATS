@@ -29,4 +29,3 @@ underscore@1.0.10
 kadira:blaze-layout
 ostrio:flow-router-extra
 meteorhacks:picker
-meteortesting:mocha
