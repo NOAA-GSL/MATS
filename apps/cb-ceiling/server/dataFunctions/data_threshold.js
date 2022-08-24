@@ -2,15 +2,13 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {
-    matsCollections,
-    matsTypes,
-    matsDataUtils,
-    matsDataQueryUtils,
-    matsDataDiffUtils,
-    matsDataCurveOpsUtils,
-    matsDataProcessUtils
-} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataThreshold = function (plotParams, plotFunction) {
@@ -39,19 +37,19 @@ dataThreshold = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
     var idealValues = [];
 
-    // catalogue the thresholds now, we'll need to do a separate query for each
-    const allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).sort(function (a, b) {
-        return Number(a) - Number(b)
-    });
-
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var database = curve['database'];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
         var queryTableClause = "FROM mdata m0";
+        // catalogue the thresholds now, we'll need to do a separate query for each
+        var allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).sort(function (a, b) {
+            return Number(a) - Number(b)
+        });
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
