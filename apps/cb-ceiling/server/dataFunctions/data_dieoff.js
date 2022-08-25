@@ -123,7 +123,6 @@ dataDieOff = function (plotParams, plotFunction) {
                 "AND o.subset='METAR' " +
                 "AND o.version='V01' ";
         }
-        var groupByClause = "group by m0.fcstLen";
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -173,7 +172,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.fcstLen as fcst_lead, " +
+            var statement = "SELECT m0.fcstLen AS fcst_lead, " +
                 "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
                 "MIN(m0.fcstValidEpoch) min_secs, " +
                 "MAX(m0.fcstValidEpoch) max_secs, " +
@@ -190,8 +189,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{utcCycleStartClause}} " +
                 "{{siteDateClause}} " +
                 "{{dateClause}} " +
-                "{{groupByClause}} " +
-                "order by fcst_lead" +
+                "GROUP BY m0.fcstLen " +
+                "ORDER BY fcst_lead" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
@@ -207,7 +206,6 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            statement = statement.replace('{{groupByClause}}', groupByClause);
             dataRequests[label] = statement;
 
             var queryResult;

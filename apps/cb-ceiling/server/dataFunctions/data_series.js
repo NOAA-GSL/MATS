@@ -125,7 +125,6 @@ dataSeries = function (plotParams, plotFunction) {
                 "AND o.subset='METAR' " +
                 "AND o.version='V01' ";
         }
-        var groupByClause = "group by {{average}}";
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
@@ -145,7 +144,7 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT {{average}} as avtime, " +
+            var statement = "SELECT {{average}} AS avtime, " +
                 "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
                 "MIN(m0.fcstValidEpoch) min_secs, " +
                 "MAX(m0.fcstValidEpoch) max_secs, " +
@@ -161,8 +160,8 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{forecastLengthClause}} " +
                 "{{siteDateClause}} " +
                 "{{dateClause}} " +
-                "{{groupByClause}} " +
-                "order by avtime" +
+                "GROUP BY {{average}} " +
+                "ORDER BY avtime" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
@@ -177,7 +176,6 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            statement = statement.replace('{{groupByClause}}', groupByClause);
             statement = statement.split('{{average}}').join(average);
             dataRequests[label] = statement;
 

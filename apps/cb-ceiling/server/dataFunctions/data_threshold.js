@@ -77,7 +77,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
         var whereClause = "WHERE " +
             "m0.type='DD' " +
-            "AND m0.docType='CTC'" +
+            "AND m0.docType='CTC' " +
             "AND m0.subset='METAR' " +
             "AND m0.version='V01' ";
         // axisKey is used to determine which axis a curve should use.
@@ -98,20 +98,20 @@ dataThreshold = function (plotParams, plotFunction) {
             for (var thresholdIndex = 0; thresholdIndex < allThresholds.length; thresholdIndex++) {
                 var threshold = allThresholds[thresholdIndex];
                 // prepare the query from the above parameters
-                var statement = "SELECT {{threshold}} as thresh, " +      // produces thresholds in kft
+                var statement = "SELECT {{threshold}} AS thresh, " +      // produces thresholds in kft
                     "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
                     "MIN(m0.fcstValidEpoch) min_secs, " +
                     "MAX(m0.fcstValidEpoch) max_secs, " +
                     "{{statisticClause}} " +
                     "{{queryTableClause}} " +
-                    "{{whereClause}}" +
-                    "{{modelClause}}" +
-                    "{{regionClause}}" +
+                    "{{whereClause}} " +
+                    "{{modelClause}} " +
+                    "{{regionClause}} " +
                     "{{dateClause}} " +
                     "{{validTimeClause}} " +
                     "{{forecastLengthClause}} " +
-                    "group by {{threshold}} " +
-                    "order by thresh" +
+                    "GROUP BY {{threshold}} " +
+                    "ORDER BY thresh" +
                     ";";
 
                 statement = statement.replace('{{statisticClause}}', statisticClause);
@@ -130,7 +130,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 var finishMoment;
                 try {
                     // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(cbPool, statement, appParams, statisticSelect);
+                    queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(cbPool, statement, appParams, statisticSelect);
                     finishMoment = moment();
                     dataRequests["data retrieval (query) time - " + label] = {
                         begin: startMoment.format(),

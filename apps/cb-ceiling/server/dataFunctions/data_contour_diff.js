@@ -98,7 +98,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
         var whereClause = "WHERE " +
             "m0.type='DD' " +
-            "AND m0.docType='CTC'" +
+            "AND m0.docType='CTC' " +
             "AND m0.subset='METAR' " +
             "AND m0.version='V01' ";
         // For contours, this functions as the colorbar label.
@@ -108,21 +108,21 @@ dataContourDiff = function (plotParams, plotFunction) {
         var d = {};
         // this is a database driven curve, not a difference curve
         // prepare the query from the above parameters
-        var statement = "SELECT {{xValClause}} as xVal, " +
+        var statement = "SELECT {{xValClause}} AS xVal, " +
             "{{yValClause}} yVal, " +
             "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
             "MIN(m0.fcstValidEpoch) min_secs, " +
             "MAX(m0.fcstValidEpoch) max_secs, " +
             "{{statisticClause}} " +
             "{{queryTableClause}} " +
-            "{{whereClause}}" +
-            "{{modelClause}}" +
-            "{{regionClause}}" +
+            "{{whereClause}} " +
+            "{{modelClause}} " +
+            "{{regionClause}} " +
             "{{dateClause}} " +
             "{{validTimeClause}} " +
             "{{forecastLengthClause}} " +
-            "group by {{xValClause}}, {{yValClause}} " +
-            "order by xVal,yVal" +
+            "GROUP BY {{xValClause}}, {{yValClause}} " +
+            "ORDER BY xVal,yVal" +
             ";";
 
         statement = statement.split('{{xValClause}}').join(xValClause);

@@ -103,7 +103,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
         var whereClause = "WHERE " +
             "m0.type='DD' " +
-            "AND m0.docType='CTC'" +
+            "AND m0.docType='CTC' " +
             "AND m0.subset='METAR' " +
             "AND m0.version='V01' ";
         // axisKey is used to determine which axis a curve should use.
@@ -119,20 +119,20 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             for (var thresholdIndex = 0; thresholdIndex < allThresholds.length; thresholdIndex++) {
                 threshold = allThresholds[thresholdIndex];
                 // prepare the query from the above parameters
-                var statement = "SELECT {{binClause}} as binVal, " +
+                var statement = "SELECT {{binClause}} AS binVal, " +
                     "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
                     "MIN(m0.fcstValidEpoch) min_secs, " +
                     "MAX(m0.fcstValidEpoch) max_secs, " +
                     "{{statisticClause}} " +
                     "{{queryTableClause}} " +
-                    "{{whereClause}}" +
-                    "{{modelClause}}" +
-                    "{{regionClause}}" +
+                    "{{whereClause}} " +
+                    "{{modelClause}} " +
+                    "{{regionClause}} " +
                     "{{dateClause}} " +
                     "{{validTimeClause}} " +
                     "{{forecastLengthClause}} " +
-                    "group by {{binClause}} " +
-                    "order by binVal" +
+                    "GROUP BY {{binClause}} " +
+                    "ORDER BY binVal" +
                     ";";
 
                 statement = statement.split('{{binClause}}').join(binClause);
