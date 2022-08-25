@@ -384,9 +384,10 @@ const doCurveParams = async function () {
             const site_id = rows[i].id;
             const site_name = rows[i].name == undefined ? "unknown" : rows[i].name;
             const site_description = rows[i].description == undefined ? "unknown" : rows[i].description;
-            const site_lat = rows[i].geo == undefined ? undefined : rows[i].geo.lat;
-            const site_lon = rows[i].geo == undefined ? undefined : rows[i].geo.lon;
-            const site_elev = rows[i].geo == undefined ? "unknown" : rows[i].geo.elev;
+            const site_lat = rows[i].geo == undefined ? undefined : rows[i].geo[0].lat;
+            const site_lon = rows[i].geo == undefined ? undefined : rows[i].geo[0].lon;
+            const site_elev = rows[i].geo == undefined ? "unknown" : rows[i].geo[0].elev;
+            if (site_lat >= 90 || site_lat <= -90) continue;    // there's one station right at the south pole the the map doesn't know how to render at all
             siteOptionsMap[site_name] = [site_id];
 
             var point = [site_lat, site_lon];
