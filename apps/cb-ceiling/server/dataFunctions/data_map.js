@@ -35,76 +35,82 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-        var database = curve['database'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+    var database = curve['database'];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
     var modelClause = "AND m0.model='" + model + "' ";
-    var queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc)\n " +
-        "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) ON o.fcstValidEpoch = m0.fcstValidEpoch\n " +
-        "LET pairs = ARRAY {'modelName':model.name,\n " +
-        "                   'modelValue':model.Ceiling,\n " +
-        "                   'observationName':FIRST observation.name FOR observation IN o.data WHEN observation.name = model.name END,\n " +
-        "                   'observationValue':FIRST observation.Ceiling FOR observation IN o.data WHEN observation.name = model.name END\n " +
-        "                   } FOR model IN m0.data WHEN model.name IN ['{{sitesList}}'] END,\n " +
-        "   validPairs = ARRAY {'modelName':pair.modelName, 'observationName':pair.observationName} For pair IN pairs WHEN pair.modelName IS NOT missing AND pair.observationName IS NOT missing END\n";
+    var queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc) " +
+        "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) " +
+        "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
+        "UNNEST o.data AS odata " +
+        "UNNEST m0.data AS m0data ";
+    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var thresholdStr = curve['threshold'];
     var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
     var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+        validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
     }
     var forecastLength = curve['forecast-length'];
-    var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
+    var forecastLengthClause = "AND m0.fcstLen = " + forecastLength;
+    var statistic = curve['statistic'];
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
     if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        queryTableClause = queryTableClause.replace(/\{\{sitesList\}\}/g, sitesList.join("','"));
+        var sitesClause = " and m0data.name in ['" + sitesList.join("','") + "']";
+        sitesClause = sitesClause + " and odata.name in ['" + sitesList.join("','") + "']";
+        var siteMatchClause = "and m0data.name = odata.name ";
     } else {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var statistic = curve['statistic'];
-    var statisticClause = "ARRAY_LENGTH(validPairs) AS N0,\n " +
-        "ARRAY_SUM(ARRAY CASE WHEN (pair.modelValue < " + threshold + " " +
-        "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS hit,\n " +
-        "ARRAY_SUM(ARRAY CASE WHEN (pair.modelValue < " + threshold + " " +
-        "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS fa,\n " +
-        "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
-        "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS miss,\n " +
-        "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
-        "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS cn\n " +
-        "--validPairs";
+    var statisticClause = "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
+        "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS hit, " +
+        "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
+        "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS fa, " +
+        "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
+        "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS miss, " +
+        "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
+        "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS cn, " +
+        "SUM(CASE WHEN m0data.Ceiling IS NOT MISSING " +
+        "AND odata.Ceiling IS NOT MISSING THEN 1 ELSE 0 END) AS N0, " +
+        "ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
+        "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
+        "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
+        "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
+        "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END) AS sub_data ";
     var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs + " and m0.fcstValidEpoch = o.fcstValidEpoch";
-    var whereClause = "AND " +
-        "m0.type='DD'\n " +
-        "AND m0.docType='model'\n " +
-        "AND m0.subset='METAR'\n " +
-        "AND m0.version='V01'\n ";
+    var whereClause = "AND m0.type='DD' " +
+        "AND m0.docType='model' " +
+        "AND m0.subset='METAR' " +
+        "AND m0.version='V01' ";
     var siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " and o.fcstValidEpoch <= " + toSecs;
-    var siteWhereClause = "WHERE " +
-        "o.type='DD'\n " +
-        "AND o.docType='obs'\n " +
-        "AND o.subset='METAR'\n " +
-        "AND o.version='V01'\n ";
-    var groupByClause = "group by m0.data[*].name, pairs, validPairs";
+    var siteWhereClause = "WHERE o.type='DD' " +
+        "AND o.docType='obs' " +
+        "AND o.subset='METAR' " +
+        "AND o.version='V01' ";
 
-    var statement = "SELECT m0.data[*].name as sta_id,\n " +
-        "COUNT(DISTINCT m0.fcstValidEpoch) N_times,\n " +
-        "MIN(m0.fcstValidEpoch) min_secs,\n " +
-        "MAX(m0.fcstValidEpoch) max_secs,\n " +
-        "{{statisticClause}}\n " +
-        "{{queryTableClause}}\n " +
-        "{{siteWhereClause}}\n " +
-        "{{whereClause}}\n " +
-        "{{modelClause}}\n " +
-        "{{validTimeClause}}\n " +
-        "{{forecastLengthClause}}\n " +
-        "{{siteDateClause}}\n " +
-        "{{dateClause}}\n " +
-        "{{groupByClause}}\n " +
-        "order by sta_id" +
+    var statement = "SELECT m0.data[*].name AS sta_id, " +
+        "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+        "MIN(m0.fcstValidEpoch) min_secs, " +
+        "MAX(m0.fcstValidEpoch) max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "{{siteWhereClause}} " +
+        "{{whereClause}} " +
+        "{{modelClause}} " +
+        "{{validTimeClause}} " +
+        "{{sitesClause}} " +
+        "{{siteMatchClause}} " +
+        "{{forecastLengthClause}} " +
+        "{{siteDateClause}} " +
+        "{{dateClause}} " +
+        "GROUP BY m0.data[*].name " +
+        "ORDER BY sta_id" +
         ";";
 
     statement = statement.replace('{{statisticClause}}', statisticClause);
     statement = statement.replace('{{queryTableClause}}', queryTableClause);
+    statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
+    statement = statement.replace('{{sitesClause}}', sitesClause);
     statement = statement.replace('{{whereClause}}', whereClause);
     statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
     statement = statement.replace('{{modelClause}}', modelClause);
@@ -112,7 +118,6 @@ dataMap = function (plotParams, plotFunction) {
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
-    statement = statement.replace('{{groupByClause}}', groupByClause);
     dataRequests[label] = statement;
 
     var queryResult;
@@ -120,7 +125,7 @@ dataMap = function (plotParams, plotFunction) {
     var finishMoment;
     try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBMapCTC(modelPool, statement, modelTable, statistic, siteMap);
+        queryResult = matsDataQueryUtils.queryDBMapCTC(cbPool, statement, model, statistic, siteMap, appParams);
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),
