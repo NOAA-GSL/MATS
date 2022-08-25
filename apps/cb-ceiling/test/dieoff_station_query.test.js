@@ -1,8 +1,7 @@
 const dataQueryUtil = require('./lib/data_query_util.mjs');
 var chai = require('chai');
-const {
-  Console
-} = require('console');
+const { Console } = require('console');
+
 //if (Meteor.isServer) {
 describe('dieoff_query', () => {
   before(function setup() {
@@ -25,14 +24,14 @@ describe('dieoff_query', () => {
       SUM(CASE WHEN NOT m0data.Ceiling < 500
                 AND odata.Ceiling < 500 THEN 1 ELSE 0 END) AS miss,
       SUM(CASE WHEN NOT m0data.Ceiling < 500
-                AND NOT odata.Ceiling < 500 THEN 1 ELSE 0 END) AS cn
+                AND NOT odata.Ceiling < 500 THEN 1 ELSE 0 END) AS cn,
       SUM(CASE WHEN m0data.Ceiling IS NOT MISSING 
                 AND odata.Ceiling IS NOT MISSING THEN 1 ELSE 0 END) AS N0,
       ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ";" || CASE WHEN m0data.Ceiling < 500
               AND odata.Ceiling < 500 THEN "1" ELSE "0" END || ";" || CASE WHEN m0data.Ceiling < 500
               AND NOT odata.Ceiling < 500 THEN "1" ELSE "0" END || ";" || CASE WHEN NOT m0data.Ceiling < 500
               AND odata.Ceiling < 500 THEN "1" ELSE "0" END || ";" || CASE WHEN NOT m0data.Ceiling < 500
-              AND NOT odata.Ceiling < 500 THEN "1" ELSE "0" END) AS subData,
+              AND NOT odata.Ceiling < 500 THEN "1" ELSE "0" END) AS subData
         FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc)
           JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) ON o.fcstValidEpoch = m0.fcstValidEpoch
         UNNEST o.data AS odata
