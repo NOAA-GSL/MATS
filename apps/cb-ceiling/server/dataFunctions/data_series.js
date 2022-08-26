@@ -54,7 +54,7 @@ dataSeries = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
         }
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "AND m0.fcstLen = " + forecastLength;

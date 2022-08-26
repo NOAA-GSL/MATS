@@ -55,7 +55,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var forecastLengthStr = curve['dieoff-type'];
         var forecastLengthOptionsMap = matsCollections['dieoff-type'].findOne({name: 'dieoff-type'}).optionsMap;
         var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
-        var forecastLengthClause = "AND m0.fcstLen IN [0,3,6,9,12,15,18,21,24,30,36]";
+        var forecastLengthClause = "AND m0.fcstLen IN [0,3,6,9,12,15,18,21,24,30,36,42,48]";
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
@@ -126,7 +126,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
             validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+                validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
             }
             if (regionType === 'Predefined region') {
                 dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
@@ -137,7 +137,7 @@ dataDieOff = function (plotParams, plotFunction) {
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
             utcCycleStart = curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
             if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
-                utcCycleStartClause = "and (m0.fcstValidEpoch - m0.fcstLen*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";   // adjust by 1800 seconds to center obs at the top of the hour
+                utcCycleStartClause = "and (m0.fcstValidEpoch - m0.fcstLen*3600)%(24*3600)/3600 IN[" + utcCycleStart + "]";   // adjust by 1800 seconds to center obs at the top of the hour
             }
             if (regionType === 'Predefined region') {
                 dateClause = "and m0.fcstValidEpoch-m0.fcstLen*3600 >= " + fromSecs + " and m0.fcstValidEpoch-m0.fcstLen*3600 <= " + toSecs;

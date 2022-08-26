@@ -19,8 +19,8 @@ Feature: Add Remove Curve
         Then the "database" parameter value matches "Ceiling"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
-        When I set the dates to "08/21/2022 0:00 - 08/24/2022 0:00"
-        Then the dates value is "08/21/2022 0:00 - 08/24/2022 0:00"
+        When I set the dates to "08/09/2022 0:00 - 08/12/2022 0:00"
+        Then the dates value is "08/09/2022 0:00 - 08/12/2022 0:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"

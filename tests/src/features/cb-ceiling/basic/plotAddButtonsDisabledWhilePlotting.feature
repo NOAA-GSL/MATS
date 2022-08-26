@@ -17,12 +17,12 @@ Feature: Plot and Add buttons are disabled while plotting
         Then the plot type should be "TimeSeries"
         When I change the "database" parameter to "Ceiling"
         Then the "database" parameter value matches "Ceiling"
-        When I change the "data-source" parameter to "HRRR_OPS_LEGACY"
+        When I change the "data-source" parameter to "RAP_OPS_130"
         And I change the "average" parameter to "1D"
-        Then the "data-source" parameter value matches "HRRR_OPS_LEGACY"
+        Then the "data-source" parameter value matches "RAP_OPS_130"
         And the "average" parameter value matches "1D"
-        When I set the dates to "03/28/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "03/28/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "03/28/2022 0:00 - 09/24/2022 0:00"
+        Then the dates value is "03/28/2022 0:00 - 09/24/2022 0:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
