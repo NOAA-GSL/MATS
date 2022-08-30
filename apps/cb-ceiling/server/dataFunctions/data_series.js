@@ -54,12 +54,14 @@ dataSeries = function (plotParams, plotFunction) {
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
         }
         var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
+        var forecastLengthClause = "AND m0.fcstLen = " + forecastLength;
         var dateClause;
         var siteDateClause = "";
+        var siteMatchClause = "";
+        var sitesClause = "";
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statisticClause;
@@ -67,62 +69,61 @@ dataSeries = function (plotParams, plotFunction) {
         var regionClause = "";
         var whereClause;
         var siteWhereClause = "";
-        var groupByClause;
         if (regionType === 'Predefined region') {
             queryTableClause = "FROM mdata m0";
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             regionClause = "AND m0.region='" + region + "' ";
-            statisticClause = "sum(m0.data.['" + threshold + "'].hits) hit,\n sum(m0.data.['" + threshold + "'].false_alarms) fa,\n " +
-                "sum(m0.data.['" + threshold + "'].misses) miss,\n sum(m0.data.['" + threshold + "'].correct_negatives) cn,\n " +
+            statisticClause = "sum(m0.data.['" + threshold + "'].hits) hit, sum(m0.data.['" + threshold + "'].false_alarms) fa, " +
+                "sum(m0.data.['" + threshold + "'].misses) miss, sum(m0.data.['" + threshold + "'].correct_negatives) cn, " +
                 "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['" + threshold + "'].hits) || ';' || " +
                 "TO_STRING(m0.data.['" + threshold + "'].false_alarms) || ';' || TO_STRING(m0.data.['" + threshold + "'].misses) || ';' || " +
-                "TO_STRING(m0.data.['" + threshold + "'].correct_negatives))) sub_data,\n count(m0.data.['" + threshold + "'].hits) N0 ";
+                "TO_STRING(m0.data.['" + threshold + "'].correct_negatives))) sub_data, count(m0.data.['" + threshold + "'].hits) N0 ";
             dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
             whereClause = "WHERE " +
-                "m0.type='DD'\n " +
-                "AND m0.docType='CTC'\n " +
-                "AND m0.subset='METAR'\n " +
-                "AND m0.version='V01'\n ";
-            groupByClause = "group by {{average}}";
+                "m0.type='DD' " +
+                "AND m0.docType='CTC' " +
+                "AND m0.subset='METAR' " +
+                "AND m0.version='V01' ";
         } else {
-            queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc)\n " +
-                "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) ON o.fcstValidEpoch = m0.fcstValidEpoch\n " +
-                "LET pairs = ARRAY {'modelName':model.name,\n " +
-                "                   'modelValue':model.Ceiling,\n " +
-                "                   'observationName':FIRST observation.name FOR observation IN o.data WHEN observation.name = model.name END,\n " +
-                "                   'observationValue':FIRST observation.Ceiling FOR observation IN o.data WHEN observation.name = model.name END\n " +
-                "                   } FOR model IN m0.data WHEN model.name IN ['{{sitesList}}'] END,\n " +
-                "   validPairs = ARRAY {'modelName':pair.modelName, 'observationName':pair.observationName} For pair IN pairs WHEN pair.modelName IS NOT missing AND pair.observationName IS NOT missing END\n";
+            queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc) " +
+                "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) " +
+                "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
+                "UNNEST o.data AS odata " +
+                "UNNEST m0.data AS m0data ";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-                queryTableClause = queryTableClause.replace(/\{\{sitesList\}\}/g, sitesList.join("','"));
+                sitesClause = " and m0data.name in ['" + sitesList.join("','") + "']";
+                sitesClause = sitesClause + " and odata.name in ['" + sitesList.join("','") + "']";
+                siteMatchClause = "and m0data.name = odata.name ";
             } else {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            statisticClause = "ARRAY_LENGTH(validPairs) AS N0,\n " +
-                "ARRAY_SUM(ARRAY CASE WHEN (pair.modelValue < " + threshold + " " +
-                "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS hit,\n " +
-                "ARRAY_SUM(ARRAY CASE WHEN (pair.modelValue < " + threshold + " " +
-                "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS fa,\n " +
-                "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
-                "AND pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS miss,\n " +
-                "ARRAY_SUM(ARRAY CASE WHEN (NOT pair.modelValue < " + threshold + " " +
-                "AND NOT pair.observationValue < " + threshold + ") THEN 1 ELSE 0 END FOR pair IN pairs END) AS cn\n " +
-                "--validPairs";
+            statisticClause = "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
+                "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS hit, " +
+                "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
+                "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS fa, " +
+                "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
+                "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS miss, " +
+                "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
+                "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS cn, " +
+                "SUM(CASE WHEN m0data.Ceiling IS NOT MISSING " +
+                "AND odata.Ceiling IS NOT MISSING THEN 1 ELSE 0 END) AS N0, " +
+                "ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
+                "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
+                "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
+                "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
+                "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END) AS sub_data ";
             dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs + " and m0.fcstValidEpoch = o.fcstValidEpoch";
-            whereClause = "AND " +
-                "m0.type='DD'\n " +
-                "AND m0.docType='model'\n " +
-                "AND m0.subset='METAR'\n " +
-                "AND m0.version='V01'\n ";
+            whereClause = "AND m0.type='DD' " +
+                "AND m0.docType='model' " +
+                "AND m0.subset='METAR' " +
+                "AND m0.version='V01' ";
             siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " and o.fcstValidEpoch <= " + toSecs;
-            siteWhereClause = "WHERE " +
-                "o.type='DD'\n " +
-                "AND o.docType='obs'\n " +
-                "AND o.subset='METAR'\n " +
-                "AND o.version='V01'\n ";
-            groupByClause = "group by {{average}}, pairs, validPairs";
+            siteWhereClause = "WHERE o.type='DD' " +
+                "AND o.docType='obs' " +
+                "AND o.subset='METAR' " +
+                "AND o.version='V01' ";
         }
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections['average'].findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
@@ -143,26 +144,30 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT {{average}} avtime,\n " +
-                "COUNT(DISTINCT m0.fcstValidEpoch) N_times,\n " +
-                "MIN(m0.fcstValidEpoch) min_secs,\n " +
-                "MAX(m0.fcstValidEpoch) max_secs,\n " +
-                "{{statisticClause}}\n " +
-                "{{queryTableClause}}\n " +
-                "{{siteWhereClause}}\n " +
-                "{{whereClause}}\n " +
-                "{{modelClause}}\n " +
-                "{{regionClause}}\n " +
-                "{{validTimeClause}}\n " +
-                "{{forecastLengthClause}}\n " +
-                "{{siteDateClause}}\n " +
-                "{{dateClause}}\n " +
-                "{{groupByClause}}\n " +
-                "order by avtime" +
+            var statement = "SELECT {{average}} AS avtime, " +
+                "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+                "MIN(m0.fcstValidEpoch) min_secs, " +
+                "MAX(m0.fcstValidEpoch) max_secs, " +
+                "{{statisticClause}} " +
+                "{{queryTableClause}} " +
+                "{{siteWhereClause}} " +
+                "{{whereClause}} " +
+                "{{modelClause}} " +
+                "{{regionClause}} " +
+                "{{validTimeClause}} " +
+                "{{sitesClause}} " +
+                "{{siteMatchClause}} " +
+                "{{forecastLengthClause}} " +
+                "{{siteDateClause}} " +
+                "{{dateClause}} " +
+                "GROUP BY {{average}} " +
+                "ORDER BY avtime" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
             statement = statement.replace('{{queryTableClause}}', queryTableClause);
+            statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
+            statement = statement.replace('{{sitesClause}}', sitesClause);
             statement = statement.replace('{{whereClause}}', whereClause);
             statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
             statement = statement.replace('{{modelClause}}', modelClause);
@@ -171,7 +176,6 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            statement = statement.replace('{{groupByClause}}', groupByClause);
             statement = statement.split('{{average}}').join(average);
             dataRequests[label] = statement;
 
