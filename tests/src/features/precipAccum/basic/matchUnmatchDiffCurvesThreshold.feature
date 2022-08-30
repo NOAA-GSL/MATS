@@ -15,8 +15,8 @@ Feature: Match Unmatch Diff Curves Threshold
     Scenario: matchUnmatchDiffCurvesThreshold
         When I set the plot type to "Threshold"
         Then the plot type should be "Threshold"
-        When I change the "database" parameter to "24 Hour Precipitation"
-        Then the "database" parameter value matches "24 Hour Precipitation"
+        When I change the "variable" parameter to "24 Hour Precipitation"
+        Then the "variable" parameter value matches "24 Hour Precipitation"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I set the curve-dates to "09/21/2019 0:00 - 09/24/2019 0:00"

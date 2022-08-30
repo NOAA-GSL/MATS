@@ -42,9 +42,9 @@ dataThreshold = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var database = curve['database'];
-        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var variable = curve['variable'];
+        var databaseRef = matsCollections['variable'].findOne({name: 'variable'}).optionsMap[variable];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";

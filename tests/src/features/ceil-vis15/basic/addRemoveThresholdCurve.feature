@@ -16,8 +16,8 @@ Feature: Add Remove Threshold Curve
     Scenario: addRemoveThresholdCurve
         When I set the plot type to "Threshold"
         Then the plot type should be "Threshold"
-        When I change the "database" parameter to "15 Minute Visibility"
-        Then the "database" parameter value matches "15 Minute Visibility"
+        When I change the "variable" parameter to "15 Minute Visibility"
+        Then the "variable" parameter value matches "15 Minute Visibility"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I set the curve-dates to "09/21/2019 0:00 - 09/24/2019 0:00"

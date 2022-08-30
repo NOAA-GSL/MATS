@@ -45,12 +45,12 @@ dataSeries = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var database = curve['database'];
-        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var variable = curve['variable'];
+        var databaseRef = matsCollections['variable'].findOne({name: 'variable'}).optionsMap[variable];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var queryTableClause = "";
         var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
         var thresholdClause = "";
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -84,7 +84,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
                 "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0";
             statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
-            if (database.includes("Visibility")) {
+            if (variable.includes("Visibility")) {
                 statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
                 statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
             }

@@ -42,18 +42,18 @@ dataThreshold = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var database = curve['database'];
-        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var variable = curve['variable'];
+        var databaseRef = matsCollections['variable'].findOne({name: 'variable'}).optionsMap[variable];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var scaleStr = curve['scale'];
-        var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database]).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database][key] === scaleStr);
+        var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap[variable]).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[variable][key] === scaleStr);
         var queryTableClause = "from " + databaseRef + "." + model + '_' + grid_scale + '_' + region + " as m0";
         var thresholdClause = "";
         var forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
         var forecastTypeStr = curve['forecast-type'];
-        var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[database]).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[database][key] === forecastTypeStr);
+        var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[variable]).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[variable][key] === forecastTypeStr);
         var forecastTypeClause;
         if (databaseRef === "precip") {
             forecastTypeClause = "and m0.num_fcsts = " + forecastType;

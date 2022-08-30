@@ -44,8 +44,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var label = curve['label'];
         var binParam = curve['bin-parameter'];
         var binClause = matsCollections['bin-parameter'].findOne({name: 'bin-parameter'}).optionsMap[binParam];
-        var database = curve['database'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var variable = curve['variable'];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
         var queryTableClause = "FROM mdata m0";
         var validTimeClause = "";
@@ -59,11 +59,11 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             if (thresholdStr === undefined) {
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
-            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
+            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
             allThresholds = [threshold];
         } else {
             // catalogue the thresholds now, we'll need to do a separate query for each
-            allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).sort(function (a, b) {
+            allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
                 return Number(a) - Number(b)
             });
         }
