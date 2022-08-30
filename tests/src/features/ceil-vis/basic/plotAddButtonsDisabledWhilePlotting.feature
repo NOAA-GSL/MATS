@@ -15,8 +15,8 @@ Feature: Plot and Add buttons are disabled while plotting
     Scenario: plotAddButtonsDisabledWhilePlotting
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "database" parameter to "Ceiling"
-        Then the "database" parameter value matches "Ceiling"
+        When I change the "variable" parameter to "Ceiling"
+        Then the "variable" parameter value matches "Ceiling"
         When I change the "data-source" parameter to "HRRR_GSL"
         And I change the "average" parameter to "1D"
         Then the "data-source" parameter value matches "HRRR_GSL"

@@ -41,9 +41,9 @@ dataContour = function (plotParams, plotFunction) {
     // initialize variables specific to the curve
     var curve = curves[0];
     var label = curve['label'];
-    var database = curve['database'];
-    var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
-    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+    var variable = curve['variable'];
+    var databaseRef = matsCollections['variable'].findOne({name: 'variable'}).optionsMap[variable];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
     var regionStr = curve['region'];
     var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
     var queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
@@ -54,7 +54,7 @@ dataContour = function (plotParams, plotFunction) {
     var dateClause = "";
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
         thresholdClause = "and m0.trsh = " + threshold;
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {

@@ -45,12 +45,12 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var database = curve['database'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var variable = curve['variable'];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
         var queryTableClause = "FROM mdata m0";
         var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {

@@ -35,8 +35,8 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-    var database = curve['database'];
-    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+    var variable = curve['variable'];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
     var modelClause = "AND m0.model='" + model + "' ";
     var queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc) " +
         "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) " +
@@ -45,7 +45,7 @@ dataMap = function (plotParams, plotFunction) {
         "UNNEST m0.data AS m0data ";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var thresholdStr = curve['threshold'];
-    var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
+    var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
     var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {

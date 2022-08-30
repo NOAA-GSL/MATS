@@ -42,12 +42,12 @@ dataThreshold = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var database = curve['database'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var variable = curve['variable'];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
         var queryTableClause = "FROM mdata m0";
         // catalogue the thresholds now, we'll need to do a separate query for each
-        var allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).sort(function (a, b) {
+        var allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
             return Number(a) - Number(b)
         });
         var validTimeClause = "";

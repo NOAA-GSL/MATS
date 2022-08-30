@@ -16,8 +16,8 @@ Feature: Add Remove Performance Diagram Curve
     Scenario: addRemovePerformanceDiagramCurve
         When I set the plot type to "PerformanceDiagram"
         Then the plot type should be "PerformanceDiagram"
-        When I change the "database" parameter to "15 Minute Visibility"
-        Then the "database" parameter value matches "15 Minute Visibility"
+        When I change the "variable" parameter to "15 Minute Visibility"
+        Then the "variable" parameter value matches "15 Minute Visibility"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I change the "bin-parameter" parameter to "Fcst lead time"

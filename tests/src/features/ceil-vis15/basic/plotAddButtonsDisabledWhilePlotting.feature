@@ -15,8 +15,8 @@ Feature: Plot and Add buttons are disabled while plotting
     Scenario: plotAddButtonsDisabledWhilePlotting
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "database" parameter to "15 Minute Visibility"
-        Then the "database" parameter value matches "15 Minute Visibility"
+        When I change the "variable" parameter to "15 Minute Visibility"
+        Then the "variable" parameter value matches "15 Minute Visibility"
         When I change the "data-source" parameter to "HRRR_GSL"
         And I change the "average" parameter to "3hr"
         Then the "data-source" parameter value matches "HRRR_GSL"

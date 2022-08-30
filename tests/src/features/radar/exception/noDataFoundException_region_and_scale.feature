@@ -20,8 +20,8 @@ Feature: No Data Found Exception: region_and_scale
     Scenario: noDataFoundException_region_and_scale
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "database" parameter to "Composite Reflectivity"
-        Then the "database" parameter value matches "Composite Reflectivity"
+        When I change the "variable" parameter to "Composite Reflectivity"
+        Then the "variable" parameter value matches "Composite Reflectivity"
         When I change the "data-source" parameter to "HRRRE_mem1"
         Then the "data-source" parameter value matches "HRRRE_mem1"
         When I change the "region" parameter to "Southeastern US moving domain"

@@ -18,8 +18,8 @@ Feature: Add Remove Two Curves
     Scenario: addRemoveTwoCurves
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "database" parameter to "24 Hour Precipitation"
-        Then the "database" parameter value matches "24 Hour Precipitation"
+        When I change the "variable" parameter to "24 Hour Precipitation"
+        Then the "variable" parameter value matches "24 Hour Precipitation"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I set the dates to "09/21/2019 0:00 - 09/24/2019 0:00"

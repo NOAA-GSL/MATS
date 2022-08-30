@@ -33,15 +33,15 @@ dataMap = function (plotParams, plotFunction) {
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
-    var database = curve['database'];
-    var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
-    var modelTable = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+    var variable = curve['variable'];
+    var databaseRef = matsCollections['variable'].findOne({name: 'variable'}).optionsMap[variable];
+    var modelTable = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
     var obsTable = (modelTable.includes('ret_') || modelTable.includes('Ret_')) ? 'obs_retro' : 'obs';
     var queryTableClause = "from " + databaseRef.modelDB + "." + obsTable + " as o, " + databaseRef.modelDB + "." + modelTable + " as m0 ";
     var sitesClause = "";
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var thresholdStr = curve['threshold'];
-    var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
+    var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
     var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -56,7 +56,7 @@ dataMap = function (plotParams, plotFunction) {
         "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
         "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0";
     statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
-    if (database.includes("Visibility")) {
+    if (variable.includes("Visibility")) {
         statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
         statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
     }
