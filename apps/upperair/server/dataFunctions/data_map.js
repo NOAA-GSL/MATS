@@ -141,11 +141,11 @@ dataMap = function (plotParams, plotFunction) {
         };
         // get the data back from the query
         var d = queryResult.data;
-        var dPurple = queryResult.dataPurple;
-        var dBlue = queryResult.dataBlue;
-        var dBlack = queryResult.dataBlack;
-        var dOrange = queryResult.dataOrange;
-        var dRed = queryResult.dataRed;
+        var dLowest = queryResult.dataLowest;
+        var dLow = queryResult.dataLow;
+        var dModerate = queryResult.dataModerate;
+        var dHigh = queryResult.dataHigh;
+        var dHighest = queryResult.dataHighest;
     } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -169,19 +169,19 @@ dataMap = function (plotParams, plotFunction) {
     var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, .0001);  // generate map with site data
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarPurpleCurveText, dPurple);  // generate dark blue (purple) text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarLowestCurveText, dLowest);  // generate lowest text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarBlueCurveText, dBlue);  // generate blue text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarLowCurveText, dLow);  // generate low text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarBlackCurveText, dBlack);  // generate black text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarModerateCurveText, dModerate);  // generate moderate text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarOrangeCurveText, dOrange);  // generate orange text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarHighCurveText, dHigh);  // generate high text layer
     dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarRedCurveText, dRed);  // generate red text layer
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarHighestCurveText, dHighest);  // generate highest text layer
     dataset.push(cOptions);
 
     const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(false);
