@@ -19,8 +19,8 @@ Feature: No Data Found Exception: invalid_times
     Scenario: noDataFoundException_invalid_times
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "database" parameter to "Composite Reflectivity"
-        Then the "database" parameter value matches "Composite Reflectivity"
+        When I change the "variable" parameter to "Composite Reflectivity"
+        Then the "variable" parameter value matches "Composite Reflectivity"
         When I change the "data-source" parameter to "RAP_GSL"
         Then the "data-source" parameter value matches "RAP_GSL"
         When I set the dates to "01/19/1995 12:00 - 06/19/1996 12:00"

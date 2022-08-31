@@ -41,24 +41,24 @@ dataContour = function (plotParams, plotFunction) {
     // initialize variables specific to the curve
     var curve = curves[0];
     var label = curve['label'];
-    var database = curve['database'];
-    var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
-    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+    var variable = curve['variable'];
+    var databaseRef = matsCollections['variable'].findOne({name: 'variable'}).optionsMap[variable];
+    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
     var regionStr = curve['region'];
     var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
     var scaleStr = curve['scale'];
-    var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database]).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[database][key] === scaleStr);
+    var grid_scale = Object.keys(matsCollections['scale'].findOne({name: 'scale'}).valuesMap[variable]).find(key => matsCollections['scale'].findOne({name: 'scale'}).valuesMap[variable][key] === scaleStr);
     var queryTableClause = "from " + databaseRef + "." + model + '_' + grid_scale + '_' + region + " as m0";
     var thresholdClause = "";
     var forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
     var dateClause = "";
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
         thresholdClause = "and m0.trsh = " + threshold * 0.01;
     }
     var forecastTypeStr = curve['forecast-type'];
-    var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[database]).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[database][key] === forecastTypeStr);
+    var forecastType = Object.keys(matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[variable]).find(key => matsCollections['forecast-type'].findOne({name: 'forecast-type'}).valuesMap[variable][key] === forecastTypeStr);
     var forecastTypeClause;
     if (databaseRef === "precip") {
         forecastTypeClause = "and m0.num_fcsts = " + forecastType;

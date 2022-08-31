@@ -10,6 +10,8 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
+const variables = ["Gauge Precipitation"];
+
 // determined in doCurveParanms
 var minDate;
 var maxDate;
@@ -382,6 +384,22 @@ const doCurveParams = function () {
         );
     }
 
+    if (matsCollections["variable"].findOne({name: 'variable'}) == undefined) {
+        matsCollections["variable"].insert(
+            {
+                name: 'variable',
+                type: matsTypes.InputTypes.select,
+                options: variables,
+                controlButtonCovered: true,
+                default: variables[0],
+                unique: false,
+                controlButtonVisibility: 'none',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+    }
+
     if (matsCollections["data-source"].findOne({name: 'data-source'}) == undefined) {
         matsCollections["data-source"].insert(
             {
@@ -395,7 +413,7 @@ const doCurveParams = function () {
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 1
             });
@@ -429,9 +447,9 @@ const doCurveParams = function () {
                 unique: false,
                 default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary update

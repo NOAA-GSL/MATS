@@ -16,8 +16,8 @@ Feature: Add Remove Threshold Curve
     Scenario: addRemoveThresholdCurve
         When I set the plot type to "Threshold"
         Then the plot type should be "Threshold"
-        When I change the "database" parameter to "Ceiling"
-        Then the "database" parameter value matches "Ceiling"
+        When I change the "variable" parameter to "Ceiling"
+        Then the "variable" parameter value matches "Ceiling"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I set the curve-dates to "08/09/2022 0:00 - 08/12/2022 0:00"
