@@ -146,6 +146,7 @@ dataMap = function (plotParams, plotFunction) {
         var dModerate = queryResult.dataModerate;
         var dHigh = queryResult.dataHigh;
         var dHighest = queryResult.dataHighest;
+        var maxValue = queryResult.maxValue;
     } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -166,7 +167,7 @@ dataMap = function (plotParams, plotFunction) {
         }
     }
 
-    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, .0001);  // generate map with site data
+    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d, appParams, maxValue);  // generate map with site data
     dataset.push(cOptions);
 
     cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.ScalarLowestCurveText, dLowest);  // generate lowest text layer
