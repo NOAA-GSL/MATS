@@ -50,7 +50,7 @@ dataValidTime = function (plotParams, plotFunction) {
         var scaleClause = "and m0.scale = " + grid_scale;
         var queryTableClause = "from " + model + '_freq_' + region + " as m0";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {valuesMap: 1})['valuesMap'];
         var variable = variableOptionsMap[variableStr];
         var forecastLength = Number(curve['forecast-length']) * 60;
         var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
