@@ -53,7 +53,7 @@ dataSeries = function (plotParams, plotFunction) {
         var scaleClause = "and m0.scale = " + grid_scale;
         var queryTableClause = "from " + model + '_freq_' + region + " as m0";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {valuesMap: 1})['valuesMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
