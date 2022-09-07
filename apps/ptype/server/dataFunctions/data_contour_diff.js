@@ -52,7 +52,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + model + '_freq_' + region + " as m0";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {valuesMap: 1})['valuesMap'];
         var variable = variableOptionsMap[variableStr];
         var validTimeClause = "";
         var scaleClause = "";
