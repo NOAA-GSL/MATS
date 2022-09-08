@@ -8,8 +8,6 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsCouchbaseUtils} from 'meteor/randyp:mats-common';
 
-const dbs = ["Ceiling"];
-
 // determined in doCurveParanms
 var minDate;
 var maxDate;
@@ -27,7 +25,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: minDate,
                 stopDate: maxDate,
-                superiorNames: ['data-source', 'exp-data-source'],
+                superiorNames: ['data-source', 'validation-data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -60,7 +58,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: minDate,
                 stopDate: maxDate,
-                superiorNames: ['data-source', 'exp-data-source'],
+                superiorNames: ['data-source', 'validation-data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -147,11 +145,11 @@ const doCurveParams = async function () {
         );
     }
 
-    if (matsCollections["applications"].findOne({name: 'applications'}) == undefined) {
+    if (matsCollections["application"].findOne({name: 'application'}) == undefined) {
         optionsMap = applicationOptionMap;
-        matsCollections["applications"].insert(
+        matsCollections["application"].insert(
             {
-                name: 'applications',
+                name: 'application',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap),
@@ -173,7 +171,7 @@ const doCurveParams = async function () {
             {
                 name: 'data-source',
                 type: matsTypes.InputTypes.select,
-                superiorNames: ['applications'],
+                superiorNames: ['application'],
                 dependentNames: ['region', 'forecast-length', 'dates'],
                 optionsMap: optionsMap,
                 options: Object.keys(firstOptionMap),
@@ -200,14 +198,14 @@ const doCurveParams = async function () {
         }
     }
 
-    if (matsCollections["exp-data-source"].findOne({name: 'exp-data-source'}) == undefined) {
+    if (matsCollections["validation-data-source"].findOne({name: 'validation-data-source'}) == undefined) {
         optionsMap = modelOptionsMap;
         firstOptionMap = Object.keys(modelOptionsMap)[0];
-        matsCollections["exp-data-source"].insert(
+        matsCollections["validation-data-source"].insert(
             {
-                name: 'exp-data-source',
+                name: 'validation-data-source',
                 type: matsTypes.InputTypes.select,
-                superiorNames: ['applications'],
+                superiorNames: ['application'],
                 dependentNames: ['region', 'forecast-length', 'dates'],
                 optionsMap: optionsMap,
                 options: Object.keys(firstOptionMap),
@@ -221,10 +219,10 @@ const doCurveParams = async function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections["exp-data-source"].findOne({name: 'exp-data-source'});
+        var currentParam = matsCollections["validation-data-source"].findOne({name: 'validation-data-source'});
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
             // have to reload model data
-            matsCollections["exp-data-source"].update({name: 'exp-data-source'}, {
+            matsCollections["validation-data-source"].update({name: 'validation-data-source'}, {
                 $set: {
                     optionsMap: optionsMap,
                     options: Object.keys(firstOptionMap),
@@ -244,7 +242,7 @@ const doCurveParams = async function () {
                 optionsMap: optionsMap,
                 options: Object.keys(firstOptionMap),
                 default: Object.keys(firstOptionMap)[0],
-                superiorNames: ['data-source', 'exp-data-source'],
+                superiorNames: ['data-source', 'validation-data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 controlButtonVisibility: 'block',
@@ -376,7 +374,7 @@ const doCurveParams = async function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
                 options: forecastLengthOptionsMap,
-                superiorNames: ['data-source', 'exp-data-source'],
+                superiorNames: ['data-source', 'validation-data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
