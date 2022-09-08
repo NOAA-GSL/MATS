@@ -17,7 +17,7 @@ const doPlotParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
-    if (matsCollections.PlotParams.findOne({name:"dates"}) == undefined) {
+    if (matsCollections.PlotParams.findOne({name: "dates"}) == undefined) {
         matsCollections.PlotParams.insert(
             {
                 name: 'dates',
@@ -50,7 +50,7 @@ const doPlotParams = function () {
             });
         }
     }
-    if (matsCollections.PlotParams.findOne({name:"repeat"}) == undefined) {
+    if (matsCollections.PlotParams.findOne({name: "repeat"}) == undefined) {
         matsCollections.PlotParams.insert(
             {
                 name: 'repeat',
@@ -96,6 +96,7 @@ const doCurveParams = function () {
 
     // get a map of the apps included in this scorecard, and which URLs we're pulling their metadata from
     const appsToScore = matsCollections.AppsToScore.find({"apps_to_score": {"$exists": true}}).fetch()[0]["apps_to_score"];
+    const apps = Object.keys(appsToScore);
 
     let hideOtherFor = {}
     let applicationOptions = [];
@@ -119,9 +120,16 @@ const doCurveParams = function () {
     let dateOptionsMap = {};
     try {
         debugger;
-        for (let aidx = 0; aidx < appsToScore.length; aidx++){
-
-        }
+            HTTP.get("https://mats-docker-dev.gsd.esrl.noaa.gov/radar/getModels", {}, function (error, response) {
+                if (error) {
+                    console.log(error);
+                } else {
+                    Meteor.bindEnvironment(console.log(JSON.parse(response.content)));
+                }
+            });
+        // for (let aidx = 0; aidx < appsToScore.length; aidx++){
+        //
+        // }
     } catch (err) {
         console.log(err.message);
     }
@@ -268,7 +276,7 @@ const doCurveParams = function () {
                     valuesMap: regionValuesMap,
                     options: regionOptionsMap[applicationOptions[0]][Object.keys(regionOptionsMap[applicationOptions[0]])[0]],
                     default: regionOptionsMap[applicationOptions[0]][Object.keys(regionOptionsMap[applicationOptions[0]])[0]][0]
-                    }
+                }
             });
         }
     }
@@ -300,7 +308,7 @@ const doCurveParams = function () {
                     optionsMap: statisticOptionsMap,
                     options: statisticOptionsMap[Object.keys(statisticOptionsMap)[0]],
                     default: statisticOptionsMap[Object.keys(statisticOptionsMap)[0]][0]
-                    }
+                }
             });
         }
     }
@@ -334,7 +342,7 @@ const doCurveParams = function () {
                     valuesMap: variableValuesMap,
                     options: variableOptionsMap[Object.keys(variableOptionsMap)[0]],
                     default: variableOptionsMap[Object.keys(variableOptionsMap)[0]][0]
-                    }
+                }
             });
         }
     }
