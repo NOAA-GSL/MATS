@@ -121,8 +121,7 @@ const doCurveParams = function () {
         let currentApp;
         let currentURL;
         let queryURL;
-        let pFuture;
-        for (let aidx = 0; aidx < appsToScore.length; aidx++){
+        for (let aidx = 0; aidx < appsToScore.length; aidx++) {
             currentApp = Object.keys(appsToScore[aidx])[0];
             currentURL = appsToScore[aidx][currentApp];
 
@@ -137,6 +136,39 @@ const doCurveParams = function () {
             // get models in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getModels";
             modelOptionsMap = matsDataUtils.callMetadataAPI(queryURL, modelOptionsMap);
+
+            // get regions in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getRegions";
+            regionOptionsMap = matsDataUtils.callMetadataAPI(queryURL, regionOptionsMap);
+
+            // // get region values in this MATS app
+            // queryURL = currentURL + "/" + currentApp + "/getRegionsValuesMap";
+            // regionValuesMap = matsDataUtils.callMetadataAPI(queryURL, regionValuesMap);
+
+            // get statistics in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getStatistics";
+            statisticOptionsMap = matsDataUtils.callMetadataAPI(queryURL, statisticOptionsMap);
+
+            // get variables in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getVariables";
+            variableOptionsMap = matsDataUtils.callMetadataAPI(queryURL, variableOptionsMap);
+
+            // // get variable values in this MATS app
+            // queryURL = currentURL + "/" + currentApp + "/getVariablesValuesMap";
+            // variableValuesMap = matsDataUtils.callMetadataAPI(queryURL, variableValuesMap);
+
+            // get thresholds in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getThresholds";
+            thresholdOptionsMap = matsDataUtils.callMetadataAPI(queryURL, thresholdOptionsMap);
+
+            // get scales in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getScales";
+            scaleOptionsMap = matsDataUtils.callMetadataAPI(queryURL, scaleOptionsMap);
+
+            // get truths in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getTruths";
+            truthOptionsMap = matsDataUtils.callMetadataAPI(queryURL, truthOptionsMap);
+
 
         }
         debugger;
@@ -263,7 +295,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionOptionsMap,
                 options: regionOptionsMap[applicationOptions[0]][Object.keys(regionOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: regionValuesMap,
+                // valuesMap: regionValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -277,13 +309,12 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["region"].findOne({name: 'region'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, regionValuesMap))) {
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionOptionsMap)) {
             // have to reload region data
             matsCollections["region"].update({name: 'region'}, {
                 $set: {
                     optionsMap: regionOptionsMap,
-                    valuesMap: regionValuesMap,
+                    // valuesMap: regionValuesMap,
                     options: regionOptionsMap[applicationOptions[0]][Object.keys(regionOptionsMap[applicationOptions[0]])[0]],
                     default: regionOptionsMap[applicationOptions[0]][Object.keys(regionOptionsMap[applicationOptions[0]])[0]][0]
                 }
@@ -330,7 +361,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: variableOptionsMap,
                 options: variableOptionsMap[Object.keys(variableOptionsMap)[0]],
-                valuesMap: variableValuesMap,
+                // valuesMap: variableValuesMap,
                 superiorNames: ['application'],
                 controlButtonCovered: true,
                 unique: false,
@@ -349,7 +380,7 @@ const doCurveParams = function () {
             matsCollections["variable"].update({name: 'variable'}, {
                 $set: {
                     optionsMap: variableOptionsMap,
-                    valuesMap: variableValuesMap,
+                    // valuesMap: variableValuesMap,
                     options: variableOptionsMap[Object.keys(variableOptionsMap)[0]],
                     default: variableOptionsMap[Object.keys(variableOptionsMap)[0]][0]
                 }
@@ -364,7 +395,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: thresholdOptionsMap,
                 options: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: thresholdValuesMap,
+                // valuesMap: thresholdValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -378,13 +409,12 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["threshold"].findOne({name: 'threshold'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, thresholdValuesMap))) {
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdOptionsMap)) {
             // have to reload threshold data
             matsCollections["threshold"].update({name: 'threshold'}, {
                 $set: {
                     optionsMap: thresholdOptionsMap,
-                    valuesMap: thresholdValuesMap,
+                    // valuesMap: thresholdValuesMap,
                     options: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]],
                     default: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]][0]
                 }
@@ -399,7 +429,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: scaleOptionsMap,
                 options: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: scaleValuesMap,
+                // valuesMap: scaleValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -413,13 +443,12 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["scale"].findOne({name: 'scale'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, scaleValuesMap))) {
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleOptionsMap)) {
             // have to reload scale data
             matsCollections["scale"].update({name: 'scale'}, {
                 $set: {
                     optionsMap: scaleOptionsMap,
-                    valuesMap: scaleValuesMap,
+                    // valuesMap: scaleValuesMap,
                     options: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]],
                     default: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]][0]
                 }
@@ -434,7 +463,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: truthOptionsMap,
                 options: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: truthValuesMap,
+                // valuesMap: truthValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -448,13 +477,12 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["truth"].findOne({name: 'truth'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, truthValuesMap))) {
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthOptionsMap)) {
             // have to reload truth data
             matsCollections["truth"].update({name: 'truth'}, {
                 $set: {
                     optionsMap: truthOptionsMap,
-                    valuesMap: truthValuesMap,
+                    // valuesMap: truthValuesMap,
                     options: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]],
                     default: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]][0]
                 }
@@ -502,7 +530,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastTypeOptionsMap,
                 options: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: forecastTypeValuesMap,
+                // valuesMap: forecastTypeValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -516,13 +544,12 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["forecast-type"].findOne({name: 'forecast-type'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastTypeOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, forecastTypeValuesMap))) {
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastTypeOptionsMap)) {
             // have to reload forecast type data
             matsCollections["forecast-type"].update({name: 'forecast-type'}, {
                 $set: {
                     optionsMap: forecastTypeOptionsMap,
-                    valuesMap: forecastTypeValuesMap,
+                    // valuesMap: forecastTypeValuesMap,
                     options: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]],
                     default: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]][0]
                 }
