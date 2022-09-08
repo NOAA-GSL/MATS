@@ -94,6 +94,8 @@ const doCurveParams = function () {
         }
     }
 
+    const Future = require('fibers/future');
+
     // get a map of the apps included in this scorecard, and which URLs we're pulling their metadata from
     const appsToScore = matsCollections.AppsToScore.find({"apps_to_score": {"$exists": true}}).fetch()[0]["apps_to_score"];
     const apps = Object.keys(appsToScore);
@@ -122,7 +124,6 @@ const doCurveParams = function () {
         let currentApp;
         let currentURL;
         let queryURL;
-        debugger;
         for (let aidx = 0; aidx < apps.length; aidx++){
             currentApp = apps[aidx];
             currentURL = appsToScore[currentApp];
@@ -133,14 +134,18 @@ const doCurveParams = function () {
 
             // get database-defined apps in this MATS apps
             queryURL = currentURL + "/" + currentApp + "/getApps";
+            var pFuture = new Future();
             HTTP.get(queryURL, {}, function (error, response) {
                 if (error) {
                     console.log(error);
                 } else {
-                    Meteor.bindEnvironment(console.log(JSON.parse(response.content)));
+                    applicationOptions = [...applicationOptions, ...JSON.parse(response.content)];
                 }
+                pFuture['return']();
             });
+            pFuture.wait();
         }
+        debugger;
     } catch (err) {
         console.log(err.message);
     }
