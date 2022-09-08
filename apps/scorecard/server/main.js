@@ -124,6 +124,7 @@ const doCurveParams = function () {
         let currentApp;
         let currentURL;
         let queryURL;
+        let pFuture;
         for (let aidx = 0; aidx < apps.length; aidx++){
             currentApp = apps[aidx];
             currentURL = appsToScore[currentApp];
@@ -132,9 +133,9 @@ const doCurveParams = function () {
             if (currentURL[currentURL.length - 1] === "/") currentURL.slice(0, -1);
             if (!currentURL.includes("https://")) currentURL = "https://" + currentURL;
 
-            // get database-defined apps in this MATS apps
+            // get database-defined apps in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getApps";
-            var pFuture = new Future();
+            pFuture = new Future();
             HTTP.get(queryURL, {}, function (error, response) {
                 if (error) {
                     console.log(error);
@@ -144,6 +145,22 @@ const doCurveParams = function () {
                 pFuture['return']();
             });
             pFuture.wait();
+
+            // get models in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getModels";
+            pFuture = new Future();
+            HTTP.get(queryURL, {}, function (error, response) {
+                if (error) {
+                    console.log(error);
+                } else {
+                    modelOptionsMap = {...modelOptionsMap, ...JSON.parse(response.content)};
+                }
+                pFuture['return']();
+            });
+            pFuture.wait();
+
+
+
         }
         debugger;
     } catch (err) {
