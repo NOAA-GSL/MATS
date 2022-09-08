@@ -98,7 +98,6 @@ const doCurveParams = function () {
 
     // get a map of the apps included in this scorecard, and which URLs we're pulling their metadata from
     const appsToScore = matsCollections.AppsToScore.find({"apps_to_score": {"$exists": true}}).fetch()[0]["apps_to_score"];
-    const apps = Object.keys(appsToScore);
 
     let hideOtherFor = {}
     let applicationOptions = [];
@@ -125,9 +124,9 @@ const doCurveParams = function () {
         let currentURL;
         let queryURL;
         let pFuture;
-        for (let aidx = 0; aidx < apps.length; aidx++){
-            currentApp = apps[aidx];
-            currentURL = appsToScore[currentApp];
+        for (let aidx = 0; aidx < appsToScore.length; aidx++){
+            currentApp = Object.keys(appsToScore[aidx])[0];
+            currentURL = appsToScore[aidx][currentApp];
 
             // clean up URL if users left a trailing slash or didn't include https://
             if (currentURL[currentURL.length - 1] === "/") currentURL.slice(0, -1);
