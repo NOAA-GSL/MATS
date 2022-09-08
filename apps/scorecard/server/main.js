@@ -119,17 +119,28 @@ const doCurveParams = function () {
     let levelOptionsMap = {};
     let dateOptionsMap = {};
     try {
+        let currentApp;
+        let currentURL;
+        let queryURL;
         debugger;
-            HTTP.get("https://mats-docker-dev.gsd.esrl.noaa.gov/radar/getModels", {}, function (error, response) {
+        for (let aidx = 0; aidx < apps.length; aidx++){
+            currentApp = apps[aidx];
+            currentURL = appsToScore[currentApp];
+
+            // clean up URL if users left a trailing slash or didn't include https://
+            if (currentURL[currentURL.length - 1] === "/") currentURL.slice(0, -1);
+            if (!currentURL.includes("https://")) currentURL = "https://" + currentURL;
+
+            // get database-defined apps in this MATS apps
+            queryURL = currentURL + "/" + currentApp + "/getApps";
+            HTTP.get(queryURL, {}, function (error, response) {
                 if (error) {
                     console.log(error);
                 } else {
                     Meteor.bindEnvironment(console.log(JSON.parse(response.content)));
                 }
             });
-        // for (let aidx = 0; aidx < appsToScore.length; aidx++){
-        //
-        // }
+        }
     } catch (err) {
         console.log(err.message);
     }
