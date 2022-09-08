@@ -94,8 +94,6 @@ const doCurveParams = function () {
         }
     }
 
-    const Future = require('fibers/future');
-
     // get a map of the apps included in this scorecard, and which URLs we're pulling their metadata from
     const appsToScore = matsCollections.AppsToScore.find({"apps_to_score": {"$exists": true}}).fetch()[0]["apps_to_score"];
 
@@ -134,31 +132,11 @@ const doCurveParams = function () {
 
             // get database-defined apps in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getApps";
-            pFuture = new Future();
-            HTTP.get(queryURL, {}, function (error, response) {
-                if (error) {
-                    console.log(error);
-                } else {
-                    applicationOptions = [...applicationOptions, ...JSON.parse(response.content)];
-                }
-                pFuture['return']();
-            });
-            pFuture.wait();
+            applicationOptions = matsDataUtils.callMetadataAPI(queryURL, applicationOptions);
 
             // get models in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getModels";
-            pFuture = new Future();
-            HTTP.get(queryURL, {}, function (error, response) {
-                if (error) {
-                    console.log(error);
-                } else {
-                    modelOptionsMap = {...modelOptionsMap, ...JSON.parse(response.content)};
-                }
-                pFuture['return']();
-            });
-            pFuture.wait();
-
-
+            modelOptionsMap = matsDataUtils.callMetadataAPI(queryURL, modelOptionsMap);
 
         }
         debugger;
