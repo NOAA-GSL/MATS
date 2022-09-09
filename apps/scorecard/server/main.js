@@ -132,50 +132,60 @@ const doCurveParams = function () {
 
             // get database-defined apps in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getApps";
-            [applicationOptions, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('application', queryURL, applicationOptions, expectedApps, hideOtherFor);
+            [applicationOptions, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('application', queryURL, applicationOptions, expectedApps, [], hideOtherFor);
 
             // get models in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getModels";
-            [modelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('data-source', queryURL, modelOptionsMap, expectedApps, hideOtherFor);
+            [modelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('data-source', queryURL, modelOptionsMap, expectedApps, {}, hideOtherFor);
 
             // get regions in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getRegions";
-            [regionOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('region', queryURL, regionOptionsMap, expectedApps, hideOtherFor);
-
-            // // get region values in this MATS app
-            // queryURL = currentURL + "/" + currentApp + "/getRegionsValuesMap";
-            // [regionValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('region-values', queryURL, regionValuesMap, expectedApps, hideOtherFor);
+            [regionOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('region', queryURL, regionOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
 
             // get statistics in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getStatistics";
-            [statisticOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('statistic', queryURL, statisticOptionsMap, expectedApps, hideOtherFor);
+            [statisticOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('statistic', queryURL, statisticOptionsMap, expectedApps, ["NULL"], hideOtherFor);
 
             // get variables in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getVariables";
-            [variableOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('variable', queryURL, variableOptionsMap, expectedApps, hideOtherFor);
-
-            // // get variable values in this MATS app
-            // queryURL = currentURL + "/" + currentApp + "/getVariablesValuesMap";
-            // [variableValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('variable-values', queryURL, variableValuesMap, expectedApps, hideOtherFor);
+            [variableOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('variable', queryURL, variableOptionsMap, expectedApps, ["NULL"], hideOtherFor);
 
             // get thresholds in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getThresholds";
-            [thresholdOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('threshold', queryURL, thresholdOptionsMap, expectedApps, hideOtherFor);
+            [thresholdOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('threshold', queryURL, thresholdOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
 
             // get scales in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getScales";
-            [scaleOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('scale', queryURL, scaleOptionsMap, expectedApps, hideOtherFor);
+            [scaleOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('scale', queryURL, scaleOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
 
             // get truths in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getTruths";
-            [truthOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('truth', queryURL, truthOptionsMap, expectedApps, hideOtherFor);
+            [truthOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('truth', queryURL, truthOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
 
+            // get forecast lengths in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getFcstLengths";
+            [forecastLengthOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('forecast-length', queryURL, forecastLengthOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
 
+            // get forecast types in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getFcstTypes";
+            [forecastTypeOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('forecast-type', queryURL, forecastTypeOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
+
+            // get valid times in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getValidTimes";
+            [validTimeOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('valid-time', queryURL, validTimeOptionsMap, expectedApps, ["NULL"], hideOtherFor);
+
+            // get levels in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getLevels";
+            [levelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('level', queryURL, levelOptionsMap, expectedApps, ["NULL"], hideOtherFor);
+
+            // get dates in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getDates";
+            [dateOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('dates', queryURL, dateOptionsMap, expectedApps, {}, hideOtherFor);
         }
-        debugger;
     } catch (err) {
         console.log(err.message);
     }
+    debugger;
 
     if (matsCollections["label"].findOne({name: 'label'}) == undefined) {
         matsCollections["label"].insert(
@@ -201,7 +211,6 @@ const doCurveParams = function () {
             {
                 name: 'application',
                 type: matsTypes.InputTypes.select,
-                optionsMap: {},
                 options: applicationOptions,
                 hideOtherFor: hideOtherFor,
                 dates: dateOptionsMap,
@@ -624,6 +633,19 @@ const doCurveParams = function () {
             });
         }
     }
+
+    // determine date defaults for dates
+    const defaultApp = matsCollections["application"].findOne({name: "application"}, {default: 1}).default;
+    dateOptionsMap = matsCollections["application"].findOne({name: "application"}, {dates: 1}).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({name: "data-source"}, {default: 1}).default;
+    minDate = dateOptionsMap[defaultApp][defaultDataSource].minDate;
+    maxDate = dateOptionsMap[defaultApp][defaultDataSource].maxDate;
+
+    // need to turn the raw max and min from the metadata into the last valid month of data
+    const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
+    const minusMonthMinDate = newDateRange.minDate;
+    maxDate = newDateRange.maxDate;
+    dstr = moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm") + ' - ' + moment.utc(maxDate).format("MM/DD/YYYY HH:mm");
 };
 
 Meteor.startup(function () {
