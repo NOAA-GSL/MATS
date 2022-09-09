@@ -438,7 +438,6 @@ const doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
-                optionsMap: variableModelOptionsMap,
                 options: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]],
                 superiorNames: ['data-source'],
                 selected: '',
@@ -450,19 +449,6 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections['variable'].findOne({name: 'variable'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, variableModelOptionsMap)) {
-            // have to reload variable data
-            matsCollections['variable'].update({name: 'variable'}, {
-                $set: {
-                    optionsMap: variableModelOptionsMap,
-                    options: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]],
-                    default: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]][0]
-                }
-            });
-        }
     }
 
     if (matsCollections["forecast-length"].findOne({name: 'forecast-length'}) == undefined) {

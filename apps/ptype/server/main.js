@@ -467,8 +467,8 @@ const doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
+                optionsMap: masterVariableValuesMap,
                 options: Object.keys(masterVariableValuesMap),
-                valuesMap: masterVariableValuesMap,
                 controlButtonCovered: true,
                 unique: false,
                 default: Object.keys(masterVariableValuesMap)[0],
