@@ -158,13 +158,25 @@ const doCurveParams = function () {
             queryURL = currentURL + "/" + currentApp + "/getThresholds";
             [thresholdOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('threshold', queryURL, thresholdOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
 
+            // get threshold values in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getThresholdsValuesMap";
+            [thresholdValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('threshold-values', queryURL, thresholdValuesMap, expectedApps, ["NULL"], hideOtherFor);
+
             // get scales in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getScales";
             [scaleOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('scale', queryURL, scaleOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
 
+            // get scale values in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getScalesValuesMap";
+            [scaleValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('scale-values', queryURL, scaleValuesMap, expectedApps, ["NULL"], hideOtherFor);
+
             // get truths in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getTruths";
             [truthOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('truth', queryURL, truthOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
+
+            // get truth values in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getTruthsValuesMap";
+            [truthValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('truth-values', queryURL, truthValuesMap, expectedApps, ["NULL"], hideOtherFor);
 
             // get forecast lengths in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getFcstLengths";
@@ -173,6 +185,10 @@ const doCurveParams = function () {
             // get forecast types in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getFcstTypes";
             [forecastTypeOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('forecast-type', queryURL, forecastTypeOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
+
+            // get forecast type values in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getFcstTypesValuesMap";
+            [forecastTypeValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('forecast-type-values', queryURL, forecastTypeValuesMap, expectedApps, ["NULL"], hideOtherFor);
 
             // get valid times in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getValidTimes";
@@ -410,7 +426,7 @@ debugger;
                 type: matsTypes.InputTypes.select,
                 optionsMap: thresholdOptionsMap,
                 options: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]],
-                // valuesMap: thresholdValuesMap,
+                valuesMap: thresholdValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -444,7 +460,7 @@ debugger;
                 type: matsTypes.InputTypes.select,
                 optionsMap: scaleOptionsMap,
                 options: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]],
-                // valuesMap: scaleValuesMap,
+                valuesMap: scaleValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -478,7 +494,7 @@ debugger;
                 type: matsTypes.InputTypes.select,
                 optionsMap: truthOptionsMap,
                 options: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]],
-                // valuesMap: truthValuesMap,
+                valuesMap: truthValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -545,7 +561,7 @@ debugger;
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastTypeOptionsMap,
                 options: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]],
-                // valuesMap: forecastTypeValuesMap,
+                valuesMap: forecastTypeValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
