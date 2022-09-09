@@ -14,7 +14,7 @@ import {matsParamUtils} from 'meteor/randyp:mats-common';
 // This is where we store the databases referenced by those apps.
 const dbNames = {
     "RAOBs (Traditional)": {"modelDB": "ruc_ua", "sumsDB": "ruc_ua_sums2"},
-    "RAOBs (PREPBUFR)": {"modelDB": "ruc_ua_pb", "sumsDB": "ruc_ua_pb_sums2"},
+    "RAOBs (GDAS)": {"modelDB": "ruc_ua_pb", "sumsDB": "ruc_ua_pb_sums2"},
     "AMDAR": {"modelDB": "acars_RR2", "sumsDB": "acars_RR2"}
 };
 const dbs = Object.keys(dbNames);
@@ -452,7 +452,7 @@ const doCurveParams = function () {
                 controlButtonCovered: true,
                 default: dbs[0],
                 hideOtherFor: {
-                    'phase': ["RAOBs (Traditional)", "RAOBs (PREPBUFR)"]
+                    'phase': ["RAOBs (Traditional)", "RAOBs (GDAS)"]
                 },
                 unique: false,
                 controlButtonVisibility: 'block',
