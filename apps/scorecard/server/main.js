@@ -99,10 +99,12 @@ const doCurveParams = function () {
 
     let hideOtherFor = {}
     let applicationOptions = [];
+    let applicationOptionsMap = {};
     let modelOptionsMap = {};
     let regionOptionsMap = {};
     let regionValuesMap = {};
     let statisticOptionsMap = {};
+    let statisticValuesMap = {};
     let variableOptionsMap = {};
     let variableValuesMap = {};
     let thresholdOptionsMap = {};
@@ -134,6 +136,10 @@ const doCurveParams = function () {
             queryURL = currentURL + "/" + currentApp + "/getApps";
             [applicationOptions, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('application', queryURL, applicationOptions, expectedApps, [], hideOtherFor);
 
+            // get databases that correspond with apps
+            queryURL = currentURL + "/" + currentApp + "/getAppSumsDBs";
+            [applicationOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('application-values', queryURL, applicationOptionsMap, expectedApps, {}, hideOtherFor);
+
             // get models in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getModels";
             [modelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('data-source', queryURL, modelOptionsMap, expectedApps, {}, hideOtherFor);
@@ -150,9 +156,17 @@ const doCurveParams = function () {
             queryURL = currentURL + "/" + currentApp + "/getStatistics";
             [statisticOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('statistic', queryURL, statisticOptionsMap, expectedApps, ["NULL"], hideOtherFor);
 
+            // get statistic values in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getStatisticsValuesMap";
+            [statisticValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('statistic-values', queryURL, statisticValuesMap, expectedApps, ["NULL"], hideOtherFor);
+
             // get variables in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getVariables";
             [variableOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('variable', queryURL, variableOptionsMap, expectedApps, ["NULL"], hideOtherFor);
+
+            // get variable values in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getVariablesValuesMap";
+            [variableValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('variable-values', queryURL, variableValuesMap, expectedApps, ["NULL"], hideOtherFor);
 
             // get thresholds in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getThresholds";
@@ -231,6 +245,7 @@ debugger;
             {
                 name: 'application',
                 type: matsTypes.InputTypes.select,
+                optionsMap: applicationOptionsMap,
                 options: applicationOptions,
                 hideOtherFor: hideOtherFor,
                 dates: dateOptionsMap,
@@ -360,6 +375,7 @@ debugger;
                 type: matsTypes.InputTypes.select,
                 optionsMap: statisticOptionsMap,
                 options: statisticOptionsMap[Object.keys(statisticOptionsMap)[0]],
+                valuesMap: statisticValuesMap,
                 superiorNames: ['application'],
                 controlButtonCovered: true,
                 unique: false,
@@ -392,7 +408,7 @@ debugger;
                 type: matsTypes.InputTypes.select,
                 optionsMap: variableOptionsMap,
                 options: variableOptionsMap[Object.keys(variableOptionsMap)[0]],
-                // valuesMap: variableValuesMap,
+                valuesMap: variableValuesMap,
                 superiorNames: ['application'],
                 controlButtonCovered: true,
                 unique: false,
