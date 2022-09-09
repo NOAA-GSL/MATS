@@ -62,9 +62,9 @@ const doPlotParams = function () {
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1,
+                displayGroup: 2,
                 help: "dateHelp.html"
             });
     } else {
@@ -249,9 +249,9 @@ const doCurveParams = function () {
                 default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary update
@@ -280,9 +280,9 @@ const doCurveParams = function () {
                 default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary update
@@ -315,7 +315,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
     } else {
         // it is defined but check for necessary update
@@ -348,7 +348,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
     } else {
         // it is defined but check for necessary update
@@ -381,7 +381,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
     } else {
         // it is defined but check for necessary update
@@ -415,7 +415,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     } else {
         // it is defined but check for necessary update
@@ -449,7 +449,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     } else {
         // it is defined but check for necessary update
@@ -483,7 +483,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     } else {
         // it is defined but check for necessary update
@@ -517,7 +517,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     } else {
         // it is defined but check for necessary update
@@ -550,7 +550,7 @@ const doCurveParams = function () {
                 controlButtonText: "forecast type",
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     } else {
         // it is defined but check for necessary update
@@ -584,7 +584,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     } else {
         // it is defined but check for necessary update
@@ -615,9 +615,9 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 controlButtonText: "pressure level (hPa)",
                 multiple: true,
-                displayOrder: 3,
+                displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     } else {
         // it is defined but check for necessary update
