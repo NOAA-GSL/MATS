@@ -219,7 +219,7 @@ const doCurveParams = function () {
     } catch (err) {
         console.log(err.message);
     }
-debugger;
+
 
     if (matsCollections["label"].findOne({name: 'label'}) == undefined) {
         matsCollections["label"].insert(
