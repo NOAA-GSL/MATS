@@ -142,6 +142,10 @@ const doCurveParams = function () {
             queryURL = currentURL + "/" + currentApp + "/getRegions";
             [regionOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('region', queryURL, regionOptionsMap, expectedApps, {"NULL": ["NULL"]}, hideOtherFor);
 
+            // get region values in this MATS app
+            queryURL = currentURL + "/" + currentApp + "/getRegionsValuesMap";
+            [regionValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('region-values', queryURL, regionValuesMap, expectedApps, ["NULL"], hideOtherFor);
+
             // get statistics in this MATS app
             queryURL = currentURL + "/" + currentApp + "/getStatistics";
             [statisticOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI('statistic', queryURL, statisticOptionsMap, expectedApps, ["NULL"], hideOtherFor);
@@ -185,7 +189,7 @@ const doCurveParams = function () {
     } catch (err) {
         console.log(err.message);
     }
-    debugger;
+debugger;
 
     if (matsCollections["label"].findOne({name: 'label'}) == undefined) {
         matsCollections["label"].insert(
@@ -306,7 +310,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionOptionsMap,
                 options: regionOptionsMap[applicationOptions[0]][Object.keys(regionOptionsMap[applicationOptions[0]])[0]],
-                // valuesMap: regionValuesMap,
+                valuesMap: regionValuesMap,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -325,7 +329,7 @@ const doCurveParams = function () {
             matsCollections["region"].update({name: 'region'}, {
                 $set: {
                     optionsMap: regionOptionsMap,
-                    // valuesMap: regionValuesMap,
+                    valuesMap: regionValuesMap,
                     options: regionOptionsMap[applicationOptions[0]][Object.keys(regionOptionsMap[applicationOptions[0]])[0]],
                     default: regionOptionsMap[applicationOptions[0]][Object.keys(regionOptionsMap[applicationOptions[0]])[0]][0]
                 }
