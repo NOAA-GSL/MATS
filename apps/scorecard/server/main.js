@@ -547,7 +547,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]][0],
                 controlButtonVisibility: 'block',
-                controlButtonText: "forecast type",
+                multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 5
