@@ -53,7 +53,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var scaleClause = "and m0.scale = " + grid_scale;
         var queryTableClause = "from " + model + '_freq_' + region + " as m0";
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {valuesMap: 1})['valuesMap'];
+        var variableOptionsMap = matsCollections['variable'].findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         if (curve['utc-cycle-start'].length !== 1) {
             throw new Error("INFO:  Please select exactly one UTC Cycle Init Hour for this plot type.");
