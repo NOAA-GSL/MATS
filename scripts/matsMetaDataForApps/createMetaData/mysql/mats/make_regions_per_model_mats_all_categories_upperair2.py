@@ -260,7 +260,7 @@ def regions_per_model_mats_all_categories(mode):
     # sys.exit(-1)
 
     # clean metadata build table
-    usedb = "use " + db1
+    usedb = "use " + db2
     cursor.execute(usedb)
 
     clean_rpmmac = "delete from regions_per_model_mats_all_categories_build"
