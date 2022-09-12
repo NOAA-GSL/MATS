@@ -114,7 +114,7 @@ dataHistogram = function (plotParams, plotFunction) {
                     model = model + "_" + model_components[midx];
                 }
             }
-            var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'RAOB_reXXtro' : 'RAOB';
+            var obsTable = 'RAOB';
             queryTableClause = "from " + databaseRef.modelDB + "." + obsTable + " as o, " + databaseRef.modelDB + "." + model + " as m0 ";
             var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
