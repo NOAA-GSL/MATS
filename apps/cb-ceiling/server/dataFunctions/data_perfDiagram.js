@@ -44,7 +44,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var label = curve['label'];
         var binParam = curve['bin-parameter'];
         var binClause = matsCollections['bin-parameter'].findOne({name: 'bin-parameter'}).optionsMap[binParam];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var variable = curve['variable'];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
         var queryTableClause = "FROM mdata m0";
         var validTimeClause = "";
@@ -58,18 +59,18 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             if (thresholdStr === undefined) {
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
-            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
             allThresholds = [threshold];
         } else {
             // catalogue the thresholds now, we'll need to do a separate query for each
-            allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).sort(function (a, b) {
+            allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
                 return Number(a) - Number(b)
             });
         }
         if (binParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+                validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
             }
         }
         if (binParam !== 'Fcst lead time') {
@@ -102,7 +103,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
         var whereClause = "WHERE " +
             "m0.type='DD' " +
-            "AND m0.docType='CTC'" +
+            "AND m0.docType='CTC' " +
             "AND m0.subset='METAR' " +
             "AND m0.version='V01' ";
         // axisKey is used to determine which axis a curve should use.
@@ -118,20 +119,20 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             for (var thresholdIndex = 0; thresholdIndex < allThresholds.length; thresholdIndex++) {
                 threshold = allThresholds[thresholdIndex];
                 // prepare the query from the above parameters
-                var statement = "SELECT {{binClause}} as binVal, " +
+                var statement = "SELECT {{binClause}} AS binVal, " +
                     "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
                     "MIN(m0.fcstValidEpoch) min_secs, " +
                     "MAX(m0.fcstValidEpoch) max_secs, " +
                     "{{statisticClause}} " +
                     "{{queryTableClause}} " +
-                    "{{whereClause}}" +
-                    "{{modelClause}}" +
-                    "{{regionClause}}" +
+                    "{{whereClause}} " +
+                    "{{modelClause}} " +
+                    "{{regionClause}} " +
                     "{{dateClause}} " +
                     "{{validTimeClause}} " +
                     "{{forecastLengthClause}} " +
-                    "group by {{binClause}} " +
-                    "order by binVal" +
+                    "GROUP BY {{binClause}} " +
+                    "ORDER BY binVal" +
                     ";";
 
                 statement = statement.split('{{binClause}}').join(binClause);

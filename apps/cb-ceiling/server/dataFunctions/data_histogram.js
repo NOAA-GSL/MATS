@@ -45,15 +45,16 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var variable = curve['variable'];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
         var queryTableClause = "FROM mdata m0";
         var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
         }
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
@@ -77,7 +78,7 @@ dataHistogram = function (plotParams, plotFunction) {
         var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
         var whereClause = "WHERE " +
             "m0.type='DD' " +
-            "AND m0.docType='CTC'" +
+            "AND m0.docType='CTC' " +
             "AND m0.subset='METAR' " +
             "AND m0.version='V01' ";
         // axisKey is used to determine which axis a curve should use.
@@ -97,20 +98,20 @@ dataHistogram = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.fcstValidEpoch avtime, " +
+            var statement = "SELECT m0.fcstValidEpoch AS avtime, " +
                 "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
                 "MIN(m0.fcstValidEpoch) min_secs, " +
                 "MAX(m0.fcstValidEpoch) max_secs, " +
                 "{{statisticClause}} " +
                 "{{queryTableClause}} " +
-                "{{whereClause}}" +
-                "{{modelClause}}" +
-                "{{regionClause}}" +
+                "{{whereClause}} " +
+                "{{modelClause}} " +
+                "{{regionClause}} " +
                 "{{dateClause}} " +
                 "{{validTimeClause}} " +
                 "{{forecastLengthClause}} " +
-                "group by m0.fcstValidEpoch " +
-                "order by avtime" +
+                "GROUP BY m0.fcstValidEpoch " +
+                "ORDER BY avtime" +
                 ";";
 
             statement = statement.replace('{{statisticClause}}', statisticClause);
@@ -173,7 +174,7 @@ dataHistogram = function (plotParams, plotFunction) {
         "statType": statType,
         "axisMap": axisMap,
         "yAxisFormat": yAxisFormat,
-        "varUnits" : varUnits
+        "varUnits": varUnits
     };
     const bookkeepingParams = {
         "alreadyMatched": alreadyMatched,

@@ -16,8 +16,8 @@ Feature: Add Remove ContourDiff
     Scenario: addRemoveContourDiff
         When I set the plot type to "ContourDiff"
         Then the plot type should be "ContourDiff"
-        When I change the "database" parameter to "Composite Reflectivity"
-        Then the "database" parameter value matches "Composite Reflectivity"
+        When I change the "variable" parameter to "Composite Reflectivity"
+        Then the "variable" parameter value matches "Composite Reflectivity"
         When I change the "data-source" parameter to "RAP_GSL"
         Then the "data-source" parameter value matches "RAP_GSL"
         When I set the dates to "09/21/2019 0:00 - 09/24/2019 0:00"

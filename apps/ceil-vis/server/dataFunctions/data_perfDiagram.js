@@ -41,9 +41,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var label = curve['label'];
         var binParam = curve['bin-parameter'];
         var binClause = matsCollections['bin-parameter'].findOne({name: 'bin-parameter'}).optionsMap[binParam];
-        var database = curve['database'];
-        var databaseRef = matsCollections['database'].findOne({name: 'database'}).optionsMap[database];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        var variable = curve['variable'];
+        var databaseRef = matsCollections['variable'].findOne({name: 'variable'}).optionsMap[variable];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
         var queryTableClause = "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
@@ -60,7 +60,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             if (thresholdStr === undefined) {
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
-            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[database][key] === thresholdStr);
+            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
             thresholdClause = "and m0.trsh = " + threshold;
         }
         if (binParam !== 'Valid UTC hour') {

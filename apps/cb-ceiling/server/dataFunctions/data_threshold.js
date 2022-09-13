@@ -2,15 +2,13 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {
-    matsCollections,
-    matsTypes,
-    matsDataUtils,
-    matsDataQueryUtils,
-    matsDataDiffUtils,
-    matsDataCurveOpsUtils,
-    matsDataProcessUtils
-} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
 
 dataThreshold = function (plotParams, plotFunction) {
@@ -39,23 +37,23 @@ dataThreshold = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
     var idealValues = [];
 
-    // catalogue the thresholds now, we'll need to do a separate query for each
-    const allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap).sort(function (a, b) {
-        return Number(a) - Number(b)
-    });
-
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var variable = curve['variable'];
+        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
         var queryTableClause = "FROM mdata m0";
+        // catalogue the thresholds now, we'll need to do a separate query for each
+        var allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
+            return Number(a) - Number(b)
+        });
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN(" + validTimes + ")";
+            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
         }
         var forecastLength = curve['forecast-length'];
         var forecastLengthClause = "and m0.fcstLen = " + forecastLength;
@@ -79,7 +77,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
         var whereClause = "WHERE " +
             "m0.type='DD' " +
-            "AND m0.docType='CTC'" +
+            "AND m0.docType='CTC' " +
             "AND m0.subset='METAR' " +
             "AND m0.version='V01' ";
         // axisKey is used to determine which axis a curve should use.
@@ -100,20 +98,20 @@ dataThreshold = function (plotParams, plotFunction) {
             for (var thresholdIndex = 0; thresholdIndex < allThresholds.length; thresholdIndex++) {
                 var threshold = allThresholds[thresholdIndex];
                 // prepare the query from the above parameters
-                var statement = "SELECT {{threshold}} as thresh, " +      // produces thresholds in kft
+                var statement = "SELECT {{threshold}} AS thresh, " +      // produces thresholds in kft
                     "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
                     "MIN(m0.fcstValidEpoch) min_secs, " +
                     "MAX(m0.fcstValidEpoch) max_secs, " +
                     "{{statisticClause}} " +
                     "{{queryTableClause}} " +
-                    "{{whereClause}}" +
-                    "{{modelClause}}" +
-                    "{{regionClause}}" +
+                    "{{whereClause}} " +
+                    "{{modelClause}} " +
+                    "{{regionClause}} " +
                     "{{dateClause}} " +
                     "{{validTimeClause}} " +
                     "{{forecastLengthClause}} " +
-                    "group by {{threshold}} " +
-                    "order by thresh" +
+                    "GROUP BY {{threshold}} " +
+                    "ORDER BY thresh" +
                     ";";
 
                 statement = statement.replace('{{statisticClause}}', statisticClause);
@@ -132,7 +130,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 var finishMoment;
                 try {
                     // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(cbPool, statement, appParams, statisticSelect);
+                    queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(cbPool, statement, appParams, statisticSelect);
                     finishMoment = moment();
                     dataRequests["data retrieval (query) time - " + label] = {
                         begin: startMoment.format(),

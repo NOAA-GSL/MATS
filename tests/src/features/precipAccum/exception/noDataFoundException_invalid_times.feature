@@ -19,8 +19,8 @@ Feature: No Data Found Exception: invalid_times
     Scenario: noDataFoundException_invalid_times
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "database" parameter to "24 Hour Precipitation"
-        Then the "database" parameter value matches "24 Hour Precipitation"
+        When I change the "variable" parameter to "24 Hour Precipitation"
+        Then the "variable" parameter value matches "24 Hour Precipitation"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I set the dates to "01/19/1995 12:00 - 06/19/1996 12:00"
