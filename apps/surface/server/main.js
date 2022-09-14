@@ -564,7 +564,7 @@ const doCurveParams = function () {
             'Select stations' : {
                 '2m temperature': ['pow(o.temp - m0.temp,2)/100', '(o.temp - m0.temp)', '(o.temp - m0.temp)/10', '(if(o.temp is not null,m0.temp,null))/10', '(if(m0.temp is not null,o.temp,null))/10', '(abs(o.temp - m0.temp))/10'],
                 '2m dewpoint': ['(pow(o.dp - m0.dp,2))/100', '(o.dp - m0.dp)', '(o.dp - m0.dp)/10', '(if(o.dp is not null,m0.dp,null))/10', '(if(m0.dp is not null,o.dp,null))/10', '(abs(o.dp - m0.dp))/10'],
-                '10m wind': ['(pow(o.ws,2)+pow(m0.ws,2)-  2*o.ws*m0.ws*cos((o.wd-m0.wd)/57.2958))', '(o.ws + m0.ws)', '(o.ws - m0.ws)', '(if(o.ws is not null,m0.ws,null))', '(if(m0.ws is not null,o.ws,null))', '(abs(o.ws - m0.ws))']
+                '10m wind': ['(pow(o.ws,2)+pow(m0.ws,2)-2*o.ws*m0.ws*cos((o.wd-m0.wd)/57.2958))', '(o.ws + m0.ws)', '(o.ws - m0.ws)', '(if(o.ws is not null,m0.ws,null))', '(if(m0.ws is not null,o.ws,null))', '(abs(o.ws - m0.ws))']
             }
         };
 

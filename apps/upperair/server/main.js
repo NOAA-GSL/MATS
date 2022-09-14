@@ -618,7 +618,7 @@ const doCurveParams = function () {
                 'RH': ['(pow(o.rh - m0.rh,2))', '(o.rh - m0.rh)', '(o.rh - m0.rh)', '(if(o.rh is not null,m0.rh,null))', '(if(m0.rh is not null,o.rh,null))', '(abs(o.rh - m0.rh))'],
                 'RHobT': ['(pow(o.rhot - m0.rhot,2))', '(o.rhot - m0.rhot)', '(o.rhot - m0.rhot)', '(if(o.rhot is not null,m0.rhot,null))', '(if(m0.rhot is not null,o.rhot,null))', '(abs(o.rhot - m0.rhot))'],
                 'Dewpoint': ['(pow(o.dp - m0.dp,2))/10000', '(o.dp - m0.dp)/100', '(o.dp - m0.dp)/100', '(if(o.dp is not null,m0.dp,null))/100', '(if(m0.dp is not null,o.dp,null))/100', '(abs(o.dp - m0.dp))/100'],
-                'Wind': ['(pow(o.ws,2)+pow(m0.ws,2)-2*o.ws*m0.ws*cos(o.wd-m0.wd))/10000', '(o.ws + m0.ws)/100', '(o.ws - m0.ws)/100', '(if(o.ws is not null,m0.ws,null))/100', '(if(m0.ws is not null,o.ws,null))/100', '(abs(o.ws - m0.ws))/100'],
+                'Wind': ['(pow(o.ws,2)+pow(m0.ws,2)-2*o.ws*m0.ws*cos(o.wd-m0.wd))/57.2958/10000', '(o.ws + m0.ws)/100', '(o.ws - m0.ws)/100', '(if(o.ws is not null,m0.ws,null))/100', '(if(m0.ws is not null,o.ws,null))/100', '(abs(o.ws - m0.ws))/100'],
                 'Height': ['pow(o.z - m0.z,2)', '(o.z - m0.z)', '(o.z - m0.z)', '(if(o.z is not null,m0.z,null))', '(if(m0.z is not null,o.z,null))', '(abs(o.z - m0.z))']
             }
         };
