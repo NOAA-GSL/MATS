@@ -25,7 +25,7 @@ describe('dieoff_query', () => {
                 AND odata.Ceiling < 500 THEN 1 ELSE 0 END) AS miss,
       SUM(CASE WHEN NOT m0data.Ceiling < 500
                 AND NOT odata.Ceiling < 500 THEN 1 ELSE 0 END) AS cn,
-      SUM(CASE WHEN m0data.Ceiling IS NOT MISSING 
+      SUM(CASE WHEN m0data.Ceiling IS NOT MISSING
                 AND odata.Ceiling IS NOT MISSING THEN 1 ELSE 0 END) AS N0,
         ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || CASE WHEN m0data.Ceiling < 500
                 AND odata.Ceiling < 500 THEN '1' ELSE '0' END || ';' || CASE WHEN m0data.Ceiling < 500
