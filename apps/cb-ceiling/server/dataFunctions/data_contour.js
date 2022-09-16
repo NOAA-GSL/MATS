@@ -56,6 +56,7 @@ dataContour = function (plotParams, plotFunction) {
             throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
         }
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
+        threshold = threshold.replace(/_/g, ".");
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];

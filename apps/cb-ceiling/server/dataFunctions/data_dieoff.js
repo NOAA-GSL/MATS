@@ -48,6 +48,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var queryTableClause;
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
+        threshold = threshold.replace(/_/g, ".");
         var validTimes;
         var validTimeClause = "";
         var utcCycleStart;
