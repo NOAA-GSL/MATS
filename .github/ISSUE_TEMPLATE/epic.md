@@ -1,5 +1,5 @@
 ---
-name: Project
+name: Epic
 about: Describe the requirements for a new or improved feature
 title: ''
 labels: ["epic", "needs requirements"]
