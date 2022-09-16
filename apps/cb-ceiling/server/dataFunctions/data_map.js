@@ -46,6 +46,7 @@ dataMap = function (plotParams, plotFunction) {
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
     var thresholdStr = curve['threshold'];
     var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
+    threshold = threshold.replace(/_/g, ".");
     var validTimeClause = "";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {

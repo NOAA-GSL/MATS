@@ -60,12 +60,15 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
             var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
-            allThresholds = [threshold];
+            allThresholds = [threshold.replace(/_/g, ".")];
         } else {
             // catalogue the thresholds now, we'll need to do a separate query for each
             allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
                 return Number(a) - Number(b)
             });
+            for (let tidx = 0; tidx < allThresholds.length; tidx++) {
+                allThresholds[tidx] = allThresholds[tidx].replace(/_/g, ".");
+            }
         }
         if (binParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];

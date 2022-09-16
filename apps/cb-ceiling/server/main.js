@@ -317,10 +317,12 @@ const doCurveParams = async function () {
             }
             var masterDescription;
             var masterTrsh;
+            let jsonFriendlyTrsh;
             for (var j = 0; j < Object.keys(rows[0]).length; j++) {
                 masterDescription = rows[0][Object.keys(rows[0])[j]].trim();
                 masterTrsh = Object.keys(rows[0])[j].trim();
-                masterThresholdValuesMap[variables[didx]][masterTrsh] = masterDescription;
+                jsonFriendlyTrsh = masterTrsh.replace(/\./g, "_");
+                masterThresholdValuesMap[variables[didx]][jsonFriendlyTrsh] = masterDescription;
             }
         }
     } catch (err) {
@@ -357,7 +359,7 @@ const doCurveParams = async function () {
                 });
                 var thresholdArr = [];
                 for (var t = 0; t < rows[i].thresholds.length; t++) {
-                    thresholdArr.push(masterThresholdValuesMap[variables[didx]][rows[i].thresholds[t]]);
+                    thresholdArr.push(masterThresholdValuesMap[variables[didx]][rows[i].thresholds[t].replace(/\./g, "_")]);
                 }
                 thresholdsModelOptionsMap[variables[didx]][model] = thresholdArr;
 
