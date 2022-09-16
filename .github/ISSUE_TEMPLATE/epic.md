@@ -1,8 +1,8 @@
 ---
-name: Project
+name: Epic
 about: Describe the requirements for a new or improved feature
 title: ''
-labels: project, shaping
+labels: ["epic", "needs requirements"]
 assignees: ''
 
 ---
