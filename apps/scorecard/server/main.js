@@ -8,6 +8,7 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsCouchbaseUtils} from 'meteor/randyp:mats-common';
 
+
 // determined in doCurveParanms
 var minDate;
 var maxDate;
@@ -684,6 +685,59 @@ const doCurveParams = function () {
     dstr = moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm") + ' - ' + moment.utc(maxDate).format("MM/DD/YYYY HH:mm");
 };
 
+/* The format of a curveTextPattern is an array of arrays, each sub array has
+ [labelString, localVariableName, delimiterString]  any of which can be null.
+ Each sub array will be joined (the localVariableName is always dereferenced first)
+ and then the sub arrays will be joined maintaining order.
+
+ The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
+ See curve_item.js and standAlone.js.
+ */
+const doCurveTextPatterns = function () {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.CurveTextPatterns.remove({});
+    }
+    if (matsCollections.CurveTextPatterns.find().count() == 0) {
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.scorecard,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'application', ' in '],
+                ['', 'data-source', ' in '],
+                ['', 'validation-data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'statistic', ' at '],
+                ['', 'variable', ' '],
+                ['', 'threshold', ' '],
+                ['', 'scale', ' '],
+                ['', 'truth', ' '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['fcst_type: ', 'forecast-type', ', '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'level', ' ']
+            ],
+            displayParams: [
+                "label", "application", "data-source", "validation-data-source", "region", "statistic", "variable", "threshold", "scale", "truth", "forecast-length", "forecast-type", "valid-time", "level"
+            ],
+            groupSize: 6
+        });
+    }
+};
+
+const doPlotGraph = function () {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.PlotGraphFunctions.remove({});
+    }
+    if (matsCollections.PlotGraphFunctions.find().count() == 0) {
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.scorecard,
+            graphFunction: "displayScorecard",
+            dataFunction: "dataScorecard",
+            checked: true
+        });
+    }
+};
+
 Meteor.startup(function () {
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() < 0) {
@@ -745,5 +799,7 @@ Meteor.startup(function () {
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
 appSpecificResetRoutines = [
     doCurveParams,
-    doPlotParams
+    doPlotGraph,
+    doPlotParams,
+    doCurveTextPatterns
 ];
