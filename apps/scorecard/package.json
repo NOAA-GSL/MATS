@@ -1,5 +1,5 @@
 {
-  "name": "upperair",
+  "name": "scorecard",
   "private": true,
   "scripts": {
     "start": "meteor run"
