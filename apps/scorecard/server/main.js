@@ -731,8 +731,8 @@ const doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.scorecard,
-            graphFunction: "displayScorecard",
-            dataFunction: "dataScorecard",
+            graphFunction: "scorecardStatusPage",
+            dataFunction: "processScorecard",
             checked: true
         });
     }
