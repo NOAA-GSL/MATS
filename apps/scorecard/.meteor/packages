@@ -24,9 +24,7 @@ accounts-google@1.4.0
 accounts-base@2.2.3
 accounts-ui@1.4.2
 google-config-ui@1.0.3
-practicalmeteor:mocha
 dynamic-import@0.7.2
-practicalmeteor:chai
 underscore@1.0.10
 kadira:blaze-layout
 ostrio:flow-router-extra
