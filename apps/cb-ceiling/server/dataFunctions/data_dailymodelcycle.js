@@ -51,6 +51,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var queryTableClause;
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
+        threshold = threshold.replace(/_/g, ".");
         if (curve['utc-cycle-start'].length !== 1) {
             throw new Error("INFO:  Please select exactly one UTC Cycle Init Hour for this plot type.");
         }

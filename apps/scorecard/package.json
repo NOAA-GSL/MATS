@@ -1,11 +1,11 @@
 {
-  "name": "upperair",
+  "name": "scorecard",
   "private": true,
   "scripts": {
     "start": "meteor run"
   },
   "dependencies": {
-    "@babel/runtime": "^7.18.9",
+    "@babel/runtime": "^7.19.0",
     "bootstrap": "^4.5.2",
     "chai": "^4.2.0",
     "downsample-lttb": "0.0.1",

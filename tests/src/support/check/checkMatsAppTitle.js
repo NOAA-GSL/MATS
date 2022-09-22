@@ -15,7 +15,7 @@ export default (title) => {
      * The text of the element
      * @type {String}
      */
-    const elem = $('#plotType');
+    const elem = $('#appTitleText');
     elem.waitForDisplayed();
     const text = elem[command]();
 

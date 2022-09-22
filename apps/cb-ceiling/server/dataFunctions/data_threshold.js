@@ -48,8 +48,11 @@ dataThreshold = function (plotParams, plotFunction) {
         var queryTableClause = "FROM mdata m0";
         // catalogue the thresholds now, we'll need to do a separate query for each
         var allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
-            return Number(a) - Number(b)
+            return Number(a) - Number(b);
         });
+        for (let tidx = 0; tidx < allThresholds.length; tidx++) {
+            allThresholds[tidx] = allThresholds[tidx].replace(/_/g, ".");
+        }
         var validTimeClause = "";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
