@@ -8,7 +8,7 @@
     "@babel/runtime": "^7.19.0",
     "bootstrap": "^4.6.2",
     "chai": "^4.3.6",
-    "couchbase": "^4.1.2",
+    "couchbase": "^3.2.3",
     "downsample-lttb": "0.0.1",
     "fibers": "^5.0.3",
     "fs-extra": "^7.0.1",
