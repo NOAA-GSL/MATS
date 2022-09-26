@@ -19,7 +19,7 @@ const doPlotParams = function () {
         matsCollections.PlotParams.remove({});
     }
     if (matsCollections.PlotParams.findOne({name: "date-range-custom-relative"}) == undefined) {
-        optionsMap = {"custom":"Custom", "relative":"Relative"};
+        let optionsMap = {"custom":"Custom", "relative":"Relative"};
         matsCollections.PlotParams.insert(
             {
                 name: 'date-range-custom-relative',
