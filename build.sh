@@ -13,6 +13,7 @@ apps=(
     "precipitation1hr"
     "ptype"
     "radar"
+    "scorecard"
     "surface"
     "surfrad"
     "upperair"
