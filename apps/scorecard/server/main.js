@@ -19,7 +19,7 @@ const doPlotParams = function () {
         matsCollections.PlotParams.remove({});
     }
     if (matsCollections.PlotParams.findOne({name: "date-range-custom-relative"}) == undefined) {
-        let optionsMap = {"custom":"Custom", "relative":"Relative"};
+        let optionsMap = {"custom": "Custom", "relative": "Relative"};
         matsCollections.PlotParams.insert(
             {
                 name: 'date-range-custom-relative',
@@ -71,7 +71,7 @@ const doPlotParams = function () {
     }
 
     if (matsCollections.PlotParams.findOne({name: "relative-date-range-type"}) == undefined) {
-        optionsMap = {"hours":"Hours", "days":"Days", "weeks":"Weeks"}
+        let optionsMap = {"hours": "Hours", "days": "Days", "weeks": "Weeks"}
         matsCollections.PlotParams.insert(
             {
                 name: 'relative-date-range-type',
@@ -106,7 +106,33 @@ const doPlotParams = function () {
             });
     }
     if (matsCollections.PlotParams.findOne({name: "cron-hour"}) == undefined) {
-        optionsMap={"*":"*","0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23};
+        let optionsMap = {
+            "*": "*",
+            "0": 0,
+            "1": 1,
+            "2": 2,
+            "3": 3,
+            "4": 4,
+            "5": 5,
+            "6": 6,
+            "7": 7,
+            "8": 8,
+            "9": 9,
+            "10": 10,
+            "11": 11,
+            "12": 12,
+            "13": 13,
+            "14": 14,
+            "15": 15,
+            "16": 16,
+            "17": 17,
+            "18": 18,
+            "19": 19,
+            "20": 20,
+            "21": 21,
+            "22": 22,
+            "23": 23
+        };
         matsCollections.PlotParams.insert(
             {
                 name: 'cron-hour',
@@ -123,7 +149,16 @@ const doPlotParams = function () {
             });
     }
     if (matsCollections.PlotParams.findOne({name: "cron-day"}) == undefined) {
-        optionsMap = {"*":"*","sunday":"Sunday","monday":"Monday","tuseday":"Tuesday","wednesday":"Wednesday","thursday":"Thursday","friday":"Friday","saturday":"Saturday"};
+        let optionsMap = {
+            "*": "*",
+            "sunday": "Sunday",
+            "monday": "Monday",
+            "tuseday": "Tuesday",
+            "wednesday": "Wednesday",
+            "thursday": "Thursday",
+            "friday": "Friday",
+            "saturday": "Saturday"
+        };
         matsCollections.PlotParams.insert(
             {
                 name: 'cron-day',
@@ -140,7 +175,41 @@ const doPlotParams = function () {
             });
     }
     if (matsCollections.PlotParams.findOne({name: "cron-day-of-month"}) == undefined) {
-        optionsMap={"*":"*","0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31};
+        let optionsMap = {
+            "*": "*",
+            "0": 0,
+            "1": 1,
+            "2": 2,
+            "3": 3,
+            "4": 4,
+            "5": 5,
+            "6": 6,
+            "7": 7,
+            "8": 8,
+            "9": 9,
+            "10": 10,
+            "11": 11,
+            "12": 12,
+            "13": 13,
+            "14": 14,
+            "15": 15,
+            "16": 16,
+            "17": 17,
+            "18": 18,
+            "19": 19,
+            "20": 20,
+            "21": 21,
+            "22": 22,
+            "23": 23,
+            "24": 24,
+            "25": 25,
+            "26": 26,
+            "27": 27,
+            "28": 28,
+            "29": 29,
+            "30": 30,
+            "31": 31
+        };
         matsCollections.PlotParams.insert(
             {
                 name: 'cron-day-of-month',
@@ -157,7 +226,21 @@ const doPlotParams = function () {
             });
     }
     if (matsCollections.PlotParams.findOne({name: "cron-month"}) == undefined) {
-        optionsMap = {"*":"*","january":"January","february":"February","march":"March","april":"April","may":"May","june":"June","july":"July","august":"August","september":"September","october":"October","november":"November","december":"December"}
+        let optionsMap = {
+            "*": "*",
+            "january": "January",
+            "february": "February",
+            "march": "March",
+            "april": "April",
+            "may": "May",
+            "june": "June",
+            "july": "July",
+            "august": "August",
+            "september": "September",
+            "october": "October",
+            "november": "November",
+            "december": "December"
+        }
         matsCollections.PlotParams.insert(
             {
                 name: 'cron-month',
@@ -172,27 +255,27 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 4
             });
-        }
-        if (matsCollections.PlotParams.findOne({name: "cron-year"}) == undefined) {
-            matsCollections.PlotParams.insert(
-                {
-                    name: 'cron-year',
-                    type: matsTypes.InputTypes.numberSpinner,
-                    optionsMap: {},
-                    options: [],
-                    min: '2022',
-                    max: '2100',
-                    step: '2022',
-                    controlButtonCovered: true,
-                    default: 2022,
-                    controlButtonVisibility: 'none',
-                    multiple: true,
-                    displayOrder: 5,
-                    displayPriority: 1,
-                    displayGroup: 4
-                });
-        }
-    };
+    }
+    if (matsCollections.PlotParams.findOne({name: "cron-year"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'cron-year',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '2022',
+                max: '2100',
+                step: '2022',
+                controlButtonCovered: true,
+                default: 2022,
+                controlButtonVisibility: 'none',
+                multiple: true,
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+};
 
 const doCurveParams = function () {
     // force a reset if requested - simply remove all the existing params to force a reload
