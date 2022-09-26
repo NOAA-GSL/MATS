@@ -18,45 +18,30 @@ const doPlotParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
-    if (matsCollections.PlotParams.findOne({name: "dates"}) == undefined) {
+    if (matsCollections.PlotParams.findOne({name: "date-range-custom-relative"}) == undefined) {
+        optionsMap = {"custom":"Custom", "relative":"Relative"};
         matsCollections.PlotParams.insert(
             {
-                name: 'dates',
-                type: matsTypes.InputTypes.dateRange,
-                options: [''],
-                startDate: minDate,
-                stopDate: maxDate,
-                superiorNames: ['application', 'data-source'],
-                controlButtonCovered: true,
-                default: dstr,
+                name: 'date-range-custom-relative',
+                type: matsTypes.InputTypes.radioGroup,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: false,
+                default: "custom",
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1,
-                help: "dateHelp.html"
+                displayGroup: 1
             });
-    } else {
-        // need to update the dates selector if the metadata has changed
-        var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
-            // have to reload model data
-            matsCollections.PlotParams.update({name: 'dates'}, {
-                $set: {
-                    startDate: minDate,
-                    stopDate: maxDate,
-                    default: dstr
-                }
-            });
-        }
     }
-    if (matsCollections.PlotParams.findOne({name: "repeat"}) == undefined) {
+
+    if (matsCollections.PlotParams.findOne({name: "date-range"}) == undefined) {
         matsCollections.PlotParams.insert(
             {
-                name: 'repeat',
+                name: 'date-range',
                 type: matsTypes.InputTypes.dateRange,
-                options: [''],
+                optionsMap: {},
+                options: [],
                 startDate: minDate,
                 stopDate: maxDate,
                 superiorNames: ['application', 'data-source'],
@@ -70,12 +55,12 @@ const doPlotParams = function () {
             });
     } else {
         // need to update the dates selector if the metadata has changed
-        var currentParam = matsCollections.PlotParams.findOne({name: 'repeat'});
+        var currentParam = matsCollections.PlotParams.findOne({name: 'date-range'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
             // have to reload model data
-            matsCollections.PlotParams.update({name: 'repeat'}, {
+            matsCollections.PlotParams.update({name: 'date-range'}, {
                 $set: {
                     startDate: minDate,
                     stopDate: maxDate,
@@ -84,7 +69,125 @@ const doPlotParams = function () {
             });
         }
     }
-};
+
+    if (matsCollections.PlotParams.findOne({name: "relative-type"}) == undefined) {
+        optionsMap = {"hours":"Hours", "days":"Days", "weeks":"Weeks"}
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-type',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                default: "hours",
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "relative-value"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-value',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '1',
+                max: '100',
+                step: 'any',
+                controlButtonCovered: true,
+                default: 1,
+                controlButtonVisibility: 'none',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "relative-hour"}) == undefined) {
+        optionsMap={"Every":"*","0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23};
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-hour',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                default: "Every",
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "relative-day"}) == undefined) {
+        optionsMap = {"Every":"*","sunday":"Sunday","monday":"Monday","tuseday":"Tuesday","wednesday":"Wednesday","thursday":"Thursday","friday":"Friday","saturday":"Saturday"};
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-day',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                default: "Every",
+                controlButtonVisibility: 'none',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "relative-day-of-month"}) == undefined) {
+        optionsMap={"Every":"*","0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31};
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-day-of-month',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                default: "Every",
+                controlButtonVisibility: 'none',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "relative-month"}) == undefined) {
+        optionsMap = {"Every":"*","january":"January","february":"February","march":"March","april":"April","may":"May","june":"June","july":"July","august":"August","september":"September","october":"October","november":"November","december":"December"}
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-month',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                default: "Every",
+                controlButtonVisibility: 'none',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+        }
+        if (matsCollections.PlotParams.findOne({name: "relative-year"}) == undefined) {
+            matsCollections.PlotParams.insert(
+                {
+                    name: 'relative-year',
+                    type: matsTypes.InputTypes.numberSpinner,
+                    optionsMap: {},
+                    options: [],
+                    min: '2022',
+                    max: '2100',
+                    step: 'any',
+                    controlButtonCovered: true,
+                    default: 2022,
+                    controlButtonVisibility: 'none',
+                    displayOrder: 5,
+                    displayPriority: 1,
+                    displayGroup: 4
+                });
+        }
+    };
 
 const doCurveParams = function () {
     // force a reset if requested - simply remove all the existing params to force a reload
@@ -272,6 +375,42 @@ const doCurveParams = function () {
         }
     }
 
+    if (matsCollections["user"].findOne({name: 'user'}) == undefined) {
+        matsCollections["user"].insert(
+            {
+                name: 'user',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: 'anom',
+                unique: true,
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 1
+            }
+        );
+    }
+
+    if (matsCollections["scorecard-name"].findOne({name: 'scorecard-name'}) == undefined) {
+        matsCollections["scorecard-name"].insert(
+            {
+                name: 'scorecard-name',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: 'unnamed',
+                unique: true,
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 1
+            }
+        );
+    }
+
     if (matsCollections["data-source"].findOne({name: 'data-source'}) == undefined) {
         matsCollections["data-source"].insert(
             {
@@ -280,7 +419,7 @@ const doCurveParams = function () {
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap[applicationOptions[0]]),
                 superiorNames: ['application'],
-                dependentNames: ["region", "threshold", "scale", "truth", "forecast-length", "forecast-type", "dates"],
+                dependentNames: ["region", "threshold", "scale", "truth", "forecast-length", "forecast-type", "date-range"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
                 unique: false,
@@ -702,6 +841,8 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.scorecard,
             textPattern: [
                 ['', 'label', ': '],
+                ['', 'user', ': '],
+                ['', 'scorecard-name', ': '],
                 ['', 'application', ' in '],
                 ['', 'data-source', ' in '],
                 ['', 'validation-data-source', ' in '],
@@ -717,7 +858,7 @@ const doCurveTextPatterns = function () {
                 ['', 'level', ' ']
             ],
             displayParams: [
-                "label", "application", "data-source", "validation-data-source", "region", "statistic", "variable", "threshold", "scale", "truth", "forecast-length", "forecast-type", "valid-time", "level"
+                "label", "user", "scorecard-name", "application", "data-source", "validation-data-source", "region", "statistic", "variable", "threshold", "scale", "truth", "forecast-length", "forecast-type", "valid-time", "level"
             ],
             groupSize: 6
         });
