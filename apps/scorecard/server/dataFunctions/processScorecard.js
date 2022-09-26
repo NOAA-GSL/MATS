@@ -1,9 +1,9 @@
 processScorecard = function (plotParams, plotFunction) {
     // create or retrieve the scorecard document
-    let scoreCardDocument = {}
-    scoreCardDocument['user'] = plotParams['curves'][0]['user'];
-    scoreCardDocument['re']
-    // process the scoreCardDocument
+    let scorecardDocument = {}
+    scorecardDocument['user'] = plotParams['curves'][0]['user'];
+    scorecardDocument['re']
+    // process the scorecardDocument
 /*
 plotParams
 {plotTypes: {…}, curves: Array(2), plotAction: 'scorecard', date-range-custom-relative: 'custom', date-range: '08/26/2022 20:30 - 09/25/2022 21:30', …}
@@ -58,5 +58,5 @@ __proto__: Object
 
 */
     // display the scorecard status page
-    plotFunction(scoreCard);
+    plotFunction(scorecardDocument);
 }

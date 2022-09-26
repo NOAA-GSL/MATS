@@ -70,11 +70,11 @@ const doPlotParams = function () {
         }
     }
 
-    if (matsCollections.PlotParams.findOne({name: "relative-type"}) == undefined) {
+    if (matsCollections.PlotParams.findOne({name: "relative-date-range-type"}) == undefined) {
         optionsMap = {"hours":"Hours", "days":"Days", "weeks":"Weeks"}
         matsCollections.PlotParams.insert(
             {
-                name: 'relative-type',
+                name: 'relative-date-range-type',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap),
@@ -87,10 +87,10 @@ const doPlotParams = function () {
             });
     }
 
-    if (matsCollections.PlotParams.findOne({name: "relative-value"}) == undefined) {
+    if (matsCollections.PlotParams.findOne({name: "relative-date-range-value"}) == undefined) {
         matsCollections.PlotParams.insert(
             {
-                name: 'relative-value',
+                name: 'relative-date-range-value',
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
                 options: [],
@@ -105,83 +105,88 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
     }
-    if (matsCollections.PlotParams.findOne({name: "relative-hour"}) == undefined) {
-        optionsMap={"Every":"*","0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23};
+    if (matsCollections.PlotParams.findOne({name: "cron-hour"}) == undefined) {
+        optionsMap={"*":"*","0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23};
         matsCollections.PlotParams.insert(
             {
-                name: 'relative-hour',
+                name: 'cron-hour',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap),
                 controlButtonCovered: true,
-                default: "Every",
+                default: "*",
                 controlButtonVisibility: 'none',
+                multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4
             });
     }
-    if (matsCollections.PlotParams.findOne({name: "relative-day"}) == undefined) {
-        optionsMap = {"Every":"*","sunday":"Sunday","monday":"Monday","tuseday":"Tuesday","wednesday":"Wednesday","thursday":"Thursday","friday":"Friday","saturday":"Saturday"};
+    if (matsCollections.PlotParams.findOne({name: "cron-day"}) == undefined) {
+        optionsMap = {"*":"*","sunday":"Sunday","monday":"Monday","tuseday":"Tuesday","wednesday":"Wednesday","thursday":"Thursday","friday":"Friday","saturday":"Saturday"};
         matsCollections.PlotParams.insert(
             {
-                name: 'relative-day',
+                name: 'cron-day',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap),
                 controlButtonCovered: true,
-                default: "Every",
+                default: "*",
                 controlButtonVisibility: 'none',
+                multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 4
             });
     }
-    if (matsCollections.PlotParams.findOne({name: "relative-day-of-month"}) == undefined) {
-        optionsMap={"Every":"*","0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31};
+    if (matsCollections.PlotParams.findOne({name: "cron-day-of-month"}) == undefined) {
+        optionsMap={"*":"*","0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31};
         matsCollections.PlotParams.insert(
             {
-                name: 'relative-day-of-month',
+                name: 'cron-day-of-month',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap),
                 controlButtonCovered: true,
-                default: "Every",
+                default: "*",
                 controlButtonVisibility: 'none',
+                multiple: true,
                 displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 4
             });
     }
-    if (matsCollections.PlotParams.findOne({name: "relative-month"}) == undefined) {
-        optionsMap = {"Every":"*","january":"January","february":"February","march":"March","april":"April","may":"May","june":"June","july":"July","august":"August","september":"September","october":"October","november":"November","december":"December"}
+    if (matsCollections.PlotParams.findOne({name: "cron-month"}) == undefined) {
+        optionsMap = {"*":"*","january":"January","february":"February","march":"March","april":"April","may":"May","june":"June","july":"July","august":"August","september":"September","october":"October","november":"November","december":"December"}
         matsCollections.PlotParams.insert(
             {
-                name: 'relative-month',
+                name: 'cron-month',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap),
                 controlButtonCovered: true,
-                default: "Every",
+                default: "*",
                 controlButtonVisibility: 'none',
+                multiple: true,
                 displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 4
             });
         }
-        if (matsCollections.PlotParams.findOne({name: "relative-year"}) == undefined) {
+        if (matsCollections.PlotParams.findOne({name: "cron-year"}) == undefined) {
             matsCollections.PlotParams.insert(
                 {
-                    name: 'relative-year',
+                    name: 'cron-year',
                     type: matsTypes.InputTypes.numberSpinner,
                     optionsMap: {},
                     options: [],
                     min: '2022',
                     max: '2100',
-                    step: 'any',
+                    step: '2022',
                     controlButtonCovered: true,
                     default: 2022,
                     controlButtonVisibility: 'none',
+                    multiple: true,
                     displayOrder: 5,
                     displayPriority: 1,
                     displayGroup: 4
@@ -353,7 +358,7 @@ const doCurveParams = function () {
                 options: applicationOptions,
                 hideOtherFor: hideOtherFor,
                 dates: dateOptionsMap,
-                dependentNames: ["data-source", "validation-data-source", "statistic", "variable", "valid-time", "level"],
+                dependentNames: ["data-source", "validation-data-source", "statistic", "variable", "threshold", "scale", "truth", "valid-time", "level"],
                 controlButtonCovered: true,
                 default: applicationOptions[0],
                 unique: false,
@@ -404,7 +409,7 @@ const doCurveParams = function () {
                 default: 'unnamed',
                 unique: true,
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 1
             }
