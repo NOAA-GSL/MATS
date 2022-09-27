@@ -35,10 +35,10 @@ const doPlotParams = function () {
             });
     }
 
-    if (matsCollections.PlotParams.findOne({name: "one-time-data-range"}) == undefined) {
+    if (matsCollections.PlotParams.findOne({name: "dates"}) == undefined) {
         matsCollections.PlotParams.insert(
             {
-                name: 'one-time-data-range',
+                name: 'dates',
                 type: matsTypes.InputTypes.dateRange,
                 optionsMap: {},
                 options: [],
@@ -48,6 +48,7 @@ const doPlotParams = function () {
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
+                controlButtonText: 'one time date range',
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 2,
@@ -55,12 +56,12 @@ const doPlotParams = function () {
             });
     } else {
         // need to update the dates selector if the metadata has changed
-        var currentParam = matsCollections.PlotParams.findOne({name: 'one-time-data-range'});
+        var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
             // have to reload model data
-            matsCollections.PlotParams.update({name: 'one-time-data-range'}, {
+            matsCollections.PlotParams.update({name: 'dates'}, {
                 $set: {
                     startDate: minDate,
                     stopDate: maxDate,
@@ -480,7 +481,7 @@ const doCurveParams = function () {
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap[applicationOptions[0]]),
                 superiorNames: ['application'],
-                dependentNames: ["region", "threshold", "scale", "truth", "forecast-length", "forecast-type", "date-range"],
+                dependentNames: ["region", "threshold", "scale", "truth", "forecast-length", "forecast-type", "dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
                 unique: false,
