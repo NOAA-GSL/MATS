@@ -19,5 +19,8 @@
     "object-sizeof": "^1.6.3",
     "popper.js": "^1.16.1",
     "xmlbuilder": "^10.1.1"
+  },
+  "devDependencies": {
+    "vanillajs-datepicker": "^1.2.0"
   }
 }
