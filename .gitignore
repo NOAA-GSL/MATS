@@ -1,25 +1,23 @@
-apps/*/node_modules
-apps/*/.idea
-apps/*/.meteor/local
-apps/*/settings
-appProductionStatus/*/node_modules
-appProductionStatus/*/.idea
-appProductionStatus/*/.meteor/local
-appProductionStatus/*/settings
-home/*/node_modules
-home/*/.idea
-home/*/.meteor/local
-home/*/settings
-tests/node_modules
-tests/logs
+# Node & Meteor
+.meteor/local
 node_modules
-.idea
-.DS_Store
-logs
+
+# Python
 __pycache__
 venv
-.history
+*.pyc
+
+# IDEs
+.idea
 .vscode
+
+# OS-specific
+.DS_Store
+.history
+
+# Project-specific
+logs
+settings
 *.swp
 tmp
 bundle*
