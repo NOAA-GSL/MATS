@@ -18,6 +18,14 @@ const doPlotParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
+    /*
+    NOTE: hideOtherFor - radio button groups
+    the hideOtherFor plotParam option for radio groups is similar to hideOtherFor for select params.
+    hideOtherFor: {
+        'param-name-to-be-hidden':['checked-option-that-hides','other-checked-option-that-hides', ...]
+    }
+    */
+
     if (matsCollections.PlotParams.findOne({name: "scorecard-schedule-mode"}) == undefined) {
         let optionsMap = {"once": "Once", "recurring": "Recurring"};
         matsCollections.PlotParams.insert(
@@ -28,6 +36,16 @@ const doPlotParams = function () {
                 options: Object.keys(optionsMap),
                 controlButtonCovered: false,
                 default: "once",
+                hideOtherFor: {
+                    'scorecard-recurrence-interval':['once'],
+                    'scorecard-ends-on':['once'],
+                    'these-hours-of-the-day':['once','recurring'],
+                    'these-days-of-the-week':['once','recurring'],
+                    'these-days-of-the-month':['once','recurring'],
+                    'these-months':['once'],
+                    'dates':['recurring','recurring']
+
+                },
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -81,6 +99,12 @@ const doPlotParams = function () {
                 options: Object.keys(optionsMap),
                 controlButtonCovered: false,
                 default: "weekly",
+                hideOtherFor: {
+                    'these-hours-of-the-day':[], // never hidden by recurrence-interval
+                    'these-days-of-the-week':['daily','monthly','yearly'], // only exposed on weekly
+                    'these-days-of-the-month':['daily','weekly'], // only exposed for monthly and yearly
+                    'these-months':['daily','weekly','monthly'] // only exposed on yearly
+                },
                 controlButtonVisibility: 'none',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -244,10 +268,10 @@ const doPlotParams = function () {
                 options: [],
                 controlButtonCovered: true,
                 default: new Date().toLocaleDateString(),
-                controlButtonVisibility: 'block',
-                displayOrder: 6,
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     }
     if (matsCollections.PlotParams.findOne({name: 'user'}) == undefined) {
@@ -263,7 +287,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 6
             }
         );
     }
@@ -280,7 +304,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 6
             }
         );
     }
