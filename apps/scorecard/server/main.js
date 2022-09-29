@@ -38,6 +38,8 @@ const doPlotParams = function () {
                 default: "once",
                 hideOtherFor: {
                     'scorecard-recurrence-interval':['once'],
+                    'relative-date-range-type':['once'],
+                    'relative-date-range-value':['once'],
                     'scorecard-ends-on':['once'],
                     'these-hours-of-the-day':['once','recurring'],
                     'these-days-of-the-week':['once','recurring'],
@@ -89,6 +91,42 @@ const doPlotParams = function () {
         }
     }
 
+    if (matsCollections.PlotParams.findOne({name: "relative-date-range-type"}) == undefined) {
+        let optionsMap = {"hours": "Hours", "days": "Days", "weeks": "Weeks"}
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-date-range-type',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                default: "hours",
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "relative-date-range-value"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-date-range-value',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '1',
+                max: '100',
+                step: 'any',
+                controlButtonCovered: true,
+                default: 1,
+                controlButtonVisibility: 'none',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
+
     if (matsCollections.PlotParams.findOne({name: "scorecard-recurrence-interval"}) == undefined) {
         let optionsMap = {"daily": "Daily", "weekly":"Weekly","monthly":"Monthly","yearly":"Yearly"};
         matsCollections.PlotParams.insert(
@@ -111,6 +149,7 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
     }
+
 
     if (matsCollections.PlotParams.findOne({name: "these-hours-of-the-day"}) == undefined) {
         let optionsMap = {
@@ -216,7 +255,7 @@ const doPlotParams = function () {
         };
         matsCollections.PlotParams.insert(
             {
-                name: 'these-days-of-the-month',
+                name: 'these-days-of-the-month', 
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap),
@@ -268,7 +307,7 @@ const doPlotParams = function () {
                 options: [],
                 controlButtonCovered: true,
                 default: new Date().toLocaleDateString(),
-                controlButtonVisibility: 'none',
+                controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 5
