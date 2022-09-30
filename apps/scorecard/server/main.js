@@ -130,6 +130,7 @@ const doPlotParams = function () {
                 name: 'scorecard-recurrence-interval',
                 type: matsTypes.InputTypes.radioGroup,
                 options: ["Daily", "Weekly", "Monthly", "Yearly"],
+                superiorRadioGroups: ['scorecard-schedule-mode'],
                 controlButtonCovered: false,
                 default: "Weekly",
                 hideOtherFor: {
