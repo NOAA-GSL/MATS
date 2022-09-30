@@ -32,6 +32,7 @@ const doPlotParams = function () {
                 name: 'scorecard-schedule-mode',
                 type: matsTypes.InputTypes.radioGroup,
                 options: ["Once", "Recurring"],
+                dependentRadioGroups: ['scorecard-recurrence-interval'],    // need an event triggered after this element changes to ensure hide/show settings are correct
                 controlButtonCovered: false,
                 default: "Once",
                 hideOtherFor: {
