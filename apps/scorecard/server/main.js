@@ -27,25 +27,23 @@ const doPlotParams = function () {
     */
 
     if (matsCollections.PlotParams.findOne({name: "scorecard-schedule-mode"}) == undefined) {
-        let optionsMap = {"once": "Once", "recurring": "Recurring"};
         matsCollections.PlotParams.insert(
             {
                 name: 'scorecard-schedule-mode',
                 type: matsTypes.InputTypes.radioGroup,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),
+                options: ["Once", "Recurring"],
                 controlButtonCovered: false,
-                default: "once",
+                default: "Once",
                 hideOtherFor: {
-                    'scorecard-recurrence-interval':['once'],
-                    'relative-date-range-type':['once'],
-                    'relative-date-range-value':['once'],
-                    'scorecard-ends-on':['once'],
-                    'these-hours-of-the-day':['once','recurring'],
-                    'these-days-of-the-week':['once','recurring'],
-                    'these-days-of-the-month':['once','recurring'],
-                    'these-months':['once'],
-                    'dates':['recurring','recurring']
+                    'scorecard-recurrence-interval':['Once'],
+                    'relative-date-range-type':['Once'],
+                    'relative-date-range-value':['Once'],
+                    'scorecard-ends-on':['Once'],
+                    'these-hours-of-the-day':['Once','Recurring'],
+                    'these-days-of-the-week':['Once','Recurring'],
+                    'these-days-of-the-month':['Once','Recurring'],
+                    'these-months':['Once'],
+                    'dates':['Recurring']
 
                 },
                 controlButtonVisibility: 'block',
@@ -92,15 +90,13 @@ const doPlotParams = function () {
     }
 
     if (matsCollections.PlotParams.findOne({name: "relative-date-range-type"}) == undefined) {
-        let optionsMap = {"hours": "Hours", "days": "Days", "weeks": "Weeks"}
         matsCollections.PlotParams.insert(
             {
                 name: 'relative-date-range-type',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),
+                options: ["Hours", "Days", "Weeks"],
                 controlButtonCovered: true,
-                default: "hours",
+                default: "Hours",
                 controlButtonVisibility: 'none',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -128,20 +124,17 @@ const doPlotParams = function () {
     }
 
     if (matsCollections.PlotParams.findOne({name: "scorecard-recurrence-interval"}) == undefined) {
-        let optionsMap = {"daily": "Daily", "weekly":"Weekly","monthly":"Monthly","yearly":"Yearly"};
         matsCollections.PlotParams.insert(
             {
                 name: 'scorecard-recurrence-interval',
                 type: matsTypes.InputTypes.radioGroup,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),
+                options: ["Daily", "Weekly", "Monthly", "Yearly"],
                 controlButtonCovered: false,
-                default: "weekly",
+                default: "Weekly",
                 hideOtherFor: {
-                    'these-hours-of-the-day':[], // never hidden by recurrence-interval
-                    'these-days-of-the-week':['daily','monthly','yearly'], // only exposed on weekly
-                    'these-days-of-the-month':['daily','weekly'], // only exposed for monthly and yearly
-                    'these-months':['daily','weekly','monthly'] // only exposed on yearly
+                    'these-days-of-the-week':['Daily','Monthly','Yearly'], // only exposed on weekly
+                    'these-days-of-the-month':['Daily','Weekly'], // only exposed for monthly and yearly
+                    'these-months':['Daily','Weekly','Monthly'] // only exposed on yearly
                 },
                 controlButtonVisibility: 'none',
                 displayOrder: 1,
@@ -152,38 +145,11 @@ const doPlotParams = function () {
 
 
     if (matsCollections.PlotParams.findOne({name: "these-hours-of-the-day"}) == undefined) {
-        let optionsMap = {
-            "0": 0,
-            "1": 1,
-            "2": 2,
-            "3": 3,
-            "4": 4,
-            "5": 5,
-            "6": 6,
-            "7": 7,
-            "8": 8,
-            "9": 9,
-            "10": 10,
-            "11": 11,
-            "12": 12,
-            "13": 13,
-            "14": 14,
-            "15": 15,
-            "16": 16,
-            "17": 17,
-            "18": 18,
-            "19": 19,
-            "20": 20,
-            "21": 21,
-            "22": 22,
-            "23": 23
-        };
         matsCollections.PlotParams.insert(
             {
                 name: 'these-hours-of-the-day',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 controlButtonCovered: true,
                 default: "unused",
                 controlButtonVisibility: 'none',
@@ -194,21 +160,11 @@ const doPlotParams = function () {
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-week"}) == undefined) {
-        let optionsMap = {
-            "sunday": "Sunday",
-            "monday": "Monday",
-            "tuseday": "Tuesday",
-            "wednesday": "Wednesday",
-            "thursday": "Thursday",
-            "friday": "Friday",
-            "saturday": "Saturday"
-        };
         matsCollections.PlotParams.insert(
             {
                 name: 'these-days-of-the-week',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),
+                options: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
                 controlButtonCovered: true,
                 default: "unused",
                 controlButtonVisibility: 'none',
@@ -219,46 +175,11 @@ const doPlotParams = function () {
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-month"}) == undefined) {
-        let optionsMap = {
-            "0": 0,
-            "1": 1,
-            "2": 2,
-            "3": 3,
-            "4": 4,
-            "5": 5,
-            "6": 6,
-            "7": 7,
-            "8": 8,
-            "9": 9,
-            "10": 10,
-            "11": 11,
-            "12": 12,
-            "13": 13,
-            "14": 14,
-            "15": 15,
-            "16": 16,
-            "17": 17,
-            "18": 18,
-            "19": 19,
-            "20": 20,
-            "21": 21,
-            "22": 22,
-            "23": 23,
-            "24": 24,
-            "25": 25,
-            "26": 26,
-            "27": 27,
-            "28": 28,
-            "29": 29,
-            "30": 30,
-            "31": 31
-        };
         matsCollections.PlotParams.insert(
             {
                 name: 'these-days-of-the-month', 
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
                 controlButtonCovered: true,
                 default: "unused",
                 controlButtonVisibility: 'none',
@@ -269,26 +190,11 @@ const doPlotParams = function () {
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-months"}) == undefined) {
-        let optionsMap = {
-            "january": "January",
-            "february": "February",
-            "march": "March",
-            "april": "April",
-            "may": "May",
-            "june": "June",
-            "july": "July",
-            "august": "August",
-            "september": "September",
-            "october": "October",
-            "november": "November",
-            "december": "December"
-        }
         matsCollections.PlotParams.insert(
             {
                 name: 'these-months',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),
+                options: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
                 controlButtonCovered: true,
                 default: "unused",
                 controlButtonVisibility: 'none',
