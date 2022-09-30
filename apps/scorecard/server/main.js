@@ -167,7 +167,7 @@ const doPlotParams = function () {
                 options: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
                 controlButtonCovered: true,
                 default: "unused",
-                controlButtonVisibility: 'none',
+                controlButtonVisibility: 'none', // weekly comes up by default
                 multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
@@ -177,7 +177,7 @@ const doPlotParams = function () {
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-month"}) == undefined) {
         matsCollections.PlotParams.insert(
             {
-                name: 'these-days-of-the-month', 
+                name: 'these-days-of-the-month',
                 type: matsTypes.InputTypes.select,
                 options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
                 controlButtonCovered: true,
@@ -219,6 +219,169 @@ const doPlotParams = function () {
                 displayGroup: 5
             });
     }
+
+    if (matsCollections.PlotParams.findOne({name: "scorecard-percent-stdv"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'scorecard-percent-stdv',
+                type: matsTypes.InputTypes.radioGroup,
+                options: ["Percent", "Standard-Deviation"],
+                controlButtonCovered: false,
+                default: "",
+                hideOtherFor: {
+                    'small-threshold-by-percent':['Standard-Deviation'],
+                    'large-threshold-by-percent':['Standard-Deviation'],
+                    'small-threshold-by-stdv':['Percent'],
+                    'large-threshold-by-stdv':['Percent']
+                },
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 6
+            });
+    }
+
+
+    if (matsCollections.PlotParams.findOne({name: "small-threshold-by-percent"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'small-threshold-by-percent',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '90',
+                max: '100',
+                step: '1',
+                controlButtonCovered: true,
+                default: 1,
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 7
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "large-threshold-by-percent"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'large-threshold-by-percent',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '90',
+                max: '100',
+                step: '1',
+                controlButtonCovered: true,
+                default: 1,
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 7
+            });
+    }
+
+
+    if (matsCollections.PlotParams.findOne({name: "small-threshold-by-stdv"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'small-threshold-by-stdv',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '1',
+                max: '3',
+                step: '1',
+                controlButtonCovered: true,
+                default: 1,
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 7
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "large-threshold-by-stdv"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'large-threshold-by-stdv',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '1',
+                max: '3',
+                step: '1',
+                controlButtonCovered: true,
+                default: 1,
+                controlButtonVisibility: 'none',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 7
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "small-significance-truth-color"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'small-significance-truth-color',
+                type: matsTypes.InputTypes.color,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: "#aae6fa",
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "large-significance-truth-color"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'large-significance-truth-color',
+                type: matsTypes.InputTypes.color,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: "#056ed2",
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "small-significance-source-color"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'small-significance-source-color',
+                type: matsTypes.InputTypes.color,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: "#ffa0a0",
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "large-significance-source-color"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'large-significance-source-color',
+                type: matsTypes.InputTypes.color,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: "#F05050",
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+
     if (matsCollections.PlotParams.findOne({name: 'user'}) == undefined) {
         matsCollections.PlotParams.insert(
             {
@@ -232,7 +395,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6
+                displayGroup: 9
             }
         );
     }
@@ -249,7 +412,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 6
+                displayGroup: 9
             }
         );
     }
