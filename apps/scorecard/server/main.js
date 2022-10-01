@@ -50,7 +50,6 @@ const doPlotParams = function () {
                 'scorecard-recurrence-interval': ['Once'],
                 'relative-date-range-type': ['Once'],
                 'relative-date-range-value': ['Once'],
-                'scorecard-ends-on': ['Once'],
                 'these-hours-of-the-day': ['Once'],
                 'these-days-of-the-week': ['Once'],
                 'these-days-of-the-month': ['Once'],
@@ -252,14 +251,14 @@ const doPlotParams = function () {
         matsCollections.PlotParams.insert({
             name: 'scorecard-percent-stdv',
             type: matsTypes.InputTypes.radioGroup,
-            options: ["Percent", "Standard-Deviation"],
+            options: ["Percent", "StandardDeviation"],
             controlButtonCovered: false,
-            default: "",
+            default: "Percent",
             hideOtherFor: {
-                'small-threshold-by-percent': ["Standard-Deviation"],
-                'large-threshold-by-percent': ["Standard-Deviation"],
-                'small-threshold-by-stdv': ["Percent"],
-                'large-threshold-by-stdv': ["Percent"],
+                'minor-threshold-by-percent': ["StandardDeviation"],
+                'major-threshold-by-percent': ["StandardDeviation"],
+                'minor-threshold-by-stdv': ["Percent"],
+                'major-threshold-by-stdv': ["Percent"],
             },
             controlButtonVisibility: 'block',
             displayOrder: 1,
@@ -270,20 +269,20 @@ const doPlotParams = function () {
 
 
     if (matsCollections.PlotParams.findOne({
-            name: "small-threshold-by-percent"
+            name: "minor-threshold-by-percent"
         }) == undefined) {
         matsCollections.PlotParams.insert({
-            name: 'small-threshold-by-percent',
+            name: 'minor-threshold-by-percent',
             type: matsTypes.InputTypes.numberSpinner,
             optionsMap: {},
             options: [],
             min: '90',
             max: '100',
             step: '1',
+            default: 95,
             controlButtonCovered: true,
-            controlButtonText: " - %",
-            controlButtonFA: "fa-sm fa fa-caret-down",
-            default: 1,
+            controlButtonText: "minor - %",
+            controlButtonFA: "fa-1x fa fa-caret-down",
             controlButtonVisibility: 'none',
             displayOrder: 1,
             displayPriority: 1,
@@ -291,20 +290,20 @@ const doPlotParams = function () {
         });
     }
     if (matsCollections.PlotParams.findOne({
-            name: "large-threshold-by-percent"
+            name: "major-threshold-by-percent"
         }) == undefined) {
         matsCollections.PlotParams.insert({
-            name: 'large-threshold-by-percent',
+            name: 'major-threshold-by-percent',
             type: matsTypes.InputTypes.numberSpinner,
             optionsMap: {},
             options: [],
             min: '90',
             max: '100',
             step: '1',
+            default: 99,
             controlButtonCovered: true,
-            controlButtonText: " - %",
-            controlButtonFA: "fa-lg fa fa-caret-down",
-            default: 1,
+            controlButtonText: "major - %",
+            controlButtonFA: "fa-2x fa fa-caret-down",
             controlButtonVisibility: 'none',
             displayOrder: 2,
             displayPriority: 1,
@@ -314,20 +313,20 @@ const doPlotParams = function () {
 
 
     if (matsCollections.PlotParams.findOne({
-            name: "small-threshold-by-stdv"
+            name: "minor-threshold-by-stdv"
         }) == undefined) {
         matsCollections.PlotParams.insert({
-            name: 'small-threshold-by-stdv',
+            name: 'minor-threshold-by-stdv',
             type: matsTypes.InputTypes.numberSpinner,
             optionsMap: {},
             options: [],
             min: '1',
             max: '3',
             step: '1',
-            controlButtonCovered: true,
-            controlButtonText: " - std",
-            controlButtonFA: "fa-sm fa fa-caret-down",
             default: 1,
+            controlButtonCovered: true,
+            controlButtonText: "minor - std",
+            controlButtonFA: "fa-1x fa fa-caret-down",
             controlButtonVisibility: 'none',
             displayOrder: 1,
             displayPriority: 1,
@@ -335,20 +334,20 @@ const doPlotParams = function () {
         });
     }
     if (matsCollections.PlotParams.findOne({
-            name: "large-threshold-by-stdv"
+            name: "major-threshold-by-stdv"
         }) == undefined) {
         matsCollections.PlotParams.insert({
-            name: 'large-threshold-by-stdv',
+            name: 'major-threshold-by-stdv',
             type: matsTypes.InputTypes.numberSpinner,
             optionsMap: {},
             options: [],
             min: '1',
             max: '3',
             step: '1',
-            controlButtonCovered: true,
-            controlButtonText: " - std",
-            controlButtonFA: "fa-lg fa fa-caret-down",
             default: 1,
+            controlButtonCovered: true,
+            controlButtonText: "major - std",
+            controlButtonFA: "fa-2x fa fa-caret-down",
             controlButtonVisibility: 'none',
             displayOrder: 2,
             displayPriority: 1,
@@ -357,36 +356,34 @@ const doPlotParams = function () {
     }
 
     if (matsCollections.PlotParams.findOne({
-            name: "small-significance-truth-color"
-        }) == undefined) {
-        matsCollections.PlotParams.insert({
-            name: 'small-significance-truth-color',
-            type: matsTypes.InputTypes.color,
-            optionsMap: {},
-            options: [],
-            controlButtonCovered: true,
-            controlButtonText: " ",
-            controlButtonFA: "fa-sm fa fa-caret-down",
-            default: "#aae6fa",
-            controlButtonVisibility: 'block',
-            displayOrder: 1,
-            displayPriority: 1,
-            displayGroup: 8
-        });
-    }
+        name: "scorecard-color-theme"
+    }) == undefined) {
+    matsCollections.PlotParams.insert({
+        name: 'scorecard-color-theme',
+        type: matsTypes.InputTypes.radioGroup,
+        options: ["GreenRed", "BlueRed"],
+        controlButtonCovered: false,
+        default: "GreenRed",
+        controlButtonVisibility: 'block',
+        displayOrder: 1,
+        displayPriority: 1,
+        displayGroup: 8
+    });
+}
+
 
     if (matsCollections.PlotParams.findOne({
-            name: "large-significance-truth-color"
+            name: "minor-truth-color"
         }) == undefined) {
         matsCollections.PlotParams.insert({
-            name: 'large-significance-truth-color',
+            name: 'minor-truth-color',
             type: matsTypes.InputTypes.color,
             optionsMap: {},
             options: [],
             controlButtonCovered: true,
             controlButtonText: " ",
-            controlButtonFA: "fa-lg fa fa-caret-down",
-            default: "#056ed2",
+            controlButtonFA: "fa-1x fa fa-caret-down",
+            default: "#00ff00",
             controlButtonVisibility: 'block',
             displayOrder: 2,
             displayPriority: 1,
@@ -395,17 +392,17 @@ const doPlotParams = function () {
     }
 
     if (matsCollections.PlotParams.findOne({
-            name: "small-significance-source-color"
+            name: "major-truth-color"
         }) == undefined) {
         matsCollections.PlotParams.insert({
-            name: 'small-significance-source-color',
+            name: 'major-truth-color',
             type: matsTypes.InputTypes.color,
             optionsMap: {},
             options: [],
             controlButtonCovered: true,
             controlButtonText: " ",
-            controlButtonFA: "fa-sm fa fa-caret-up",
-            default: "#ffa0a0",
+            controlButtonFA: "fa-2x fa fa-caret-down",
+            default: "#00ff00",
             controlButtonVisibility: 'block',
             displayOrder: 3,
             displayPriority: 1,
@@ -414,19 +411,38 @@ const doPlotParams = function () {
     }
 
     if (matsCollections.PlotParams.findOne({
-            name: "large-significance-source-color"
+            name: "minor-source-color"
         }) == undefined) {
         matsCollections.PlotParams.insert({
-            name: 'large-significance-source-color',
+            name: 'minor-source-color',
             type: matsTypes.InputTypes.color,
             optionsMap: {},
             options: [],
             controlButtonCovered: true,
             controlButtonText: " ",
-            controlButtonFA: "fa-lg fa fa-caret-down",
-            default: "#F05050",
+            controlButtonFA: "fa-1x fa fa-caret-up",
+            default: "#ff0000",
             controlButtonVisibility: 'block',
             displayOrder: 4,
+            displayPriority: 1,
+            displayGroup: 8
+        });
+    }
+
+    if (matsCollections.PlotParams.findOne({
+            name: "major-source-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-source-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-2x fa fa-caret-up",
+            default: "#ff0000",
+            controlButtonVisibility: 'block',
+            displayOrder: 5,
             displayPriority: 1,
             displayGroup: 8
         });
