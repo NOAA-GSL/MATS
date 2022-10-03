@@ -387,7 +387,7 @@ const doPlotParams = function () {
                 options: [],
                 controlButtonCovered: true,
                 controlButtonText: " ",
-                controlButtonFA: "fa-lg fa fa-caret-down",
+                controlButtonFA: "fa-lg fa fa-caret-up",
                 default: "#F05050",
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
