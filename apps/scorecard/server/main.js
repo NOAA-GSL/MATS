@@ -226,12 +226,12 @@ const doPlotParams = function () {
             {
                 name: 'scorecard-percent-stdv',
                 type: matsTypes.InputTypes.radioGroup,
-                options: ["Percent", "Standard-Deviation"],
+                options: ["Percent", "Standard Deviation"],
                 controlButtonCovered: false,
-                default: "",
+                default: "Percent",
                 hideOtherFor: {
-                    'small-threshold-by-percent': ["Standard-Deviation"],
-                    'large-threshold-by-percent': ["Standard-Deviation"],
+                    'small-threshold-by-percent': ["Standard Deviation"],
+                    'large-threshold-by-percent': ["Standard Deviation"],
                     'small-threshold-by-stdv': ["Percent"],
                     'large-threshold-by-stdv': ["Percent"],
                 },
