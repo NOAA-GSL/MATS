@@ -356,20 +356,20 @@ const doPlotParams = function () {
     }
 
     if (matsCollections.PlotParams.findOne({
-        name: "scorecard-color-theme"
-    }) == undefined) {
-    matsCollections.PlotParams.insert({
-        name: 'scorecard-color-theme',
-        type: matsTypes.InputTypes.radioGroup,
-        options: ["GreenRed", "BlueRed"],
-        controlButtonCovered: false,
-        default: "GreenRed",
-        controlButtonVisibility: 'block',
-        displayOrder: 1,
-        displayPriority: 1,
-        displayGroup: 8
-    });
-}
+            name: "scorecard-color-theme"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'scorecard-color-theme',
+            type: matsTypes.InputTypes.radioGroup,
+            options: ["GreenRed", "BlueRed"],
+            controlButtonCovered: false,
+            default: "GreenRed",
+            controlButtonVisibility: 'block',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 8
+        });
+    }
 
 
     if (matsCollections.PlotParams.findOne({
@@ -900,7 +900,6 @@ const doCurveParams = function () {
             unique: false,
             default: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]][0],
             controlButtonVisibility: 'block',
-            multiple: true,
             displayOrder: 1,
             displayPriority: 1,
             displayGroup: 4
@@ -939,7 +938,6 @@ const doCurveParams = function () {
             unique: false,
             default: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]][0],
             controlButtonVisibility: 'block',
-            multiple: true,
             displayOrder: 2,
             displayPriority: 1,
             displayGroup: 4
@@ -978,7 +976,6 @@ const doCurveParams = function () {
             unique: false,
             default: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]][0],
             controlButtonVisibility: 'block',
-            multiple: true,
             displayOrder: 3,
             displayPriority: 1,
             displayGroup: 4
@@ -1055,7 +1052,6 @@ const doCurveParams = function () {
             unique: false,
             default: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]][0],
             controlButtonVisibility: 'block',
-            multiple: true,
             displayOrder: 2,
             displayPriority: 1,
             displayGroup: 5
@@ -1094,7 +1090,6 @@ const doCurveParams = function () {
             default: matsTypes.InputTypes.unused,
             controlButtonVisibility: 'block',
             controlButtonText: "valid utc hour",
-            multiple: true,
             displayOrder: 3,
             displayPriority: 1,
             displayGroup: 5
@@ -1132,7 +1127,6 @@ const doCurveParams = function () {
             default: matsTypes.InputTypes.unused,
             controlButtonVisibility: 'block',
             controlButtonText: "pressure level (hPa)",
-            multiple: true,
             displayOrder: 4,
             displayPriority: 1,
             displayGroup: 5
