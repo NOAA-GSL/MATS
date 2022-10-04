@@ -6,4 +6,8 @@ configMapGenerator:
   - name: mongo-config
     files:
       - mongod.conf
-# secretGenerator: ...
+
+secretGenerator:
+  - name: mongo-secret
+    envs:
+    - .env.mongo.secret # Should contain user and password

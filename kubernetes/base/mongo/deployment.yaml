@@ -35,6 +35,9 @@ spec:
             - name: mongo-config-file
               mountPath: /etc/mongod.conf
               readOnly: true
+          envFrom:
+            - secretRef:
+              name: mongo-secret
       volumes:
         - name: mongo-config-file
           configMap:
