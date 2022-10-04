@@ -1,0 +1,9 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+
+configMapGenerator:
+  - name: mongo-config
+    files:
+      - mongod.conf
+# secretGenerator: ...
