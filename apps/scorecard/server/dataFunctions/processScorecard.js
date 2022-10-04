@@ -204,7 +204,7 @@ results: {
     });
     var result = {
         error: "",
-        data: "",
+        data: scorecardDocument,
         options: {},
         basis: {
             plotParams: plotParams,
