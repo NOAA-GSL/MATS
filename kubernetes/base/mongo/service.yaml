@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mongodb
+  name: mongodb
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017 # Port to forward to in the pod
+      protocol: TCP
+      name: mongodb
+  selector:
+    app: mongodb
+  type: ClusterIP
