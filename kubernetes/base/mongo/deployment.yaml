@@ -31,14 +31,19 @@ spec:
               cpu: "1"
           securityContext:
             allowPrivilegeEscalation: false
+          envFrom:
+            - secretRef:
+                name: mongo-secret
           volumeMounts:
             - name: mongo-config-file
               mountPath: /etc/mongod.conf
               readOnly: true
-          envFrom:
-            - secretRef:
-                name: mongo-secret
+            - name: mongo-persistent-storage
+              mountPath: /data/db
       volumes:
         - name: mongo-config-file
           configMap:
             name: mongo-config
+        - name: mongo-persistent-storage
+          persistentVolumeClaim:
+            claimName: mongo-pv-claim
