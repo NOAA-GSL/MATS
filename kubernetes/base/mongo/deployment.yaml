@@ -37,7 +37,7 @@ spec:
               readOnly: true
           envFrom:
             - secretRef:
-              name: mongo-secret
+                name: mongo-secret
       volumes:
         - name: mongo-config-file
           configMap:
