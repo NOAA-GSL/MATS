@@ -39,6 +39,7 @@ const doPlotParams = function () {
                 'scorecard-recurrence-interval': ['Once'],
                 'relative-date-range-type': ['Once'],
                 'relative-date-range-value': ['Once'],
+                'scorecard-ends-on': ['Once'],
                 'these-hours-of-the-day': ['Once'],
                 'these-days-of-the-week': ['Once'],
                 'these-days-of-the-month': ['Once'],
