@@ -51,7 +51,11 @@ const doPlotParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 1,
             displayPriority: 1,
-            displayGroup: 1
+            displayGroup: 1,
+            tooltip: "Choose select the schedule mode, 'Once' means that this scorecard will be \
+             processed only one time. Recurring means that this scorecard will be processed on a schedule. If \
+             you choose 'Recurring' you will need to choose the schedule parameters as well as the date on which processing will cease",
+            tooltipPlacement: "right"
         });
     }
 
@@ -72,7 +76,10 @@ const doPlotParams = function () {
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 2,
-                help: "dateHelp.html"
+                help: "dateHelp.html",
+                tooltip: "Choose the date range for which this 'Once' scorecard will be processed. \
+                This scorecard will process only that date range, and only one time",
+                tooltipPlacement: "right"
             });
     } else {
         // need to update the dates selector if the metadata has changed
@@ -102,7 +109,11 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                tooltip: "Choose the relative range type. All recurring schedules will create a date range that is relative to \
+                when the scorecard processing runs. For example, if you choose 'Hours' then you will need to also choose the number of hours \
+                prior to the scheduled run time that will be included in the calculations. The same for 'Days' or 'Weeks'",
+                tooltipPlacement: "right"
             });
     }
 
@@ -121,7 +132,9 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                tooltip: "Choose the number of 'Hours', 'Days', or 'Weeks' for which this scorecard will be calculated relative to its processing time.",
+                tooltipPlacement: "right"
             });
     }
 
@@ -142,7 +155,10 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 3,
+                tooltip: "Choose the type of recurrance interval on which this recurring scorecard will be processed. \
+                Each new cycle will create a new viewable scorecard identified by the processing date and time.",
+                tooltipPlacement: "right"
             });
     }
 
@@ -159,7 +175,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "Choose the hours of the day for which this 'Daily', 'Weekly' or 'Monthly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-week"}) == undefined) {
@@ -174,7 +192,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "Choose the days of the week for which this 'Weekly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-month"}) == undefined) {
@@ -189,7 +209,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "Choose the days of the month for which this 'Monthly' or 'Yearly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-months"}) == undefined) {
@@ -204,7 +226,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "Choose the months for which this 'Yearly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "scorecard-ends-on"}) == undefined) {
