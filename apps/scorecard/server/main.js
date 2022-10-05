@@ -344,7 +344,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 1,
             displayPriority: 1,
-            displayGroup: 8
+            displayGroup: 8,
+            tooltip: "Choose a color scheme for the major and minor symbols, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
         });
     }
 
@@ -364,7 +366,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 2,
             displayPriority: 1,
-            displayGroup: 8
+            displayGroup: 8,
+            tooltip: "Choose a color for the minor validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
         });
     }
 
@@ -383,7 +387,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 3,
             displayPriority: 1,
-            displayGroup: 8
+            displayGroup: 8,
+            tooltip: "Choose a color for the major validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
         });
     }
 
@@ -402,7 +408,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 4,
             displayPriority: 1,
-            displayGroup: 8
+            displayGroup: 8,
+            tooltip: "Choose a color for the minor datasource symbol, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
         });
     }
 
@@ -421,7 +429,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 5,
             displayPriority: 1,
-            displayGroup: 8
+            displayGroup: 8,
+            tooltip: "Choose a color for the major datasource symbol, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
         });
     }
 
@@ -455,7 +465,9 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 9
+                displayGroup: 9,
+                tooltip: "Choose a name for this scorecard. This name will be used to identify a one time scorecard and all the recurring ones with these parameters.",
+                tooltipPlacement: "right"
             });
     }
 
@@ -611,7 +623,9 @@ const doCurveParams = function () {
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 1,
-                help: 'label.html'
+                help: 'label.html',
+                tooltip: "Choose a label for this scorecard row, this will be used to identify this scorecard",
+                tooltipPlacement: "right"
             }
         );
     }
@@ -632,7 +646,9 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                tooltip: "Choose an application for this scorecard row",
+                tooltipPlacement: "right"
             });
     } else {
         // it is defined but check for necessary update
