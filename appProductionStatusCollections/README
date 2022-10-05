@@ -1,8 +1,0 @@
-The files in this directory are exported from the mats.gsd.esrl.noaa.gov appProductionStatus mongo database automatically
-each time a build modifies the data in the deployment collection. The utility that does the exporting can be found in the
-mongo_utilities.source script in the scripts/common directory in this repository. The utility is named exportCollections.
-The build script checks the files into the master and development branches of the git repository automatically.
-
-If needed the data can be restored to the database using the mongoimport utility. https://docs.mongodb.com/manual/reference/program/mongoimport/
-
-

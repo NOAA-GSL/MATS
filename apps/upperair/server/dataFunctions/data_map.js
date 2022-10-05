@@ -79,8 +79,8 @@ dataMap = function (plotParams, plotFunction) {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
     var siteDateClause = "and unix_timestamp(o.date)+3600*o.hour >= " + fromSecs + " - 1800 and unix_timestamp(o.date)+3600*o.hour <= " + toSecs + " + 1800";
-    var levelClause = "and m0.press >= " + top + " and m0.press <= " + bottom;
-    var siteLevelClause = "and o.press >= " + top + " and o.press <= " + bottom;
+    var levelClause = "and ceil((m0.press-20)/50)*50 >= " + top + " and ceil((m0.press-20)/50)*50 <= " + bottom;
+    var siteLevelClause = "and ceil((o.press-20)/50)*50 >= " + top + " and ceil((o.press-20)/50)*50 <= " + bottom;
     var siteMatchClause = "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -89,7 +89,7 @@ dataMap = function (plotParams, plotFunction) {
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections['statistic'].findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
     var statisticClause = "sum(" + variable[0] + ") as square_diff_sum, count(" + variable[1] + ") as N_sum, sum(" + variable[2] + ") as obs_model_diff_sum, sum(" + variable[3] + ") as model_sum, sum(" + variable[4] + ") as obs_sum, sum(" + variable[5] + ") as abs_sum, " +
-        "group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', m0.press, ';', " + variable[0] + ", ';', 1, ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by unix_timestamp(m0.date)+3600*m0.hour, m0.press) as sub_data, count(" + variable[0] + ") as N0";
+        "group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ceil((m0.press-20)/50)*50, ';', " + variable[0] + ", ';', 1, ';', " + variable[2] + ", ';', " + variable[3] + ", ';', " + variable[4] + ", ';', " + variable[5] + " order by unix_timestamp(m0.date)+3600*m0.hour, ceil((m0.press-20)/50)*50) as sub_data, count(" + variable[0] + ") as N0";
     var statType = statisticOptionsMap[statisticSelect];
     var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
     var varUnits = statVarUnitMap[statisticSelect][variableStr];
