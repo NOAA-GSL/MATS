@@ -218,7 +218,9 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 5,
+                tooltip: "Choose select the date on which this scorecard will end, any runs on the end date will be completed",
+                tooltipPlacement: "right"
             });
     }
 
@@ -240,7 +242,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 1,
             displayPriority: 1,
-            displayGroup: 6
+            displayGroup: 6,
+            tooltip: "Choose percentage or standard deviation as the method for setting the significance thresholds",
+            tooltipPlacement: "right"
         });
     }
 
@@ -263,7 +267,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'none',
             displayOrder: 1,
             displayPriority: 1,
-            displayGroup: 7
+            displayGroup: 7,
+            tooltip: "Choose a threshold for the minor significance in percentage",
+            tooltipPlacement: "right"
         });
     }
     if (matsCollections.PlotParams.findOne({
@@ -284,7 +290,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'none',
             displayOrder: 2,
             displayPriority: 1,
-            displayGroup: 7
+            displayGroup: 7,
+            tooltip: "Choose a threshold for the major significance in percentage",
+            tooltipPlacement: "right"
         });
     }
 
@@ -307,7 +315,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'none',
             displayOrder: 1,
             displayPriority: 1,
-            displayGroup: 7
+            displayGroup: 7,
+            tooltip: "Choose a threshold for the minor significance in standard deviations",
+            tooltipPlacement: "right"
         });
     }
     if (matsCollections.PlotParams.findOne({
@@ -328,7 +338,9 @@ const doPlotParams = function () {
             controlButtonVisibility: 'none',
             displayOrder: 2,
             displayPriority: 1,
-            displayGroup: 7
+            displayGroup: 7,
+            tooltip: "Choose a threshold for the major significance in standard deviations",
+            tooltipPlacement: "right"
         });
     }
 
