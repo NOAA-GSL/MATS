@@ -26,10 +26,9 @@ const doPlotParams = function () {
     }
     */
 
-    if (matsCollections.PlotParams.findOne({
-            name: "scorecard-schedule-mode"
-        }) == undefined) {
-        matsCollections.PlotParams.insert({
+    if (matsCollections.PlotParams.findOne({name: "scorecard-schedule-mode"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
             name: 'scorecard-schedule-mode',
             type: matsTypes.InputTypes.radioGroup,
             options: ["Once", "Recurring"],
@@ -44,7 +43,8 @@ const doPlotParams = function () {
                 'these-days-of-the-week': ['Once'],
                 'these-days-of-the-month': ['Once'],
                 'these-months': ['Once'],
-                'dates': ['Recurring']
+                'scorecard-ends-on': ['Once'],
+                'dates': ['Recurring'],
 
             },
             controlButtonVisibility: 'block',
@@ -215,7 +215,7 @@ const doPlotParams = function () {
                 options: [],
                 controlButtonCovered: true,
                 default: new Date().toLocaleDateString(),
-                controlButtonVisibility: 'block',
+                controlButtonVisibility: 'none',
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 5,
