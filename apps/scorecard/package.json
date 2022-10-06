@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.19.0",
+    "@popperjs/core": "^2.11.6",
     "bootstrap": "^4.6.2",
     "chai": "^4.3.6",
     "downsample-lttb": "0.0.1",

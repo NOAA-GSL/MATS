@@ -44,13 +44,18 @@ const doPlotParams = function () {
                 'these-days-of-the-week': ['Once'],
                 'these-days-of-the-month': ['Once'],
                 'these-months': ['Once'],
-                'dates': ['Recurring']
+                'scorecard-ends-on': ['Once'],
+                'dates': ['Recurring'],
 
             },
             controlButtonVisibility: 'block',
             displayOrder: 1,
             displayPriority: 1,
-            displayGroup: 1
+            displayGroup: 1,
+            tooltip: "Choose select the schedule mode, 'Once' means that this scorecard will be \
+             processed only one time. Recurring means that this scorecard will be processed on a schedule. If \
+             you choose 'Recurring' you will need to choose the schedule parameters as well as the date on which processing will cease",
+            tooltipPlacement: "right"
         });
     }
 
@@ -71,7 +76,10 @@ const doPlotParams = function () {
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 2,
-                help: "dateHelp.html"
+                help: "dateHelp.html",
+                tooltip: "Choose the date range for which this 'Once' scorecard will be processed. \
+                This scorecard will process only that date range, and only one time",
+                tooltipPlacement: "right"
             });
     } else {
         // need to update the dates selector if the metadata has changed
@@ -101,7 +109,11 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                tooltip: "Choose the relative range type. All recurring schedules will create a date range that is relative to \
+                when the scorecard processing runs. For example, if you choose 'Hours' then you will need to also choose the number of hours \
+                prior to the scheduled run time that will be included in the calculations. The same for 'Days' or 'Weeks'",
+                tooltipPlacement: "right"
             });
     }
 
@@ -120,7 +132,9 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                tooltip: "Choose the number of 'Hours', 'Days', or 'Weeks' for which this scorecard will be calculated relative to its processing time.",
+                tooltipPlacement: "right"
             });
     }
 
@@ -141,7 +155,10 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 3,
+                tooltip: "Choose the type of recurrance interval on which this recurring scorecard will be processed. \
+                Each new cycle will create a new viewable scorecard identified by the processing date and time.",
+                tooltipPlacement: "right"
             });
     }
 
@@ -158,7 +175,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "Choose the hours of the day for which this 'Daily', 'Weekly' or 'Monthly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-week"}) == undefined) {
@@ -173,7 +192,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "Choose the days of the week for which this 'Weekly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-month"}) == undefined) {
@@ -188,7 +209,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "Choose the days of the month for which this 'Monthly' or 'Yearly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-months"}) == undefined) {
@@ -203,7 +226,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "Choose the months for which this 'Yearly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "scorecard-ends-on"}) == undefined) {
@@ -215,201 +240,236 @@ const doPlotParams = function () {
                 options: [],
                 controlButtonCovered: true,
                 default: new Date().toLocaleDateString(),
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 5
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: "scorecard-percent-stdv"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'scorecard-percent-stdv',
-                type: matsTypes.InputTypes.radioGroup,
-                options: ["Percent", "StandardDeviation"],
-                controlButtonCovered: false,
-                default: "Percent",
-                hideOtherFor: {
-                    'minor-threshold-by-percent': ["StandardDeviation"],
-                    'major-threshold-by-percent': ["StandardDeviation"],
-                    'minor-threshold-by-stdv': ["Percent"],
-                    'major-threshold-by-stdv': ["Percent"],
-                },
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: "minor-threshold-by-percent"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'minor-threshold-by-percent',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '90',
-                max: '100',
-                step: '1',
-                default: 95,
-                controlButtonCovered: true,
-                controlButtonText: "minor - %",
-                controlButtonFA: "fa-1x fa fa-caret-down",
                 controlButtonVisibility: 'none',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 7
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: "major-threshold-by-percent"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'major-threshold-by-percent',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '90',
-                max: '100',
-                step: '1',
-                default: 99,
-                controlButtonCovered: true,
-                controlButtonText: "major - %",
-                controlButtonFA: "fa-2x fa fa-caret-down",
-                controlButtonVisibility: 'none',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 5,
+                tooltip: "Choose select the date on which this scorecard will end, any runs on the end date will be completed",
+                tooltipPlacement: "right"
             });
     }
 
-
-    if (matsCollections.PlotParams.findOne({name: "minor-threshold-by-stdv"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'minor-threshold-by-stdv',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '1',
-                max: '3',
-                step: '1',
-                default: 1,
-                controlButtonCovered: true,
-                controlButtonText: "minor - std",
-                controlButtonFA: "fa-1x fa fa-caret-down",
-                controlButtonVisibility: 'none',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 7
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: "major-threshold-by-stdv"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'major-threshold-by-stdv',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '1',
-                max: '3',
-                step: '1',
-                default: 1,
-                controlButtonCovered: true,
-                controlButtonText: "major - std",
-                controlButtonFA: "fa-2x fa fa-caret-down",
-                controlButtonVisibility: 'none',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 7
-            });
-    }
-
-    if (matsCollections.PlotParams.findOne({name: "scorecard-color-theme"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'scorecard-color-theme',
-                type: matsTypes.InputTypes.radioGroup,
-                options: ["GreenRed", "BlueRed"],
-                controlButtonCovered: false,
-                default: "GreenRed",
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+    if (matsCollections.PlotParams.findOne({
+            name: "scorecard-percent-stdv"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'scorecard-percent-stdv',
+            type: matsTypes.InputTypes.radioGroup,
+            options: ["Percent", "StandardDeviation"],
+            controlButtonCovered: false,
+            default: "Percent",
+            hideOtherFor: {
+                'minor-threshold-by-percent': ["StandardDeviation"],
+                'major-threshold-by-percent': ["StandardDeviation"],
+                'minor-threshold-by-stdv': ["Percent"],
+                'major-threshold-by-stdv': ["Percent"],
+            },
+            controlButtonVisibility: 'block',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 6,
+            tooltip: "Choose percentage or standard deviation as the method for setting the significance thresholds",
+            tooltipPlacement: "right"
+        });
     }
 
 
-    if (matsCollections.PlotParams.findOne({name: "minor-truth-color"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'minor-truth-color',
-                type: matsTypes.InputTypes.color,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                controlButtonText: " ",
-                controlButtonFA: "fa-1x fa fa-caret-down",
-                default: "#ff0000",
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+    if (matsCollections.PlotParams.findOne({
+            name: "minor-threshold-by-percent"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'minor-threshold-by-percent',
+            type: matsTypes.InputTypes.numberSpinner,
+            optionsMap: {},
+            options: [],
+            min: '90',
+            max: '100',
+            step: '1',
+            default: 95,
+            controlButtonCovered: true,
+            controlButtonText: "minor - %",
+            controlButtonFA: "fa-1x fa fa-caret-down",
+            controlButtonVisibility: 'none',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 7,
+            tooltip: "Choose a threshold for the minor significance in percentage",
+            tooltipPlacement: "right"
+        });
+    }
+    if (matsCollections.PlotParams.findOne({
+            name: "major-threshold-by-percent"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-threshold-by-percent',
+            type: matsTypes.InputTypes.numberSpinner,
+            optionsMap: {},
+            options: [],
+            min: '90',
+            max: '100',
+            step: '1',
+            default: 99,
+            controlButtonCovered: true,
+            controlButtonText: "major - %",
+            controlButtonFA: "fa-2x fa fa-caret-down",
+            controlButtonVisibility: 'none',
+            displayOrder: 2,
+            displayPriority: 1,
+            displayGroup: 7,
+            tooltip: "Choose a threshold for the major significance in percentage",
+            tooltipPlacement: "right"
+        });
     }
 
-    if (matsCollections.PlotParams.findOne({name: "major-truth-color"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'major-truth-color',
-                type: matsTypes.InputTypes.color,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                controlButtonText: " ",
-                controlButtonFA: "fa-2x fa fa-caret-down",
-                default: "#ff0000",
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+
+    if (matsCollections.PlotParams.findOne({
+            name: "minor-threshold-by-stdv"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'minor-threshold-by-stdv',
+            type: matsTypes.InputTypes.numberSpinner,
+            optionsMap: {},
+            options: [],
+            min: '1',
+            max: '3',
+            step: '1',
+            default: 1,
+            controlButtonCovered: true,
+            controlButtonText: "minor - std",
+            controlButtonFA: "fa-1x fa fa-caret-down",
+            controlButtonVisibility: 'none',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 7,
+            tooltip: "Choose a threshold for the minor significance in standard deviations",
+            tooltipPlacement: "right"
+        });
+    }
+    if (matsCollections.PlotParams.findOne({
+            name: "major-threshold-by-stdv"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-threshold-by-stdv',
+            type: matsTypes.InputTypes.numberSpinner,
+            optionsMap: {},
+            options: [],
+            min: '1',
+            max: '3',
+            step: '1',
+            default: 1,
+            controlButtonCovered: true,
+            controlButtonText: "major - std",
+            controlButtonFA: "fa-2x fa fa-caret-down",
+            controlButtonVisibility: 'none',
+            displayOrder: 2,
+            displayPriority: 1,
+            displayGroup: 7,
+            tooltip: "Choose a threshold for the major significance in standard deviations",
+            tooltipPlacement: "right"
+        });
     }
 
-    if (matsCollections.PlotParams.findOne({name: "minor-source-color"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'minor-source-color',
-                type: matsTypes.InputTypes.color,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                controlButtonText: " ",
-                controlButtonFA: "fa-1x fa fa-caret-up",
-                default: "#00ff00",
-                controlButtonVisibility: 'block',
-                displayOrder: 4,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+    if (matsCollections.PlotParams.findOne({
+            name: "scorecard-color-theme"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'scorecard-color-theme',
+            type: matsTypes.InputTypes.radioGroup,
+            options: ["GreenRed", "BlueRed"],
+            controlButtonCovered: false,
+            default: "GreenRed",
+            controlButtonVisibility: 'block',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: "Choose a color scheme for the major and minor symbols, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
+        });
     }
 
-    if (matsCollections.PlotParams.findOne({name: "major-source-color"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'major-source-color',
-                type: matsTypes.InputTypes.color,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                controlButtonText: " ",
-                controlButtonFA: "fa-2x fa fa-caret-up",
-                default: "#00ff00",
-                controlButtonVisibility: 'block',
-                displayOrder: 5,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+
+    if (matsCollections.PlotParams.findOne({
+            name: "minor-truth-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'minor-truth-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-1x fa fa-caret-down",
+            default: "#ff0000",
+            controlButtonVisibility: 'block',
+            displayOrder: 2,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: "Choose a color for the minor validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
+        });
+    }
+
+    if (matsCollections.PlotParams.findOne({
+            name: "major-truth-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-truth-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-2x fa fa-caret-down",
+            default: "#ff0000",
+            controlButtonVisibility: 'block',
+            displayOrder: 3,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: "Choose a color for the major validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
+        });
+    }
+
+    if (matsCollections.PlotParams.findOne({
+            name: "minor-source-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'minor-source-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-1x fa fa-caret-up",
+            default: "#00ff00",
+            controlButtonVisibility: 'block',
+            displayOrder: 4,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: "Choose a color for the minor datasource symbol, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
+        });
+    }
+
+    if (matsCollections.PlotParams.findOne({
+            name: "major-source-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-source-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-2x fa fa-caret-up",
+            default: "#00ff00",
+            controlButtonVisibility: 'block',
+            displayOrder: 5,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: "Choose a color for the major datasource symbol, you can use the eyedropper tool in the color editor to match colors to another symbol",
+            tooltipPlacement: "right"
+        });
     }
 
 
@@ -442,7 +502,9 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 9
+                displayGroup: 9,
+                tooltip: "Choose a name for this scorecard. This name will be used to identify a one time scorecard and all the recurring ones with these parameters.",
+                tooltipPlacement: "right"
             });
     }
 
@@ -598,7 +660,9 @@ const doCurveParams = function () {
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 1,
-                help: 'label.html'
+                help: 'label.html',
+                tooltip: "Choose a label for this scorecard row, this will be used to identify this scorecard",
+                tooltipPlacement: "right"
             }
         );
     }
@@ -619,7 +683,9 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                tooltip: "Choose an application for this scorecard row",
+                tooltipPlacement: "right"
             });
     } else {
         // it is defined but check for necessary update
