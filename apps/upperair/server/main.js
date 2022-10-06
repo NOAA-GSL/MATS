@@ -480,7 +480,7 @@ const doCurveParams = function () {
                 name: 'region-type',
                 type: matsTypes.InputTypes.select,
                 options: ['Predefined region', 'Select stations'],
-                dependentNames: ["variable"],
+                dependentNames: ["variable", "x-variable", "y-variable"],
                 default: 'Predefined region',
                 hideOtherFor: {
                     'region': ["Select stations"],
@@ -561,23 +561,23 @@ const doCurveParams = function () {
         }
     }
 
+    const optionsMap = {
+        "RMSE": "scalar",
+
+        "Bias (Model - Obs)": "scalar",
+
+        "N": "scalar",
+
+        "Model average": "scalar",
+
+        "Obs average": "scalar",
+
+        "Std deviation": "scalar",
+
+        "MAE (station plots only)": "scalar"
+    };
+
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
-        const optionsMap = {
-            "RMSE": "scalar",
-
-            "Bias (Model - Obs)": "scalar",
-
-            "N": "scalar",
-
-            "Model average": "scalar",
-
-            "Obs average": "scalar",
-
-            "Std deviation": "scalar",
-
-            "MAE (station plots only)": "scalar"
-        };
-
         matsCollections["statistic"].insert(
             {
                 name: 'statistic',
@@ -594,94 +594,128 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["x-statistic"].findOne({name: 'x-statistic'}) == undefined) {
+        matsCollections["x-statistic"].insert(
+            {
+                name: 'x-statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    if (matsCollections["y-statistic"].findOne({name: 'y-statistic'}) == undefined) {
+        matsCollections["y-statistic"].insert(
+            {
+                name: 'y-statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 6,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    const statVarOptionsMap = {
+        // THIS IS KEYED BY REGION-TYPE BECAUSE OUR MYSQL OBS TABLE DOESN'T HAVE RH
+        // FOR SOME REASON OR OTHER, SO IT NEEDS TO BE EXCLUDED AS A VARIABLE
+        // FROM STATION PLOTS. SIGH.
+        //
+        // ARRAY ITEMS BY INDEX:
+        // 0: sum of squared x-x_bar difference for RMSE/STDEV
+        // 1: number of values in sum
+        // 2: sum of obs-model difference (-1 * bias * N)
+        // 3: sum of model values
+        // 4: sum of obs values
+        // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
+        'Predefined region': {
+            'Temperature': ['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m1.sum_ob_t)', 'm1.sum_ob_t', '0'],
+            'RH': ['m0.sum2_dR', 'm0.N_dR', 'm0.sum_dR', '-1 * (m0.sum_dR-m1.sum_ob_R)', 'm1.sum_ob_R', '0'],
+            'RHobT': ['m0.sum2_dRoT', 'm0.N_dRoT', 'm0.sum_dRoT', '-1 * (m0.sum_dRoT-m1.sum_ob_R)', 'm1.sum_ob_R', '0'],
+            'Wind': ['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0'],
+        },
+        'Select stations': {
+            'Temperature': ['pow(o.t - m0.t,2)/10000', '(o.t - m0.t)/100', '(o.t - m0.t)/100', '(if(o.t is not null,m0.t,null))/100', '(if(m0.t is not null,o.t,null))/100', '(abs(o.t - m0.t))/100'],
+            'RH': ['(pow(o.rh - m0.rh,2))', '(o.rh - m0.rh)', '(o.rh - m0.rh)', '(if(o.rh is not null,m0.rh,null))', '(if(m0.rh is not null,o.rh,null))', '(abs(o.rh - m0.rh))'],
+            'RHobT': ['(pow(o.rhot - m0.rhot,2))', '(o.rhot - m0.rhot)', '(o.rhot - m0.rhot)', '(if(o.rhot is not null,m0.rhot,null))', '(if(m0.rhot is not null,o.rhot,null))', '(abs(o.rhot - m0.rhot))'],
+            'Dewpoint': ['(pow(o.dp - m0.dp,2))/10000', '(o.dp - m0.dp)/100', '(o.dp - m0.dp)/100', '(if(o.dp is not null,m0.dp,null))/100', '(if(m0.dp is not null,o.dp,null))/100', '(abs(o.dp - m0.dp))/100'],
+            'Wind': ['(pow(o.ws,2)+pow(m0.ws,2)-2*o.ws*m0.ws*cos((o.wd-m0.wd)/57.2958))/10000', '(o.ws + m0.ws)/100', '(o.ws - m0.ws)/100', '(if(o.ws is not null,m0.ws,null))/100', '(if(m0.ws is not null,o.ws,null))/100', '(abs(o.ws - m0.ws))/100'],
+            'Height': ['pow(o.z - m0.z,2)', '(o.z - m0.z)', '(o.z - m0.z)', '(if(o.z is not null,m0.z,null))', '(if(m0.z is not null,o.z,null))', '(abs(o.z - m0.z))']
+        }
+    };
+
+    const statVarUnitMap = {
+        'RMSE': {
+            'Temperature': '°C',
+            'RH': 'RH (%)',
+            'RHobT': 'RH (%)',
+            'Dewpoint': '°C',
+            'Wind': 'm/s',
+            'Height': 'z'
+        },
+        'Bias (Model - Obs)': {
+            'Temperature': '°C',
+            'RH': 'RH (%)',
+            'RHobT': 'RH (%)',
+            'Dewpoint': '°C',
+            'Wind': 'm/s',
+            'Height': 'z'
+        },
+        'N': {
+            'Temperature': 'Number',
+            'RH': 'Number',
+            'RHobT': 'Number',
+            'Dewpoint': 'Number',
+            'Wind': 'Number',
+            'Height': 'Number'
+        },
+        'Model average': {
+            'Temperature': '°C',
+            'RH': 'RH (%)',
+            'RHobT': 'RH (%)',
+            'Dewpoint': '°C',
+            'Wind': 'm/s',
+            'Height': 'z'
+        },
+        'Obs average': {
+            'Temperature': '°C',
+            'RH': 'RH (%)',
+            'RHobT': 'RH (%)',
+            'Dewpoint': '°C',
+            'Wind': 'm/s',
+            'Height': 'z'
+        },
+        'Std deviation': {
+            'Temperature': '°C',
+            'RH': 'RH (%)',
+            'RHobT': 'RH (%)',
+            'Dewpoint': '°C',
+            'Wind': 'm/s',
+            'Height': 'z'
+        },
+        'MAE (station plots only)': {
+            'Temperature': '°C',
+            'RH': 'RH (%)',
+            'RHobT': 'RH (%)',
+            'Dewpoint': '°C',
+            'Wind': 'm/s',
+            'Height': 'z'
+        }
+    };
+
     if (matsCollections['variable'].findOne({name: 'variable'}) == undefined) {
-        const statVarOptionsMap = {
-            // THIS IS KEYED BY REGION-TYPE BECAUSE OUR MYSQL OBS TABLE DOESN'T HAVE RH
-            // FOR SOME REASON OR OTHER, SO IT NEEDS TO BE EXCLUDED AS A VARIABLE
-            // FROM STATION PLOTS. SIGH.
-            //
-            // ARRAY ITEMS BY INDEX:
-            // 0: sum of squared x-x_bar difference for RMSE/STDEV
-            // 1: number of values in sum
-            // 2: sum of obs-model difference (-1 * bias * N)
-            // 3: sum of model values
-            // 4: sum of obs values
-            // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
-            'Predefined region': {
-                'Temperature': ['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m1.sum_ob_t)', 'm1.sum_ob_t', '0'],
-                'RH': ['m0.sum2_dR', 'm0.N_dR', 'm0.sum_dR', '-1 * (m0.sum_dR-m1.sum_ob_R)', 'm1.sum_ob_R', '0'],
-                'RHobT': ['m0.sum2_dRoT', 'm0.N_dRoT', 'm0.sum_dRoT', '-1 * (m0.sum_dRoT-m1.sum_ob_R)', 'm1.sum_ob_R', '0'],
-                'Wind': ['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0'],
-            },
-            'Select stations': {
-                'Temperature': ['pow(o.t - m0.t,2)/10000', '(o.t - m0.t)/100', '(o.t - m0.t)/100', '(if(o.t is not null,m0.t,null))/100', '(if(m0.t is not null,o.t,null))/100', '(abs(o.t - m0.t))/100'],
-                'RH': ['(pow(o.rh - m0.rh,2))', '(o.rh - m0.rh)', '(o.rh - m0.rh)', '(if(o.rh is not null,m0.rh,null))', '(if(m0.rh is not null,o.rh,null))', '(abs(o.rh - m0.rh))'],
-                'RHobT': ['(pow(o.rhot - m0.rhot,2))', '(o.rhot - m0.rhot)', '(o.rhot - m0.rhot)', '(if(o.rhot is not null,m0.rhot,null))', '(if(m0.rhot is not null,o.rhot,null))', '(abs(o.rhot - m0.rhot))'],
-                'Dewpoint': ['(pow(o.dp - m0.dp,2))/10000', '(o.dp - m0.dp)/100', '(o.dp - m0.dp)/100', '(if(o.dp is not null,m0.dp,null))/100', '(if(m0.dp is not null,o.dp,null))/100', '(abs(o.dp - m0.dp))/100'],
-                'Wind': ['(pow(o.ws,2)+pow(m0.ws,2)-2*o.ws*m0.ws*cos((o.wd-m0.wd)/57.2958))/10000', '(o.ws + m0.ws)/100', '(o.ws - m0.ws)/100', '(if(o.ws is not null,m0.ws,null))/100', '(if(m0.ws is not null,o.ws,null))/100', '(abs(o.ws - m0.ws))/100'],
-                'Height': ['pow(o.z - m0.z,2)', '(o.z - m0.z)', '(o.z - m0.z)', '(if(o.z is not null,m0.z,null))', '(if(m0.z is not null,o.z,null))', '(abs(o.z - m0.z))']
-            }
-        };
-
-        const statVarUnitMap = {
-            'RMSE': {
-                'Temperature': '°C',
-                'RH': 'RH (%)',
-                'RHobT': 'RH (%)',
-                'Dewpoint': '°C',
-                'Wind': 'm/s',
-                'Height': 'z'
-            },
-            'Bias (Model - Obs)': {
-                'Temperature': '°C',
-                'RH': 'RH (%)',
-                'RHobT': 'RH (%)',
-                'Dewpoint': '°C',
-                'Wind': 'm/s',
-                'Height': 'z'
-            },
-            'N': {
-                'Temperature': 'Number',
-                'RH': 'Number',
-                'RHobT': 'Number',
-                'Dewpoint': 'Number',
-                'Wind': 'Number',
-                'Height': 'Number'
-            },
-            'Model average': {
-                'Temperature': '°C',
-                'RH': 'RH (%)',
-                'RHobT': 'RH (%)',
-                'Dewpoint': '°C',
-                'Wind': 'm/s',
-                'Height': 'z'
-            },
-            'Obs average': {
-                'Temperature': '°C',
-                'RH': 'RH (%)',
-                'RHobT': 'RH (%)',
-                'Dewpoint': '°C',
-                'Wind': 'm/s',
-                'Height': 'z'
-            },
-            'Std deviation': {
-                'Temperature': '°C',
-                'RH': 'RH (%)',
-                'RHobT': 'RH (%)',
-                'Dewpoint': '°C',
-                'Wind': 'm/s',
-                'Height': 'z'
-            },
-            'MAE (station plots only)': {
-                'Temperature': '°C',
-                'RH': 'RH (%)',
-                'RHobT': 'RH (%)',
-                'Dewpoint': '°C',
-                'Wind': 'm/s',
-                'Height': 'z'
-            }
-        };
-
         matsCollections['variable'].insert(
             {
                 name: 'variable',
@@ -695,6 +729,44 @@ const doCurveParams = function () {
                 default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    if (matsCollections['x-variable'].findOne({name: 'x-variable'}) == undefined) {
+        matsCollections['x-variable'].insert(
+            {
+                name: 'x-variable',
+                type: matsTypes.InputTypes.select,
+                superiorNames: ['region-type'],
+                optionsMap: statVarOptionsMap,
+                statVarUnitMap: statVarUnitMap,
+                options: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]],
+                controlButtonCovered: true,
+                unique: false,
+                default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    if (matsCollections['y-variable'].findOne({name: 'y-variable'}) == undefined) {
+        matsCollections['y-variable'].insert(
+            {
+                name: 'y-variable',
+                type: matsTypes.InputTypes.select,
+                superiorNames: ['region-type'],
+                optionsMap: statVarOptionsMap,
+                statVarUnitMap: statVarUnitMap,
+                options: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]],
+                controlButtonCovered: true,
+                unique: false,
+                default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
             });
