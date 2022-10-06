@@ -723,10 +723,10 @@ const doCurveParams = function () {
                 superiorNames: ['region-type'],
                 optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                options: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]],
+                options: Object.keys(statVarOptionsMap["Predefined region"]),
                 controlButtonCovered: true,
                 unique: false,
-                default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
+                default: Object.keys(statVarOptionsMap["Predefined region"])[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -742,10 +742,10 @@ const doCurveParams = function () {
                 superiorNames: ['region-type'],
                 optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                options: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]],
+                options: Object.keys(statVarOptionsMap["Predefined region"]),
                 controlButtonCovered: true,
                 unique: false,
-                default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
+                default: Object.keys(statVarOptionsMap["Predefined region"])[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -761,10 +761,10 @@ const doCurveParams = function () {
                 superiorNames: ['region-type'],
                 optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                options: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]],
+                options: Object.keys(statVarOptionsMap["Predefined region"]),
                 controlButtonCovered: true,
                 unique: false,
-                default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
+                default: Object.keys(statVarOptionsMap["Predefined region"])[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -1318,7 +1318,7 @@ const doCurveTextPatterns = function () {
                 ['phase: ', 'phase', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "x-statistic", "x-variable", "y-statistic", "y-variable", "valid-time", "forecast-length", "phase", "top", "bottom"
+                "label", "database", "data-source", "region", "x-statistic", "x-variable", "y-statistic", "y-variable", "valid-time", "forecast-length", "phase", "top", "bottom", "bin-parameter", "curve-dates"
             ],
             groupSize: 6
         });
