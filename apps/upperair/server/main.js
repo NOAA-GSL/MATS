@@ -607,7 +607,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 2
             });
     }
 
@@ -622,7 +622,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -749,7 +749,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 2
             });
     }
 
@@ -766,7 +766,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: statVarOptionsMap[Object.keys(statVarOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 7,
+                displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -1007,6 +1007,39 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
+        const optionsMap = {
+            'Level': "select m0.mb10 * 10 as binVal, ",
+            'Fcst lead time': "select m0.fcst_len as binVal, ",
+            'Valid UTC hour': "select m0.time%(24*3600)/3600 as binVal, ",
+            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
+            'Valid Date': "select m0.time as binVal, ",
+            'Init Date': "select m0.time-m0.fcst_len*3600 as binVal, "
+        };
+
+        matsCollections["bin-parameter"].insert(
+            {
+                name: 'bin-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                hideOtherFor: {
+                    'top': ["Level"],
+                    'bottom': ["Level"],
+                    'forecast-length': ["Fcst lead time"],
+                    'valid-time': ["Valid UTC hour"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[4],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
     // determine date defaults for dates and curveDates
     const defaultDb = matsCollections["database"].findOne({name: "database"}, {default: 1}).default;
     modelDateRangeMap = matsCollections["database"].findOne({name: "database"}, {dates: 1}).dates;
@@ -1097,7 +1130,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "average", "top", "bottom", "sites", "sitesMap"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "average", "top", "bottom", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -1119,7 +1152,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1142,7 +1175,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1163,7 +1196,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1183,7 +1216,7 @@ const doCurveTextPatterns = function () {
                 ['phase: ', 'phase', ', ']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -1267,6 +1300,28 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.simpleScatter,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'database', ' '],
+                ['', 'x-variable', ' '],
+                ['', 'x-statistic', ' vs '],
+                ['', 'y-variable', ' '],
+                ['', 'y-statistic', ', '],
+                ['level: ', 'top', ' '],
+                ['to ', 'bottom', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['phase: ', 'phase', '']
+            ],
+            displayParams: [
+                "label", "database", "data-source", "region", "x-statistic", "x-variable", "y-statistic", "y-variable", "valid-time", "forecast-length", "phase", "top", "bottom"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -1336,6 +1391,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.contourDiff,
             graphFunction: "graphPlotly",
             dataFunction: "dataContourDiff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.simpleScatter,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataSimpleScatter",
             checked: false
         });
     }
