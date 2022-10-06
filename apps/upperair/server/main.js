@@ -1025,7 +1025,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "average", "top", "bottom", "sites", "sitesMap"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "average", "top", "bottom", "sites", "sitesMap"
             ],
             groupSize: 6
         });
@@ -1047,7 +1047,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1070,7 +1070,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1091,7 +1091,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom", "sites", "sitesMap", "curve-dates"
             ],
             groupSize: 6
         });
@@ -1111,7 +1111,7 @@ const doCurveTextPatterns = function () {
                 ['phase: ', 'phase', ', ']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "statistic", "variable", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap"
+                "label", "database", "data-source", "region-type", "region", "statistic", "variable", "utc-cycle-start", "phase", "top", "bottom", "sites", "sitesMap"
             ],
             groupSize: 6
         });
