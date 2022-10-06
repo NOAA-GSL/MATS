@@ -18,21 +18,59 @@ const doPlotParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
+    /*
+    NOTE: hideOtherFor - radio button groups
+    the hideOtherFor plotParam option for radio groups is similar to hideOtherFor for select params.
+    hideOtherFor: {
+        'param-name-to-be-hidden':['checked-option-that-hides','other-checked-option-that-hides', ...]
+    }
+    */
+
+    if (matsCollections.PlotParams.findOne({name: "scorecard-schedule-mode"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+            name: 'scorecard-schedule-mode',
+            type: matsTypes.InputTypes.radioGroup,
+            options: ["Once", "Recurring"],
+            dependentRadioGroups: ['scorecard-recurrence-interval'], // need an event triggered after this element changes to ensure hide/show settings are correct
+            controlButtonCovered: false,
+            default: "Once",
+            hideOtherFor: {
+                'scorecard-recurrence-interval': ['Once'],
+                'relative-date-range-type': ['Once'],
+                'relative-date-range-value': ['Once'],
+                'scorecard-ends-on': ['Once'],
+                'these-hours-of-the-day': ['Once'],
+                'these-days-of-the-week': ['Once'],
+                'these-days-of-the-month': ['Once'],
+                'these-months': ['Once'],
+                'dates': ['Recurring']
+
+            },
+            controlButtonVisibility: 'block',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 1
+        });
+    }
+
     if (matsCollections.PlotParams.findOne({name: "dates"}) == undefined) {
         matsCollections.PlotParams.insert(
             {
                 name: 'dates',
                 type: matsTypes.InputTypes.dateRange,
-                options: [''],
+                optionsMap: {},
+                options: [],
                 startDate: minDate,
                 stopDate: maxDate,
                 superiorNames: ['application', 'data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
+                controlButtonText: 'one time date range',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1,
+                displayGroup: 2,
                 help: "dateHelp.html"
             });
     } else {
@@ -51,39 +89,363 @@ const doPlotParams = function () {
             });
         }
     }
-    if (matsCollections.PlotParams.findOne({name: "repeat"}) == undefined) {
+
+    if (matsCollections.PlotParams.findOne({name: "relative-date-range-type"}) == undefined) {
         matsCollections.PlotParams.insert(
             {
-                name: 'repeat',
-                type: matsTypes.InputTypes.dateRange,
-                options: [''],
-                startDate: minDate,
-                stopDate: maxDate,
-                superiorNames: ['application', 'data-source'],
+                name: 'relative-date-range-type',
+                type: matsTypes.InputTypes.select,
+                options: ["Hours", "Days", "Weeks"],
                 controlButtonCovered: true,
-                default: dstr,
+                default: "Hours",
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2,
-                help: "dateHelp.html"
+                displayGroup: 2
             });
-    } else {
-        // need to update the dates selector if the metadata has changed
-        var currentParam = matsCollections.PlotParams.findOne({name: 'repeat'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
-            // have to reload model data
-            matsCollections.PlotParams.update({name: 'repeat'}, {
-                $set: {
-                    startDate: minDate,
-                    stopDate: maxDate,
-                    default: dstr
-                }
-            });
-        }
     }
+
+    if (matsCollections.PlotParams.findOne({name: "relative-date-range-value"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'relative-date-range-value',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '1',
+                max: '100',
+                step: 'any',
+                controlButtonCovered: true,
+                default: 1,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "scorecard-recurrence-interval"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'scorecard-recurrence-interval',
+                type: matsTypes.InputTypes.radioGroup,
+                options: ["Daily", "Weekly", "Monthly", "Yearly"],
+                superiorRadioGroups: ['scorecard-schedule-mode'],
+                controlButtonCovered: false,
+                default: "Weekly",
+                hideOtherFor: {
+                    'these-days-of-the-week': ['Daily', 'Monthly', 'Yearly'], // only exposed on weekly
+                    'these-days-of-the-month': ['Daily', 'Weekly'], // only exposed for monthly and yearly
+                    'these-months': ['Daily', 'Weekly', 'Monthly'] // only exposed on yearly
+                },
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+
+    if (matsCollections.PlotParams.findOne({name: "these-hours-of-the-day"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'these-hours-of-the-day',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                controlButtonCovered: true,
+                default: "unused",
+                controlButtonVisibility: 'block',
+                multiple: true,
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "these-days-of-the-week"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'these-days-of-the-week',
+                type: matsTypes.InputTypes.select,
+                options: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                controlButtonCovered: true,
+                default: "unused",
+                controlButtonVisibility: 'block',
+                multiple: true,
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "these-days-of-the-month"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'these-days-of-the-month',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+                controlButtonCovered: true,
+                default: "unused",
+                controlButtonVisibility: 'block',
+                multiple: true,
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "these-months"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'these-months',
+                type: matsTypes.InputTypes.select,
+                options: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+                controlButtonCovered: true,
+                default: "unused",
+                controlButtonVisibility: 'block',
+                multiple: true,
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "scorecard-ends-on"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'scorecard-ends-on',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: new Date().toLocaleDateString(),
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "scorecard-percent-stdv"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'scorecard-percent-stdv',
+                type: matsTypes.InputTypes.radioGroup,
+                options: ["Percent", "StandardDeviation"],
+                controlButtonCovered: false,
+                default: "Percent",
+                hideOtherFor: {
+                    'minor-threshold-by-percent': ["StandardDeviation"],
+                    'major-threshold-by-percent': ["StandardDeviation"],
+                    'minor-threshold-by-stdv': ["Percent"],
+                    'major-threshold-by-stdv': ["Percent"],
+                },
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 6
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "minor-threshold-by-percent"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'minor-threshold-by-percent',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '90',
+                max: '100',
+                step: '1',
+                default: 95,
+                controlButtonCovered: true,
+                controlButtonText: "minor - %",
+                controlButtonFA: "fa-1x fa fa-caret-down",
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 7
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "major-threshold-by-percent"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'major-threshold-by-percent',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '90',
+                max: '100',
+                step: '1',
+                default: 99,
+                controlButtonCovered: true,
+                controlButtonText: "major - %",
+                controlButtonFA: "fa-2x fa fa-caret-down",
+                controlButtonVisibility: 'none',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 7
+            });
+    }
+
+
+    if (matsCollections.PlotParams.findOne({name: "minor-threshold-by-stdv"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'minor-threshold-by-stdv',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '1',
+                max: '3',
+                step: '1',
+                default: 1,
+                controlButtonCovered: true,
+                controlButtonText: "minor - std",
+                controlButtonFA: "fa-1x fa fa-caret-down",
+                controlButtonVisibility: 'none',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 7
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: "major-threshold-by-stdv"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'major-threshold-by-stdv',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '1',
+                max: '3',
+                step: '1',
+                default: 1,
+                controlButtonCovered: true,
+                controlButtonText: "major - std",
+                controlButtonFA: "fa-2x fa fa-caret-down",
+                controlButtonVisibility: 'none',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 7
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "scorecard-color-theme"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'scorecard-color-theme',
+                type: matsTypes.InputTypes.radioGroup,
+                options: ["GreenRed", "BlueRed"],
+                controlButtonCovered: false,
+                default: "GreenRed",
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+
+    if (matsCollections.PlotParams.findOne({name: "minor-truth-color"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'minor-truth-color',
+                type: matsTypes.InputTypes.color,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                controlButtonText: " ",
+                controlButtonFA: "fa-1x fa fa-caret-down",
+                default: "#ff0000",
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "major-truth-color"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'major-truth-color',
+                type: matsTypes.InputTypes.color,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                controlButtonText: " ",
+                controlButtonFA: "fa-2x fa fa-caret-down",
+                default: "#ff0000",
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "minor-source-color"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'minor-source-color',
+                type: matsTypes.InputTypes.color,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                controlButtonText: " ",
+                controlButtonFA: "fa-1x fa fa-caret-up",
+                default: "#00ff00",
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+    if (matsCollections.PlotParams.findOne({name: "major-source-color"}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'major-source-color',
+                type: matsTypes.InputTypes.color,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                controlButtonText: " ",
+                controlButtonFA: "fa-2x fa fa-caret-up",
+                default: "#00ff00",
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 8
+            });
+    }
+
+
+    if (matsCollections.PlotParams.findOne({name: 'user'}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'user',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: 'anon',
+                unique: true,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 9
+            });
+    }
+    if (matsCollections.PlotParams.findOne({name: 'scorecard-name'}) == undefined) {
+        matsCollections.PlotParams.insert(
+            {
+                name: 'scorecard-name',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],
+                controlButtonCovered: true,
+                default: 'unnamed',
+                unique: true,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 9
+            });
+    }
+
 };
 
 const doCurveParams = function () {
@@ -250,7 +612,7 @@ const doCurveParams = function () {
                 options: applicationOptions,
                 hideOtherFor: hideOtherFor,
                 dates: dateOptionsMap,
-                dependentNames: ["data-source", "validation-data-source", "statistic", "variable", "valid-time", "level"],
+                dependentNames: ["data-source", "validation-data-source", "statistic", "variable", "threshold", "scale", "truth", "valid-time", "level"],
                 controlButtonCovered: true,
                 default: applicationOptions[0],
                 unique: false,
@@ -436,24 +798,24 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections["threshold"].findOne({name: 'threshold'}) == undefined) {
-        matsCollections["threshold"].insert(
-            {
-                name: 'threshold',
-                type: matsTypes.InputTypes.select,
-                optionsMap: thresholdOptionsMap,
-                options: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: thresholdValuesMap,
-                superiorNames: ['application', 'data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]][0],
-                controlButtonVisibility: 'block',
-                multiple: true,
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 4
-            });
+    if (matsCollections["threshold"].findOne({
+            name: 'threshold'
+        }) == undefined) {
+        matsCollections["threshold"].insert({
+            name: 'threshold',
+            type: matsTypes.InputTypes.select,
+            optionsMap: thresholdOptionsMap,
+            options: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]],
+            valuesMap: thresholdValuesMap,
+            superiorNames: ['application', 'data-source'],
+            controlButtonCovered: true,
+            unique: false,
+            default: thresholdOptionsMap[applicationOptions[0]][Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]][0],
+            controlButtonVisibility: 'block',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 4
+        });
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["threshold"].findOne({name: 'threshold'});
@@ -470,24 +832,24 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections["scale"].findOne({name: 'scale'}) == undefined) {
-        matsCollections["scale"].insert(
-            {
-                name: 'scale',
-                type: matsTypes.InputTypes.select,
-                optionsMap: scaleOptionsMap,
-                options: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: scaleValuesMap,
-                superiorNames: ['application', 'data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]][0],
-                controlButtonVisibility: 'block',
-                multiple: true,
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 4
-            });
+    if (matsCollections["scale"].findOne({
+            name: 'scale'
+        }) == undefined) {
+        matsCollections["scale"].insert({
+            name: 'scale',
+            type: matsTypes.InputTypes.select,
+            optionsMap: scaleOptionsMap,
+            options: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]],
+            valuesMap: scaleValuesMap,
+            superiorNames: ['application', 'data-source'],
+            controlButtonCovered: true,
+            unique: false,
+            default: scaleOptionsMap[applicationOptions[0]][Object.keys(scaleOptionsMap[applicationOptions[0]])[0]][0],
+            controlButtonVisibility: 'block',
+            displayOrder: 2,
+            displayPriority: 1,
+            displayGroup: 4
+        });
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["scale"].findOne({name: 'scale'});
@@ -504,24 +866,24 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections["truth"].findOne({name: 'truth'}) == undefined) {
-        matsCollections["truth"].insert(
-            {
-                name: 'truth',
-                type: matsTypes.InputTypes.select,
-                optionsMap: truthOptionsMap,
-                options: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: truthValuesMap,
-                superiorNames: ['application', 'data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]][0],
-                controlButtonVisibility: 'block',
-                multiple: true,
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 4
-            });
+    if (matsCollections["truth"].findOne({
+            name: 'truth'
+        }) == undefined) {
+        matsCollections["truth"].insert({
+            name: 'truth',
+            type: matsTypes.InputTypes.select,
+            optionsMap: truthOptionsMap,
+            options: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]],
+            valuesMap: truthValuesMap,
+            superiorNames: ['application', 'data-source'],
+            controlButtonCovered: true,
+            unique: false,
+            default: truthOptionsMap[applicationOptions[0]][Object.keys(truthOptionsMap[applicationOptions[0]])[0]][0],
+            controlButtonVisibility: 'block',
+            displayOrder: 3,
+            displayPriority: 1,
+            displayGroup: 4
+        });
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["truth"].findOne({name: 'truth'});
@@ -571,24 +933,24 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections["forecast-type"].findOne({name: 'forecast-type'}) == undefined) {
-        matsCollections["forecast-type"].insert(
-            {
-                name: 'forecast-type',
-                type: matsTypes.InputTypes.select,
-                optionsMap: forecastTypeOptionsMap,
-                options: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]],
-                valuesMap: forecastTypeValuesMap,
-                superiorNames: ['application', 'data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]][0],
-                controlButtonVisibility: 'block',
-                multiple: true,
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 5
-            });
+    if (matsCollections["forecast-type"].findOne({
+            name: 'forecast-type'
+        }) == undefined) {
+        matsCollections["forecast-type"].insert({
+            name: 'forecast-type',
+            type: matsTypes.InputTypes.select,
+            optionsMap: forecastTypeOptionsMap,
+            options: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]],
+            valuesMap: forecastTypeValuesMap,
+            superiorNames: ['application', 'data-source'],
+            controlButtonCovered: true,
+            unique: false,
+            default: forecastTypeOptionsMap[applicationOptions[0]][Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]][0],
+            controlButtonVisibility: 'block',
+            displayOrder: 2,
+            displayPriority: 1,
+            displayGroup: 5
+        });
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["forecast-type"].findOne({name: 'forecast-type'});
@@ -605,24 +967,24 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections["valid-time"].findOne({name: 'valid-time'}) == undefined) {
-        matsCollections["valid-time"].insert(
-            {
-                name: 'valid-time',
-                type: matsTypes.InputTypes.select,
-                optionsMap: validTimeOptionsMap,
-                options: validTimeOptionsMap[Object.keys(validTimeOptionsMap)[0]],
-                superiorNames: ['application'],
-                controlButtonCovered: true,
-                unique: false,
-                default: matsTypes.InputTypes.unused,
-                controlButtonVisibility: 'block',
-                controlButtonText: "valid utc hour",
-                multiple: true,
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 5
-            });
+    if (matsCollections["valid-time"].findOne({
+            name: 'valid-time'
+        }) == undefined) {
+        matsCollections["valid-time"].insert({
+            name: 'valid-time',
+            type: matsTypes.InputTypes.select,
+            optionsMap: validTimeOptionsMap,
+            options: validTimeOptionsMap[Object.keys(validTimeOptionsMap)[0]],
+            superiorNames: ['application'],
+            controlButtonCovered: true,
+            unique: false,
+            default: matsTypes.InputTypes.unused,
+            controlButtonVisibility: 'block',
+            controlButtonText: "valid utc hour",
+            displayOrder: 3,
+            displayPriority: 1,
+            displayGroup: 5
+        });
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["valid-time"].findOne({name: 'valid-time'});
@@ -638,24 +1000,24 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections["level"].findOne({name: 'level'}) == undefined) {
-        matsCollections["level"].insert(
-            {
-                name: 'level',
-                type: matsTypes.InputTypes.select,
-                optionsMap: levelOptionsMap,
-                options: levelOptionsMap[Object.keys(levelOptionsMap)[0]],
-                superiorNames: ['application'],
-                controlButtonCovered: true,
-                unique: false,
-                default: matsTypes.InputTypes.unused,
-                controlButtonVisibility: 'block',
-                controlButtonText: "pressure level (hPa)",
-                multiple: true,
-                displayOrder: 4,
-                displayPriority: 1,
-                displayGroup: 5
-            });
+    if (matsCollections["level"].findOne({
+            name: 'level'
+        }) == undefined) {
+        matsCollections["level"].insert({
+            name: 'level',
+            type: matsTypes.InputTypes.select,
+            optionsMap: levelOptionsMap,
+            options: levelOptionsMap[Object.keys(levelOptionsMap)[0]],
+            superiorNames: ['application'],
+            controlButtonCovered: true,
+            unique: false,
+            default: matsTypes.InputTypes.unused,
+            controlButtonVisibility: 'block',
+            controlButtonText: "pressure level (hPa)",
+            displayOrder: 4,
+            displayPriority: 1,
+            displayGroup: 5
+        });
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections["level"].findOne({name: 'level'});
@@ -702,6 +1064,8 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.scorecard,
             textPattern: [
                 ['', 'label', ': '],
+                ['', 'user', ': '],
+                ['', 'scorecard-name', ': '],
                 ['', 'application', ' in '],
                 ['', 'data-source', ' in '],
                 ['', 'validation-data-source', ' in '],
@@ -717,7 +1081,7 @@ const doCurveTextPatterns = function () {
                 ['', 'level', ' ']
             ],
             displayParams: [
-                "label", "application", "data-source", "validation-data-source", "region", "statistic", "variable", "threshold", "scale", "truth", "forecast-length", "forecast-type", "valid-time", "level"
+                "label", "user", "scorecard-name", "application", "data-source", "validation-data-source", "region", "statistic", "variable", "threshold", "scale", "truth", "forecast-length", "forecast-type", "valid-time", "level"
             ],
             groupSize: 6
         });
