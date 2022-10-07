@@ -170,13 +170,13 @@ dataSimpleScatter = function (plotParams, plotFunction) {
                 statement = statement.split('m1').join('m0');
             }
             dataRequests[label] = statement;
-debugger;
+
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBContour(sumPool, statement, appParams, statisticSelect + "_" + variableStr);
+                queryResult = matsDataQueryUtils.queryDBSimpleScatter(sumPool, statement, appParams, statisticXSelect + "_" + variableXStr, statisticYSelect + "_" + variableYStr);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
