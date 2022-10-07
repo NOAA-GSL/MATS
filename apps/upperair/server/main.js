@@ -1009,12 +1009,12 @@ const doCurveParams = function () {
 
     if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
         const optionsMap = {
-            'Level': "select m0.mb10 * 10 as binVal, ",
             'Fcst lead time': "select m0.fcst_len as binVal, ",
-            'Valid UTC hour': "select m0.time%(24*3600)/3600 as binVal, ",
-            'Init UTC hour': "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
-            'Valid Date': "select m0.time as binVal, ",
-            'Init Date': "select m0.time-m0.fcst_len*3600 as binVal, "
+            'Pressure level': "select m0.mb10*10 as binVal, ",
+            'Valid UTC hour': "select m0.hour as binVal, ",
+            'Init UTC hour': "select (unix_timestamp(m0.date)+3600*(m0.hour-m0.fcst_len))%(24*3600)/3600 as binVal, ",
+            'Valid Date': "select unix_timestamp(m0.date)+3600*m0.hour as binVal, ",
+            'Init Date': "select unix_timestamp(m0.date)+3600*(m0.hour-m0.fcst_len) as binVal, "
         };
 
         matsCollections["bin-parameter"].insert(
