@@ -15,7 +15,7 @@ describe('dieoff_query', () => {
   it('should return data', function (done) {
     try {
       const statement = `
-      SELECT m0data.name as sta_name,
+      SELECT m0.fcstValidEpoch AS avtime,
              COUNT(DISTINCT m0.fcstValidEpoch) N_times,
              MIN(m0.fcstValidEpoch) min_secs,
              MAX(m0.fcstValidEpoch) max_secs,
@@ -47,7 +47,8 @@ describe('dieoff_query', () => {
           AND m0.subset='METAR'
           AND m0.version='V01'
           AND m0.model='HRRR_OPS'
-          AND m0.fcstLen = 6
+          AND (m0.fcstValidEpoch - m0.fcstLen*3600)%(24*3600)/3600 IN[12]
+          AND m0.fcstLen < 24
           AND o.fcstValidEpoch >= 1664236800
           AND o.fcstValidEpoch <= 1664841600
           AND m0.fcstValidEpoch >= 1664236800
@@ -56,8 +57,8 @@ describe('dieoff_query', () => {
           AND m0data.name IN ['KEWR','KJFK','KJRB','KLDJ','KLGA','KNYC','KTEB']
           AND odata.name IN ['KEWR','KJFK','KJRB','KLDJ','KLGA','KNYC','KTEB']
           AND m0data.name = odata.name
-      GROUP BY m0data.name
-      ORDER BY m0data.name;
+      GROUP BY m0.fcstValidEpoch
+      ORDER BY m0.fcstValidEpoch;
       `
       console.log(statement);
       data = "something"
