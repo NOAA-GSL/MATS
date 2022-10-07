@@ -296,7 +296,7 @@ const doPlotParams = function () {
             default: 95,
             controlButtonCovered: true,
             controlButtonText: "minor - %",
-            controlButtonFA: "fa-1x fa fa-caret-down",
+            controlButtonFA: "fa-sm fa-solid fa-caret-down",
             controlButtonVisibility: 'none',
             displayOrder: 1,
             displayPriority: 1,
@@ -319,7 +319,7 @@ const doPlotParams = function () {
             default: 99,
             controlButtonCovered: true,
             controlButtonText: "major - %",
-            controlButtonFA: "fa-2x fa fa-caret-down",
+            controlButtonFA: "fa-xl fa-solid fa-caret-down",
             controlButtonVisibility: 'none',
             displayOrder: 2,
             displayPriority: 1,
@@ -344,7 +344,7 @@ const doPlotParams = function () {
             default: 1,
             controlButtonCovered: true,
             controlButtonText: "minor - std",
-            controlButtonFA: "fa-1x fa fa-caret-down",
+            controlButtonFA: "fa-sm fa-solid fa-caret-down",
             controlButtonVisibility: 'none',
             displayOrder: 1,
             displayPriority: 1,
@@ -367,7 +367,7 @@ const doPlotParams = function () {
             default: 1,
             controlButtonCovered: true,
             controlButtonText: "major - std",
-            controlButtonFA: "fa-2x fa fa-caret-down",
+            controlButtonFA: "fa-xl fa-solid fa-caret-down",
             controlButtonVisibility: 'none',
             displayOrder: 2,
             displayPriority: 1,
@@ -407,7 +407,7 @@ const doPlotParams = function () {
             options: [],
             controlButtonCovered: true,
             controlButtonText: " ",
-            controlButtonFA: "fa-solid fa-caret-down",
+            controlButtonFA: "fa-sm fa-solid fa-caret-down",
             default: "#ff0000",
             controlButtonVisibility: 'block',
             displayOrder: 2,
@@ -415,7 +415,7 @@ const doPlotParams = function () {
             displayGroup: 8,
             tooltip: `The color for the minor validation datasource symbol,
             you can use the eyedropper tool in the color editor to match colors to the major symbol`,
-            tooltipPlacement: "right"
+            tooltipPlacement: "top"
         });
     }
 
@@ -429,14 +429,14 @@ const doPlotParams = function () {
             options: [],
             controlButtonCovered: true,
             controlButtonText: " ",
-            controlButtonFA: "fa-solid fa-caret-down",
+            controlButtonFA: "fa-xl fa-solid fa-caret-down",
             default: "#ff0000",
             controlButtonVisibility: 'block',
             displayOrder: 3,
             displayPriority: 1,
             displayGroup: 8,
             tooltip: "The color for the major validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol",
-            tooltipPlacement: "right"
+            tooltipPlacement: "top"
         });
     }
 
@@ -450,14 +450,14 @@ const doPlotParams = function () {
             options: [],
             controlButtonCovered: true,
             controlButtonText: " ",
-            controlButtonFA: "fa-solid fa-caret-up",
+            controlButtonFA: "fa-sm fa-solid fa-caret-up",
             default: "#00ff00",
             controlButtonVisibility: 'block',
             displayOrder: 4,
             displayPriority: 1,
             displayGroup: 8,
             tooltip: "The color for the minor datasource symbol, you can use the eyedropper tool in the color editor to match colors to the major symbol",
-            tooltipPlacement: "right"
+            tooltipPlacement: "top"
         });
     }
 
@@ -471,14 +471,14 @@ const doPlotParams = function () {
             options: [],
             controlButtonCovered: true,
             controlButtonText: " ",
-            controlButtonFA: "fa-solid fa-caret-up",
+            controlButtonFA: "fa-xl fa-solid fa-caret-up",
             default: "#00ff00",
             controlButtonVisibility: 'block',
             displayOrder: 5,
             displayPriority: 1,
             displayGroup: 8,
             tooltip: "The color for the major datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol",
-            tooltipPlacement: "right"
+            tooltipPlacement: "top"
         });
     }
 
