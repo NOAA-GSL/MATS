@@ -44,9 +44,7 @@ const doPlotParams = function () {
                 'these-days-of-the-week': ['Once'],
                 'these-days-of-the-month': ['Once'],
                 'these-months': ['Once'],
-                'scorecard-ends-on': ['Once'],
                 'dates': ['Recurring'],
-
             },
             controlButtonVisibility: 'block',
             displayOrder: 1,
@@ -246,7 +244,7 @@ const doPlotParams = function () {
                 options: [],
                 controlButtonCovered: true,
                 default: new Date().toLocaleDateString(),
-                controlButtonVisibility: 'none',
+                controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 5,
