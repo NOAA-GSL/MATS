@@ -19,7 +19,8 @@ dataMap = function (plotParams, plotFunction) {
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
         "hideGaps": plotParams['noGapsCheck'],
-        "hasLevels": false
+        "hasLevels": false,
+        "isCouchbase": true
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
