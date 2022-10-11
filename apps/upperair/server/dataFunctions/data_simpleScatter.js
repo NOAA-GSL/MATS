@@ -28,7 +28,8 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
-    var axisMap = Object.create(null);
+    var axisXMap = Object.create(null);
+    var axisYMap = Object.create(null);
     var xmax = -1 * Number.MAX_VALUE;
     var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
@@ -60,7 +61,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
                 queryTableClause = queryTableClause + ", " + databaseRef.sumsDB + ".GFS_Areg" + region + " as m1";
             }
         }
-        // contours are only for predefined regions--no station plots
+        // scatterplots are only for predefined regions--no station plots
         var regionType = 'Predefined region';
         var phaseClause = "";
         if (database === 'AMDAR') {
@@ -130,9 +131,6 @@ dataSimpleScatter = function (plotParams, plotFunction) {
         var statVarUnitMap = matsCollections['variable'].findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnitsX = statVarUnitMap[statisticXSelect][variableXStr];
         var varUnitsY = statVarUnitMap[statisticYSelect][variableYStr];
-
-        curves[curveIndex]['unitKeyX'] = varUnitsX;
-        curves[curveIndex]['unitKeyY'] = varUnitsY;
 
         var d;
         if (diffFrom == null) {
@@ -230,9 +228,10 @@ dataSimpleScatter = function (plotParams, plotFunction) {
         curve['xmax'] = d.xmax;
         curve['ymin'] = d.ymin;
         curve['ymax'] = d.ymax;
-        curve['axisKey'] = statisticSelect;
+        curve['axisXKey'] = varUnitsX;
+        curve['axisYKey'] = varUnitsY;
         curve['binParam'] = binParam;
-        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateScatterCurveOptions(curve, curveIndex, axisXMap, axisYMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + label] = {
@@ -252,11 +251,12 @@ dataSimpleScatter = function (plotParams, plotFunction) {
         "curves": curves,
         "curvesLength": curvesLength,
         "statType": statType,
-        "axisMap": axisMap,
+        "axisXMap": axisXMap,
+        "axisYMap": axisYMap,
         "xmax": xmax,
         "xmin": xmin
     };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
-    var result = matsDataProcessUtils.processDataPerformanceDiagram(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
+    var result = matsDataProcessUtils.processDataSimpleScatter(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
 };
