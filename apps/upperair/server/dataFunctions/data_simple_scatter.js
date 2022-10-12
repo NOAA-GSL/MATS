@@ -13,7 +13,7 @@ import {moment} from 'meteor/momentjs:moment';
 dataSimpleScatter = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appParams = {
-        "plotType": matsTypes.PlotTypes.contourDiff,
+        "plotType": matsTypes.PlotTypes.simpleScatter,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
         "completeness": plotParams['completeness'],
         "outliers": plotParams['outliers'],
