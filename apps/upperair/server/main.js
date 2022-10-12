@@ -946,9 +946,9 @@ const doCurveParams = function () {
     if (matsCollections['phase'].findOne({name: 'phase'}) == undefined) {
         const optionsMap = {
             "All": "and m0.up_dn = 2 ",
-            "EnR": "and m0.up_dn = 0 ",
-            "Up": "and m0.up_dn = 1 ",
-            "Dn": "and m0.up_dn = -1 "
+            "En Route": "and m0.up_dn = 0 ",
+            "Ascending": "and m0.up_dn = 1 ",
+            "Descending": "and m0.up_dn = -1 "
         };
         matsCollections['phase'].insert(
             {
