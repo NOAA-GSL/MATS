@@ -15,7 +15,7 @@ describe('dieoff_query', () => {
   it('should return data', function (done) {
     try {
       const statement = `
-      SELECT m0data.name as sta_name,
+      SELECT m0.fcstValidEpoch%(24*3600)/3600 AS hr_of_day,
              COUNT(DISTINCT m0.fcstValidEpoch) N_times,
              MIN(m0.fcstValidEpoch) min_secs,
              MAX(m0.fcstValidEpoch) max_secs,
@@ -56,8 +56,8 @@ describe('dieoff_query', () => {
           AND m0data.name IN ['KEWR','KJFK','KJRB','KLDJ','KLGA','KNYC','KTEB']
           AND odata.name IN ['KEWR','KJFK','KJRB','KLDJ','KLGA','KNYC','KTEB']
           AND m0data.name = odata.name
-      GROUP BY m0data.name
-      ORDER BY m0data.name;
+      GROUP BY m0.fcstValidEpoch%(24*3600)/3600
+      ORDER BY hr_of_day;
       `
       console.log(statement);
       data = "something"

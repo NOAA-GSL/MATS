@@ -87,8 +87,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 "AND m0.subset='METAR' " +
                 "AND m0.version='V01' ";
         } else {
-            queryTableClause = "FROM mdata AS m0 USE INDEX (ix_subset_version_model_fcstLen_fcstValidEpoc) " +
-                "JOIN mdata AS o USE INDEX(adv_fcstValidEpoch_docType_subset_version_type) " +
+            queryTableClause = "FROM mdata AS m0 " +
+                "JOIN mdata AS o " +
                 "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
                 "UNNEST o.data AS odata " +
                 "UNNEST m0.data AS m0data ";
@@ -183,13 +183,13 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{whereClause}} " +
                 "{{modelClause}} " +
                 "{{regionClause}} " +
-                "{{validTimeClause}} " +
-                "{{sitesClause}} " +
-                "{{siteMatchClause}} " +
                 "{{forecastLengthClause}} " +
+                "{{validTimeClause}} " +
                 "{{utcCycleStartClause}} " +
                 "{{siteDateClause}} " +
                 "{{dateClause}} " +
+                "{{sitesClause}} " +
+                "{{siteMatchClause}} " +
                 "GROUP BY m0.fcstLen " +
                 "ORDER BY fcst_lead" +
                 ";";
