@@ -44,13 +44,18 @@ const doPlotParams = function () {
                 'these-days-of-the-week': ['Once'],
                 'these-days-of-the-month': ['Once'],
                 'these-months': ['Once'],
-                'dates': ['Recurring']
-
+                'dates': ['Recurring'],
             },
             controlButtonVisibility: 'block',
             displayOrder: 1,
             displayPriority: 1,
-            displayGroup: 1
+            displayGroup: 1,
+            tooltip: `The schedule mode, 'Once' means that this scorecard will be
+             processed only one time. Recurring means that this scorecard will be
+             processed repeatedly on a schedule. If you choose 'Recurring' you will
+             need to choose the schedule recurrence parameters as well as the
+             date after which processing will cease.`,
+            tooltipPlacement: "right"
         });
     }
 
@@ -71,7 +76,10 @@ const doPlotParams = function () {
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 2,
-                help: "dateHelp.html"
+                help: "dateHelp.html",
+                tooltip: `The date range over which this 'Once' (one time) scorecard will be processed.
+                This scorecard will process only that date range, and process it only one time`,
+                tooltipPlacement: "right"
             });
     } else {
         // need to update the dates selector if the metadata has changed
@@ -101,7 +109,12 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                tooltip: `The relative time range type. All recurring scorecards will process a time range that is relative to
+                the recurring scorecard processing schedule. For example, if you choose 'Hours' then you will need
+                to also choose the number of hours prior to the scheduled run time that will be included in the
+                calculations. The same for 'Days' or 'Weeks'`,
+                tooltipPlacement: "right"
             });
     }
 
@@ -120,7 +133,11 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                tooltip: `The number of 'Hours', 'Days', or 'Weeks' for which this Recurring scorecard will be
+                calculated relative to its processing time. The time interval will be dynamically set for
+                the period immediately prior to the processing time, which will be determined by the recurrence schedule.`,
+                tooltipPlacement: "right"
             });
     }
 
@@ -141,7 +158,11 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 3,
+                tooltip: `The type of recurrance interval on which this recurring scorecard will be processed.
+                Each new cycle will create a new viewable scorecard identified by the 'user',
+                'Scorecard Name', and processing date and time.`,
+                tooltipPlacement: "right"
             });
     }
 
@@ -158,7 +179,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "The hours of the day for which this 'Daily', 'Weekly' or 'Monthly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-week"}) == undefined) {
@@ -173,7 +196,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "The days of the week for which this 'Weekly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-days-of-the-month"}) == undefined) {
@@ -188,7 +213,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "The days of the month for which this 'Monthly' or 'Yearly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "these-months"}) == undefined) {
@@ -203,7 +230,9 @@ const doPlotParams = function () {
                 multiple: true,
                 displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                tooltip: "The months for which this 'Yearly' scorecard will be reprocessed.",
+                tooltipPlacement: "right"
             });
     }
     if (matsCollections.PlotParams.findOne({name: "scorecard-ends-on"}) == undefined) {
@@ -218,198 +247,237 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: "scorecard-percent-stdv"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'scorecard-percent-stdv',
-                type: matsTypes.InputTypes.radioGroup,
-                options: ["Percent", "StandardDeviation"],
-                controlButtonCovered: false,
-                default: "Percent",
-                hideOtherFor: {
-                    'minor-threshold-by-percent': ["StandardDeviation"],
-                    'major-threshold-by-percent': ["StandardDeviation"],
-                    'minor-threshold-by-stdv': ["Percent"],
-                    'major-threshold-by-stdv': ["Percent"],
-                },
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: "minor-threshold-by-percent"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'minor-threshold-by-percent',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '90',
-                max: '100',
-                step: '1',
-                default: 95,
-                controlButtonCovered: true,
-                controlButtonText: "minor - %",
-                controlButtonFA: "fa-1x fa fa-caret-down",
-                controlButtonVisibility: 'none',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 7
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: "major-threshold-by-percent"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'major-threshold-by-percent',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '90',
-                max: '100',
-                step: '1',
-                default: 99,
-                controlButtonCovered: true,
-                controlButtonText: "major - %",
-                controlButtonFA: "fa-2x fa fa-caret-down",
-                controlButtonVisibility: 'none',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 5,
+                tooltip: `The date after which processing for this scorecard will end,
+                any runs on the end date will be completed. Completed scorecards will be accessed based on
+                'user', 'Scorecard Name', and processed date.`,
+                tooltipPlacement: "right"
             });
     }
 
-
-    if (matsCollections.PlotParams.findOne({name: "minor-threshold-by-stdv"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'minor-threshold-by-stdv',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '1',
-                max: '3',
-                step: '1',
-                default: 1,
-                controlButtonCovered: true,
-                controlButtonText: "minor - std",
-                controlButtonFA: "fa-1x fa fa-caret-down",
-                controlButtonVisibility: 'none',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 7
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: "major-threshold-by-stdv"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'major-threshold-by-stdv',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '1',
-                max: '3',
-                step: '1',
-                default: 1,
-                controlButtonCovered: true,
-                controlButtonText: "major - std",
-                controlButtonFA: "fa-2x fa fa-caret-down",
-                controlButtonVisibility: 'none',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 7
-            });
-    }
-
-    if (matsCollections.PlotParams.findOne({name: "scorecard-color-theme"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'scorecard-color-theme',
-                type: matsTypes.InputTypes.radioGroup,
-                options: ["GreenRed", "BlueRed"],
-                controlButtonCovered: false,
-                default: "GreenRed",
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+    if (matsCollections.PlotParams.findOne({
+            name: "scorecard-percent-stdv"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'scorecard-percent-stdv',
+            type: matsTypes.InputTypes.radioGroup,
+            options: ["Percent", "StandardDeviation"],
+            controlButtonCovered: false,
+            default: "Percent",
+            hideOtherFor: {
+                'minor-threshold-by-percent': ["StandardDeviation"],
+                'major-threshold-by-percent': ["StandardDeviation"],
+                'minor-threshold-by-stdv': ["Percent"],
+                'major-threshold-by-stdv': ["Percent"],
+            },
+            controlButtonVisibility: 'block',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 6,
+            tooltip: "The method for setting the significance thresholds, percentage or standard deviation.",
+            tooltipPlacement: "right"
+        });
     }
 
 
-    if (matsCollections.PlotParams.findOne({name: "minor-truth-color"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'minor-truth-color',
-                type: matsTypes.InputTypes.color,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                controlButtonText: " ",
-                controlButtonFA: "fa-1x fa fa-caret-down",
-                default: "#ff0000",
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+    if (matsCollections.PlotParams.findOne({
+            name: "minor-threshold-by-percent"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'minor-threshold-by-percent',
+            type: matsTypes.InputTypes.numberSpinner,
+            optionsMap: {},
+            options: [],
+            min: '90',
+            max: '100',
+            step: '1',
+            default: 95,
+            controlButtonCovered: true,
+            controlButtonText: "minor - %",
+            controlButtonFA: "fa-sm fa-solid fa-caret-down",
+            controlButtonVisibility: 'none',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 7,
+            tooltip: "The threshold for the minor significance defined in percentage.",
+            tooltipPlacement: "right"
+        });
+    }
+    if (matsCollections.PlotParams.findOne({
+            name: "major-threshold-by-percent"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-threshold-by-percent',
+            type: matsTypes.InputTypes.numberSpinner,
+            optionsMap: {},
+            options: [],
+            min: '90',
+            max: '100',
+            step: '1',
+            default: 99,
+            controlButtonCovered: true,
+            controlButtonText: "major - %",
+            controlButtonFA: "fa-xl fa-solid fa-caret-down",
+            controlButtonVisibility: 'none',
+            displayOrder: 2,
+            displayPriority: 1,
+            displayGroup: 7,
+            tooltip: "The threshold for the major significance defined in percentage.",
+            tooltipPlacement: "right"
+        });
     }
 
-    if (matsCollections.PlotParams.findOne({name: "major-truth-color"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'major-truth-color',
-                type: matsTypes.InputTypes.color,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                controlButtonText: " ",
-                controlButtonFA: "fa-2x fa fa-caret-down",
-                default: "#ff0000",
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+
+    if (matsCollections.PlotParams.findOne({
+            name: "minor-threshold-by-stdv"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'minor-threshold-by-stdv',
+            type: matsTypes.InputTypes.numberSpinner,
+            optionsMap: {},
+            options: [],
+            min: '1',
+            max: '3',
+            step: '1',
+            default: 1,
+            controlButtonCovered: true,
+            controlButtonText: "minor - std",
+            controlButtonFA: "fa-sm fa-solid fa-caret-down",
+            controlButtonVisibility: 'none',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 7,
+            tooltip: "The threshold for the minor significance defined in standard deviations.",
+            tooltipPlacement: "right"
+        });
+    }
+    if (matsCollections.PlotParams.findOne({
+            name: "major-threshold-by-stdv"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-threshold-by-stdv',
+            type: matsTypes.InputTypes.numberSpinner,
+            optionsMap: {},
+            options: [],
+            min: '1',
+            max: '3',
+            step: '1',
+            default: 1,
+            controlButtonCovered: true,
+            controlButtonText: "major - std",
+            controlButtonFA: "fa-xl fa-solid fa-caret-down",
+            controlButtonVisibility: 'none',
+            displayOrder: 2,
+            displayPriority: 1,
+            displayGroup: 7,
+            tooltip: "The threshold for the major significance defined in standard deviations",
+            tooltipPlacement: "right"
+        });
     }
 
-    if (matsCollections.PlotParams.findOne({name: "minor-source-color"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'minor-source-color',
-                type: matsTypes.InputTypes.color,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                controlButtonText: " ",
-                controlButtonFA: "fa-1x fa fa-caret-up",
-                default: "#00ff00",
-                controlButtonVisibility: 'block',
-                displayOrder: 4,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+    if (matsCollections.PlotParams.findOne({
+            name: "scorecard-color-theme"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'scorecard-color-theme',
+            type: matsTypes.InputTypes.radioGroup,
+            options: ["RedGreen", "RedBlue"],
+            controlButtonCovered: false,
+            default: "RedGreen",
+            controlButtonVisibility: 'block',
+            displayOrder: 1,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: `The color scheme for the major and minor symbols,
+            you can use the eyedropper tool in the color editor to customize colors.`,
+            tooltipPlacement: "right"
+        });
     }
 
-    if (matsCollections.PlotParams.findOne({name: "major-source-color"}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'major-source-color',
-                type: matsTypes.InputTypes.color,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                controlButtonText: " ",
-                controlButtonFA: "fa-2x fa fa-caret-up",
-                default: "#00ff00",
-                controlButtonVisibility: 'block',
-                displayOrder: 5,
-                displayPriority: 1,
-                displayGroup: 8
-            });
+
+    if (matsCollections.PlotParams.findOne({
+            name: "minor-truth-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'minor-truth-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-sm fa-solid fa-caret-down",
+            default: "#ff0000",
+            controlButtonVisibility: 'block',
+            displayOrder: 2,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: `The color for the minor validation datasource symbol,
+            you can use the eyedropper tool in the color editor to match colors to the major symbol`,
+            tooltipPlacement: "top"
+        });
+    }
+
+    if (matsCollections.PlotParams.findOne({
+            name: "major-truth-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-truth-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-xl fa-solid fa-caret-down",
+            default: "#ff0000",
+            controlButtonVisibility: 'block',
+            displayOrder: 3,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: "The color for the major validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol",
+            tooltipPlacement: "top"
+        });
+    }
+
+    if (matsCollections.PlotParams.findOne({
+            name: "minor-source-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'minor-source-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-sm fa-solid fa-caret-up",
+            default: "#00ff00",
+            controlButtonVisibility: 'block',
+            displayOrder: 4,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: "The color for the minor datasource symbol, you can use the eyedropper tool in the color editor to match colors to the major symbol",
+            tooltipPlacement: "top"
+        });
+    }
+
+    if (matsCollections.PlotParams.findOne({
+            name: "major-source-color"
+        }) == undefined) {
+        matsCollections.PlotParams.insert({
+            name: 'major-source-color',
+            type: matsTypes.InputTypes.color,
+            optionsMap: {},
+            options: [],
+            controlButtonCovered: true,
+            controlButtonText: " ",
+            controlButtonFA: "fa-xl fa-solid fa-caret-up",
+            default: "#00ff00",
+            controlButtonVisibility: 'block',
+            displayOrder: 5,
+            displayPriority: 1,
+            displayGroup: 8,
+            tooltip: "The color for the major datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol",
+            tooltipPlacement: "top"
+        });
     }
 
 
@@ -442,7 +510,11 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 9
+                displayGroup: 9,
+                tooltip: `The name for this scorecard. This name will be used to identify the scorecard.
+                Each scorecard will be identified by a combination of 'user', 'scorecard name' and process timestamp. Recurring scorecards
+                may have many instances with the same 'user' and 'scorecard name'.`,
+                tooltipPlacement: "right"
             });
     }
 
@@ -598,7 +670,9 @@ const doCurveParams = function () {
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 1,
-                help: 'label.html'
+                help: 'label.html',
+                tooltip: "The label for this scorecard row, this will be used to identify this row within the scorecard.",
+                tooltipPlacement: "right"
             }
         );
     }
@@ -619,7 +693,9 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                tooltip: "The application for this scorecard row. Parameters will adjust to accomodate the application that you choose.",
+                tooltipPlacement: "right"
             });
     } else {
         // it is defined but check for necessary update
@@ -649,7 +725,9 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                tooltip: "Datasource is the 'experiment' input for this scorecard row. calculations will be compared against the validation datasource.",
+                tooltipPlacement: "right"
             });
     } else {
         // it is defined but check for necessary update
@@ -680,7 +758,9 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                tooltip: "Validation Datasource is the data source for values that will be compared against the 'experiment' datasource.",
+                tooltipPlacement: "right"
             });
     } else {
         // it is defined but check for necessary update
@@ -713,7 +793,9 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 3,
+                tooltip: "This defines the meteorological predefined domain over which datasource and validation datasource statistical values will be calculated.",
+                tooltipPlacement: "right"
             });
     } else {
         // it is defined but check for necessary update
@@ -747,7 +829,11 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 3,
+                tooltip: `The statistical method used for calculations in a given subrow
+                of the scorecard row. Each subrow will be calculated for a combination of
+                statistic and variable over a predefined region.`,
+                tooltipPlacement: "right"
             });
     } else {
         // it is defined but check for necessary update
@@ -780,7 +866,11 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 3,
+                tooltip: `The variable used for calculations in a given subrow
+                of the scorecard row. Each subrow will be calculated for a combination of
+                statistic and variable over a predefined region.`,
+                tooltipPlacement: "right"
             });
     } else {
         // it is defined but check for necessary update
@@ -814,7 +904,9 @@ const doCurveParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 1,
             displayPriority: 1,
-            displayGroup: 4
+            displayGroup: 4,
+            tooltip: `The threshold for which contingency variables have been bin'd.`,
+            tooltipPlacement: "right"
         });
     } else {
         // it is defined but check for necessary update
@@ -848,7 +940,10 @@ const doCurveParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 2,
             displayPriority: 1,
-            displayGroup: 4
+            displayGroup: 4,
+            tooltip: `The grid resolution used for calculations.`,
+            tooltipPlacement: "right"
+
         });
     } else {
         // it is defined but check for necessary update
@@ -882,7 +977,10 @@ const doCurveParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 3,
             displayPriority: 1,
-            displayGroup: 4
+            displayGroup: 4,
+            tooltip: `The source that was used to compare datasource values.`,
+            tooltipPlacement: "right"
+
         });
     } else {
         // it is defined but check for necessary update
@@ -916,7 +1014,13 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 5,
+                tooltip: `The set of forecast lead times that are included in the scorecard.
+                Each scorecard row will include the union of the forecast lengths for all the rows. If a given row
+                does not have data for a specific forecast length, that forecast length will be represented with a nuetral
+                color that indicates 'unavailable' data.`,
+                tooltipPlacement: "right"
+
             });
     } else {
         // it is defined but check for necessary update
@@ -949,7 +1053,9 @@ const doCurveParams = function () {
             controlButtonVisibility: 'block',
             displayOrder: 2,
             displayPriority: 1,
-            displayGroup: 5
+            displayGroup: 5,
+            tooltip: ``,
+            tooltipPlacement: "right"
         });
     } else {
         // it is defined but check for necessary update
@@ -983,7 +1089,9 @@ const doCurveParams = function () {
             controlButtonText: "valid utc hour",
             displayOrder: 3,
             displayPriority: 1,
-            displayGroup: 5
+            displayGroup: 5,
+            tooltip: `Filters the calculated results by the valid forecast lead time.`,
+            tooltipPlacement: "right"
         });
     } else {
         // it is defined but check for necessary update
@@ -1016,7 +1124,10 @@ const doCurveParams = function () {
             controlButtonText: "pressure level (hPa)",
             displayOrder: 4,
             displayPriority: 1,
-            displayGroup: 5
+            displayGroup: 5,
+            tooltip: `Filters the calculated row by pressure level.`,
+            tooltipPlacement: "right"
+
         });
     } else {
         // it is defined but check for necessary update

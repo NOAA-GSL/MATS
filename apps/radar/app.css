@@ -126,3 +126,13 @@ hr {
 .mediumPublicSans {
     font-family: PublicSans-Medium, Arial, Helvetica, serif;
 }
+
+.item + .tooltip > .tooltip-inner {
+    background-color: #73AD21; 
+    color: #FFFFFF; 
+    border: 1px solid green; 
+    padding: 5px;
+    font-size: 15px;
+    max-width: 350px;
+    width: 350px;
+}
