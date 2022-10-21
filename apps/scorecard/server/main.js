@@ -1175,8 +1175,6 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.scorecard,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'user', ': '],
-                ['', 'scorecard-name', ': '],
                 ['', 'application', ' in '],
                 ['', 'data-source', ' in '],
                 ['', 'validation-data-source', ' in '],
@@ -1192,7 +1190,7 @@ const doCurveTextPatterns = function () {
                 ['', 'level', ' ']
             ],
             displayParams: [
-                "label", "user", "scorecard-name", "application", "data-source", "validation-data-source", "region", "statistic", "variable", "threshold", "scale", "truth", "forecast-length", "forecast-type", "valid-time", "level"
+                "label", "application", "data-source", "validation-data-source", "region", "statistic", "variable", "threshold", "scale", "truth", "forecast-length", "forecast-type", "valid-time", "level"
             ],
             groupSize: 6
         });
