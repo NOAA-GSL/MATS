@@ -22,8 +22,8 @@ Feature: Add Remove Performance Diagram Curve
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I change the "bin-parameter" parameter to "Fcst lead time"
         Then the "bin-parameter" parameter value matches "Fcst lead time"
-        When I set the curve-dates to "08/09/2022 0:00 - 08/12/2022 0:00"
-        Then the curve-dates value is "08/09/2022 0:00 - 08/12/2022 0:00"
+        When I set the curve-dates to "08/09/2022 00:00 - 08/12/2022 00:00"
+        Then the curve-dates value is "08/09/2022 00:00 - 08/12/2022 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 

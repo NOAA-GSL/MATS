@@ -6,21 +6,16 @@ import pause from './pause';
 
 export default (value) => {
     const dateRange = value;
-    const dates = dateRange.split(' - ');
+    const dateCharArray = dateRange.split('');
     $('#controlButton-dates-value').waitForDisplayed();
     $('#controlButton-dates-value').scrollIntoView();
     $('#controlButton-dates-value').waitForClickable();
-    $('#controlButton-dates-value').click(); // brings up date menu
-    // eslint-disable-next-line max-len
-    $$('input[name="daterangepicker_start"]')[$$('input[name="daterangepicker_start"]').length - 1].setValue('');
-    // eslint-disable-next-line max-len
-    $$('input[name="daterangepicker_start"]')[$$('input[name="daterangepicker_start"]').length - 1].setValue(dates[0]);
-    // eslint-disable-next-line max-len
-    $$('input[name="daterangepicker_end"]')[$$('input[name="daterangepicker_end"]').length - 1].setValue('');
-    // eslint-disable-next-line max-len
-    $$('input[name="daterangepicker_end"]')[$$('input[name="daterangepicker_end"]').length - 1].setValue(dates[1]);
-    $$('/html/body/div[3]/div[1]/div/button[1]')[0].waitForClickable();
-    $$('/html/body/div[3]/div[1]/div/button[1]')[0].click();
+    $('#controlButton-dates-value').click();
+    $('#dates-dateRange').click(); // brings up date menu
+    browser.keys(['Meta', 'a']);
+    browser.keys("Backspace");
+    browser.keys(dateCharArray);
+    $('#dates-applyBtn').click();
     let datesValue = '';
     let count = 0;
     while (count < 10 && datesValue !== dateRange) {
