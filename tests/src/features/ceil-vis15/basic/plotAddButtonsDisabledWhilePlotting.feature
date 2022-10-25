@@ -21,8 +21,8 @@ Feature: Plot and Add buttons are disabled while plotting
         And I change the "average" parameter to "3hr"
         Then the "data-source" parameter value matches "HRRR_GSL"
         And the "average" parameter value matches "3hr"
-        When I set the dates to "03/28/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "03/28/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "03/28/2019 00:00 - 09/24/2019 00:00"
+        Then the dates value is "03/28/2019 00:00 - 09/24/2019 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 

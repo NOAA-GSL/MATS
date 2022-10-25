@@ -17,8 +17,8 @@ Feature: Match Unmatch Diff Curves Histogram
         Then the plot type should be "Histogram"
         When I change the "data-source" parameter to "GFS"
         Then the "data-source" parameter value matches "GFS"
-        When I set the curve-dates to "02/28/2020 0:00 - 05/24/2020 0:00"
-        Then the curve-dates value is "02/28/2020 0:00 - 05/24/2020 0:00"
+        When I set the curve-dates to "02/28/2020 00:00 - 05/24/2020 00:00"
+        Then the curve-dates value is "02/28/2020 00:00 - 05/24/2020 00:00"
         Then I change the "forecast-length" parameter to "144"
         Then the "forecast-length" parameter value matches "144"
         When I click the "Add Curve" button

@@ -19,8 +19,8 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
         Then the "variable" parameter value matches "Composite Reflectivity"
         When I change the "data-source" parameter to "RAP_GSL"
         Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the dates to "09/21/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "09/21/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "09/21/2019 00:00 - 09/24/2019 00:00"
+        Then the dates value is "09/21/2019 00:00 - 09/24/2019 00:00"
         When I click the "Add Curve" button
         Then "Curve0" is added
 
