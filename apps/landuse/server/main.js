@@ -743,8 +743,6 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap),
                 optionsMap: optionsMap,
                 hideOtherFor: {
-                    'top': ["Level"],
-                    'bottom': ["Level"],
                     'forecast-length': ["Fcst lead time"],
                     'valid-time': ["Valid UTC hour"],
                 },

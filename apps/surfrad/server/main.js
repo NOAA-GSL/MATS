@@ -444,23 +444,23 @@ const doCurveParams = function () {
         }
     }
 
+    const optionsMap = {
+        "RMSE": "scalar",
+
+        "Bias (Model - Obs)": "scalar",
+
+        "N": "scalar",
+
+        "Model average": "scalar",
+
+        "Obs average": "scalar",
+
+        "Std deviation": "scalar",
+
+        "MAE": "scalar"
+    };
+
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
-        const optionsMap = {
-            "RMSE": "scalar",
-
-            "Bias (Model - Obs)": "scalar",
-
-            "N": "scalar",
-
-            "Model average": "scalar",
-
-            "Obs average": "scalar",
-
-            "Std deviation": "scalar",
-
-            "MAE": "scalar"
-        };
-
         matsCollections["statistic"].insert(
             {
                 name: 'statistic',
@@ -477,74 +477,108 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["x-statistic"].findOne({name: 'x-statistic'}) == undefined) {
+        matsCollections["x-statistic"].insert(
+            {
+                name: 'x-statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
+
+    if (matsCollections["y-statistic"].findOne({name: 'y-statistic'}) == undefined) {
+        matsCollections["y-statistic"].insert(
+            {
+                name: 'y-statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    const statVarOptionsMap = {
+        // ARRAY ITEMS BY INDEX:
+        // 0: sum of squared x-x_bar difference for RMSE/STDEV
+        // 1: number of values in sum
+        // 2: sum of obs-model difference (-1 * bias * N)
+        // 3: sum of model values
+        // 4: sum of obs values
+        // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
+        'dswrf': ['pow(o.direct + o.diffuse - m0.dswrf,2)', '(o.direct + o.diffuse - m0.dswrf)', '(o.direct + o.diffuse - m0.dswrf)', '(if(o.direct + o.diffuse is not null,m0.dswrf,null))', '(if(m0.dswrf is not null,o.direct + o.diffuse,null))', '(abs(o.direct + o.diffuse - m0.dswrf))'],
+        'direct (experimental HRRR only)': ['pow(o.direct - m0.direct,2)', '(o.direct - m0.direct)', '(o.direct - m0.direct)', '(if(o.direct is not null,m0.direct,null))', '(if(m0.direct is not null,o.direct,null))', '(abs(o.direct - m0.direct))'],
+        'diffuse (experimental HRRR only)': ['pow(o.diffuse - m0.diffuse,2)', '(o.diffuse - m0.diffuse)', '(o.diffuse - m0.diffuse)', '(if(o.diffuse is not null,m0.diffuse,null))', '(if(m0.diffuse is not null,o.diffuse,null))', '(abs(o.diffuse - m0.diffuse))'],
+        '15 min avg dswrf (experimental HRRR only)': ['pow(o.direct + o.diffuse - m0.dswrf15,2)', '(o.direct + o.diffuse - m0.dswrf15)', '(o.direct + o.diffuse - m0.dswrf15)', '(if(o.direct + o.diffuse is not null,m0.dswrf15,null))', '(if(m0.dswrf15 is not null,o.direct + o.diffuse,null))', '(abs(o.direct + o.diffuse - m0.dswrf15))'],
+        '15 min avg direct (experimental HRRR only)': ['pow(o.direct - m0.direct15,2)', '(o.direct - m0.direct15)', '(o.direct - m0.direct15)', '(if(o.direct is not null,m0.direct15,null))', '(if(m0.direct15 is not null,o.direct,null))', '(abs(o.direct - m0.direct15))']
+    };
+
+    const statVarUnitMap = {
+        'RMSE': {
+            'dswrf': 'W/m2',
+            'direct (experimental HRRR only)': 'W/m2',
+            'diffuse (experimental HRRR only)': 'W/m2',
+            '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+            '15 min avg direct (experimental HRRR only)': 'W/m2'
+        },
+        'Bias (Model - Obs)': {
+            'dswrf': 'W/m2',
+            'direct (experimental HRRR only)': 'W/m2',
+            'diffuse (experimental HRRR only)': 'W/m2',
+            '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+            '15 min avg direct (experimental HRRR only)': 'W/m2'
+        },
+        'N': {
+            'dswrf': 'Number',
+            'direct (experimental HRRR only)': 'Number',
+            'diffuse (experimental HRRR only)': 'Number',
+            '15 min avg dswrf (experimental HRRR only)': 'Number',
+            '15 min avg direct (experimental HRRR only)': 'Number'
+        },
+        'Model average': {
+            'dswrf': 'W/m2',
+            'direct (experimental HRRR only)': 'W/m2',
+            'diffuse (experimental HRRR only)': 'W/m2',
+            '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+            '15 min avg direct (experimental HRRR only)': 'W/m2'
+        },
+        'Obs average': {
+            'dswrf': 'W/m2',
+            'direct (experimental HRRR only)': 'W/m2',
+            'diffuse (experimental HRRR only)': 'W/m2',
+            '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+            '15 min avg direct (experimental HRRR only)': 'W/m2'
+        },
+        'Std deviation': {
+            'dswrf': 'W/m2',
+            'direct (experimental HRRR only)': 'W/m2',
+            'diffuse (experimental HRRR only)': 'W/m2',
+            '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+            '15 min avg direct (experimental HRRR only)': 'W/m2'
+        },
+        'MAE': {
+            'dswrf': 'W/m2',
+            'direct (experimental HRRR only)': 'W/m2',
+            'diffuse (experimental HRRR only)': 'W/m2',
+            '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+            '15 min avg direct (experimental HRRR only)': 'W/m2'
+        }
+    };
+
     if (matsCollections['variable'].findOne({name: 'variable'}) == undefined) {
-        const statVarOptionsMap = {
-            // ARRAY ITEMS BY INDEX:
-            // 0: sum of squared x-x_bar difference for RMSE/STDEV
-            // 1: number of values in sum
-            // 2: sum of obs-model difference (-1 * bias * N)
-            // 3: sum of model values
-            // 4: sum of obs values
-            // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
-            'dswrf': ['pow(o.direct + o.diffuse - m0.dswrf,2)', '(o.direct + o.diffuse - m0.dswrf)', '(o.direct + o.diffuse - m0.dswrf)', '(if(o.direct + o.diffuse is not null,m0.dswrf,null))', '(if(m0.dswrf is not null,o.direct + o.diffuse,null))', '(abs(o.direct + o.diffuse - m0.dswrf))'],
-            'direct (experimental HRRR only)': ['pow(o.direct - m0.direct,2)', '(o.direct - m0.direct)', '(o.direct - m0.direct)', '(if(o.direct is not null,m0.direct,null))', '(if(m0.direct is not null,o.direct,null))', '(abs(o.direct - m0.direct))'],
-            'diffuse (experimental HRRR only)': ['pow(o.diffuse - m0.diffuse,2)', '(o.diffuse - m0.diffuse)', '(o.diffuse - m0.diffuse)', '(if(o.diffuse is not null,m0.diffuse,null))', '(if(m0.diffuse is not null,o.diffuse,null))', '(abs(o.diffuse - m0.diffuse))'],
-            '15 min avg dswrf (experimental HRRR only)': ['pow(o.direct + o.diffuse - m0.dswrf15,2)', '(o.direct + o.diffuse - m0.dswrf15)', '(o.direct + o.diffuse - m0.dswrf15)', '(if(o.direct + o.diffuse is not null,m0.dswrf15,null))', '(if(m0.dswrf15 is not null,o.direct + o.diffuse,null))', '(abs(o.direct + o.diffuse - m0.dswrf15))'],
-            '15 min avg direct (experimental HRRR only)': ['pow(o.direct - m0.direct15,2)', '(o.direct - m0.direct15)', '(o.direct - m0.direct15)', '(if(o.direct is not null,m0.direct15,null))', '(if(m0.direct15 is not null,o.direct,null))', '(abs(o.direct - m0.direct15))']
-        };
-
-        const statVarUnitMap = {
-            'RMSE': {
-                'dswrf': 'W/m2',
-                'direct (experimental HRRR only)': 'W/m2',
-                'diffuse (experimental HRRR only)': 'W/m2',
-                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
-                '15 min avg direct (experimental HRRR only)': 'W/m2'
-            },
-            'Bias (Model - Obs)': {
-                'dswrf': 'W/m2',
-                'direct (experimental HRRR only)': 'W/m2',
-                'diffuse (experimental HRRR only)': 'W/m2',
-                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
-                '15 min avg direct (experimental HRRR only)': 'W/m2'
-            },
-            'N': {
-                'dswrf': 'Number',
-                'direct (experimental HRRR only)': 'Number',
-                'diffuse (experimental HRRR only)': 'Number',
-                '15 min avg dswrf (experimental HRRR only)': 'Number',
-                '15 min avg direct (experimental HRRR only)': 'Number'
-            },
-            'Model average': {
-                'dswrf': 'W/m2',
-                'direct (experimental HRRR only)': 'W/m2',
-                'diffuse (experimental HRRR only)': 'W/m2',
-                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
-                '15 min avg direct (experimental HRRR only)': 'W/m2'
-            },
-            'Obs average': {
-                'dswrf': 'W/m2',
-                'direct (experimental HRRR only)': 'W/m2',
-                'diffuse (experimental HRRR only)': 'W/m2',
-                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
-                '15 min avg direct (experimental HRRR only)': 'W/m2'
-            },
-            'Std deviation': {
-                'dswrf': 'W/m2',
-                'direct (experimental HRRR only)': 'W/m2',
-                'diffuse (experimental HRRR only)': 'W/m2',
-                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
-                '15 min avg direct (experimental HRRR only)': 'W/m2'
-            },
-            'MAE': {
-                'dswrf': 'W/m2',
-                'direct (experimental HRRR only)': 'W/m2',
-                'diffuse (experimental HRRR only)': 'W/m2',
-                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
-                '15 min avg direct (experimental HRRR only)': 'W/m2'
-            }
-        };
-
         matsCollections['variable'].insert(
             {
                 name: 'variable',
@@ -562,6 +596,41 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections['x-variable'].findOne({name: 'x-variable'}) == undefined) {
+        matsCollections['x-variable'].insert(
+            {
+                name: 'x-variable',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statVarOptionsMap,
+                statVarUnitMap: statVarUnitMap,
+                options: Object.keys(statVarOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statVarOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
+
+    if (matsCollections['y-variable'].findOne({name: 'y-variable'}) == undefined) {
+        matsCollections['y-variable'].insert(
+            {
+                name: 'y-variable',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statVarOptionsMap,
+                statVarUnitMap: statVarUnitMap,
+                options: Object.keys(statVarOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statVarOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
     if (matsCollections['scale'].findOne({name: 'scale'}) == undefined) {
         matsCollections['scale'].insert(
             {
@@ -575,7 +644,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][1],
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -704,9 +773,39 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
+        const optionsMap = {
+            'Fcst lead time': "select m0.fcst_len/60 as binVal, ",
+            'Valid UTC hour': "select m0.secs%(24*3600)/3600 as binVal, ",
+            'Init UTC hour': "select (m0.secs-m0.fcst_len*60)%(24*3600)/3600 as binVal, ",
+            'Valid Date': "select m0.secs as binVal, ",
+            'Init Date': "select m0.secs-m0.fcst_len*60 as binVal, "
+        };
+
+        matsCollections["bin-parameter"].insert(
+            {
+                name: 'bin-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                hideOtherFor: {
+                    'forecast-length': ["Fcst lead time"],
+                    'valid-time': ["Valid UTC hour"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[3],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
     // determine date defaults for dates and curveDates
-    const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({name: "data-source"}, {default: 1}).default;
+    modelDateRangeMap = matsCollections["data-source"].findOne({name: "data-source"}, {dates: 1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
 
@@ -878,6 +977,25 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.simpleScatter,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'scale', ', '],
+                ['', 'x-variable', ' '],
+                ['', 'x-statistic', ' vs '],
+                ['', 'y-variable', ' '],
+                ['', 'y-statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "x-statistic", "x-variable", "y-statistic", "y-variable", "valid-time", "scale", "forecast-length", "bin-parameter", "curve-dates"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -929,6 +1047,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.contourDiff,
             graphFunction: "graphPlotly",
             dataFunction: "dataContourDiff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.simpleScatter,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataSimpleScatter",
             checked: false
         });
     }
