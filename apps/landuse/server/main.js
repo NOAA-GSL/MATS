@@ -418,23 +418,23 @@ const doCurveParams = function () {
         }
     }
 
+    const optionsMap = {
+        "RMSE": "scalar",
+
+        "Bias (Model - Obs)": "scalar",
+
+        "N": "scalar",
+
+        "Model average": "scalar",
+
+        "Obs average": "scalar",
+
+        "Std deviation": "scalar",
+
+        "MAE (temp and dewpoint only)": "scalar"
+    };
+
     if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
-        const optionsMap = {
-            "RMSE": "scalar",
-
-            "Bias (Model - Obs)": "scalar",
-
-            "N": "scalar",
-
-            "Model average": "scalar",
-
-            "Obs average": "scalar",
-
-            "Std deviation": "scalar",
-
-            "MAE (temp and dewpoint only)": "scalar"
-        };
-
         matsCollections["statistic"].insert(
             {
                 name: 'statistic',
@@ -451,66 +451,100 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["x-statistic"].findOne({name: 'x-statistic'}) == undefined) {
+        matsCollections["x-statistic"].insert(
+            {
+                name: 'x-statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
+
+    if (matsCollections["y-statistic"].findOne({name: 'y-statistic'}) == undefined) {
+        matsCollections["y-statistic"].insert(
+            {
+                name: 'y-statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    const statVarOptionsMap = {
+        // ARRAY ITEMS BY INDEX:
+        // 0: sum of squared x-x_bar difference for RMSE/STDEV
+        // 1: number of values in sum
+        // 2: sum of obs-model difference (-1 * bias * N)
+        // 3: sum of model values
+        // 4: sum of obs values
+        // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
+        '2m temperature': ['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m0.sum_ob_t)', 'm0.sum_ob_t', '(if(m0.sum_adt is not null,m0.sum_adt,0))'],
+        '2m RH': ['m0.sum2_drh', 'm0.N_drh', 'm0.sum_drh', '-1 * (m0.sum_drh-m0.sum_ob_rh)', 'm0.sum_ob_rh', '0'],
+        '2m dewpoint': ['m0.sum2_dtd', 'm0.N_dtd', 'm0.sum_dtd', '-1 * (m0.sum_dtd-m0.sum_ob_td)', 'm0.sum_ob_td', '(if(m0.sum_adtd is not null,m0.sum_adtd,0))'],
+        '10m wind': ['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0']
+    };
+
+    const statVarUnitMap = {
+        'RMSE': {
+            '2m temperature': '°C',
+            '2m RH': 'RH (%)',
+            '2m dewpoint': '°C',
+            '10m wind': 'm/s'
+        },
+        'Bias (Model - Obs)': {
+            '2m temperature': '°C',
+            '2m RH': 'RH (%)',
+            '2m dewpoint': '°C',
+            '10m wind': 'm/s'
+        },
+        'N': {
+            '2m temperature': 'Number',
+            '2m RH': 'Number',
+            '2m dewpoint': 'Number',
+            '10m wind': 'Number'
+        },
+        'Model average': {
+            '2m temperature': '°C',
+            '2m RH': 'RH (%)',
+            '2m dewpoint': '°C',
+            '10m wind': 'm/s'
+        },
+        'Obs average': {
+            '2m temperature': '°C',
+            '2m RH': 'RH (%)',
+            '2m dewpoint': '°C',
+            '10m wind': 'm/s'
+        },
+        'Std deviation': {
+            '2m temperature': '°C',
+            '2m RH': 'RH (%)',
+            '2m dewpoint': '°C',
+            '10m wind': 'm/s'
+        },
+        'MAE (temp and dewpoint only)': {
+            '2m temperature': '°C',
+            '2m RH': 'RH (%)',
+            '2m dewpoint': '°C',
+            '10m wind': 'm/s'
+        }
+    };
+
     if (matsCollections['variable'].findOne({name: 'variable'}) == undefined) {
-        const statVarOptionsMap = {
-            // ARRAY ITEMS BY INDEX:
-            // 0: sum of squared x-x_bar difference for RMSE/STDEV
-            // 1: number of values in sum
-            // 2: sum of obs-model difference (-1 * bias * N)
-            // 3: sum of model values
-            // 4: sum of obs values
-            // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
-            '2m temperature': ['m0.sum2_dt', 'm0.N_dt', 'm0.sum_dt', '-1 * (m0.sum_dt-m0.sum_ob_t)', 'm0.sum_ob_t', '(if(m0.sum_adt is not null,m0.sum_adt,0))'],
-            '2m RH': ['m0.sum2_drh', 'm0.N_drh', 'm0.sum_drh', '-1 * (m0.sum_drh-m0.sum_ob_rh)', 'm0.sum_ob_rh', '0'],
-            '2m dewpoint': ['m0.sum2_dtd', 'm0.N_dtd', 'm0.sum_dtd', '-1 * (m0.sum_dtd-m0.sum_ob_td)', 'm0.sum_ob_td', '(if(m0.sum_adtd is not null,m0.sum_adtd,0))'],
-            '10m wind': ['m0.sum2_dw', 'm0.N_dw', 'm0.sum_ob_ws-m0.sum_model_ws', 'm0.sum_model_ws', 'm0.sum_ob_ws', '0']
-        };
-
-        const statVarUnitMap = {
-            'RMSE': {
-                '2m temperature': '°C',
-                '2m RH': 'RH (%)',
-                '2m dewpoint': '°C',
-                '10m wind': 'm/s'
-            },
-            'Bias (Model - Obs)': {
-                '2m temperature': '°C',
-                '2m RH': 'RH (%)',
-                '2m dewpoint': '°C',
-                '10m wind': 'm/s'
-            },
-            'N': {
-                '2m temperature': 'Number',
-                '2m RH': 'Number',
-                '2m dewpoint': 'Number',
-                '10m wind': 'Number'
-            },
-            'Model average': {
-                '2m temperature': '°C',
-                '2m RH': 'RH (%)',
-                '2m dewpoint': '°C',
-                '10m wind': 'm/s'
-            },
-            'Obs average': {
-                '2m temperature': '°C',
-                '2m RH': 'RH (%)',
-                '2m dewpoint': '°C',
-                '10m wind': 'm/s'
-            },
-            'Std deviation': {
-                '2m temperature': '°C',
-                '2m RH': 'RH (%)',
-                '2m dewpoint': '°C',
-                '10m wind': 'm/s'
-            },
-            'MAE (temp and dewpoint only)': {
-                '2m temperature': '°C',
-                '2m RH': 'RH (%)',
-                '2m dewpoint': '°C',
-                '10m wind': 'm/s'
-            }
-        };
-
         matsCollections['variable'].insert(
             {
                 name: 'variable',
@@ -525,6 +559,42 @@ const doCurveParams = function () {
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 2
+            });
+    }
+
+    if (matsCollections['x-variable'].findOne({name: 'x-variable'}) == undefined) {
+        matsCollections['x-variable'].insert(
+            {
+                name: 'x-variable',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statVarOptionsMap,
+                statVarUnitMap: statVarUnitMap,
+                options: Object.keys(statVarOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statVarOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
+
+    if (matsCollections['y-variable'].findOne({name: 'y-variable'}) == undefined) {
+        matsCollections['y-variable'].insert(
+            {
+                name: 'y-variable',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statVarOptionsMap,
+                statVarUnitMap: statVarUnitMap,
+                options: Object.keys(statVarOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statVarOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 3
             });
     }
 
@@ -657,9 +727,41 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
+        const optionsMap = {
+            'Fcst lead time': "select m0.fcst_len as binVal, ",
+            'Valid UTC hour': "select m0.hour as binVal, ",
+            'Init UTC hour': "select (m0.valid_day+3600*m0.hour-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
+            'Valid Date': "select m0.valid_day+3600*m0.hour as binVal, ",
+            'Init Date': "select m0.valid_day+3600*m0.hour-m0.fcst_len*3600 as binVal, "
+        };
+
+        matsCollections["bin-parameter"].insert(
+            {
+                name: 'bin-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                hideOtherFor: {
+                    'top': ["Level"],
+                    'bottom': ["Level"],
+                    'forecast-length': ["Fcst lead time"],
+                    'valid-time': ["Valid UTC hour"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[3],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 6,
+            });
+    }
+
     // determine date defaults for dates and curveDates
-    const defaultDataSource = matsCollections["data-source"].findOne({name:"data-source"},{default:1}).default;
-    modelDateRangeMap = matsCollections["data-source"].findOne({name:"data-source"},{dates:1}).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({name: "data-source"}, {default: 1}).default;
+    modelDateRangeMap = matsCollections["data-source"].findOne({name: "data-source"}, {dates: 1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
 
@@ -843,6 +945,24 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.simpleScatter,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'vgtyp', ', '],
+                ['', 'x-variable', ' '],
+                ['', 'x-statistic', ' vs '],
+                ['', 'y-variable', ' '],
+                ['', 'y-statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', '']
+            ],
+            displayParams: [
+                "label", "data-source", "vgtyp", "x-statistic", "x-variable", "y-statistic", "y-variable", "valid-time", "forecast-length", "bin-parameter", "curve-dates"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -900,6 +1020,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.contourDiff,
             graphFunction: "graphPlotly",
             dataFunction: "dataContourDiff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.simpleScatter,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataSimpleScatter",
             checked: false
         });
     }
