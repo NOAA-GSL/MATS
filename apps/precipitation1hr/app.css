@@ -136,3 +136,17 @@ hr {
     max-width: 350px;
     width: 350px;
 }
+
+.daterangepicker .ranges li {
+    background-color: #bfdfff;
+    font-size: 14px !important;
+    margin: 5px 2px;
+    border-radius: 10px;
+    border-color: #dddddd;
+    border-width: 1px;
+}
+
+.daterangepicker .drp-selected {
+    font-size: 18px !important;
+    color: #990000;
+}

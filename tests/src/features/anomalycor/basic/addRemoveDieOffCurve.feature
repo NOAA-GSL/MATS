@@ -19,8 +19,8 @@ Feature: Add Remove DieOff Curve
         Then the plot type should be "DieOff"
         When I change the "data-source" parameter to "GFS"
         Then the "data-source" parameter value matches "GFS"
-        When I set the curve-dates to "02/28/2020 0:00 - 05/24/2020 0:00"
-        Then the curve-dates value is "02/28/2020 0:00 - 05/24/2020 0:00"
+        When I set the curve-dates to "02/28/2020 00:00 - 05/24/2020 00:00"
+        Then the curve-dates value is "02/28/2020 00:00 - 05/24/2020 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"

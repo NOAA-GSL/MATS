@@ -22,8 +22,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         Then the "variable" parameter value matches "15 Minute Visibility"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
-        When I set the dates to "09/21/2019 0:00 - 09/24/2019 0:00"
-        Then the dates value is "09/21/2019 0:00 - 09/24/2019 0:00"
+        When I set the dates to "09/21/2019 00:00 - 09/24/2019 00:00"
+        Then the dates value is "09/21/2019 00:00 - 09/24/2019 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 

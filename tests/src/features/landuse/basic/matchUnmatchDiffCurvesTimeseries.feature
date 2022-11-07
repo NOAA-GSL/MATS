@@ -17,8 +17,8 @@ Feature: Match Unmatch Diff Curves Timeseries
         Then the plot type should be "TimeSeries"
         When I change the "data-source" parameter to "RAP_GSL"
         Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the dates to "03/02/2021 0:00 - 03/03/2021 0:00"
-        Then the dates value is "03/02/2021 0:00 - 03/03/2021 0:00"
+        When I set the dates to "03/02/2021 00:00 - 03/03/2021 00:00"
+        Then the dates value is "03/02/2021 00:00 - 03/03/2021 00:00"
         When I click the "Add Curve" button
         Then "Curve0" is added
 
