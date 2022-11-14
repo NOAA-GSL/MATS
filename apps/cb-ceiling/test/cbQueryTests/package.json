@@ -1,0 +1,17 @@
+{
+  "name": "cbQueryTests",
+  "version": "1.0.0",
+  "description": "Couchbase query tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Gopa",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.2.2"
+  },
+  "dependencies": {
+    "couchbase": "^4.1.3"
+  }
+}

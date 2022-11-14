@@ -1,0 +1,24 @@
+{
+    "queries": [
+        {
+            "name": "TimeSeries query",
+            "queryFile": "./test_queries/final_TimeSeries.sql",
+            "maxExecutionTime_ms": 11000
+        },
+        {
+            "name": "Map query",
+            "queryFile": "./test_queries/final_Map.sql",
+            "maxExecutionTime_ms": 9000
+        },
+        {
+            "name": "DieOff query",
+            "queryFile": "./test_queries/final_DieOff.sql",
+            "maxExecutionTime_ms": 150000
+        },
+        {
+            "name": "ValidTime query",
+            "queryFile": "./test_queries/final_ValidTime.sql",
+            "maxExecutionTime_ms": 9000
+        }
+    ]
+}
