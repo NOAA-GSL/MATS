@@ -1,0 +1,1 @@
+CREATE INDEX idx0_fcstValidEpoch ON `default`:`mdatatest`.`_default`.`METAR`(`idx0`,`fcstValidEpoch`)
