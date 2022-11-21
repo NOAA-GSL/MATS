@@ -1,24 +1,29 @@
 {
+    "notes": "attributes starting with doc_[attribute] are documentation for that particulat atribute",
+    "doc_bucket" : "rename bucket attribute to bucket0 to pick bucket from settings.json",
+    "bucket": "mdatatest",
+    "doc_host" : "rename host attribute to host0 to pick host from settings.json",
+    "host": "adb-cb1.gsd.esrl.noaa.gov",
     "queries": [
         {
             "name": "TimeSeries query",
             "queryFile": "./test_queries/final_TimeSeries.sql",
-            "maxExecutionTime_ms": 11000
+            "maxExecutionTime_ms": 14000
         },
         {
             "name": "Map query",
             "queryFile": "./test_queries/final_Map.sql",
-            "maxExecutionTime_ms": 9000
+            "maxExecutionTime_ms": 11000
         },
         {
             "name": "DieOff query",
             "queryFile": "./test_queries/final_DieOff.sql",
-            "maxExecutionTime_ms": 150000
+            "maxExecutionTime_ms": 180000
         },
         {
             "name": "ValidTime query",
             "queryFile": "./test_queries/final_ValidTime.sql",
-            "maxExecutionTime_ms": 9000
+            "maxExecutionTime_ms": 11000
         }
     ]
 }
