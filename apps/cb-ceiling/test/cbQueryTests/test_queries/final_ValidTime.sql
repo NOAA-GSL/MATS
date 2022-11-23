@@ -13,9 +13,9 @@ FROM (
            ARRAY_AGG(sdu) AS data
     FROM (
         SELECT stationData
-        FROM `mdatatest`._default.METAR AS obs
+        FROM `vxdata`._default.METAR AS obs
         LET ofve = obs.fcstValidEpoch,
-            stationData_tmp = ARRAY OBJECT_ADD(d, 'ofve', ofve ) FOR d IN ( [obs.stations.KEWR, obs.stations.KJFK, obs.stations.KJRB] ) END,
+            stationData_tmp = ARRAY OBJECT_ADD(d, 'ofve', ofve ) FOR d IN ( [obs.data.KEWR, obs.data.KJFK, obs.data.KJRB] ) END,
             stationData = ARRAY OBJECT_ADD(d, 'ohod', ofve%(24*3600)/3600 ) FOR d IN ( stationData_tmp ) END
         WHERE type = "DD"
             AND docType = "obs"
@@ -29,9 +29,9 @@ FROM (
            ARRAY_AGG(sdu) AS data
     FROM (
         SELECT modelData
-        FROM `mdatatest`._default.METAR AS models
+        FROM `vxdata`._default.METAR AS models
         LET mfve = models.fcstValidEpoch,
-            modelData_tmp = ARRAY OBJECT_ADD(d, 'mfve', mfve ) FOR d IN ( [models.stations.KEWR, models.stations.KJFK, models.stations.KJRB] ) END,
+            modelData_tmp = ARRAY OBJECT_ADD(d, 'mfve', mfve ) FOR d IN ( [models.data.KEWR, models.data.KJFK, models.data.KJRB] ) END,
             modelData = ARRAY OBJECT_ADD(d, 'mhod', mfve%(24*3600)/3600 ) FOR d IN ( modelData_tmp ) END
         WHERE type = "DD"
             AND docType = "model"

@@ -1,1 +1,1 @@
-select count(*) from `mdatatest`._default.METAR
+select count(*) from `vxdata`._default.METAR

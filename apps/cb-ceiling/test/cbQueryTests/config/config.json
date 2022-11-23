@@ -1,7 +1,7 @@
 {
     "notes": "attributes starting with doc_[attribute] are documentation for that particulat atribute",
     "doc_bucket" : "rename bucket attribute to bucket0 to pick bucket from settings.json",
-    "bucket": "mdatatest",
+    "bucket": "vxdata",
     "doc_host" : "rename host attribute to host0 to pick host from settings.json",
     "host": "adb-cb1.gsd.esrl.noaa.gov",
     "queries": [
@@ -18,11 +18,16 @@
         {
             "name": "DieOff query",
             "queryFile": "./test_queries/final_DieOff.sql",
-            "maxExecutionTime_ms": 180000
+            "maxExecutionTime_ms": 190000
         },
         {
             "name": "ValidTime query",
             "queryFile": "./test_queries/final_ValidTime.sql",
+            "maxExecutionTime_ms": 11000
+        },
+        {
+            "name": "DailyModelCycle query",
+            "queryFile": "./test_queries/final_DailyModelCycle.sql",
             "maxExecutionTime_ms": 11000
         }
     ]

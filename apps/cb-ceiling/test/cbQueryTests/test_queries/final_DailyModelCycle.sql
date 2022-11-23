@@ -1,4 +1,4 @@
-SELECT m.fcst AS fcst_lead,
+SELECT m.mfve AS avtime,
        ARRAY_MIN(stats[*].fve) AS min_secs,
        ARRAY_MAX(stats[*].fve) AS max_secs,
        ARRAY_SUM(stats[*].hit) AS hits,
@@ -24,7 +24,7 @@ FROM (
     GROUP BY sdu.ovfe
     ORDER BY sdu.ovfe) o,
 (
-    SELECT sdu.fcst AS fcst,
+    SELECT sdu.mfve AS mfve,
            ARRAY_AGG(sdu) AS data
     FROM (
         SELECT modelData
@@ -36,10 +36,12 @@ FROM (
             AND docType = "model"
             AND model = "HRRR_OPS"
             AND version = "V01"
+            AND models.fcstLen < 24
+            AND (models.fcstValidEpoch - models.fcstLen*3600)%(24*3600)/3600 IN[12]
             AND models.fcstValidEpoch BETWEEN 1662249600 AND 1664841600) sd
     UNNEST sd.modelData sdu
-    GROUP BY sdu.fcst
-    ORDER BY sdu.fcst) m
+    GROUP BY sdu.mfve
+    ORDER BY sdu.mfve) m
 LET stats = ARRAY( FIRST { 'hit' :CASE WHEN mv.Ceiling < 3000.0
         AND ov.Ceiling < 3000.0 THEN 1 ELSE 0 END,
                                           'miss' :CASE WHEN NOT mv.Ceiling < 3000.0
@@ -58,4 +60,3 @@ LET stats = ARRAY( FIRST { 'hit' :CASE WHEN mv.Ceiling < 3000.0
         AND ov.Ceiling < 3000.0 THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.Ceiling < 3000.0
         AND NOT ov.Ceiling < 3000.0 THEN '1' ELSE '0' END } FOR ov IN o.data WHEN ov.ofve = mv.mfve
         AND ov.name = mv.name END ) FOR mv IN m.data END
-        

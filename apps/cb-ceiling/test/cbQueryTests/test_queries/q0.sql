@@ -12,8 +12,8 @@ FROM (
     SELECT sdu.name AS name,
            ARRAY_AGG(sdu) AS data
     FROM (
-        SELECT ARRAY OBJECT_ADD(d, 'ofve', obs.fcstValidEpoch) FOR d IN [obs.stations.KEWR, obs.stations.KJFK, obs.stations.KJRB] END AS obsData
-        FROM `mdatatest`._default.METAR AS obs USE INDEX (adv_docType_fcstValidEpoch_type_version_obs)
+        SELECT ARRAY OBJECT_ADD(d, 'ofve', obs.fcstValidEpoch) FOR d IN [obs.data.KEWR, obs.data.KJFK, obs.data.KJRB] END AS obsData
+        FROM `vxdata`._default.METAR AS obs USE INDEX (adv_docType_fcstValidEpoch_type_version_obs)
         WHERE type = "DD"
             AND docType = "obs"
             AND version = "V01"
@@ -25,8 +25,8 @@ FROM (
     SELECT sdu.name AS name,
            ARRAY_AGG(sdu) AS data
     FROM (
-        SELECT ARRAY OBJECT_ADD(d, 'mfve', models.fcstValidEpoch) FOR d IN [models.stations.KEWR, models.stations.KJFK, models.stations.KJRB] END AS modelData
-        FROM `mdatatest`._default.METAR AS models
+        SELECT ARRAY OBJECT_ADD(d, 'mfve', models.fcstValidEpoch) FOR d IN [models.data.KEWR, models.data.KJFK, models.data.KJRB] END AS modelData
+        FROM `vxdata`._default.METAR AS models
         WHERE type = "DD"
             AND docType = "model"
             AND model = "HRRR_OPS"
