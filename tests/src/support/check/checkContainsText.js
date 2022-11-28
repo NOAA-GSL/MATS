@@ -38,6 +38,7 @@ export default (elementType, selector, falseCase, expectedText) => {
      */
     const elem = $(selector);
     elem.waitForDisplayed();
+    elem.scrollIntoView();
     const text = elem[command]();
 
     if (typeof expectedText === 'undefined') {

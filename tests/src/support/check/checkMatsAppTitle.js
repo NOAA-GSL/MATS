@@ -17,6 +17,7 @@ export default (title) => {
      */
     const elem = $('#appTitleText');
     elem.waitForDisplayed();
+    elem.scrollIntoView();
     const text = elem[command]();
 
     expect(text).toContain(stringExpectedText);

@@ -18,6 +18,7 @@ export default (parameter, selectionValue) => {
 
     // noinspection JSJQueryEfficiency
     $(`#controlButton-${parameter}`).waitForDisplayed();
+    $(`#controlButton-${parameter}`).scrollIntoView();
     let len = $$(`.select2-results__option=${selectionValue}`).length;
     // it might already be clicked! Sometimes the click doesn't seem to take on the first try.
     let c = 0;

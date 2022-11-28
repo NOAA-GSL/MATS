@@ -11,6 +11,7 @@ export default (expected) => {
      */
     const expectedList = expected.split(',').sort();
     $('.displayItemLabelSpan').waitForDisplayed();
+    $('.displayItemLabelSpan').scrollIntoView();
     pause(1000);
     const actualList = $$('.displayItemLabelSpan').map(
         (elem) => elem.getText()

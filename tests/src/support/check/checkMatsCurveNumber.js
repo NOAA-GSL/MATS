@@ -25,6 +25,7 @@ export default (curveNumber) => {
     } else {
         let count = 0;
         $('#curveList').waitForDisplayed(20000);
+        $('#curveList').scrollIntoView();
         let curveItemsLength = $$("[id|='curveItem']").length;
         while (count < 5 && curveItemsLength !== curveNumber) {
             pause(1000);

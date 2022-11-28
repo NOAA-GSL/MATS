@@ -13,6 +13,7 @@ export default (plotType) => {
 
     const elem = $('#header');
     elem.waitForDisplayed();
+    elem.scrollIntoView();
     const text = elem[command]();
 
     expect(text).toContain(stringExpectedText);

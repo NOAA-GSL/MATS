@@ -27,6 +27,7 @@ export default (label) => {
         nrOfElements = $$(`#confirm-remove-curve*=${cPart}`).length;
         expect(nrOfElements).toBeGreaterThan(0, `Expected an "${selector}" button to exist`);
         $$(`#confirm-remove-curve*=${cPart}`)[1].waitForDisplayed();
+        $$(`#confirm-remove-curve*=${cPart}`)[1].scrollIntoView();
         $$(`#confirm-remove-curve*=${cPart}`)[1].waitForClickable();
         $$(`#confirm-remove-curve*=${cPart}`)[1].click();
     } else if (label.match('Remove .*')) {
@@ -42,31 +43,37 @@ export default (label) => {
             case 'Add Curve':
                 selector = $('#add');
                 selector.waitForDisplayed();
+                selector.scrollIntoView();
                 nrOfElements = $$('#add').length;
                 break;
             case 'Back':
                 selector = $('#backButton');
                 selector.waitForDisplayed();
+                selector.scrollIntoView();
                 nrOfElements = $$('#backButton').length;
                 break;
             case 'Plot Unmatched':
                 selector = $('#plotUnmatched');
                 selector.waitForDisplayed();
+                selector.scrollIntoView();
                 nrOfElements = $$('#plotUnmatched').length;
                 break;
             case 'Plot Matched':
                 selector = $('#plotMatched');
                 selector.waitForDisplayed();
+                selector.scrollIntoView();
                 nrOfElements = $$('#plotMatched').length;
                 break;
             case 'Reset to Defaults':
                 selector = $('#reset');
                 selector.waitForDisplayed();
+                selector.scrollIntoView();
                 nrOfElements = $$('#reset').length;
                 break;
             case 'Clear':
                 selector = $('#clear-info');
                 selector.waitForDisplayed();
+                selector.scrollIntoView();
                 nrOfElements = $$('#clear-info').length;
                 break;
             default:
