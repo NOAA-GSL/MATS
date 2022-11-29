@@ -1,7 +1,6 @@
 const fs = require('fs');
 var couchbase = require('couchbase');
 
-
 const configFile = "./config/config.json";
 const settingsFile = '../../settings/settings.json';
 
