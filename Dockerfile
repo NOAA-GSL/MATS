@@ -1,5 +1,5 @@
 # This tag here should match the app's Meteor version, per .meteor/release
-FROM geoffreybooth/meteor-base:2.6.1 AS meteor-builder
+FROM geoffreybooth/meteor-base:2.8.0 AS meteor-builder
 
 ARG APPNAME
 
@@ -30,6 +30,7 @@ RUN apk --no-cache add \
     bash \
     g++ \
     make \
+    cmake \
     python3
 
 # Copy in build scripts & entrypoint
