@@ -1,7 +1,8 @@
 Configuration is loaded from ./config/config.json
 see config.json on how to override the setings.json bucket setting
 
-To run all tests, do:
+Male sure there is a linked settings file: <app>/settings/settings.json
+To run all tests, do (at app folder):
     npm install
     npm test
 
