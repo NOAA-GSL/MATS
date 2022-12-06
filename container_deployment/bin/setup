@@ -444,43 +444,43 @@ defaultEntryPoints = ["http", "https"]
             curveParams="[\"label\",\"data-source\",\"region\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "cb-ceiling" ]]; then
-            curveParams="[\"label\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
+            curveParams="[\"label\",\"variable\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "ceil-vis" ]]; then
-            curveParams="[\"label\",\"database\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
+            curveParams="[\"label\",\"variable\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "ceil-vis15" ]]; then
-            curveParams="[\"label\",\"database\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
+            curveParams="[\"label\",\"variable\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "landuse" ]]; then
-            curveParams="[\"label\",\"data-source\",\"vgtyp\",\"statistic\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"curve-dates\"]"
+            curveParams="[\"label\",\"data-source\",\"vgtyp\",\"statistic\",\"x-statistic\",\"y-statistic\",\"variable\",\"x-variable\",\"y-variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "met-airquality" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"threshold\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"curve-dates\"]"
+            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"threshold\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "met-anomalycor" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"curve-dates\"]"
+            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "met-cyclone" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"basin\",\"statistic\",\"year\",\"storm\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"curve-dates\"]"
+            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"basin\",\"statistic\",\"year\",\"storm\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "met-ensemble" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"curve-dates\"]"
+            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "met-object" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"statistic\",\"variable\",\"threshold\",\"radius\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"object-matching\",\"object-simplicity\",\"curve-dates\"]"
+            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"statistic\",\"variable\",\"threshold\",\"radius\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"object-matching\",\"object-simplicity\",\"aggregation-method\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "met-precip" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"threshold\",\"interp-method\",\"scale\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"curve-dates\"]"
+            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"threshold\",\"interp-method\",\"scale\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "met-surface" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"curve-dates\"]"
+            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "met-upperair" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"curve-dates\"]"
+            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "precipAccum" ]]; then
-            curveParams="[\"label\",\"database\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"scale\",\"forecast-type\",\"average\",\"bin-parameter\",\"curve-dates\"]"
+            curveParams="[\"label\",\"variable\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"scale\",\"forecast-type\",\"average\",\"bin-parameter\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "precipGauge" ]]; then
             curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
@@ -492,16 +492,16 @@ defaultEntryPoints = ["http", "https"]
             curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"variable\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "radar" ]]; then
-            curveParams="[\"label\",\"database\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
+            curveParams="[\"label\",\"variable\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "surface" ]]; then
-            curveParams="[\"label\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"variable\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"curve-dates\"]"
+            curveParams="[\"label\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"x-statistic\",\"y-statistic\",\"variable\",\"x-variable\",\"y-variable\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "surfrad" ]]; then
-            curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"variable\",\"scale\",\"forecast-length\",\"valid-time\",\"utc-cycle-start\",\"average\",\"curve-dates\"]"
+            curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"x-statistic\",\"y-statistic\",\"variable\",\"x-variable\",\"y-variable\",\"scale\",\"forecast-length\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
         fi
         if [[ "${appref}"  == "upperair" ]]; then
-            curveParams="[\"label\",\"database\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"top\",\"bottom\",\"phase\",\"sites\",\"sitesMap\",\"curve-dates\"]"
+            curveParams="[\"label\",\"database\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"x-statistic\",\"y-statistic\",\"variable\",\"x-variable\",\"y-variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"top\",\"bottom\",\"phase\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
         fi
         #finish up the document
         echo "], \"PYTHON_PATH\":\"/usr/bin/python3\", \"MAPBOX_KEY\":\"${mapbox_key}\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"curve_params\":${curveParams},\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
