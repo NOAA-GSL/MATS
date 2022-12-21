@@ -9,6 +9,7 @@ export default (curveNumber) => {
      * @type {String}
      */
     $('#curves').waitForDisplayed(20000);
+    $('#curves').scrollIntoView();
     // use the heatMapVisibility button (it's a unique selector) to count the curves
     const curveItems = $$('.traces');
     // eslint-disable-next-line no-template-curly-in-string

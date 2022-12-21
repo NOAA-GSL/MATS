@@ -17,6 +17,7 @@ export default (curve) => {
      * @type {String}
      */
     selector.waitForDisplayed();
+    selector.scrollIntoView();
     const text = selector[command]();
 
     expect(text).toContain(stringExpectedText);

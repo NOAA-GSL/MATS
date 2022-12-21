@@ -7,6 +7,7 @@ export default (message) => {
     const expectedText = message;
     const elem = $('#info').$('.modal-body').$('<p />');
     elem.waitForDisplayed();
+    elem.scrollIntoView();
     const text = elem[command]();
     // notice that the expectedText contains the actual text.
     // that is because the expected text has a leading "Info:  "
