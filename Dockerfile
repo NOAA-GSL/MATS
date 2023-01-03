@@ -30,7 +30,6 @@ RUN apk --no-cache add \
     bash \
     g++ \
     make \
-    cmake \
     python3
 
 # Copy in build scripts & entrypoint
