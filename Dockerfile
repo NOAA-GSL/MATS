@@ -31,7 +31,6 @@ RUN apk --no-cache add \
     g++ \
     make \
     cmake \
-    linux-headers \
     python3
 
 # Copy in build scripts & entrypoint
