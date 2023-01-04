@@ -1200,6 +1200,8 @@ Meteor.startup(function () {
         host: 1,
         port: 1,
         bucket: 1,
+        scope: 1,
+        collection: 1,
         user: 1,
         password: 1
     });
@@ -1210,7 +1212,7 @@ Meteor.startup(function () {
     }
     allPools.push({pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
     // create list of tables we need to monitor for update
-    const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
+    const mdr = new matsTypes.MetaDataDBRecord("cbPool", "vxdata:_default:METAR", [
         "MD:matsAux:COMMON:V01",
         "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
         "MD:V01:REGION:ALL_HRRR",

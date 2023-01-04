@@ -1,0 +1,18 @@
+Org in mdatatest
+----------------
+CREATE INDEX `adv_docType_fcstLen_model_fcstValidEpoch_type_version_model` ON `mdatatest`.`_default`.`METAR`(`model`,`fcstLen`,`fcstValidEpoch`) WHERE (((`docType` = "model") and (`type` = "DD")) and (`version` = "V01"))
+CREATE INDEX `adv_docType_fcstValidEpoch_type_version_obs` ON `mdatatest`.`_default`.`METAR`(`fcstValidEpoch`) WHERE (((`docType` = "obs") and (`type` = "DD")) and (`version` = "V01"))
+CREATE INDEX `adv_docType_obs_fcstValidEpoch_version_type` ON `mdatatest`.`_default`.`METAR`(`docType`,(`obs`.`fcstValidEpoch`)) WHERE ((`type` = "DD") and (`version` = "V01"))
+CREATE INDEX `adv_docType_type` ON `mdatatest`.`_default`.`METAR`(`docType`,`type`)
+CREATE INDEX `adv_model_fcstValidEpoch_subset_type_docType_version` ON `mdatatest`.`_default`.`METAR`(`model`,`fcstValidEpoch`) WHERE ((((`type` = "DD") and (`docType` = "model")) and (`version` = "V01")) and (`subset` = "METAR"))
+CREATE INDEX `adv_model_region_subDocType_fcstValidEpoch_type_docType_version_subset` ON `mdatatest`.`_default`.`METAR`(`model`,`region`,`subDocType`,`fcstValidEpoch`) WHERE ((((`type` = "DD") and (`docType` = "CTC")) and (`version` = "V01")) and (`subset` = "METAR"))
+CREATE INDEX `adv_originType_fileType_model_subset_type` ON `mdatatest`.`_default`.`METAR`(`originType`,`fileType`,`model`) WHERE ((`subset` = "metar") and (`type` = "DF"))
+CREATE INDEX `adv_originType_type_fileType_url_mtime` ON `mdatatest`.`_default`.`METAR`(`originType`,`url`,`mtime`) WHERE ((`type` = "DF") and (`fileType` = "grib2"))
+CREATE INDEX `adv_subset_docType_version_type` ON `mdatatest`.`_default`.`METAR`(`subset`,`docType`,`version`,`type`)
+CREATE INDEX `idx0_fcstValidEpoch` ON `mdatatest`.`_default`.`METAR`(`idx0`,`fcstValidEpoch`)
+
+New in vxdata
+-------------
+CREATE INDEX adv_fcstValidEpoch_version_type_docType ON `default`:`vxdata`.`_default`.`METAR`(`fcstValidEpoch`) WHERE `type` = 'DD' AND `docType` = 'obs' AND `version` = 'V01'
+CREATE INDEX adv_fcstLen_model_fcstValidEpoch_type_docType_version ON `default`:`vxdata`.`_default`.`METAR`(`fcstLen`,`model`,`fcstValidEpoch`) WHERE `type` = 'DD' AND `docType` = 'model' AND `version` = 'V01'
+CREATE INDEX adv_model_fcstValidEpoch_docType_version_type ON `default`:`vxdata`.`_default`.`METAR`(`model`,`fcstValidEpoch`) WHERE `type` = 'DD' AND `docType` = 'model' AND `version` = 'V01'
