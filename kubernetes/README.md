@@ -8,20 +8,34 @@ This project uses a Kustomize-style layout. `base` contains the default k8s mani
 
 ### Start app via CLI
 
-Currently, you will need to create a `kubernetes/base/mongo/.env.mongo.secret` file containing the DB user and password:
+Currently, you will need to create the following files:
+
+* A `kubernetes/base/mongo/.env.mongo.secret` file containing the DB user and password:
 
 ```env
 MONGO_INITDB_ROOT_PASSWORD=<admin_password>
 MONGO_INITDB_ROOT_USERNAME=<admin_user>
 ```
 
-Once you have that in place, you can start the app with:
+* A `kubernetes/base/scorecard/.env` file containing the Delay, Root URL, and Mongo URL:
+
+```env
+DELAY=6
+ROOT_URL=http://mats.127.0.0.1.nip.io/scorecard
+MONGO_URL=mongodb://<admin_user>:<admin_password>@mongodb:27017
+```
+
+* A `kubernetes/base/scorecard/settings.json` file copied from `mats-settings/configurations/dev/settings/scorecard/settings.json`.
+
+Once you have those three files in place, you can start the app with:
 
 ```console
 kubectl apply -k kubernetes/base                # Apply the Kustomize templates for the base services
 kubectl get -k kubernetes/base                  # Get resource info
 kubectl delete -k kubernetes/base               # Delete the resources
 ```
+
+You should be able to visit the scorecard app at: http://mats.127.0.0.1.nip.io/scorecard
 
 ### Security scanning
 
