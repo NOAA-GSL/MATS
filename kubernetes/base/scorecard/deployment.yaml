@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scorecard
+  labels:
+    app.kubernetes.io/name: scorecard
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: scorecard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scorecard
+  template:
+    metadata:
+      labels:
+        app: scorecard
+    spec:
+      containers:
+        - name: scorecard
+          image: ghcr.io/noaa-gsl/mats/development/scorecard:development
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+          envFrom:
+            - secretRef:
+                name: scorecard-secret
+          volumeMounts:
+            - name: scorecard-settings-file
+              mountPath: /usr/app/settings/scorecard/settings.json
+              subPath: settings.json
+              readOnly: true
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+      volumes:
+        - name: scorecard-settings-file
+          configMap:
+            name: scorecard-config
+
