@@ -22,7 +22,7 @@ MONGO_INITDB_ROOT_USERNAME=<admin_user>
 ```env
 DELAY=6
 ROOT_URL=http://mats.127.0.0.1.nip.io/scorecard
-MONGO_URL=mongodb://<admin_user>:<admin_password>@mongodb:27017
+MONGO_URL=mongodb://<admin_user>:<admin_password>@mongodb:27017/scorecard?authSource=admin 
 ```
 
 * A `kubernetes/base/scorecard/settings.json` file copied from `mats-settings/configurations/dev/settings/scorecard/settings.json`.
