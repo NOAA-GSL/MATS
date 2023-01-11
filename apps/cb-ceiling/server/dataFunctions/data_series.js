@@ -71,7 +71,7 @@ dataSeries = function (plotParams, plotFunction) {
         var whereClause;
         var siteWhereClause = "";
         if (regionType === 'Predefined region') {
-            queryTableClause = "FROM mdata m0";
+            queryTableClause = "from vxDBTARGET  m0";
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             regionClause = "AND m0.region='" + region + "' ";
@@ -87,7 +87,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "AND m0.subset='METAR' " +
                 "AND m0.version='V01' ";
         } else {
-            queryTableClause = "FROM mdata AS m0 " +
+            queryTableClause = "from vxDBTARGET  AS m0 " +
                 "JOIN mdata AS o " +
                 "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
                 "UNNEST o.data AS odata " +
@@ -178,6 +178,8 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
             statement = statement.split('{{average}}').join(average);
+
+            statement = cbPool.trfmSQLForDbTarget(statement);
             dataRequests[label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0

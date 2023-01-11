@@ -48,7 +48,7 @@ dataHistogram = function (plotParams, plotFunction) {
         var variable = curve['variable'];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
-        var queryTableClause = "FROM mdata m0";
+        var queryTableClause = "from vxDBTARGET  m0";
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
         threshold = threshold.replace(/_/g, ".");
@@ -123,6 +123,8 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
+
+            statement = cbPool.trfmSQLForDbTarget(statement);
             dataRequests[label] = statement;
 
             var queryResult;
