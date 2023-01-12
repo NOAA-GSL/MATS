@@ -1,0 +1,6 @@
+resources:
+  - scorecard
+  - mongo
+  - ingress.yaml
+commonLabels:
+  environment: dev
