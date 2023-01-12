@@ -3,4 +3,4 @@ resources:
   - mongo
   - ingress.yaml
 commonLabels:
-  environment: dev
+  environment: local
