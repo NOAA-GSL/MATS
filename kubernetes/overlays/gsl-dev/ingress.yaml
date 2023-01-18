@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # Omit the rewrite-target annotation as it causes problems with Meteor's ROOT_URL
     nginx.ingress.kubernetes.io/use-regex: "true"
   name: mats
   namespace: mats-dev
@@ -11,7 +11,7 @@ spec:
     - host: apps-dev.gsd.esrl.noaa.gov
       http:
         paths:
-          - path: /mats/scorecard(/|$)(.*)
+          - path: /mats-dev/scorecard
             pathType: Prefix
             backend:
               service:
