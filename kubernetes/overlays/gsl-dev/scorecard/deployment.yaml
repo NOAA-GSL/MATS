@@ -7,13 +7,6 @@ spec:
     spec:
       containers:
         - name: scorecard
-          resources:
-            requests:
-              memory: "2Gi"
-              cpu: "1"
-            limits:
-              memory: "8Gi"
-              cpu: "4"
           envFrom:
             - secretRef:
                 name: scorecard-secret
