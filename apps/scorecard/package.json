@@ -2,7 +2,8 @@
   "name": "scorecard",
   "private": true,
   "scripts": {
-    "start": "meteor run"
+    "start": "meteor run",
+    "test": "jest"
   },
   "dependencies": {
     "@babel/runtime": "^7.19.0",
@@ -22,5 +23,8 @@
     "object-sizeof": "^1.6.3",
     "vanillajs-datepicker": "^1.2.0",
     "xmlbuilder": "^10.1.1"
+  },
+  "devDependencies": {
+    "jest": "^29.3.1"
   }
 }
