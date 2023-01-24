@@ -167,6 +167,7 @@ processScorecard = function (plotParams, plotFunction) {
     }
     let scorecardDocument = {
         'id': id,
+        'plotParams': plotParams,
         'type': "SC",
         'userName': userName,
         'name': name,
@@ -226,11 +227,18 @@ processScorecard = function (plotParams, plotFunction) {
                         };
                         fcstLengths.forEach(function (fcstlen, index) {
                             // this is where we will calculate the significances.
-                            const minimum = 0;
-                            const maximum = 4;
-                            let val = Math.floor(Math.random() * (maximum - minimum) - maximum / 2); // -2 to 2
+                            // get a random number between 0 and 100
+                            let sval = 0;
+                            let val = Math.floor(Math.random() * (100));
+                            // use the random number to generate a weighted number between -2 and 2
+                            if (val >= 0 && val < 10) { sval = -2;}
+                                else if (val >= 10 && val < 30){ sval = -1}
+                                    else if (val >= 30 && val < 70){ sval = 0}
+                                        else if (val >= 70 && val < 90){ sval = 1}
+                                            else if (val >= 90 && val <= 100){ sval = 2}
+
                             if (scorecardDocument['results']['rows'][curve['label']]['fcstlens'].includes(fcstlen)) {
-                                scorecardDocument['results']['rows'][curve['label']]['data'][region][stat][variable][fcstlen] = val;
+                                scorecardDocument['results']['rows'][curve['label']]['data'][region][stat][variable][fcstlen] = sval;
                             } else {
                                 //mark this undefined
                                 scorecardDocument['results']['rows'][curve['label']]['data'][region][stat][variable][fcstlen] = "undefined";
