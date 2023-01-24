@@ -10,4 +10,4 @@ updates:
     schedule:
       interval: "weekly"
     pull-request-branch-name:
-      seperator: "-" # Use "-" instead of "/" in branch names to avoid issues with docker registries
+      separator: "-" # Use "-" instead of "/" in branch names to avoid issues with docker registries
