@@ -8,10 +8,14 @@ participant FlowRouter as froute
 participant SaveSettingsPickerServerRoute as ssroute
 participant matsMethods as matsMethods
 participant plotButton  as plot
+
+scorecard<-matsMethods: gets scorecardData sets up temporary collection
+scorecard<-scData **: creates temporary mongo collection
+scorecard->scorecard: associates datatable with mongo collection - renders template
 scorecard<-scData: retrives plotparams (JSON settings)
 scorecard->ssroute: saves settings (POST request plotParams JSON - should have TTL)
-scorecard->froute: PLOT display mats home page
+scorecard->froute: PLOT display mats app home page
 froute->plot: automatically restores settings using settings name
-note left: This might just \nbe an action on the "created" \nevent handler in the case \nthat it is an automatic plot
+note left: This might \nbe an action on the "created" \nevent handler in the case \nthat it is an automatic plot
 froute->plot: automatically clicks plot matched
-froute->browser: displays graph
+froute->browser: displays graph with settings restored
