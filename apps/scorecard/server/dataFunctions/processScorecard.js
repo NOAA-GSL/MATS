@@ -193,7 +193,7 @@ processScorecard = function (plotParams, plotFunction) {
             //make rowTitle and rowParameters maps, the display page can sort out stringifying them.
             //map the necessary row parameters
             // remove these params from the singleCurveParamNames list, all of the row parameters are either single select
-            // or they are handled individually, so we remove the onse that are handled individually from the single select list.
+            // or they are handled individually, so we remove the ones that are handled individually from the single select list.
             let notIncludedParams = [
                 "label",
                 "data-source",

@@ -1,0 +1,17 @@
+
+@startuml scMatsPlot
+title scMatsPlot
+hide footbox
+actor       ScorecardDisplay as scorecard
+participant myScorecard as scData
+participant FlowRouter as froute
+participant SaveSettingsPickerServerRoute as ssroute
+participant matsMethods as matsMethods
+participant plotButton  as plot
+scorecard<-scData: retrives plotparams (JSON settings)
+scorecard->ssroute: saves settings (POST request plotParams JSON - should have TTL)
+scorecard->froute: PLOT display mats home page
+froute->plot: automatically restores settings using settings name
+note left: This might just \nbe an action on the "created" \nevent handler in the case \nthat it is an automatic plot
+froute->plot: automatically clicks plot matched
+froute->browser: displays graph

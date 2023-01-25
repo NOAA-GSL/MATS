@@ -1,0 +1,30 @@
+@startuml scProcessScorecardData
+title scProcessScorecardData
+hide footbox
+Participant server.processScorecard as processScorecard
+Participant Scheduler as scheduler
+Participant Schedule as schedule
+Participant CalculateService as calcService
+Participant CalcDirecdtor as calcDirector
+Participant CalcWorker  as calcWorker
+
+processScorecard->scheduler:add schedule (from params)
+scheduler->schedule **: (create)
+schedule->calcService: HTTP request to calculate (params scorecard id)
+calcService->calcDirector **: create
+calcDirector->calcDirector: gets scoreCard from database
+calcDirector->calcQueue **: builds and fills queue
+loop n times
+    calcDirector->calcWorker **: creates threads
+    loop until queue is empty
+    calcWorker<-calcQueue: pulls item from queue
+    calcWorker->calcWorker: makes calculation
+    calcWorker->calcDirector: gives result to director
+    end
+    calcWorker->calcWorker !!: worker dies
+end
+calcDirector->calcDirector: updates scorecard in database
+calcDirector->calcService: Done
+caclDirector->calcDirector: !! dies
+
+
