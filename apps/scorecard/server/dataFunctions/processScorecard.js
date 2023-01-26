@@ -1,8 +1,5 @@
 import {
-    matsTypes
-} from 'meteor/randyp:mats-common';
-import {
-    matsParamUtils
+    matsTypes, matsParamUtils, matsCollections
 } from 'meteor/randyp:mats-common';
 
 processScorecard = function (plotParams, plotFunction) {
@@ -255,7 +252,7 @@ processScorecard = function (plotParams, plotFunction) {
         (async function (id, doc) {
             cbScorecardPool.upsertCB(id, doc);
         })(id, scDoc).then(() => {
-            console.log("upserted doc with id id");
+            console.log("upserted doc with id", id);
         });
     } catch (err) {
         console.log("error writing scorecard to database: " + err.message)
@@ -270,5 +267,7 @@ processScorecard = function (plotParams, plotFunction) {
             queries: {}
         }
     };
+    // save scorecard in the Scorecard collection
+    //matsCollections.Scorecard.insert();
     plotFunction(result);
 }
