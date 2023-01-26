@@ -5,7 +5,7 @@ hide footbox
 actor       ScorecardDisplay as scorecard
 participant myScorecard as scData
 participant FlowRouter as froute
-participant SaveSettingsPickerServerRoute as ssroute
+participant SaveSettingsServerRoute as ssroute
 participant matsMethods as matsMethods
 participant plotButton  as plot
 
