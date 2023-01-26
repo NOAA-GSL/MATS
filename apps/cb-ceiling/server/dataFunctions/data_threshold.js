@@ -45,7 +45,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var variable = curve['variable'];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
-        var queryTableClause = "FROM mdata m0";
+        var queryTableClause = "FROM vxdata._default.METAR m0";
         // catalogue the thresholds now, we'll need to do a separate query for each
         var allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
             return Number(a) - Number(b);

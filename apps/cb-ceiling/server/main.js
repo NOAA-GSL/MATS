@@ -288,7 +288,7 @@ const doCurveParams = async function () {
     var masterThresholdValuesMap = {};
 
     try {
-        const rows = await cbPool.queryCB('select name, description from mdata where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
+        const rows = await cbPool.queryCB('select name, description FROM vxdata._default.METAR where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
         if (rows.includes("queryCB ERROR: ")) {
             // have this local try catch fail properly if the metadata isn't there
             throw new Error(rows);
@@ -310,7 +310,7 @@ const doCurveParams = async function () {
     try {
         for (didx = 0; didx < variables.length; didx++) {
             masterThresholdValuesMap[variables[didx]] = {};
-            rows = await cbPool.queryCB('select raw thresholdDescriptions.ceiling from mdata where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
+            rows = await cbPool.queryCB('select raw thresholdDescriptions.ceiling FROM vxdata._default.METAR where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
             if (rows.includes("queryCB ERROR: ")) {
                 // have this local try catch fail properly if the metadata isn't there
                 throw new Error(rows);
@@ -337,7 +337,7 @@ const doCurveParams = async function () {
             thresholdsModelOptionsMap[variables[didx]] = {};
             regionModelOptionsMap[variables[didx]] = {};
 
-            rows = await cbPool.queryCB('select mdata.model, mdata.displayText, mdata.mindate, mdata.maxdate, mdata.fcstLens, mdata.regions, mdata.thresholds from mdata where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0 order by mdata.displayCategory, mdata.displayOrder');
+            rows = await cbPool.queryCB('select vxdata._default.METAR.model, vxdata._default.METAR.displayText, vxdata._default.METAR.mindate, vxdata._default.METAR.maxdate, vxdata._default.METAR.fcstLens, vxdata._default.METAR.regions, vxdata._default.METAR.thresholds FROM vxdata._default.METAR where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0 order by vxdata._default.METAR.displayCategory, vxdata._default.METAR.displayOrder');
             if (rows.includes("queryCB ERROR: ")) {
                 // have this local try catch fail properly if the metadata isn't there
                 throw new Error(rows);
@@ -376,7 +376,7 @@ const doCurveParams = async function () {
 
     try {
         matsCollections.SiteMap.remove({});
-        var rows = await cbPool.queryCB('select meta().id, mdata.* from mdata where type="MD" and docType="station" and version = "V01"  and subset="METAR";');
+        var rows = await cbPool.queryCB('select meta().id, METAR.* FROM vxdata._default.METAR where type="MD" and docType="station" and version = "V01"  and subset="METAR";');
         if (rows.includes("queryCB ERROR: ")) {
             // have this local try catch fail properly if the metadata isn't there
             throw new Error(rows);

@@ -39,8 +39,8 @@ dataMap = function (plotParams, plotFunction) {
     var variable = curve['variable'];
     var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
     var modelClause = "AND m0.model='" + model + "' ";
-    var queryTableClause = "FROM mdata AS m0 " +
-        "JOIN mdata AS o " +
+    var queryTableClause = "FROM vxdata._default.METAR AS m0 " +
+        "JOIN vxdata._default.METAR AS o " +
         "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
         "UNNEST o.data AS odata " +
         "UNNEST m0.data AS m0data ";
