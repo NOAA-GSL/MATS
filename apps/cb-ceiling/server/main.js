@@ -408,9 +408,10 @@ const doCurveParams = async function ()
 
     try
     {
+        // Gopa:TODO
         matsCollections.SiteMap.remove({});
         var rows = await cbPool.queryCB(
-            cbPool.trfmSQLForDbTarget('select meta().id, vxDBTARGET.* from vxDBTARGET where type="MD" and docType="station" and version = "V01"  and subset="METAR";'));
+            cbPool.trfmSQLForDbTarget('select meta().id, vxCOLLECTION.* from vxDBTARGET where type="MD" and docType="station" and version = "V01"  and subset="vxCOLLECTION";'));
         if (rows.includes("queryCB ERROR: "))
         {
             // have this local try catch fail properly if the metadata isn't there
