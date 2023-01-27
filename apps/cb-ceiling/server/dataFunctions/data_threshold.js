@@ -45,7 +45,7 @@ dataThreshold = function (plotParams, plotFunction) {
         var variable = curve['variable'];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
-        var queryTableClause = "FROM mdata m0";
+        var queryTableClause = "from vxDBTARGET  m0";
         // catalogue the thresholds now, we'll need to do a separate query for each
         var allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
             return Number(a) - Number(b);
@@ -126,6 +126,8 @@ dataThreshold = function (plotParams, plotFunction) {
                 statement = statement.replace('{{validTimeClause}}', validTimeClause);
                 statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
                 statement = statement.replace('{{dateClause}}', dateClause);
+
+                statement = cbPool.trfmSQLForDbTarget(statement);
                 dataRequests[label] = statement;
 
                 var queryResult;

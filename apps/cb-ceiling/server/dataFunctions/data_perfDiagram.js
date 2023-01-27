@@ -47,7 +47,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         var variable = curve['variable'];
         var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
         var modelClause = "AND m0.model='" + model + "' ";
-        var queryTableClause = "FROM mdata m0";
+        var queryTableClause = "from vxDBTARGET  m0";
         var validTimeClause = "";
         var forecastLengthClause = "";
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -148,6 +148,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                 statement = statement.replace('{{validTimeClause}}', validTimeClause);
                 statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
                 statement = statement.replace('{{dateClause}}', dateClause);
+
+                statement = cbPool.trfmSQLForDbTarget(statement);
                 dataRequests[label] = statement;
 
                 var queryResult;
