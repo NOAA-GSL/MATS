@@ -2,12 +2,12 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {Meteor} from 'meteor/meteor';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsCouchbaseUtils} from 'meteor/randyp:mats-common';
-import {matsParamUtils} from 'meteor/randyp:mats-common';
+import { Meteor } from 'meteor/meteor';
+import { matsTypes } from 'meteor/randyp:mats-common';
+import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsDataUtils } from 'meteor/randyp:mats-common';
+import { matsCouchbaseUtils } from 'meteor/randyp:mats-common';
+import { matsParamUtils } from 'meteor/randyp:mats-common';
 
 const variables = ["Ceiling"];
 
@@ -16,11 +16,14 @@ var minDate;
 var maxDate;
 var dstr;
 
-const doPlotParams = function () {
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+const doPlotParams = function ()
+{
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true)
+    {
         matsCollections.PlotParams.remove({});
     }
-    if (matsCollections.PlotParams.find().count() == 0) {
+    if (matsCollections.PlotParams.find().count() == 0)
+    {
         matsCollections.PlotParams.insert(
             {
                 name: 'dates',
@@ -250,14 +253,16 @@ const doPlotParams = function () {
                 displayPriority: 1,
                 displayGroup: 2,
             });
-    } else {
+    } else
+    {
         // need to update the dates selector if the metadata has changed
-        var currentParam = matsCollections.PlotParams.findOne({name: 'dates'});
+        var currentParam = matsCollections.PlotParams.findOne({ name: 'dates' });
         if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr)))
+        {
             // have to reload model data
-            matsCollections.PlotParams.update({name: 'dates'}, {
+            matsCollections.PlotParams.update({ name: 'dates' }, {
                 $set: {
                     startDate: minDate,
                     stopDate: maxDate,
@@ -268,11 +273,14 @@ const doPlotParams = function () {
     }
 };
 
-const doCurveParams = async function () {
+const doCurveParams = async function ()
+{
     // force a reset if requested - simply remove all the existing params to force a reload
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        const params = matsCollections.CurveParamsInfo.find({"curve_params": {"$exists": true}}).fetch()[0]["curve_params"];
-        for (var cp = 0; cp < params.length; cp++) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true)
+    {
+        const params = matsCollections.CurveParamsInfo.find({ "curve_params": { "$exists": true } }).fetch()[0]["curve_params"];
+        for (var cp = 0; cp < params.length; cp++)
+        {
             matsCollections[params[cp]].remove({});
         }
     }
@@ -287,102 +295,131 @@ const doCurveParams = async function () {
     var masterRegionValuesMap = {};
     var masterThresholdValuesMap = {};
 
-    try {
-        const rows = await cbPool.queryCB('select name, description FROM vxdata._default.METAR where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
-        if (rows.includes("queryCB ERROR: ")) {
+    try
+    {
+        const queryStr = cbPool.trfmSQLForDbTarget('select name, description from vxDBTARGET where type="MD" and docType="region" and version = "V01"  and subset="COMMON"');
+        const rows = await cbPool.queryCB(queryStr);
+        if (rows.includes("queryCB ERROR: "))
+        {
             // have this local try catch fail properly if the metadata isn't there
             throw new Error(rows);
         }
         var masterRegDescription;
         var masterShortName;
-        for (var j = 0; j < rows.length; j++) {
+        for (var j = 0; j < rows.length; j++)
+        {
             masterRegDescription = rows[j].description.trim();
             masterShortName = rows[j].name.trim();
             masterRegionValuesMap[masterShortName] = masterRegDescription;
         }
-    } catch (err) {
+    } catch (err)
+    {
         console.log(err.message);
     }
 
     var rows;
     var didx;
 
-    try {
-        for (didx = 0; didx < variables.length; didx++) {
+    try
+    {
+        for (didx = 0; didx < variables.length; didx++)
+        {
             masterThresholdValuesMap[variables[didx]] = {};
-            rows = await cbPool.queryCB('select raw thresholdDescriptions.ceiling FROM vxdata._default.METAR where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
-            if (rows.includes("queryCB ERROR: ")) {
+            const queryStr = cbPool.trfmSQLForDbTarget('select raw thresholdDescriptions.ceiling from vxDBTARGET where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"');
+            const rows = await cbPool.queryCB(queryStr);
+            if (rows.includes("queryCB ERROR: "))
+            {
                 // have this local try catch fail properly if the metadata isn't there
                 throw new Error(rows);
             }
             var masterDescription;
             var masterTrsh;
             let jsonFriendlyTrsh;
-            for (var j = 0; j < Object.keys(rows[0]).length; j++) {
+            for (var j = 0; j < Object.keys(rows[0]).length; j++)
+            {
                 masterDescription = rows[0][Object.keys(rows[0])[j]].trim();
                 masterTrsh = Object.keys(rows[0])[j].trim();
                 jsonFriendlyTrsh = masterTrsh.replace(/\./g, "_");
                 masterThresholdValuesMap[variables[didx]][jsonFriendlyTrsh] = masterDescription;
             }
         }
-    } catch (err) {
+    } catch (err)
+    {
         console.log(err.message);
     }
 
-    try {
-        for (didx = 0; didx < variables.length; didx++) {
+    try
+    {
+        for (didx = 0; didx < variables.length; didx++)
+        {
             modelOptionsMap[variables[didx]] = {};
             modelDateRangeMap[variables[didx]] = {};
             forecastLengthOptionsMap[variables[didx]] = {};
             thresholdsModelOptionsMap[variables[didx]] = {};
             regionModelOptionsMap[variables[didx]] = {};
 
-            rows = await cbPool.queryCB('select vxdata._default.METAR.model, vxdata._default.METAR.displayText, vxdata._default.METAR.mindate, vxdata._default.METAR.maxdate, vxdata._default.METAR.fcstLens, vxdata._default.METAR.regions, vxdata._default.METAR.thresholds FROM vxdata._default.METAR where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0 order by vxdata._default.METAR.displayCategory, vxdata._default.METAR.displayOrder');
-            if (rows.includes("queryCB ERROR: ")) {
+            const queryStr = cbPool.trfmSQLForDbTarget('select model, displayText, mindate, maxdate, fcstLens, ' +
+                'regions, thresholds ' +
+                'from vxDBTARGET where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0 ' +
+                'order by displayCategory, displayOrder');
+            const rows = await cbPool.queryCB(queryStr);
+
+            if (rows.includes("queryCB ERROR: "))
+            {
                 // have this local try catch fail properly if the metadata isn't there
                 throw new Error(rows);
             }
-            for (var i = 0; i < rows.length; i++) {
+            for (var i = 0; i < rows.length; i++)
+            {
                 var model_value = rows[i].model.trim();
                 var model = rows[i].displayText.trim();
                 modelOptionsMap[variables[didx]][model] = [model_value];
 
                 var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
                 var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-                modelDateRangeMap[variables[didx]][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
+                modelDateRangeMap[variables[didx]][model] = { minDate: rowMinDate, maxDate: rowMaxDate };
 
                 forecastLengthOptionsMap[variables[didx]][model] = rows[i].fcstLens.map(String);
 
                 // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
-                rows[i].thresholds.sort(function (a, b) {
+                rows[i].thresholds.sort(function (a, b)
+                {
                     return Number(a) - Number(b)
                 });
                 var thresholdArr = [];
-                for (var t = 0; t < rows[i].thresholds.length; t++) {
+                for (var t = 0; t < rows[i].thresholds.length; t++)
+                {
                     thresholdArr.push(masterThresholdValuesMap[variables[didx]][rows[i].thresholds[t].replace(/\./g, "_")]);
                 }
                 thresholdsModelOptionsMap[variables[didx]][model] = thresholdArr;
 
                 var regionsArr = [];
-                for (var ri = 0; ri < rows[i].regions.length; ri++) {
+                for (var ri = 0; ri < rows[i].regions.length; ri++)
+                {
                     regionsArr.push(masterRegionValuesMap[rows[i].regions[ri]])
                 }
                 regionModelOptionsMap[variables[didx]][model] = regionsArr;
             }
         }
-    } catch (err) {
+    } catch (err)
+    {
         console.log(err.message);
     }
 
-    try {
+    try
+    {
+        // Gopa:TODO
         matsCollections.SiteMap.remove({});
-        var rows = await cbPool.queryCB('select meta().id, METAR.* FROM vxdata._default.METAR where type="MD" and docType="station" and version = "V01"  and subset="METAR";');
-        if (rows.includes("queryCB ERROR: ")) {
+        var rows = await cbPool.queryCB(
+            cbPool.trfmSQLForDbTarget('select meta().id, vxCOLLECTION.* from vxDBTARGET where type="MD" and docType="station" and version = "V01"  and subset="vxCOLLECTION";'));
+        if (rows.includes("queryCB ERROR: "))
+        {
             // have this local try catch fail properly if the metadata isn't there
             throw new Error(rows);
         }
         rows = rows.sort((a, b) => (a.name > b.name) ? 1 : -1);
-        for (var i = 0; i < rows.length; i++) {
+        for (var i = 0; i < rows.length; i++)
+        {
             const site_id = rows[i].id;
             const site_name = rows[i].name == undefined ? "unknown" : rows[i].name;
             const site_description = rows[i].description == undefined ? "unknown" : rows[i].description;
@@ -410,9 +447,10 @@ const doCurveParams = async function () {
             };
             sitesLocationMap.push(obj);
 
-            matsCollections.SiteMap.insert({siteName: site_name, siteId: site_id});
+            matsCollections.SiteMap.insert({ siteName: site_name, siteId: site_id });
         }
-    } catch (err) {
+    } catch (err)
+    {
         console.log(err.message);
     }
 
@@ -424,7 +462,8 @@ const doCurveParams = async function () {
         }
     );
 
-    if (matsCollections["label"].findOne({name: 'label'}) == undefined) {
+    if (matsCollections["label"].findOne({ name: 'label' }) == undefined)
+    {
         matsCollections["label"].insert(
             {
                 name: 'label',
@@ -443,7 +482,8 @@ const doCurveParams = async function () {
         );
     }
 
-    if (matsCollections["variable"].findOne({name: 'variable'}) == undefined) {
+    if (matsCollections["variable"].findOne({ name: 'variable' }) == undefined)
+    {
         matsCollections["variable"].insert(
             {
                 name: 'variable',
@@ -459,12 +499,14 @@ const doCurveParams = async function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
-    } else {
+    } else
+    {
         // it is defined but check for necessary update
-        var currentParam = matsCollections["variable"].findOne({name: 'variable'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
+        var currentParam = matsCollections["variable"].findOne({ name: 'variable' });
+        if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap))
+        {
             // have to reload variable data
-            matsCollections["variable"].update({name: 'variable'}, {
+            matsCollections["variable"].update({ name: 'variable' }, {
                 $set: {
                     dates: modelDateRangeMap
                 }
@@ -472,7 +514,8 @@ const doCurveParams = async function () {
         }
     }
 
-    if (matsCollections['region-type'].findOne({name: 'region-type'}) == undefined) {
+    if (matsCollections['region-type'].findOne({ name: 'region-type' }) == undefined)
+    {
         matsCollections['region-type'].insert(
             {
                 name: 'region-type',
@@ -492,7 +535,8 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["data-source"].findOne({name: 'data-source'}) == undefined) {
+    if (matsCollections["data-source"].findOne({ name: 'data-source' }) == undefined)
+    {
         matsCollections["data-source"].insert(
             {
                 name: 'data-source',
@@ -509,12 +553,14 @@ const doCurveParams = async function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
-    } else {
+    } else
+    {
         // it is defined but check for necessary update
-        var currentParam = matsCollections["data-source"].findOne({name: 'data-source'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
+        var currentParam = matsCollections["data-source"].findOne({ name: 'data-source' });
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap))
+        {
             // have to reload model data
-            matsCollections["data-source"].update({name: 'data-source'}, {
+            matsCollections["data-source"].update({ name: 'data-source' }, {
                 $set: {
                     optionsMap: modelOptionsMap,
                     options: Object.keys(modelOptionsMap[variables[0]]),
@@ -524,7 +570,8 @@ const doCurveParams = async function () {
         }
     }
 
-    if (matsCollections["region"].findOne({name: 'region'}) == undefined) {
+    if (matsCollections["region"].findOne({ name: 'region' }) == undefined)
+    {
         matsCollections["region"].insert(
             {
                 name: 'region',
@@ -541,13 +588,15 @@ const doCurveParams = async function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
-    } else {
+    } else
+    {
         // it is defined but check for necessary update
-        var currentParam = matsCollections["region"].findOne({name: 'region'});
+        var currentParam = matsCollections["region"].findOne({ name: 'region' });
         if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)))
+        {
             // have to reload region data
-            matsCollections["region"].update({name: 'region'}, {
+            matsCollections["region"].update({ name: 'region' }, {
                 $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
@@ -558,7 +607,8 @@ const doCurveParams = async function () {
         }
     }
 
-    if (matsCollections["statistic"].findOne({name: 'statistic'}) == undefined) {
+    if (matsCollections["statistic"].findOne({ name: 'statistic' }) == undefined)
+    {
         const optionsMap = {
             'CSI (Critical Success Index)': ['ctc', 'x100', 100],
 
@@ -604,7 +654,8 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["threshold"].findOne({name: 'threshold'}) == undefined) {
+    if (matsCollections["threshold"].findOne({ name: 'threshold' }) == undefined)
+    {
         matsCollections["threshold"].insert(
             {
                 name: 'threshold',
@@ -621,13 +672,15 @@ const doCurveParams = async function () {
                 displayPriority: 1,
                 displayGroup: 3
             });
-    } else {
+    } else
+    {
         // it is defined but check for necessary update
-        var currentParam = matsCollections["threshold"].findOne({name: 'threshold'});
+        var currentParam = matsCollections["threshold"].findOne({ name: 'threshold' });
         if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdsModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap))) {
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap)))
+        {
             // have to reload threshold data
-            matsCollections["threshold"].update({name: 'threshold'}, {
+            matsCollections["threshold"].update({ name: 'threshold' }, {
                 $set: {
                     optionsMap: thresholdsModelOptionsMap,
                     valuesMap: masterThresholdValuesMap,
@@ -638,7 +691,8 @@ const doCurveParams = async function () {
         }
     }
 
-    if (matsCollections["forecast-length"].findOne({name: 'forecast-length'}) == undefined) {
+    if (matsCollections["forecast-length"].findOne({ name: 'forecast-length' }) == undefined)
+    {
         matsCollections["forecast-length"].insert(
             {
                 name: 'forecast-length',
@@ -656,12 +710,14 @@ const doCurveParams = async function () {
                 displayPriority: 1,
                 displayGroup: 4
             });
-    } else {
+    } else
+    {
         // it is defined but check for necessary update
-        var currentParam = matsCollections["forecast-length"].findOne({name: 'forecast-length'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
+        var currentParam = matsCollections["forecast-length"].findOne({ name: 'forecast-length' });
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap))
+        {
             // have to reload forecast length data
-            matsCollections["forecast-length"].update({name: 'forecast-length'}, {
+            matsCollections["forecast-length"].update({ name: 'forecast-length' }, {
                 $set: {
                     optionsMap: forecastLengthOptionsMap,
                     options: forecastLengthOptionsMap[variables[0]][Object.keys(forecastLengthOptionsMap[variables[0]])[0]]
@@ -670,7 +726,8 @@ const doCurveParams = async function () {
         }
     }
 
-    if (matsCollections["dieoff-type"].findOne({name: 'dieoff-type'}) == undefined) {
+    if (matsCollections["dieoff-type"].findOne({ name: 'dieoff-type' }) == undefined)
+    {
         var dieoffOptionsMap = {
             "Dieoff": [matsTypes.ForecastTypes.dieoff],
             "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
@@ -698,7 +755,8 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["valid-time"].findOne({name: 'valid-time'}) == undefined) {
+    if (matsCollections["valid-time"].findOne({ name: 'valid-time' }) == undefined)
+    {
         matsCollections["valid-time"].insert(
             {
                 name: 'valid-time',
@@ -717,7 +775,8 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["utc-cycle-start"].findOne({name: 'utc-cycle-start'}) == undefined) {
+    if (matsCollections["utc-cycle-start"].findOne({ name: 'utc-cycle-start' }) == undefined)
+    {
         matsCollections["utc-cycle-start"].insert(
             {
                 name: 'utc-cycle-start',
@@ -736,7 +795,8 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["average"].findOne({name: 'average'}) == undefined) {
+    if (matsCollections["average"].findOne({ name: 'average' }) == undefined)
+    {
         const optionsMap = {
             'None': ['m0.fcstValidEpoch'],
             '3hr': ['ceil(' + 3600 * 3 + '*floor(((m0.fcstValidEpoch)+' + 3600 * 3 + '/2)/' + 3600 * 3 + '))'],
@@ -767,7 +827,8 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["sites"].findOne({name: 'sites'}) == undefined) {
+    if (matsCollections["sites"].findOne({ name: 'sites' }) == undefined)
+    {
         matsCollections["sites"].insert(
             {
                 name: 'sites',
@@ -786,7 +847,8 @@ const doCurveParams = async function () {
             });
     }
 
-    if (matsCollections["sitesMap"].findOne({name: 'sitesMap'}) == undefined) {
+    if (matsCollections["sitesMap"].findOne({ name: 'sitesMap' }) == undefined)
+    {
         matsCollections["sitesMap"].insert(
             {
                 name: 'sitesMap',
@@ -803,12 +865,13 @@ const doCurveParams = async function () {
                 displayPriority: 1,
                 displayGroup: 5,
                 multiple: true,
-                defaultMapView: {point: [50, -92.5], zoomLevel: 1.25},
+                defaultMapView: { point: [50, -92.5], zoomLevel: 1.25 },
                 help: 'map-help.html'
             });
     }
 
-    if (matsCollections["bin-parameter"].findOne({name: 'bin-parameter'}) == undefined) {
+    if (matsCollections["bin-parameter"].findOne({ name: 'bin-parameter' }) == undefined)
+    {
         const optionsMap = {
             'Fcst lead time': "m0.fcstLen",
             'Threshold': "'{{threshold}}'",
@@ -841,9 +904,9 @@ const doCurveParams = async function () {
     }
 
     // determine date defaults for dates and curveDates
-    const defaultDb = matsCollections["variable"].findOne({name: "variable"}, {default: 1}).default;
-    modelDateRangeMap = matsCollections["variable"].findOne({name: "variable"}, {dates: 1}).dates;
-    const defaultDataSource = matsCollections["data-source"].findOne({name: "data-source"}, {default: 1}).default;
+    const defaultDb = matsCollections["variable"].findOne({ name: "variable" }, { default: 1 }).default;
+    modelDateRangeMap = matsCollections["variable"].findOne({ name: "variable" }, { dates: 1 }).dates;
+    const defaultDataSource = matsCollections["data-source"].findOne({ name: "data-source" }, { default: 1 }).default;
     minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
     maxDate = modelDateRangeMap[variables[0]][defaultDataSource].maxDate;
 
@@ -853,7 +916,8 @@ const doCurveParams = async function () {
     maxDate = newDateRange.maxDate;
     dstr = moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm") + ' - ' + moment.utc(maxDate).format("MM/DD/YYYY HH:mm");
 
-    if (matsCollections["curve-dates"].findOne({name: 'curve-dates'}) == undefined) {
+    if (matsCollections["curve-dates"].findOne({ name: 'curve-dates' }) == undefined)
+    {
         const optionsMap = {
             '1 day': ['1 day'],
             '3 days': ['3 days'],
@@ -881,14 +945,16 @@ const doCurveParams = async function () {
                 displayGroup: 7,
                 help: "dateHelp.html"
             });
-    } else {
+    } else
+    {
         // it is defined but check for necessary update
-        var currentParam = matsCollections["curve-dates"].findOne({name: 'curve-dates'});
+        var currentParam = matsCollections["curve-dates"].findOne({ name: 'curve-dates' });
         if ((!matsDataUtils.areObjectsEqual(currentParam.startDate, minDate)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr))) {
+            (!matsDataUtils.areObjectsEqual(currentParam.default, dstr)))
+        {
             // have to reload dates data
-            matsCollections["curve-dates"].update({name: 'curve-dates'}, {
+            matsCollections["curve-dates"].update({ name: 'curve-dates' }, {
                 $set: {
                     startDate: minDate,
                     stopDate: maxDate,
@@ -907,11 +973,14 @@ const doCurveParams = async function () {
  The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
  See curve_item.js and standAlone.js.
  */
-const doCurveTextPatterns = function () {
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+const doCurveTextPatterns = function ()
+{
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true)
+    {
         matsCollections.CurveTextPatterns.remove({});
     }
-    if (matsCollections.CurveTextPatterns.find().count() == 0) {
+    if (matsCollections.CurveTextPatterns.find().count() == 0)
+    {
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
@@ -1093,20 +1162,26 @@ const doCurveTextPatterns = function () {
     }
 };
 
-const doSavedCurveParams = function () {
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+const doSavedCurveParams = function ()
+{
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true)
+    {
         matsCollections.SavedCurveParams.remove({});
     }
-    if (matsCollections.SavedCurveParams.find().count() == 0) {
-        matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList: []});
+    if (matsCollections.SavedCurveParams.find().count() == 0)
+    {
+        matsCollections.SavedCurveParams.insert({ clName: 'changeList', changeList: [] });
     }
 };
 
-const doPlotGraph = function () {
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+const doPlotGraph = function ()
+{
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true)
+    {
         matsCollections.PlotGraphFunctions.remove({});
     }
-    if (matsCollections.PlotGraphFunctions.find().count() == 0) {
+    if (matsCollections.PlotGraphFunctions.find().count() == 0)
+    {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphPlotly",
@@ -1170,21 +1245,28 @@ const doPlotGraph = function () {
     }
 };
 
-Meteor.startup(function () {
+Meteor.startup(function ()
+{
     matsCollections.Databases.remove({});
-    if (matsCollections.Databases.find({}).count() < 0) {
+    if (matsCollections.Databases.find({}).count() < 0)
+    {
         console.log('main startup: corrupted Databases collection: dropping Databases collection');
         matsCollections.Databases.drop();
     }
-    if (matsCollections.Databases.find({}).count() === 0) {
+    if (matsCollections.Databases.find({}).count() === 0)
+    {
         var databases = undefined;
-        if (Meteor.settings == undefined || Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined) {
+        if (Meteor.settings == undefined || Meteor.settings.private == undefined || Meteor.settings.private.databases == undefined)
+        {
             databases = undefined;
-        } else {
+        } else
+        {
             databases = Meteor.settings.private.databases;
         }
-        if (databases !== null && databases !== undefined && Array.isArray(databases)) {
-            for (var di = 0; di < databases.length; di++) {
+        if (databases !== null && databases !== undefined && Array.isArray(databases))
+        {
+            for (var di = 0; di < databases.length; di++)
+            {
                 matsCollections.Databases.insert(databases[di]);
             }
         }
@@ -1200,17 +1282,20 @@ Meteor.startup(function () {
         host: 1,
         port: 1,
         bucket: 1,
+        scope: 1,
+        collection: 1,
         user: 1,
         password: 1
     });
 
     // the cluster and bucket are intended to be global
-    if (cbConnection) {
-        cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.user, cbConnection.password);
+    if (cbConnection)
+    {
+        cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.scope, cbConnection.collection, cbConnection.user, cbConnection.password);
     }
-    allPools.push({pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
+    allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
     // create list of tables we need to monitor for update
-    const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
+    const mdr = new matsTypes.MetaDataDBRecord("cbPool", cbConnection.bucket + ":" + cbConnection.scope + ":" + cbConnection.collection, [
         "MD:matsAux:COMMON:V01",
         "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
         "MD:V01:REGION:ALL_HRRR",
@@ -1219,14 +1304,17 @@ Meteor.startup(function () {
         "MD:V01:REGION:GtLk",
         "MD:V01:REGION:W_HRRR"
     ]);
-    try {
+    try
+    {
         matsMethods.resetApp({
             appPools: allPools,
             appMdr: mdr,
             appType: matsTypes.AppTypes.mats,
             dbType: matsTypes.DbTypes.couchbase
         });
-    } catch (error) {
+
+    } catch (error)
+    {
         console.log(error.message);
     }
 });

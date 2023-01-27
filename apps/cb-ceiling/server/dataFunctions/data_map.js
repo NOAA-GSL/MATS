@@ -39,8 +39,8 @@ dataMap = function (plotParams, plotFunction) {
     var variable = curve['variable'];
     var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
     var modelClause = "AND m0.model='" + model + "' ";
-    var queryTableClause = "FROM vxdata._default.METAR AS m0 " +
-        "JOIN vxdata._default.METAR AS o " +
+    var queryTableClause = "from vxDBTARGET  AS m0 " +
+        "JOIN mdata AS o " +
         "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
         "UNNEST o.data AS odata " +
         "UNNEST m0.data AS m0data ";
@@ -120,6 +120,8 @@ dataMap = function (plotParams, plotFunction) {
     statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
     statement = statement.replace('{{dateClause}}', dateClause);
     statement = statement.replace('{{siteDateClause}}', siteDateClause);
+
+    statement = cbPool.trfmSQLForDbTarget(statement);
     dataRequests[label] = statement;
 
     var queryResult;

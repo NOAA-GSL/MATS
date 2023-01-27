@@ -71,7 +71,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         var whereClause;
         var siteWhereClause = "";
         if (regionType === 'Predefined region') {
-            queryTableClause = "FROM vxdata._default.METAR m0";
+            queryTableClause = "from vxDBTARGET  m0";
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
             regionClause = "AND m0.region='" + region + "' ";
@@ -87,8 +87,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "AND m0.subset='METAR' " +
                 "AND m0.version='V01' ";
         } else {
-            queryTableClause = "FROM vxdata._default.METAR AS m0 " +
-                "JOIN vxdata._default.METAR AS o " +
+            queryTableClause = "from vxDBTARGET  AS m0 " +
+                "JOIN mdata AS o " +
                 "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
                 "UNNEST o.data AS odata " +
                 "UNNEST m0.data AS m0data ";
@@ -174,6 +174,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
             statement = statement.replace('{{dateClause}}', dateClause);
             statement = statement.replace('{{siteDateClause}}', siteDateClause);
+
+            statement = cbPool.trfmSQLForDbTarget(statement);
             dataRequests[label] = statement;
 
             var queryResult;
