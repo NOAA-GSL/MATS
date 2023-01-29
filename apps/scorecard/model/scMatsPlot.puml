@@ -1,18 +1,20 @@
-
 @startuml scMatsPlot
 title scMatsPlot
 hide footbox
 actor       ScorecardDisplay as scorecard
+participant processScorecard as processScorecard
 participant myScorecard as scData
 participant FlowRouter as froute
-participant SaveSettingsPickerServerRoute as ssroute
+participant SaveSettingsServerRoute as ssroute
 participant matsMethods as matsMethods
 participant plotButton  as plot
 
-scorecard<-matsMethods: gets scorecardData sets up temporary collection matsMethods.getScorecardData(user, name, submitTime, runTime)
-matsMethods->scData **: creates temporary mongo collection (reactive for display tempalte)
-scorecard->scorecard: associates datatable with mongo collection - renders scorecard view (datatable)
-scorecard<-scData: retrives plotparams (JSON settings)
+scorecard->processScorecard **: calls the server side processScorecard
+note right: The client side uses plot_list.js\nto call the servside processScorecard\nmethed (scorecard data function)
+processScorecard<-matsMethods: gets scorecardData and creates a data structure ds for the template from the scorecard
+processScorecard<-matsMethods: sets up temporary collection\nmatsMethods.getScorecardData(user, name, submitTime, runTime)\nand inserts ds regarding TTL
+scorecard->scorecard: associates ds (subscribes to mongo collection)\nand renders scorecard view (datatable)
+scorecard<-scData: represents template js that has subscribed to ds - \n it retrives plotparams (JSON settings)
 scData->scData: creates plotparams for plot from scorecard plot params
 scorecard->ssroute: saves settings (POST request using plot plotParams JSON - settings should also have TTL)
 scorecard->froute: PLOT display mats app home page modified to automatically restore settings
