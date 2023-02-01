@@ -51,3 +51,59 @@ spec:
                 name: landuse
                 port:
                   number: 80
+          - path: /precipaccum
+            pathType: Prefix
+            backend:
+              service:
+                name: precipaccum
+                port:
+                  number: 80
+          - path: /precipgauge
+            pathType: Prefix
+            backend:
+              service:
+                name: precipgauge
+                port:
+                  number: 80
+          - path: /precipitation1hr
+            pathType: Prefix
+            backend:
+              service:
+                name: precipitation1hr
+                port:
+                  number: 80
+          - path: /ptype
+            pathType: Prefix
+            backend:
+              service:
+                name: ptype
+                port:
+                  number: 80
+          - path: /radar
+            pathType: Prefix
+            backend:
+              service:
+                name: radar
+                port:
+                  number: 80
+          - path: /surface
+            pathType: Prefix
+            backend:
+              service:
+                name: surface
+                port:
+                  number: 80
+          - path: /surfrad
+            pathType: Prefix
+            backend:
+              service:
+                name: surfrad
+                port:
+                  number: 80
+          - path: /upperair
+            pathType: Prefix
+            backend:
+              service:
+                name: upperair
+                port:
+                  number: 80
