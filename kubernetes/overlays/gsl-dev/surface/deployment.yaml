@@ -22,6 +22,9 @@ spec:
               mountPath: /usr/app/settings/surface/settings.json
               subPath: settings.json
               readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
       volumes:
         - name: surface-settings-file
           configMap:

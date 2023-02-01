@@ -27,7 +27,9 @@ MONGO_URL=mongodb://<admin_user>:<admin_password>@mongodb:27017/scorecard?authSo
 
 * A `kubernetes/overlays/local/scorecard/settings.json` file copied from `mats-settings/configurations/dev/settings/scorecard/settings.json`.
 
-Once you have those three files in place, you can start the app with:
+You will also need to authenticate your docker client with the container registry. [GitHub has documentation on how to do that with a PAT](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic). Your token will only need `read:packages` permissions and you'll need to authenticate it with the GitHub organization via SSO.
+
+Once you have those three files in place and you're authenticated with the registry, you can start the app with:
 
 ```console
 kubectl apply -k kubernetes/overlays/local                # Apply the Kustomize templates for the local services
@@ -84,3 +86,16 @@ sysctl -p /etc/sysctl.d/99-custom-unprivileged-port.conf
 ```
 
 And restart Rancher Desktop.
+
+## Deploying in GSL
+
+In GSL, we will need to add a secret to the intended namespace so we can pull from GHCR.
+
+```console
+ kubectl -n <namespace> create secret docker-registry mats-ghcr \
+ --docker-server=ghcr.io \
+ --docker-username=<your username> \
+ --docker-password=<PAT with read:packages permission and granted SSO access to the GSL GitHub org>
+```
+
+For now, you'll need to create appropriate `settings.json` files and `.env` files in each MATS application's configuration which is a pain. They contain secrets so can't be checked into a public git repo. We could investigate sealed secrets or Hashicorp's vault but they would require ITS's buy-in. We also could look to generate them before we `kubectl -n <namespace> apply -k ...` so they're pre-populated in the namespace - similarly to how the docker registry secret is currently handled.
