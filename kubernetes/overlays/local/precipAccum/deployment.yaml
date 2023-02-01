@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: precipaccum
+spec:
+  template:
+    spec:
+      containers:
+        - name: precipaccum
+          # resources:
+          #   requests:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          #   limits:
+          #     memory: "4Gi"
+          #     cpu: "2"
+          envFrom:
+            - secretRef:
+                name: precipaccum-secret
+          volumeMounts:
+            - name: precipaccum-settings-file
+              mountPath: /usr/app/settings/precipaccum/settings.json
+              subPath: settings.json
+              readOnly: true
+      volumes:
+        - name: precipaccum-settings-file
+          configMap:
+            name: precipaccum-config
