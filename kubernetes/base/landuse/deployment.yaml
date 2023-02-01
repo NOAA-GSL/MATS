@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: landuse
+  labels:
+    app.kubernetes.io/name: landuse
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: landuse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: landuse
+  template:
+    metadata:
+      labels:
+        app: landuse
+    spec:
+      containers:
+        - name: landuse
+          image: ghcr.io/noaa-gsl/mats/development/landuse:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+
