@@ -16,3 +16,10 @@ spec:
                 name: scorecard
                 port:
                   number: 80
+          - path: /anomalycor
+            pathType: Prefix
+            backend:
+              service:
+                name: anomalycor
+                port:
+                  number: 80
