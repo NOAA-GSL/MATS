@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: anomalycor
+  labels:
+    app: anomalycor
+spec:
+  selector:
+    app: anomalycor
+  ports:
+  - port: 80
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  type: ClusterIP
