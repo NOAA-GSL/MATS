@@ -4,7 +4,15 @@ resources:
   - ceil-vis
   - ceil-vis15
   - landuse
+  - precipAccum
+  - precipGauge
+  - precipitation1hr
+  - ptype
+  - radar
   - scorecard
+  - surface
+  - surfrad
+  - upperair
   - mongo
   - ingress.yaml
 commonLabels:
