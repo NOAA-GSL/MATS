@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cb-ceiling
+spec:
+  template:
+    spec:
+      containers:
+        - name: cb-ceiling
+          # resources:
+          #   requests:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          #   limits:
+          #     memory: "4Gi"
+          #     cpu: "2"
+          envFrom:
+            - secretRef:
+                name: cb-ceiling-secret
+          volumeMounts:
+            - name: cb-ceiling-settings-file
+              mountPath: /usr/app/settings/cb-ceiling/settings.json
+              subPath: settings.json
+              readOnly: true
+      volumes:
+        - name: cb-ceiling-settings-file
+          configMap:
+            name: cb-ceiling-config
