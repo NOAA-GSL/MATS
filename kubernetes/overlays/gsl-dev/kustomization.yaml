@@ -1,4 +1,5 @@
 resources:
+  - anomalycor
   - scorecard
   - mongo
   - ingress.yaml
