@@ -15,6 +15,9 @@ spec:
               mountPath: /usr/app/settings/scorecard/settings.json
               subPath: settings.json
               readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
       volumes:
         - name: scorecard-settings-file
           configMap:
