@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: surface
+  labels:
+    app.kubernetes.io/name: surface
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: surface
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: surface
+  template:
+    metadata:
+      labels:
+        app: surface
+    spec:
+      containers:
+        - name: surface
+          image: ghcr.io/noaa-gsl/mats/development/surface:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+
