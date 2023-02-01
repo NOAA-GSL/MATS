@@ -1,5 +1,9 @@
 resources:
   - anomalycor
+  - cb-ceiling
+  - ceil-vis
+  - ceil-vis15
+  - landuse
   - scorecard
   - mongo
   - ingress.yaml

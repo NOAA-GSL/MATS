@@ -25,3 +25,31 @@ spec:
                 name: anomalycor
                 port:
                   name: http
+          - path: /mats-dev/cb-ceiling
+            pathType: Prefix
+            backend:
+              service:
+                name: cb-ceiling
+                port:
+                  number: 80
+          - path: /mats-dev/ceil-vis
+            pathType: Prefix
+            backend:
+              service:
+                name: ceil-vis
+                port:
+                  number: 80
+          - path: /mats-dev/ceil-vis15
+            pathType: Prefix
+            backend:
+              service:
+                name: ceil-vis15
+                port:
+                  number: 80
+          - path: /mats-dev/landuse
+            pathType: Prefix
+            backend:
+              service:
+                name: landuse
+                port:
+                  number: 80
