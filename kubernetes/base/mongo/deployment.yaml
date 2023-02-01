@@ -20,6 +20,7 @@ spec:
       containers:
         - name: mongodb
           image: mongo:5.0
+          args: [-nojournal]
           ports:
             - containerPort: 27017
           securityContext:
