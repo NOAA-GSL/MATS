@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: precipitation1hr
+  labels:
+    app: precipitation1hr
+spec:
+  selector:
+    app: precipitation1hr
+  ports:
+  - port: 80
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  type: ClusterIP
