@@ -7,6 +7,13 @@ spec:
     spec:
       containers:
         - name: mongodb
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
           envFrom:
             - secretRef:
                 name: mongo-secret
