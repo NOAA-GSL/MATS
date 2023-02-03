@@ -9,8 +9,8 @@ spec:
         - name: precipitation1hr
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "1"
+              memory: "1Gi"
+              cpu: "0.25"
             limits:
               memory: "8Gi"
               cpu: "4"
