@@ -13,7 +13,7 @@ FROM (
         SELECT stationData
         FROM vxDBTARGET AS obs
         LET ofve = obs.fcstValidEpoch,
-            stationData = ARRAY OBJECT_ADD(d, 'ofve', ofve) FOR d IN ( [obs.data.KEWR, obs.data.KJFK, obs.data.KJRB] ) END
+            stationData = ARRAY OBJECT_ADD(d, 'ofve', ofve) FOR d IN ( [vxSITES_LIST] ) END
         WHERE type = "DD"
             AND docType = "obs"
             AND version = "V01"
@@ -28,11 +28,12 @@ FROM (
         SELECT modelData
         FROM vxDBTARGET AS models
         LET mfve = models.fcstValidEpoch,
-            modelData = ARRAY OBJECT_ADD(d, 'mfve', mfve) FOR d IN ( [models.data.KEWR, models.data.KJFK, models.data.KJRB] ) END
+            modelData = ARRAY OBJECT_ADD(d, 'mfve', mfve) FOR d IN ( [vxSITES_LIST] ) END
         WHERE type = "DD"
             AND docType = "model"
-            AND model = "HRRR_OPS"
-            AND fcstLen = 6
+            AND model = 'vxMODEL'
+            AND fcstLen = vxFCST_LEN
+            AND models.fcstValidEpoch%(24*3600)/3600 IN[vxVALID_TIMES]
             AND version = "V01"
             AND models.fcstValidEpoch BETWEEN vxFROM_SECS AND vxTO_SECS ) sd
     UNNEST sd.modelData sdu

@@ -18,8 +18,10 @@ dataSeries = function (plotParams, plotFunction)
     console.log("dataSeries()");
 
     var fs = require('fs');
-    var queryTemplate =  fs.readFileSync(process.env.PWD + '/server/dataFunctions/sqlTemplates/tmpl_TimeSeries.sql', 'utf8');
-    console.log(queryTemplate)
+    var queryTemplate_region = fs.readFileSync(process.env.PWD + '/server/dataFunctions/sqlTemplates/tmpl_TimeSeries_region.sql', 'utf8');
+    console.log(queryTemplate_region);
+    var queryTemplate_stations = fs.readFileSync(process.env.PWD + '/server/dataFunctions/sqlTemplates/tmpl_TimeSeries_stations.sql', 'utf8');
+    console.log(queryTemplate_stations);
 
     // initialize variables common to all curves
     const appParams = {
@@ -49,98 +51,65 @@ dataSeries = function (plotParams, plotFunction)
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
     var idealValues = [];
+    var statement = "";
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++)
     {
         // initialize variables specific to each curve
+
+        queryTemplate_region = queryTemplate_region.replace(/vxFROM_SECS/g, fromSecs);
+        queryTemplate_stations = queryTemplate_stations.replace(/vxFROM_SECS/g, fromSecs);
+        queryTemplate_region = queryTemplate_region.replace(/vxTO_SECS/g, toSecs);
+        queryTemplate_stations = queryTemplate_stations.replace(/vxTO_SECS/g, toSecs);
+
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var variable = curve['variable'];
         var model = matsCollections['data-source'].findOne({ name: 'data-source' }).optionsMap[variable][curve['data-source']][0];
-        var modelClause = "AND m0.model='" + model + "' ";
-        var queryTableClause;
+        queryTemplate_region = queryTemplate_region.replace(/vxMODEL/g, model);
+        queryTemplate_stations = queryTemplate_stations.replace(/vxMODEL/g, model);
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable][key] === thresholdStr);
         threshold = threshold.replace(/_/g, ".");
-        var validTimeClause = "";
+        queryTemplate_region = queryTemplate_region.replace(/vxTHRESHOLD/g, threshold);
+        queryTemplate_stations = queryTemplate_stations.replace(/vxTHRESHOLD/g, threshold);
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
         {
-            validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
+            console.log("validTimes:" + cbPool.trfmListToCSVString(validTimes, null, false));
+            queryTemplate_region = queryTemplate_region.replace(/vxVALID_TIMES/g, cbPool.trfmListToCSVString(validTimes, null, false));
+            queryTemplate_stations = queryTemplate_stations.replace(/vxVALID_TIMES/g, cbPool.trfmListToCSVString(validTimes, null, false));
+        }
+        else
+        {
+            queryTemplate_region = cbPool.trfmSQLRemoveClause(queryTemplate_region, "vxVALID_TIMES");
+            queryTemplate_stations = cbPool.trfmSQLRemoveClause(queryTemplate_stations, "vxVALID_TIMES");
         }
         var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "AND m0.fcstLen = " + forecastLength;
-        var dateClause;
-        var siteDateClause = "";
-        var siteMatchClause = "";
-        var sitesClause = "";
+        queryTemplate_region = queryTemplate_region.replace(/vxFCST_LEN/g, forecastLength);
+        queryTemplate_stations = queryTemplate_stations.replace(/vxFCST_LEN/g, forecastLength);
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({ name: 'statistic' }, { optionsMap: 1 })['optionsMap'];
-        var statisticClause;
         var regionType = curve['region-type'];
-        var regionClause = "";
-        var whereClause;
-        var siteWhereClause = "";
         if (regionType === 'Predefined region')
         {
-            queryTableClause = "from vxDBTARGET  m0";
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections['region'].findOne({ name: 'region' }).valuesMap).find(key => matsCollections['region'].findOne({ name: 'region' }).valuesMap[key] === regionStr);
-            regionClause = "AND m0.region='" + region + "' ";
-            statisticClause = "sum(m0.data.['" + threshold + "'].hits) hit, sum(m0.data.['" + threshold + "'].false_alarms) fa, " +
-                "sum(m0.data.['" + threshold + "'].misses) miss, sum(m0.data.['" + threshold + "'].correct_negatives) cn, " +
-                "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['" + threshold + "'].hits) || ';' || " +
-                "TO_STRING(m0.data.['" + threshold + "'].false_alarms) || ';' || TO_STRING(m0.data.['" + threshold + "'].misses) || ';' || " +
-                "TO_STRING(m0.data.['" + threshold + "'].correct_negatives))) sub_data, count(m0.data.['" + threshold + "'].hits) N0 ";
-            dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs;
-            whereClause = "WHERE " +
-                "m0.type='DD' " +
-                "AND m0.docType='CTC' " +
-                "AND m0.subset='METAR' " +
-                "AND m0.version='V01' ";
+            queryTemplate_region = queryTemplate_region.replace(/vxREGION/g, region);
+            statement = queryTemplate_region;
         } else
         {
-            queryTableClause = "from vxDBTARGET  AS m0 " +
-                "JOIN mdata AS o " +
-                "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
-                "UNNEST o.data AS odata " +
-                "UNNEST m0.data AS m0data ";
-            var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+           var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused)
             {
-                sitesClause = " and m0data.name in ['" + sitesList.join("','") + "']";
-                sitesClause = sitesClause + " and odata.name in ['" + sitesList.join("','") + "']";
-                siteMatchClause = "and m0data.name = odata.name ";
+                console.log("sitesList:" + cbPool.trfmListToCSVString(sitesList, "models.data.", false));
+                queryTemplate_stations = queryTemplate_stations.replace(/vxSITES_LIST/g, cbPool.trfmListToCSVString(sitesList, "models.data.", false));
             } else
             {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            statisticClause = "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
-                "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS hit, " +
-                "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
-                "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS fa, " +
-                "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-                "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS miss, " +
-                "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-                "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS cn, " +
-                "SUM(CASE WHEN m0data.Ceiling IS NOT MISSING " +
-                "AND odata.Ceiling IS NOT MISSING THEN 1 ELSE 0 END) AS N0, " +
-                "ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
-                "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
-                "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-                "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-                "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END) AS sub_data ";
-            dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs + " and m0.fcstValidEpoch = o.fcstValidEpoch";
-            whereClause = "AND m0.type='DD' " +
-                "AND m0.docType='model' " +
-                "AND m0.subset='METAR' " +
-                "AND m0.version='V01' ";
-            siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " and o.fcstValidEpoch <= " + toSecs;
-            siteWhereClause = "WHERE o.type='DD' " +
-                "AND o.docType='obs' " +
-                "AND o.subset='METAR' " +
-                "AND o.version='V01' ";
+            statement = queryTemplate_stations;
         }
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections['average'].findOne({ name: 'average' }, { optionsMap: 1 })['optionsMap'];
@@ -161,42 +130,6 @@ dataSeries = function (plotParams, plotFunction)
         var d;
         if (diffFrom == null)
         {
-            // this is a database driven curve, not a difference curve
-            // prepare the query from the above parameters
-            var statement = "SELECT {{average}} AS avtime, " +
-                "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
-                "MIN(m0.fcstValidEpoch) min_secs, " +
-                "MAX(m0.fcstValidEpoch) max_secs, " +
-                "{{statisticClause}} " +
-                "{{queryTableClause}} " +
-                "{{siteWhereClause}} " +
-                "{{whereClause}} " +
-                "{{modelClause}} " +
-                "{{regionClause}} " +
-                "{{forecastLengthClause}} " +
-                "{{validTimeClause}} " +
-                "{{siteDateClause}} " +
-                "{{dateClause}} " +
-                "{{sitesClause}} " +
-                "{{siteMatchClause}} " +
-                "GROUP BY {{average}} " +
-                "ORDER BY avtime" +
-                ";";
-
-            statement = statement.replace('{{statisticClause}}', statisticClause);
-            statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-            statement = statement.replace('{{sitesClause}}', sitesClause);
-            statement = statement.replace('{{whereClause}}', whereClause);
-            statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
-            statement = statement.replace('{{modelClause}}', modelClause);
-            statement = statement.replace('{{regionClause}}', regionClause);
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-            statement = statement.replace('{{dateClause}}', dateClause);
-            statement = statement.replace('{{siteDateClause}}', siteDateClause);
-            statement = statement.split('{{average}}').join(average);
-
             statement = cbPool.trfmSQLForDbTarget(statement);
             dataRequests[label] = statement;
 

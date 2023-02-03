@@ -1313,16 +1313,6 @@ Meteor.startup(function ()
             dbType: matsTypes.DbTypes.couchbase
         });
 
-        console.log("SQLs:\n" + JSON.stringify(Meteor.settings.public.SQLs, null, 2));
-        matsCollections["SQLs"] = {};
-        for (const [key, value] of Object.entries(Meteor.settings.public.SQLs))
-        {
-            var val = value.replace(/tmpl_BUCKET/g, cbConnection.bucket);
-            val = val.replace(/tmpl_SCOPE/g, cbConnection.scope);
-            val = val.replace(/tmpl_COLLECTION/g, cbConnection.collection);
-            matsCollections.SQLs[key] = val;
-        }
-        console.log("SQLs:\n" + JSON.stringify(matsCollections.SQLs, null, 2));
     } catch (error)
     {
         console.log(error.message);
