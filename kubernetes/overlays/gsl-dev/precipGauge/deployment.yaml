@@ -7,13 +7,13 @@ spec:
     spec:
       containers:
         - name: precipgauge
-          # resources:
-          #   requests:
-          #     memory: "2Gi"
-          #     cpu: "1"
-          #   limits:
-          #     memory: "4Gi"
-          #     cpu: "2"
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
           envFrom:
             - secretRef:
                 name: precipgauge-secret
