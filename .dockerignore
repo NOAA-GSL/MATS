@@ -9,6 +9,7 @@ bundle*
 **/.npm
 cache*
 container_deployment
+kubernetes
 home
 logs
 scripts
