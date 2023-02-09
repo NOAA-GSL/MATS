@@ -44,7 +44,6 @@ COPY --from=meteor-builder /opt/bundle $APP_BUNDLE_FOLDER/
 RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh
 
 
-
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
 FROM node:14-alpine AS production
 

@@ -34,8 +34,13 @@ describe('dieoff_query', () => {
                      AND NOT odata.Ceiling < 3000.0 THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < 3000.0
                      AND odata.Ceiling < 3000.0 THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < 3000.0
                      AND NOT odata.Ceiling < 3000.0 THEN '1' ELSE '0' END) AS sub_data
+<<<<<<< HEAD
       from vxDBTARGET  AS m0
           JOIN mdata AS o ON o.fcstValidEpoch = m0.fcstValidEpoch
+=======
+      FROM vxdata._default.METAR AS m0
+          JOIN vxdata._default.METAR AS o ON o.fcstValidEpoch = m0.fcstValidEpoch
+>>>>>>> development
       UNNEST o.data AS odata
       UNNEST m0.data AS m0data
       WHERE o.type='DD'

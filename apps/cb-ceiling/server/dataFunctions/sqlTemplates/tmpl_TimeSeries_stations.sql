@@ -13,7 +13,7 @@ FROM (
         SELECT stationData
         FROM vxDBTARGET AS obs
         LET ofve = obs.fcstValidEpoch,
-            stationData = ARRAY OBJECT_ADD(d, 'ofve', ofve) FOR d IN ( [vxSITES_LIST] ) END
+            stationData = ARRAY OBJECT_ADD(d, 'ofve', ofve) FOR d IN ( [vxSITES_LIST_OBS] ) END
         WHERE type = "DD"
             AND docType = "obs"
             AND version = "V01"
@@ -28,7 +28,7 @@ FROM (
         SELECT modelData
         FROM vxDBTARGET AS models
         LET mfve = models.fcstValidEpoch,
-            modelData = ARRAY OBJECT_ADD(d, 'mfve', mfve) FOR d IN ( [vxSITES_LIST] ) END
+            modelData = ARRAY OBJECT_ADD(d, 'mfve', mfve) FOR d IN ( [vxSITES_LIST_MODELS] ) END
         WHERE type = "DD"
             AND docType = "model"
             AND model = 'vxMODEL'
