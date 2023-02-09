@@ -2,35 +2,41 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import { matsCollections } from 'meteor/randyp:mats-common';
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsDataUtils } from 'meteor/randyp:mats-common';
-import { matsDataQueryUtils } from 'meteor/randyp:mats-common';
-import { matsDataDiffUtils } from 'meteor/randyp:mats-common';
-import { matsDataCurveOpsUtils } from 'meteor/randyp:mats-common';
-import { matsDataProcessUtils } from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
-
-
+import { matsCollections } from "meteor/randyp:mats-common";
+import { matsTypes } from "meteor/randyp:mats-common";
+import { matsDataUtils } from "meteor/randyp:mats-common";
+import { matsDataQueryUtils } from "meteor/randyp:mats-common";
+import { matsDataDiffUtils } from "meteor/randyp:mats-common";
+import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
+import { matsDataProcessUtils } from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataSeries = function (plotParams, plotFunction)
 {
     console.log("dataSeries()");
 
-    var fs = require('fs');
-    var queryTemplate_region = fs.readFileSync(process.env.PWD + '/server/dataFunctions/sqlTemplates/tmpl_TimeSeries_region.sql', 'utf8');
+    var fs = require("fs");
+    var queryTemplate_region = fs.readFileSync(
+        process.env.PWD +
+        "/server/dataFunctions/sqlTemplates/tmpl_TimeSeries_region.sql",
+        "utf8"
+    );
     console.log(queryTemplate_region);
-    var queryTemplate_stations = fs.readFileSync(process.env.PWD + '/server/dataFunctions/sqlTemplates/tmpl_TimeSeries_stations.sql', 'utf8');
+    var queryTemplate_stations = fs.readFileSync(
+        process.env.PWD +
+        "/server/dataFunctions/sqlTemplates/tmpl_TimeSeries_stations.sql",
+        "utf8"
+    );
     console.log(queryTemplate_stations);
 
     // initialize variables common to all curves
     const appParams = {
-        "plotType": matsTypes.PlotTypes.timeSeries,
-        "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
-        "completeness": plotParams['completeness'],
-        "outliers": plotParams['outliers'],
-        "hideGaps": plotParams['noGapsCheck'],
-        "hasLevels": false
+        plotType: matsTypes.PlotTypes.timeSeries,
+        matching: plotParams["plotAction"] === matsTypes.PlotActions.matched,
+        completeness: plotParams["completeness"],
+        outliers: plotParams["outliers"],
+        hideGaps: plotParams["noGapsCheck"],
+        hasLevels: false,
     };
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
@@ -57,62 +63,128 @@ dataSeries = function (plotParams, plotFunction)
     {
         // initialize variables specific to each curve
 
-        queryTemplate_region = queryTemplate_region.replace(/vxFROM_SECS/g, fromSecs);
-        queryTemplate_stations = queryTemplate_stations.replace(/vxFROM_SECS/g, fromSecs);
+        queryTemplate_region = queryTemplate_region.replace(
+            /vxFROM_SECS/g,
+            fromSecs
+        );
+        queryTemplate_stations = queryTemplate_stations.replace(
+            /vxFROM_SECS/g,
+            fromSecs
+        );
         queryTemplate_region = queryTemplate_region.replace(/vxTO_SECS/g, toSecs);
-        queryTemplate_stations = queryTemplate_stations.replace(/vxTO_SECS/g, toSecs);
+        queryTemplate_stations = queryTemplate_stations.replace(
+            /vxTO_SECS/g,
+            toSecs
+        );
 
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        var label = curve['label'];
-        var variable = curve['variable'];
-        var model = matsCollections['data-source'].findOne({ name: 'data-source' }).optionsMap[variable][curve['data-source']][0];
+        var label = curve["label"];
+        var variable = curve["variable"];
+        var model = matsCollections["data-source"].findOne({ name: "data-source" })
+            .optionsMap[variable][curve["data-source"]][0];
         queryTemplate_region = queryTemplate_region.replace(/vxMODEL/g, model);
         queryTemplate_stations = queryTemplate_stations.replace(/vxMODEL/g, model);
-        var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable][key] === thresholdStr);
+        var thresholdStr = curve["threshold"];
+        var threshold = Object.keys(
+            matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[
+            variable
+            ]
+        ).find(
+            (key) =>
+                matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[
+                variable
+                ][key] === thresholdStr
+        );
         threshold = threshold.replace(/_/g, ".");
-        queryTemplate_region = queryTemplate_region.replace(/vxTHRESHOLD/g, threshold);
-        queryTemplate_stations = queryTemplate_stations.replace(/vxTHRESHOLD/g, threshold);
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        queryTemplate_region = queryTemplate_region.replace(
+            /vxTHRESHOLD/g,
+            threshold
+        );
+        queryTemplate_stations = queryTemplate_stations.replace(
+            /vxTHRESHOLD/g,
+            threshold
+        );
+        var validTimes =
+            curve["valid-time"] === undefined ? [] : curve["valid-time"];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
         {
-            console.log("validTimes:" + cbPool.trfmListToCSVString(validTimes, null, false));
-            queryTemplate_region = queryTemplate_region.replace(/vxVALID_TIMES/g, cbPool.trfmListToCSVString(validTimes, null, false));
-            queryTemplate_stations = queryTemplate_stations.replace(/vxVALID_TIMES/g, cbPool.trfmListToCSVString(validTimes, null, false));
-        }
-        else
+            console.log(
+                "validTimes:" + cbPool.trfmListToCSVString(validTimes, null, false)
+            );
+            queryTemplate_region = queryTemplate_region.replace(
+                /vxVALID_TIMES/g,
+                cbPool.trfmListToCSVString(validTimes, null, false)
+            );
+            queryTemplate_stations = queryTemplate_stations.replace(
+                /vxVALID_TIMES/g,
+                cbPool.trfmListToCSVString(validTimes, null, false)
+            );
+        } else
         {
-            queryTemplate_region = cbPool.trfmSQLRemoveClause(queryTemplate_region, "vxVALID_TIMES");
-            queryTemplate_stations = cbPool.trfmSQLRemoveClause(queryTemplate_stations, "vxVALID_TIMES");
+            queryTemplate_region = cbPool.trfmSQLRemoveClause(
+                queryTemplate_region,
+                "vxVALID_TIMES"
+            );
+            queryTemplate_stations = cbPool.trfmSQLRemoveClause(
+                queryTemplate_stations,
+                "vxVALID_TIMES"
+            );
         }
-        var forecastLength = curve['forecast-length'];
-        queryTemplate_region = queryTemplate_region.replace(/vxFCST_LEN/g, forecastLength);
-        queryTemplate_stations = queryTemplate_stations.replace(/vxFCST_LEN/g, forecastLength);
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections['statistic'].findOne({ name: 'statistic' }, { optionsMap: 1 })['optionsMap'];
-        var regionType = curve['region-type'];
-        if (regionType === 'Predefined region')
+        var forecastLength = curve["forecast-length"];
+        queryTemplate_region = queryTemplate_region.replace(
+            /vxFCST_LEN/g,
+            forecastLength
+        );
+        queryTemplate_stations = queryTemplate_stations.replace(
+            /vxFCST_LEN/g,
+            forecastLength
+        );
+        var statisticSelect = curve["statistic"];
+        var statisticOptionsMap = matsCollections["statistic"].findOne(
+            { name: "statistic" },
+            { optionsMap: 1 }
+        )["optionsMap"];
+        var regionType = curve["region-type"];
+        if (regionType === "Predefined region")
         {
-            var regionStr = curve['region'];
-            var region = Object.keys(matsCollections['region'].findOne({ name: 'region' }).valuesMap).find(key => matsCollections['region'].findOne({ name: 'region' }).valuesMap[key] === regionStr);
+            var regionStr = curve["region"];
+            var region = Object.keys(
+                matsCollections["region"].findOne({ name: "region" }).valuesMap
+            ).find(
+                (key) =>
+                    matsCollections["region"].findOne({ name: "region" }).valuesMap[
+                    key
+                    ] === regionStr
+            );
             queryTemplate_region = queryTemplate_region.replace(/vxREGION/g, region);
             statement = queryTemplate_region;
         } else
         {
-           var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
+            var sitesList = curve["sites"] === undefined ? [] : curve["sites"];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused)
             {
-                console.log("sitesList:" + cbPool.trfmListToCSVString(sitesList, "models.data.", false));
-                queryTemplate_stations = queryTemplate_stations.replace(/vxSITES_LIST/g, cbPool.trfmListToCSVString(sitesList, "models.data.", false));
+                queryTemplate_stations = queryTemplate_stations.replace(
+                    /vxSITES_LIST_OBS/g,
+                    cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
+                );
+                queryTemplate_stations = queryTemplate_stations.replace(
+                    /vxSITES_LIST_MODELS/g,
+                    cbPool.trfmListToCSVString(sitesList, "models.data.", false)
+                );
             } else
             {
-                throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
+                throw new Error(
+                    "INFO:  Please add sites in order to get a single/multi station plot."
+                );
             }
             statement = queryTemplate_stations;
         }
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections['average'].findOne({ name: 'average' }, { optionsMap: 1 })['optionsMap'];
+        var averageStr = curve["average"];
+        var averageOptionsMap = matsCollections["average"].findOne(
+            { name: "average" },
+            { optionsMap: 1 }
+        )["optionsMap"];
         var average = averageOptionsMap[averageStr][0];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -145,20 +217,41 @@ dataSeries = function (plotParams, plotFunction)
             try
             {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(cbPool, statement, model, forecastLength, fromSecs, toSecs, averageStr, statisticSelect, validTimes, appParams, false);
+                fs.writeFileSync(
+                    "/Users/gopa.padmanabhan/scratch/appout.sql",
+                    statement,
+                    "utf8"
+                );
+                // console.log(statement);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(
+                    cbPool,
+                    statement,
+                    model,
+                    forecastLength,
+                    fromSecs,
+                    toSecs,
+                    averageStr,
+                    statisticSelect,
+                    validTimes,
+                    appParams,
+                    false
+                );
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.x.length
+                    duration:
+                        moment.duration(finishMoment.diff(startMoment)).asSeconds() +
+                        " seconds",
+                    recordCount: queryResult.data.x.length,
                 };
                 // get the data back from the query
                 d = queryResult.data;
             } catch (e)
             {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
-                e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+                e.message =
+                    "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
             }
             if (queryResult.error !== undefined && queryResult.error !== "")
@@ -170,8 +263,13 @@ dataSeries = function (plotParams, plotFunction)
                 } else
                 {
                     // this is an error returned by the mysql database
-                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw (new Error(error));
+                    error +=
+                        "Error from verification query: <br>" +
+                        queryResult.error +
+                        "<br> query: <br>" +
+                        statement +
+                        "<br>";
+                    throw new Error(error);
                 }
             } else
             {
@@ -190,7 +288,13 @@ dataSeries = function (plotParams, plotFunction)
         } else
         {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, appParams, statType === "ctc", statType === "scalar");
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(
+                dataset,
+                diffFrom,
+                appParams,
+                statType === "ctc",
+                statType === "scalar"
+            );
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -201,22 +305,34 @@ dataSeries = function (plotParams, plotFunction)
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         const mean = d.sum / d.x.length;
-        const annotation = mean === undefined ? label + "- mean = NoData" : label + "- mean = " + mean.toPrecision(4);
-        curve['annotation'] = annotation;
-        curve['xmin'] = d.xmin;
-        curve['xmax'] = d.xmax;
-        curve['ymin'] = d.ymin;
-        curve['ymax'] = d.ymax;
-        curve['axisKey'] = axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d, appParams);  // generate plot with data, curve annotation, axis labels, etc.
+        const annotation =
+            mean === undefined
+                ? label + "- mean = NoData"
+                : label + "- mean = " + mean.toPrecision(4);
+        curve["annotation"] = annotation;
+        curve["xmin"] = d.xmin;
+        curve["xmax"] = d.xmax;
+        curve["ymin"] = d.ymin;
+        curve["ymax"] = d.ymax;
+        curve["axisKey"] = axisKey;
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+            curve,
+            curveIndex,
+            axisMap,
+            d,
+            appParams
+        ); // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
-            duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
+            duration:
+                moment
+                    .duration(postQueryFinishMoment.diff(postQueryStartMoment))
+                    .asSeconds() + " seconds",
         };
-    }  // end for curves
+    } // end for curves
 
     if (!dataFoundForAnyCurve)
     {
@@ -226,16 +342,25 @@ dataSeries = function (plotParams, plotFunction)
 
     // process the data returned by the query
     const curveInfoParams = {
-        "curves": curves,
-        "curvesLength": curvesLength,
-        "idealValues": idealValues,
-        "utcCycleStarts": utcCycleStarts,
-        "statType": statType,
-        "axisMap": axisMap,
-        "xmax": xmax,
-        "xmin": xmin
+        curves: curves,
+        curvesLength: curvesLength,
+        idealValues: idealValues,
+        utcCycleStarts: utcCycleStarts,
+        statType: statType,
+        axisMap: axisMap,
+        xmax: xmax,
+        xmin: xmin,
     };
-    const bookkeepingParams = { "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart };
-    var result = matsDataProcessUtils.processDataXYCurve(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
+    const bookkeepingParams = {
+        dataRequests: dataRequests,
+        totalProcessingStart: totalProcessingStart,
+    };
+    var result = matsDataProcessUtils.processDataXYCurve(
+        dataset,
+        appParams,
+        curveInfoParams,
+        plotParams,
+        bookkeepingParams
+    );
     plotFunction(result);
 };
