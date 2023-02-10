@@ -5,11 +5,11 @@ const { Console } = require('console');
 //if (Meteor.isServer) {
 describe('dieoff_query', () => {
   before(function setup() {
-    console.log("setup");
+    console.log('setup');
   });
 
   after(function teardown() {
-    console.log("teardown");
+    console.log('teardown');
   });
 
   it('should return data', function (done) {
@@ -58,11 +58,11 @@ describe('dieoff_query', () => {
           AND m0data.name = odata.name
       GROUP BY m0data.name
       ORDER BY m0data.name;
-      `
+      `;
       console.log(statement);
-      data = "something"
-      chai.assert(data == "something");
-      done()
+      data = 'something';
+      chai.assert(data == 'something');
+      done();
     } catch (err) {
       done(err);
     }

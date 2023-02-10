@@ -12,4 +12,3 @@ The best way to use it is to place your diagram text (.puml file) in the onine e
 https://www.plantuml.com/plantuml/uml/SyfFKj2rKt3CoKnELR1Io4ZDoSa70000 and work interactively until you have it the way you want it.
 
 You can then export the png from the right button context in the puml fille. View the report to find out where the png file is and copy it to the desired place.
-
