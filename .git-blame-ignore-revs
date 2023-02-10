@@ -2,3 +2,5 @@
 9b8f07b97593b377bd0caa2dd082062ef1824a03
 # Run ESLint's automated fixer over the codebase to conform with Airbnb's style guide 
 78b12e0ead93e99b03832b282cc7f817a85c01e6
+# Switch Prettier to use double-quotes - we use unescaped single quotes in a large number of locations
+d6d334204e930729454c1f2af3f1455276174eda
