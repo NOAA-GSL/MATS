@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataDieOff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,7 +27,7 @@ dataDieOff = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -45,56 +45,56 @@ dataDieOff = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
     const { label } = curve;
     var { variable } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[variable][curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
     const modelClause = `AND m0.model='${model}' `;
     var queryTableClause;
     var thresholdStr = curve.threshold;
     let threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
       (key) =>
-        matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable][
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
           key
         ] === thresholdStr
     );
-    threshold = threshold.replace(/_/g, '.');
+    threshold = threshold.replace(/_/g, ".");
     var validTimes;
-    let validTimeClause = '';
+    let validTimeClause = "";
     var utcCycleStart;
-    let utcCycleStartClause = '';
-    const forecastLengthStr = curve['dieoff-type'];
-    const forecastLengthOptionsMap = matsCollections['dieoff-type'].findOne({
-      name: 'dieoff-type',
+    let utcCycleStartClause = "";
+    const forecastLengthStr = curve["dieoff-type"];
+    const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne({
+      name: "dieoff-type",
     }).optionsMap;
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
     const forecastLengthClause =
-      'AND m0.fcstLen IN [0,3,6,9,12,15,18,21,24,30,36,42,48]';
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+      "AND m0.fcstLen IN [0,3,6,9,12,15,18,21,24,30,36,42,48]";
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     var dateClause;
-    let siteDateClause = '';
-    let siteMatchClause = '';
-    let sitesClause = '';
+    let siteDateClause = "";
+    let siteMatchClause = "";
+    let sitesClause = "";
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     var statisticClause;
-    const regionType = curve['region-type'];
-    let regionClause = '';
+    const regionType = curve["region-type"];
+    let regionClause = "";
     var whereClause;
-    let siteWhereClause = '';
-    if (regionType === 'Predefined region') {
-      queryTableClause = 'from vxDBTARGET  m0';
+    let siteWhereClause = "";
+    if (regionType === "Predefined region") {
+      queryTableClause = "from vxDBTARGET  m0";
       var regionStr = curve.region;
       const region = Object.keys(
-        matsCollections.region.findOne({ name: 'region' }).valuesMap
+        matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
         (key) =>
-          matsCollections.region.findOne({ name: 'region' }).valuesMap[key] ===
+          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
       regionClause = `AND m0.region='${region}' `;
@@ -105,26 +105,26 @@ dataDieOff = function (plotParams, plotFunction) {
         `TO_STRING(m0.data.['${threshold}'].false_alarms) || ';' || TO_STRING(m0.data.['${threshold}'].misses) || ';' || ` +
         `TO_STRING(m0.data.['${threshold}'].correct_negatives))) sub_data, count(m0.data.['${threshold}'].hits) N0 `;
       whereClause =
-        'WHERE ' +
+        "WHERE " +
         "m0.type='DD' " +
         "AND m0.docType='CTC' " +
         "AND m0.subset='METAR' " +
         "AND m0.version='V01' ";
     } else {
       queryTableClause =
-        'from vxDBTARGET  AS m0 ' +
-        'JOIN mdata AS o ' +
-        'ON o.fcstValidEpoch = m0.fcstValidEpoch ' +
-        'UNNEST o.data AS odata ' +
-        'UNNEST m0.data AS m0data ';
+        "from vxDBTARGET  AS m0 " +
+        "JOIN mdata AS o " +
+        "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
+        "UNNEST o.data AS odata " +
+        "UNNEST m0.data AS m0data ";
       const sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         sitesClause = ` and m0data.name in ['${sitesList.join("','")}']`;
         sitesClause = `${sitesClause} and odata.name in ['${sitesList.join("','")}']`;
-        siteMatchClause = 'and m0data.name = odata.name ';
+        siteMatchClause = "and m0data.name = odata.name ";
       } else {
         throw new Error(
-          'INFO:  Please add sites in order to get a single/multi station plot.'
+          "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
       statisticClause =
@@ -155,11 +155,11 @@ dataDieOff = function (plotParams, plotFunction) {
         "AND o.version='V01' ";
     }
     if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-      validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+      validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         validTimeClause = `and m0.fcstValidEpoch%(24*3600)/3600 IN[${validTimes}]`;
       }
-      if (regionType === 'Predefined region') {
+      if (regionType === "Predefined region") {
         dateClause = `and m0.fcstValidEpoch >= ${fromSecs} and m0.fcstValidEpoch <= ${toSecs}`;
       } else {
         dateClause = `and m0.fcstValidEpoch >= ${fromSecs} and m0.fcstValidEpoch <= ${toSecs} and m0.fcstValidEpoch = o.fcstValidEpoch`;
@@ -167,24 +167,24 @@ dataDieOff = function (plotParams, plotFunction) {
       }
     } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
       utcCycleStart =
-        curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+        curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
       if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
         utcCycleStartClause = `and (m0.fcstValidEpoch - m0.fcstLen*3600)%(24*3600)/3600 IN[${utcCycleStart}]`; // adjust by 1800 seconds to center obs at the top of the hour
       }
-      if (regionType === 'Predefined region') {
+      if (regionType === "Predefined region") {
         dateClause = `and m0.fcstValidEpoch-m0.fcstLen*3600 >= ${fromSecs} and m0.fcstValidEpoch-m0.fcstLen*3600 <= ${toSecs}`;
       } else {
         dateClause = `and m0.fcstValidEpoch-m0.fcstLen*3600 >= ${fromSecs} and m0.fcstValidEpoch-m0.fcstLen*3600 <= ${toSecs} and m0.fcstValidEpoch = o.fcstValidEpoch`;
         siteDateClause = `and o.fcstValidEpoch >= ${fromSecs} and o.fcstValidEpoch <= ${toSecs}`;
       }
-    } else if (regionType === 'Predefined region') {
+    } else if (regionType === "Predefined region") {
       dateClause = `and m0.fcstValidEpoch-m0.fcstLen*3600 = ${fromSecs}`;
     } else {
       dateClause = `and m0.fcstValidEpoch-m0.fcstLen*3600 = ${fromSecs} and m0.fcstValidEpoch = o.fcstValidEpoch`;
       siteDateClause = `and o.fcstValidEpoch = ${fromSecs}`;
     }
-    if (regionType !== 'Predefined region') {
-      dateClause += ' and m0.fcstValidEpoch = o.fcstValidEpoch';
+    if (regionType !== "Predefined region") {
+      dateClause += " and m0.fcstValidEpoch = o.fcstValidEpoch";
     }
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -203,40 +203,40 @@ dataDieOff = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'SELECT m0.fcstLen AS fcst_lead, ' +
-        'COUNT(DISTINCT m0.fcstValidEpoch) N_times, ' +
-        'MIN(m0.fcstValidEpoch) min_secs, ' +
-        'MAX(m0.fcstValidEpoch) max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        '{{siteWhereClause}} ' +
-        '{{whereClause}} ' +
-        '{{modelClause}} ' +
-        '{{regionClause}} ' +
-        '{{forecastLengthClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{utcCycleStartClause}} ' +
-        '{{siteDateClause}} ' +
-        '{{dateClause}} ' +
-        '{{sitesClause}} ' +
-        '{{siteMatchClause}} ' +
-        'GROUP BY m0.fcstLen ' +
-        'ORDER BY fcst_lead' +
-        ';';
+        "SELECT m0.fcstLen AS fcst_lead, " +
+        "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+        "MIN(m0.fcstValidEpoch) min_secs, " +
+        "MAX(m0.fcstValidEpoch) max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "{{siteWhereClause}} " +
+        "{{whereClause}} " +
+        "{{modelClause}} " +
+        "{{regionClause}} " +
+        "{{forecastLengthClause}} " +
+        "{{validTimeClause}} " +
+        "{{utcCycleStartClause}} " +
+        "{{siteDateClause}} " +
+        "{{dateClause}} " +
+        "{{sitesClause}} " +
+        "{{siteMatchClause}} " +
+        "GROUP BY m0.fcstLen " +
+        "ORDER BY fcst_lead" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-      statement = statement.replace('{{sitesClause}}', sitesClause);
-      statement = statement.replace('{{whereClause}}', whereClause);
-      statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
-      statement = statement.replace('{{modelClause}}', modelClause);
-      statement = statement.replace('{{regionClause}}', regionClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
-      statement = statement.replace('{{siteDateClause}}', siteDateClause);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+      statement = statement.replace("{{sitesClause}}", sitesClause);
+      statement = statement.replace("{{whereClause}}", whereClause);
+      statement = statement.replace("{{siteWhereClause}}", siteWhereClause);
+      statement = statement.replace("{{modelClause}}", modelClause);
+      statement = statement.replace("{{regionClause}}", regionClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
+      statement = statement.replace("{{siteDateClause}}", siteDateClause);
 
       statement = cbPool.trfmSQLForDbTarget(statement);
       dataRequests[label] = statement;
@@ -268,7 +268,7 @@ dataDieOff = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
@@ -295,8 +295,8 @@ dataDieOff = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -338,7 +338,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

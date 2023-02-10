@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataDieOff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,7 +27,7 @@ dataDieOff = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -44,41 +44,41 @@ dataDieOff = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     const queryTableClause = `from ${model}_anomcorr_${region} as m0`;
     const { variable } = curve;
     const variableClause = `and m0.variable = '${variable}'`;
-    let validTimeClause = '';
+    let validTimeClause = "";
     var utcCycleStart;
-    let utcCycleStartClause = '';
-    const forecastLengthStr = curve['dieoff-type'];
-    const forecastLengthOptionsMap = matsCollections['dieoff-type'].findOne(
-      { name: 'dieoff-type' },
+    let utcCycleStartClause = "";
+    const forecastLengthStr = curve["dieoff-type"];
+    const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne(
+      { name: "dieoff-type" },
       { optionsMap: 1 }
     ).optionsMap;
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     var dateClause;
     if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-      const validTimeStr = curve['valid-time'];
-      validTimeClause = matsCollections['valid-time'].findOne(
-        { name: 'valid-time' },
+      const validTimeStr = curve["valid-time"];
+      validTimeClause = matsCollections["valid-time"].findOne(
+        { name: "valid-time" },
         { optionsMap: 1 }
       ).optionsMap[validTimeStr][0];
       dateClause = `and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '${fromSecs}' and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '${toSecs}' `;
     } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
       utcCycleStart =
-        curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+        curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
       if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
         utcCycleStartClause = `and floor(((unix_timestamp(m0.valid_date)+3600*m0.valid_hour) - m0.fcst_len*3600)%(24*3600)/3600) IN(${utcCycleStart})`;
       }
@@ -86,23 +86,23 @@ dataDieOff = function (plotParams, plotFunction) {
     } else {
       dateClause = `and unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 = ${fromSecs}`;
     }
-    let levelClause = '';
+    let levelClause = "";
     const levels = curve.level === undefined ? [] : curve.level;
     if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
       levelClause = `and m0.level IN(${levels})`;
     }
     const statisticClause =
-      'avg(m0.wacorr/100) as stat, ' +
-      'count(m0.wacorr) as N0, ' +
+      "avg(m0.wacorr/100) as stat, " +
+      "count(m0.wacorr) as N0, " +
       "group_concat(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level, ';', m0.wacorr / 100 " +
-      'order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data';
-    var statType = 'ACC';
-    curves[curveIndex].statistic = 'Correlation';
+      "order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data";
+    var statType = "ACC";
+    curves[curveIndex].statistic = "Correlation";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const axisKey = 'Correlation';
+    const axisKey = "Correlation";
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
     var d;
@@ -110,29 +110,29 @@ dataDieOff = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select m0.fcst_len as fcst_lead, ' +
-        'count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, ' +
-        'min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, ' +
-        'max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{dateClause}} ' +
-        '{{variableClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{utcCycleStartClause}} ' +
-        '{{levelClause}} ' +
-        'group by fcst_lead ' +
-        'order by fcst_lead' +
-        ';';
+        "select m0.fcst_len as fcst_lead, " +
+        "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
+        "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
+        "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{dateClause}} " +
+        "{{variableClause}} " +
+        "{{validTimeClause}} " +
+        "{{utcCycleStartClause}} " +
+        "{{levelClause}} " +
+        "group by fcst_lead " +
+        "order by fcst_lead" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{variableClause}}', variableClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
-      statement = statement.replace('{{levelClause}}', levelClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{variableClause}}", variableClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
+      statement = statement.replace("{{levelClause}}", levelClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
       dataRequests[label] = statement;
 
       var queryResult;
@@ -144,7 +144,7 @@ dataDieOff = function (plotParams, plotFunction) {
           sumPool,
           statement,
           appParams,
-          'Anomaly Correlation'
+          "Anomaly Correlation"
         );
         finishMoment = moment();
         dataRequests[`data retrieval (query) time - ${label}`] = {
@@ -162,7 +162,7 @@ dataDieOff = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
@@ -189,8 +189,8 @@ dataDieOff = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -232,7 +232,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

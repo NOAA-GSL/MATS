@@ -11,8 +11,8 @@ import {
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
   matsPlotUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataContourDiff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,22 +27,22 @@ dataContourDiff = function (plotParams, plotFunction) {
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataNotFoundForAnyCurve = false;
-  const showSignificance = plotParams.significance !== 'none';
+  const showSignificance = plotParams.significance !== "none";
   const totalProcessingStart = moment();
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
-  const xAxisParam = plotParams['x-axis-parameter'];
-  const yAxisParam = plotParams['y-axis-parameter'];
-  const xValClause = matsCollections.PlotParams.findOne({ name: 'x-axis-parameter' })
+  const xAxisParam = plotParams["x-axis-parameter"];
+  const yAxisParam = plotParams["y-axis-parameter"];
+  const xValClause = matsCollections.PlotParams.findOne({ name: "x-axis-parameter" })
     .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOne({ name: 'y-axis-parameter' })
+  const yValClause = matsCollections.PlotParams.findOne({ name: "y-axis-parameter" })
     .optionsMap[yAxisParam];
-  let error = '';
+  let error = "";
   let curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   if (curvesLength !== 2) {
-    throw new Error('INFO:  There must be two added curves.');
+    throw new Error("INFO:  There must be two added curves.");
   }
   let dataset = [];
   const axisMap = Object.create(null);
@@ -51,70 +51,70 @@ dataContourDiff = function (plotParams, plotFunction) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
     const { label } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     var regionClause;
-    if (region === 'all_stat') {
-      regionClause = '';
-    } else if (region === 'all_surf') {
-      regionClause = 'and m0.id in(1,2,3,4,5,6,7) ';
-    } else if (region === 'all_sol') {
-      regionClause = 'and m0.id in(8,9,10,11,12,13,14) ';
+    if (region === "all_stat") {
+      regionClause = "";
+    } else if (region === "all_surf") {
+      regionClause = "and m0.id in(1,2,3,4,5,6,7) ";
+    } else if (region === "all_sol") {
+      regionClause = "and m0.id in(8,9,10,11,12,13,14) ";
     } else {
       regionClause = `and m0.id in(${region}) `;
     }
     var scaleStr = curve.scale;
     const grid_scale = Object.keys(
-      matsCollections.scale.findOne({ name: 'scale' }).valuesMap
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.scale.findOne({ name: 'scale' }).valuesMap[key] === scaleStr
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
     );
     const scaleClause = `and m0.scale = ${grid_scale}`;
     const queryTableClause = `from surfrad as o, ${model} as m0`;
     var variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
-    let validTimeClause = '';
-    let forecastLengthClause = '';
-    let dateString = '';
-    let dateClause = '';
-    let matchClause = '';
-    if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-      const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    let validTimeClause = "";
+    let forecastLengthClause = "";
+    let dateString = "";
+    let dateClause = "";
+    let matchClause = "";
+    if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
+      const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
         validTimeClause = `and (m0.secs)%(24*3600)/3600 IN(${validTimes})`;
       }
     }
-    if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-      const forecastLength = Number(curve['forecast-length']) * 60;
+    if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
+      const forecastLength = Number(curve["forecast-length"]) * 60;
       forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
     }
     if (
-      (xAxisParam === 'Init Date' || yAxisParam === 'Init Date') &&
-      xAxisParam !== 'Valid Date' &&
-      yAxisParam !== 'Valid Date'
+      (xAxisParam === "Init Date" || yAxisParam === "Init Date") &&
+      xAxisParam !== "Valid Date" &&
+      yAxisParam !== "Valid Date"
     ) {
-      dateString = 'm0.secs-m0.fcst_len*60';
+      dateString = "m0.secs-m0.fcst_len*60";
     } else {
-      dateString = 'm0.secs';
+      dateString = "m0.secs";
     }
     dateClause = `and o.secs >= ${fromSecs} and o.secs <= ${toSecs}`;
     dateClause = `${dateClause} and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
-    matchClause = 'and m0.id = o.id and m0.secs = o.secs';
+    matchClause = "and m0.id = o.id and m0.secs = o.secs";
     var statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
@@ -122,7 +122,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       `group_concat(m0.secs, ';', ${variable[0]}, ';', 1, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.secs) as sub_data, count(${variable[0]}) as N0`;
     var statType = statisticOptionsMap[statisticSelect];
     const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { statVarUnitMap: 1 }
     );
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -134,41 +134,41 @@ dataContourDiff = function (plotParams, plotFunction) {
     // this is a database driven curve, not a difference curve
     // prepare the query from the above parameters
     let statement =
-      '{{xValClause}} ' +
-      '{{yValClause}} ' +
-      'count(distinct {{dateString}}) as N_times, ' +
-      'min({{dateString}}) as min_secs, ' +
-      'max({{dateString}}) as max_secs, ' +
-      '{{statisticClause}} ' +
-      '{{queryTableClause}} ' +
-      'where 1=1 ' +
-      '{{matchClause}} ' +
-      '{{dateClause}} ' +
-      '{{validTimeClause}} ' +
-      '{{forecastLengthClause}} ' +
-      '{{scaleClause}} ' +
-      '{{regionClause}} ' +
-      'group by xVal,yVal ' +
-      'order by xVal,yVal' +
-      ';';
+      "{{xValClause}} " +
+      "{{yValClause}} " +
+      "count(distinct {{dateString}}) as N_times, " +
+      "min({{dateString}}) as min_secs, " +
+      "max({{dateString}}) as max_secs, " +
+      "{{statisticClause}} " +
+      "{{queryTableClause}} " +
+      "where 1=1 " +
+      "{{matchClause}} " +
+      "{{dateClause}} " +
+      "{{validTimeClause}} " +
+      "{{forecastLengthClause}} " +
+      "{{scaleClause}} " +
+      "{{regionClause}} " +
+      "group by xVal,yVal " +
+      "order by xVal,yVal" +
+      ";";
 
-    statement = statement.replace('{{xValClause}}', xValClause);
-    statement = statement.replace('{{yValClause}}', yValClause);
-    statement = statement.replace('{{statisticClause}}', statisticClause);
-    statement = statement.replace('{{queryTableClause}}', queryTableClause);
-    statement = statement.replace('{{validTimeClause}}', validTimeClause);
-    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-    statement = statement.replace('{{scaleClause}}', scaleClause);
-    statement = statement.replace('{{regionClause}}', regionClause);
-    statement = statement.replace('{{matchClause}}', matchClause);
-    statement = statement.replace('{{dateClause}}', dateClause);
-    statement = statement.split('{{dateString}}').join(dateString);
+    statement = statement.replace("{{xValClause}}", xValClause);
+    statement = statement.replace("{{yValClause}}", yValClause);
+    statement = statement.replace("{{statisticClause}}", statisticClause);
+    statement = statement.replace("{{queryTableClause}}", queryTableClause);
+    statement = statement.replace("{{validTimeClause}}", validTimeClause);
+    statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+    statement = statement.replace("{{scaleClause}}", scaleClause);
+    statement = statement.replace("{{regionClause}}", regionClause);
+    statement = statement.replace("{{matchClause}}", matchClause);
+    statement = statement.replace("{{dateClause}}", dateClause);
+    statement = statement.split("{{dateString}}").join(dateString);
     dataRequests[label] = statement;
 
     if (
-      model !== 'HRRR' &&
-      variableStr !== 'dswrf' &&
-      statisticSelect !== 'Obs average'
+      model !== "HRRR" &&
+      variableStr !== "dswrf" &&
+      statisticSelect !== "Obs average"
     ) {
       throw new Error(
         `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is only available for the HRRR data-source.`
@@ -202,7 +202,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
       throw new Error(e.message);
     }
-    if (queryResult.error !== undefined && queryResult.error !== '') {
+    if (queryResult.error !== undefined && queryResult.error !== "") {
       if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
         // this is NOT an error just a no data condition
         dataFoundForCurve = false;
@@ -252,7 +252,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   if (dataNotFoundForAnyCurve) {
     // we found no data for at least one curve so don't bother proceeding
     throw new Error(
-      'INFO:  No valid data for at least one curve. Try making individual contour plots to determine which one.'
+      "INFO:  No valid data for at least one curve. Try making individual contour plots to determine which one."
     );
   }
 
@@ -263,8 +263,8 @@ dataContourDiff = function (plotParams, plotFunction) {
     showSignificance,
     plotParams.significance,
     `${statisticSelect}_${variableStr}`,
-    statType === 'ctc',
-    statType === 'scalar'
+    statType === "ctc",
+    statType === "scalar"
   );
   plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
   curves = plotParams.curves;

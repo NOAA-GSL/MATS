@@ -2,13 +2,13 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import { Meteor } from 'meteor/meteor';
+import { Meteor } from "meteor/meteor";
 import {
   matsTypes,
   matsCollections,
   matsDataUtils,
   matsCouchbaseUtils,
-} from 'meteor/randyp:mats-common';
+} from "meteor/randyp:mats-common";
 
 // determined in doCurveParanms
 let minDate;
@@ -32,27 +32,27 @@ const doPlotParams = function () {
     */
 
   if (
-    matsCollections.PlotParams.findOne({ name: 'scorecard-schedule-mode' }) == undefined
+    matsCollections.PlotParams.findOne({ name: "scorecard-schedule-mode" }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'scorecard-schedule-mode',
+      name: "scorecard-schedule-mode",
       type: matsTypes.InputTypes.radioGroup,
-      options: ['Once', 'Recurring'],
-      dependentRadioGroups: ['scorecard-recurrence-interval'], // need an event triggered after this element changes to ensure hide/show settings are correct
+      options: ["Once", "Recurring"],
+      dependentRadioGroups: ["scorecard-recurrence-interval"], // need an event triggered after this element changes to ensure hide/show settings are correct
       controlButtonCovered: false,
-      default: 'Once',
+      default: "Once",
       hideOtherFor: {
-        'scorecard-recurrence-interval': ['Once'],
-        'relative-date-range-type': ['Once'],
-        'relative-date-range-value': ['Once'],
-        'scorecard-ends-on': ['Once'],
-        'these-hours-of-the-day': ['Once'],
-        'these-days-of-the-week': ['Once'],
-        'these-days-of-the-month': ['Once'],
-        'these-months': ['Once'],
-        dates: ['Recurring'],
+        "scorecard-recurrence-interval": ["Once"],
+        "relative-date-range-type": ["Once"],
+        "relative-date-range-value": ["Once"],
+        "scorecard-ends-on": ["Once"],
+        "these-hours-of-the-day": ["Once"],
+        "these-days-of-the-week": ["Once"],
+        "these-days-of-the-month": ["Once"],
+        "these-months": ["Once"],
+        dates: ["Recurring"],
       },
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
@@ -61,34 +61,34 @@ const doPlotParams = function () {
              processed repeatedly on a schedule. If you choose 'Recurring' you will
              need to choose the schedule recurrence parameters as well as the
              date after which processing will cease.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
 
-  if (matsCollections.PlotParams.findOne({ name: 'dates' }) == undefined) {
+  if (matsCollections.PlotParams.findOne({ name: "dates" }) == undefined) {
     matsCollections.PlotParams.insert({
-      name: 'dates',
+      name: "dates",
       type: matsTypes.InputTypes.dateRange,
       optionsMap: {},
       options: [],
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ['application', 'data-source'],
+      superiorNames: ["application", "data-source"],
       controlButtonCovered: true,
       default: dstr,
-      controlButtonVisibility: 'block',
-      controlButtonText: 'one time date range',
+      controlButtonVisibility: "block",
+      controlButtonText: "one time date range",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 2,
-      help: 'dateHelp.html',
+      help: "dateHelp.html",
       tooltip: `The date range over which this 'Once' (one time) scorecard will be processed.
                 This scorecard will process only that date range, and process it only one time`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // need to update the dates selector if the metadata has changed
-    const currentParam = matsCollections.PlotParams.findOne({ name: 'dates' });
+    const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
@@ -96,7 +96,7 @@ const doPlotParams = function () {
     ) {
       // have to reload model data
       matsCollections.PlotParams.update(
-        { name: 'dates' },
+        { name: "dates" },
         {
           $set: {
             startDate: minDate,
@@ -109,16 +109,16 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: 'relative-date-range-type' }) ==
+    matsCollections.PlotParams.findOne({ name: "relative-date-range-type" }) ==
     undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'relative-date-range-type',
+      name: "relative-date-range-type",
       type: matsTypes.InputTypes.select,
-      options: ['Hours', 'Days', 'Weeks'],
+      options: ["Hours", "Days", "Weeks"],
       controlButtonCovered: true,
-      default: 'Hours',
-      controlButtonVisibility: 'block',
+      default: "Hours",
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 2,
@@ -126,478 +126,478 @@ const doPlotParams = function () {
                 the recurring scorecard processing schedule. For example, if you choose 'Hours' then you will need
                 to also choose the number of hours prior to the scheduled run time that will be included in the
                 calculations. The same for 'Days' or 'Weeks'`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: 'relative-date-range-value' }) ==
+    matsCollections.PlotParams.findOne({ name: "relative-date-range-value" }) ==
     undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'relative-date-range-value',
+      name: "relative-date-range-value",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '1',
-      max: '100',
-      step: 'any',
+      min: "1",
+      max: "100",
+      step: "any",
       controlButtonCovered: true,
       default: 1,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 2,
       tooltip: `The number of 'Hours', 'Days', or 'Weeks' for which this Recurring scorecard will be
                 calculated relative to its processing time. The time interval will be dynamically set for
                 the period immediately prior to the processing time, which will be determined by the recurrence schedule.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: 'scorecard-recurrence-interval' }) ==
+    matsCollections.PlotParams.findOne({ name: "scorecard-recurrence-interval" }) ==
     undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'scorecard-recurrence-interval',
+      name: "scorecard-recurrence-interval",
       type: matsTypes.InputTypes.radioGroup,
-      options: ['Daily', 'Weekly', 'Monthly', 'Yearly'],
-      superiorRadioGroups: ['scorecard-schedule-mode'],
+      options: ["Daily", "Weekly", "Monthly", "Yearly"],
+      superiorRadioGroups: ["scorecard-schedule-mode"],
       controlButtonCovered: false,
-      default: 'Weekly',
+      default: "Weekly",
       hideOtherFor: {
-        'these-days-of-the-week': ['Daily', 'Monthly', 'Yearly'], // only exposed on weekly
-        'these-days-of-the-month': ['Daily', 'Weekly'], // only exposed for monthly and yearly
-        'these-months': ['Daily', 'Weekly', 'Monthly'], // only exposed on yearly
+        "these-days-of-the-week": ["Daily", "Monthly", "Yearly"], // only exposed on weekly
+        "these-days-of-the-month": ["Daily", "Weekly"], // only exposed for monthly and yearly
+        "these-months": ["Daily", "Weekly", "Monthly"], // only exposed on yearly
       },
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 3,
       tooltip: `The type of recurrance interval on which this recurring scorecard will be processed.
                 Each new cycle will create a new viewable scorecard identified by the 'user',
                 'Scorecard Name', and processing date and time.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: 'these-hours-of-the-day' }) == undefined
+    matsCollections.PlotParams.findOne({ name: "these-hours-of-the-day" }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'these-hours-of-the-day',
+      name: "these-hours-of-the-day",
       type: matsTypes.InputTypes.select,
       options: [
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
-        '7',
-        '8',
-        '9',
-        '10',
-        '11',
-        '12',
-        '13',
-        '14',
-        '15',
-        '16',
-        '17',
-        '18',
-        '19',
-        '20',
-        '21',
-        '22',
-        '23',
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
       ],
       controlButtonCovered: true,
-      default: 'unused',
-      controlButtonVisibility: 'block',
+      default: "unused",
+      controlButtonVisibility: "block",
       multiple: true,
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 4,
       tooltip:
         "The hours of the day for which this 'Daily', 'Weekly' or 'Monthly' scorecard will be reprocessed.",
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
   if (
-    matsCollections.PlotParams.findOne({ name: 'these-days-of-the-week' }) == undefined
+    matsCollections.PlotParams.findOne({ name: "these-days-of-the-week" }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'these-days-of-the-week',
+      name: "these-days-of-the-week",
       type: matsTypes.InputTypes.select,
       options: [
-        'Sunday',
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday',
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
       ],
       controlButtonCovered: true,
-      default: 'unused',
-      controlButtonVisibility: 'block',
+      default: "unused",
+      controlButtonVisibility: "block",
       multiple: true,
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 4,
       tooltip:
         "The days of the week for which this 'Weekly' scorecard will be reprocessed.",
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
   if (
-    matsCollections.PlotParams.findOne({ name: 'these-days-of-the-month' }) == undefined
+    matsCollections.PlotParams.findOne({ name: "these-days-of-the-month" }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'these-days-of-the-month',
+      name: "these-days-of-the-month",
       type: matsTypes.InputTypes.select,
       options: [
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
-        '7',
-        '8',
-        '9',
-        '10',
-        '11',
-        '12',
-        '13',
-        '14',
-        '15',
-        '16',
-        '17',
-        '18',
-        '19',
-        '20',
-        '21',
-        '22',
-        '23',
-        '24',
-        '25',
-        '26',
-        '27',
-        '28',
-        '29',
-        '30',
-        '31',
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
       ],
       controlButtonCovered: true,
-      default: 'unused',
-      controlButtonVisibility: 'block',
+      default: "unused",
+      controlButtonVisibility: "block",
       multiple: true,
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 4,
       tooltip:
         "The days of the month for which this 'Monthly' or 'Yearly' scorecard will be reprocessed.",
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
-  if (matsCollections.PlotParams.findOne({ name: 'these-months' }) == undefined) {
+  if (matsCollections.PlotParams.findOne({ name: "these-months" }) == undefined) {
     matsCollections.PlotParams.insert({
-      name: 'these-months',
+      name: "these-months",
       type: matsTypes.InputTypes.select,
       options: [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
       ],
       controlButtonCovered: true,
-      default: 'unused',
-      controlButtonVisibility: 'block',
+      default: "unused",
+      controlButtonVisibility: "block",
       multiple: true,
       displayOrder: 4,
       displayPriority: 1,
       displayGroup: 4,
       tooltip: "The months for which this 'Yearly' scorecard will be reprocessed.",
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
-  if (matsCollections.PlotParams.findOne({ name: 'scorecard-ends-on' }) == undefined) {
+  if (matsCollections.PlotParams.findOne({ name: "scorecard-ends-on" }) == undefined) {
     matsCollections.PlotParams.insert({
-      name: 'scorecard-ends-on',
+      name: "scorecard-ends-on",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
       options: [],
       controlButtonCovered: true,
       default: new Date().toLocaleDateString(),
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 5,
       tooltip: `The date after which processing for this scorecard will end,
                 any runs on the end date will be completed. Completed scorecards will be accessed based on
                 'user', 'Scorecard Name', and processed date.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
 
   if (
     matsCollections.PlotParams.findOne({
-      name: 'scorecard-percent-stdv',
+      name: "scorecard-percent-stdv",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'scorecard-percent-stdv',
+      name: "scorecard-percent-stdv",
       type: matsTypes.InputTypes.radioGroup,
-      options: ['Percent', 'StandardDeviation'],
+      options: ["Percent", "StandardDeviation"],
       controlButtonCovered: false,
-      default: 'Percent',
+      default: "Percent",
       hideOtherFor: {
-        'minor-threshold-by-percent': ['StandardDeviation'],
-        'major-threshold-by-percent': ['StandardDeviation'],
-        'minor-threshold-by-stdv': ['Percent'],
-        'major-threshold-by-stdv': ['Percent'],
+        "minor-threshold-by-percent": ["StandardDeviation"],
+        "major-threshold-by-percent": ["StandardDeviation"],
+        "minor-threshold-by-stdv": ["Percent"],
+        "major-threshold-by-stdv": ["Percent"],
       },
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 6,
       tooltip:
-        'The method for setting the significance thresholds, percentage or standard deviation.',
-      tooltipPlacement: 'right',
+        "The method for setting the significance thresholds, percentage or standard deviation.",
+      tooltipPlacement: "right",
     });
   }
 
   if (
     matsCollections.PlotParams.findOne({
-      name: 'minor-threshold-by-percent',
+      name: "minor-threshold-by-percent",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'minor-threshold-by-percent',
+      name: "minor-threshold-by-percent",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '90',
-      max: '100',
-      step: '1',
+      min: "90",
+      max: "100",
+      step: "1",
       default: 95,
       controlButtonCovered: true,
-      controlButtonText: 'minor - %',
-      controlButtonFA: 'fa-sm fa-solid fa-caret-down',
-      controlButtonVisibility: 'none',
+      controlButtonText: "minor - %",
+      controlButtonFA: "fa-sm fa-solid fa-caret-down",
+      controlButtonVisibility: "none",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 7,
-      tooltip: 'The threshold for the minor significance defined in percentage.',
-      tooltipPlacement: 'right',
+      tooltip: "The threshold for the minor significance defined in percentage.",
+      tooltipPlacement: "right",
     });
   }
   if (
     matsCollections.PlotParams.findOne({
-      name: 'major-threshold-by-percent',
+      name: "major-threshold-by-percent",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'major-threshold-by-percent',
+      name: "major-threshold-by-percent",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '90',
-      max: '100',
-      step: '1',
+      min: "90",
+      max: "100",
+      step: "1",
       default: 99,
       controlButtonCovered: true,
-      controlButtonText: 'major - %',
-      controlButtonFA: 'fa-xl fa-solid fa-caret-down',
-      controlButtonVisibility: 'none',
+      controlButtonText: "major - %",
+      controlButtonFA: "fa-xl fa-solid fa-caret-down",
+      controlButtonVisibility: "none",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 7,
-      tooltip: 'The threshold for the major significance defined in percentage.',
-      tooltipPlacement: 'right',
+      tooltip: "The threshold for the major significance defined in percentage.",
+      tooltipPlacement: "right",
     });
   }
 
   if (
     matsCollections.PlotParams.findOne({
-      name: 'minor-threshold-by-stdv',
+      name: "minor-threshold-by-stdv",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'minor-threshold-by-stdv',
+      name: "minor-threshold-by-stdv",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '1',
-      max: '3',
-      step: '1',
+      min: "1",
+      max: "3",
+      step: "1",
       default: 1,
       controlButtonCovered: true,
-      controlButtonText: 'minor - std',
-      controlButtonFA: 'fa-sm fa-solid fa-caret-down',
-      controlButtonVisibility: 'none',
+      controlButtonText: "minor - std",
+      controlButtonFA: "fa-sm fa-solid fa-caret-down",
+      controlButtonVisibility: "none",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 7,
       tooltip:
-        'The threshold for the minor significance defined in standard deviations.',
-      tooltipPlacement: 'right',
+        "The threshold for the minor significance defined in standard deviations.",
+      tooltipPlacement: "right",
     });
   }
   if (
     matsCollections.PlotParams.findOne({
-      name: 'major-threshold-by-stdv',
+      name: "major-threshold-by-stdv",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'major-threshold-by-stdv',
+      name: "major-threshold-by-stdv",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '1',
-      max: '3',
-      step: '1',
+      min: "1",
+      max: "3",
+      step: "1",
       default: 1,
       controlButtonCovered: true,
-      controlButtonText: 'major - std',
-      controlButtonFA: 'fa-xl fa-solid fa-caret-down',
-      controlButtonVisibility: 'none',
+      controlButtonText: "major - std",
+      controlButtonFA: "fa-xl fa-solid fa-caret-down",
+      controlButtonVisibility: "none",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 7,
       tooltip:
-        'The threshold for the major significance defined in standard deviations',
-      tooltipPlacement: 'right',
+        "The threshold for the major significance defined in standard deviations",
+      tooltipPlacement: "right",
     });
   }
 
   if (
     matsCollections.PlotParams.findOne({
-      name: 'scorecard-color-theme',
+      name: "scorecard-color-theme",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'scorecard-color-theme',
+      name: "scorecard-color-theme",
       type: matsTypes.InputTypes.radioGroup,
-      options: ['RedGreen', 'RedBlue'],
+      options: ["RedGreen", "RedBlue"],
       controlButtonCovered: false,
-      default: 'RedGreen',
-      controlButtonVisibility: 'block',
+      default: "RedGreen",
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 8,
       tooltip: `The color scheme for the major and minor symbols,
             you can use the eyedropper tool in the color editor to customize colors.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   }
 
   if (
     matsCollections.PlotParams.findOne({
-      name: 'minor-truth-color',
+      name: "minor-truth-color",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'minor-truth-color',
+      name: "minor-truth-color",
       type: matsTypes.InputTypes.color,
       optionsMap: {},
       options: [],
       controlButtonCovered: true,
-      controlButtonText: ' ',
-      controlButtonFA: 'fa-sm fa-solid fa-caret-down',
-      default: '#ff0000',
-      controlButtonVisibility: 'block',
+      controlButtonText: " ",
+      controlButtonFA: "fa-sm fa-solid fa-caret-down",
+      default: "#ff0000",
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 8,
       tooltip: `The color for the minor validation datasource symbol,
             you can use the eyedropper tool in the color editor to match colors to the major symbol`,
-      tooltipPlacement: 'top',
+      tooltipPlacement: "top",
     });
   }
 
   if (
     matsCollections.PlotParams.findOne({
-      name: 'major-truth-color',
+      name: "major-truth-color",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'major-truth-color',
+      name: "major-truth-color",
       type: matsTypes.InputTypes.color,
       optionsMap: {},
       options: [],
       controlButtonCovered: true,
-      controlButtonText: ' ',
-      controlButtonFA: 'fa-xl fa-solid fa-caret-down',
-      default: '#ff0000',
-      controlButtonVisibility: 'block',
+      controlButtonText: " ",
+      controlButtonFA: "fa-xl fa-solid fa-caret-down",
+      default: "#ff0000",
+      controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 8,
       tooltip:
-        'The color for the major validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol',
-      tooltipPlacement: 'top',
+        "The color for the major validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol",
+      tooltipPlacement: "top",
     });
   }
 
   if (
     matsCollections.PlotParams.findOne({
-      name: 'minor-source-color',
+      name: "minor-source-color",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'minor-source-color',
+      name: "minor-source-color",
       type: matsTypes.InputTypes.color,
       optionsMap: {},
       options: [],
       controlButtonCovered: true,
-      controlButtonText: ' ',
-      controlButtonFA: 'fa-sm fa-solid fa-caret-up',
-      default: '#00ff00',
-      controlButtonVisibility: 'block',
+      controlButtonText: " ",
+      controlButtonFA: "fa-sm fa-solid fa-caret-up",
+      default: "#00ff00",
+      controlButtonVisibility: "block",
       displayOrder: 4,
       displayPriority: 1,
       displayGroup: 8,
       tooltip:
-        'The color for the minor datasource symbol, you can use the eyedropper tool in the color editor to match colors to the major symbol',
-      tooltipPlacement: 'top',
+        "The color for the minor datasource symbol, you can use the eyedropper tool in the color editor to match colors to the major symbol",
+      tooltipPlacement: "top",
     });
   }
 
   if (
     matsCollections.PlotParams.findOne({
-      name: 'major-source-color',
+      name: "major-source-color",
     }) == undefined
   ) {
     matsCollections.PlotParams.insert({
-      name: 'major-source-color',
+      name: "major-source-color",
       type: matsTypes.InputTypes.color,
       optionsMap: {},
       options: [],
       controlButtonCovered: true,
-      controlButtonText: ' ',
-      controlButtonFA: 'fa-xl fa-solid fa-caret-up',
-      default: '#00ff00',
-      controlButtonVisibility: 'block',
+      controlButtonText: " ",
+      controlButtonFA: "fa-xl fa-solid fa-caret-up",
+      default: "#00ff00",
+      controlButtonVisibility: "block",
       displayOrder: 5,
       displayPriority: 1,
       displayGroup: 8,
       tooltip:
-        'The color for the major datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol',
-      tooltipPlacement: 'top',
+        "The color for the major datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol",
+      tooltipPlacement: "top",
     });
   }
 };
@@ -654,13 +654,13 @@ const doCurveParams = function () {
       currentURL = appsToScore[aidx][currentApp];
 
       // clean up URL if users left a trailing slash or didn't include https://
-      if (currentURL[currentURL.length - 1] === '/') currentURL.slice(0, -1);
-      if (!currentURL.includes('https://')) currentURL = `https://${currentURL}`;
+      if (currentURL[currentURL.length - 1] === "/") currentURL.slice(0, -1);
+      if (!currentURL.includes("https://")) currentURL = `https://${currentURL}`;
 
       // get database-defined apps in this MATS app
       queryURL = `${currentURL}/${currentApp}/getApps`;
       [applicationOptions, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'application',
+        "application",
         queryURL,
         applicationOptions,
         expectedApps,
@@ -672,7 +672,7 @@ const doCurveParams = function () {
       queryURL = `${currentURL}/${currentApp}/getAppSumsDBs`;
       [applicationOptionsMap, expectedApps, hideOtherFor] =
         matsDataUtils.callMetadataAPI(
-          'application-values',
+          "application-values",
           queryURL,
           applicationOptionsMap,
           expectedApps,
@@ -683,7 +683,7 @@ const doCurveParams = function () {
       // get models in this MATS app
       queryURL = `${currentURL}/${currentApp}/getModels`;
       [modelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'data-source',
+        "data-source",
         queryURL,
         modelOptionsMap,
         expectedApps,
@@ -694,132 +694,132 @@ const doCurveParams = function () {
       // get regions in this MATS app
       queryURL = `${currentURL}/${currentApp}/getRegions`;
       [regionOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'region',
+        "region",
         queryURL,
         regionOptionsMap,
         expectedApps,
-        { NULL: ['NULL'] },
+        { NULL: ["NULL"] },
         hideOtherFor
       );
 
       // get region values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getRegionsValuesMap`;
       [regionValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'region-values',
+        "region-values",
         queryURL,
         regionValuesMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get statistics in this MATS app
       queryURL = `${currentURL}/${currentApp}/getStatistics`;
       [statisticOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'statistic',
+        "statistic",
         queryURL,
         statisticOptionsMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get statistic values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getStatisticsValuesMap`;
       [statisticValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'statistic-values',
+        "statistic-values",
         queryURL,
         statisticValuesMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get variables in this MATS app
       queryURL = `${currentURL}/${currentApp}/getVariables`;
       [variableOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'variable',
+        "variable",
         queryURL,
         variableOptionsMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get variable values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getVariablesValuesMap`;
       [variableValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'variable-values',
+        "variable-values",
         queryURL,
         variableValuesMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get thresholds in this MATS app
       queryURL = `${currentURL}/${currentApp}/getThresholds`;
       [thresholdOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'threshold',
+        "threshold",
         queryURL,
         thresholdOptionsMap,
         expectedApps,
-        { NULL: ['NULL'] },
+        { NULL: ["NULL"] },
         hideOtherFor
       );
 
       // get threshold values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getThresholdsValuesMap`;
       [thresholdValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'threshold-values',
+        "threshold-values",
         queryURL,
         thresholdValuesMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get scales in this MATS app
       queryURL = `${currentURL}/${currentApp}/getScales`;
       [scaleOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'scale',
+        "scale",
         queryURL,
         scaleOptionsMap,
         expectedApps,
-        { NULL: ['NULL'] },
+        { NULL: ["NULL"] },
         hideOtherFor
       );
 
       // get scale values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getScalesValuesMap`;
       [scaleValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'scale-values',
+        "scale-values",
         queryURL,
         scaleValuesMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get truths in this MATS app
       queryURL = `${currentURL}/${currentApp}/getTruths`;
       [truthOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'truth',
+        "truth",
         queryURL,
         truthOptionsMap,
         expectedApps,
-        { NULL: ['NULL'] },
+        { NULL: ["NULL"] },
         hideOtherFor
       );
 
       // get truth values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getTruthsValuesMap`;
       [truthValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'truth-values',
+        "truth-values",
         queryURL,
         truthValuesMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
@@ -827,11 +827,11 @@ const doCurveParams = function () {
       queryURL = `${currentURL}/${currentApp}/getFcstLengths`;
       [forecastLengthOptionsMap, expectedApps, hideOtherFor] =
         matsDataUtils.callMetadataAPI(
-          'forecast-length',
+          "forecast-length",
           queryURL,
           forecastLengthOptionsMap,
           expectedApps,
-          { NULL: ['NULL'] },
+          { NULL: ["NULL"] },
           hideOtherFor
         );
 
@@ -839,11 +839,11 @@ const doCurveParams = function () {
       queryURL = `${currentURL}/${currentApp}/getFcstTypes`;
       [forecastTypeOptionsMap, expectedApps, hideOtherFor] =
         matsDataUtils.callMetadataAPI(
-          'forecast-type',
+          "forecast-type",
           queryURL,
           forecastTypeOptionsMap,
           expectedApps,
-          { NULL: ['NULL'] },
+          { NULL: ["NULL"] },
           hideOtherFor
         );
 
@@ -851,40 +851,40 @@ const doCurveParams = function () {
       queryURL = `${currentURL}/${currentApp}/getFcstTypesValuesMap`;
       [forecastTypeValuesMap, expectedApps, hideOtherFor] =
         matsDataUtils.callMetadataAPI(
-          'forecast-type-values',
+          "forecast-type-values",
           queryURL,
           forecastTypeValuesMap,
           expectedApps,
-          ['NULL'],
+          ["NULL"],
           hideOtherFor
         );
 
       // get valid times in this MATS app
       queryURL = `${currentURL}/${currentApp}/getValidTimes`;
       [validTimeOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'valid-time',
+        "valid-time",
         queryURL,
         validTimeOptionsMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get levels in this MATS app
       queryURL = `${currentURL}/${currentApp}/getLevels`;
       [levelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'level',
+        "level",
         queryURL,
         levelOptionsMap,
         expectedApps,
-        ['NULL'],
+        ["NULL"],
         hideOtherFor
       );
 
       // get dates in this MATS app
       queryURL = `${currentURL}/${currentApp}/getDates`;
       [dateOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        'dates',
+        "dates",
         queryURL,
         dateOptionsMap,
         expectedApps,
@@ -896,63 +896,63 @@ const doCurveParams = function () {
     console.log(err.message);
   }
 
-  if (matsCollections.label.findOne({ name: 'label' }) == undefined) {
+  if (matsCollections.label.findOne({ name: "label" }) == undefined) {
     matsCollections.label.insert({
-      name: 'label',
+      name: "label",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
       options: [],
       controlButtonCovered: true,
-      default: '',
+      default: "",
       unique: true,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: 'label.html',
+      help: "label.html",
       tooltip:
-        'The label for this scorecard row, this will be used to identify this row within the scorecard.',
-      tooltipPlacement: 'right',
+        "The label for this scorecard row, this will be used to identify this row within the scorecard.",
+      tooltipPlacement: "right",
     });
   }
 
-  if (matsCollections.application.findOne({ name: 'application' }) == undefined) {
+  if (matsCollections.application.findOne({ name: "application" }) == undefined) {
     matsCollections.application.insert({
-      name: 'application',
+      name: "application",
       type: matsTypes.InputTypes.select,
       optionsMap: applicationOptionsMap,
       options: applicationOptions,
       hideOtherFor,
       dates: dateOptionsMap,
       dependentNames: [
-        'data-source',
-        'validation-data-source',
-        'statistic',
-        'variable',
-        'threshold',
-        'scale',
-        'truth',
-        'valid-time',
-        'level',
+        "data-source",
+        "validation-data-source",
+        "statistic",
+        "variable",
+        "threshold",
+        "scale",
+        "truth",
+        "valid-time",
+        "level",
       ],
       controlButtonCovered: true,
       default: applicationOptions[0],
       unique: false,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 1,
       tooltip:
-        'The application for this scorecard row. Parameters will adjust to accomodate the application that you choose.',
-      tooltipPlacement: 'right',
+        "The application for this scorecard row. Parameters will adjust to accomodate the application that you choose.",
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.application.findOne({ name: 'application' });
+    var currentParam = matsCollections.application.findOne({ name: "application" });
     if (!matsDataUtils.areObjectsEqual(currentParam.dates, dateOptionsMap)) {
       // have to reload application data
       matsCollections.application.update(
-        { name: 'application' },
+        { name: "application" },
         {
           $set: {
             dates: dateOptionsMap,
@@ -962,40 +962,40 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections['data-source'].findOne({ name: 'data-source' }) == undefined) {
-    matsCollections['data-source'].insert({
-      name: 'data-source',
+  if (matsCollections["data-source"].findOne({ name: "data-source" }) == undefined) {
+    matsCollections["data-source"].insert({
+      name: "data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
       options: Object.keys(modelOptionsMap[applicationOptions[0]]),
-      superiorNames: ['application'],
+      superiorNames: ["application"],
       dependentNames: [
-        'region',
-        'threshold',
-        'scale',
-        'truth',
-        'forecast-length',
-        'forecast-type',
-        'dates',
+        "region",
+        "threshold",
+        "scale",
+        "truth",
+        "forecast-length",
+        "forecast-type",
+        "dates",
       ],
       controlButtonCovered: true,
       default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
       unique: false,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 2,
       tooltip:
         "Datasource is the 'experiment' input for this scorecard row. calculations will be compared against the validation datasource.",
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['data-source'].findOne({ name: 'data-source' });
+    var currentParam = matsCollections["data-source"].findOne({ name: "data-source" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
-      matsCollections['data-source'].update(
-        { name: 'data-source' },
+      matsCollections["data-source"].update(
+        { name: "data-source" },
         {
           $set: {
             optionsMap: modelOptionsMap,
@@ -1008,36 +1008,36 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections['validation-data-source'].findOne({
-      name: 'validation-data-source',
+    matsCollections["validation-data-source"].findOne({
+      name: "validation-data-source",
     }) == undefined
   ) {
-    matsCollections['validation-data-source'].insert({
-      name: 'validation-data-source',
+    matsCollections["validation-data-source"].insert({
+      name: "validation-data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
       options: Object.keys(modelOptionsMap[applicationOptions[0]]),
-      superiorNames: ['application'],
+      superiorNames: ["application"],
       controlButtonCovered: true,
       default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
       unique: false,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 2,
       tooltip:
         "Validation Datasource is the data source for values that will be compared against the 'experiment' datasource.",
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['validation-data-source'].findOne({
-      name: 'validation-data-source',
+    var currentParam = matsCollections["validation-data-source"].findOne({
+      name: "validation-data-source",
     });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
-      matsCollections['validation-data-source'].update(
-        { name: 'validation-data-source' },
+      matsCollections["validation-data-source"].update(
+        { name: "validation-data-source" },
         {
           $set: {
             optionsMap: modelOptionsMap,
@@ -1049,9 +1049,9 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.region.findOne({ name: 'region' }) == undefined) {
+  if (matsCollections.region.findOne({ name: "region" }) == undefined) {
     matsCollections.region.insert({
-      name: 'region',
+      name: "region",
       type: matsTypes.InputTypes.select,
       optionsMap: regionOptionsMap,
       options:
@@ -1059,29 +1059,29 @@ const doCurveParams = function () {
           Object.keys(regionOptionsMap[applicationOptions[0]])[0]
         ],
       valuesMap: regionValuesMap,
-      superiorNames: ['application', 'data-source'],
+      superiorNames: ["application", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         regionOptionsMap[applicationOptions[0]][
           Object.keys(regionOptionsMap[applicationOptions[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       multiple: true,
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 3,
       tooltip:
-        'This defines the meteorological predefined domain over which datasource and validation datasource statistical values will be calculated.',
-      tooltipPlacement: 'right',
+        "This defines the meteorological predefined domain over which datasource and validation datasource statistical values will be calculated.",
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.region.findOne({ name: 'region' });
+    var currentParam = matsCollections.region.findOne({ name: "region" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionOptionsMap)) {
       // have to reload region data
       matsCollections.region.update(
-        { name: 'region' },
+        { name: "region" },
         {
           $set: {
             optionsMap: regionOptionsMap,
@@ -1100,18 +1100,18 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.statistic.findOne({ name: 'statistic' }) == undefined) {
+  if (matsCollections.statistic.findOne({ name: "statistic" }) == undefined) {
     matsCollections.statistic.insert({
-      name: 'statistic',
+      name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statisticOptionsMap,
       options: statisticOptionsMap[Object.keys(statisticOptionsMap)[0]],
       valuesMap: statisticValuesMap,
-      superiorNames: ['application'],
+      superiorNames: ["application"],
       controlButtonCovered: true,
       unique: false,
       default: statisticOptionsMap[Object.keys(statisticOptionsMap)[0]][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       multiple: true,
       displayOrder: 2,
       displayPriority: 1,
@@ -1119,15 +1119,15 @@ const doCurveParams = function () {
       tooltip: `The statistical method used for calculations in a given subrow
                 of the scorecard row. Each subrow will be calculated for a combination of
                 statistic and variable over a predefined region.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.statistic.findOne({ name: 'statistic' });
+    var currentParam = matsCollections.statistic.findOne({ name: "statistic" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, statisticOptionsMap)) {
       // have to reload statistic data
       matsCollections.statistic.update(
-        { name: 'statistic' },
+        { name: "statistic" },
         {
           $set: {
             optionsMap: statisticOptionsMap,
@@ -1139,18 +1139,18 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.variable.findOne({ name: 'variable' }) == undefined) {
+  if (matsCollections.variable.findOne({ name: "variable" }) == undefined) {
     matsCollections.variable.insert({
-      name: 'variable',
+      name: "variable",
       type: matsTypes.InputTypes.select,
       optionsMap: variableOptionsMap,
       options: variableOptionsMap[Object.keys(variableOptionsMap)[0]],
       valuesMap: variableValuesMap,
-      superiorNames: ['application'],
+      superiorNames: ["application"],
       controlButtonCovered: true,
       unique: false,
       default: variableOptionsMap[Object.keys(variableOptionsMap)[0]][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       multiple: true,
       displayOrder: 3,
       displayPriority: 1,
@@ -1158,15 +1158,15 @@ const doCurveParams = function () {
       tooltip: `The variable used for calculations in a given subrow
                 of the scorecard row. Each subrow will be calculated for a combination of
                 statistic and variable over a predefined region.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.variable.findOne({ name: 'variable' });
+    var currentParam = matsCollections.variable.findOne({ name: "variable" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, variableOptionsMap)) {
       // have to reload variable data
       matsCollections.variable.update(
-        { name: 'variable' },
+        { name: "variable" },
         {
           $set: {
             optionsMap: variableOptionsMap,
@@ -1181,11 +1181,11 @@ const doCurveParams = function () {
 
   if (
     matsCollections.threshold.findOne({
-      name: 'threshold',
+      name: "threshold",
     }) == undefined
   ) {
     matsCollections.threshold.insert({
-      name: 'threshold',
+      name: "threshold",
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdOptionsMap,
       options:
@@ -1193,27 +1193,27 @@ const doCurveParams = function () {
           Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]
         ],
       valuesMap: thresholdValuesMap,
-      superiorNames: ['application', 'data-source'],
+      superiorNames: ["application", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         thresholdOptionsMap[applicationOptions[0]][
           Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 4,
       tooltip: `The threshold for which contingency variables have been bin'd.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.threshold.findOne({ name: 'threshold' });
+    var currentParam = matsCollections.threshold.findOne({ name: "threshold" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdOptionsMap)) {
       // have to reload threshold data
       matsCollections.threshold.update(
-        { name: 'threshold' },
+        { name: "threshold" },
         {
           $set: {
             optionsMap: thresholdOptionsMap,
@@ -1234,11 +1234,11 @@ const doCurveParams = function () {
 
   if (
     matsCollections.scale.findOne({
-      name: 'scale',
+      name: "scale",
     }) == undefined
   ) {
     matsCollections.scale.insert({
-      name: 'scale',
+      name: "scale",
       type: matsTypes.InputTypes.select,
       optionsMap: scaleOptionsMap,
       options:
@@ -1246,27 +1246,27 @@ const doCurveParams = function () {
           Object.keys(scaleOptionsMap[applicationOptions[0]])[0]
         ],
       valuesMap: scaleValuesMap,
-      superiorNames: ['application', 'data-source'],
+      superiorNames: ["application", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         scaleOptionsMap[applicationOptions[0]][
           Object.keys(scaleOptionsMap[applicationOptions[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 4,
       tooltip: `The grid resolution used for calculations.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.scale.findOne({ name: 'scale' });
+    var currentParam = matsCollections.scale.findOne({ name: "scale" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleOptionsMap)) {
       // have to reload scale data
       matsCollections.scale.update(
-        { name: 'scale' },
+        { name: "scale" },
         {
           $set: {
             optionsMap: scaleOptionsMap,
@@ -1287,11 +1287,11 @@ const doCurveParams = function () {
 
   if (
     matsCollections.truth.findOne({
-      name: 'truth',
+      name: "truth",
     }) == undefined
   ) {
     matsCollections.truth.insert({
-      name: 'truth',
+      name: "truth",
       type: matsTypes.InputTypes.select,
       optionsMap: truthOptionsMap,
       options:
@@ -1299,27 +1299,27 @@ const doCurveParams = function () {
           Object.keys(truthOptionsMap[applicationOptions[0]])[0]
         ],
       valuesMap: truthValuesMap,
-      superiorNames: ['application', 'data-source'],
+      superiorNames: ["application", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         truthOptionsMap[applicationOptions[0]][
           Object.keys(truthOptionsMap[applicationOptions[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 4,
       tooltip: `The source that was used to compare datasource values.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.truth.findOne({ name: 'truth' });
+    var currentParam = matsCollections.truth.findOne({ name: "truth" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthOptionsMap)) {
       // have to reload truth data
       matsCollections.truth.update(
-        { name: 'truth' },
+        { name: "truth" },
         {
           $set: {
             optionsMap: truthOptionsMap,
@@ -1339,25 +1339,25 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections['forecast-length'].findOne({ name: 'forecast-length' }) == undefined
+    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) == undefined
   ) {
-    matsCollections['forecast-length'].insert({
-      name: 'forecast-length',
+    matsCollections["forecast-length"].insert({
+      name: "forecast-length",
       type: matsTypes.InputTypes.select,
       optionsMap: forecastLengthOptionsMap,
       options:
         forecastLengthOptionsMap[applicationOptions[0]][
           Object.keys(forecastLengthOptionsMap[applicationOptions[0]])[0]
         ],
-      superiorNames: ['application', 'data-source'],
+      superiorNames: ["application", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         forecastLengthOptionsMap[applicationOptions[0]][
           Object.keys(forecastLengthOptionsMap[applicationOptions[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
-      controlButtonText: 'forecast lead time (h)',
+      controlButtonVisibility: "block",
+      controlButtonText: "forecast lead time (h)",
       multiple: true,
       displayOrder: 1,
       displayPriority: 1,
@@ -1366,19 +1366,19 @@ const doCurveParams = function () {
                 Each scorecard row will include the union of the forecast lengths for all the rows. If a given row
                 does not have data for a specific forecast length, that forecast length will be represented with a nuetral
                 color that indicates 'unavailable' data.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['forecast-length'].findOne({
-      name: 'forecast-length',
+    var currentParam = matsCollections["forecast-length"].findOne({
+      name: "forecast-length",
     });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)
     ) {
       // have to reload forecast length data
-      matsCollections['forecast-length'].update(
-        { name: 'forecast-length' },
+      matsCollections["forecast-length"].update(
+        { name: "forecast-length" },
         {
           $set: {
             optionsMap: forecastLengthOptionsMap,
@@ -1397,12 +1397,12 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections['forecast-type'].findOne({
-      name: 'forecast-type',
+    matsCollections["forecast-type"].findOne({
+      name: "forecast-type",
     }) == undefined
   ) {
-    matsCollections['forecast-type'].insert({
-      name: 'forecast-type',
+    matsCollections["forecast-type"].insert({
+      name: "forecast-type",
       type: matsTypes.InputTypes.select,
       optionsMap: forecastTypeOptionsMap,
       options:
@@ -1410,31 +1410,31 @@ const doCurveParams = function () {
           Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]
         ],
       valuesMap: forecastTypeValuesMap,
-      superiorNames: ['application', 'data-source'],
+      superiorNames: ["application", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         forecastTypeOptionsMap[applicationOptions[0]][
           Object.keys(forecastTypeOptionsMap[applicationOptions[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 5,
       tooltip: ``,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['forecast-type'].findOne({
-      name: 'forecast-type',
+    var currentParam = matsCollections["forecast-type"].findOne({
+      name: "forecast-type",
     });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastTypeOptionsMap)
     ) {
       // have to reload forecast type data
-      matsCollections['forecast-type'].update(
-        { name: 'forecast-type' },
+      matsCollections["forecast-type"].update(
+        { name: "forecast-type" },
         {
           $set: {
             optionsMap: forecastTypeOptionsMap,
@@ -1454,34 +1454,34 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections['valid-time'].findOne({
-      name: 'valid-time',
+    matsCollections["valid-time"].findOne({
+      name: "valid-time",
     }) == undefined
   ) {
-    matsCollections['valid-time'].insert({
-      name: 'valid-time',
+    matsCollections["valid-time"].insert({
+      name: "valid-time",
       type: matsTypes.InputTypes.select,
       optionsMap: validTimeOptionsMap,
       options: validTimeOptionsMap[Object.keys(validTimeOptionsMap)[0]],
-      superiorNames: ['application'],
+      superiorNames: ["application"],
       controlButtonCovered: true,
       unique: false,
       default: matsTypes.InputTypes.unused,
-      controlButtonVisibility: 'block',
-      controlButtonText: 'valid utc hour',
+      controlButtonVisibility: "block",
+      controlButtonText: "valid utc hour",
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 5,
       tooltip: `Filters the calculated results by the valid forecast lead time.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['valid-time'].findOne({ name: 'valid-time' });
+    var currentParam = matsCollections["valid-time"].findOne({ name: "valid-time" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, validTimeOptionsMap)) {
       // have to reload valid time data
-      matsCollections['valid-time'].update(
-        { name: 'valid-time' },
+      matsCollections["valid-time"].update(
+        { name: "valid-time" },
         {
           $set: {
             optionsMap: validTimeOptionsMap,
@@ -1495,33 +1495,33 @@ const doCurveParams = function () {
 
   if (
     matsCollections.level.findOne({
-      name: 'level',
+      name: "level",
     }) == undefined
   ) {
     matsCollections.level.insert({
-      name: 'level',
+      name: "level",
       type: matsTypes.InputTypes.select,
       optionsMap: levelOptionsMap,
       options: levelOptionsMap[Object.keys(levelOptionsMap)[0]],
-      superiorNames: ['application'],
+      superiorNames: ["application"],
       controlButtonCovered: true,
       unique: false,
       default: matsTypes.InputTypes.unused,
-      controlButtonVisibility: 'block',
-      controlButtonText: 'pressure level (hPa)',
+      controlButtonVisibility: "block",
+      controlButtonText: "pressure level (hPa)",
       displayOrder: 4,
       displayPriority: 1,
       displayGroup: 5,
       tooltip: `Filters the calculated row by pressure level.`,
-      tooltipPlacement: 'right',
+      tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.level.findOne({ name: 'level' });
+    var currentParam = matsCollections.level.findOne({ name: "level" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, levelOptionsMap)) {
       // have to reload level data
       matsCollections.level.update(
-        { name: 'level' },
+        { name: "level" },
         {
           $set: {
             optionsMap: levelOptionsMap,
@@ -1535,15 +1535,15 @@ const doCurveParams = function () {
 
   // determine date defaults for dates
   const defaultApp = matsCollections.application.findOne(
-    { name: 'application' },
+    { name: "application" },
     { default: 1 }
   ).default;
   dateOptionsMap = matsCollections.application.findOne(
-    { name: 'application' },
+    { name: "application" },
     { dates: 1 }
   ).dates;
-  const defaultDataSource = matsCollections['data-source'].findOne(
-    { name: 'data-source' },
+  const defaultDataSource = matsCollections["data-source"].findOne(
+    { name: "data-source" },
     { default: 1 }
   ).default;
   minDate = dateOptionsMap[defaultApp][defaultDataSource].minDate;
@@ -1553,9 +1553,9 @@ const doCurveParams = function () {
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
   const minusMonthMinDate = newDateRange.minDate;
   maxDate = newDateRange.maxDate;
-  dstr = `${moment.utc(minusMonthMinDate).format('MM/DD/YYYY HH:mm')} - ${moment
+  dstr = `${moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm")} - ${moment
     .utc(maxDate)
-    .format('MM/DD/YYYY HH:mm')}`;
+    .format("MM/DD/YYYY HH:mm")}`;
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -1578,36 +1578,36 @@ const doCurveTextPatterns = function () {
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.scorecard,
       textPattern: [
-        ['', 'label', ': '],
-        ['', 'application', ' in '],
-        ['', 'data-source', ' in '],
-        ['', 'validation-data-source', ' in '],
-        ['', 'region', ', '],
-        ['', 'statistic', ' at '],
-        ['', 'variable', ' '],
-        ['', 'threshold', ' '],
-        ['', 'scale', ' '],
-        ['', 'truth', ' '],
-        ['fcst_len: ', 'forecast-length', 'h, '],
-        ['fcst_type: ', 'forecast-type', ', '],
-        ['valid-time: ', 'valid-time', ', '],
-        ['', 'level', ' '],
+        ["", "label", ": "],
+        ["", "application", " in "],
+        ["", "data-source", " in "],
+        ["", "validation-data-source", " in "],
+        ["", "region", ", "],
+        ["", "statistic", " at "],
+        ["", "variable", " "],
+        ["", "threshold", " "],
+        ["", "scale", " "],
+        ["", "truth", " "],
+        ["fcst_len: ", "forecast-length", "h, "],
+        ["fcst_type: ", "forecast-type", ", "],
+        ["valid-time: ", "valid-time", ", "],
+        ["", "level", " "],
       ],
       displayParams: [
-        'label',
-        'application',
-        'data-source',
-        'validation-data-source',
-        'region',
-        'statistic',
-        'variable',
-        'threshold',
-        'scale',
-        'truth',
-        'forecast-length',
-        'forecast-type',
-        'valid-time',
-        'level',
+        "label",
+        "application",
+        "data-source",
+        "validation-data-source",
+        "region",
+        "statistic",
+        "variable",
+        "threshold",
+        "scale",
+        "truth",
+        "forecast-length",
+        "forecast-type",
+        "valid-time",
+        "level",
       ],
       groupSize: 6,
     });
@@ -1625,8 +1625,8 @@ const doPlotGraph = function () {
   if (matsCollections.PlotGraphFunctions.find().count() == 0) {
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.scorecard,
-      graphFunction: 'scorecardStatusPage',
-      dataFunction: 'processScorecard',
+      graphFunction: "scorecardStatusPage",
+      dataFunction: "processScorecard",
       checked: true,
     });
   }
@@ -1636,7 +1636,7 @@ Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
     console.log(
-      'main startup: corrupted Databases collection: dropping Databases collection'
+      "main startup: corrupted Databases collection: dropping Databases collection"
     );
     matsCollections.Databases.drop();
   }
@@ -1667,7 +1667,7 @@ Meteor.startup(function () {
   const cbConnections = matsCollections.Databases.find(
     {
       role: matsTypes.DatabaseRoles.COUCHBASE,
-      status: 'active',
+      status: "active",
     },
     {
       host: 1,
@@ -1682,7 +1682,7 @@ Meteor.startup(function () {
 
   // the pool names intended to be global
   cbConnections.forEach(function (cbConnection) {
-    if (cbConnection.collection === 'METAR') {
+    if (cbConnection.collection === "METAR") {
       // global cbPool
       cbPool = new matsCouchbaseUtils.CBUtilities(
         cbConnection.host,
@@ -1692,9 +1692,9 @@ Meteor.startup(function () {
         cbConnection.user,
         cbConnection.password
       );
-      allPools.push({ pool: 'cbPool', role: matsTypes.DatabaseRoles.COUCHBASE });
+      allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
     }
-    if (cbConnection.collection === 'SCORECARD') {
+    if (cbConnection.collection === "SCORECARD") {
       // global cbScorecardPool
       cbScorecardPool = new matsCouchbaseUtils.CBUtilities(
         cbConnection.host,
@@ -1705,14 +1705,14 @@ Meteor.startup(function () {
         cbConnection.password
       );
       allPools.push({
-        pool: 'cbScorecardPool',
+        pool: "cbScorecardPool",
         role: matsTypes.DatabaseRoles.COUCHBASE,
       });
     }
   });
   // create list of tables we need to monitor for update
-  const mdr = new matsTypes.MetaDataDBRecord('cbPool', 'mdata', [
-    'MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01',
+  const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
+    "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
   ]);
   try {
     matsMethods.resetApp({

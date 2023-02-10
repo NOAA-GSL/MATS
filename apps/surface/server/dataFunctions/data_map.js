@@ -9,15 +9,15 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataPlotOpsUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataMap = function (plotParams, plotFunction) {
   const appParams = {
     plotType: matsTypes.PlotTypes.map,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
     completeness: plotParams.completeness,
-    outliers: plotParams['outliers-lite'],
+    outliers: plotParams["outliers-lite"],
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
@@ -27,46 +27,46 @@ dataMap = function (plotParams, plotFunction) {
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   if (curves.length > 1) {
-    throw new Error('INFO:  There must only be one added curve.');
+    throw new Error("INFO:  There must only be one added curve.");
   }
   const dataset = [];
   const curve = curves[0];
   const { label } = curve;
-  const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-    .optionsMap[curve['data-source']][0];
+  const model = matsCollections["data-source"].findOne({ name: "data-source" })
+    .optionsMap[curve["data-source"]][0];
   // map plots are only for stations--no predefined regions
-  const regionType = 'Select stations';
+  const regionType = "Select stations";
   const variableStr = curve.variable;
   const variableOptionsMap = matsCollections.variable.findOne(
-    { name: 'variable' },
+    { name: "variable" },
     { optionsMap: 1 }
   ).optionsMap;
   const variable = variableOptionsMap[regionType][variableStr];
-  let validTimeClause = '';
-  const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+  let validTimeClause = "";
+  const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
   if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
     validTimeClause = `and floor((m0.time+1800)%(24*3600)/3600) IN(${validTimes})`; // adjust by 1800 seconds to center obs at the top of the hour
   }
-  const forecastLength = curve['forecast-length'];
-  let forecastLengthClause = '';
-  let sitesClause = '';
+  const forecastLength = curve["forecast-length"];
+  let forecastLengthClause = "";
+  let sitesClause = "";
   let modelTable;
   if (forecastLength === 1) {
     modelTable = `${model}qp1f`;
-    forecastLengthClause = '';
+    forecastLengthClause = "";
   } else {
     modelTable =
-      model.includes('ret_') || model.includes('Ret_') ? `${model}p` : `${model}qp`;
+      model.includes("ret_") || model.includes("Ret_") ? `${model}p` : `${model}qp`;
     forecastLengthClause = `and m0.fcst_len = ${forecastLength} `;
   }
   const obsTable =
-    model.includes('ret_') || model.includes('Ret_') ? 'obs_retro' : 'obs';
+    model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
   const queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
   const siteMap = matsCollections.StationMap.findOne(
-    { name: 'stations' },
+    { name: "stations" },
     { optionsMap: 1 }
   ).optionsMap;
   const sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -82,15 +82,15 @@ dataMap = function (plotParams, plotFunction) {
     sitesClause = ` and m0.sta_id in('${querySites.join("','")}')`;
   } else {
     throw new Error(
-      'INFO:  Please add sites in order to get a single/multi station plot.'
+      "INFO:  Please add sites in order to get a single/multi station plot."
     );
   }
   const dateClause = `and m0.time >= ${fromSecs} - 900 and m0.time <= ${toSecs} + 900`;
   const siteDateClause = `and o.time >= ${fromSecs} - 900 and o.time <= ${toSecs} + 900`;
-  const siteMatchClause = 'and m0.sta_id = o.sta_id and m0.time = o.time';
+  const siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
   const statisticSelect = curve.statistic;
   const statisticOptionsMap = matsCollections.statistic.findOne(
-    { name: 'statistic' },
+    { name: "statistic" },
     { optionsMap: 1 }
   ).optionsMap;
   const statisticClause =
@@ -98,37 +98,37 @@ dataMap = function (plotParams, plotFunction) {
     `group_concat(m0.time, ';', ${variable[0]}, ';', 1, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.time) as sub_data, count(${variable[0]}) as N0`;
   const statType = statisticOptionsMap[statisticSelect];
   const { statVarUnitMap } = matsCollections.variable.findOne(
-    { name: 'variable' },
+    { name: "variable" },
     { statVarUnitMap: 1 }
   );
   const varUnits = statVarUnitMap[statisticSelect][variableStr];
 
   let statement =
-    'select m0.sta_id as sta_id, ' +
-    'count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, ' +
-    'min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, ' +
-    'max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, ' +
-    '{{statisticClause}} ' +
-    '{{queryTableClause}} ' +
-    'where 1=1 ' +
-    '{{siteMatchClause}} ' +
-    '{{sitesClause}} ' +
-    '{{dateClause}} ' +
-    '{{siteDateClause}} ' +
-    '{{validTimeClause}} ' +
-    '{{forecastLengthClause}} ' +
-    'group by sta_id ' +
-    'order by sta_id' +
-    ';';
+    "select m0.sta_id as sta_id, " +
+    "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
+    "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
+    "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
+    "{{statisticClause}} " +
+    "{{queryTableClause}} " +
+    "where 1=1 " +
+    "{{siteMatchClause}} " +
+    "{{sitesClause}} " +
+    "{{dateClause}} " +
+    "{{siteDateClause}} " +
+    "{{validTimeClause}} " +
+    "{{forecastLengthClause}} " +
+    "group by sta_id " +
+    "order by sta_id" +
+    ";";
 
-  statement = statement.replace('{{statisticClause}}', statisticClause);
-  statement = statement.replace('{{queryTableClause}}', queryTableClause);
-  statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-  statement = statement.replace('{{sitesClause}}', sitesClause);
-  statement = statement.replace('{{validTimeClause}}', validTimeClause);
-  statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-  statement = statement.replace('{{dateClause}}', dateClause);
-  statement = statement.replace('{{siteDateClause}}', siteDateClause);
+  statement = statement.replace("{{statisticClause}}", statisticClause);
+  statement = statement.replace("{{queryTableClause}}", queryTableClause);
+  statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+  statement = statement.replace("{{sitesClause}}", sitesClause);
+  statement = statement.replace("{{validTimeClause}}", validTimeClause);
+  statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+  statement = statement.replace("{{dateClause}}", dateClause);
+  statement = statement.replace("{{siteDateClause}}", siteDateClause);
   dataRequests[label] = statement;
 
   let queryResult;
@@ -168,14 +168,14 @@ dataMap = function (plotParams, plotFunction) {
     e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
     throw new Error(e.message);
   }
-  if (queryResult.error !== undefined && queryResult.error !== '') {
+  if (queryResult.error !== undefined && queryResult.error !== "") {
     if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
       // this is NOT an error just a no data condition
       dataFoundForCurve = false;
     } else {
       // this is an error returned by the mysql database
       error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-      if (error.includes('Unknown column')) {
+      if (error.includes("Unknown column")) {
         throw new Error(
           `INFO:  The variable [${variableStr}] is not supported by the database for the model/sites [${model} and ${sitesList}].`
         );
@@ -254,7 +254,7 @@ dataMap = function (plotParams, plotFunction) {
 
   const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(false);
   const totalProcessingFinish = moment();
-  dataRequests['total retrieval and processing time for curve set'] = {
+  dataRequests["total retrieval and processing time for curve set"] = {
     begin: totalProcessingStart.format(),
     finish: totalProcessingFinish.format(),
     duration: `${moment

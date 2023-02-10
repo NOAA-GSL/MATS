@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataValidTime = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,7 +27,7 @@ dataValidTime = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -44,51 +44,51 @@ dataValidTime = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     var regionClause;
-    if (region === 'all_stat') {
-      regionClause = '';
-    } else if (region === 'all_surf') {
-      regionClause = 'and m0.id in(1,2,3,4,5,6,7) ';
-    } else if (region === 'all_sol') {
-      regionClause = 'and m0.id in(8,9,10,11,12,13,14) ';
+    if (region === "all_stat") {
+      regionClause = "";
+    } else if (region === "all_surf") {
+      regionClause = "and m0.id in(1,2,3,4,5,6,7) ";
+    } else if (region === "all_sol") {
+      regionClause = "and m0.id in(8,9,10,11,12,13,14) ";
     } else {
       regionClause = `and m0.id in(${region}) `;
     }
     var scaleStr = curve.scale;
     const grid_scale = Object.keys(
-      matsCollections.scale.findOne({ name: 'scale' }).valuesMap
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.scale.findOne({ name: 'scale' }).valuesMap[key] === scaleStr
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
     );
     const scaleClause = `and m0.scale = ${grid_scale}`;
     const queryTableClause = `from surfrad as o, ${model} as m0`;
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
-    const forecastLength = Number(curve['forecast-length']) * 60;
+    const forecastLength = Number(curve["forecast-length"]) * 60;
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     let dateClause = `and o.secs >= ${fromSecs} and o.secs <= ${toSecs}`;
     dateClause = `${dateClause} and m0.secs >= ${fromSecs} and m0.secs <= ${toSecs}`;
-    const matchClause = 'and m0.id = o.id and m0.secs = o.secs';
+    const matchClause = "and m0.id = o.id and m0.secs = o.secs";
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
@@ -96,7 +96,7 @@ dataValidTime = function (plotParams, plotFunction) {
       `group_concat(m0.secs, ';', ${variable[0]}, ';', 1, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.secs) as sub_data, count(${variable[0]}) as N0`;
     var statType = statisticOptionsMap[statisticSelect];
     const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { statVarUnitMap: 1 }
     );
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -112,35 +112,35 @@ dataValidTime = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select floor((m0.secs)%(24*3600)/900)/4 as hr_of_day, ' +
-        'count(distinct m0.secs) as N_times, ' +
-        'min(m0.secs) as min_secs, ' +
-        'max(m0.secs) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{matchClause}} ' +
-        '{{dateClause}} ' +
-        '{{forecastLengthClause}} ' +
-        '{{scaleClause}} ' +
-        '{{regionClause}} ' +
-        'group by hr_of_day ' +
-        'order by hr_of_day' +
-        ';';
+        "select floor((m0.secs)%(24*3600)/900)/4 as hr_of_day, " +
+        "count(distinct m0.secs) as N_times, " +
+        "min(m0.secs) as min_secs, " +
+        "max(m0.secs) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{matchClause}} " +
+        "{{dateClause}} " +
+        "{{forecastLengthClause}} " +
+        "{{scaleClause}} " +
+        "{{regionClause}} " +
+        "group by hr_of_day " +
+        "order by hr_of_day" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{scaleClause}}', scaleClause);
-      statement = statement.replace('{{regionClause}}', regionClause);
-      statement = statement.replace('{{matchClause}}', matchClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{scaleClause}}", scaleClause);
+      statement = statement.replace("{{regionClause}}", regionClause);
+      statement = statement.replace("{{matchClause}}", matchClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
       dataRequests[label] = statement;
 
       if (
-        model !== 'HRRR' &&
-        variableStr !== 'dswrf' &&
-        statisticSelect !== 'Obs average'
+        model !== "HRRR" &&
+        variableStr !== "dswrf" &&
+        statisticSelect !== "Obs average"
       ) {
         throw new Error(
           `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is only available for the HRRR data-source.`
@@ -174,7 +174,7 @@ dataValidTime = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
@@ -201,8 +201,8 @@ dataValidTime = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -244,7 +244,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

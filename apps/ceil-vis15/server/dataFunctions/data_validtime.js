@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataValidTime = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,7 +27,7 @@ dataValidTime = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -45,65 +45,65 @@ dataValidTime = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
     const { label } = curve;
     var { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: 'variable' })
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[variable][curve['data-source']][0];
-    let queryTableClause = '';
-    let truthClause = '';
-    if (variable === '15 Minute Visibility') {
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
+    let queryTableClause = "";
+    let truthClause = "";
+    if (variable === "15 Minute Visibility") {
       var truthStr = curve.truth;
       var truth = Object.keys(
-        matsCollections.truth.findOne({ name: 'truth' }).valuesMap[variable]
+        matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections.truth.findOne({ name: 'truth' }).valuesMap[variable][key] ===
+          matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable][key] ===
           truthStr
       );
     }
     var thresholdStr = curve.threshold;
     const threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
       (key) =>
-        matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable][
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
           key
         ] === thresholdStr
     );
-    let thresholdClause = '';
-    const forecastLength = Number(curve['forecast-length']);
+    let thresholdClause = "";
+    const forecastLength = Number(curve["forecast-length"]);
     const forecastHour = Math.floor(forecastLength);
     const forecastMinute = (forecastLength - forecastHour) * 60;
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength} and m0.fcst_min = ${forecastMinute}`;
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     var dateClause;
-    let siteDateClause = '';
-    let siteMatchClause = '';
-    let sitesClause = '';
+    let siteDateClause = "";
+    let siteMatchClause = "";
+    let sitesClause = "";
     const siteMap = matsCollections.StationMap.findOne(
-      { name: 'stations' },
+      { name: "stations" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     var statisticClause;
-    const regionType = curve['region-type'];
-    if (regionType === 'Predefined region') {
+    const regionType = curve["region-type"];
+    if (regionType === "Predefined region") {
       var regionStr = curve.region;
       const region = Object.keys(
-        matsCollections.region.findOne({ name: 'region' }).valuesMap
+        matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
         (key) =>
-          matsCollections.region.findOne({ name: 'region' }).valuesMap[key] ===
+          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
       queryTableClause = `from ${databaseRef.sumsDB}.${model}_${region} as m0`;
-      if (variable === '15 Minute Visibility') {
+      if (variable === "15 Minute Visibility") {
         truthClause = `and m0.truth = '${truth}'`;
       }
       thresholdClause = `and m0.trsh = ${threshold}`;
@@ -112,22 +112,22 @@ dataValidTime = function (plotParams, plotFunction) {
       dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
     } else {
       const obsTable =
-        model.includes('ret_') || model.includes('Ret_') ? 'obs_retro' : 'obs';
+        model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
       queryTableClause = `from ${databaseRef.modelDB}.${obsTable} as o, ${databaseRef.modelDB}.${model} as m0 `;
       statisticClause =
-        'sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, ' +
-        'sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, ' +
+        "sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, " +
+        "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, " +
         "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
         "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
-        'if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0';
+        "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0";
       statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
-      if (variable.includes('Visibility')) {
-        statisticClause = statisticClause.replace(/m0\.ceil/g, 'm0.vis100');
-        if (truth !== 'qc') {
+      if (variable.includes("Visibility")) {
+        statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
+        if (truth !== "qc") {
           statisticClause = statisticClause.replace(/o\.ceil/g, `o.vis_${truth}`);
         } else {
-          statisticClause = statisticClause.replace(/o\.ceil/g, 'o.vis_closest');
-          truthClause = 'and o.vis_std < 2.4';
+          statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis_closest");
+          truthClause = "and o.vis_std < 2.4";
         }
       }
       const sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -143,12 +143,12 @@ dataValidTime = function (plotParams, plotFunction) {
         sitesClause = ` and m0.madis_id in('${querySites.join("','")}')`;
       } else {
         throw new Error(
-          'INFO:  Please add sites in order to get a single/multi station plot.'
+          "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
       dateClause = `and m0.time >= ${fromSecs} - 300 and m0.time <= ${toSecs} + 300`;
       siteDateClause = `and o.time >= ${fromSecs} - 300 and o.time <= ${toSecs} + 300`;
-      siteMatchClause = 'and m0.madis_id = o.madis_id and m0.time = o.time ';
+      siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
     }
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -167,35 +167,35 @@ dataValidTime = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select floor((m0.time+450)%(24*3600)/900)/4 as hr_of_day, ' +
-        'count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, ' +
-        'min(ceil(900*floor((m0.time+450)/900))) as min_secs, ' +
-        'max(ceil(900*floor((m0.time+450)/900))) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{siteMatchClause}} ' +
-        '{{sitesClause}} ' +
-        '{{dateClause}} ' +
-        '{{siteDateClause}} ' +
-        '{{thresholdClause}} ' +
-        '{{forecastLengthClause}} ' +
-        '{{truthClause}} ' +
-        'group by hr_of_day ' +
-        'order by hr_of_day' +
-        ';';
+        "select floor((m0.time+450)%(24*3600)/900)/4 as hr_of_day, " +
+        "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +
+        "min(ceil(900*floor((m0.time+450)/900))) as min_secs, " +
+        "max(ceil(900*floor((m0.time+450)/900))) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{siteMatchClause}} " +
+        "{{sitesClause}} " +
+        "{{dateClause}} " +
+        "{{siteDateClause}} " +
+        "{{thresholdClause}} " +
+        "{{forecastLengthClause}} " +
+        "{{truthClause}} " +
+        "group by hr_of_day " +
+        "order by hr_of_day" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-      statement = statement.replace('{{sitesClause}}', sitesClause);
-      statement = statement.replace('{{thresholdClause}}', thresholdClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{truthClause}}', truthClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
-      statement = statement.replace('{{siteDateClause}}', siteDateClause);
-      if (variable.includes('Visibility')) {
-        statement = statement.replace(/o\.time/g, 'o.valid_time');
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+      statement = statement.replace("{{sitesClause}}", sitesClause);
+      statement = statement.replace("{{thresholdClause}}", thresholdClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{truthClause}}", truthClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
+      statement = statement.replace("{{siteDateClause}}", siteDateClause);
+      if (variable.includes("Visibility")) {
+        statement = statement.replace(/o\.time/g, "o.valid_time");
       }
       dataRequests[label] = statement;
 
@@ -226,7 +226,7 @@ dataValidTime = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
@@ -253,8 +253,8 @@ dataValidTime = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -296,7 +296,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

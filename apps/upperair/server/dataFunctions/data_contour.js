@@ -9,8 +9,8 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataContour = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -28,16 +28,16 @@ dataContour = function (plotParams, plotFunction) {
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
-  const xAxisParam = plotParams['x-axis-parameter'];
-  const yAxisParam = plotParams['y-axis-parameter'];
-  const xValClause = matsCollections.PlotParams.findOne({ name: 'x-axis-parameter' })
+  const xAxisParam = plotParams["x-axis-parameter"];
+  const yAxisParam = plotParams["y-axis-parameter"];
+  const xValClause = matsCollections.PlotParams.findOne({ name: "x-axis-parameter" })
     .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOne({ name: 'y-axis-parameter' })
+  const yValClause = matsCollections.PlotParams.findOne({ name: "y-axis-parameter" })
     .optionsMap[yAxisParam];
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   if (curves.length > 1) {
-    throw new Error('INFO:  There must only be one added curve.');
+    throw new Error("INFO:  There must only be one added curve.");
   }
   const dataset = [];
   const axisMap = Object.create(null);
@@ -46,93 +46,93 @@ dataContour = function (plotParams, plotFunction) {
   const curve = curves[0];
   const { label } = curve;
   const { database } = curve;
-  const databaseRef = matsCollections.database.findOne({ name: 'database' }).optionsMap[
+  const databaseRef = matsCollections.database.findOne({ name: "database" }).optionsMap[
     database
   ];
-  const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-    .optionsMap[database][curve['data-source']][0];
+  const model = matsCollections["data-source"].findOne({ name: "data-source" })
+    .optionsMap[database][curve["data-source"]][0];
   const regionStr = curve.region;
-  const regionDB = database.includes('RAOBs') ? 'ID' : 'shortName';
+  const regionDB = database.includes("RAOBs") ? "ID" : "shortName";
   const region = Object.keys(
-    matsCollections.region.findOne({ name: 'region' }).valuesMap[regionDB]
+    matsCollections.region.findOne({ name: "region" }).valuesMap[regionDB]
   ).find(
     (key) =>
-      matsCollections.region.findOne({ name: 'region' }).valuesMap[regionDB][key] ===
+      matsCollections.region.findOne({ name: "region" }).valuesMap[regionDB][key] ===
       regionStr
   );
   let queryTableClause = `from ${databaseRef.sumsDB}.${model}${region} as m0`;
-  if (database.includes('RAOBs')) {
+  if (database.includes("RAOBs")) {
     // Most of the RAOBs tables don't store a model sum or an obs sum for some reason.
     // So, we get the obs sum from HRRR_OPS, HRRR_HI, or GFS, because the obs are the same across all models.
     // Then we get the model sum by adding the obs sum to the bias sum (bias = model-obs).
-    if (['5', '14', '15', '16', '17', '18'].includes(region.toString())) {
+    if (["5", "14", "15", "16", "17", "18"].includes(region.toString())) {
       queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.HRRR_OPS_Areg${region} as m1`;
-    } else if (region.toString() === '19') {
+    } else if (region.toString() === "19") {
       queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.HRRR_HI_Areg${region} as m1`;
     } else {
       queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.GFS_Areg${region} as m1`;
     }
   }
   // contours are only for predefined regions--no station plots
-  const regionType = 'Predefined region';
-  let phaseClause = '';
-  if (database === 'AMDAR') {
+  const regionType = "Predefined region";
+  let phaseClause = "";
+  if (database === "AMDAR") {
     const phaseStr = curve.phase;
     const phaseOptionsMap = matsCollections.phase.findOne(
-      { name: 'phase' },
+      { name: "phase" },
       { optionsMap: 1 }
     ).optionsMap;
     phaseClause = phaseOptionsMap[phaseStr];
   }
   const variableStr = curve.variable;
   const variableOptionsMap = matsCollections.variable.findOne(
-    { name: 'variable' },
+    { name: "variable" },
     { optionsMap: 1 }
   ).optionsMap;
   const variable = variableOptionsMap[regionType][variableStr];
-  let validTimeClause = '';
-  let forecastLengthClause = '';
-  let dateString = '';
-  let dateClause = '';
-  let levelClause = '';
-  let siteMatchClause = '';
-  if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-    const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+  let validTimeClause = "";
+  let forecastLengthClause = "";
+  let dateString = "";
+  let dateClause = "";
+  let levelClause = "";
+  let siteMatchClause = "";
+  if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
       validTimeClause = `and m0.hour IN(${validTimes})`;
     }
   }
-  if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-    const forecastLength = curve['forecast-length'];
+  if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
+    const forecastLength = curve["forecast-length"];
     forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
   }
-  if (database.includes('RAOBs')) {
+  if (database.includes("RAOBs")) {
     // we're just getting the obs from table m1, so only need fcst_len = 0
-    forecastLengthClause += ' and m1.fcst_len = 0';
+    forecastLengthClause += " and m1.fcst_len = 0";
   }
-  forecastLengthClause += ' and m0.fcst_len >= 0';
+  forecastLengthClause += " and m0.fcst_len >= 0";
   if (
-    (xAxisParam === 'Init Date' || yAxisParam === 'Init Date') &&
-    xAxisParam !== 'Valid Date' &&
-    yAxisParam !== 'Valid Date'
+    (xAxisParam === "Init Date" || yAxisParam === "Init Date") &&
+    xAxisParam !== "Valid Date" &&
+    yAxisParam !== "Valid Date"
   ) {
-    dateString = 'unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600';
+    dateString = "unix_timestamp(m0.date)+3600*m0.hour-m0.fcst_len*3600";
   } else {
-    dateString = 'unix_timestamp(m0.date)+3600*m0.hour';
+    dateString = "unix_timestamp(m0.date)+3600*m0.hour";
   }
   dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
-  if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
+  if (xAxisParam !== "Pressure level" && yAxisParam !== "Pressure level") {
     const { top } = curve;
     const { bottom } = curve;
     levelClause = `and m0.mb10 >= ${top}/10 and m0.mb10 <= ${bottom}/10`;
   }
-  if (database.includes('RAOBs')) {
+  if (database.includes("RAOBs")) {
     siteMatchClause =
-      'and m0.date = m1.date and m0.hour = m1.hour and m0.mb10 = m1.mb10';
+      "and m0.date = m1.date and m0.hour = m1.hour and m0.mb10 = m1.mb10";
   }
   const statisticSelect = curve.statistic;
   const statisticOptionsMap = matsCollections.statistic.findOne(
-    { name: 'statistic' },
+    { name: "statistic" },
     { optionsMap: 1 }
   ).optionsMap;
   const statisticClause =
@@ -140,7 +140,7 @@ dataContour = function (plotParams, plotFunction) {
     `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', m0.mb10 * 10, ';', ${variable[0]}, ';', ${variable[1]}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, m0.mb10 * 10) as sub_data, count(${variable[0]}) as N0`;
   const statType = statisticOptionsMap[statisticSelect];
   const { statVarUnitMap } = matsCollections.variable.findOne(
-    { name: 'variable' },
+    { name: "variable" },
     { statVarUnitMap: 1 }
   );
   const varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -152,38 +152,38 @@ dataContour = function (plotParams, plotFunction) {
   // this is a database driven curve, not a difference curve
   // prepare the query from the above parameters
   let statement =
-    '{{xValClause}} ' +
-    '{{yValClause}} ' +
-    'count(distinct {{dateString}}) as N_times, ' +
-    'min({{dateString}}) as min_secs, ' +
-    'max({{dateString}}) as max_secs, ' +
-    '{{statisticClause}} ' +
-    '{{queryTableClause}} ' +
-    'where 1=1 ' +
-    '{{siteMatchClause}} ' +
-    '{{dateClause}} ' +
-    '{{validTimeClause}} ' +
-    '{{forecastLengthClause}} ' +
-    '{{levelClause}} ' +
-    '{{phaseClause}} ' +
-    'group by xVal,yVal ' +
-    'order by xVal,yVal' +
-    ';';
+    "{{xValClause}} " +
+    "{{yValClause}} " +
+    "count(distinct {{dateString}}) as N_times, " +
+    "min({{dateString}}) as min_secs, " +
+    "max({{dateString}}) as max_secs, " +
+    "{{statisticClause}} " +
+    "{{queryTableClause}} " +
+    "where 1=1 " +
+    "{{siteMatchClause}} " +
+    "{{dateClause}} " +
+    "{{validTimeClause}} " +
+    "{{forecastLengthClause}} " +
+    "{{levelClause}} " +
+    "{{phaseClause}} " +
+    "group by xVal,yVal " +
+    "order by xVal,yVal" +
+    ";";
 
-  statement = statement.replace('{{xValClause}}', xValClause);
-  statement = statement.replace('{{yValClause}}', yValClause);
-  statement = statement.replace('{{statisticClause}}', statisticClause);
-  statement = statement.replace('{{queryTableClause}}', queryTableClause);
-  statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-  statement = statement.replace('{{validTimeClause}}', validTimeClause);
-  statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-  statement = statement.replace('{{levelClause}}', levelClause);
-  statement = statement.replace('{{phaseClause}}', phaseClause);
-  statement = statement.replace('{{dateClause}}', dateClause);
-  statement = statement.split('{{dateString}}').join(dateString);
-  if (database === 'AMDAR') {
+  statement = statement.replace("{{xValClause}}", xValClause);
+  statement = statement.replace("{{yValClause}}", yValClause);
+  statement = statement.replace("{{statisticClause}}", statisticClause);
+  statement = statement.replace("{{queryTableClause}}", queryTableClause);
+  statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+  statement = statement.replace("{{validTimeClause}}", validTimeClause);
+  statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+  statement = statement.replace("{{levelClause}}", levelClause);
+  statement = statement.replace("{{phaseClause}}", phaseClause);
+  statement = statement.replace("{{dateClause}}", dateClause);
+  statement = statement.split("{{dateString}}").join(dateString);
+  if (database === "AMDAR") {
     // AMDAR tables have all partial sums so we can get them all from the main table
-    statement = statement.split('m1').join('m0');
+    statement = statement.split("m1").join("m0");
   }
   dataRequests[label] = statement;
 
@@ -214,16 +214,16 @@ dataContour = function (plotParams, plotFunction) {
     e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
     throw new Error(e.message);
   }
-  if (queryResult.error !== undefined && queryResult.error !== '') {
+  if (queryResult.error !== undefined && queryResult.error !== "") {
     if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
       // this is NOT an error just a no data condition
       dataFoundForCurve = false;
     } else {
       // this is an error returned by the mysql database
       error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-      if (error.includes('Unknown column')) {
+      if (error.includes("Unknown column")) {
         throw new Error(
-          `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is not supported by the database for the model/region [${curve['data-source']} and ${region}].`
+          `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is not supported by the database for the model/region [${curve["data-source"]} and ${region}].`
         );
       } else {
         throw new Error(error);
@@ -233,7 +233,7 @@ dataContour = function (plotParams, plotFunction) {
 
   if (!dataFoundForCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   const postQueryStartMoment = moment();

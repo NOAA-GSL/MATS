@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataDailyModelCycle = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -30,7 +30,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -48,51 +48,51 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
     const { label } = curve;
     var { variable } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[variable][curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
     const modelClause = `AND m0.model='${model}' `;
     var queryTableClause;
     var thresholdStr = curve.threshold;
     let threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
       (key) =>
-        matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable][
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
           key
         ] === thresholdStr
     );
-    threshold = threshold.replace(/_/g, '.');
-    if (curve['utc-cycle-start'].length !== 1) {
+    threshold = threshold.replace(/_/g, ".");
+    if (curve["utc-cycle-start"].length !== 1) {
       throw new Error(
-        'INFO:  Please select exactly one UTC Cycle Init Hour for this plot type.'
+        "INFO:  Please select exactly one UTC Cycle Init Hour for this plot type."
       );
     }
-    const utcCycleStart = Number(curve['utc-cycle-start'][0]);
+    const utcCycleStart = Number(curve["utc-cycle-start"][0]);
     utcCycleStarts[curveIndex] = utcCycleStart;
     const utcCycleStartClause = `and (m0.fcstValidEpoch - m0.fcstLen*3600)%(24*3600)/3600 IN[${utcCycleStart}]`;
-    const forecastLengthClause = 'and m0.fcstLen < 24';
+    const forecastLengthClause = "and m0.fcstLen < 24";
     var dateClause;
-    let siteDateClause = '';
-    let siteMatchClause = '';
-    let sitesClause = '';
+    let siteDateClause = "";
+    let siteMatchClause = "";
+    let sitesClause = "";
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     var statisticClause;
-    const regionType = curve['region-type'];
-    let regionClause = '';
+    const regionType = curve["region-type"];
+    let regionClause = "";
     var whereClause;
-    let siteWhereClause = '';
-    if (regionType === 'Predefined region') {
-      queryTableClause = 'from vxDBTARGET  m0';
+    let siteWhereClause = "";
+    if (regionType === "Predefined region") {
+      queryTableClause = "from vxDBTARGET  m0";
       var regionStr = curve.region;
       const region = Object.keys(
-        matsCollections.region.findOne({ name: 'region' }).valuesMap
+        matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
         (key) =>
-          matsCollections.region.findOne({ name: 'region' }).valuesMap[key] ===
+          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
       regionClause = `AND m0.region='${region}' `;
@@ -104,26 +104,26 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         `TO_STRING(m0.data.['${threshold}'].correct_negatives))) sub_data, count(m0.data.['${threshold}'].hits) N0 `;
       dateClause = `and m0.fcstValidEpoch >= ${fromSecs} and m0.fcstValidEpoch <= ${toSecs}`;
       whereClause =
-        'WHERE ' +
+        "WHERE " +
         "m0.type='DD' " +
         "AND m0.docType='CTC' " +
         "AND m0.subset='METAR' " +
         "AND m0.version='V01' ";
     } else {
       queryTableClause =
-        'from vxDBTARGET  AS m0 ' +
-        'JOIN mdata AS o ' +
-        'ON o.fcstValidEpoch = m0.fcstValidEpoch ' +
-        'UNNEST o.data AS odata ' +
-        'UNNEST m0.data AS m0data ';
+        "from vxDBTARGET  AS m0 " +
+        "JOIN mdata AS o " +
+        "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
+        "UNNEST o.data AS odata " +
+        "UNNEST m0.data AS m0data ";
       const sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         sitesClause = ` and m0data.name in ['${sitesList.join("','")}']`;
         sitesClause = `${sitesClause} and odata.name in ['${sitesList.join("','")}']`;
-        siteMatchClause = 'and m0data.name = odata.name ';
+        siteMatchClause = "and m0data.name = odata.name ";
       } else {
         throw new Error(
-          'INFO:  Please add sites in order to get a single/multi station plot.'
+          "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
       statisticClause =
@@ -172,38 +172,38 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'SELECT m0.fcstValidEpoch AS avtime, ' +
-        'COUNT(DISTINCT m0.fcstValidEpoch) N_times, ' +
-        'MIN(m0.fcstValidEpoch) min_secs, ' +
-        'MAX(m0.fcstValidEpoch) max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        '{{siteWhereClause}} ' +
-        '{{whereClause}} ' +
-        '{{modelClause}} ' +
-        '{{regionClause}} ' +
-        '{{forecastLengthClause}} ' +
-        '{{utcCycleStartClause}} ' +
-        '{{siteDateClause}} ' +
-        '{{dateClause}} ' +
-        '{{sitesClause}} ' +
-        '{{siteMatchClause}} ' +
-        'GROUP BY m0.fcstValidEpoch ' +
-        'ORDER BY avtime' +
-        ';';
+        "SELECT m0.fcstValidEpoch AS avtime, " +
+        "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+        "MIN(m0.fcstValidEpoch) min_secs, " +
+        "MAX(m0.fcstValidEpoch) max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "{{siteWhereClause}} " +
+        "{{whereClause}} " +
+        "{{modelClause}} " +
+        "{{regionClause}} " +
+        "{{forecastLengthClause}} " +
+        "{{utcCycleStartClause}} " +
+        "{{siteDateClause}} " +
+        "{{dateClause}} " +
+        "{{sitesClause}} " +
+        "{{siteMatchClause}} " +
+        "GROUP BY m0.fcstValidEpoch " +
+        "ORDER BY avtime" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-      statement = statement.replace('{{sitesClause}}', sitesClause);
-      statement = statement.replace('{{whereClause}}', whereClause);
-      statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
-      statement = statement.replace('{{modelClause}}', modelClause);
-      statement = statement.replace('{{regionClause}}', regionClause);
-      statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
-      statement = statement.replace('{{siteDateClause}}', siteDateClause);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+      statement = statement.replace("{{sitesClause}}", sitesClause);
+      statement = statement.replace("{{whereClause}}", whereClause);
+      statement = statement.replace("{{siteWhereClause}}", siteWhereClause);
+      statement = statement.replace("{{modelClause}}", modelClause);
+      statement = statement.replace("{{regionClause}}", regionClause);
+      statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
+      statement = statement.replace("{{siteDateClause}}", siteDateClause);
 
       statement = cbPool.trfmSQLForDbTarget(statement);
       dataRequests[label] = statement;
@@ -235,7 +235,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
@@ -262,8 +262,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -305,7 +305,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

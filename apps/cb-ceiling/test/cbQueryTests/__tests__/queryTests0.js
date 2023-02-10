@@ -1,12 +1,12 @@
-const fs = require('fs');
-var couchbase = require('couchbase');
+const fs = require("fs");
+const couchbase = require("couchbase");
 
-const configFile = './config/config.json';
-const settingsFile = '../../settings/settings.json';
+const configFile = "./config/config.json";
+const settingsFile = "../../settings/settings.json";
 
 // jest.setTimeout(20000);
 
-describe('CouchBase Query Tests', () => {
+describe("CouchBase Query Tests", () => {
   let host = null;
   let bucketName = null;
 
@@ -17,9 +17,9 @@ describe('CouchBase Query Tests', () => {
   let collection_METAR = null;
 
   beforeAll(async () => {
-    config = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+    config = JSON.parse(fs.readFileSync(configFile, "utf-8"));
     console.log(`${config.queries.length} queries loaded from config.`);
-    settings = JSON.parse(fs.readFileSync(settingsFile, 'utf-8'));
+    settings = JSON.parse(fs.readFileSync(settingsFile, "utf-8"));
 
     if (config.host) {
       host = config.host;
@@ -36,11 +36,11 @@ describe('CouchBase Query Tests', () => {
     cluster = await init(config, settings);
     bucket = cluster.bucket(bucketName);
     expect(bucket != undefined);
-    collection_METAR = bucket.scope('_default').collection('METAR');
+    collection_METAR = bucket.scope("_default").collection("METAR");
     expect(collection_METAR != undefined);
   });
 
-  test('Establish CouchBase connection', async () => {
+  test("Establish CouchBase connection", async () => {
     // console.log(process.cwd());
     // console.log(process.argv);
 
@@ -49,12 +49,12 @@ describe('CouchBase Query Tests', () => {
     expect(collection_METAR != undefined);
   });
 
-  test('Get METAR count', async () => {
+  test("Get METAR count", async () => {
     const res = await run_METAR_count(bucket);
     expect(res != undefined);
   });
 
-  test('Run all queries', async () => {
+  test("Run all queries", async () => {
     if (!cluster) {
       cluster = await init();
       expect(cluster != undefined);
@@ -62,7 +62,7 @@ describe('CouchBase Query Tests', () => {
       bucket = cluster.bucket(bucketName);
       expect(bucket != undefined);
 
-      collection_METAR = bucket.scope('_default').collection('METAR');
+      collection_METAR = bucket.scope("_default").collection("METAR");
       expect(collection_METAR != undefined);
     }
 
@@ -79,7 +79,7 @@ describe('CouchBase Query Tests', () => {
 });
 
 async function init(config, settings) {
-  console.log('init()');
+  console.log("init()");
 
   const startTime = new Date().valueOf();
 
@@ -102,11 +102,11 @@ async function init(config, settings) {
 async function run_query_file(bckt, query_file, maxExecutionTime_ms) {
   console.log(`run_query_file(${query_file})`);
 
-  const qstr = fs.readFileSync(query_file, 'utf-8');
+  const qstr = fs.readFileSync(query_file, "utf-8");
 
   const startTime = new Date().valueOf();
 
-  const queryResult = await bckt.scope('_default').query(qstr, {
+  const queryResult = await bckt.scope("_default").query(qstr, {
     parameters: [],
     timeout: maxExecutionTime_ms,
   });
@@ -125,14 +125,14 @@ async function run_query_file(bckt, query_file, maxExecutionTime_ms) {
 }
 
 async function run_METAR_count(bckt) {
-  console.log('run_METAR_count()');
+  console.log("run_METAR_count()");
 
   const startTime = new Date().valueOf();
 
-  const queryFile = './test_queries/METAR_count.sql';
-  const qstr = fs.readFileSync(queryFile, 'utf-8');
+  const queryFile = "./test_queries/METAR_count.sql";
+  const qstr = fs.readFileSync(queryFile, "utf-8");
 
-  const queryResult = await bckt.scope('_default').query(qstr, {
+  const queryResult = await bckt.scope("_default").query(qstr, {
     parameters: [],
   });
   queryResult.rows.forEach((row) => {

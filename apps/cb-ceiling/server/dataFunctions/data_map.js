@@ -9,8 +9,8 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataPlotOpsUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataMap = function (plotParams, plotFunction) {
   const appParams = {
@@ -28,54 +28,54 @@ dataMap = function (plotParams, plotFunction) {
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   if (curves.length > 1) {
-    throw new Error('INFO:  There must only be one added curve.');
+    throw new Error("INFO:  There must only be one added curve.");
   }
   const dataset = [];
   const curve = curves[0];
   const { label } = curve;
   const { variable } = curve;
-  const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-    .optionsMap[variable][curve['data-source']][0];
+  const model = matsCollections["data-source"].findOne({ name: "data-source" })
+    .optionsMap[variable][curve["data-source"]][0];
   const modelClause = `AND m0.model='${model}' `;
   const queryTableClause =
-    'from vxDBTARGET  AS m0 ' +
-    'JOIN mdata AS o ' +
-    'ON o.fcstValidEpoch = m0.fcstValidEpoch ' +
-    'UNNEST o.data AS odata ' +
-    'UNNEST m0.data AS m0data ';
+    "from vxDBTARGET  AS m0 " +
+    "JOIN mdata AS o " +
+    "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
+    "UNNEST o.data AS odata " +
+    "UNNEST m0.data AS m0data ";
   const siteMap = matsCollections.StationMap.findOne(
-    { name: 'stations' },
+    { name: "stations" },
     { optionsMap: 1 }
   ).optionsMap;
   const thresholdStr = curve.threshold;
   let threshold = Object.keys(
-    matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+    matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
   ).find(
     (key) =>
-      matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable][
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
         key
       ] === thresholdStr
   );
-  threshold = threshold.replace(/_/g, '.');
-  let validTimeClause = '';
-  const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+  threshold = threshold.replace(/_/g, ".");
+  let validTimeClause = "";
+  const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
   if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
     validTimeClause = `and m0.fcstValidEpoch%(24*3600)/3600 IN[${validTimes}]`;
   }
-  const forecastLength = curve['forecast-length'];
+  const forecastLength = curve["forecast-length"];
   const forecastLengthClause = `AND m0.fcstLen = ${forecastLength}`;
   const { statistic } = curve;
   const sitesList = curve.sites === undefined ? [] : curve.sites;
   if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
     var sitesClause = ` and m0data.name in ['${sitesList.join("','")}']`;
     sitesClause = `${sitesClause} and odata.name in ['${sitesList.join("','")}']`;
-    var siteMatchClause = 'and m0data.name = odata.name ';
+    var siteMatchClause = "and m0data.name = odata.name ";
   } else {
     throw new Error(
-      'INFO:  Please add sites in order to get a single/multi station plot.'
+      "INFO:  Please add sites in order to get a single/multi station plot."
     );
   }
   const statisticClause =
@@ -108,36 +108,36 @@ dataMap = function (plotParams, plotFunction) {
     "AND o.version='V01' ";
 
   let statement =
-    'SELECT m0data.name as sta_id, ' +
-    'COUNT(DISTINCT m0.fcstValidEpoch) N_times, ' +
-    'MIN(m0.fcstValidEpoch) min_secs, ' +
-    'MAX(m0.fcstValidEpoch) max_secs, ' +
-    '{{statisticClause}} ' +
-    '{{queryTableClause}} ' +
-    '{{siteWhereClause}} ' +
-    '{{whereClause}} ' +
-    '{{modelClause}} ' +
-    '{{forecastLengthClause}} ' +
-    '{{validTimeClause}} ' +
-    '{{siteDateClause}} ' +
-    '{{dateClause}} ' +
-    '{{sitesClause}} ' +
-    '{{siteMatchClause}} ' +
-    'GROUP BY m0data.name ' +
-    'ORDER BY sta_id' +
-    ';';
+    "SELECT m0data.name as sta_id, " +
+    "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+    "MIN(m0.fcstValidEpoch) min_secs, " +
+    "MAX(m0.fcstValidEpoch) max_secs, " +
+    "{{statisticClause}} " +
+    "{{queryTableClause}} " +
+    "{{siteWhereClause}} " +
+    "{{whereClause}} " +
+    "{{modelClause}} " +
+    "{{forecastLengthClause}} " +
+    "{{validTimeClause}} " +
+    "{{siteDateClause}} " +
+    "{{dateClause}} " +
+    "{{sitesClause}} " +
+    "{{siteMatchClause}} " +
+    "GROUP BY m0data.name " +
+    "ORDER BY sta_id" +
+    ";";
 
-  statement = statement.replace('{{statisticClause}}', statisticClause);
-  statement = statement.replace('{{queryTableClause}}', queryTableClause);
-  statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-  statement = statement.replace('{{sitesClause}}', sitesClause);
-  statement = statement.replace('{{whereClause}}', whereClause);
-  statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
-  statement = statement.replace('{{modelClause}}', modelClause);
-  statement = statement.replace('{{validTimeClause}}', validTimeClause);
-  statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-  statement = statement.replace('{{dateClause}}', dateClause);
-  statement = statement.replace('{{siteDateClause}}', siteDateClause);
+  statement = statement.replace("{{statisticClause}}", statisticClause);
+  statement = statement.replace("{{queryTableClause}}", queryTableClause);
+  statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+  statement = statement.replace("{{sitesClause}}", sitesClause);
+  statement = statement.replace("{{whereClause}}", whereClause);
+  statement = statement.replace("{{siteWhereClause}}", siteWhereClause);
+  statement = statement.replace("{{modelClause}}", modelClause);
+  statement = statement.replace("{{validTimeClause}}", validTimeClause);
+  statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+  statement = statement.replace("{{dateClause}}", dateClause);
+  statement = statement.replace("{{siteDateClause}}", siteDateClause);
 
   statement = cbPool.trfmSQLForDbTarget(statement);
   dataRequests[label] = statement;
@@ -182,7 +182,7 @@ dataMap = function (plotParams, plotFunction) {
     e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
     throw new Error(e.message);
   }
-  if (queryResult.error !== undefined && queryResult.error !== '') {
+  if (queryResult.error !== undefined && queryResult.error !== "") {
     if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
       // this is NOT an error just a no data condition
       dataFoundForCurve = false;
@@ -322,7 +322,7 @@ dataMap = function (plotParams, plotFunction) {
 
   const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(true);
   const totalProcessingFinish = moment();
-  dataRequests['total retrieval and processing time for curve set'] = {
+  dataRequests["total retrieval and processing time for curve set"] = {
     begin: totalProcessingStart.format(),
     finish: totalProcessingFinish.format(),
     duration: `${moment

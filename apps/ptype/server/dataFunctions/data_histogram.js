@@ -8,8 +8,8 @@ import {
   matsDataUtils,
   matsDataQueryUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataHistogram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -26,7 +26,7 @@ dataHistogram = function (plotParams, plotFunction) {
   const dataFoundForCurve = [];
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -45,44 +45,44 @@ dataHistogram = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
     dataFoundForCurve[curveIndex] = true;
     const { label } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     var scaleStr = curve.scale;
     const grid_scale = Object.keys(
-      matsCollections.scale.findOne({ name: 'scale' }).valuesMap
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.scale.findOne({ name: 'scale' }).valuesMap[key] === scaleStr
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
     );
     const scaleClause = `and m0.scale = ${grid_scale}`;
     const queryTableClause = `from ${model}_freq_${region} as m0`;
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
-    let validTimeClause = '';
-    const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    let validTimeClause = "";
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       validTimeClause = `and (m0.valid_secs)%(24*3600)/3600 IN(${validTimes})`;
     }
-    const forecastLength = Number(curve['forecast-length']) * 60;
+    const forecastLength = Number(curve["forecast-length"]) * 60;
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     const dateClause = `and m0.valid_secs >= ${fromSecs} and m0.valid_secs <= ${toSecs}`;
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause = statisticOptionsMap[statisticSelect][0];
@@ -92,8 +92,8 @@ dataHistogram = function (plotParams, plotFunction) {
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     var statType = statisticOptionsMap[statisticSelect][1];
     let axisKey = yAxisFormat;
-    if (yAxisFormat === 'Relative frequency') {
-      axisKey += ' (x100)';
+    if (yAxisFormat === "Relative frequency") {
+      axisKey += " (x100)";
     }
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
@@ -103,28 +103,28 @@ dataHistogram = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select m0.valid_secs as avtime, ' +
-        'count(distinct m0.valid_secs) as N_times, ' +
-        'min(m0.valid_secs) as min_secs, ' +
-        'max(m0.valid_secs) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{dateClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{forecastLengthClause}} ' +
-        '{{scaleClause}} ' +
-        'group by avtime ' +
-        'order by avtime' +
-        ';';
+        "select m0.valid_secs as avtime, " +
+        "count(distinct m0.valid_secs) as N_times, " +
+        "min(m0.valid_secs) as min_secs, " +
+        "max(m0.valid_secs) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{dateClause}} " +
+        "{{validTimeClause}} " +
+        "{{forecastLengthClause}} " +
+        "{{scaleClause}} " +
+        "group by avtime " +
+        "order by avtime" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{scaleClause}}', scaleClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
-      statement = statement.split('{{variable}}').join(variable);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{scaleClause}}", scaleClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
+      statement = statement.split("{{variable}}").join(variable);
       dataRequests[label] = statement;
 
       var queryResult;
@@ -156,14 +156,14 @@ dataHistogram = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve[curveIndex] = false;
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          if (error.includes('ER_NO_SUCH_TABLE')) {
+          if (error.includes("ER_NO_SUCH_TABLE")) {
             throw new Error(
               `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${dataSourceStr}]. ` +
                 `Choose a different scale to continue using this region.`
@@ -180,7 +180,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query
@@ -191,7 +191,7 @@ dataHistogram = function (plotParams, plotFunction) {
     statType,
     axisMap,
     yAxisFormat,
-    varUnits: '',
+    varUnits: "",
   };
   const bookkeepingParams = {
     alreadyMatched,

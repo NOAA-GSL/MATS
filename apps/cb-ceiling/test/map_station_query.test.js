@@ -1,18 +1,18 @@
-const chai = require('chai');
-const { Console } = require('console');
-const dataQueryUtil = require('./lib/data_query_util.mjs');
+const chai = require("chai");
+const { Console } = require("console");
+const dataQueryUtil = require("./lib/data_query_util.mjs");
 
 // if (Meteor.isServer) {
-describe('dieoff_query', () => {
+describe("dieoff_query", () => {
   before(function setup() {
-    console.log('setup');
+    console.log("setup");
   });
 
   after(function teardown() {
-    console.log('teardown');
+    console.log("teardown");
   });
 
-  it('should return data', function (done) {
+  it("should return data", function (done) {
     try {
       const statement = `
       SELECT m0data.name as sta_name,
@@ -60,8 +60,8 @@ describe('dieoff_query', () => {
       ORDER BY m0data.name;
       `;
       console.log(statement);
-      data = 'something';
-      chai.assert(data == 'something');
+      data = "something";
+      chai.assert(data == "something");
       done();
     } catch (err) {
       done(err);

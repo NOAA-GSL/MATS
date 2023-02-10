@@ -9,8 +9,8 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataContour = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -28,16 +28,16 @@ dataContour = function (plotParams, plotFunction) {
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
-  const xAxisParam = plotParams['x-axis-parameter'];
-  const yAxisParam = plotParams['y-axis-parameter'];
-  const xValClause = matsCollections.PlotParams.findOne({ name: 'x-axis-parameter' })
+  const xAxisParam = plotParams["x-axis-parameter"];
+  const yAxisParam = plotParams["y-axis-parameter"];
+  const xValClause = matsCollections.PlotParams.findOne({ name: "x-axis-parameter" })
     .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOne({ name: 'y-axis-parameter' })
+  const yValClause = matsCollections.PlotParams.findOne({ name: "y-axis-parameter" })
     .optionsMap[yAxisParam];
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   if (curves.length > 1) {
-    throw new Error('INFO:  There must only be one added curve.');
+    throw new Error("INFO:  There must only be one added curve.");
   }
   const dataset = [];
   const axisMap = Object.create(null);
@@ -45,60 +45,60 @@ dataContour = function (plotParams, plotFunction) {
   // initialize variables specific to the curve
   const curve = curves[0];
   const { label } = curve;
-  const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-    .optionsMap[curve['data-source']][0];
+  const model = matsCollections["data-source"].findOne({ name: "data-source" })
+    .optionsMap[curve["data-source"]][0];
   const regionStr = curve.region;
   const region = Object.keys(
-    matsCollections.region.findOne({ name: 'region' }).valuesMap
+    matsCollections.region.findOne({ name: "region" }).valuesMap
   ).find(
     (key) =>
-      matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+      matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
   );
   const queryTableClause = `from ${model}_freq_${region} as m0`;
   const variableStr = curve.variable;
   const variableOptionsMap = matsCollections.variable.findOne(
-    { name: 'variable' },
+    { name: "variable" },
     { optionsMap: 1 }
   ).optionsMap;
   const variable = variableOptionsMap[variableStr];
-  let validTimeClause = '';
-  let scaleClause = '';
-  let forecastLengthClause = '';
-  let dateString = '';
-  let dateClause = '';
-  if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-    const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+  let validTimeClause = "";
+  let scaleClause = "";
+  let forecastLengthClause = "";
+  let dateString = "";
+  let dateClause = "";
+  if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
       validTimeClause = `and m0.valid_secs%(24*3600)/3600 IN(${validTimes})`;
     }
   }
-  if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-    const forecastLength = Number(curve['forecast-length']) * 60;
+  if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
+    const forecastLength = Number(curve["forecast-length"]) * 60;
     forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
   }
-  if (xAxisParam !== 'Grid scale' && yAxisParam !== 'Grid scale') {
+  if (xAxisParam !== "Grid scale" && yAxisParam !== "Grid scale") {
     var scaleStr = curve.scale;
     const grid_scale = Object.keys(
-      matsCollections.scale.findOne({ name: 'scale' }).valuesMap
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.scale.findOne({ name: 'scale' }).valuesMap[key] === scaleStr
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
     );
     scaleClause = `and m0.scale = ${grid_scale} `;
   }
   if (
-    (xAxisParam === 'Init Date' || yAxisParam === 'Init Date') &&
-    xAxisParam !== 'Valid Date' &&
-    yAxisParam !== 'Valid Date'
+    (xAxisParam === "Init Date" || yAxisParam === "Init Date") &&
+    xAxisParam !== "Valid Date" &&
+    yAxisParam !== "Valid Date"
   ) {
-    dateString = 'm0.valid_secs-m0.fcst_len*60';
+    dateString = "m0.valid_secs-m0.fcst_len*60";
   } else {
-    dateString = 'm0.valid_secs';
+    dateString = "m0.valid_secs";
   }
   dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
   const statisticSelect = curve.statistic;
   const statisticOptionsMap = matsCollections.statistic.findOne(
-    { name: 'statistic' },
+    { name: "statistic" },
     { optionsMap: 1 }
   ).optionsMap;
   const statisticClause = statisticOptionsMap[statisticSelect][0];
@@ -110,32 +110,32 @@ dataContour = function (plotParams, plotFunction) {
   // this is a database driven curve, not a difference curve
   // prepare the query from the above parameters
   let statement =
-    '{{xValClause}} ' +
-    '{{yValClause}} ' +
-    'count(distinct {{dateString}}) as N_times, ' +
-    'min({{dateString}}) as min_secs, ' +
-    'max({{dateString}}) as max_secs, ' +
-    '{{statisticClause}} ' +
-    '{{queryTableClause}} ' +
-    'where 1=1 ' +
-    '{{dateClause}} ' +
-    '{{validTimeClause}} ' +
-    '{{forecastLengthClause}} ' +
-    '{{scaleClause}} ' +
-    'group by xVal,yVal ' +
-    'order by xVal,yVal' +
-    ';';
+    "{{xValClause}} " +
+    "{{yValClause}} " +
+    "count(distinct {{dateString}}) as N_times, " +
+    "min({{dateString}}) as min_secs, " +
+    "max({{dateString}}) as max_secs, " +
+    "{{statisticClause}} " +
+    "{{queryTableClause}} " +
+    "where 1=1 " +
+    "{{dateClause}} " +
+    "{{validTimeClause}} " +
+    "{{forecastLengthClause}} " +
+    "{{scaleClause}} " +
+    "group by xVal,yVal " +
+    "order by xVal,yVal" +
+    ";";
 
-  statement = statement.replace('{{xValClause}}', xValClause);
-  statement = statement.replace('{{yValClause}}', yValClause);
-  statement = statement.replace('{{statisticClause}}', statisticClause);
-  statement = statement.replace('{{queryTableClause}}', queryTableClause);
-  statement = statement.replace('{{validTimeClause}}', validTimeClause);
-  statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-  statement = statement.replace('{{scaleClause}}', scaleClause);
-  statement = statement.replace('{{dateClause}}', dateClause);
-  statement = statement.split('{{dateString}}').join(dateString);
-  statement = statement.split('{{variable}}').join(variable);
+  statement = statement.replace("{{xValClause}}", xValClause);
+  statement = statement.replace("{{yValClause}}", yValClause);
+  statement = statement.replace("{{statisticClause}}", statisticClause);
+  statement = statement.replace("{{queryTableClause}}", queryTableClause);
+  statement = statement.replace("{{validTimeClause}}", validTimeClause);
+  statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+  statement = statement.replace("{{scaleClause}}", scaleClause);
+  statement = statement.replace("{{dateClause}}", dateClause);
+  statement = statement.split("{{dateString}}").join(dateString);
+  statement = statement.split("{{variable}}").join(variable);
   dataRequests[label] = statement;
 
   let queryResult;
@@ -165,14 +165,14 @@ dataContour = function (plotParams, plotFunction) {
     e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
     throw new Error(e.message);
   }
-  if (queryResult.error !== undefined && queryResult.error !== '') {
+  if (queryResult.error !== undefined && queryResult.error !== "") {
     if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
       // this is NOT an error just a no data condition
       dataFoundForCurve = false;
     } else {
       // this is an error returned by the mysql database
       error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-      if (error.includes('ER_NO_SUCH_TABLE')) {
+      if (error.includes("ER_NO_SUCH_TABLE")) {
         throw new Error(
           `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${dataSourceStr}]. ` +
             `Choose a different scale to continue using this region.`
@@ -185,7 +185,7 @@ dataContour = function (plotParams, plotFunction) {
 
   if (!dataFoundForCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   const postQueryStartMoment = moment();

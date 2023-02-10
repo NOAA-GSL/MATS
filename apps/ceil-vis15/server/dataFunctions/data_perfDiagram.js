@@ -9,8 +9,8 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataPerformanceDiagram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -26,7 +26,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -41,44 +41,44 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
-    const binParam = curve['bin-parameter'];
-    const binClause = matsCollections['bin-parameter'].findOne({
-      name: 'bin-parameter',
+    const binParam = curve["bin-parameter"];
+    const binClause = matsCollections["bin-parameter"].findOne({
+      name: "bin-parameter",
     }).optionsMap[binParam];
     var { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: 'variable' })
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[variable][curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     const queryTableClause = `from ${databaseRef.sumsDB}.${model}_${region} as m0`;
-    let thresholdClause = '';
-    let truthClause = '';
-    if (variable === '15 Minute Visibility') {
+    let thresholdClause = "";
+    let truthClause = "";
+    if (variable === "15 Minute Visibility") {
       var truthStr = curve.truth;
       const truth = Object.keys(
-        matsCollections.truth.findOne({ name: 'truth' }).valuesMap[variable]
+        matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections.truth.findOne({ name: 'truth' }).valuesMap[variable][key] ===
+          matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable][key] ===
           truthStr
       );
       truthClause = `and m0.truth = '${truth}'`;
     }
-    let validTimeClause = '';
-    let forecastLengthClause = '';
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    let validTimeClause = "";
+    let forecastLengthClause = "";
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    let dateString = '';
-    let dateClause = '';
-    if (binParam !== 'Threshold') {
+    let dateString = "";
+    let dateClause = "";
+    if (binParam !== "Threshold") {
       var thresholdStr = curve.threshold;
       if (thresholdStr === undefined) {
         throw new Error(
@@ -86,23 +86,23 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         );
       }
       const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable][
+          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
             key
           ] === thresholdStr
       );
       thresholdClause = `and m0.trsh = ${threshold}`;
     }
-    if (binParam !== 'Valid UTC hour') {
-      const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    if (binParam !== "Valid UTC hour") {
+      const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
         validTimeClause = `and floor((m0.time)%(24*3600)/900)/4 IN(${validTimes})`;
       }
     }
-    if (binParam !== 'Fcst lead time') {
-      const forecastLength = Number(curve['forecast-length']);
+    if (binParam !== "Fcst lead time") {
+      const forecastLength = Number(curve["forecast-length"]);
       const forecastHour = Math.floor(forecastLength);
       const forecastMinute = (forecastLength - forecastHour) * 60;
       if (forecastLength === undefined) {
@@ -112,14 +112,14 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       }
       forecastLengthClause = `and m0.fcst_len = ${forecastLength} and m0.fcst_min = ${forecastMinute}`;
     }
-    if (binParam === 'Init Date') {
-      dateString = 'm0.time-(m0.fcst_len*3600+m0.fcst_min*60)';
+    if (binParam === "Init Date") {
+      dateString = "m0.time-(m0.fcst_len*3600+m0.fcst_min*60)";
     } else {
-      dateString = 'm0.time';
+      dateString = "m0.time";
     }
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
-    const statisticSelect = 'PerformanceDiagram';
-    var statType = 'ctc';
+    const statisticSelect = "PerformanceDiagram";
+    var statType = "ctc";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // variable + statistic (axisKey) it will use the same axis.
@@ -131,32 +131,32 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        '{{binClause}} ' +
-        'count(distinct {{dateString}}) as N_times, ' +
-        'min({{dateString}}) as min_secs, ' +
-        'max({{dateString}}) as max_secs, ' +
-        '((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) as pod, ((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) as far, ' +
+        "{{binClause}} " +
+        "count(distinct {{dateString}}) as N_times, " +
+        "min({{dateString}}) as min_secs, " +
+        "max({{dateString}}) as max_secs, " +
+        "((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) as pod, ((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) as far, " +
         "sum(m0.yy+m0.ny) as oy_all, sum(m0.yn+m0.nn) as on_all, group_concat(m0.time, ';', m0.yy, ';', " +
         "m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0 " +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{dateClause}} ' +
-        '{{thresholdClause}} ' +
-        '{{truthClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{forecastLengthClause}} ' +
-        'group by binVal ' +
-        'order by binVal' +
-        ';';
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{dateClause}} " +
+        "{{thresholdClause}} " +
+        "{{truthClause}} " +
+        "{{validTimeClause}} " +
+        "{{forecastLengthClause}} " +
+        "group by binVal " +
+        "order by binVal" +
+        ";";
 
-      statement = statement.replace('{{binClause}}', binClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{thresholdClause}}', thresholdClause);
-      statement = statement.replace('{{truthClause}}', truthClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
-      statement = statement.split('{{dateString}}').join(dateString);
+      statement = statement.replace("{{binClause}}", binClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{thresholdClause}}", thresholdClause);
+      statement = statement.replace("{{truthClause}}", truthClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
+      statement = statement.split("{{dateString}}").join(dateString);
       dataRequests[label] = statement;
 
       var queryResult;
@@ -185,7 +185,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
@@ -209,7 +209,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     } else {
       // this is a difference curve -- not supported for ROC plots
       throw new Error(
-        'INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves.'
+        "INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves."
       );
     }
 
@@ -247,7 +247,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

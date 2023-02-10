@@ -11,8 +11,8 @@ import {
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
   matsPlotUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataContourDiff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,22 +27,22 @@ dataContourDiff = function (plotParams, plotFunction) {
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataNotFoundForAnyCurve = false;
-  const showSignificance = plotParams.significance !== 'none';
+  const showSignificance = plotParams.significance !== "none";
   const totalProcessingStart = moment();
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
-  const xAxisParam = plotParams['x-axis-parameter'];
-  const yAxisParam = plotParams['y-axis-parameter'];
-  const xValClause = matsCollections.PlotParams.findOne({ name: 'x-axis-parameter' })
+  const xAxisParam = plotParams["x-axis-parameter"];
+  const yAxisParam = plotParams["y-axis-parameter"];
+  const xValClause = matsCollections.PlotParams.findOne({ name: "x-axis-parameter" })
     .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOne({ name: 'y-axis-parameter' })
+  const yValClause = matsCollections.PlotParams.findOne({ name: "y-axis-parameter" })
     .optionsMap[yAxisParam];
-  let error = '';
+  let error = "";
   let curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   if (curvesLength !== 2) {
-    throw new Error('INFO:  There must be two added curves.');
+    throw new Error("INFO:  There must be two added curves.");
   }
   let dataset = [];
   const axisMap = Object.create(null);
@@ -51,58 +51,58 @@ dataContourDiff = function (plotParams, plotFunction) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
     const { label } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     const queryTableClause = `from ${model}_anomcorr_${region} as m0`;
     const { variable } = curve;
     const variableClause = `and m0.variable = '${variable}'`;
-    let validTimeClause = '';
-    let forecastLengthClause = '';
-    let dateString = '';
-    let dateClause = '';
-    let levelClause = '';
-    if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-      const validTimeStr = curve['valid-time'];
-      validTimeClause = matsCollections['valid-time'].findOne(
-        { name: 'valid-time' },
+    let validTimeClause = "";
+    let forecastLengthClause = "";
+    let dateString = "";
+    let dateClause = "";
+    let levelClause = "";
+    if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
+      const validTimeStr = curve["valid-time"];
+      validTimeClause = matsCollections["valid-time"].findOne(
+        { name: "valid-time" },
         { optionsMap: 1 }
       ).optionsMap[validTimeStr][0];
     }
-    if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-      const forecastLength = curve['forecast-length'];
+    if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
+      const forecastLength = curve["forecast-length"];
       forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
     }
     if (
-      (xAxisParam === 'Init Date' || yAxisParam === 'Init Date') &&
-      xAxisParam !== 'Valid Date' &&
-      yAxisParam !== 'Valid Date'
+      (xAxisParam === "Init Date" || yAxisParam === "Init Date") &&
+      xAxisParam !== "Valid Date" &&
+      yAxisParam !== "Valid Date"
     ) {
-      dateString = 'unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600';
+      dateString = "unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600";
     } else {
-      dateString = 'unix_timestamp(m0.valid_date)+3600*m0.valid_hour';
+      dateString = "unix_timestamp(m0.valid_date)+3600*m0.valid_hour";
     }
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
-    if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
+    if (xAxisParam !== "Pressure level" && yAxisParam !== "Pressure level") {
       const levels = curve.level === undefined ? [] : curve.level;
       if (levels.length > 0 && levels !== matsTypes.InputTypes.unused) {
         levelClause = `and m0.level IN(${levels})`;
       }
     }
     const statisticClause =
-      'avg(m0.wacorr/100) as stat, ' +
-      'stddev(m0.wacorr/100) as stdev, ' +
+      "avg(m0.wacorr/100) as stat, " +
+      "stddev(m0.wacorr/100) as stdev, " +
       "group_concat(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level, ';', m0.wacorr / 100 " +
-      'order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data, ' +
-      'count(m0.wacorr) as N0';
-    var statType = 'ACC';
-    curve.statistic = 'Correlation';
+      "order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data, " +
+      "count(m0.wacorr) as N0";
+    var statType = "ACC";
+    curve.statistic = "Correlation";
 
     // For contours, this functions as the colorbar label.
     curves[curveIndex].unitKey = curve.statistic;
@@ -111,33 +111,33 @@ dataContourDiff = function (plotParams, plotFunction) {
     // this is a database driven curve, not a difference curve
     // prepare the query from the above parameters
     let statement =
-      '{{xValClause}} ' +
-      '{{yValClause}} ' +
-      'count(distinct {{dateString}}) as N_times, ' +
-      'min({{dateString}}) as min_secs, ' +
-      'max({{dateString}}) as max_secs, ' +
-      '{{statisticClause}} ' +
-      '{{queryTableClause}} ' +
-      'where 1=1 ' +
-      '{{dateClause}} ' +
-      '{{variableClause}} ' +
-      '{{validTimeClause}} ' +
-      '{{forecastLengthClause}} ' +
-      '{{levelClause}} ' +
-      'group by xVal,yVal ' +
-      'order by xVal,yVal' +
-      ';';
+      "{{xValClause}} " +
+      "{{yValClause}} " +
+      "count(distinct {{dateString}}) as N_times, " +
+      "min({{dateString}}) as min_secs, " +
+      "max({{dateString}}) as max_secs, " +
+      "{{statisticClause}} " +
+      "{{queryTableClause}} " +
+      "where 1=1 " +
+      "{{dateClause}} " +
+      "{{variableClause}} " +
+      "{{validTimeClause}} " +
+      "{{forecastLengthClause}} " +
+      "{{levelClause}} " +
+      "group by xVal,yVal " +
+      "order by xVal,yVal" +
+      ";";
 
-    statement = statement.replace('{{xValClause}}', xValClause);
-    statement = statement.replace('{{yValClause}}', yValClause);
-    statement = statement.replace('{{statisticClause}}', statisticClause);
-    statement = statement.replace('{{queryTableClause}}', queryTableClause);
-    statement = statement.replace('{{variableClause}}', variableClause);
-    statement = statement.replace('{{validTimeClause}}', validTimeClause);
-    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-    statement = statement.replace('{{levelClause}}', levelClause);
-    statement = statement.replace('{{dateClause}}', dateClause);
-    statement = statement.split('{{dateString}}').join(dateString);
+    statement = statement.replace("{{xValClause}}", xValClause);
+    statement = statement.replace("{{yValClause}}", yValClause);
+    statement = statement.replace("{{statisticClause}}", statisticClause);
+    statement = statement.replace("{{queryTableClause}}", queryTableClause);
+    statement = statement.replace("{{variableClause}}", variableClause);
+    statement = statement.replace("{{validTimeClause}}", validTimeClause);
+    statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+    statement = statement.replace("{{levelClause}}", levelClause);
+    statement = statement.replace("{{dateClause}}", dateClause);
+    statement = statement.split("{{dateString}}").join(dateString);
     dataRequests[label] = statement;
 
     var queryResult;
@@ -149,7 +149,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         sumPool,
         statement,
         appParams,
-        'Anomaly Correlation'
+        "Anomaly Correlation"
       );
       finishMoment = moment();
       dataRequests[`data retrieval (query) time - ${label}`] = {
@@ -167,7 +167,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
       throw new Error(e.message);
     }
-    if (queryResult.error !== undefined && queryResult.error !== '') {
+    if (queryResult.error !== undefined && queryResult.error !== "") {
       if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
         // this is NOT an error just a no data condition
         dataFoundForCurve = false;
@@ -217,7 +217,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   if (dataNotFoundForAnyCurve) {
     // we found no data for at least one curve so don't bother proceeding
     throw new Error(
-      'INFO:  No valid data for at least one curve. Try making individual contour plots to determine which one.'
+      "INFO:  No valid data for at least one curve. Try making individual contour plots to determine which one."
     );
   }
 
@@ -227,8 +227,8 @@ dataContourDiff = function (plotParams, plotFunction) {
     appParams,
     showSignificance,
     plotParams.significance,
-    'Anomaly Correlation',
-    statType === 'ctc'
+    "Anomaly Correlation",
+    statType === "ctc"
   );
   plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
   curves = plotParams.curves;

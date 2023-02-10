@@ -8,8 +8,8 @@ import {
   matsDataUtils,
   matsDataQueryUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataHistogram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -26,7 +26,7 @@ dataHistogram = function (plotParams, plotFunction) {
   const dataFoundForCurve = [];
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -46,56 +46,56 @@ dataHistogram = function (plotParams, plotFunction) {
     dataFoundForCurve[curveIndex] = true;
     const { label } = curve;
     var { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: 'variable' })
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[variable][curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     const queryTableClause = `from ${databaseRef.sumsDB}.${model}_${region} as m0`;
     var thresholdStr = curve.threshold;
     const threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
       (key) =>
-        matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable][
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
           key
         ] === thresholdStr
     );
     const thresholdClause = `and m0.trsh = ${threshold}`;
-    let truthClause = '';
-    if (variable === '15 Minute Visibility') {
+    let truthClause = "";
+    if (variable === "15 Minute Visibility") {
       var truthStr = curve.truth;
       const truth = Object.keys(
-        matsCollections.truth.findOne({ name: 'truth' }).valuesMap[variable]
+        matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections.truth.findOne({ name: 'truth' }).valuesMap[variable][key] ===
+          matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable][key] ===
           truthStr
       );
       truthClause = `and m0.truth = '${truth}'`;
     }
-    let validTimeClause = '';
-    const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    let validTimeClause = "";
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       validTimeClause = `and floor((m0.time)%(24*3600)/900)/4 IN(${validTimes})`;
     }
-    const forecastLength = Number(curve['forecast-length']);
+    const forecastLength = Number(curve["forecast-length"]);
     const forecastHour = Math.floor(forecastLength);
     const forecastMinute = (forecastLength - forecastHour) * 60;
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength} and m0.fcst_min = ${forecastMinute}`;
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
@@ -107,8 +107,8 @@ dataHistogram = function (plotParams, plotFunction) {
     var statType = statisticOptionsMap[statisticSelect][0];
     var varUnits = statisticOptionsMap[statisticSelect][1];
     let axisKey = yAxisFormat;
-    if (yAxisFormat === 'Relative frequency') {
-      axisKey += ' (x100)';
+    if (yAxisFormat === "Relative frequency") {
+      axisKey += " (x100)";
     }
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
@@ -118,29 +118,29 @@ dataHistogram = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select m0.time as avtime, ' +
-        'count(distinct m0.time) as N_times, ' +
-        'min(m0.time) as min_secs, ' +
-        'max(m0.time) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{dateClause}} ' +
-        '{{thresholdClause}} ' +
-        '{{truthClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{forecastLengthClause}} ' +
-        'group by avtime ' +
-        'order by avtime' +
-        ';';
+        "select m0.time as avtime, " +
+        "count(distinct m0.time) as N_times, " +
+        "min(m0.time) as min_secs, " +
+        "max(m0.time) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{dateClause}} " +
+        "{{thresholdClause}} " +
+        "{{truthClause}} " +
+        "{{validTimeClause}} " +
+        "{{forecastLengthClause}} " +
+        "group by avtime " +
+        "order by avtime" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{thresholdClause}}', thresholdClause);
-      statement = statement.replace('{{truthClause}}', truthClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{thresholdClause}}", thresholdClause);
+      statement = statement.replace("{{truthClause}}", truthClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
       dataRequests[label] = statement;
 
       var queryResult;
@@ -172,7 +172,7 @@ dataHistogram = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve[curveIndex] = false;
@@ -189,7 +189,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

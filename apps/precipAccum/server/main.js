@@ -2,21 +2,21 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import { Meteor } from 'meteor/meteor';
-import { mysql } from 'meteor/pcel:mysql';
+import { Meteor } from "meteor/meteor";
+import { mysql } from "meteor/pcel:mysql";
 import {
   matsTypes,
   matsCollections,
   matsDataUtils,
   matsDataQueryUtils,
   matsParamUtils,
-} from 'meteor/randyp:mats-common';
+} from "meteor/randyp:mats-common";
 
 // This app combines two previous apps, precipitation24hr, and precipitationSub24hr.
 // This is where we store the databases referenced by those apps.
 const variableDBNames = {
-  '24 Hour Precipitation': 'precip',
-  'Sub 24 Hour Precipitation': 'precip2',
+  "24 Hour Precipitation": "precip",
+  "Sub 24 Hour Precipitation": "precip2",
 };
 const variables = Object.keys(variableDBNames);
 
@@ -35,27 +35,27 @@ const doPlotParams = function () {
   }
   if (matsCollections.PlotParams.find().count() == 0) {
     matsCollections.PlotParams.insert({
-      name: 'dates',
+      name: "dates",
       type: matsTypes.InputTypes.dateRange,
-      options: [''],
+      options: [""],
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ['variable', 'data-source'],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       default: dstr,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: 'dateHelp.html',
+      help: "dateHelp.html",
     });
 
     const plotFormats = {};
-    plotFormats[matsTypes.PlotFormats.matching] = 'show matching diffs';
-    plotFormats[matsTypes.PlotFormats.pairwise] = 'pairwise diffs';
-    plotFormats[matsTypes.PlotFormats.none] = 'no diffs';
+    plotFormats[matsTypes.PlotFormats.matching] = "show matching diffs";
+    plotFormats[matsTypes.PlotFormats.pairwise] = "pairwise diffs";
+    plotFormats[matsTypes.PlotFormats.none] = "no diffs";
     matsCollections.PlotParams.insert({
-      name: 'plotFormat',
+      name: "plotFormat",
       type: matsTypes.InputTypes.radioGroup,
       optionsMap: plotFormats,
       options: [
@@ -65,229 +65,229 @@ const doPlotParams = function () {
       ],
       default: matsTypes.PlotFormats.none,
       controlButtonCovered: false,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 3,
     });
 
     const yAxisOptionsMap = {
-      'Relative frequency': ['relFreq'],
-      Number: ['number'],
+      "Relative frequency": ["relFreq"],
+      Number: ["number"],
     };
     matsCollections.PlotParams.insert({
-      name: 'histogram-yaxis-controls',
+      name: "histogram-yaxis-controls",
       type: matsTypes.InputTypes.select,
       optionsMap: yAxisOptionsMap,
       options: Object.keys(yAxisOptionsMap),
       default: Object.keys(yAxisOptionsMap)[0],
       controlButtonCovered: true,
-      controlButtonText: 'Y-axis mode',
+      controlButtonText: "Y-axis mode",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     const binOptionsMap = {
-      'Default bins': ['default'],
-      'Set number of bins': ['binNumber'],
-      'Make zero a bin bound': ['zeroBound'],
-      'Choose a bin bound': ['chooseBound'],
-      'Set number of bins and make zero a bin bound': ['binNumberWithZero'],
-      'Set number of bins and choose a bin bound': ['binNumberWithChosen'],
-      'Manual bins': ['manual'],
-      'Manual bin start, number, and stride': ['manualStride'],
+      "Default bins": ["default"],
+      "Set number of bins": ["binNumber"],
+      "Make zero a bin bound": ["zeroBound"],
+      "Choose a bin bound": ["chooseBound"],
+      "Set number of bins and make zero a bin bound": ["binNumberWithZero"],
+      "Set number of bins and choose a bin bound": ["binNumberWithChosen"],
+      "Manual bins": ["manual"],
+      "Manual bin start, number, and stride": ["manualStride"],
     };
     matsCollections.PlotParams.insert({
-      name: 'histogram-bin-controls',
+      name: "histogram-bin-controls",
       type: matsTypes.InputTypes.select,
       optionsMap: binOptionsMap,
       options: Object.keys(binOptionsMap),
       hideOtherFor: {
-        'bin-number': [
-          'Default bins',
-          'Make zero a bin bound',
-          'Manual bins',
-          'Choose a bin bound',
+        "bin-number": [
+          "Default bins",
+          "Make zero a bin bound",
+          "Manual bins",
+          "Choose a bin bound",
         ],
-        'bin-pivot': [
-          'Default bins',
-          'Set number of bins',
-          'Make zero a bin bound',
-          'Set number of bins and make zero a bin bound',
-          'Manual bins',
-          'Manual bin start, number, and stride',
+        "bin-pivot": [
+          "Default bins",
+          "Set number of bins",
+          "Make zero a bin bound",
+          "Set number of bins and make zero a bin bound",
+          "Manual bins",
+          "Manual bin start, number, and stride",
         ],
-        'bin-start': [
-          'Default bins',
-          'Set number of bins',
-          'Make zero a bin bound',
-          'Choose a bin bound',
-          'Set number of bins and make zero a bin bound',
-          'Set number of bins and choose a bin bound',
-          'Manual bins',
+        "bin-start": [
+          "Default bins",
+          "Set number of bins",
+          "Make zero a bin bound",
+          "Choose a bin bound",
+          "Set number of bins and make zero a bin bound",
+          "Set number of bins and choose a bin bound",
+          "Manual bins",
         ],
-        'bin-stride': [
-          'Default bins',
-          'Set number of bins',
-          'Make zero a bin bound',
-          'Choose a bin bound',
-          'Set number of bins and make zero a bin bound',
-          'Set number of bins and choose a bin bound',
-          'Manual bins',
+        "bin-stride": [
+          "Default bins",
+          "Set number of bins",
+          "Make zero a bin bound",
+          "Choose a bin bound",
+          "Set number of bins and make zero a bin bound",
+          "Set number of bins and choose a bin bound",
+          "Manual bins",
         ],
-        'bin-bounds': [
-          'Default bins',
-          'Set number of bins',
-          'Make zero a bin bound',
-          'Choose a bin bound',
-          'Set number of bins and make zero a bin bound',
-          'Set number of bins and choose a bin bound',
-          'Manual bin start, number, and stride',
+        "bin-bounds": [
+          "Default bins",
+          "Set number of bins",
+          "Make zero a bin bound",
+          "Choose a bin bound",
+          "Set number of bins and make zero a bin bound",
+          "Set number of bins and choose a bin bound",
+          "Manual bin start, number, and stride",
         ],
       },
       default: Object.keys(binOptionsMap)[0],
       controlButtonCovered: true,
-      controlButtonText: 'customize bins',
+      controlButtonText: "customize bins",
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     matsCollections.PlotParams.insert({
-      name: 'bin-number',
+      name: "bin-number",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '2',
-      max: '100',
-      step: 'any',
-      default: '12',
+      min: "2",
+      max: "100",
+      step: "any",
+      default: "12",
       controlButtonCovered: true,
-      controlButtonText: 'number of bins',
+      controlButtonText: "number of bins",
       displayOrder: 4,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     matsCollections.PlotParams.insert({
-      name: 'bin-pivot',
+      name: "bin-pivot",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '-10000',
-      max: '10000',
-      step: 'any',
-      default: '0',
+      min: "-10000",
+      max: "10000",
+      step: "any",
+      default: "0",
       controlButtonCovered: true,
-      controlButtonText: 'bin pivot value',
+      controlButtonText: "bin pivot value",
       displayOrder: 5,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     matsCollections.PlotParams.insert({
-      name: 'bin-start',
+      name: "bin-start",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '-10000',
-      max: '10000',
-      step: 'any',
-      default: '0',
+      min: "-10000",
+      max: "10000",
+      step: "any",
+      default: "0",
       controlButtonCovered: true,
-      controlButtonText: 'bin start',
+      controlButtonText: "bin start",
       displayOrder: 6,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     matsCollections.PlotParams.insert({
-      name: 'bin-stride',
+      name: "bin-stride",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
-      min: '-10000',
-      max: '10000',
-      step: 'any',
-      default: '0',
+      min: "-10000",
+      max: "10000",
+      step: "any",
+      default: "0",
       controlButtonCovered: true,
-      controlButtonText: 'bin stride',
+      controlButtonText: "bin stride",
       displayOrder: 7,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     matsCollections.PlotParams.insert({
-      name: 'bin-bounds',
+      name: "bin-bounds",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
       options: [],
-      default: ' ',
+      default: " ",
       controlButtonCovered: true,
-      controlButtonText: 'bin bounds (Enter numbers separated by commas)',
+      controlButtonText: "bin bounds (Enter numbers separated by commas)",
       displayOrder: 8,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     const xOptionsMap = {
-      Threshold: 'select m0.trsh as xVal, ',
-      'Valid Date': 'select m0.time as xVal, ',
+      Threshold: "select m0.trsh as xVal, ",
+      "Valid Date": "select m0.time as xVal, ",
     };
 
     matsCollections.PlotParams.insert({
-      name: 'x-axis-parameter',
+      name: "x-axis-parameter",
       type: matsTypes.InputTypes.select,
       options: Object.keys(xOptionsMap),
       optionsMap: xOptionsMap,
-      selected: '',
+      selected: "",
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(xOptionsMap)[1],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 9,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     const yOptionsMap = {
-      Threshold: 'm0.trsh as yVal, ',
-      'Valid Date': 'm0.time as yVal, ',
+      Threshold: "m0.trsh as yVal, ",
+      "Valid Date": "m0.time as yVal, ",
     };
 
     matsCollections.PlotParams.insert({
-      name: 'y-axis-parameter',
+      name: "y-axis-parameter",
       type: matsTypes.InputTypes.select,
       options: Object.keys(yOptionsMap),
       optionsMap: yOptionsMap,
-      selected: '',
+      selected: "",
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(yOptionsMap)[0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 10,
       displayPriority: 1,
       displayGroup: 2,
     });
 
     matsCollections.PlotParams.insert({
-      name: 'significance',
+      name: "significance",
       type: matsTypes.InputTypes.select,
-      options: ['none', 'significance at 95th percentile'],
-      selected: '',
+      options: ["none", "significance at 95th percentile"],
+      selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: 'none',
-      controlButtonVisibility: 'block',
-      controlButtonText: 'overlay significance',
+      default: "none",
+      controlButtonVisibility: "block",
+      controlButtonText: "overlay significance",
       displayOrder: 11,
       displayPriority: 1,
       displayGroup: 2,
     });
   } else {
     // need to update the dates selector if the metadata has changed
-    const currentParam = matsCollections.PlotParams.findOne({ name: 'dates' });
+    const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
@@ -295,7 +295,7 @@ const doPlotParams = function () {
     ) {
       // have to reload model data
       matsCollections.PlotParams.update(
-        { name: 'dates' },
+        { name: "dates" },
         {
           $set: {
             startDate: minDate,
@@ -337,7 +337,7 @@ const doCurveParams = function () {
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
       metadataPool,
-      'select short_name,description from region_descriptions;'
+      "select short_name,description from region_descriptions;"
     );
     let masterRegDescription;
     let masterShortName;
@@ -439,10 +439,10 @@ const doCurveParams = function () {
 
         const rowMinDate = moment
           .utc(rows[i].mindate * 1000)
-          .format('MM/DD/YYYY HH:mm');
+          .format("MM/DD/YYYY HH:mm");
         const rowMaxDate = moment
           .utc(rows[i].maxdate * 1000)
-          .format('MM/DD/YYYY HH:mm');
+          .format("MM/DD/YYYY HH:mm");
         modelDateRangeMap[variables[didx]][model] = {
           minDate: rowMinDate,
           maxDate: rowMaxDate,
@@ -450,48 +450,48 @@ const doCurveParams = function () {
 
         const fcstTypes = rows[i].fcst_types;
         const fcstTypesArrRaw = fcstTypes
-          .split(',')
+          .split(",")
           .map(Function.prototype.call, String.prototype.trim);
         const fcstTypesArr = [];
         var dummyfcstType;
         for (var j = 0; j < fcstTypesArrRaw.length; j++) {
-          dummyfcstType = fcstTypesArrRaw[j].replace(/'|\[|\]/g, '');
+          dummyfcstType = fcstTypesArrRaw[j].replace(/'|\[|\]/g, "");
           fcstTypesArr.push(masterFcstTypeValuesMap[variables[didx]][dummyfcstType]);
         }
         fcstTypeModelOptionsMap[variables[didx]][model] = fcstTypesArr;
 
         const thresholds = rows[i].trsh;
         const thresholdsArrRaw = thresholds
-          .split(',')
+          .split(",")
           .map(Function.prototype.call, String.prototype.trim);
         const thresholdsArr = [];
         var dummyThresh;
         for (var j = 0; j < thresholdsArrRaw.length; j++) {
-          dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, '');
+          dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "");
           thresholdsArr.push(masterThresholdValuesMap[variables[didx]][dummyThresh]);
         }
         thresholdsModelOptionsMap[variables[didx]][model] = thresholdsArr;
 
         const scales = rows[i].scle;
         const scalesArrRaw = scales
-          .split(',')
+          .split(",")
           .map(Function.prototype.call, String.prototype.trim);
         const scalesArr = [];
         var dummyScale;
         for (var j = 0; j < scalesArrRaw.length; j++) {
-          dummyScale = scalesArrRaw[j].replace(/'|\[|\]/g, '');
+          dummyScale = scalesArrRaw[j].replace(/'|\[|\]/g, "");
           scalesArr.push(masterScaleValuesMap[variables[didx]][dummyScale]);
         }
         scaleModelOptionsMap[variables[didx]][model] = scalesArr;
 
         const { regions } = rows[i];
         const regionsArrRaw = regions
-          .split(',')
+          .split(",")
           .map(Function.prototype.call, String.prototype.trim);
         const regionsArr = [];
         var dummyRegion;
         for (var j = 0; j < regionsArrRaw.length; j++) {
-          dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, '');
+          dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
           regionsArr.push(masterRegionValuesMap[dummyRegion]);
         }
         regionModelOptionsMap[variables[didx]][model] = regionsArr;
@@ -501,46 +501,46 @@ const doCurveParams = function () {
     console.log(err.message);
   }
 
-  if (matsCollections.label.findOne({ name: 'label' }) == undefined) {
+  if (matsCollections.label.findOne({ name: "label" }) == undefined) {
     matsCollections.label.insert({
-      name: 'label',
+      name: "label",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
       options: [],
       controlButtonCovered: true,
-      default: '',
+      default: "",
       unique: true,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: 'label.html',
+      help: "label.html",
     });
   }
 
-  if (matsCollections.variable.findOne({ name: 'variable' }) == undefined) {
+  if (matsCollections.variable.findOne({ name: "variable" }) == undefined) {
     matsCollections.variable.insert({
-      name: 'variable',
+      name: "variable",
       type: matsTypes.InputTypes.select,
       optionsMap: variableDBNames,
       options: variables,
       dates: modelDateRangeMap,
-      dependentNames: ['data-source'],
+      dependentNames: ["data-source"],
       controlButtonCovered: true,
       default: variables[0],
       unique: false,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 1,
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.variable.findOne({ name: 'variable' });
+    var currentParam = matsCollections.variable.findOne({ name: "variable" });
     if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
       // have to reload variable data
       matsCollections.variable.update(
-        { name: 'variable' },
+        { name: "variable" },
         {
           $set: {
             dates: modelDateRangeMap,
@@ -550,36 +550,36 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections['data-source'].findOne({ name: 'data-source' }) == undefined) {
-    matsCollections['data-source'].insert({
-      name: 'data-source',
+  if (matsCollections["data-source"].findOne({ name: "data-source" }) == undefined) {
+    matsCollections["data-source"].insert({
+      name: "data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
       options: Object.keys(modelOptionsMap[variables[0]]),
-      superiorNames: ['variable'],
+      superiorNames: ["variable"],
       dependentNames: [
-        'region',
-        'threshold',
-        'scale',
-        'forecast-type',
-        'dates',
-        'curve-dates',
+        "region",
+        "threshold",
+        "scale",
+        "forecast-type",
+        "dates",
+        "curve-dates",
       ],
       controlButtonCovered: true,
       default: Object.keys(modelOptionsMap[variables[0]])[0],
       unique: false,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 1,
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['data-source'].findOne({ name: 'data-source' });
+    var currentParam = matsCollections["data-source"].findOne({ name: "data-source" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
-      matsCollections['data-source'].update(
-        { name: 'data-source' },
+      matsCollections["data-source"].update(
+        { name: "data-source" },
         {
           $set: {
             optionsMap: modelOptionsMap,
@@ -591,9 +591,9 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.region.findOne({ name: 'region' }) == undefined) {
+  if (matsCollections.region.findOne({ name: "region" }) == undefined) {
     matsCollections.region.insert({
-      name: 'region',
+      name: "region",
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
       options:
@@ -601,28 +601,28 @@ const doCurveParams = function () {
           Object.keys(regionModelOptionsMap[variables[0]])[0]
         ],
       valuesMap: masterRegionValuesMap,
-      superiorNames: ['variable', 'data-source'],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         regionModelOptionsMap[variables[0]][
           Object.keys(regionModelOptionsMap[variables[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 2,
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.region.findOne({ name: 'region' });
+    var currentParam = matsCollections.region.findOne({ name: "region" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)
     ) {
       // have to reload region data
       matsCollections.region.update(
-        { name: 'region' },
+        { name: "region" },
         {
           $set: {
             optionsMap: regionModelOptionsMap,
@@ -641,66 +641,66 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.statistic.findOne({ name: 'statistic' }) == undefined) {
+  if (matsCollections.statistic.findOne({ name: "statistic" }) == undefined) {
     const optionsMap = {
-      'CSI (Critical Success Index)': ['ctc', 'x100', 100],
+      "CSI (Critical Success Index)": ["ctc", "x100", 100],
 
-      'TSS (True Skill Score)': ['ctc', 'x100', 100],
+      "TSS (True Skill Score)": ["ctc", "x100", 100],
 
-      'PODy (POD of value > threshold)': ['ctc', 'x100', 100],
+      "PODy (POD of value > threshold)": ["ctc", "x100", 100],
 
-      'PODn (POD of value < threshold)': ['ctc', 'x100', 100],
+      "PODn (POD of value < threshold)": ["ctc", "x100", 100],
 
-      'FAR (False Alarm Ratio)': ['ctc', 'x100', 0],
+      "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
 
-      'Bias (forecast/actual)': ['ctc', 'Ratio', 1],
+      "Bias (forecast/actual)": ["ctc", "Ratio", 1],
 
-      'HSS (Heidke Skill Score)': ['ctc', 'x100', 100],
+      "HSS (Heidke Skill Score)": ["ctc", "x100", 100],
 
-      'ETS (Equitable Threat Score)': ['ctc', 'x100', 100],
+      "ETS (Equitable Threat Score)": ["ctc", "x100", 100],
 
-      'Nlow (Number of obs < threshold (false alarms + correct nulls))': [
-        'ctc',
-        'Number',
+      "Nlow (Number of obs < threshold (false alarms + correct nulls))": [
+        "ctc",
+        "Number",
         null,
       ],
 
-      'Nhigh (Number of obs > threshold (hits + misses))': ['ctc', 'Number', null],
+      "Nhigh (Number of obs > threshold (hits + misses))": ["ctc", "Number", null],
 
-      'Ntot (Total number of obs, (Nlow + Nhigh))': ['ctc', 'Number', null],
+      "Ntot (Total number of obs, (Nlow + Nhigh))": ["ctc", "Number", null],
 
-      'Ratio Nlow / Ntot ((fa + cn)/(hit + miss + fa + cn))': ['ctc', 'Ratio', null],
+      "Ratio Nlow / Ntot ((fa + cn)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
 
-      'Ratio Nhigh / Ntot ((hit + miss)/(hit + miss + fa + cn))': [
-        'ctc',
-        'Ratio',
+      "Ratio Nhigh / Ntot ((hit + miss)/(hit + miss + fa + cn))": [
+        "ctc",
+        "Ratio",
         null,
       ],
 
-      'N times*levels(*stations if station plot) per graph point': [
-        'ctc',
-        'Number',
+      "N times*levels(*stations if station plot) per graph point": [
+        "ctc",
+        "Number",
         null,
       ],
     };
     matsCollections.statistic.insert({
-      name: 'statistic',
+      name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap,
       options: Object.keys(optionsMap),
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(optionsMap)[0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 2,
     });
   }
 
-  if (matsCollections.threshold.findOne({ name: 'threshold' }) == undefined) {
+  if (matsCollections.threshold.findOne({ name: "threshold" }) == undefined) {
     matsCollections.threshold.insert({
-      name: 'threshold',
+      name: "threshold",
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdsModelOptionsMap,
       options:
@@ -708,21 +708,21 @@ const doCurveParams = function () {
           Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
         ],
       valuesMap: masterThresholdValuesMap,
-      superiorNames: ['variable', 'data-source'],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         thresholdsModelOptionsMap[variables[0]][
           Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 3,
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.threshold.findOne({ name: 'threshold' });
+    var currentParam = matsCollections.threshold.findOne({ name: "threshold" });
     if (
       !matsDataUtils.areObjectsEqual(
         currentParam.optionsMap,
@@ -732,7 +732,7 @@ const doCurveParams = function () {
     ) {
       // have to reload threshold data
       matsCollections.threshold.update(
-        { name: 'threshold' },
+        { name: "threshold" },
         {
           $set: {
             optionsMap: thresholdsModelOptionsMap,
@@ -751,9 +751,9 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.scale.findOne({ name: 'scale' }) == undefined) {
+  if (matsCollections.scale.findOne({ name: "scale" }) == undefined) {
     matsCollections.scale.insert({
-      name: 'scale',
+      name: "scale",
       type: matsTypes.InputTypes.select,
       optionsMap: scaleModelOptionsMap,
       options:
@@ -761,28 +761,28 @@ const doCurveParams = function () {
           Object.keys(scaleModelOptionsMap[variables[0]])[0]
         ],
       valuesMap: masterScaleValuesMap,
-      superiorNames: ['variable', 'data-source'],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         scaleModelOptionsMap[variables[0]][
           Object.keys(scaleModelOptionsMap[variables[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 3,
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.scale.findOne({ name: 'scale' });
+    var currentParam = matsCollections.scale.findOne({ name: "scale" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap)
     ) {
       // have to reload scale data
       matsCollections.scale.update(
-        { name: 'scale' },
+        { name: "scale" },
         {
           $set: {
             optionsMap: scaleModelOptionsMap,
@@ -802,10 +802,10 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections['forecast-type'].findOne({ name: 'forecast-type' }) == undefined
+    matsCollections["forecast-type"].findOne({ name: "forecast-type" }) == undefined
   ) {
-    matsCollections['forecast-type'].insert({
-      name: 'forecast-type',
+    matsCollections["forecast-type"].insert({
+      name: "forecast-type",
       type: matsTypes.InputTypes.select,
       optionsMap: fcstTypeModelOptionsMap,
       options:
@@ -813,23 +813,23 @@ const doCurveParams = function () {
           Object.keys(fcstTypeModelOptionsMap[variables[0]])[0]
         ],
       valuesMap: masterFcstTypeValuesMap,
-      superiorNames: ['variable', 'data-source'],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
         fcstTypeModelOptionsMap[variables[0]][
           Object.keys(fcstTypeModelOptionsMap[variables[0]])[0]
         ][0],
-      controlButtonVisibility: 'block',
-      controlButtonText: 'forecast type',
+      controlButtonVisibility: "block",
+      controlButtonText: "forecast type",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 4,
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['forecast-type'].findOne({
-      name: 'forecast-type',
+    var currentParam = matsCollections["forecast-type"].findOne({
+      name: "forecast-type",
     });
     if (
       !matsDataUtils.areObjectsEqual(
@@ -839,8 +839,8 @@ const doCurveParams = function () {
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterFcstTypeValuesMap)
     ) {
       // have to reload forecast type data
-      matsCollections['forecast-type'].update(
-        { name: 'forecast-type' },
+      matsCollections["forecast-type"].update(
+        { name: "forecast-type" },
         {
           $set: {
             optionsMap: fcstTypeModelOptionsMap,
@@ -859,50 +859,50 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.average.findOne({ name: 'average' }) == undefined) {
+  if (matsCollections.average.findOne({ name: "average" }) == undefined) {
     const optionsMap = {
       None: [`ceil(${3600}*floor(((m0.time)+${3600}/2)/${3600}))`],
-      '3hr': [`ceil(${3600 * 3}*floor(((m0.time)+${3600 * 3}/2)/${3600 * 3}))`],
-      '6hr': [`ceil(${3600 * 6}*floor(((m0.time)+${3600 * 6}/2)/${3600 * 6}))`],
-      '12hr': [`ceil(${3600 * 12}*floor(((m0.time)+${3600 * 12}/2)/${3600 * 12}))`],
-      '1D': [`ceil(${3600 * 24}*floor(((m0.time)+${3600 * 24}/2)/${3600 * 24}))`],
-      '3D': [
+      "3hr": [`ceil(${3600 * 3}*floor(((m0.time)+${3600 * 3}/2)/${3600 * 3}))`],
+      "6hr": [`ceil(${3600 * 6}*floor(((m0.time)+${3600 * 6}/2)/${3600 * 6}))`],
+      "12hr": [`ceil(${3600 * 12}*floor(((m0.time)+${3600 * 12}/2)/${3600 * 12}))`],
+      "1D": [`ceil(${3600 * 24}*floor(((m0.time)+${3600 * 24}/2)/${3600 * 24}))`],
+      "3D": [
         `ceil(${3600 * 24 * 3}*floor(((m0.time)+${3600 * 24 * 3}/2)/${3600 * 24 * 3}))`,
       ],
-      '7D': [
+      "7D": [
         `ceil(${3600 * 24 * 7}*floor(((m0.time)+${3600 * 24 * 7}/2)/${3600 * 24 * 7}))`,
       ],
-      '30D': [
+      "30D": [
         `ceil(${3600 * 24 * 30}*floor(((m0.time)+${3600 * 24 * 30}/2)/${
           3600 * 24 * 30
         }))`,
       ],
-      '60D': [
+      "60D": [
         `ceil(${3600 * 24 * 60}*floor(((m0.time)+${3600 * 24 * 60}/2)/${
           3600 * 24 * 60
         }))`,
       ],
-      '90D': [
+      "90D": [
         `ceil(${3600 * 24 * 90}*floor(((m0.time)+${3600 * 24 * 90}/2)/${
           3600 * 24 * 90
         }))`,
       ],
-      '180D': [
+      "180D": [
         `ceil(${3600 * 24 * 180}*floor(((m0.time)+${3600 * 24 * 180}/2)/${
           3600 * 24 * 180
         }))`,
       ],
     };
     matsCollections.average.insert({
-      name: 'average',
+      name: "average",
       type: matsTypes.InputTypes.select,
       optionsMap,
       options: Object.keys(optionsMap),
       controlButtonCovered: true,
       unique: false,
-      selected: 'None',
-      default: 'None',
-      controlButtonVisibility: 'block',
+      selected: "None",
+      default: "None",
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 5,
@@ -910,26 +910,26 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections['bin-parameter'].findOne({ name: 'bin-parameter' }) == undefined
+    matsCollections["bin-parameter"].findOne({ name: "bin-parameter" }) == undefined
   ) {
     const optionsMap = {
-      Threshold: 'select m0.trsh as binVal, ',
-      'Valid Date': 'select m0.time as binVal, ',
+      Threshold: "select m0.trsh as binVal, ",
+      "Valid Date": "select m0.time as binVal, ",
     };
 
-    matsCollections['bin-parameter'].insert({
-      name: 'bin-parameter',
+    matsCollections["bin-parameter"].insert({
+      name: "bin-parameter",
       type: matsTypes.InputTypes.select,
       options: Object.keys(optionsMap),
       optionsMap,
       hideOtherFor: {
-        threshold: ['Threshold'],
+        threshold: ["Threshold"],
       },
-      selected: '',
+      selected: "",
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(optionsMap)[1],
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 6,
@@ -938,15 +938,15 @@ const doCurveParams = function () {
 
   // determine date defaults for dates and curveDates
   const defaultDb = matsCollections.variable.findOne(
-    { name: 'variable' },
+    { name: "variable" },
     { default: 1 }
   ).default;
   modelDateRangeMap = matsCollections.variable.findOne(
-    { name: 'variable' },
+    { name: "variable" },
     { dates: 1 }
   ).dates;
-  const defaultDataSource = matsCollections['data-source'].findOne(
-    { name: 'data-source' },
+  const defaultDataSource = matsCollections["data-source"].findOne(
+    { name: "data-source" },
     { default: 1 }
   ).default;
   minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
@@ -956,48 +956,48 @@ const doCurveParams = function () {
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
   const minusMonthMinDate = newDateRange.minDate;
   maxDate = newDateRange.maxDate;
-  dstr = `${moment.utc(minusMonthMinDate).format('MM/DD/YYYY HH:mm')} - ${moment
+  dstr = `${moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm")} - ${moment
     .utc(maxDate)
-    .format('MM/DD/YYYY HH:mm')}`;
+    .format("MM/DD/YYYY HH:mm")}`;
 
-  if (matsCollections['curve-dates'].findOne({ name: 'curve-dates' }) == undefined) {
+  if (matsCollections["curve-dates"].findOne({ name: "curve-dates" }) == undefined) {
     const optionsMap = {
-      '1 day': ['1 day'],
-      '3 days': ['3 days'],
-      '7 days': ['7 days'],
-      '31 days': ['31 days'],
-      '90 days': ['90 days'],
-      '180 days': ['180 days'],
-      '365 days': ['365 days'],
+      "1 day": ["1 day"],
+      "3 days": ["3 days"],
+      "7 days": ["7 days"],
+      "31 days": ["31 days"],
+      "90 days": ["90 days"],
+      "180 days": ["180 days"],
+      "365 days": ["365 days"],
     };
-    matsCollections['curve-dates'].insert({
-      name: 'curve-dates',
+    matsCollections["curve-dates"].insert({
+      name: "curve-dates",
       type: matsTypes.InputTypes.dateRange,
       optionsMap,
       options: Object.keys(optionsMap).sort(),
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ['variable', 'data-source'],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default: dstr,
-      controlButtonVisibility: 'block',
+      controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 7,
-      help: 'dateHelp.html',
+      help: "dateHelp.html",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['curve-dates'].findOne({ name: 'curve-dates' });
+    var currentParam = matsCollections["curve-dates"].findOne({ name: "curve-dates" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.default, dstr)
     ) {
       // have to reload dates data
-      matsCollections['curve-dates'].update(
-        { name: 'curve-dates' },
+      matsCollections["curve-dates"].update(
+        { name: "curve-dates" },
         {
           $set: {
             startDate: minDate,
@@ -1030,149 +1030,149 @@ const doCurveTextPatterns = function () {
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.timeSeries,
       textPattern: [
-        ['', 'label', ': '],
-        ['', 'data-source', ' in '],
-        ['', 'region', ', '],
-        ['', 'scale', ' '],
-        ['', 'variable', ' '],
-        ['', 'statistic', ' at '],
-        ['', 'threshold', ', '],
-        ['fcst_type: ', 'forecast-type', ''],
-        ['avg: ', 'average', ''],
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["fcst_type: ", "forecast-type", ""],
+        ["avg: ", "average", ""],
       ],
       displayParams: [
-        'label',
-        'variable',
-        'data-source',
-        'region',
-        'statistic',
-        'threshold',
-        'scale',
-        'average',
-        'forecast-type',
+        "label",
+        "variable",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "scale",
+        "average",
+        "forecast-type",
       ],
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.threshold,
       textPattern: [
-        ['', 'label', ': '],
-        ['', 'data-source', ' in '],
-        ['', 'region', ', '],
-        ['', 'scale', ' '],
-        ['', 'variable', ' '],
-        ['', 'statistic', ', '],
-        ['fcst_type: ', 'forecast-type', ''],
-        ['', 'curve-dates', ''],
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", ", "],
+        ["fcst_type: ", "forecast-type", ""],
+        ["", "curve-dates", ""],
       ],
       displayParams: [
-        'label',
-        'variable',
-        'data-source',
-        'region',
-        'statistic',
-        'scale',
-        'forecast-type',
-        'curve-dates',
+        "label",
+        "variable",
+        "data-source",
+        "region",
+        "statistic",
+        "scale",
+        "forecast-type",
+        "curve-dates",
       ],
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.performanceDiagram,
       textPattern: [
-        ['', 'label', ': '],
-        ['', 'data-source', ' in '],
-        ['', 'region', ', '],
-        ['', 'scale', ' '],
-        ['', 'variable', ' at '],
-        ['', 'threshold', ', '],
-        ['fcst_type: ', 'forecast-type', ''],
-        ['', 'curve-dates', ''],
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "scale", " "],
+        ["", "variable", " at "],
+        ["", "threshold", ", "],
+        ["fcst_type: ", "forecast-type", ""],
+        ["", "curve-dates", ""],
       ],
       displayParams: [
-        'label',
-        'variable',
-        'data-source',
-        'region',
-        'threshold',
-        'scale',
-        'forecast-type',
-        'bin-parameter',
-        'curve-dates',
+        "label",
+        "variable",
+        "data-source",
+        "region",
+        "threshold",
+        "scale",
+        "forecast-type",
+        "bin-parameter",
+        "curve-dates",
       ],
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.histogram,
       textPattern: [
-        ['', 'label', ': '],
-        ['', 'data-source', ' in '],
-        ['', 'region', ', '],
-        ['', 'scale', ' '],
-        ['', 'variable', ' '],
-        ['', 'statistic', ' at '],
-        ['', 'threshold', ', '],
-        ['fcst_type: ', 'forecast-type', ''],
-        ['', 'curve-dates', ''],
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["fcst_type: ", "forecast-type", ""],
+        ["", "curve-dates", ""],
       ],
       displayParams: [
-        'label',
-        'variable',
-        'data-source',
-        'region',
-        'statistic',
-        'threshold',
-        'scale',
-        'forecast-type',
-        'curve-dates',
+        "label",
+        "variable",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "scale",
+        "forecast-type",
+        "curve-dates",
       ],
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.contour,
       textPattern: [
-        ['', 'label', ': '],
-        ['', 'data-source', ' in '],
-        ['', 'region', ', '],
-        ['', 'scale', ' '],
-        ['', 'variable', ' '],
-        ['', 'statistic', ' at '],
-        ['', 'threshold', ', '],
-        ['fcst_type: ', 'forecast-type', ''],
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["fcst_type: ", "forecast-type", ""],
       ],
       displayParams: [
-        'label',
-        'variable',
-        'data-source',
-        'region',
-        'statistic',
-        'threshold',
-        'scale',
-        'forecast-type',
+        "label",
+        "variable",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "scale",
+        "forecast-type",
       ],
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.contourDiff,
       textPattern: [
-        ['', 'label', ': '],
-        ['', 'data-source', ' in '],
-        ['', 'region', ', '],
-        ['', 'scale', ' '],
-        ['', 'variable', ' '],
-        ['', 'statistic', ' at '],
-        ['', 'threshold', ', '],
-        ['fcst_type: ', 'forecast-type', ''],
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["fcst_type: ", "forecast-type", ""],
       ],
       displayParams: [
-        'label',
-        'variable',
-        'data-source',
-        'region',
-        'statistic',
-        'threshold',
-        'scale',
-        'forecast-type',
+        "label",
+        "variable",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "scale",
+        "forecast-type",
       ],
       groupSize: 6,
     });
@@ -1188,7 +1188,7 @@ const doSavedCurveParams = function () {
     matsCollections.SavedCurveParams.remove({});
   }
   if (matsCollections.SavedCurveParams.find().count() == 0) {
-    matsCollections.SavedCurveParams.insert({ clName: 'changeList', changeList: [] });
+    matsCollections.SavedCurveParams.insert({ clName: "changeList", changeList: [] });
   }
 };
 
@@ -1203,38 +1203,38 @@ const doPlotGraph = function () {
   if (matsCollections.PlotGraphFunctions.find().count() == 0) {
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.timeSeries,
-      graphFunction: 'graphPlotly',
-      dataFunction: 'dataSeries',
+      graphFunction: "graphPlotly",
+      dataFunction: "dataSeries",
       checked: true,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.threshold,
-      graphFunction: 'graphPlotly',
-      dataFunction: 'dataThreshold',
+      graphFunction: "graphPlotly",
+      dataFunction: "dataThreshold",
       checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.performanceDiagram,
-      graphFunction: 'graphPlotly',
-      dataFunction: 'dataPerformanceDiagram',
+      graphFunction: "graphPlotly",
+      dataFunction: "dataPerformanceDiagram",
       checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.histogram,
-      graphFunction: 'graphPlotly',
-      dataFunction: 'dataHistogram',
+      graphFunction: "graphPlotly",
+      dataFunction: "dataHistogram",
       checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.contour,
-      graphFunction: 'graphPlotly',
-      dataFunction: 'dataContour',
+      graphFunction: "graphPlotly",
+      dataFunction: "dataContour",
       checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.contourDiff,
-      graphFunction: 'graphPlotly',
-      dataFunction: 'dataContourDiff',
+      graphFunction: "graphPlotly",
+      dataFunction: "dataContourDiff",
       checked: false,
     });
   }
@@ -1244,7 +1244,7 @@ Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
     console.log(
-      'main startup: corrupted Databases collection: dropping Databases collection'
+      "main startup: corrupted Databases collection: dropping Databases collection"
     );
     matsCollections.Databases.drop();
   }
@@ -1269,7 +1269,7 @@ Meteor.startup(function () {
   // create list of all pools
   const allPools = [];
   const metadataSettings = matsCollections.Databases.findOne(
-    { role: matsTypes.DatabaseRoles.META_DATA, status: 'active' },
+    { role: matsTypes.DatabaseRoles.META_DATA, status: "active" },
     {
       host: 1,
       port: 1,
@@ -1282,11 +1282,11 @@ Meteor.startup(function () {
   // the pool is intended to be global
   if (metadataSettings) {
     metadataPool = mysql.createPool(metadataSettings);
-    allPools.push({ pool: 'metadataPool', role: matsTypes.DatabaseRoles.META_DATA });
+    allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
 
   const sumSettings = matsCollections.Databases.findOne(
-    { role: matsTypes.DatabaseRoles.SUMS_DATA, status: 'active' },
+    { role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active" },
     {
       host: 1,
       port: 1,
@@ -1299,19 +1299,19 @@ Meteor.startup(function () {
   // the pool is intended to be global
   if (sumSettings) {
     sumPool = mysql.createPool(sumSettings);
-    allPools.push({ pool: 'sumPool', role: matsTypes.DatabaseRoles.SUMS_DATA });
+    allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
 
   // create list of tables we need to monitor for update
-  const mdr = new matsTypes.MetaDataDBRecord('metadataPool', 'mats_common', [
-    'region_descriptions',
+  const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", [
+    "region_descriptions",
   ]);
   for (let didx = 0; didx < variables.length; didx++) {
-    mdr.addRecord('sumPool', variableDBNames[variables[didx]], [
-      'threshold_descriptions',
-      'scale_descriptions',
-      'fcst_type_descriptions',
-      'regions_per_model_mats_all_categories',
+    mdr.addRecord("sumPool", variableDBNames[variables[didx]], [
+      "threshold_descriptions",
+      "scale_descriptions",
+      "fcst_type_descriptions",
+      "regions_per_model_mats_all_categories",
     ]);
   }
   try {

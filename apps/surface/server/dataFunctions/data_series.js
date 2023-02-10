@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataSeries = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -30,7 +30,7 @@ dataSeries = function (plotParams, plotFunction) {
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -47,67 +47,67 @@ dataSeries = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[curve['data-source']][0];
-    let queryTableClause = '';
-    const regionType = curve['region-type'];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[curve["data-source"]][0];
+    let queryTableClause = "";
+    const regionType = curve["region-type"];
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[regionType][variableStr];
-    let validTimeClause = '';
-    let forecastLength = curve['forecast-length'];
-    let forecastLengthClause = '';
+    let validTimeClause = "";
+    let forecastLength = curve["forecast-length"];
+    let forecastLengthClause = "";
     var timeVar;
     var dateClause;
-    let siteDateClause = '';
-    let siteMatchClause = '';
-    let sitesClause = '';
+    let siteDateClause = "";
+    let siteMatchClause = "";
+    let sitesClause = "";
     var NAggregate;
     var NClause;
     var queryPool;
-    if (regionType === 'Predefined region') {
-      timeVar = 'm0.valid_day+3600*m0.hour';
+    if (regionType === "Predefined region") {
+      timeVar = "m0.valid_day+3600*m0.hour";
       var metarStringStr = curve.truth;
       const metarString = Object.keys(
-        matsCollections.truth.findOne({ name: 'truth' }).valuesMap
+        matsCollections.truth.findOne({ name: "truth" }).valuesMap
       ).find(
         (key) =>
-          matsCollections.truth.findOne({ name: 'truth' }).valuesMap[key] ===
+          matsCollections.truth.findOne({ name: "truth" }).valuesMap[key] ===
           metarStringStr
       );
       var regionStr = curve.region;
       var region = Object.keys(
-        matsCollections.region.findOne({ name: 'region' }).valuesMap
+        matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
         (key) =>
-          matsCollections.region.findOne({ name: 'region' }).valuesMap[key] ===
+          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
       queryTableClause = `from ${model}_${metarString}_${region} as m0`;
       forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
       dateClause = `and m0.valid_day+3600*m0.hour >= ${fromSecs} and m0.valid_day+3600*m0.hour <= ${toSecs}`;
-      NAggregate = 'sum';
+      NAggregate = "sum";
       NClause = variable[1];
       queryPool = sumPool;
     } else {
-      timeVar = 'm0.time';
+      timeVar = "m0.time";
       var modelTable;
       if (forecastLength === 1) {
         modelTable = `${model}qp1f`;
-        forecastLengthClause = '';
+        forecastLengthClause = "";
       } else {
         modelTable =
-          model.includes('ret_') || model.includes('Ret_') ? `${model}p` : `${model}qp`;
+          model.includes("ret_") || model.includes("Ret_") ? `${model}p` : `${model}qp`;
         forecastLengthClause = `and m0.fcst_len = ${forecastLength} `;
       }
       const obsTable =
-        model.includes('ret_') || model.includes('Ret_') ? 'obs_retro' : 'obs';
+        model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
       queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
       const siteMap = matsCollections.StationMap.findOne(
-        { name: 'stations' },
+        { name: "stations" },
         { optionsMap: 1 }
       ).optionsMap;
       const sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -123,29 +123,29 @@ dataSeries = function (plotParams, plotFunction) {
         sitesClause = ` and m0.sta_id in('${querySites.join("','")}')`;
       } else {
         throw new Error(
-          'INFO:  Please add sites in order to get a single/multi station plot.'
+          "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
       dateClause = `and m0.time >= ${fromSecs} - 900 and m0.time <= ${toSecs} + 900`;
       siteDateClause = `and o.time >= ${fromSecs} - 900 and o.time <= ${toSecs} + 900`;
-      siteMatchClause = 'and m0.sta_id = o.sta_id and m0.time = o.time';
-      NAggregate = 'count';
-      NClause = '1';
+      siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
+      NAggregate = "count";
+      NClause = "1";
       queryPool = sitePool;
     }
-    const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       validTimeClause = `and floor((${timeVar}+1800)%(24*3600)/3600) IN(${validTimes})`; // adjust by 1800 seconds to center obs at the top of the hour
     }
     const averageStr = curve.average;
     const averageOptionsMap = matsCollections.average.findOne(
-      { name: 'average' },
+      { name: "average" },
       { optionsMap: 1 }
     ).optionsMap;
     const average = averageOptionsMap[averageStr][0];
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
@@ -153,7 +153,7 @@ dataSeries = function (plotParams, plotFunction) {
       `group_concat(${timeVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by ${timeVar}) as sub_data, count(${variable[0]}) as N0`;
     var statType = statisticOptionsMap[statisticSelect];
     const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { statVarUnitMap: 1 }
     );
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -169,38 +169,38 @@ dataSeries = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select {{average}} as avtime, ' +
-        'count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, ' +
-        'min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, ' +
-        'max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{siteMatchClause}} ' +
-        '{{sitesClause}} ' +
-        '{{dateClause}} ' +
-        '{{siteDateClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{forecastLengthClause}} ' +
-        'group by avtime ' +
-        'order by avtime' +
-        ';';
+        "select {{average}} as avtime, " +
+        "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
+        "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
+        "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{siteMatchClause}} " +
+        "{{sitesClause}} " +
+        "{{dateClause}} " +
+        "{{siteDateClause}} " +
+        "{{validTimeClause}} " +
+        "{{forecastLengthClause}} " +
+        "group by avtime " +
+        "order by avtime" +
+        ";";
 
-      statement = statement.replace('{{average}}', average);
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-      statement = statement.replace('{{sitesClause}}', sitesClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
-      statement = statement.replace('{{siteDateClause}}', siteDateClause);
-      statement = statement.split('{{timeVar}}').join(timeVar);
+      statement = statement.replace("{{average}}", average);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+      statement = statement.replace("{{sitesClause}}", sitesClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
+      statement = statement.replace("{{siteDateClause}}", siteDateClause);
+      statement = statement.split("{{timeVar}}").join(timeVar);
       dataRequests[label] = statement;
 
       // math is done on forecastLength later on -- set all analyses to 0
-      if (forecastLength === '-99') {
-        forecastLength = '0';
+      if (forecastLength === "-99") {
+        forecastLength = "0";
       }
 
       var queryResult;
@@ -237,14 +237,14 @@ dataSeries = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          if (error.includes('Unknown column')) {
+          if (error.includes("Unknown column")) {
             throw new Error(
               `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is not supported by the database for the model/region [${model} and ${region}].`
             );
@@ -270,8 +270,8 @@ dataSeries = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -313,7 +313,7 @@ dataSeries = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

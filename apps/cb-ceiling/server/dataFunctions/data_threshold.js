@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataThreshold = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,7 +27,7 @@ dataThreshold = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -45,46 +45,46 @@ dataThreshold = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
     const { label } = curve;
     const { variable } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[variable][curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
     const modelClause = `AND m0.model='${model}' `;
-    const queryTableClause = 'from vxDBTARGET  m0';
+    const queryTableClause = "from vxDBTARGET  m0";
     // catalogue the thresholds now, we'll need to do a separate query for each
     const allThresholds = Object.keys(
-      matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).sort(function (a, b) {
       return Number(a) - Number(b);
     });
     for (let tidx = 0; tidx < allThresholds.length; tidx++) {
-      allThresholds[tidx] = allThresholds[tidx].replace(/_/g, '.');
+      allThresholds[tidx] = allThresholds[tidx].replace(/_/g, ".");
     }
-    let validTimeClause = '';
-    const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    let validTimeClause = "";
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       validTimeClause = `and m0.fcstValidEpoch%(24*3600)/3600 IN[${validTimes}]`;
     }
-    const forecastLength = curve['forecast-length'];
+    const forecastLength = curve["forecast-length"];
     const forecastLengthClause = `and m0.fcstLen = ${forecastLength}`;
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
-    const regionType = curve['region-type'];
-    if (regionType === 'Select stations') {
+    const regionType = curve["region-type"];
+    if (regionType === "Select stations") {
       throw new Error(
-        'INFO:  Single/multi station plotting is not available for thresholds.'
+        "INFO:  Single/multi station plotting is not available for thresholds."
       );
     }
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     const regionClause = `AND m0.region='${region}' `;
     const statisticClause =
@@ -95,7 +95,7 @@ dataThreshold = function (plotParams, plotFunction) {
       "TO_STRING(m0.data.['{{threshold}}'].correct_negatives))) sub_data, count(m0.data.['{{threshold}}'].hits) N0 ";
     const dateClause = `and m0.fcstValidEpoch >= ${fromSecs} and m0.fcstValidEpoch <= ${toSecs}`;
     const whereClause =
-      'WHERE ' +
+      "WHERE " +
       "m0.type='DD' " +
       "AND m0.docType='CTC' " +
       "AND m0.subset='METAR' " +
@@ -123,31 +123,31 @@ dataThreshold = function (plotParams, plotFunction) {
         const threshold = allThresholds[thresholdIndex];
         // prepare the query from the above parameters
         let statement =
-          'SELECT {{threshold}} AS thresh, ' + // produces thresholds in kft
-          'COUNT(DISTINCT m0.fcstValidEpoch) N_times, ' +
-          'MIN(m0.fcstValidEpoch) min_secs, ' +
-          'MAX(m0.fcstValidEpoch) max_secs, ' +
-          '{{statisticClause}} ' +
-          '{{queryTableClause}} ' +
-          '{{whereClause}} ' +
-          '{{modelClause}} ' +
-          '{{regionClause}} ' +
-          '{{dateClause}} ' +
-          '{{validTimeClause}} ' +
-          '{{forecastLengthClause}} ' +
-          'GROUP BY {{threshold}} ' +
-          'ORDER BY thresh' +
-          ';';
+          "SELECT {{threshold}} AS thresh, " + // produces thresholds in kft
+          "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+          "MIN(m0.fcstValidEpoch) min_secs, " +
+          "MAX(m0.fcstValidEpoch) max_secs, " +
+          "{{statisticClause}} " +
+          "{{queryTableClause}} " +
+          "{{whereClause}} " +
+          "{{modelClause}} " +
+          "{{regionClause}} " +
+          "{{dateClause}} " +
+          "{{validTimeClause}} " +
+          "{{forecastLengthClause}} " +
+          "GROUP BY {{threshold}} " +
+          "ORDER BY thresh" +
+          ";";
 
-        statement = statement.replace('{{statisticClause}}', statisticClause);
-        statement = statement.replace('{{queryTableClause}}', queryTableClause);
-        statement = statement.replace('{{whereClause}}', whereClause);
-        statement = statement.replace('{{modelClause}}', modelClause);
-        statement = statement.replace('{{regionClause}}', regionClause);
-        statement = statement.split('{{threshold}}').join(threshold);
-        statement = statement.replace('{{validTimeClause}}', validTimeClause);
-        statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-        statement = statement.replace('{{dateClause}}', dateClause);
+        statement = statement.replace("{{statisticClause}}", statisticClause);
+        statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{whereClause}}", whereClause);
+        statement = statement.replace("{{modelClause}}", modelClause);
+        statement = statement.replace("{{regionClause}}", regionClause);
+        statement = statement.split("{{threshold}}").join(threshold);
+        statement = statement.replace("{{validTimeClause}}", validTimeClause);
+        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+        statement = statement.replace("{{dateClause}}", dateClause);
 
         statement = cbPool.trfmSQLForDbTarget(statement);
         dataRequests[label] = statement;
@@ -179,7 +179,7 @@ dataThreshold = function (plotParams, plotFunction) {
           e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
           throw new Error(e.message);
         }
-        if (queryResult.error !== undefined && queryResult.error !== '') {
+        if (queryResult.error !== undefined && queryResult.error !== "") {
           if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
             // this is NOT an error just a no data condition
             dataFoundForCurve = false;
@@ -225,8 +225,8 @@ dataThreshold = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -268,7 +268,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

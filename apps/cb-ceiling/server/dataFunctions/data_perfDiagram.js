@@ -9,8 +9,8 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataPerformanceDiagram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -26,7 +26,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -42,22 +42,22 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
-    const binParam = curve['bin-parameter'];
-    const binClause = matsCollections['bin-parameter'].findOne({
-      name: 'bin-parameter',
+    const binParam = curve["bin-parameter"];
+    const binClause = matsCollections["bin-parameter"].findOne({
+      name: "bin-parameter",
     }).optionsMap[binParam];
     var { variable } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[variable][curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
     const modelClause = `AND m0.model='${model}' `;
-    const queryTableClause = 'from vxDBTARGET  m0';
-    let validTimeClause = '';
-    let forecastLengthClause = '';
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const queryTableClause = "from vxDBTARGET  m0";
+    let validTimeClause = "";
+    let forecastLengthClause = "";
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    let dateString = '';
-    if (binParam !== 'Threshold') {
+    let dateString = "";
+    if (binParam !== "Threshold") {
       var thresholdStr = curve.threshold;
       if (thresholdStr === undefined) {
         throw new Error(
@@ -65,33 +65,33 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         );
       }
       var threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable][
+          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
             key
           ] === thresholdStr
       );
-      allThresholds = [threshold.replace(/_/g, '.')];
+      allThresholds = [threshold.replace(/_/g, ".")];
     } else {
       // catalogue the thresholds now, we'll need to do a separate query for each
       allThresholds = Object.keys(
-        matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
       ).sort(function (a, b) {
         return Number(a) - Number(b);
       });
       for (let tidx = 0; tidx < allThresholds.length; tidx++) {
-        allThresholds[tidx] = allThresholds[tidx].replace(/_/g, '.');
+        allThresholds[tidx] = allThresholds[tidx].replace(/_/g, ".");
       }
     }
-    if (binParam !== 'Valid UTC hour') {
-      const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    if (binParam !== "Valid UTC hour") {
+      const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         validTimeClause = `and m0.fcstValidEpoch%(24*3600)/3600 IN[${validTimes}]`;
       }
     }
-    if (binParam !== 'Fcst lead time') {
-      const forecastLength = curve['forecast-length'];
+    if (binParam !== "Fcst lead time") {
+      const forecastLength = curve["forecast-length"];
       if (forecastLength === undefined) {
         throw new Error(
           `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
@@ -99,26 +99,26 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       }
       forecastLengthClause = `and m0.fcstLen = ${forecastLength}`;
     }
-    if (binParam === 'Init Date') {
-      dateString = 'm0.fcstValidEpoch-m0.fcstLen*3600';
+    if (binParam === "Init Date") {
+      dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
     } else {
-      dateString = 'm0.fcstValidEpoch';
+      dateString = "m0.fcstValidEpoch";
     }
-    const regionType = curve['region-type'];
-    if (regionType === 'Select stations') {
+    const regionType = curve["region-type"];
+    if (regionType === "Select stations") {
       throw new Error(
-        'INFO:  Single/multi station plotting is not available for performance diagrams.'
+        "INFO:  Single/multi station plotting is not available for performance diagrams."
       );
     }
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     const regionClause = `AND m0.region='${region}' `;
-    const statisticSelect = 'PerformanceDiagram';
+    const statisticSelect = "PerformanceDiagram";
     const statisticClause =
       "((sum(m0.data.['{{threshold}}'].hits))/sum(m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses)) as pod, " +
       "((sum(m0.data.['{{threshold}}'].false_alarms))/sum(m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].hits)) as far, " +
@@ -129,7 +129,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       "TO_STRING(m0.data.['{{threshold}}'].correct_negatives))) sub_data, count(m0.data.['{{threshold}}'].hits) N0 ";
     const dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
     const whereClause =
-      'WHERE ' +
+      "WHERE " +
       "m0.type='DD' " +
       "AND m0.docType='CTC' " +
       "AND m0.subset='METAR' " +
@@ -138,7 +138,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // variable + statistic (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = 'ctc';
+    var statType = "ctc";
     curves[curveIndex].axisKey = statisticSelect; // stash the axisKey to use it later for axis options
 
     let d = {};
@@ -152,32 +152,32 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         threshold = allThresholds[thresholdIndex];
         // prepare the query from the above parameters
         let statement =
-          'SELECT {{binClause}} AS binVal, ' +
-          'COUNT(DISTINCT m0.fcstValidEpoch) N_times, ' +
-          'MIN(m0.fcstValidEpoch) min_secs, ' +
-          'MAX(m0.fcstValidEpoch) max_secs, ' +
-          '{{statisticClause}} ' +
-          '{{queryTableClause}} ' +
-          '{{whereClause}} ' +
-          '{{modelClause}} ' +
-          '{{regionClause}} ' +
-          '{{dateClause}} ' +
-          '{{validTimeClause}} ' +
-          '{{forecastLengthClause}} ' +
-          'GROUP BY {{binClause}} ' +
-          'ORDER BY binVal' +
-          ';';
+          "SELECT {{binClause}} AS binVal, " +
+          "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
+          "MIN(m0.fcstValidEpoch) min_secs, " +
+          "MAX(m0.fcstValidEpoch) max_secs, " +
+          "{{statisticClause}} " +
+          "{{queryTableClause}} " +
+          "{{whereClause}} " +
+          "{{modelClause}} " +
+          "{{regionClause}} " +
+          "{{dateClause}} " +
+          "{{validTimeClause}} " +
+          "{{forecastLengthClause}} " +
+          "GROUP BY {{binClause}} " +
+          "ORDER BY binVal" +
+          ";";
 
-        statement = statement.split('{{binClause}}').join(binClause);
-        statement = statement.replace('{{statisticClause}}', statisticClause);
-        statement = statement.replace('{{queryTableClause}}', queryTableClause);
-        statement = statement.replace('{{whereClause}}', whereClause);
-        statement = statement.replace('{{modelClause}}', modelClause);
-        statement = statement.replace('{{regionClause}}', regionClause);
-        statement = statement.split('{{threshold}}').join(threshold);
-        statement = statement.replace('{{validTimeClause}}', validTimeClause);
-        statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-        statement = statement.replace('{{dateClause}}', dateClause);
+        statement = statement.split("{{binClause}}").join(binClause);
+        statement = statement.replace("{{statisticClause}}", statisticClause);
+        statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{whereClause}}", whereClause);
+        statement = statement.replace("{{modelClause}}", modelClause);
+        statement = statement.replace("{{regionClause}}", regionClause);
+        statement = statement.split("{{threshold}}").join(threshold);
+        statement = statement.replace("{{validTimeClause}}", validTimeClause);
+        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+        statement = statement.replace("{{dateClause}}", dateClause);
 
         statement = cbPool.trfmSQLForDbTarget(statement);
         dataRequests[label] = statement;
@@ -208,7 +208,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
           e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
           throw new Error(e.message);
         }
-        if (queryResult.error !== undefined && queryResult.error !== '') {
+        if (queryResult.error !== undefined && queryResult.error !== "") {
           if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
             // this is NOT an error just a no data condition
             dataFoundForCurve = false;
@@ -253,7 +253,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     } else {
       // this is a difference curve -- not supported for ROC plots
       throw new Error(
-        'INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves.'
+        "INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves."
       );
     }
 
@@ -291,7 +291,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

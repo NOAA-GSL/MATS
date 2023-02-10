@@ -1,4 +1,4 @@
-import { matsTypes, matsParamUtils, matsCollections } from 'meteor/randyp:mats-common';
+import { matsTypes, matsParamUtils, matsCollections } from "meteor/randyp:mats-common";
 
 processScorecard = function (plotParams, plotFunction) {
   /*
@@ -80,53 +80,53 @@ processScorecard = function (plotParams, plotFunction) {
     */
   // create or retrieve the scorecard document
   // get the submission epoch - right now
-  const submitEpoch = plotParams.submitEpoch;
+  const { submitEpoch } = plotParams;
   const processedAt = 0; // should be filled in when processing is finished
-  const userName = plotParams.userName;
-  const name = plotParams['scorecard-name'];
+  const { userName } = plotParams;
+  const name = plotParams["scorecard-name"];
   const singleCurveParamNames = matsParamUtils.getSingleSelectCurveParamNames();
   // We are thinking that the combination of userName/scorecardName/submitEpoch/processedEpoch is uniq
 
   let interval = {};
-  if ((plotParams['scorecard-schedule-mode'] == 'Once') === 'Recurring') {
-    switch (plotParams['scorecard-recurrence-interval']) {
-      case 'Daily':
+  if ((plotParams["scorecard-schedule-mode"] == "Once") === "Recurring") {
+    switch (plotParams["scorecard-recurrence-interval"]) {
+      case "Daily":
         interval = {
-          type: 'daily',
-          hours: plotParams['these-hours-of-the-day'],
+          type: "daily",
+          hours: plotParams["these-hours-of-the-day"],
         };
         break;
-      case 'Weekly':
+      case "Weekly":
         interval = {
-          type: 'weekly',
-          hours: plotParams['these-hours-of-the-day'],
-          daysOfWeek: plotParams['these-days-of-the-week'],
+          type: "weekly",
+          hours: plotParams["these-hours-of-the-day"],
+          daysOfWeek: plotParams["these-days-of-the-week"],
         };
         break;
-      case 'Monthly':
+      case "Monthly":
         interval = {
-          type: 'monthly',
-          hours: plotParams['these-hours-of-the-day'],
-          daysOfMonth: plotParams['these-days-of-the-month'],
+          type: "monthly",
+          hours: plotParams["these-hours-of-the-day"],
+          daysOfMonth: plotParams["these-days-of-the-month"],
         };
         break;
-      case 'Yearly':
+      case "Yearly":
         interval = {
-          type: 'yearly',
-          hours: plotParams['these-hours-of-the-day'],
-          daysOfMonth: plotParams['these-days-of-the-month'],
-          months: plotParams['these-months'],
+          type: "yearly",
+          hours: plotParams["these-hours-of-the-day"],
+          daysOfMonth: plotParams["these-days-of-the-month"],
+          months: plotParams["these-months"],
         };
         break;
     }
   }
   const dateRange =
-    plotParams['scorecard-schedule-mode'] == 'Once' ? plotParams.dates : interval;
+    plotParams["scorecard-schedule-mode"] == "Once" ? plotParams.dates : interval;
 
   // get the union of the fcst-length arrays of all the curves
   const fcstLengthsSet = new Set();
   plotParams.curves.forEach(function (curve) {
-    curve['forecast-length'].forEach(function (fcl) {
+    curve["forecast-length"].forEach(function (fcl) {
       fcstLengthsSet.add(fcl);
     });
   });
@@ -142,38 +142,38 @@ processScorecard = function (plotParams, plotFunction) {
   const regions = Array.from(regionsSet);
 
   // create an id for the document
-  let idDateRange = dateRange.replace(/ /g, '_');
-  idDateRange = idDateRange.replace(/:/g, '_');
+  let idDateRange = dateRange.replace(/ /g, "_");
+  idDateRange = idDateRange.replace(/:/g, "_");
 
   const id = `SC:${name}:${processedAt}:${idDateRange}`;
   const title = `${userName}:${name}:${submitEpoch}:${processedAt}:${dateRange}`;
   // process the scorecardDocument
   const significanceThresholds =
-    plotParams['scorecard-percent-stdv'] === 'Percent'
+    plotParams["scorecard-percent-stdv"] === "Percent"
       ? {
-          'minor-threshold-by-percent': plotParams['minor-threshold-by-percent'],
-          'major-threshold-by-percent': plotParams['major-threshold-by-percent'],
+          "minor-threshold-by-percent": plotParams["minor-threshold-by-percent"],
+          "major-threshold-by-percent": plotParams["major-threshold-by-percent"],
         }
       : {
-          'minor-threshold-by-stdv': plotParams['minor-threshold-by-stdv'],
-          'major-threshold-by-stdv': plotParams['major-threshold-by-stdv'],
+          "minor-threshold-by-stdv": plotParams["minor-threshold-by-stdv"],
+          "major-threshold-by-stdv": plotParams["major-threshold-by-stdv"],
         };
   const significanceColors = {
-    'major-source-color': plotParams['major-source-color'],
-    'major-truth-color': plotParams['major-truth-color'],
-    'minor-source-color': plotParams['minor-source-color'],
-    'minor-truth-color': plotParams['minor-truth-color'],
+    "major-source-color": plotParams["major-source-color"],
+    "major-truth-color": plotParams["major-truth-color"],
+    "minor-source-color": plotParams["minor-source-color"],
+    "minor-truth-color": plotParams["minor-truth-color"],
   };
   const scorecardDocument = {
     id,
     plotParams,
-    type: 'SC',
+    type: "SC",
     userName,
     name,
     status: matsTypes.ScorecardStatus.pending,
     submitted: submitEpoch,
     dateRange,
-    schedule: (schedule = plotParams['scorecard-schedule-mode']),
+    schedule: (schedule = plotParams["scorecard-schedule-mode"]),
     endsOn: plotParams.scorecardEndsOn,
     processedAt,
     significanceThresholds,
@@ -186,22 +186,22 @@ processScorecard = function (plotParams, plotFunction) {
     // fill in the rows - these are all initially default values
     plotParams.curves.forEach(function (curve) {
       // create the empty object for this row
-      const label = curve.label;
+      const { label } = curve;
       scorecardDocument.results.rows[label] = {};
       // add the top level elements.
       // make rowTitle and rowParameters maps, the display page can sort out stringifying them.
       // map the necessary row parameters
       // remove these params from the singleCurveParamNames list, all of the row parameters are either single select
       // or they are handled individually, so we remove the ones that are handled individually from the single select list.
-      const notIncludedParams = ['label', 'data-source', 'validation-data-source'];
+      const notIncludedParams = ["label", "data-source", "validation-data-source"];
       const rowParameters = singleCurveParamNames.filter(function (paramName) {
         return !notIncludedParams.includes(paramName);
       });
 
       scorecardDocument.results.rows[curve.label].rowTitle = {
         label,
-        datasource: curve['data-source'],
-        validationDatasource: curve['validation-data-source'],
+        datasource: curve["data-source"],
+        validationDatasource: curve["validation-data-source"],
       };
       scorecardDocument.results.rows[curve.label].rowParameters = rowParameters;
       scorecardDocument.results.rows[curve.label].regions = regions;
@@ -255,7 +255,7 @@ processScorecard = function (plotParams, plotFunction) {
                 // mark this undefined
                 scorecardDocument.results.rows[curve.label].data[region][stat][
                   variable
-                ][fcstlen] = 'undefined';
+                ][fcstlen] = "undefined";
               }
             });
           });
@@ -265,18 +265,18 @@ processScorecard = function (plotParams, plotFunction) {
   // store the document
   try {
     const scDoc = JSON.stringify(scorecardDocument);
-    const id = scorecardDocument.id;
+    const { id } = scorecardDocument;
     (async function (id, doc) {
       cbScorecardPool.upsertCB(id, doc);
     })(id, scDoc).then(() => {
-      console.log('upserted doc with id', id);
+      console.log("upserted doc with id", id);
     });
   } catch (err) {
     console.log(`error writing scorecard to database: ${err.message}`);
   }
 
-  var result = {
-    error: '',
+  const result = {
+    error: "",
     data: scorecardDocument.id,
     options: {},
     basis: {

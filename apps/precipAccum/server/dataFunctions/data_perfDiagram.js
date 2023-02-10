@@ -9,8 +9,8 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataPerformanceDiagram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -26,7 +26,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -41,37 +41,37 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
-    const binParam = curve['bin-parameter'];
-    const binClause = matsCollections['bin-parameter'].findOne({
-      name: 'bin-parameter',
+    const binParam = curve["bin-parameter"];
+    const binClause = matsCollections["bin-parameter"].findOne({
+      name: "bin-parameter",
     }).optionsMap[binParam];
     var { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: 'variable' })
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[variable][curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     var scaleStr = curve.scale;
     const grid_scale = Object.keys(
-      matsCollections.scale.findOne({ name: 'scale' }).valuesMap[variable]
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
     ).find(
       (key) =>
-        matsCollections.scale.findOne({ name: 'scale' }).valuesMap[variable][key] ===
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
         scaleStr
     );
     const queryTableClause = `from ${databaseRef}.${model}_${grid_scale}_${region} as m0`;
-    let thresholdClause = '';
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    let thresholdClause = "";
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    let dateClause = '';
-    if (binParam !== 'Threshold') {
+    let dateClause = "";
+    if (binParam !== "Threshold") {
       var thresholdStr = curve.threshold;
       if (thresholdStr === undefined) {
         throw new Error(
@@ -79,35 +79,35 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         );
       }
       const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable]
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections.threshold.findOne({ name: 'threshold' }).valuesMap[variable][
+          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
             key
           ] === thresholdStr
       );
       thresholdClause = `and m0.trsh = ${threshold * 0.01}`;
     }
-    var forecastTypeStr = curve['forecast-type'];
+    var forecastTypeStr = curve["forecast-type"];
     const forecastType = Object.keys(
-      matsCollections['forecast-type'].findOne({ name: 'forecast-type' }).valuesMap[
+      matsCollections["forecast-type"].findOne({ name: "forecast-type" }).valuesMap[
         variable
       ]
     ).find(
       (key) =>
-        matsCollections['forecast-type'].findOne({ name: 'forecast-type' }).valuesMap[
+        matsCollections["forecast-type"].findOne({ name: "forecast-type" }).valuesMap[
           variable
         ][key] === forecastTypeStr
     );
     var forecastTypeClause;
-    if (databaseRef === 'precip') {
+    if (databaseRef === "precip") {
       forecastTypeClause = `and m0.num_fcsts = ${forecastType}`;
     } else {
       forecastTypeClause = `and m0.accum_len = ${forecastType}`;
     }
     dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
-    const statisticSelect = 'PerformanceDiagram';
-    var statType = 'ctc';
+    const statisticSelect = "PerformanceDiagram";
+    var statType = "ctc";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // variable + statistic (axisKey) it will use the same axis.
@@ -119,27 +119,27 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        '{{binClause}} ' +
-        'count(distinct m0.time) as N_times, ' +
-        'min(m0.time) as min_secs, ' +
-        'max(m0.time) as max_secs, ' +
-        '((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, ' +
+        "{{binClause}} " +
+        "count(distinct m0.time) as N_times, " +
+        "min(m0.time) as min_secs, " +
+        "max(m0.time) as max_secs, " +
+        "((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, " +
         "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, group_concat(m0.time, ';', m0.yy, ';', " +
         "m0.ny, ';', m0.yn, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0 " +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{dateClause}} ' +
-        '{{thresholdClause}} ' +
-        '{{forecastTypeClause}} ' +
-        'group by binVal ' +
-        'order by binVal' +
-        ';';
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{dateClause}} " +
+        "{{thresholdClause}} " +
+        "{{forecastTypeClause}} " +
+        "group by binVal " +
+        "order by binVal" +
+        ";";
 
-      statement = statement.replace('{{binClause}}', binClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{thresholdClause}}', thresholdClause);
-      statement = statement.replace('{{forecastTypeClause}}', forecastTypeClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
+      statement = statement.replace("{{binClause}}", binClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{thresholdClause}}", thresholdClause);
+      statement = statement.replace("{{forecastTypeClause}}", forecastTypeClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
       dataRequests[label] = statement;
 
       var queryResult;
@@ -168,14 +168,14 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          if (error.includes('ER_NO_SUCH_TABLE')) {
+          if (error.includes("ER_NO_SUCH_TABLE")) {
             throw new Error(
               `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
                 `Choose a different scale to continue using this region.`
@@ -199,7 +199,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     } else {
       // this is a difference curve -- not supported for ROC plots
       throw new Error(
-        'INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves.'
+        "INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves."
       );
     }
 
@@ -237,7 +237,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

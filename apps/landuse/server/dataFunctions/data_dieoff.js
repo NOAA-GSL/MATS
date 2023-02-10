@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataDieOff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,7 +27,7 @@ dataDieOff = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -44,46 +44,46 @@ dataDieOff = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[curve["data-source"]][0];
     var vgtypStr = curve.vgtyp;
     const vgtyp = Object.keys(
-      matsCollections.vgtyp.findOne({ name: 'vgtyp' }).valuesMap
+      matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.vgtyp.findOne({ name: 'vgtyp' }).valuesMap[key] === vgtypStr
+        matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap[key] === vgtypStr
     );
     const vgtypClause = `and m0.vgtyp IN(${vgtyp})`;
     const queryTableClause = `from ${model} as m0`;
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
     var validTimes;
-    let validTimeClause = '';
+    let validTimeClause = "";
     var utcCycleStart;
-    let utcCycleStartClause = '';
-    const forecastLengthStr = curve['dieoff-type'];
-    const forecastLengthOptionsMap = matsCollections['dieoff-type'].findOne(
-      { name: 'dieoff-type' },
+    let utcCycleStartClause = "";
+    const forecastLengthStr = curve["dieoff-type"];
+    const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne(
+      { name: "dieoff-type" },
       { optionsMap: 1 }
     ).optionsMap;
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     var dateClause;
     if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-      validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+      validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         validTimeClause = `and floor((m0.valid_day+3600*m0.hour)%(24*3600)/3600) IN(${validTimes})`;
       }
       dateClause = `and m0.valid_day+3600*m0.hour >= ${fromSecs} and m0.valid_day+3600*m0.hour <= ${toSecs}`;
     } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
       utcCycleStart =
-        curve['utc-cycle-start'] === undefined ? [] : curve['utc-cycle-start'];
+        curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
       if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
         utcCycleStartClause = `and floor((m0.valid_day+3600*m0.hour - m0.fcst_len*3600)%(24*3600)/3600) IN(${utcCycleStart})`;
       }
@@ -93,7 +93,7 @@ dataDieOff = function (plotParams, plotFunction) {
     }
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
@@ -101,7 +101,7 @@ dataDieOff = function (plotParams, plotFunction) {
       `group_concat(m0.valid_day+3600*m0.hour, ';', ${variable[0]}, ';', ${variable[1]}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.valid_day+3600*m0.hour) as sub_data, count(${variable[0]}) as N0`;
     var statType = statisticOptionsMap[statisticSelect];
     const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { statVarUnitMap: 1 }
     );
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -117,27 +117,27 @@ dataDieOff = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select m0.fcst_len as fcst_lead, ' +
-        'count(distinct m0.valid_day+3600*m0.hour) as N_times, ' +
-        'min(m0.valid_day+3600*m0.hour) as min_secs, ' +
-        'max(m0.valid_day+3600*m0.hour) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{dateClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{utcCycleStartClause}} ' +
-        '{{vgtypClause}} ' +
-        'group by fcst_lead ' +
-        'order by fcst_lead' +
-        ';';
+        "select m0.fcst_len as fcst_lead, " +
+        "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+        "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+        "max(m0.valid_day+3600*m0.hour) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{dateClause}} " +
+        "{{validTimeClause}} " +
+        "{{utcCycleStartClause}} " +
+        "{{vgtypClause}} " +
+        "group by fcst_lead " +
+        "order by fcst_lead" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
-      statement = statement.replace('{{vgtypClause}}', vgtypClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
+      statement = statement.replace("{{vgtypClause}}", vgtypClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
       dataRequests[label] = statement;
 
       var queryResult;
@@ -167,14 +167,14 @@ dataDieOff = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          if (error.includes('Unknown column')) {
+          if (error.includes("Unknown column")) {
             throw new Error(
               `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is not supported by the database for the model/vgtyp [${model} and ${vgtypStr}].`
             );
@@ -200,8 +200,8 @@ dataDieOff = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -243,7 +243,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

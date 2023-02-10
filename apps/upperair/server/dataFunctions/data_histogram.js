@@ -8,8 +8,8 @@ import {
   matsDataUtils,
   matsDataQueryUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataHistogram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -26,7 +26,7 @@ dataHistogram = function (plotParams, plotFunction) {
   const dataFoundForCurve = [];
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -47,97 +47,97 @@ dataHistogram = function (plotParams, plotFunction) {
     dataFoundForCurve[curveIndex] = true;
     const { label } = curve;
     const { database } = curve;
-    const databaseRef = matsCollections.database.findOne({ name: 'database' })
+    const databaseRef = matsCollections.database.findOne({ name: "database" })
       .optionsMap[database];
-    let model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[database][curve['data-source']][0];
-    let queryTableClause = '';
-    const regionType = curve['region-type'];
-    let phaseClause = '';
-    if (database === 'AMDAR') {
+    let model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[database][curve["data-source"]][0];
+    let queryTableClause = "";
+    const regionType = curve["region-type"];
+    let phaseClause = "";
+    if (database === "AMDAR") {
       const phaseStr = curve.phase;
       const phaseOptionsMap = matsCollections.phase.findOne(
-        { name: 'phase' },
+        { name: "phase" },
         { optionsMap: 1 }
       ).optionsMap;
       phaseClause = phaseOptionsMap[phaseStr];
     }
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[regionType][variableStr];
-    let validTimeClause = '';
-    const forecastLength = curve['forecast-length'];
+    let validTimeClause = "";
+    const forecastLength = curve["forecast-length"];
     let forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    if (database.includes('RAOBs') && regionType === 'Predefined region') {
+    if (database.includes("RAOBs") && regionType === "Predefined region") {
       // we're just getting the obs from table m1, so only need fcst_len = 0
-      forecastLengthClause += ' and m1.fcst_len = 0';
+      forecastLengthClause += " and m1.fcst_len = 0";
     }
     var levelVar;
     const { top } = curve;
     const { bottom } = curve;
-    let siteDateClause = '';
-    let siteLevelClause = '';
-    let siteMatchClause = '';
-    let sitesClause = '';
+    let siteDateClause = "";
+    let siteLevelClause = "";
+    let siteMatchClause = "";
+    let sitesClause = "";
     var NAggregate;
     var NClause;
-    let levelClause = '';
-    if (regionType === 'Predefined region') {
+    let levelClause = "";
+    if (regionType === "Predefined region") {
       var regionStr = curve.region;
-      var regionDB = database.includes('RAOBs') ? 'ID' : 'shortName';
+      var regionDB = database.includes("RAOBs") ? "ID" : "shortName";
       var region = Object.keys(
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[regionDB]
+        matsCollections.region.findOne({ name: "region" }).valuesMap[regionDB]
       ).find(
         (key) =>
-          matsCollections.region.findOne({ name: 'region' }).valuesMap[regionDB][
+          matsCollections.region.findOne({ name: "region" }).valuesMap[regionDB][
             key
           ] === regionStr
       );
       queryTableClause = `from ${databaseRef.sumsDB}.${model}${region} as m0`;
-      if (database.includes('RAOBs')) {
+      if (database.includes("RAOBs")) {
         // Most of the RAOBs tables don't store a model sum or an obs sum for some reason.
         // So, we get the obs sum from HRRR_OPS, HRRR_HI, or GFS, because the obs are the same across all models.
         // Then we get the model sum by adding the obs sum to the bias sum (bias = model-obs).
-        if (['5', '14', '15', '16', '17', '18'].includes(region.toString())) {
+        if (["5", "14", "15", "16", "17", "18"].includes(region.toString())) {
           queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.HRRR_OPS_Areg${region} as m1`;
-        } else if (region.toString() === '19') {
+        } else if (region.toString() === "19") {
           queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.HRRR_HI_Areg${region} as m1`;
         } else {
           queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.GFS_Areg${region} as m1`;
         }
       }
       levelClause = `and m0.mb10 >= ${top}/10 and m0.mb10 <= ${bottom}/10`;
-      if (database.includes('RAOBs')) {
+      if (database.includes("RAOBs")) {
         siteMatchClause =
-          'and m0.date = m1.date and m0.hour = m1.hour and m0.mb10 = m1.mb10';
+          "and m0.date = m1.date and m0.hour = m1.hour and m0.mb10 = m1.mb10";
       }
-      NAggregate = 'sum';
+      NAggregate = "sum";
       NClause = variable[1];
-      levelVar = 'm0.mb10 * 10';
+      levelVar = "m0.mb10 * 10";
     } else {
-      if (database === 'AMDAR') {
+      if (database === "AMDAR") {
         throw new Error(
-          'Single/multi-station plotting is not supported by the AMDAR databse.'
+          "Single/multi-station plotting is not supported by the AMDAR databse."
         );
       }
       // remove table prefixes
-      const model_components = model.split('_');
+      const model_components = model.split("_");
       model = model_components[0];
       if (model_components.length > 1) {
         for (let midx = 1; midx < model_components.length - 1; midx++) {
           model = `${model}_${model_components[midx]}`;
         }
       }
-      const obsTable = 'RAOB';
+      const obsTable = "RAOB";
       queryTableClause = `from ${databaseRef.modelDB}.${obsTable} as o, ${databaseRef.modelDB}.${model} as m0 `;
       const siteMap = matsCollections.StationMap.findOne(
-        { name: 'stations' },
+        { name: "stations" },
         { optionsMap: 1 }
       ).optionsMap;
       const sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -157,25 +157,25 @@ dataHistogram = function (plotParams, plotFunction) {
         sitesClause = ` and m0.wmoid in('${querySites.join("','")}')`;
       } else {
         throw new Error(
-          'INFO:  Please add sites in order to get a single/multi station plot.'
+          "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
       siteDateClause = `and unix_timestamp(o.date)+3600*o.hour >= ${fromSecs} - 1800 and unix_timestamp(o.date)+3600*o.hour <= ${toSecs} + 1800`;
       levelClause = `and ceil((m0.press-20)/50)*50 >= ${top} and ceil((m0.press-20)/50)*50 <= ${bottom}`;
       siteLevelClause = `and ceil((o.press-20)/50)*50 >= ${top} and ceil((o.press-20)/50)*50 <= ${bottom}`;
       siteMatchClause =
-        'and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press';
-      NAggregate = 'count';
-      NClause = '1';
-      levelVar = 'ceil((m0.press-20)/50)*50';
+        "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
+      NAggregate = "count";
+      NClause = "1";
+      levelVar = "ceil((m0.press-20)/50)*50";
     }
-    const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       validTimeClause = `and m0.hour IN(${validTimes})`;
     }
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: 'statistic' },
+      { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
@@ -183,7 +183,7 @@ dataHistogram = function (plotParams, plotFunction) {
       `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ${levelVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, ${levelVar}) as sub_data, count(${variable[0]}) as N0`;
     var statType = statisticOptionsMap[statisticSelect];
     const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: 'variable' },
+      { name: "variable" },
       { statVarUnitMap: 1 }
     );
     var varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -193,8 +193,8 @@ dataHistogram = function (plotParams, plotFunction) {
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     let axisKey = yAxisFormat;
-    if (yAxisFormat === 'Relative frequency') {
-      axisKey += ' (x100)';
+    if (yAxisFormat === "Relative frequency") {
+      axisKey += " (x100)";
     }
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
@@ -204,40 +204,40 @@ dataHistogram = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)) as avtime, ' +
-        'count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, ' +
-        'min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, ' +
-        'max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{siteMatchClause}} ' +
-        '{{sitesClause}} ' +
-        '{{dateClause}} ' +
-        '{{siteDateClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{forecastLengthClause}} ' +
-        '{{levelClause}} ' +
-        '{{siteLevelClause}} ' +
-        '{{phaseClause}} ' +
-        'group by avtime ' +
-        'order by avtime' +
-        ';';
+        "select ceil(43200*floor(((unix_timestamp(m0.date)+3600*m0.hour)+43200/2)/43200)) as avtime, " +
+        "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
+        "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
+        "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{siteMatchClause}} " +
+        "{{sitesClause}} " +
+        "{{dateClause}} " +
+        "{{siteDateClause}} " +
+        "{{validTimeClause}} " +
+        "{{forecastLengthClause}} " +
+        "{{levelClause}} " +
+        "{{siteLevelClause}} " +
+        "{{phaseClause}} " +
+        "group by avtime " +
+        "order by avtime" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-      statement = statement.replace('{{sitesClause}}', sitesClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{levelClause}}', levelClause);
-      statement = statement.replace('{{siteLevelClause}}', siteLevelClause);
-      statement = statement.replace('{{phaseClause}}', phaseClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
-      statement = statement.replace('{{siteDateClause}}', siteDateClause);
-      if (database === 'AMDAR') {
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+      statement = statement.replace("{{sitesClause}}", sitesClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{levelClause}}", levelClause);
+      statement = statement.replace("{{siteLevelClause}}", siteLevelClause);
+      statement = statement.replace("{{phaseClause}}", phaseClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
+      statement = statement.replace("{{siteDateClause}}", siteDateClause);
+      if (database === "AMDAR") {
         // AMDAR tables have all partial sums so we can get them all from the main table
-        statement = statement.split('m1').join('m0');
+        statement = statement.split("m1").join("m0");
       }
       dataRequests[label] = statement;
 
@@ -271,14 +271,14 @@ dataHistogram = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve[curveIndex] = false;
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          if (error.includes('Unknown column')) {
+          if (error.includes("Unknown column")) {
             throw new Error(
               `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is not supported by the database for the model/region [${model} and ${region}].`
             );
@@ -294,7 +294,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query

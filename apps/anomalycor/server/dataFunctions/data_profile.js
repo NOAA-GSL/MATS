@@ -10,8 +10,8 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-} from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
+} from "meteor/randyp:mats-common";
+import { moment } from "meteor/momentjs:moment";
 
 dataProfile = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -27,7 +27,7 @@ dataProfile = function (plotParams, plotFunction) {
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
-  let error = '';
+  let error = "";
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
@@ -43,41 +43,41 @@ dataProfile = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
-    const model = matsCollections['data-source'].findOne({ name: 'data-source' })
-      .optionsMap[curve['data-source']][0];
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: 'region' }).valuesMap
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections.region.findOne({ name: 'region' }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     const queryTableClause = `from ${model}_anomcorr_${region} as m0`;
     const { variable } = curve;
     const variableClause = `and m0.variable = '${variable}'`;
-    const validTimeStr = curve['valid-time'];
-    const validTimeClause = matsCollections['valid-time'].findOne(
-      { name: 'valid-time' },
+    const validTimeStr = curve["valid-time"];
+    const validTimeClause = matsCollections["valid-time"].findOne(
+      { name: "valid-time" },
       { optionsMap: 1 }
     ).optionsMap[validTimeStr][0];
-    const forecastLength = curve['forecast-length'];
+    const forecastLength = curve["forecast-length"];
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
-    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     const dateClause = `and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= ${fromSecs} and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= ${toSecs}`;
     const statisticClause =
-      'avg(m0.wacorr/100) as stat, ' +
-      'count(m0.wacorr) as N0, ' +
+      "avg(m0.wacorr/100) as stat, " +
+      "count(m0.wacorr) as N0, " +
       "group_concat(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level, ';', m0.wacorr / 100 " +
-      'order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data';
-    var statType = 'ACC';
-    curves[curveIndex].statistic = 'Correlation';
+      "order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data";
+    var statType = "ACC";
+    curves[curveIndex].statistic = "Correlation";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const axisKey = 'Correlation';
+    const axisKey = "Correlation";
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
     var d;
@@ -85,27 +85,27 @@ dataProfile = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        'select m0.level as avVal, ' +
-        'count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, ' +
-        'min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, ' +
-        'max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, ' +
-        '{{statisticClause}} ' +
-        '{{queryTableClause}} ' +
-        'where 1=1 ' +
-        '{{dateClause}} ' +
-        '{{variableClause}} ' +
-        '{{validTimeClause}} ' +
-        '{{forecastLengthClause}} ' +
-        'group by avVal ' +
-        'order by avVal' +
-        ';';
+        "select m0.level as avVal, " +
+        "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
+        "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
+        "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{dateClause}} " +
+        "{{variableClause}} " +
+        "{{validTimeClause}} " +
+        "{{forecastLengthClause}} " +
+        "group by avVal " +
+        "order by avVal" +
+        ";";
 
-      statement = statement.replace('{{statisticClause}}', statisticClause);
-      statement = statement.replace('{{queryTableClause}}', queryTableClause);
-      statement = statement.replace('{{variableClause}}', variableClause);
-      statement = statement.replace('{{validTimeClause}}', validTimeClause);
-      statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-      statement = statement.replace('{{dateClause}}', dateClause);
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{variableClause}}", variableClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
       dataRequests[label] = statement;
 
       var queryResult;
@@ -117,7 +117,7 @@ dataProfile = function (plotParams, plotFunction) {
           sumPool,
           statement,
           appParams,
-          'Anomaly Correlation'
+          "Anomaly Correlation"
         );
         finishMoment = moment();
         dataRequests[`data retrieval (query) time - ${label}`] = {
@@ -135,7 +135,7 @@ dataProfile = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== '') {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
@@ -162,8 +162,8 @@ dataProfile = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === 'ctc',
-        statType === 'scalar'
+        statType === "ctc",
+        statType === "scalar"
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -205,7 +205,7 @@ dataProfile = function (plotParams, plotFunction) {
 
   if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
-    throw new Error('INFO:  No valid data for any curves.');
+    throw new Error("INFO:  No valid data for any curves.");
   }
 
   // process the data returned by the query
