@@ -2,7 +2,9 @@
   "name": "surface",
   "private": true,
   "scripts": {
-    "start": "meteor run"
+    "start": "meteor run",
+    "lint:check": "prettier --ignore-path ../../.gitignore --check . && eslint --ignore-path ../../.gitignore .",
+    "lint:fix": "prettier --ignore-path ../../.gitignore --write . && eslint --ignore-path ../../.gitignore --fix ."
   },
   "dependencies": {
     "@babel/runtime": "^7.20.13",
@@ -21,5 +23,18 @@
     "object-hash": "^1.3.1",
     "object-sizeof": "^1.6.3",
     "xmlbuilder": "^10.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-import-resolver-meteor": "^0.4.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
+    "eslint-plugin-meteor": "^7.3.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^2.8.4"
   }
 }

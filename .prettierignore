@@ -1,0 +1,11 @@
+.vscode
+container_deployment
+container-scripts
+MATScommon
+METexpress
+kubernetes
+scripts
+server_configuration_files
+static
+**/.meteor
+**/met-*
