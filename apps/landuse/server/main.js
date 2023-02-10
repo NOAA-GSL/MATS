@@ -4,16 +4,18 @@
 
 import { Meteor } from 'meteor/meteor';
 import { mysql } from 'meteor/pcel:mysql';
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsCollections } from 'meteor/randyp:mats-common';
-import { matsDataUtils } from 'meteor/randyp:mats-common';
-import { matsDataQueryUtils } from 'meteor/randyp:mats-common';
-import { matsParamUtils } from 'meteor/randyp:mats-common';
+import {
+  matsTypes,
+  matsCollections,
+  matsDataUtils,
+  matsDataQueryUtils,
+  matsParamUtils,
+} from 'meteor/randyp:mats-common';
 
 // determined in doCurveParanms
-var minDate;
-var maxDate;
-var dstr;
+let minDate;
+let maxDate;
+let dstr;
 
 const doPlotParams = function () {
   if (
@@ -40,7 +42,7 @@ const doPlotParams = function () {
       help: 'dateHelp.html',
     });
 
-    var plotFormats = {};
+    const plotFormats = {};
     plotFormats[matsTypes.PlotFormats.matching] = 'show matching diffs';
     plotFormats[matsTypes.PlotFormats.pairwise] = 'pairwise diffs';
     plotFormats[matsTypes.PlotFormats.none] = 'no diffs';
@@ -285,7 +287,7 @@ const doPlotParams = function () {
     });
   } else {
     // need to update the dates selector if the metadata has changed
-    var currentParam = matsCollections.PlotParams.findOne({ name: 'dates' });
+    const currentParam = matsCollections.PlotParams.findOne({ name: 'dates' });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
@@ -315,24 +317,24 @@ const doCurveParams = function () {
   ) {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
-    }).fetch()[0]['curve_params'];
-    for (var cp = 0; cp < params.length; cp++) {
+    }).fetch()[0].curve_params;
+    for (let cp = 0; cp < params.length; cp++) {
       matsCollections[params[cp]].remove({});
     }
   }
-  var modelOptionsMap = {};
-  var modelDateRangeMap = {};
-  var forecastLengthOptionsMap = {};
-  var vgtypsModelOptionsMap = {};
-  var masterVgtypValuesMap = {};
+  const modelOptionsMap = {};
+  let modelDateRangeMap = {};
+  const forecastLengthOptionsMap = {};
+  const vgtypsModelOptionsMap = {};
+  const masterVgtypValuesMap = {};
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
       sumPool,
       'select vgtyp,description from vgtyp_descriptions;'
     );
-    var masterDescription;
-    var masterVgtyp;
+    let masterDescription;
+    let masterVgtyp;
     for (var j = 0; j < rows.length; j++) {
       masterDescription = rows[j].description.trim();
       masterVgtyp = rows[j].vgtyp.trim();
@@ -347,17 +349,17 @@ const doCurveParams = function () {
       sumPool,
       'select model,display_text,fcst_lens,vgtyp,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;'
     );
-    for (var i = 0; i < rows.length; i++) {
-      var model_value = rows[i].model.trim();
-      var model = rows[i].display_text.trim();
+    for (let i = 0; i < rows.length; i++) {
+      const model_value = rows[i].model.trim();
+      const model = rows[i].display_text.trim();
       modelOptionsMap[model] = [model_value];
 
-      var rowMinDate = moment.utc(rows[i].mindate * 1000).format('MM/DD/YYYY HH:mm');
-      var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format('MM/DD/YYYY HH:mm');
+      const rowMinDate = moment.utc(rows[i].mindate * 1000).format('MM/DD/YYYY HH:mm');
+      const rowMaxDate = moment.utc(rows[i].maxdate * 1000).format('MM/DD/YYYY HH:mm');
       modelDateRangeMap[model] = { minDate: rowMinDate, maxDate: rowMaxDate };
 
-      var forecastLengths = rows[i].fcst_lens;
-      var forecastLengthArr = forecastLengths
+      const forecastLengths = rows[i].fcst_lens;
+      const forecastLengthArr = forecastLengths
         .split(',')
         .map(Function.prototype.call, String.prototype.trim);
       for (var j = 0; j < forecastLengthArr.length; j++) {
@@ -365,11 +367,11 @@ const doCurveParams = function () {
       }
       forecastLengthOptionsMap[model] = forecastLengthArr;
 
-      var vgtyps = rows[i].vgtyp;
-      var vgtypsArrRaw = vgtyps
+      const vgtyps = rows[i].vgtyp;
+      const vgtypsArrRaw = vgtyps
         .split(',')
         .map(Function.prototype.call, String.prototype.trim);
-      var vgtypsArr = [];
+      const vgtypsArr = [];
       var dummyVgtyp;
       for (var j = 0; j < vgtypsArrRaw.length; j++) {
         dummyVgtyp = vgtypsArrRaw[j].replace(/'|\[|\]/g, '');
@@ -383,8 +385,8 @@ const doCurveParams = function () {
     console.log(err.message);
   }
 
-  if (matsCollections['label'].findOne({ name: 'label' }) == undefined) {
-    matsCollections['label'].insert({
+  if (matsCollections.label.findOne({ name: 'label' }) == undefined) {
+    matsCollections.label.insert({
       name: 'label',
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
@@ -438,8 +440,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections['vgtyp'].findOne({ name: 'vgtyp' }) == undefined) {
-    matsCollections['vgtyp'].insert({
+  if (matsCollections.vgtyp.findOne({ name: 'vgtyp' }) == undefined) {
+    matsCollections.vgtyp.insert({
       name: 'vgtyp',
       type: matsTypes.InputTypes.select,
       optionsMap: vgtypsModelOptionsMap,
@@ -457,13 +459,13 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['vgtyp'].findOne({ name: 'vgtyp' });
+    var currentParam = matsCollections.vgtyp.findOne({ name: 'vgtyp' });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, vgtypsModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterVgtypValuesMap)
     ) {
       // have to reload vgtyp data
-      matsCollections['vgtyp'].update(
+      matsCollections.vgtyp.update(
         { name: 'vgtyp' },
         {
           $set: {
@@ -493,11 +495,11 @@ const doCurveParams = function () {
     'MAE (temp and dewpoint only)': 'scalar',
   };
 
-  if (matsCollections['statistic'].findOne({ name: 'statistic' }) == undefined) {
-    matsCollections['statistic'].insert({
+  if (matsCollections.statistic.findOne({ name: 'statistic' }) == undefined) {
+    matsCollections.statistic.insert({
       name: 'statistic',
       type: matsTypes.InputTypes.select,
-      optionsMap: optionsMap,
+      optionsMap,
       options: Object.keys(optionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -513,7 +515,7 @@ const doCurveParams = function () {
     matsCollections['x-statistic'].insert({
       name: 'x-statistic',
       type: matsTypes.InputTypes.select,
-      optionsMap: optionsMap,
+      optionsMap,
       options: Object.keys(optionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -529,7 +531,7 @@ const doCurveParams = function () {
     matsCollections['y-statistic'].insert({
       name: 'y-statistic',
       type: matsTypes.InputTypes.select,
-      optionsMap: optionsMap,
+      optionsMap,
       options: Object.keys(optionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -628,12 +630,12 @@ const doCurveParams = function () {
     },
   };
 
-  if (matsCollections['variable'].findOne({ name: 'variable' }) == undefined) {
-    matsCollections['variable'].insert({
+  if (matsCollections.variable.findOne({ name: 'variable' }) == undefined) {
+    matsCollections.variable.insert({
       name: 'variable',
       type: matsTypes.InputTypes.select,
       optionsMap: statVarOptionsMap,
-      statVarUnitMap: statVarUnitMap,
+      statVarUnitMap,
       options: Object.keys(statVarOptionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -650,7 +652,7 @@ const doCurveParams = function () {
       name: 'x-variable',
       type: matsTypes.InputTypes.select,
       optionsMap: statVarOptionsMap,
-      statVarUnitMap: statVarUnitMap,
+      statVarUnitMap,
       options: Object.keys(statVarOptionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -667,7 +669,7 @@ const doCurveParams = function () {
       name: 'y-variable',
       type: matsTypes.InputTypes.select,
       optionsMap: statVarOptionsMap,
-      statVarUnitMap: statVarUnitMap,
+      statVarUnitMap,
       options: Object.keys(statVarOptionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -720,7 +722,7 @@ const doCurveParams = function () {
   }
 
   if (matsCollections['dieoff-type'].findOne({ name: 'dieoff-type' }) == undefined) {
-    var dieoffOptionsMap = {
+    const dieoffOptionsMap = {
       Dieoff: [matsTypes.ForecastTypes.dieoff],
       'Dieoff for a specified UTC cycle init hour': [matsTypes.ForecastTypes.utcCycle],
       'Single cycle forecast (uses first date in range)': [
@@ -842,112 +844,64 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections['average'].findOne({ name: 'average' }) == undefined) {
+  if (matsCollections.average.findOne({ name: 'average' }) == undefined) {
     const optionsMap = {
-      None: [
-        'ceil(' +
-          3600 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 +
-          '/2)/' +
-          3600 +
-          '))',
-      ],
+      None: [`ceil(${3600}*floor((((m0.valid_day)+3600*m0.hour)+${3600}/2)/${3600}))`],
       '3hr': [
-        'ceil(' +
-          3600 * 3 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 3 +
-          '/2)/' +
-          3600 * 3 +
-          '))',
+        `ceil(${3600 * 3}*floor((((m0.valid_day)+3600*m0.hour)+${3600 * 3}/2)/${
+          3600 * 3
+        }))`,
       ],
       '6hr': [
-        'ceil(' +
-          3600 * 6 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 6 +
-          '/2)/' +
-          3600 * 6 +
-          '))',
+        `ceil(${3600 * 6}*floor((((m0.valid_day)+3600*m0.hour)+${3600 * 6}/2)/${
+          3600 * 6
+        }))`,
       ],
       '12hr': [
-        'ceil(' +
-          3600 * 12 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 12 +
-          '/2)/' +
-          3600 * 12 +
-          '))',
+        `ceil(${3600 * 12}*floor((((m0.valid_day)+3600*m0.hour)+${3600 * 12}/2)/${
+          3600 * 12
+        }))`,
       ],
       '1D': [
-        'ceil(' +
-          3600 * 24 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 24 +
-          '/2)/' +
-          3600 * 24 +
-          '))',
+        `ceil(${3600 * 24}*floor((((m0.valid_day)+3600*m0.hour)+${3600 * 24}/2)/${
+          3600 * 24
+        }))`,
       ],
       '3D': [
-        'ceil(' +
-          3600 * 24 * 3 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 24 * 3 +
-          '/2)/' +
-          3600 * 24 * 3 +
-          '))',
+        `ceil(${3600 * 24 * 3}*floor((((m0.valid_day)+3600*m0.hour)+${
+          3600 * 24 * 3
+        }/2)/${3600 * 24 * 3}))`,
       ],
       '7D': [
-        'ceil(' +
-          3600 * 24 * 7 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 24 * 7 +
-          '/2)/' +
-          3600 * 24 * 7 +
-          '))',
+        `ceil(${3600 * 24 * 7}*floor((((m0.valid_day)+3600*m0.hour)+${
+          3600 * 24 * 7
+        }/2)/${3600 * 24 * 7}))`,
       ],
       '30D': [
-        'ceil(' +
-          3600 * 24 * 30 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 24 * 30 +
-          '/2)/' +
-          3600 * 24 * 30 +
-          '))',
+        `ceil(${3600 * 24 * 30}*floor((((m0.valid_day)+3600*m0.hour)+${
+          3600 * 24 * 30
+        }/2)/${3600 * 24 * 30}))`,
       ],
       '60D': [
-        'ceil(' +
-          3600 * 24 * 60 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 24 * 60 +
-          '/2)/' +
-          3600 * 24 * 60 +
-          '))',
+        `ceil(${3600 * 24 * 60}*floor((((m0.valid_day)+3600*m0.hour)+${
+          3600 * 24 * 60
+        }/2)/${3600 * 24 * 60}))`,
       ],
       '90D': [
-        'ceil(' +
-          3600 * 24 * 90 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 24 * 90 +
-          '/2)/' +
-          3600 * 24 * 90 +
-          '))',
+        `ceil(${3600 * 24 * 90}*floor((((m0.valid_day)+3600*m0.hour)+${
+          3600 * 24 * 90
+        }/2)/${3600 * 24 * 90}))`,
       ],
       '180D': [
-        'ceil(' +
-          3600 * 24 * 180 +
-          '*floor((((m0.valid_day)+3600*m0.hour)+' +
-          3600 * 24 * 180 +
-          '/2)/' +
-          3600 * 24 * 180 +
-          '))',
+        `ceil(${3600 * 24 * 180}*floor((((m0.valid_day)+3600*m0.hour)+${
+          3600 * 24 * 180
+        }/2)/${3600 * 24 * 180}))`,
       ],
     };
-    matsCollections['average'].insert({
+    matsCollections.average.insert({
       name: 'average',
       type: matsTypes.InputTypes.select,
-      optionsMap: optionsMap,
+      optionsMap,
       options: Object.keys(optionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -976,7 +930,7 @@ const doCurveParams = function () {
       name: 'bin-parameter',
       type: matsTypes.InputTypes.select,
       options: Object.keys(optionsMap),
-      optionsMap: optionsMap,
+      optionsMap,
       hideOtherFor: {
         'forecast-length': ['Fcst lead time'],
         'valid-time': ['Valid UTC hour'],
@@ -1008,10 +962,9 @@ const doCurveParams = function () {
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
   const minusMonthMinDate = newDateRange.minDate;
   maxDate = newDateRange.maxDate;
-  dstr =
-    moment.utc(minusMonthMinDate).format('MM/DD/YYYY HH:mm') +
-    ' - ' +
-    moment.utc(maxDate).format('MM/DD/YYYY HH:mm');
+  dstr = `${moment.utc(minusMonthMinDate).format('MM/DD/YYYY HH:mm')} - ${moment
+    .utc(maxDate)
+    .format('MM/DD/YYYY HH:mm')}`;
 
   if (matsCollections['curve-dates'].findOne({ name: 'curve-dates' }) == undefined) {
     const optionsMap = {
@@ -1026,7 +979,7 @@ const doCurveParams = function () {
     matsCollections['curve-dates'].insert({
       name: 'curve-dates',
       type: matsTypes.InputTypes.dateRange,
-      optionsMap: optionsMap,
+      optionsMap,
       options: Object.keys(optionsMap).sort(),
       startDate: minDate,
       stopDate: maxDate,
@@ -1353,7 +1306,7 @@ Meteor.startup(function () {
     matsCollections.Databases.drop();
   }
   if (matsCollections.Databases.find({}).count() === 0) {
-    var databases = undefined;
+    let databases;
     if (
       Meteor.settings == undefined ||
       Meteor.settings.private == undefined ||
@@ -1364,14 +1317,14 @@ Meteor.startup(function () {
       databases = Meteor.settings.private.databases;
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
-      for (var di = 0; di < databases.length; di++) {
+      for (let di = 0; di < databases.length; di++) {
         matsCollections.Databases.insert(databases[di]);
       }
     }
   }
 
   // create list of all pools
-  var allPools = [];
+  const allPools = [];
   const sumSettings = matsCollections.Databases.findOne(
     { role: matsTypes.DatabaseRoles.SUMS_DATA, status: 'active' },
     {

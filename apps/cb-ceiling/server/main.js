@@ -3,11 +3,13 @@
  */
 
 import { Meteor } from 'meteor/meteor';
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsCollections } from 'meteor/randyp:mats-common';
-import { matsDataUtils } from 'meteor/randyp:mats-common';
-import { matsCouchbaseUtils } from 'meteor/randyp:mats-common';
-import { matsParamUtils } from 'meteor/randyp:mats-common';
+import {
+  matsTypes,
+  matsCollections,
+  matsDataUtils,
+  matsCouchbaseUtils,
+  matsParamUtils,
+} from 'meteor/randyp:mats-common';
 
 const variables = ['Ceiling'];
 
@@ -314,7 +316,7 @@ const doCurveParams = async function () {
   ) {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
-    }).fetch()[0]['curve_params'];
+    }).fetch()[0].curve_params;
     for (var cp = 0; cp < params.length; cp++) {
       matsCollections[params[cp]].remove({});
     }
@@ -465,7 +467,7 @@ const doCurveParams = async function () {
       var obj = {
         name: site_name,
         origName: site_name,
-        point: point,
+        point,
         elevation: site_elev,
         options: {
           title: site_description,
@@ -491,8 +493,8 @@ const doCurveParams = async function () {
     optionsMap: sitesLocationMap,
   });
 
-  if (matsCollections['label'].findOne({ name: 'label' }) == undefined) {
-    matsCollections['label'].insert({
+  if (matsCollections.label.findOne({ name: 'label' }) == undefined) {
+    matsCollections.label.insert({
       name: 'label',
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
@@ -508,8 +510,8 @@ const doCurveParams = async function () {
     });
   }
 
-  if (matsCollections['variable'].findOne({ name: 'variable' }) == undefined) {
-    matsCollections['variable'].insert({
+  if (matsCollections.variable.findOne({ name: 'variable' }) == undefined) {
+    matsCollections.variable.insert({
       name: 'variable',
       type: matsTypes.InputTypes.select,
       options: variables,
@@ -525,10 +527,10 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['variable'].findOne({ name: 'variable' });
+    var currentParam = matsCollections.variable.findOne({ name: 'variable' });
     if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
       // have to reload variable data
-      matsCollections['variable'].update(
+      matsCollections.variable.update(
         { name: 'variable' },
         {
           $set: {
@@ -598,8 +600,8 @@ const doCurveParams = async function () {
     }
   }
 
-  if (matsCollections['region'].findOne({ name: 'region' }) == undefined) {
-    matsCollections['region'].insert({
+  if (matsCollections.region.findOne({ name: 'region' }) == undefined) {
+    matsCollections.region.insert({
       name: 'region',
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
@@ -622,13 +624,13 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['region'].findOne({ name: 'region' });
+    var currentParam = matsCollections.region.findOne({ name: 'region' });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)
     ) {
       // have to reload region data
-      matsCollections['region'].update(
+      matsCollections.region.update(
         { name: 'region' },
         {
           $set: {
@@ -648,7 +650,7 @@ const doCurveParams = async function () {
     }
   }
 
-  if (matsCollections['statistic'].findOne({ name: 'statistic' }) == undefined) {
+  if (matsCollections.statistic.findOne({ name: 'statistic' }) == undefined) {
     const optionsMap = {
       'CSI (Critical Success Index)': ['ctc', 'x100', 100],
 
@@ -686,10 +688,10 @@ const doCurveParams = async function () {
         null,
       ],
     };
-    matsCollections['statistic'].insert({
+    matsCollections.statistic.insert({
       name: 'statistic',
       type: matsTypes.InputTypes.select,
-      optionsMap: optionsMap,
+      optionsMap,
       options: Object.keys(optionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -701,8 +703,8 @@ const doCurveParams = async function () {
     });
   }
 
-  if (matsCollections['threshold'].findOne({ name: 'threshold' }) == undefined) {
-    matsCollections['threshold'].insert({
+  if (matsCollections.threshold.findOne({ name: 'threshold' }) == undefined) {
+    matsCollections.threshold.insert({
       name: 'threshold',
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdsModelOptionsMap,
@@ -725,7 +727,7 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections['threshold'].findOne({ name: 'threshold' });
+    var currentParam = matsCollections.threshold.findOne({ name: 'threshold' });
     if (
       !matsDataUtils.areObjectsEqual(
         currentParam.optionsMap,
@@ -734,7 +736,7 @@ const doCurveParams = async function () {
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap)
     ) {
       // have to reload threshold data
-      matsCollections['threshold'].update(
+      matsCollections.threshold.update(
         { name: 'threshold' },
         {
           $set: {
@@ -923,104 +925,56 @@ const doCurveParams = async function () {
     });
   }
 
-  if (matsCollections['average'].findOne({ name: 'average' }) == undefined) {
+  if (matsCollections.average.findOne({ name: 'average' }) == undefined) {
     const optionsMap = {
       None: ['m0.fcstValidEpoch'],
       '3hr': [
-        'ceil(' +
-          3600 * 3 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 3 +
-          '/2)/' +
-          3600 * 3 +
-          '))',
+        `ceil(${3600 * 3}*floor(((m0.fcstValidEpoch)+${3600 * 3}/2)/${3600 * 3}))`,
       ],
       '6hr': [
-        'ceil(' +
-          3600 * 6 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 6 +
-          '/2)/' +
-          3600 * 6 +
-          '))',
+        `ceil(${3600 * 6}*floor(((m0.fcstValidEpoch)+${3600 * 6}/2)/${3600 * 6}))`,
       ],
       '12hr': [
-        'ceil(' +
-          3600 * 12 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 12 +
-          '/2)/' +
-          3600 * 12 +
-          '))',
+        `ceil(${3600 * 12}*floor(((m0.fcstValidEpoch)+${3600 * 12}/2)/${3600 * 12}))`,
       ],
       '1D': [
-        'ceil(' +
-          3600 * 24 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 24 +
-          '/2)/' +
-          3600 * 24 +
-          '))',
+        `ceil(${3600 * 24}*floor(((m0.fcstValidEpoch)+${3600 * 24}/2)/${3600 * 24}))`,
       ],
       '3D': [
-        'ceil(' +
-          3600 * 24 * 3 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 24 * 3 +
-          '/2)/' +
-          3600 * 24 * 3 +
-          '))',
+        `ceil(${3600 * 24 * 3}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 3}/2)/${
+          3600 * 24 * 3
+        }))`,
       ],
       '7D': [
-        'ceil(' +
-          3600 * 24 * 7 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 24 * 7 +
-          '/2)/' +
-          3600 * 24 * 7 +
-          '))',
+        `ceil(${3600 * 24 * 7}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 7}/2)/${
+          3600 * 24 * 7
+        }))`,
       ],
       '30D': [
-        'ceil(' +
-          3600 * 24 * 30 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 24 * 30 +
-          '/2)/' +
-          3600 * 24 * 30 +
-          '))',
+        `ceil(${3600 * 24 * 30}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 30}/2)/${
+          3600 * 24 * 30
+        }))`,
       ],
       '60D': [
-        'ceil(' +
-          3600 * 24 * 60 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 24 * 60 +
-          '/2)/' +
-          3600 * 24 * 60 +
-          '))',
+        `ceil(${3600 * 24 * 60}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 60}/2)/${
+          3600 * 24 * 60
+        }))`,
       ],
       '90D': [
-        'ceil(' +
-          3600 * 24 * 90 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 24 * 90 +
-          '/2)/' +
-          3600 * 24 * 90 +
-          '))',
+        `ceil(${3600 * 24 * 90}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 90}/2)/${
+          3600 * 24 * 90
+        }))`,
       ],
       '180D': [
-        'ceil(' +
-          3600 * 24 * 180 +
-          '*floor(((m0.fcstValidEpoch)+' +
-          3600 * 24 * 180 +
-          '/2)/' +
-          3600 * 24 * 180 +
-          '))',
+        `ceil(${3600 * 24 * 180}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 180}/2)/${
+          3600 * 24 * 180
+        }))`,
       ],
     };
-    matsCollections['average'].insert({
+    matsCollections.average.insert({
       name: 'average',
       type: matsTypes.InputTypes.select,
-      optionsMap: optionsMap,
+      optionsMap,
       options: Object.keys(optionsMap),
       controlButtonCovered: true,
       unique: false,
@@ -1033,8 +987,8 @@ const doCurveParams = async function () {
     });
   }
 
-  if (matsCollections['sites'].findOne({ name: 'sites' }) == undefined) {
-    matsCollections['sites'].insert({
+  if (matsCollections.sites.findOne({ name: 'sites' }) == undefined) {
+    matsCollections.sites.insert({
       name: 'sites',
       type: matsTypes.InputTypes.select,
       optionsMap: siteOptionsMap,
@@ -1051,8 +1005,8 @@ const doCurveParams = async function () {
     });
   }
 
-  if (matsCollections['sitesMap'].findOne({ name: 'sitesMap' }) == undefined) {
-    matsCollections['sitesMap'].insert({
+  if (matsCollections.sitesMap.findOne({ name: 'sitesMap' }) == undefined) {
+    matsCollections.sitesMap.insert({
       name: 'sitesMap',
       type: matsTypes.InputTypes.selectMap,
       optionsMap: sitesLocationMap,
@@ -1088,7 +1042,7 @@ const doCurveParams = async function () {
       name: 'bin-parameter',
       type: matsTypes.InputTypes.select,
       options: Object.keys(optionsMap),
-      optionsMap: optionsMap,
+      optionsMap,
       hideOtherFor: {
         'forecast-length': ['Fcst lead time'],
         threshold: ['Threshold'],
@@ -1106,11 +1060,11 @@ const doCurveParams = async function () {
   }
 
   // determine date defaults for dates and curveDates
-  const defaultDb = matsCollections['variable'].findOne(
+  const defaultDb = matsCollections.variable.findOne(
     { name: 'variable' },
     { default: 1 }
   ).default;
-  modelDateRangeMap = matsCollections['variable'].findOne(
+  modelDateRangeMap = matsCollections.variable.findOne(
     { name: 'variable' },
     { dates: 1 }
   ).dates;
@@ -1125,10 +1079,9 @@ const doCurveParams = async function () {
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
   const minusMonthMinDate = newDateRange.minDate;
   maxDate = newDateRange.maxDate;
-  dstr =
-    moment.utc(minusMonthMinDate).format('MM/DD/YYYY HH:mm') +
-    ' - ' +
-    moment.utc(maxDate).format('MM/DD/YYYY HH:mm');
+  dstr = `${moment.utc(minusMonthMinDate).format('MM/DD/YYYY HH:mm')} - ${moment
+    .utc(maxDate)
+    .format('MM/DD/YYYY HH:mm')}`;
 
   if (matsCollections['curve-dates'].findOne({ name: 'curve-dates' }) == undefined) {
     const optionsMap = {
@@ -1143,7 +1096,7 @@ const doCurveParams = async function () {
     matsCollections['curve-dates'].insert({
       name: 'curve-dates',
       type: matsTypes.InputTypes.dateRange,
-      optionsMap: optionsMap,
+      optionsMap,
       options: Object.keys(optionsMap).sort(),
       startDate: minDate,
       stopDate: maxDate,
@@ -1609,7 +1562,7 @@ Meteor.startup(function () {
   // create list of tables we need to monitor for update
   const mdr = new matsTypes.MetaDataDBRecord(
     'cbPool',
-    cbConnection.bucket + ':' + cbConnection.scope + ':' + cbConnection.collection,
+    `${cbConnection.bucket}:${cbConnection.scope}:${cbConnection.collection}`,
     [
       'MD:matsAux:COMMON:V01',
       'MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01',

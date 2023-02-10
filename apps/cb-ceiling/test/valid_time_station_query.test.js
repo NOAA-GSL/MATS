@@ -1,8 +1,8 @@
-const dataQueryUtil = require('./lib/data_query_util.mjs');
-var chai = require('chai');
+const chai = require('chai');
 const { Console } = require('console');
+const dataQueryUtil = require('./lib/data_query_util.mjs');
 
-//if (Meteor.isServer) {
+// if (Meteor.isServer) {
 describe('dieoff_query', () => {
   before(function setup() {
     console.log('setup');
@@ -68,4 +68,4 @@ describe('dieoff_query', () => {
     }
   });
 });
-//}
+// }
