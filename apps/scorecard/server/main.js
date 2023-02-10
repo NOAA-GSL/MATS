@@ -479,45 +479,6 @@ const doPlotParams = function () {
             tooltipPlacement: "top"
         });
     }
-
-
-    if (matsCollections.PlotParams.findOne({name: 'user'}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'user',
-                type: matsTypes.InputTypes.textInput,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                default: 'anon',
-                unique: true,
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 9
-            });
-    }
-    if (matsCollections.PlotParams.findOne({name: 'scorecard-name'}) == undefined) {
-        matsCollections.PlotParams.insert(
-            {
-                name: 'scorecard-name',
-                type: matsTypes.InputTypes.textInput,
-                optionsMap: {},
-                options: [],
-                controlButtonCovered: true,
-                default: 'unnamed',
-                unique: true,
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 9,
-                tooltip: `The name for this scorecard. This name will be used to identify the scorecard.
-                Each scorecard will be identified by a combination of 'user', 'scorecard name' and process timestamp. Recurring scorecards
-                may have many instances with the same 'user' and 'scorecard name'.`,
-                tooltipPlacement: "right"
-            });
-    }
-
 };
 
 const doCurveParams = function () {
@@ -1234,22 +1195,45 @@ Meteor.startup(function () {
     // create list of all pools
     var allPools = [];
     // connect to the couchbase cluster
-    const cbConnection = matsCollections.Databases.findOne({
+    // there should be two connections,
+    // one for METAR collection (readonly)
+    // and one for scorecard (writes SCORECARD)
+    const cbConnections = matsCollections.Databases.find({
         role: matsTypes.DatabaseRoles.COUCHBASE,
         status: "active"
     }, {
         host: 1,
         port: 1,
         bucket: 1,
+        collection: 1,
+        scope: 1,
         user: 1,
         password: 1
-    });
+    }).fetch();
 
-    // the cluster and bucket are intended to be global
-    if (cbConnection) {
-        cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.user, cbConnection.password);
-    }
-    allPools.push({pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
+    // the pool names intended to be global
+    cbConnections.forEach(function (cbConnection){
+        if (cbConnection.collection === "METAR") {
+            // global cbPool
+            cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host,
+                cbConnection.bucket,
+                cbConnection.scope,
+                cbConnection.collection,
+                cbConnection.user,
+                cbConnection.password);
+                allPools.push({pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE});
+        }
+        if (cbConnection.collection === "SCORECARD") {
+            // global cbScorecardPool
+            cbScorecardPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host,
+                cbConnection.bucket,
+                cbConnection.scope,
+                cbConnection.collection,
+                cbConnection.user,
+                cbConnection.password);
+                allPools.push({pool: "cbScorecardPool", role: matsTypes.DatabaseRoles.COUCHBASE});
+        };
+    });
     // create list of tables we need to monitor for update
     const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
         "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
