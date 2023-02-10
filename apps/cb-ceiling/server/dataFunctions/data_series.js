@@ -146,6 +146,8 @@ dataSeries = function (plotParams, plotFunction)
             { optionsMap: 1 }
         )["optionsMap"];
         var regionType = curve["region-type"];
+
+        // TODO - Move regios/station specific stuff within if..else
         if (regionType === "Predefined region")
         {
             var regionStr = curve["region"];
@@ -186,6 +188,9 @@ dataSeries = function (plotParams, plotFunction)
             { optionsMap: 1 }
         )["optionsMap"];
         var average = averageOptionsMap[averageStr][0];
+
+        // TODO: Gopa: Templatize average
+
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -214,6 +219,7 @@ dataSeries = function (plotParams, plotFunction)
             var queryResult;
             var startMoment = moment();
             var finishMoment;
+            // TODO : Take out SQL dump
             try
             {
                 // send the query statement to the query function
