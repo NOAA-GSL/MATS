@@ -10,19 +10,19 @@ Participant CalcWorker  as calcWorker
 Participant Database as dbScorecards
 Participant Mongo as mongo
 Participant Job as job
-Participant SCorecardRestApi as scRestApi
+Participant ScorecardRestApi as scRestApi
 Participant ScorecardApp
 
 processScorecard->processScorecard:creates initial scorecard doc(from params)
 processScorecard->:dbScorecards: inserts Scorecard doc into couchbase Scorecard collection
 processScorecard->scheduler:schedules job (might be one time immediate or repeating)
-job->scheduler:makes blank new scorecard doc (if repeating) inserts Scorecard doc into couchbase 
+job->scheduler:makes blank new scorecard doc (if repeating) inserts Scorecard doc into couchbase
 dbScorecards->calcService: event function sends HTTP request to calcService (params scorecard id)
-note right: This very much depends \n on the CB event functions knowing \n the difference between an insert \n and an update - inserts go to calcservice \n updates go to scorecard app 
+note right: This very much depends \n on the CB event functions knowing \n the difference between an insert \n and an update - inserts go to calcservice \n updates go to scorecard app
 calcDirector->calcDirector: gets scoreCard from database
 calcDirector->calcDirector: assembles calculations from scorecard doc and supporting CB data
 note right: assembling calculations might be a threaded operation
-calcDirector->calcQueue **: builds and fills queue with calculations 
+calcDirector->calcQueue **: builds and fills queue with calculations
 loop n times
     calcDirector->calcWorker **: creates threads
     loop until queue is empty
@@ -33,9 +33,8 @@ loop n times
     calcWorker->calcWorker !!: worker dies
 end
 calcDirector->dbScorecards: updates scorecard in database
-dbScorecards->scorecardApp: sends rest API request to scorecard app to update mongo
+dbScorecards->scRestApi: sends rest API request to scorecard app to update mongo
 scorecardApp->scorecardApp: reads updated scorecard results from couchbase and updates mongo
 scorecardApp->scorecardApp: reactive var updates scorecard display dynamically
 calcDirector->calcService: Done
 caclDirector->calcDirector: !! dies
-
