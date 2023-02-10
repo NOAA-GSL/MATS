@@ -3,13 +3,16 @@
     "node": true,
     "browser": true
   },
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "requireConfigFile": false,
+    "allowImportExportEverywhere": true
+  },
   "extends": ["airbnb", "prettier", "plugin:meteor/recommended"],
   "plugins": ["prettier", "meteor"],
   "settings": {
     "import/resolver": "meteor"
-  },
-  "parserOptions": {
-    "sourceType": "module"
   },
   "rules": {
     "prettier/prettier": "error",
@@ -42,6 +45,13 @@
     "no-param-reassign": "warn",
     "eqeqeq": "warn",
     "camelcase": "warn",
-    "no-redeclare": "warn"
+    "no-redeclare": "warn",
+    "no-shadow": "warn",
+    "no-useless-escape": "warn",
+    "import/no-unresolved": "warn",
+    "no-await-in-loop": "warn",
+    "no-continue": "warn",
+    "no-undef-init": "warn",
+    "no-use-before-define": "warn"
   }
 }

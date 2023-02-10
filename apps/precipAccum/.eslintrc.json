@@ -3,13 +3,16 @@
     "node": true,
     "browser": true
   },
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "requireConfigFile": false,
+    "allowImportExportEverywhere": true
+  },
   "extends": ["airbnb", "prettier", "plugin:meteor/recommended"],
   "plugins": ["prettier", "meteor"],
   "settings": {
     "import/resolver": "meteor"
-  },
-  "parserOptions": {
-    "sourceType": "module"
   },
   "rules": {
     "prettier/prettier": "error",
