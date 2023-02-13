@@ -32,8 +32,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         Then I click the "Add Curve" button
         Then "Curve1" is added
 
-        When I change the "data-source" parameter to "RTMA_RU_GSL"
-        Then the "data-source" parameter value matches "RTMA_RU_GSL"
+        When I change the "data-source" parameter to "RTMA_RU_OPS"
+        Then the "data-source" parameter value matches "RTMA_RU_OPS"
         When I click the "Add Curve" button
         Then "Curve2" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve2"
