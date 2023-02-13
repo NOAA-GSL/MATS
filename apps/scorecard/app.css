@@ -199,3 +199,12 @@ hr {
     border: 1px solid black;
     padding: 5px;
 }
+
+@keyframes blink {
+    50% {
+      opacity: 0.0;
+    }
+  }
+.blink {
+    animation: blink 1s step-start 0s infinite;
+}
