@@ -1,4 +1,4 @@
-SELECT m.mfve AS avtime,
+SELECT vxAVERAGE AS avtime,
        ARRAY_SUM(stats [*].hit) AS hits,
        ARRAY_SUM(stats [*].miss) AS misses,
        ARRAY_SUM(stats [*].false_alarm) AS fa,
