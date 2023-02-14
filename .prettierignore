@@ -1,0 +1,36 @@
+.vscode
+container_deployment
+container-scripts
+MATScommon
+METexpress
+kubernetes
+scripts
+server_configuration_files
+static
+**/.meteor
+**/met-*
+**/README.md
+
+# Node & Meteor
+.meteor/local
+node_modules
+
+# Python
+__pycache__
+venv
+*.pyc
+
+# IDEs
+.idea
+.vscode
+
+# OS-specific
+.DS_Store
+.history
+
+# Project-specific
+logs
+settings
+*.swp
+tmp
+bundle*
