@@ -7,10 +7,46 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'
   pull_request:
     branches: [main, development]
+  workflow_dispatch:
 env:
   DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        app: 
+          - anomalycor
+          # - cb-ceiling  # Enable once feature_cb_sdk_to_4x is merged
+          - ceil-vis
+          - ceil-vis15
+          - landuse
+          - precipAccum
+          - precipGauge
+          - precipitation1hr
+          - ptype
+          - radar
+          - scorecard
+          - surface
+          - surfrad
+          - upperair
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '14'  # This needs to match the version used by our Meteor release
+      - name: Install dependencies
+        working-directory: apps/${{ matrix.app }}
+        run: npm ci
+      - name: Lint
+        working-directory: apps/${{ matrix.app }}
+        run: npm run lint 
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
