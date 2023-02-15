@@ -11,7 +11,7 @@ import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
 import { matsDataProcessUtils } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-dataDieOffNew = function (plotParams, plotFunction)
+dataDieOff = function (plotParams, plotFunction)
 {
     var fs = require("fs");
     // initialize variables common to all curves
@@ -167,6 +167,13 @@ dataDieOffNew = function (plotParams, plotFunction)
                     cbPool.trfmListToCSVString(validTimes, null, false)
                 );
             }
+            else
+            {
+                queryTemplate = cbPool.trfmSQLRemoveClause(
+                    queryTemplate,
+                    "vxVALID_TIMES"
+                );
+            }
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle)
         {
             utcCycleStart =
@@ -179,6 +186,13 @@ dataDieOffNew = function (plotParams, plotFunction)
                 queryTemplate = queryTemplate.replace(
                     /vxUTC_CYCLE_START/g,
                     cbPool.trfmListToCSVString(utcCycleStart, null, false)
+                );
+            }
+            else
+            {
+                queryTemplate = cbPool.trfmSQLRemoveClause(
+                    queryTemplate,
+                    "vxUTC_CYCLE_START"
                 );
             }
         }
