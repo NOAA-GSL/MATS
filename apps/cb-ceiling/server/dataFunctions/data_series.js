@@ -14,8 +14,6 @@ import { moment } from "meteor/momentjs:moment";
 // TODO: Verify some data points on graph with CB server
 // TODO :All stations for a month ???
 dataSeries = function (plotParams, plotFunction) {
-  console.log("dataSeries()");
-
   var fs = require("fs");
 
   // initialize variables common to all curves
@@ -95,9 +93,6 @@ dataSeries = function (plotParams, plotFunction) {
     var validTimes =
       curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-      console.log(
-        "validTimes:" + cbPool.trfmListToCSVString(validTimes, null, false)
-      );
       queryTemplate = queryTemplate.replace(
         /vxVALID_TIMES/g,
         cbPool.trfmListToCSVString(validTimes, null, false)
