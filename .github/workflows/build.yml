@@ -7,6 +7,7 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'
   pull_request:
     branches: [main, development]
+  workflow_dispatch:
 env:
   DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
 
