@@ -2,77 +2,71 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import { matsCollections } from "meteor/randyp:mats-common";
-import { matsTypes } from "meteor/randyp:mats-common";
-import { matsDataUtils } from "meteor/randyp:mats-common";
-import { matsDataQueryUtils } from "meteor/randyp:mats-common";
-import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
-import { matsDataPlotOpsUtils } from "meteor/randyp:mats-common";
+import {
+  matsCollections,
+  matsTypes,
+  matsDataUtils,
+  matsDataQueryUtils,
+  matsDataCurveOpsUtils,
+  matsDataPlotOpsUtils,
+} from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
 dataMap = function (plotParams, plotFunction) {
   const appParams = {
     plotType: matsTypes.PlotTypes.map,
-    matching: plotParams["plotAction"] === matsTypes.PlotActions.matched,
-    completeness: plotParams["completeness"],
-    outliers: plotParams["outliers"],
-    hideGaps: plotParams["noGapsCheck"],
+    matching: plotParams.plotAction === matsTypes.PlotActions.matched,
+    completeness: plotParams.completeness,
+    outliers: plotParams.outliers,
+    hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
-  var dataRequests = {}; // used to store data queries
-  var dataFoundForCurve = true;
-  var totalProcessingStart = moment();
-  var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  var fromSecs = dateRange.fromSeconds;
-  var toSecs = dateRange.toSeconds;
-  var error = "";
-  var curves = JSON.parse(JSON.stringify(plotParams.curves));
+  const dataRequests = {}; // used to store data queries
+  let dataFoundForCurve = true;
+  const totalProcessingStart = moment();
+  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
+  const fromSecs = dateRange.fromSeconds;
+  const toSecs = dateRange.toSeconds;
+  let error = "";
+  const curves = JSON.parse(JSON.stringify(plotParams.curves));
   if (curves.length > 1) {
     throw new Error("INFO:  There must only be one added curve.");
   }
-  var dataset = [];
-  var curve = curves[0];
-  var label = curve["label"];
-  var variable = curve["variable"];
-  var databaseRef = matsCollections["variable"].findOne({ name: "variable" })
-    .optionsMap[variable];
-  var modelTable = matsCollections["data-source"].findOne({ name: "data-source" })
+  const dataset = [];
+  const curve = curves[0];
+  const { label } = curve;
+  const { variable } = curve;
+  const databaseRef = matsCollections.variable.findOne({ name: "variable" }).optionsMap[
+    variable
+  ];
+  const modelTable = matsCollections["data-source"].findOne({ name: "data-source" })
     .optionsMap[variable][curve["data-source"]][0];
-  var obsTable =
+  const obsTable =
     modelTable.includes("ret_") || modelTable.includes("Ret_") ? "obs_retro" : "obs";
-  var queryTableClause =
-    "from " +
-    databaseRef.modelDB +
-    "." +
-    obsTable +
-    " as o, " +
-    databaseRef.modelDB +
-    "." +
-    modelTable +
-    " as m0 ";
-  var sitesClause = "";
-  var siteMap = matsCollections.StationMap.findOne(
+  const queryTableClause = `from ${databaseRef.modelDB}.${obsTable} as o, ${databaseRef.modelDB}.${modelTable} as m0 `;
+  let sitesClause = "";
+  const siteMap = matsCollections.StationMap.findOne(
     { name: "stations" },
     { optionsMap: 1 }
-  )["optionsMap"];
-  var thresholdStr = curve["threshold"];
-  var threshold = Object.keys(
-    matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[variable]
+  ).optionsMap;
+  const thresholdStr = curve.threshold;
+  const threshold = Object.keys(
+    matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
   ).find(
     (key) =>
-      matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[variable][
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
         key
       ] === thresholdStr
   );
-  var validTimeClause = "";
-  var validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+  let validTimeClause = "";
+  const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
   if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-    validTimeClause = "and floor((m0.time+1800)%(24*3600)/3600) IN(" + validTimes + ")";
+    validTimeClause = `and floor((m0.time+1800)%(24*3600)/3600) IN(${validTimes})`;
   }
-  var forecastLength = curve["forecast-length"];
-  var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-  var statistic = curve["statistic"];
-  var statisticClause =
+  const forecastLength = curve["forecast-length"];
+  const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
+  const { statistic } = curve;
+  let statisticClause =
     "sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, " +
     "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, " +
     "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
@@ -83,31 +77,27 @@ dataMap = function (plotParams, plotFunction) {
     statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
     statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
   }
-  var sitesList = curve["sites"] === undefined ? [] : curve["sites"];
-  var querySites = [];
+  const sitesList = curve.sites === undefined ? [] : curve.sites;
+  const querySites = [];
   if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-    var thisSite;
-    var thisSiteObj;
-    for (var sidx = 0; sidx < sitesList.length; sidx++) {
+    let thisSite;
+    let thisSiteObj;
+    for (let sidx = 0; sidx < sitesList.length; sidx++) {
       thisSite = sitesList[sidx];
-      thisSiteObj = siteMap.find((obj) => {
-        return obj.origName === thisSite;
-      });
+      thisSiteObj = siteMap.find((obj) => obj.origName === thisSite);
       querySites.push(thisSiteObj.options.id);
     }
-    sitesClause = " and m0.madis_id in('" + querySites.join("','") + "')";
+    sitesClause = ` and m0.madis_id in('${querySites.join("','")}')`;
   } else {
     throw new Error(
       "INFO:  Please add sites in order to get a single/multi station plot."
     );
   }
-  var dateClause =
-    "and m0.time >= " + fromSecs + " - 900 and m0.time <= " + toSecs + " + 900";
-  var siteDateClause =
-    "and o.time >= " + fromSecs + " - 900 and o.time <= " + toSecs + " + 900";
-  var siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
+  const dateClause = `and m0.time >= ${fromSecs} - 900 and m0.time <= ${toSecs} + 900`;
+  const siteDateClause = `and o.time >= ${fromSecs} - 900 and o.time <= ${toSecs} + 900`;
+  const siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
 
-  var statement =
+  let statement =
     "select m0.madis_id as sta_id, " +
     "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
     "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
@@ -135,9 +125,9 @@ dataMap = function (plotParams, plotFunction) {
   statement = statement.replace("{{siteDateClause}}", siteDateClause);
   dataRequests[label] = statement;
 
-  var queryResult;
-  var startMoment = moment();
-  var finishMoment;
+  let queryResult;
+  const startMoment = moment();
+  let finishMoment;
   try {
     // send the query statement to the query function
     queryResult = matsDataQueryUtils.queryDBMapCTC(
@@ -149,11 +139,12 @@ dataMap = function (plotParams, plotFunction) {
       appParams
     );
     finishMoment = moment();
-    dataRequests["data retrieval (query) time - " + label] = {
+    dataRequests[`data retrieval (query) time - ${label}`] = {
       begin: startMoment.format(),
       finish: finishMoment.format(),
-      duration:
-        moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+      duration: `${moment
+        .duration(finishMoment.diff(startMoment))
+        .asSeconds()} seconds`,
       recordCount: queryResult.data.length,
     };
     // get the data back from the query
@@ -168,10 +159,10 @@ dataMap = function (plotParams, plotFunction) {
     var dOrange = queryResult.dataOrange;
     var dOrangeRed = queryResult.dataOrangeRed;
     var dRed = queryResult.dataRed;
-    var valueLimits = queryResult.valueLimits;
+    var { valueLimits } = queryResult;
   } catch (e) {
     // this is an error produced by a bug in the query function, not an error returned by the mysql database
-    e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+    e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
     throw new Error(e.message);
   }
   if (queryResult.error !== undefined && queryResult.error !== "") {
@@ -180,184 +171,153 @@ dataMap = function (plotParams, plotFunction) {
       dataFoundForCurve = false;
     } else {
       // this is an error returned by the mysql database
-      error +=
-        "Error from verification query: <br>" +
-        queryResult.error +
-        "<br> query: <br>" +
-        statement +
-        "<br>";
+      error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
       throw new Error(error);
     }
   }
 
-  var cOptions = matsDataCurveOpsUtils.generateCTCMapCurveOptions(curve, d, appParams); // generate map with site data
+  let cOptions = matsDataCurveOpsUtils.generateCTCMapCurveOptions(curve, d, appParams); // generate map with site data
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCPurpleCurveText,
-    "Values <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.1
-      ).toFixed(0),
+    `Values <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.1
+    ).toFixed(0)}`,
     dPurple
   ); // generate purple text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCPurpleBlueCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.1
-      ).toFixed(0) +
-      " and <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.1
+    ).toFixed(0)} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
+    ).toFixed(0)}`,
     dPurpleBlue
   ); // generate purple-blue text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCBlueCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
-      ).toFixed(0) +
-      " and <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.3
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
+    ).toFixed(0)} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.3
+    ).toFixed(0)}`,
     dBlue
   ); // generate blue text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCBlueGreenCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.3
-      ).toFixed(0) +
-      " and <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.3
+    ).toFixed(0)} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
+    ).toFixed(0)}`,
     dBlueGreen
   ); // generate blue-green text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCGreenCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
-      ).toFixed(0) +
-      " and <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.5
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
+    ).toFixed(0)} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.5
+    ).toFixed(0)}`,
     dGreen
   ); // generate green text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCGreenYellowCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.5
-      ).toFixed(0) +
-      " and <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.5
+    ).toFixed(0)} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
+    ).toFixed(0)}`,
     dGreenYellow
   ); // generate green-yellow text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCYellowCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
-      ).toFixed(0) +
-      " and <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.7
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
+    ).toFixed(0)} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.7
+    ).toFixed(0)}`,
     dYellow
   ); // generate yellow text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCOrangeCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.7
-      ).toFixed(0) +
-      " and <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.7
+    ).toFixed(0)} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
+    ).toFixed(0)}`,
     dOrange
   ); // generate orange text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCOrangeRedCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
-      ).toFixed(0) +
-      " and <= " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.9
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
+    ).toFixed(0)} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.9
+    ).toFixed(0)}`,
     dOrangeRed
   ); // generate orange-red text layer
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
     matsTypes.ReservedWords.CTCRedCurveText,
-    "Values > " +
-      (
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.9
-      ).toFixed(0),
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.9
+    ).toFixed(0)}`,
     dRed
   ); // generate red text layer
   dataset.push(cOptions);
 
   const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(true);
-  var totalProcessingFinish = moment();
+  const totalProcessingFinish = moment();
   dataRequests["total retrieval and processing time for curve set"] = {
     begin: totalProcessingStart.format(),
     finish: totalProcessingFinish.format(),
-    duration:
-      moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() +
-      " seconds",
+    duration: `${moment
+      .duration(totalProcessingFinish.diff(totalProcessingStart))
+      .asSeconds()} seconds`,
   };
-  var result = {
-    error: error,
+  const result = {
+    error,
     data: dataset,
     options: resultOptions,
     basis: {
-      plotParams: plotParams,
+      plotParams,
       queries: dataRequests,
     },
   };

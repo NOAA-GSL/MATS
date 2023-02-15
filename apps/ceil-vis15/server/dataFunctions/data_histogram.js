@@ -2,105 +2,103 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import { matsCollections } from "meteor/randyp:mats-common";
-import { matsTypes } from "meteor/randyp:mats-common";
-import { matsDataUtils } from "meteor/randyp:mats-common";
-import { matsDataQueryUtils } from "meteor/randyp:mats-common";
-import { matsDataProcessUtils } from "meteor/randyp:mats-common";
+import {
+  matsCollections,
+  matsTypes,
+  matsDataUtils,
+  matsDataQueryUtils,
+  matsDataProcessUtils,
+} from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
 dataHistogram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.histogram,
-    matching: plotParams["plotAction"] === matsTypes.PlotActions.matched,
-    completeness: plotParams["completeness"],
-    outliers: plotParams["outliers"],
-    hideGaps: plotParams["noGapsCheck"],
+    matching: plotParams.plotAction === matsTypes.PlotActions.matched,
+    completeness: plotParams.completeness,
+    outliers: plotParams.outliers,
+    hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
-  var alreadyMatched = false;
-  var dataRequests = {}; // used to store data queries
-  var dataFoundForCurve = [];
-  var dataFoundForAnyCurve = false;
-  var totalProcessingStart = moment();
-  var error = "";
-  var curves = JSON.parse(JSON.stringify(plotParams.curves));
-  var curvesLength = curves.length;
-  var dataset = [];
-  var allReturnedSubStats = [];
-  var allReturnedSubSecs = [];
-  var axisMap = Object.create(null);
+  const alreadyMatched = false;
+  const dataRequests = {}; // used to store data queries
+  const dataFoundForCurve = [];
+  let dataFoundForAnyCurve = false;
+  const totalProcessingStart = moment();
+  let error = "";
+  const curves = JSON.parse(JSON.stringify(plotParams.curves));
+  const curvesLength = curves.length;
+  const dataset = [];
+  const allReturnedSubStats = [];
+  const allReturnedSubSecs = [];
+  const axisMap = Object.create(null);
 
   // process user bin customizations
   const binParams = matsDataUtils.setHistogramParameters(plotParams);
-  const yAxisFormat = binParams.yAxisFormat;
-  const binNum = binParams.binNum;
+  const { yAxisFormat } = binParams;
+  const { binNum } = binParams;
 
-  for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
-    var curve = curves[curveIndex];
-    var diffFrom = curve.diffFrom;
+    const curve = curves[curveIndex];
+    const { diffFrom } = curve;
     dataFoundForCurve[curveIndex] = true;
-    var label = curve["label"];
-    var variable = curve["variable"];
-    var databaseRef = matsCollections["variable"].findOne({ name: "variable" })
+    const { label } = curve;
+    var { variable } = curve;
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
-    var model = matsCollections["data-source"].findOne({ name: "data-source" })
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    var regionStr = curve["region"];
-    var region = Object.keys(
-      matsCollections["region"].findOne({ name: "region" }).valuesMap
+    var regionStr = curve.region;
+    const region = Object.keys(
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections["region"].findOne({ name: "region" }).valuesMap[key] ===
-        regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    var queryTableClause =
-      "from " + databaseRef.sumsDB + "." + model + "_" + region + " as m0";
-    var thresholdStr = curve["threshold"];
-    var threshold = Object.keys(
-      matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[variable]
+    const queryTableClause = `from ${databaseRef.sumsDB}.${model}_${region} as m0`;
+    var thresholdStr = curve.threshold;
+    const threshold = Object.keys(
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
       (key) =>
-        matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[variable][
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
           key
         ] === thresholdStr
     );
-    var thresholdClause = "and m0.trsh = " + threshold;
-    var truthClause = "";
+    const thresholdClause = `and m0.trsh = ${threshold}`;
+    let truthClause = "";
     if (variable === "15 Minute Visibility") {
-      var truthStr = curve["truth"];
-      var truth = Object.keys(
-        matsCollections["truth"].findOne({ name: "truth" }).valuesMap[variable]
+      var truthStr = curve.truth;
+      const truth = Object.keys(
+        matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections["truth"].findOne({ name: "truth" }).valuesMap[variable][
-            key
-          ] === truthStr
+          matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable][key] ===
+          truthStr
       );
-      truthClause = "and m0.truth = '" + truth + "'";
+      truthClause = `and m0.truth = '${truth}'`;
     }
-    var validTimeClause = "";
-    var validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    let validTimeClause = "";
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-      validTimeClause = "and floor((m0.time)%(24*3600)/900)/4 IN(" + validTimes + ")";
+      validTimeClause = `and floor((m0.time)%(24*3600)/900)/4 IN(${validTimes})`;
     }
-    var forecastLength = Number(curve["forecast-length"]);
-    var forecastHour = Math.floor(forecastLength);
-    var forecastMinute = (forecastLength - forecastHour) * 60;
-    var forecastLengthClause =
-      "and m0.fcst_len = " + forecastLength + " and m0.fcst_min = " + forecastMinute;
-    var dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
-    var dateClause = "and m0.time >= " + fromSecs + " and m0.time <= " + toSecs;
-    var statisticSelect = curve["statistic"];
-    var statisticOptionsMap = matsCollections["statistic"].findOne(
+    const forecastLength = Number(curve["forecast-length"]);
+    const forecastHour = Math.floor(forecastLength);
+    const forecastMinute = (forecastLength - forecastHour) * 60;
+    const forecastLengthClause = `and m0.fcst_len = ${forecastLength} and m0.fcst_min = ${forecastMinute}`;
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+    const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
+    const statisticSelect = curve.statistic;
+    const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
-    )["optionsMap"];
-    var statisticClause =
+    ).optionsMap;
+    const statisticClause =
       "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -108,9 +106,9 @@ dataHistogram = function (plotParams, plotFunction) {
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     var statType = statisticOptionsMap[statisticSelect][0];
     var varUnits = statisticOptionsMap[statisticSelect][1];
-    var axisKey = yAxisFormat;
+    let axisKey = yAxisFormat;
     if (yAxisFormat === "Relative frequency") {
-      axisKey = axisKey + " (x100)";
+      axisKey += " (x100)";
     }
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
@@ -119,7 +117,7 @@ dataHistogram = function (plotParams, plotFunction) {
     if (diffFrom == null) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
-      var statement =
+      let statement =
         "select m0.time as avtime, " +
         "count(distinct m0.time) as N_times, " +
         "min(m0.time) as min_secs, " +
@@ -146,7 +144,7 @@ dataHistogram = function (plotParams, plotFunction) {
       dataRequests[label] = statement;
 
       var queryResult;
-      var startMoment = moment();
+      const startMoment = moment();
       var finishMoment;
       try {
         // send the query statement to the query function
@@ -157,11 +155,12 @@ dataHistogram = function (plotParams, plotFunction) {
           statisticSelect
         );
         finishMoment = moment();
-        dataRequests["data retrieval (query) time - " + label] = {
+        dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
-          duration:
-            moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+          duration: `${moment
+            .duration(finishMoment.diff(startMoment))
+            .asSeconds()} seconds`,
           recordCount: queryResult.data.x.length,
         };
         // get the data back from the query
@@ -170,7 +169,7 @@ dataHistogram = function (plotParams, plotFunction) {
         allReturnedSubSecs.push(d.subSecs);
       } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
-        e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+        e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
       if (queryResult.error !== undefined && queryResult.error !== "") {
@@ -179,12 +178,7 @@ dataHistogram = function (plotParams, plotFunction) {
           dataFoundForCurve[curveIndex] = false;
         } else {
           // this is an error returned by the mysql database
-          error +=
-            "Error from verification query: <br>" +
-            queryResult.error +
-            "<br> query: <br>" +
-            statement +
-            "<br>";
+          error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
           throw new Error(error);
         }
       } else {
@@ -200,20 +194,20 @@ dataHistogram = function (plotParams, plotFunction) {
 
   // process the data returned by the query
   const curveInfoParams = {
-    curves: curves,
-    curvesLength: curvesLength,
-    dataFoundForCurve: dataFoundForCurve,
-    statType: statType,
-    axisMap: axisMap,
-    yAxisFormat: yAxisFormat,
-    varUnits: varUnits,
+    curves,
+    curvesLength,
+    dataFoundForCurve,
+    statType,
+    axisMap,
+    yAxisFormat,
+    varUnits,
   };
   const bookkeepingParams = {
-    alreadyMatched: alreadyMatched,
-    dataRequests: dataRequests,
-    totalProcessingStart: totalProcessingStart,
+    alreadyMatched,
+    dataRequests,
+    totalProcessingStart,
   };
-  var result = matsDataProcessUtils.processDataHistogram(
+  const result = matsDataProcessUtils.processDataHistogram(
     allReturnedSubStats,
     allReturnedSubSecs,
     [],

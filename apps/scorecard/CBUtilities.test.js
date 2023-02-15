@@ -6,7 +6,7 @@ test("tests read and write", () => {
 
     homedir = process.env.HOME;
     try {
-      const data = fs.readFileSync(homedir + "/adb-cb4-credentials", "utf8");
+      const data = fs.readFileSync(`${homedir}/adb-cb4-credentials`, "utf8");
       data.split(/\r?\n/).forEach((line) => {
         parts = line.split(":");
         credentials[parts[0]] = parts[1];
@@ -17,11 +17,11 @@ test("tests read and write", () => {
       console.error(err);
     }
     const host = credentials.cb_host;
-    const password = credentials.password;
-    //"adb-cb2.gsd.esrl.noaa.gov,adb-cb3.gsd.esrl.noaa.gov,adb-cb4.gsd.esrl.noaa.gov";
+    const { password } = credentials;
+    // "adb-cb2.gsd.esrl.noaa.gov,adb-cb3.gsd.esrl.noaa.gov,adb-cb4.gsd.esrl.noaa.gov";
     const bucketName = credentials.cb_bucket;
     const collection = "SCORECARD"; // using scorecard bucket to test read and write capability
-    const scope = credentials.scope;
+    const { scope } = credentials;
 
     cbUtilities = new matsCouchbaseUtils.CBUtilities(
       host,
@@ -41,7 +41,7 @@ test("tests read and write", () => {
       name: "Couchbase Airways",
     };
     const key = `${test_doc.type}_${test_doc.id}`;
-    const statement = "select * from `travel-sample` where meta().id = '" + key + "';";
+    const statement = `select * from \`travel-sample\` where meta().id = '${key}';`;
 
     try {
       const time = await cbUtilities.queryCB("select NOW_MILLIS() as time;");
@@ -79,6 +79,6 @@ test("tests read and write", () => {
     }
 
     await cbUtilities.closeConnection();
-    //process.exit();
+    // process.exit();
   };
 });

@@ -3,15 +3,17 @@
  */
 
 import { Meteor } from "meteor/meteor";
-import { matsTypes } from "meteor/randyp:mats-common";
-import { matsCollections } from "meteor/randyp:mats-common";
-import { matsDataUtils } from "meteor/randyp:mats-common";
-import { matsCouchbaseUtils } from "meteor/randyp:mats-common";
+import {
+  matsTypes,
+  matsCollections,
+  matsDataUtils,
+  matsCouchbaseUtils,
+} from "meteor/randyp:mats-common";
 
 // determined in doCurveParanms
-var minDate;
-var maxDate;
-var dstr;
+let minDate;
+let maxDate;
+let dstr;
 
 const doPlotParams = function () {
   if (
@@ -86,7 +88,7 @@ const doPlotParams = function () {
     });
   } else {
     // need to update the dates selector if the metadata has changed
-    var currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
+    const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
@@ -609,8 +611,8 @@ const doCurveParams = function () {
   ) {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
-    }).fetch()[0]["curve_params"];
-    for (var cp = 0; cp < params.length; cp++) {
+    }).fetch()[0].curve_params;
+    for (let cp = 0; cp < params.length; cp++) {
       matsCollections[params[cp]].remove({});
     }
   }
@@ -618,7 +620,7 @@ const doCurveParams = function () {
   // get a map of the apps included in this scorecard, and which URLs we're pulling their metadata from
   const appsToScore = matsCollections.AppsToScore.find({
     apps_to_score: { $exists: true },
-  }).fetch()[0]["apps_to_score"];
+  }).fetch()[0].apps_to_score;
 
   let hideOtherFor = {};
   let applicationOptions = [];
@@ -653,10 +655,10 @@ const doCurveParams = function () {
 
       // clean up URL if users left a trailing slash or didn't include https://
       if (currentURL[currentURL.length - 1] === "/") currentURL.slice(0, -1);
-      if (!currentURL.includes("https://")) currentURL = "https://" + currentURL;
+      if (!currentURL.includes("https://")) currentURL = `https://${currentURL}`;
 
       // get database-defined apps in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getApps";
+      queryURL = `${currentURL}/${currentApp}/getApps`;
       [applicationOptions, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "application",
         queryURL,
@@ -667,7 +669,7 @@ const doCurveParams = function () {
       );
 
       // get databases that correspond with apps
-      queryURL = currentURL + "/" + currentApp + "/getAppSumsDBs";
+      queryURL = `${currentURL}/${currentApp}/getAppSumsDBs`;
       [applicationOptionsMap, expectedApps, hideOtherFor] =
         matsDataUtils.callMetadataAPI(
           "application-values",
@@ -679,7 +681,7 @@ const doCurveParams = function () {
         );
 
       // get models in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getModels";
+      queryURL = `${currentURL}/${currentApp}/getModels`;
       [modelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "data-source",
         queryURL,
@@ -690,7 +692,7 @@ const doCurveParams = function () {
       );
 
       // get regions in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getRegions";
+      queryURL = `${currentURL}/${currentApp}/getRegions`;
       [regionOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "region",
         queryURL,
@@ -701,7 +703,7 @@ const doCurveParams = function () {
       );
 
       // get region values in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getRegionsValuesMap";
+      queryURL = `${currentURL}/${currentApp}/getRegionsValuesMap`;
       [regionValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "region-values",
         queryURL,
@@ -712,7 +714,7 @@ const doCurveParams = function () {
       );
 
       // get statistics in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getStatistics";
+      queryURL = `${currentURL}/${currentApp}/getStatistics`;
       [statisticOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "statistic",
         queryURL,
@@ -723,7 +725,7 @@ const doCurveParams = function () {
       );
 
       // get statistic values in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getStatisticsValuesMap";
+      queryURL = `${currentURL}/${currentApp}/getStatisticsValuesMap`;
       [statisticValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "statistic-values",
         queryURL,
@@ -734,7 +736,7 @@ const doCurveParams = function () {
       );
 
       // get variables in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getVariables";
+      queryURL = `${currentURL}/${currentApp}/getVariables`;
       [variableOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "variable",
         queryURL,
@@ -745,7 +747,7 @@ const doCurveParams = function () {
       );
 
       // get variable values in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getVariablesValuesMap";
+      queryURL = `${currentURL}/${currentApp}/getVariablesValuesMap`;
       [variableValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "variable-values",
         queryURL,
@@ -756,7 +758,7 @@ const doCurveParams = function () {
       );
 
       // get thresholds in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getThresholds";
+      queryURL = `${currentURL}/${currentApp}/getThresholds`;
       [thresholdOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "threshold",
         queryURL,
@@ -767,7 +769,7 @@ const doCurveParams = function () {
       );
 
       // get threshold values in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getThresholdsValuesMap";
+      queryURL = `${currentURL}/${currentApp}/getThresholdsValuesMap`;
       [thresholdValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "threshold-values",
         queryURL,
@@ -778,7 +780,7 @@ const doCurveParams = function () {
       );
 
       // get scales in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getScales";
+      queryURL = `${currentURL}/${currentApp}/getScales`;
       [scaleOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "scale",
         queryURL,
@@ -789,7 +791,7 @@ const doCurveParams = function () {
       );
 
       // get scale values in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getScalesValuesMap";
+      queryURL = `${currentURL}/${currentApp}/getScalesValuesMap`;
       [scaleValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "scale-values",
         queryURL,
@@ -800,7 +802,7 @@ const doCurveParams = function () {
       );
 
       // get truths in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getTruths";
+      queryURL = `${currentURL}/${currentApp}/getTruths`;
       [truthOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "truth",
         queryURL,
@@ -811,7 +813,7 @@ const doCurveParams = function () {
       );
 
       // get truth values in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getTruthsValuesMap";
+      queryURL = `${currentURL}/${currentApp}/getTruthsValuesMap`;
       [truthValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "truth-values",
         queryURL,
@@ -822,7 +824,7 @@ const doCurveParams = function () {
       );
 
       // get forecast lengths in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getFcstLengths";
+      queryURL = `${currentURL}/${currentApp}/getFcstLengths`;
       [forecastLengthOptionsMap, expectedApps, hideOtherFor] =
         matsDataUtils.callMetadataAPI(
           "forecast-length",
@@ -834,7 +836,7 @@ const doCurveParams = function () {
         );
 
       // get forecast types in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getFcstTypes";
+      queryURL = `${currentURL}/${currentApp}/getFcstTypes`;
       [forecastTypeOptionsMap, expectedApps, hideOtherFor] =
         matsDataUtils.callMetadataAPI(
           "forecast-type",
@@ -846,7 +848,7 @@ const doCurveParams = function () {
         );
 
       // get forecast type values in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getFcstTypesValuesMap";
+      queryURL = `${currentURL}/${currentApp}/getFcstTypesValuesMap`;
       [forecastTypeValuesMap, expectedApps, hideOtherFor] =
         matsDataUtils.callMetadataAPI(
           "forecast-type-values",
@@ -858,7 +860,7 @@ const doCurveParams = function () {
         );
 
       // get valid times in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getValidTimes";
+      queryURL = `${currentURL}/${currentApp}/getValidTimes`;
       [validTimeOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "valid-time",
         queryURL,
@@ -869,7 +871,7 @@ const doCurveParams = function () {
       );
 
       // get levels in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getLevels";
+      queryURL = `${currentURL}/${currentApp}/getLevels`;
       [levelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "level",
         queryURL,
@@ -880,7 +882,7 @@ const doCurveParams = function () {
       );
 
       // get dates in this MATS app
-      queryURL = currentURL + "/" + currentApp + "/getDates";
+      queryURL = `${currentURL}/${currentApp}/getDates`;
       [dateOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
         "dates",
         queryURL,
@@ -894,8 +896,8 @@ const doCurveParams = function () {
     console.log(err.message);
   }
 
-  if (matsCollections["label"].findOne({ name: "label" }) == undefined) {
-    matsCollections["label"].insert({
+  if (matsCollections.label.findOne({ name: "label" }) == undefined) {
+    matsCollections.label.insert({
       name: "label",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
@@ -914,13 +916,13 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["application"].findOne({ name: "application" }) == undefined) {
-    matsCollections["application"].insert({
+  if (matsCollections.application.findOne({ name: "application" }) == undefined) {
+    matsCollections.application.insert({
       name: "application",
       type: matsTypes.InputTypes.select,
       optionsMap: applicationOptionsMap,
       options: applicationOptions,
-      hideOtherFor: hideOtherFor,
+      hideOtherFor,
       dates: dateOptionsMap,
       dependentNames: [
         "data-source",
@@ -946,10 +948,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["application"].findOne({ name: "application" });
+    var currentParam = matsCollections.application.findOne({ name: "application" });
     if (!matsDataUtils.areObjectsEqual(currentParam.dates, dateOptionsMap)) {
       // have to reload application data
-      matsCollections["application"].update(
+      matsCollections.application.update(
         { name: "application" },
         {
           $set: {
@@ -1047,8 +1049,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["region"].findOne({ name: "region" }) == undefined) {
-    matsCollections["region"].insert({
+  if (matsCollections.region.findOne({ name: "region" }) == undefined) {
+    matsCollections.region.insert({
       name: "region",
       type: matsTypes.InputTypes.select,
       optionsMap: regionOptionsMap,
@@ -1075,10 +1077,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["region"].findOne({ name: "region" });
+    var currentParam = matsCollections.region.findOne({ name: "region" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionOptionsMap)) {
       // have to reload region data
-      matsCollections["region"].update(
+      matsCollections.region.update(
         { name: "region" },
         {
           $set: {
@@ -1098,8 +1100,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["statistic"].findOne({ name: "statistic" }) == undefined) {
-    matsCollections["statistic"].insert({
+  if (matsCollections.statistic.findOne({ name: "statistic" }) == undefined) {
+    matsCollections.statistic.insert({
       name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statisticOptionsMap,
@@ -1121,10 +1123,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["statistic"].findOne({ name: "statistic" });
+    var currentParam = matsCollections.statistic.findOne({ name: "statistic" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, statisticOptionsMap)) {
       // have to reload statistic data
-      matsCollections["statistic"].update(
+      matsCollections.statistic.update(
         { name: "statistic" },
         {
           $set: {
@@ -1137,8 +1139,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["variable"].findOne({ name: "variable" }) == undefined) {
-    matsCollections["variable"].insert({
+  if (matsCollections.variable.findOne({ name: "variable" }) == undefined) {
+    matsCollections.variable.insert({
       name: "variable",
       type: matsTypes.InputTypes.select,
       optionsMap: variableOptionsMap,
@@ -1160,10 +1162,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["variable"].findOne({ name: "variable" });
+    var currentParam = matsCollections.variable.findOne({ name: "variable" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, variableOptionsMap)) {
       // have to reload variable data
-      matsCollections["variable"].update(
+      matsCollections.variable.update(
         { name: "variable" },
         {
           $set: {
@@ -1178,11 +1180,11 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["threshold"].findOne({
+    matsCollections.threshold.findOne({
       name: "threshold",
     }) == undefined
   ) {
-    matsCollections["threshold"].insert({
+    matsCollections.threshold.insert({
       name: "threshold",
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdOptionsMap,
@@ -1207,10 +1209,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["threshold"].findOne({ name: "threshold" });
+    var currentParam = matsCollections.threshold.findOne({ name: "threshold" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdOptionsMap)) {
       // have to reload threshold data
-      matsCollections["threshold"].update(
+      matsCollections.threshold.update(
         { name: "threshold" },
         {
           $set: {
@@ -1231,11 +1233,11 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["scale"].findOne({
+    matsCollections.scale.findOne({
       name: "scale",
     }) == undefined
   ) {
-    matsCollections["scale"].insert({
+    matsCollections.scale.insert({
       name: "scale",
       type: matsTypes.InputTypes.select,
       optionsMap: scaleOptionsMap,
@@ -1260,10 +1262,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["scale"].findOne({ name: "scale" });
+    var currentParam = matsCollections.scale.findOne({ name: "scale" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleOptionsMap)) {
       // have to reload scale data
-      matsCollections["scale"].update(
+      matsCollections.scale.update(
         { name: "scale" },
         {
           $set: {
@@ -1284,11 +1286,11 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["truth"].findOne({
+    matsCollections.truth.findOne({
       name: "truth",
     }) == undefined
   ) {
-    matsCollections["truth"].insert({
+    matsCollections.truth.insert({
       name: "truth",
       type: matsTypes.InputTypes.select,
       optionsMap: truthOptionsMap,
@@ -1313,10 +1315,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["truth"].findOne({ name: "truth" });
+    var currentParam = matsCollections.truth.findOne({ name: "truth" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthOptionsMap)) {
       // have to reload truth data
-      matsCollections["truth"].update(
+      matsCollections.truth.update(
         { name: "truth" },
         {
           $set: {
@@ -1492,11 +1494,11 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["level"].findOne({
+    matsCollections.level.findOne({
       name: "level",
     }) == undefined
   ) {
-    matsCollections["level"].insert({
+    matsCollections.level.insert({
       name: "level",
       type: matsTypes.InputTypes.select,
       optionsMap: levelOptionsMap,
@@ -1515,10 +1517,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["level"].findOne({ name: "level" });
+    var currentParam = matsCollections.level.findOne({ name: "level" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, levelOptionsMap)) {
       // have to reload level data
-      matsCollections["level"].update(
+      matsCollections.level.update(
         { name: "level" },
         {
           $set: {
@@ -1532,11 +1534,11 @@ const doCurveParams = function () {
   }
 
   // determine date defaults for dates
-  const defaultApp = matsCollections["application"].findOne(
+  const defaultApp = matsCollections.application.findOne(
     { name: "application" },
     { default: 1 }
   ).default;
-  dateOptionsMap = matsCollections["application"].findOne(
+  dateOptionsMap = matsCollections.application.findOne(
     { name: "application" },
     { dates: 1 }
   ).dates;
@@ -1551,10 +1553,9 @@ const doCurveParams = function () {
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
   const minusMonthMinDate = newDateRange.minDate;
   maxDate = newDateRange.maxDate;
-  dstr =
-    moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm") +
-    " - " +
-    moment.utc(maxDate).format("MM/DD/YYYY HH:mm");
+  dstr = `${moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm")} - ${moment
+    .utc(maxDate)
+    .format("MM/DD/YYYY HH:mm")}`;
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -1640,7 +1641,7 @@ Meteor.startup(function () {
     matsCollections.Databases.drop();
   }
   if (matsCollections.Databases.find({}).count() === 0) {
-    var databases = undefined;
+    let databases;
     if (
       Meteor.settings == undefined ||
       Meteor.settings.private == undefined ||
@@ -1651,14 +1652,14 @@ Meteor.startup(function () {
       databases = Meteor.settings.private.databases;
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
-      for (var di = 0; di < databases.length; di++) {
+      for (let di = 0; di < databases.length; di++) {
         matsCollections.Databases.insert(databases[di]);
       }
     }
   }
 
   // create list of all pools
-  var allPools = [];
+  const allPools = [];
   // connect to the couchbase cluster
   // there should be two connections,
   // one for METAR collection (readonly)

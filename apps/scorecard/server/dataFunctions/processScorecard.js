@@ -80,11 +80,11 @@ processScorecard = function (plotParams, plotFunction) {
     */
   // create or retrieve the scorecard document
   // get the submission epoch - right now
-  const submitEpoch = plotParams["submitEpoch"];
-  let processedAt = 0; // should be filled in when processing is finished
-  let userName = plotParams["userName"];
-  let name = plotParams["scorecard-name"];
-  let singleCurveParamNames = matsParamUtils.getSingleSelectCurveParamNames();
+  const { submitEpoch } = plotParams;
+  const processedAt = 0; // should be filled in when processing is finished
+  const { userName } = plotParams;
+  const name = plotParams["scorecard-name"];
+  const singleCurveParamNames = matsParamUtils.getSingleSelectCurveParamNames();
   // We are thinking that the combination of userName/scorecardName/submitEpoch/processedEpoch is uniq
 
   let interval = {};
@@ -120,36 +120,35 @@ processScorecard = function (plotParams, plotFunction) {
         break;
     }
   }
-  let dateRange =
-    plotParams["scorecard-schedule-mode"] == "Once" ? plotParams["dates"] : interval;
+  const dateRange =
+    plotParams["scorecard-schedule-mode"] == "Once" ? plotParams.dates : interval;
 
   // get the union of the fcst-length arrays of all the curves
-  let fcstLengthsSet = new Set();
-  plotParams["curves"].forEach(function (curve) {
+  const fcstLengthsSet = new Set();
+  plotParams.curves.forEach(function (curve) {
     curve["forecast-length"].forEach(function (fcl) {
       fcstLengthsSet.add(fcl);
     });
   });
-  let fcstLengths = Array.from(fcstLengthsSet);
+  const fcstLengths = Array.from(fcstLengthsSet);
 
   // get the union of all the regions of all the curves
-  let regionsSet = new Set();
-  plotParams["curves"].forEach(function (curve) {
-    curve["region"].forEach(function (r) {
+  const regionsSet = new Set();
+  plotParams.curves.forEach(function (curve) {
+    curve.region.forEach(function (r) {
       regionsSet.add(r);
     });
   });
-  let regions = Array.from(regionsSet);
+  const regions = Array.from(regionsSet);
 
   // create an id for the document
   let idDateRange = dateRange.replace(/ /g, "_");
   idDateRange = idDateRange.replace(/:/g, "_");
 
-  let id = "SC:" + name + ":" + processedAt + ":" + idDateRange;
-  let title =
-    userName + ":" + name + ":" + submitEpoch + ":" + processedAt + ":" + dateRange;
+  const id = `SC:${name}:${processedAt}:${idDateRange}`;
+  const title = `${userName}:${name}:${submitEpoch}:${processedAt}:${dateRange}`;
   // process the scorecardDocument
-  let significanceThresholds =
+  const significanceThresholds =
     plotParams["scorecard-percent-stdv"] === "Percent"
       ? {
           "minor-threshold-by-percent": plotParams["minor-threshold-by-percent"],
@@ -159,88 +158,80 @@ processScorecard = function (plotParams, plotFunction) {
           "minor-threshold-by-stdv": plotParams["minor-threshold-by-stdv"],
           "major-threshold-by-stdv": plotParams["major-threshold-by-stdv"],
         };
-  let significanceColors = {
+  const significanceColors = {
     "major-source-color": plotParams["major-source-color"],
     "major-truth-color": plotParams["major-truth-color"],
     "minor-source-color": plotParams["minor-source-color"],
     "minor-truth-color": plotParams["minor-truth-color"],
   };
-  let scorecardDocument = {
-    id: id,
-    plotParams: plotParams,
+  const scorecardDocument = {
+    id,
+    plotParams,
     type: "SC",
-    userName: userName,
-    name: name,
+    userName,
+    name,
     status: matsTypes.ScorecardStatus.pending,
     submitted: submitEpoch,
-    dateRange: dateRange,
+    dateRange,
     schedule: (schedule = plotParams["scorecard-schedule-mode"]),
-    endsOn: plotParams["scorecardEndsOn"],
-    processedAt: processedAt,
-    significanceThresholds: significanceThresholds,
-    significanceColors: significanceColors,
+    endsOn: plotParams.scorecardEndsOn,
+    processedAt,
+    significanceThresholds,
+    significanceColors,
     results: {},
   };
   // insert a title (will change when processedAt is established - easy substitution for the word 'processedAt')
-  (scorecardDocument["results"]["title"] = title),
-    (scorecardDocument["results"]["rows"] = {}),
+  (scorecardDocument.results.title = title),
+    (scorecardDocument.results.rows = {}),
     // fill in the rows - these are all initially default values
-    plotParams["curves"].forEach(function (curve) {
+    plotParams.curves.forEach(function (curve) {
       // create the empty object for this row
-      let label = curve["label"];
-      scorecardDocument["results"]["rows"][label] = {};
+      const { label } = curve;
+      scorecardDocument.results.rows[label] = {};
       // add the top level elements.
-      //make rowTitle and rowParameters maps, the display page can sort out stringifying them.
-      //map the necessary row parameters
+      // make rowTitle and rowParameters maps, the display page can sort out stringifying them.
+      // map the necessary row parameters
       // remove these params from the singleCurveParamNames list, all of the row parameters are either single select
       // or they are handled individually, so we remove the ones that are handled individually from the single select list.
-      let notIncludedParams = ["label", "data-source", "validation-data-source"];
-      let rowParameters = singleCurveParamNames.filter(function (paramName) {
+      const notIncludedParams = ["label", "data-source", "validation-data-source"];
+      const rowParameters = singleCurveParamNames.filter(function (paramName) {
         return !notIncludedParams.includes(paramName);
       });
 
-      scorecardDocument["results"]["rows"][curve["label"]]["rowTitle"] = {
-        label: label,
+      scorecardDocument.results.rows[curve.label].rowTitle = {
+        label,
         datasource: curve["data-source"],
         validationDatasource: curve["validation-data-source"],
       };
-      scorecardDocument["results"]["rows"][curve["label"]]["rowParameters"] =
-        rowParameters;
-      scorecardDocument["results"]["rows"][curve["label"]]["regions"] = regions;
-      scorecardDocument["results"]["rows"][curve["label"]]["fcstlens"] = fcstLengths;
-      scorecardDocument["results"]["rows"][curve["label"]]["data"] = {};
+      scorecardDocument.results.rows[curve.label].rowParameters = rowParameters;
+      scorecardDocument.results.rows[curve.label].regions = regions;
+      scorecardDocument.results.rows[curve.label].fcstlens = fcstLengths;
+      scorecardDocument.results.rows[curve.label].data = {};
       regions.forEach(function (region) {
-        if (
-          scorecardDocument["results"]["rows"][curve["label"]]["data"][region] ===
-          undefined
-        ) {
-          scorecardDocument["results"]["rows"][curve["label"]]["data"][region] = {};
+        if (scorecardDocument.results.rows[curve.label].data[region] === undefined) {
+          scorecardDocument.results.rows[curve.label].data[region] = {};
         }
-        curve["statistic"].forEach(function (stat) {
+        curve.statistic.forEach(function (stat) {
           if (
-            scorecardDocument["results"]["rows"][curve["label"]]["data"][region][
-              stat
-            ] === undefined
+            scorecardDocument.results.rows[curve.label].data[region][stat] === undefined
           ) {
-            scorecardDocument["results"]["rows"][curve["label"]]["data"][region][stat] =
-              {};
+            scorecardDocument.results.rows[curve.label].data[region][stat] = {};
           }
-          curve["variable"].forEach(function (variable) {
+          curve.variable.forEach(function (variable) {
             // iterate the union of fcstLengths and if a curve doesn'thave one mark it undefined
             if (
-              scorecardDocument["results"]["rows"][curve["label"]]["data"][region][
-                stat
-              ][variable] === undefined
+              scorecardDocument.results.rows[curve.label].data[region][stat][
+                variable
+              ] === undefined
             ) {
-              scorecardDocument["results"]["rows"][curve["label"]]["data"][region][
-                stat
-              ][variable] = {};
+              scorecardDocument.results.rows[curve.label].data[region][stat][variable] =
+                {};
             }
             fcstLengths.forEach(function (fcstlen, index) {
               // this is where we will calculate the significances.
               // get a random number between 0 and 100
               let sval = 0;
-              let val = Math.floor(Math.random() * 100);
+              const val = Math.floor(Math.random() * 100);
               // use the random number to generate a weighted number between -2 and 2
               if (val >= 0 && val < 10) {
                 sval = -2;
@@ -255,18 +246,16 @@ processScorecard = function (plotParams, plotFunction) {
               }
 
               if (
-                scorecardDocument["results"]["rows"][curve["label"]][
-                  "fcstlens"
-                ].includes(fcstlen)
+                scorecardDocument.results.rows[curve.label].fcstlens.includes(fcstlen)
               ) {
-                scorecardDocument["results"]["rows"][curve["label"]]["data"][region][
-                  stat
-                ][variable][fcstlen] = sval;
+                scorecardDocument.results.rows[curve.label].data[region][stat][
+                  variable
+                ][fcstlen] = sval;
               } else {
-                //mark this undefined
-                scorecardDocument["results"]["rows"][curve["label"]]["data"][region][
-                  stat
-                ][variable][fcstlen] = "undefined";
+                // mark this undefined
+                scorecardDocument.results.rows[curve.label].data[region][stat][
+                  variable
+                ][fcstlen] = "undefined";
               }
             });
           });
@@ -275,27 +264,27 @@ processScorecard = function (plotParams, plotFunction) {
     });
   // store the document
   try {
-    let scDoc = JSON.stringify(scorecardDocument);
-    let id = scorecardDocument.id;
+    const scDoc = JSON.stringify(scorecardDocument);
+    const { id } = scorecardDocument;
     (async function (id, doc) {
       cbScorecardPool.upsertCB(id, doc);
     })(id, scDoc).then(() => {
       console.log("upserted doc with id", id);
     });
   } catch (err) {
-    console.log("error writing scorecard to database: " + err.message);
+    console.log(`error writing scorecard to database: ${err.message}`);
   }
 
-  var result = {
+  const result = {
     error: "",
     data: scorecardDocument.id,
     options: {},
     basis: {
-      plotParams: plotParams,
+      plotParams,
       queries: {},
     },
   };
   // save scorecard in the Scorecard collection
-  //matsCollections.Scorecard.insert();
+  // matsCollections.Scorecard.insert();
   plotFunction(result);
 };

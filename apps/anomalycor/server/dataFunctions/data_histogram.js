@@ -2,95 +2,92 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import { matsCollections } from "meteor/randyp:mats-common";
-import { matsTypes } from "meteor/randyp:mats-common";
-import { matsDataUtils } from "meteor/randyp:mats-common";
-import { matsDataQueryUtils } from "meteor/randyp:mats-common";
-import { matsDataProcessUtils } from "meteor/randyp:mats-common";
+import {
+  matsCollections,
+  matsTypes,
+  matsDataUtils,
+  matsDataQueryUtils,
+  matsDataProcessUtils,
+} from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
 dataHistogram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.histogram,
-    matching: plotParams["plotAction"] === matsTypes.PlotActions.matched,
-    completeness: plotParams["completeness"],
-    outliers: plotParams["outliers"],
-    hideGaps: plotParams["noGapsCheck"],
+    matching: plotParams.plotAction === matsTypes.PlotActions.matched,
+    completeness: plotParams.completeness,
+    outliers: plotParams.outliers,
+    hideGaps: plotParams.noGapsCheck,
     hasLevels: true,
   };
-  var alreadyMatched = false;
-  var dataRequests = {}; // used to store data queries
-  var dataFoundForCurve = [];
-  var dataFoundForAnyCurve = false;
-  var totalProcessingStart = moment();
-  var error = "";
-  var curves = JSON.parse(JSON.stringify(plotParams.curves));
-  var curvesLength = curves.length;
-  var dataset = [];
-  var allReturnedSubStats = [];
-  var allReturnedSubSecs = [];
-  var allReturnedSubLevs = [];
-  var axisMap = Object.create(null);
+  const alreadyMatched = false;
+  const dataRequests = {}; // used to store data queries
+  const dataFoundForCurve = [];
+  let dataFoundForAnyCurve = false;
+  const totalProcessingStart = moment();
+  let error = "";
+  const curves = JSON.parse(JSON.stringify(plotParams.curves));
+  const curvesLength = curves.length;
+  const dataset = [];
+  const allReturnedSubStats = [];
+  const allReturnedSubSecs = [];
+  const allReturnedSubLevs = [];
+  const axisMap = Object.create(null);
 
   // process user bin customizations
   const binParams = matsDataUtils.setHistogramParameters(plotParams);
-  const yAxisFormat = binParams.yAxisFormat;
-  const binNum = binParams.binNum;
+  const { yAxisFormat } = binParams;
+  const { binNum } = binParams;
 
-  for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
-    var curve = curves[curveIndex];
-    var diffFrom = curve.diffFrom;
+    const curve = curves[curveIndex];
+    const { diffFrom } = curve;
     dataFoundForCurve[curveIndex] = true;
-    var label = curve["label"];
-    var model = matsCollections["data-source"].findOne({ name: "data-source" })
+    const { label } = curve;
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[curve["data-source"]][0];
-    var regionStr = curve["region"];
-    var region = Object.keys(
-      matsCollections["region"].findOne({ name: "region" }).valuesMap
+    var regionStr = curve.region;
+    const region = Object.keys(
+      matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
-        matsCollections["region"].findOne({ name: "region" }).valuesMap[key] ===
-        regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    var queryTableClause = "from " + model + "_anomcorr_" + region + " as m0";
-    var variable = curve["variable"];
-    var variableClause = "and m0.variable = '" + variable + "'";
-    var validTimeStr = curve["valid-time"];
-    var validTimeClause = matsCollections["valid-time"].findOne(
+    const queryTableClause = `from ${model}_anomcorr_${region} as m0`;
+    const { variable } = curve;
+    const variableClause = `and m0.variable = '${variable}'`;
+    const validTimeStr = curve["valid-time"];
+    const validTimeClause = matsCollections["valid-time"].findOne(
       { name: "valid-time" },
       { optionsMap: 1 }
-    )["optionsMap"][validTimeStr][0];
-    var forecastLength = curve["forecast-length"];
-    var forecastLengthClause = "and m0.fcst_len = " + forecastLength;
-    var dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
-    var dateClause =
-      "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= " +
-      fromSecs +
-      " and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= " +
-      toSecs;
-    var levelClause = "";
-    var levels = curve["level"] === undefined ? [] : curve["level"];
+    ).optionsMap[validTimeStr][0];
+    const forecastLength = curve["forecast-length"];
+    const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+    const dateClause = `and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= ${fromSecs} and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= ${toSecs}`;
+    let levelClause = "";
+    const levels = curve.level === undefined ? [] : curve.level;
     if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
-      levelClause = "and m0.level IN(" + levels + ")";
+      levelClause = `and m0.level IN(${levels})`;
     }
-    var statisticClause =
+    const statisticClause =
       "avg(m0.wacorr/100) as stat, " +
       "count(m0.wacorr) as N0, " +
       "group_concat(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level, ';', m0.wacorr / 100 " +
       "order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data";
     var statType = "ACC";
-    curves[curveIndex]["statistic"] = "Correlation";
+    curves[curveIndex].statistic = "Correlation";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var axisKey = yAxisFormat;
+    let axisKey = yAxisFormat;
     if (yAxisFormat === "Relative frequency") {
-      axisKey = axisKey + " (x100)";
+      axisKey += " (x100)";
     }
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
@@ -99,7 +96,7 @@ dataHistogram = function (plotParams, plotFunction) {
     if (diffFrom == null) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
-      var statement =
+      let statement =
         "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour as avtime, " +
         "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
         "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
@@ -126,7 +123,7 @@ dataHistogram = function (plotParams, plotFunction) {
       dataRequests[label] = statement;
 
       var queryResult;
-      var startMoment = moment();
+      const startMoment = moment();
       var finishMoment;
       try {
         // send the query statement to the query function
@@ -137,11 +134,12 @@ dataHistogram = function (plotParams, plotFunction) {
           "Anomaly Correlation"
         );
         finishMoment = moment();
-        dataRequests["data retrieval (query) time - " + label] = {
+        dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
-          duration:
-            moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+          duration: `${moment
+            .duration(finishMoment.diff(startMoment))
+            .asSeconds()} seconds`,
           recordCount: queryResult.data.x.length,
         };
         // get the data back from the query
@@ -151,7 +149,7 @@ dataHistogram = function (plotParams, plotFunction) {
         allReturnedSubLevs.push(d.subLevs);
       } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
-        e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+        e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
       if (queryResult.error !== undefined && queryResult.error !== "") {
@@ -160,12 +158,7 @@ dataHistogram = function (plotParams, plotFunction) {
           dataFoundForCurve[curveIndex] = false;
         } else {
           // this is an error returned by the mysql database
-          error +=
-            "Error from verification query: <br>" +
-            queryResult.error +
-            "<br> query: <br>" +
-            statement +
-            "<br>";
+          error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
           throw new Error(error);
         }
       } else {
@@ -181,20 +174,20 @@ dataHistogram = function (plotParams, plotFunction) {
 
   // process the data returned by the query
   const curveInfoParams = {
-    curves: curves,
-    curvesLength: curvesLength,
-    dataFoundForCurve: dataFoundForCurve,
-    statType: statType,
-    axisMap: axisMap,
-    yAxisFormat: yAxisFormat,
+    curves,
+    curvesLength,
+    dataFoundForCurve,
+    statType,
+    axisMap,
+    yAxisFormat,
     varUnits: "",
   };
   const bookkeepingParams = {
-    alreadyMatched: alreadyMatched,
-    dataRequests: dataRequests,
-    totalProcessingStart: totalProcessingStart,
+    alreadyMatched,
+    dataRequests,
+    totalProcessingStart,
   };
-  var result = matsDataProcessUtils.processDataHistogram(
+  const result = matsDataProcessUtils.processDataHistogram(
     allReturnedSubStats,
     allReturnedSubSecs,
     allReturnedSubLevs,
