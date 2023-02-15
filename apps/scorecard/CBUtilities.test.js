@@ -1,16 +1,14 @@
-import {
-  matsCouchbaseUtils
-} from 'meteor/randyp:mats-common';
+import { matsCouchbaseUtils } from "meteor/randyp:mats-common";
 
-test('tests read and write', () => {
+test("tests read and write", () => {
   const test = async () => {
-    const fs = require('fs');
+    const fs = require("fs");
 
     homedir = process.env.HOME;
     try {
-      const data = fs.readFileSync(homedir + '/adb-cb4-credentials', 'utf8');
-      data.split(/\r?\n/).forEach(line => {
-        parts = line.split(':');
+      const data = fs.readFileSync(homedir + "/adb-cb4-credentials", "utf8");
+      data.split(/\r?\n/).forEach((line) => {
+        parts = line.split(":");
         credentials[parts[0]] = parts[1];
       });
 
@@ -25,7 +23,14 @@ test('tests read and write', () => {
     const collection = "SCORECARD"; // using scorecard bucket to test read and write capability
     const scope = credentials.scope;
 
-    cbUtilities = new matsCouchbaseUtils.CBUtilities(host, bucketName, scope, collection, user, pwd);
+    cbUtilities = new matsCouchbaseUtils.CBUtilities(
+      host,
+      bucketName,
+      scope,
+      collection,
+      user,
+      pwd
+    );
 
     const test_doc = {
       type: "airline",
@@ -36,8 +41,7 @@ test('tests read and write', () => {
       name: "Couchbase Airways",
     };
     const key = `${test_doc.type}_${test_doc.id}`;
-    const statement =
-      "select * from `travel-sample` where meta().id = '" + key + "';";
+    const statement = "select * from `travel-sample` where meta().id = '" + key + "';";
 
     try {
       const time = await cbUtilities.queryCB("select NOW_MILLIS() as time;");
