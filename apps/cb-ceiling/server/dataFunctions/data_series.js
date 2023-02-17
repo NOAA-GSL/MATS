@@ -149,7 +149,6 @@ dataSeries = function (plotParams, plotFunction) {
         }
         queryTemplate = queryTemplate.replace(/m0.fcstValidEpoch/g, "m.mfve");
       }
-      statement = queryTemplate;
 
       // axisKey is used to determine which axis a curve should use.
       // This axisKeySet object is used like a set and if a curve has the same
@@ -165,7 +164,7 @@ dataSeries = function (plotParams, plotFunction) {
 
       var d;
       if (diffFrom == null) {
-        statement = cbPool.trfmSQLForDbTarget(statement);
+        statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         dataRequests[label] = statement;
 
         // math is done on forecastLength later on -- set all analyses to 0

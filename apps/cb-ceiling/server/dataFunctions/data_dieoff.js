@@ -79,11 +79,30 @@ dataDieOff = function (plotParams, plotFunction)
             }
         } else
         {
-            var queryTemplate = fs.readFileSync(
-                process.env.PWD +
-                "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations.sql",
-                "utf8"
-            );
+            if (forecastLength === matsTypes.ForecastTypes.dieoff)
+            {
+                var queryTemplate = fs.readFileSync(
+                    process.env.PWD +
+                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_DieOff.sql",
+                    "utf8"
+                );
+            }
+            else if (forecastLength === matsTypes.ForecastTypes.utcCycle)
+            {
+                var queryTemplate = fs.readFileSync(
+                    process.env.PWD +
+                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_UTC.sql",
+                    "utf8"
+                );
+            }
+            else
+            {
+                var queryTemplate = fs.readFileSync(
+                    process.env.PWD +
+                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_SingleCycle.sql",
+                    "utf8"
+                );
+            }
         }
         console.log("\nqueryTemplate:\n" + queryTemplate);
 
@@ -214,8 +233,7 @@ dataDieOff = function (plotParams, plotFunction)
         {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = queryTemplate;
-            statement = cbPool.trfmSQLForDbTarget(statement);
+            statement = cbPool.trfmSQLForDbTarget(queryTemplate);
             dataRequests[label] = statement;
 
             var queryResult;
