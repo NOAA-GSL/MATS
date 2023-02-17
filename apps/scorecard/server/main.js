@@ -626,6 +626,7 @@ const doCurveParams = function () {
   let hideOtherFor = {};
   let applicationOptions = [];
   let applicationOptionsMap = {};
+  let applicationSourceMap = {};
   let modelOptionsMap = {};
   let regionOptionsMap = {};
   let regionValuesMap = {};
@@ -669,6 +670,12 @@ const doCurveParams = function () {
         hideOtherFor
       );
 
+      // store the URL that was used to get each of these apps
+      for (let aIdx = 0; aIdx < expectedApps.length; aIdx++) {
+        const thisApp = expectedApps[aIdx];
+        applicationSourceMap[thisApp] = currentApp;
+      }
+ 
       // get databases that correspond with apps
       queryURL = `${currentURL}/${currentApp}/getAppSumsDBs`;
       [applicationOptionsMap, expectedApps, hideOtherFor] =
@@ -923,6 +930,7 @@ const doCurveParams = function () {
       type: matsTypes.InputTypes.select,
       optionsMap: applicationOptionsMap,
       options: applicationOptions,
+      sourceMap: applicationSourceMap,
       hideOtherFor,
       dates: dateOptionsMap,
       dependentNames: [
