@@ -1580,6 +1580,28 @@ Meteor.startup(function () {
 
   // create list of all pools
   const allPools = [];
+
+  const cbConnection = matsCollections.Databases.findOne({
+    role: matsTypes.DatabaseRoles.COUCHBASE,
+    status: "active"
+  }, 
+  {
+    host: 1,
+    port: 1,
+    bucket: 1,
+    scope: 1,
+    collection: 1,
+    user: 1,
+    password: 1
+  });
+
+// the cluster and bucket are intended to be global
+  if (cbConnection)
+  {
+      cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.scope, cbConnection.collection, cbConnection.user, cbConnection.password);
+  }
+  allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
+  
   const metadataSettings = matsCollections.Databases.findOne(
     {
       role: matsTypes.DatabaseRoles.META_DATA,
