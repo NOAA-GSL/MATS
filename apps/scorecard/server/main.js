@@ -361,14 +361,14 @@ const doPlotParams = function () {
     matsCollections.PlotParams.insert({
       name: "scorecard-percent-stdv",
       type: matsTypes.InputTypes.radioGroup,
-      options: ["Percentage", "Standard Deviation"],
+      options: ["Percent", "Standard Deviation"],
       controlButtonCovered: false,
-      default: "Percentage",
+      default: "Percent",
       hideOtherFor: {
         "minor-threshold-by-percent": ["Standard Deviation"],
         "major-threshold-by-percent": ["Standard Deviation"],
-        "minor-threshold-by-stdv": ["Percentage"],
-        "major-threshold-by-stdv": ["Percentage"],
+        "minor-threshold-by-stdv": ["Percent"],
+        "major-threshold-by-stdv": ["Percent"],
       },
       controlButtonVisibility: "block",
       controlButtonText: "Scorecard confidence interval metric",
