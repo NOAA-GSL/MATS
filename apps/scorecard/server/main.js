@@ -626,7 +626,7 @@ const doCurveParams = function () {
   let hideOtherFor = {};
   let applicationOptions = [];
   let applicationOptionsMap = {};
-  let applicationSourceMap = {};
+  const applicationSourceMap = {};
   let modelOptionsMap = {};
   let regionOptionsMap = {};
   let regionValuesMap = {};
@@ -675,7 +675,7 @@ const doCurveParams = function () {
         const thisApp = expectedApps[aIdx];
         applicationSourceMap[thisApp] = currentApp;
       }
- 
+
       // get databases that correspond with apps
       queryURL = `${currentURL}/${currentApp}/getAppSumsDBs`;
       [applicationOptionsMap, expectedApps, hideOtherFor] =
