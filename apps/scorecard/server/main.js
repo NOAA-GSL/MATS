@@ -361,16 +361,17 @@ const doPlotParams = function () {
     matsCollections.PlotParams.insert({
       name: "scorecard-percent-stdv",
       type: matsTypes.InputTypes.radioGroup,
-      options: ["Percent", "StandardDeviation"],
+      options: ["Percent", "Standard Deviation"],
       controlButtonCovered: false,
       default: "Percent",
       hideOtherFor: {
-        "minor-threshold-by-percent": ["StandardDeviation"],
-        "major-threshold-by-percent": ["StandardDeviation"],
+        "minor-threshold-by-percent": ["Standard Deviation"],
+        "major-threshold-by-percent": ["Standard Deviation"],
         "minor-threshold-by-stdv": ["Percent"],
         "major-threshold-by-stdv": ["Percent"],
       },
       controlButtonVisibility: "block",
+      controlButtonText: "Scorecard confidence interval metric",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 6,
@@ -625,6 +626,7 @@ const doCurveParams = function () {
   let hideOtherFor = {};
   let applicationOptions = [];
   let applicationOptionsMap = {};
+  const applicationSourceMap = {};
   let modelOptionsMap = {};
   let regionOptionsMap = {};
   let regionValuesMap = {};
@@ -667,6 +669,12 @@ const doCurveParams = function () {
         [],
         hideOtherFor
       );
+
+      // store the URL that was used to get each of these apps
+      for (let aIdx = 0; aIdx < expectedApps.length; aIdx++) {
+        const thisApp = expectedApps[aIdx];
+        applicationSourceMap[thisApp] = currentApp;
+      }
 
       // get databases that correspond with apps
       queryURL = `${currentURL}/${currentApp}/getAppSumsDBs`;
@@ -922,6 +930,7 @@ const doCurveParams = function () {
       type: matsTypes.InputTypes.select,
       optionsMap: applicationOptionsMap,
       options: applicationOptions,
+      sourceMap: applicationSourceMap,
       hideOtherFor,
       dates: dateOptionsMap,
       dependentNames: [
