@@ -13,6 +13,7 @@ import { moment } from 'meteor/momentjs:moment';
 
 dataValidTime = function (plotParams, plotFunction)
 {
+    var fs = require("fs");
     // initialize variables common to all curves
     const appParams = {
         "plotType": matsTypes.PlotTypes.validtime,
@@ -65,80 +66,44 @@ dataValidTime = function (plotParams, plotFunction)
         var label = curve['label'];
         var variable = curve['variable'];
         var model = matsCollections['data-source'].findOne({ name: 'data-source' }).optionsMap[variable][curve['data-source']][0];
-        var modelClause = "AND m0.model='" + model + "' ";
-        var queryTableClause;
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable][key] === thresholdStr);
         threshold = threshold.replace(/_/g, ".");
         var forecastLength = curve['forecast-length'];
-        var forecastLengthClause = "AND m0.fcstLen = " + forecastLength;
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var dateClause;
-        var siteDateClause = "";
-        var siteMatchClause = "";
-        var sitesClause = "";
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections['statistic'].findOne({ name: 'statistic' }, { optionsMap: 1 })['optionsMap'];
-        var statisticClause;
-        var regionClause = "";
-        var whereClause;
-        var siteWhereClause = "";
 
         queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
         queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
         queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
         queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
+        queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
 
         if (regionType === 'Predefined region')
         {
-            queryTableClause = "from vxDBTARGET  m0";
             var regionStr = curve['region'];
             var region = Object.keys(matsCollections['region'].findOne({ name: 'region' }).valuesMap).find(key => matsCollections['region'].findOne({ name: 'region' }).valuesMap[key] === regionStr);
             queryTemplate = queryTemplate.replace(/vxREGION/g, region);
         } else
         {
-            queryTableClause = "from vxDBTARGET  AS m0 " +
-                "JOIN mdata AS o " +
-                "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
-                "UNNEST o.data AS odata " +
-                "UNNEST m0.data AS m0data ";
             var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
             if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused)
             {
-                sitesClause = " and m0data.name in ['" + sitesList.join("','") + "']";
-                sitesClause = sitesClause + " and odata.name in ['" + sitesList.join("','") + "']";
-                siteMatchClause = "and m0data.name = odata.name ";
+                queryTemplate = queryTemplate.replace(
+                    /vxSITES_LIST_OBS/g,
+                    cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
+                );
+                queryTemplate = queryTemplate.replace(
+                    /vxSITES_LIST_MODELS/g,
+                    cbPool.trfmListToCSVString(sitesList, "models.data.", false)
+                );
             } else
             {
                 throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
             }
-            statisticClause = "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
-                "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS hit, " +
-                "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
-                "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS fa, " +
-                "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-                "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS miss, " +
-                "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-                "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS cn, " +
-                "SUM(CASE WHEN m0data.Ceiling IS NOT MISSING " +
-                "AND odata.Ceiling IS NOT MISSING THEN 1 ELSE 0 END) AS N0, " +
-                "ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
-                "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
-                "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-                "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-                "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END) AS sub_data ";
-            dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs + " and m0.fcstValidEpoch = o.fcstValidEpoch";
-            whereClause = "AND m0.type='DD' " +
-                "AND m0.docType='model' " +
-                "AND m0.subset='METAR' " +
-                "AND m0.version='V01' ";
-            siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " and o.fcstValidEpoch <= " + toSecs;
-            siteWhereClause = "WHERE o.type='DD' " +
-                "AND o.docType='obs' " +
-                "AND o.subset='METAR' " +
-                "AND o.version='V01' ";
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -156,40 +121,7 @@ dataValidTime = function (plotParams, plotFunction)
         var d;
         if (diffFrom == null)
         {
-            // this is a database driven curve, not a difference curve
-            // prepare the query from the above parameters
-            var statement = "SELECT m0.fcstValidEpoch%(24*3600)/3600 AS hr_of_day, " +
-                "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
-                "MIN(m0.fcstValidEpoch) min_secs, " +
-                "MAX(m0.fcstValidEpoch) max_secs, " +
-                "{{statisticClause}} " +
-                "{{queryTableClause}} " +
-                "{{siteWhereClause}} " +
-                "{{whereClause}} " +
-                "{{modelClause}} " +
-                "{{regionClause}} " +
-                "{{forecastLengthClause}} " +
-                "{{siteDateClause}} " +
-                "{{dateClause}} " +
-                "{{sitesClause}} " +
-                "{{siteMatchClause}} " +
-                "GROUP BY m0.fcstValidEpoch%(24*3600)/3600 " +
-                "ORDER BY hr_of_day" +
-                ";";
-
-            statement = statement.replace('{{statisticClause}}', statisticClause);
-            statement = statement.replace('{{queryTableClause}}', queryTableClause);
-            statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-            statement = statement.replace('{{sitesClause}}', sitesClause);
-            statement = statement.replace('{{whereClause}}', whereClause);
-            statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
-            statement = statement.replace('{{modelClause}}', modelClause);
-            statement = statement.replace('{{regionClause}}', regionClause);
-            statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-            statement = statement.replace('{{dateClause}}', dateClause);
-            statement = statement.replace('{{siteDateClause}}', siteDateClause);
-
-            statement = cbPool.trfmSQLForDbTarget(statement);
+            statement = cbPool.trfmSQLForDbTarget(queryTemplate);
             dataRequests[label] = statement;
 
             var queryResult;
