@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/precipitation1hr
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/precipitation1hr
+    newTag: development 
+
+configMapGenerator:
+  - name: precipitation1hr-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: precipitation1hr-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay

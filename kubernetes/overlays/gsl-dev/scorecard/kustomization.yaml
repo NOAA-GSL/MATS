@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/scorecard
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/scorecard
+    newTag: development
+
+configMapGenerator:
+  - name: scorecard-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: scorecard-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay

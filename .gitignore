@@ -21,3 +21,6 @@ settings
 *.swp
 tmp
 bundle*
+.env*
+settings.json
+

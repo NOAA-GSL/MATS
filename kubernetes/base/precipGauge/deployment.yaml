@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: precipgauge
+  labels:
+    app.kubernetes.io/name: precipgauge
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: precipgauge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: precipgauge
+  template:
+    metadata:
+      labels:
+        app: precipgauge
+    spec:
+      containers:
+        - name: precipgauge
+          image: ghcr.io/noaa-gsl/mats/development/precipgauge:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

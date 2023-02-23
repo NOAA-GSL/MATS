@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/landuse
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/landuse
+    newTag: development 
+
+configMapGenerator:
+  - name: landuse-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: landuse-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay

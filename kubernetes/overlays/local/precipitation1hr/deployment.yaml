@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: precipitation1hr
+spec:
+  template:
+    spec:
+      containers:
+        - name: precipitation1hr
+          # resources:
+          #   requests:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          #   limits:
+          #     memory: "4Gi"
+          #     cpu: "2"
+          envFrom:
+            - secretRef:
+                name: precipitation1hr-secret
+          volumeMounts:
+            - name: precipitation1hr-settings-file
+              mountPath: /usr/app/settings/precipitation1hr/settings.json
+              subPath: settings.json
+              readOnly: true
+      volumes:
+        - name: precipitation1hr-settings-file
+          configMap:
+            name: precipitation1hr-config

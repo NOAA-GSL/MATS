@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ceil-vis15
+spec:
+  template:
+    spec:
+      containers:
+        - name: ceil-vis15
+          # resources:
+          #   requests:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          #   limits:
+          #     memory: "4Gi"
+          #     cpu: "2"
+          envFrom:
+            - secretRef:
+                name: ceil-vis15-secret
+          volumeMounts:
+            - name: ceil-vis15-settings-file
+              mountPath: /usr/app/settings/ceil-vis15/settings.json
+              subPath: settings.json
+              readOnly: true
+      volumes:
+        - name: ceil-vis15-settings-file
+          configMap:
+            name: ceil-vis15-config
