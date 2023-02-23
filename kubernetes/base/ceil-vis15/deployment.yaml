@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ceil-vis15
+  labels:
+    app.kubernetes.io/name: ceil-vis15
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: ceil-vis15
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ceil-vis15
+  template:
+    metadata:
+      labels:
+        app: ceil-vis15
+    spec:
+      containers:
+        - name: ceil-vis15
+          image: ghcr.io/noaa-gsl/mats/development/ceil-vis15:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

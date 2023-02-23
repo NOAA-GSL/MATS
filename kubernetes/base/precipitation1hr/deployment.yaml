@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: precipitation1hr
+  labels:
+    app.kubernetes.io/name: precipitation1hr
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: precipitation1hr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: precipitation1hr
+  template:
+    metadata:
+      labels:
+        app: precipitation1hr
+    spec:
+      containers:
+        - name: precipitation1hr
+          image: ghcr.io/noaa-gsl/mats/development/precipitation1hr:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

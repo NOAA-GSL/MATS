@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: landuse
+spec:
+  template:
+    spec:
+      containers:
+        - name: landuse
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: landuse-secret
+          volumeMounts:
+            - name: landuse-settings-file
+              mountPath: /usr/app/settings/landuse/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: landuse-settings-file
+          configMap:
+            name: landuse-config

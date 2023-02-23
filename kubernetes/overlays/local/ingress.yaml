@@ -16,3 +16,94 @@ spec:
                 name: scorecard
                 port:
                   number: 80
+          - path: /anomalycor
+            pathType: Prefix
+            backend:
+              service:
+                name: anomalycor
+                port:
+                  number: 80
+          - path: /cb-ceiling
+            pathType: Prefix
+            backend:
+              service:
+                name: cb-ceiling
+                port:
+                  number: 80
+          - path: /ceil-vis
+            pathType: Prefix
+            backend:
+              service:
+                name: ceil-vis
+                port:
+                  number: 80
+          - path: /ceil-vis15
+            pathType: Prefix
+            backend:
+              service:
+                name: ceil-vis15
+                port:
+                  number: 80
+          - path: /landuse
+            pathType: Prefix
+            backend:
+              service:
+                name: landuse
+                port:
+                  number: 80
+          - path: /precipaccum
+            pathType: Prefix
+            backend:
+              service:
+                name: precipaccum
+                port:
+                  number: 80
+          - path: /precipgauge
+            pathType: Prefix
+            backend:
+              service:
+                name: precipgauge
+                port:
+                  number: 80
+          - path: /precipitation1hr
+            pathType: Prefix
+            backend:
+              service:
+                name: precipitation1hr
+                port:
+                  number: 80
+          - path: /ptype
+            pathType: Prefix
+            backend:
+              service:
+                name: ptype
+                port:
+                  number: 80
+          - path: /radar
+            pathType: Prefix
+            backend:
+              service:
+                name: radar
+                port:
+                  number: 80
+          - path: /surface
+            pathType: Prefix
+            backend:
+              service:
+                name: surface
+                port:
+                  number: 80
+          - path: /surfrad
+            pathType: Prefix
+            backend:
+              service:
+                name: surfrad
+                port:
+                  number: 80
+          - path: /upperair
+            pathType: Prefix
+            backend:
+              service:
+                name: upperair
+                port:
+                  number: 80

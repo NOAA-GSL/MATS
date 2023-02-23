@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/surface
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/surface
+    newTag: development 
+
+configMapGenerator:
+  - name: surface-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: surface-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay

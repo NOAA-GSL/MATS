@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/surfrad
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/surfrad
+    newTag: development 
+
+configMapGenerator:
+  - name: surfrad-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: surfrad-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay
