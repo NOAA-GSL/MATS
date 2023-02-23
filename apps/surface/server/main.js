@@ -1614,6 +1614,21 @@ Meteor.startup(function () {
       );
       allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
     }
+    if (cbConnection.collection === "SCORECARD") {
+      // global cbScorecardPool
+      cbScorecardPool = new matsCouchbaseUtils.CBUtilities(
+        cbConnection.host,
+        cbConnection.bucket,
+        cbConnection.scope,
+        cbConnection.collection,
+        cbConnection.user,
+        cbConnection.password
+      );
+      allPools.push({
+        pool: "cbScorecardPool",
+        role: matsTypes.DatabaseRoles.COUCHBASE,
+      });
+    }
     if (cbConnection.collection === "SCORECARD_SETTINGS") {
       // global cbScorecardSettingsPool
       cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
