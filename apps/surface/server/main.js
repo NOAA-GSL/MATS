@@ -1580,28 +1580,57 @@ Meteor.startup(function () {
 
   // create list of all pools
   const allPools = [];
+  // connect to the couchbase cluster
+  // there should be two connections,
+  // one for METAR collection (readonly)
+  // and one for scorecard (writes SCORECARD)
+  const cbConnections = matsCollections.Databases.find(
+    {
+      role: matsTypes.DatabaseRoles.COUCHBASE,
+      status: "active",
+    },
+    {
+      host: 1,
+      port: 1,
+      bucket: 1,
+      collection: 1,
+      scope: 1,
+      user: 1,
+      password: 1,
+    }
+  ).fetch();
 
-  const cbConnection = matsCollections.Databases.findOne({
-    role: matsTypes.DatabaseRoles.COUCHBASE,
-    status: "active"
-  }, 
-  {
-    host: 1,
-    port: 1,
-    bucket: 1,
-    scope: 1,
-    collection: 1,
-    user: 1,
-    password: 1
+  // the pool names intended to be global
+  cbConnections.forEach(function (cbConnection) {
+    if (cbConnection.collection === "METAR") {
+      // global cbPool
+      cbPool = new matsCouchbaseUtils.CBUtilities(
+        cbConnection.host,
+        cbConnection.bucket,
+        cbConnection.scope,
+        cbConnection.collection,
+        cbConnection.user,
+        cbConnection.password
+      );
+      allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
+    }
+    if (cbConnection.collection === "SCORECARD_SETTINGS") {
+      // global cbScorecardSettingsPool
+      cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+        cbConnection.host,
+        cbConnection.bucket,
+        cbConnection.scope,
+        cbConnection.collection,
+        cbConnection.user,
+        cbConnection.password
+      );
+      allPools.push({
+        pool: "cbScorecardSettingsPool",
+        role: matsTypes.DatabaseRoles.COUCHBASE,
+      });
+    }
   });
 
-// the cluster and bucket are intended to be global
-  if (cbConnection)
-  {
-      cbPool = new matsCouchbaseUtils.CBUtilities(cbConnection.host, cbConnection.bucket, cbConnection.scope, cbConnection.collection, cbConnection.user, cbConnection.password);
-  }
-  allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
-  
   const metadataSettings = matsCollections.Databases.findOne(
     {
       role: matsTypes.DatabaseRoles.META_DATA,
