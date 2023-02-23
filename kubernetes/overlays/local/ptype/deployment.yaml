@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ptype
+spec:
+  template:
+    spec:
+      containers:
+        - name: ptype
+          # resources:
+          #   requests:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          #   limits:
+          #     memory: "4Gi"
+          #     cpu: "2"
+          envFrom:
+            - secretRef:
+                name: ptype-secret
+          volumeMounts:
+            - name: ptype-settings-file
+              mountPath: /usr/app/settings/ptype/settings.json
+              subPath: settings.json
+              readOnly: true
+      volumes:
+        - name: ptype-settings-file
+          configMap:
+            name: ptype-config

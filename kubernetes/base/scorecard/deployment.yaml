@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scorecard
+  labels:
+    app.kubernetes.io/name: scorecard
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: scorecard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scorecard
+  template:
+    metadata:
+      labels:
+        app: scorecard
+    spec:
+      containers:
+        - name: scorecard
+          image: ghcr.io/noaa-gsl/mats/development/scorecard:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

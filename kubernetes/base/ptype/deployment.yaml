@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ptype
+  labels:
+    app.kubernetes.io/name: ptype
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: ptype
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ptype
+  template:
+    metadata:
+      labels:
+        app: ptype
+    spec:
+      containers:
+        - name: ptype
+          image: ghcr.io/noaa-gsl/mats/development/ptype:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cb-ceiling
+  labels:
+    app: cb-ceiling
+spec:
+  selector:
+    app: cb-ceiling
+  ports:
+  - port: 80
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  type: ClusterIP
