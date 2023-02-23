@@ -1600,51 +1600,32 @@ Meteor.startup(function () {
     }
   ).fetch();
 
-  // the pool names intended to be global
-  cbConnections.forEach(function (cbConnection) {
-    if (cbConnection.collection === "METAR") {
-      // global cbPool
-      cbPool = new matsCouchbaseUtils.CBUtilities(
-        cbConnection.host,
-        cbConnection.bucket,
-        cbConnection.scope,
-        cbConnection.collection,
-        cbConnection.user,
-        cbConnection.password
-      );
-      allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
+  const cbConnection = matsCollections.Databases.findOne(
+    {
+      role: matsTypes.DatabaseRoles.COUCHBASE,
+      status: "active",
+    },
+    {
+      host: 1,
+      port: 1,
+      bucket: 1,
+      scope: 1,
+      collection: 1,
+      user: 1,
+      password: 1,
     }
-    if (cbConnection.collection === "SCORECARD") {
-      // global cbScorecardPool
-      cbScorecardPool = new matsCouchbaseUtils.CBUtilities(
-        cbConnection.host,
-        cbConnection.bucket,
-        cbConnection.scope,
-        cbConnection.collection,
-        cbConnection.user,
-        cbConnection.password
-      );
-      allPools.push({
-        pool: "cbScorecardPool",
-        role: matsTypes.DatabaseRoles.COUCHBASE,
-      });
-    }
-    if (cbConnection.collection === "SCORECARD_SETTINGS") {
-      // global cbScorecardSettingsPool
-      cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
-        cbConnection.host,
-        cbConnection.bucket,
-        cbConnection.scope,
-        cbConnection.collection,
-        cbConnection.user,
-        cbConnection.password
-      );
-      allPools.push({
-        pool: "cbScorecardSettingsPool",
-        role: matsTypes.DatabaseRoles.COUCHBASE,
-      });
-    }
-  });
+  );
+  if (cbConnection) {
+    // global cbScorecardSettingsPool
+    cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+      cbConnection.host,
+      cbConnection.bucket,
+      cbConnection.scope,
+      cbConnection.collection,
+      cbConnection.user,
+      cbConnection.password
+    );
+  }
 
   const metadataSettings = matsCollections.Databases.findOne(
     {
