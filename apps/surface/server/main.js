@@ -1580,26 +1580,8 @@ Meteor.startup(function () {
 
   // create list of all pools
   const allPools = [];
-  // connect to the couchbase cluster
-  // there should be two connections,
-  // one for METAR collection (readonly)
-  // and one for scorecard (writes SCORECARD)
-  const cbConnections = matsCollections.Databases.find(
-    {
-      role: matsTypes.DatabaseRoles.COUCHBASE,
-      status: "active",
-    },
-    {
-      host: 1,
-      port: 1,
-      bucket: 1,
-      collection: 1,
-      scope: 1,
-      user: 1,
-      password: 1,
-    }
-  ).fetch();
 
+  // connect to the couchbase cluster
   const cbConnection = matsCollections.Databases.findOne(
     {
       role: matsTypes.DatabaseRoles.COUCHBASE,
