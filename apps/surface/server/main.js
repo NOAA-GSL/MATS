@@ -1580,6 +1580,35 @@ Meteor.startup(function () {
 
   // create list of all pools
   const allPools = [];
+
+  // connect to the couchbase cluster
+  const cbConnection = matsCollections.Databases.findOne(
+    {
+      role: matsTypes.DatabaseRoles.COUCHBASE,
+      status: "active",
+    },
+    {
+      host: 1,
+      port: 1,
+      bucket: 1,
+      scope: 1,
+      collection: 1,
+      user: 1,
+      password: 1,
+    }
+  );
+  if (cbConnection) {
+    // global cbScorecardSettingsPool
+    cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+      cbConnection.host,
+      cbConnection.bucket,
+      cbConnection.scope,
+      cbConnection.collection,
+      cbConnection.user,
+      cbConnection.password
+    );
+  }
+
   const metadataSettings = matsCollections.Databases.findOne(
     {
       role: matsTypes.DatabaseRoles.META_DATA,

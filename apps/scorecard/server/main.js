@@ -1718,6 +1718,21 @@ Meteor.startup(function () {
         role: matsTypes.DatabaseRoles.COUCHBASE,
       });
     }
+    if (cbConnection.collection === "SCORECARD_SETTINGS") {
+      // global cbScorecardSettingsPool
+      cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+        cbConnection.host,
+        cbConnection.bucket,
+        cbConnection.scope,
+        cbConnection.collection,
+        cbConnection.user,
+        cbConnection.password
+      );
+      allPools.push({
+        pool: "cbScorecardSettingsPool",
+        role: matsTypes.DatabaseRoles.COUCHBASE,
+      });
+    }
   });
   // create list of tables we need to monitor for update
   const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
