@@ -10,7 +10,7 @@ import {
   matsDataUtils,
   matsDataQueryUtils,
   matsParamUtils,
-  matsCouchbaseUtils
+  matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
 // This app combines two previous apps, precipitation24hr, and precipitationSub24hr.
@@ -1321,7 +1321,7 @@ Meteor.startup(function () {
   const sumSettings = matsCollections.Databases.findOne(
     {
       role: matsTypes.DatabaseRoles.SUMS_DATA,
-      status: "active"
+      status: "active",
     },
     {
       host: 1,
