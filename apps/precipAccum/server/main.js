@@ -10,6 +10,7 @@ import {
   matsDataUtils,
   matsDataQueryUtils,
   matsParamUtils,
+  matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
 // This app combines two previous apps, precipitation24hr, and precipitationSub24hr.
@@ -1268,8 +1269,40 @@ Meteor.startup(function () {
 
   // create list of all pools
   const allPools = [];
+
+  // connect to the couchbase cluster
+  const cbConnection = matsCollections.Databases.findOne(
+    {
+      role: matsTypes.DatabaseRoles.COUCHBASE,
+      status: "active",
+    },
+    {
+      host: 1,
+      port: 1,
+      bucket: 1,
+      scope: 1,
+      collection: 1,
+      user: 1,
+      password: 1,
+    }
+  );
+  if (cbConnection) {
+    // global cbScorecardSettingsPool
+    cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+      cbConnection.host,
+      cbConnection.bucket,
+      cbConnection.scope,
+      cbConnection.collection,
+      cbConnection.user,
+      cbConnection.password
+    );
+  }
+
   const metadataSettings = matsCollections.Databases.findOne(
-    { role: matsTypes.DatabaseRoles.META_DATA, status: "active" },
+    {
+      role: matsTypes.DatabaseRoles.META_DATA,
+      status: "active",
+    },
     {
       host: 1,
       port: 1,
@@ -1286,7 +1319,10 @@ Meteor.startup(function () {
   }
 
   const sumSettings = matsCollections.Databases.findOne(
-    { role: matsTypes.DatabaseRoles.SUMS_DATA, status: "active" },
+    {
+      role: matsTypes.DatabaseRoles.SUMS_DATA,
+      status: "active",
+    },
     {
       host: 1,
       port: 1,
