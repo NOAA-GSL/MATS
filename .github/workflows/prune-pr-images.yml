@@ -35,7 +35,7 @@ jobs:
           echo "APP_LOWERCASE=${APP,,}" >> $GITHUB_ENV
       - name: Cleanup images
         if: ${{ (env.BRANCH != 'development') && (env.BRANCH != 'main') }} # don't prune images from the development or main branches
-        uses: bots-house/ghcr-delete-image-action@v1.0.1
+        uses: bots-house/ghcr-delete-image-action@v1.1.0
         with:
           owner: noaa-gsl
           name: mats/development/${{ env.APP_LOWERCASE }}
