@@ -42,7 +42,6 @@
     "no-loop-func": "warn",
     "no-unused-vars": "warn",
     "no-param-reassign": "warn",
-    "eqeqeq": "warn",
     "camelcase": "warn",
     "no-redeclare": "warn",
     "no-shadow": "warn"
