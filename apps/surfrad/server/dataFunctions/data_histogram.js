@@ -118,7 +118,7 @@ dataHistogram = function (plotParams, plotFunction) {
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
 
     var d;
-    if (diffFrom == null) {
+    if (diffFrom === null) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =

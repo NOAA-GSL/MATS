@@ -22,11 +22,11 @@ const doPlotParams = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.PlotParams.remove({});
   }
-  if (matsCollections.PlotParams.find().count() == 0) {
+  if (matsCollections.PlotParams.find().count() === 0) {
     matsCollections.PlotParams.insert({
       name: "dates",
       type: matsTypes.InputTypes.dateRange,
@@ -312,7 +312,7 @@ const doCurveParams = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
@@ -417,7 +417,7 @@ const doCurveParams = function () {
     console.log(err.message);
   }
 
-  if (matsCollections.label.findOne({ name: "label" }) == undefined) {
+  if (matsCollections.label.findOne({ name: "label" }) === undefined) {
     matsCollections.label.insert({
       name: "label",
       type: matsTypes.InputTypes.textInput,
@@ -434,7 +434,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["data-source"].findOne({ name: "data-source" }) == undefined) {
+  if (matsCollections["data-source"].findOne({ name: "data-source" }) === undefined) {
     matsCollections["data-source"].insert({
       name: "data-source",
       type: matsTypes.InputTypes.select,
@@ -472,7 +472,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.region.findOne({ name: "region" }) == undefined) {
+  if (matsCollections.region.findOne({ name: "region" }) === undefined) {
     matsCollections.region.insert({
       name: "region",
       type: matsTypes.InputTypes.select,
@@ -527,7 +527,7 @@ const doCurveParams = function () {
     MAE: "scalar",
   };
 
-  if (matsCollections.statistic.findOne({ name: "statistic" }) == undefined) {
+  if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
     matsCollections.statistic.insert({
       name: "statistic",
       type: matsTypes.InputTypes.select,
@@ -543,7 +543,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["x-statistic"].findOne({ name: "x-statistic" }) == undefined) {
+  if (matsCollections["x-statistic"].findOne({ name: "x-statistic" }) === undefined) {
     matsCollections["x-statistic"].insert({
       name: "x-statistic",
       type: matsTypes.InputTypes.select,
@@ -559,7 +559,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["y-statistic"].findOne({ name: "y-statistic" }) == undefined) {
+  if (matsCollections["y-statistic"].findOne({ name: "y-statistic" }) === undefined) {
     matsCollections["y-statistic"].insert({
       name: "y-statistic",
       type: matsTypes.InputTypes.select,
@@ -677,7 +677,7 @@ const doCurveParams = function () {
     },
   };
 
-  if (matsCollections.variable.findOne({ name: "variable" }) == undefined) {
+  if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
     matsCollections.variable.insert({
       name: "variable",
       type: matsTypes.InputTypes.select,
@@ -694,7 +694,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["x-variable"].findOne({ name: "x-variable" }) == undefined) {
+  if (matsCollections["x-variable"].findOne({ name: "x-variable" }) === undefined) {
     matsCollections["x-variable"].insert({
       name: "x-variable",
       type: matsTypes.InputTypes.select,
@@ -711,7 +711,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["y-variable"].findOne({ name: "y-variable" }) == undefined) {
+  if (matsCollections["y-variable"].findOne({ name: "y-variable" }) === undefined) {
     matsCollections["y-variable"].insert({
       name: "y-variable",
       type: matsTypes.InputTypes.select,
@@ -727,7 +727,7 @@ const doCurveParams = function () {
       displayGroup: 3,
     });
   }
-  if (matsCollections.scale.findOne({ name: "scale" }) == undefined) {
+  if (matsCollections.scale.findOne({ name: "scale" }) === undefined) {
     matsCollections.scale.insert({
       name: "scale",
       type: matsTypes.InputTypes.select,
@@ -766,7 +766,8 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) == undefined
+    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) ===
+    undefined
   ) {
     matsCollections["forecast-length"].insert({
       name: "forecast-length",
@@ -805,7 +806,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["valid-time"].findOne({ name: "dieoff-type" }) == undefined) {
+  if (matsCollections["valid-time"].findOne({ name: "dieoff-type" }) === undefined) {
     const optionsArrRaw = [...Array(96).keys()].map((x) => x / 4);
     const optionsArr = optionsArrRaw.map(String);
 
@@ -827,7 +828,8 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["utc-cycle-start"].findOne({ name: "utc-cycle-start" }) == undefined
+    matsCollections["utc-cycle-start"].findOne({ name: "utc-cycle-start" }) ===
+    undefined
   ) {
     matsCollections["utc-cycle-start"].insert({
       name: "utc-cycle-start",
@@ -870,7 +872,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.average.findOne({ name: "average" }) == undefined) {
+  if (matsCollections.average.findOne({ name: "average" }) === undefined) {
     const optionsMap = {
       None: [`ceil(${900}*floor(((m0.secs)+${900}/2)/${900}))`],
       "30m": [`ceil(${1800}*floor(((m0.secs)+${1800}/2)/${1800}))`],
@@ -925,7 +927,7 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["bin-parameter"].findOne({ name: "bin-parameter" }) == undefined
+    matsCollections["bin-parameter"].findOne({ name: "bin-parameter" }) === undefined
   ) {
     const optionsMap = {
       "Fcst lead time": "select m0.fcst_len/60 as binVal, ",
@@ -975,7 +977,7 @@ const doCurveParams = function () {
     .utc(maxDate)
     .format("MM/DD/YYYY HH:mm")}`;
 
-  if (matsCollections["curve-dates"].findOne({ name: "curve-dates" }) == undefined) {
+  if (matsCollections["curve-dates"].findOne({ name: "curve-dates" }) === undefined) {
     const optionsMap = {
       "1 day": ["1 day"],
       "3 days": ["3 days"],
@@ -1037,11 +1039,11 @@ const doCurveTextPatterns = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.CurveTextPatterns.remove({});
   }
-  if (matsCollections.CurveTextPatterns.find().count() == 0) {
+  if (matsCollections.CurveTextPatterns.find().count() === 0) {
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.timeSeries,
       textPattern: [
@@ -1225,11 +1227,11 @@ const doSavedCurveParams = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.SavedCurveParams.remove({});
   }
-  if (matsCollections.SavedCurveParams.find().count() == 0) {
+  if (matsCollections.SavedCurveParams.find().count() === 0) {
     matsCollections.SavedCurveParams.insert({ clName: "changeList", changeList: [] });
   }
 };
@@ -1238,11 +1240,11 @@ const doPlotGraph = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.PlotGraphFunctions.remove({});
   }
-  if (matsCollections.PlotGraphFunctions.find().count() == 0) {
+  if (matsCollections.PlotGraphFunctions.find().count() === 0) {
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.timeSeries,
       graphFunction: "graphPlotly",
@@ -1299,9 +1301,9 @@ Meteor.startup(function () {
   if (matsCollections.Databases.find({}).count() === 0) {
     let databases;
     if (
-      Meteor.settings == undefined ||
-      Meteor.settings.private == undefined ||
-      Meteor.settings.private.databases == undefined
+      Meteor.settings === undefined ||
+      Meteor.settings.private === undefined ||
+      Meteor.settings.private.databases === undefined
     ) {
       databases = undefined;
     } else {

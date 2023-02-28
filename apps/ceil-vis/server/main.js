@@ -30,11 +30,11 @@ const doPlotParams = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.PlotParams.remove({});
   }
-  if (matsCollections.PlotParams.find().count() == 0) {
+  if (matsCollections.PlotParams.find().count() === 0) {
     matsCollections.PlotParams.insert({
       name: "dates",
       type: matsTypes.InputTypes.dateRange,
@@ -322,7 +322,7 @@ const doCurveParams = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
@@ -495,7 +495,7 @@ const doCurveParams = function () {
     optionsMap: sitesLocationMap,
   });
 
-  if (matsCollections.label.findOne({ name: "label" }) == undefined) {
+  if (matsCollections.label.findOne({ name: "label" }) === undefined) {
     matsCollections.label.insert({
       name: "label",
       type: matsTypes.InputTypes.textInput,
@@ -512,7 +512,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.variable.findOne({ name: "variable" }) == undefined) {
+  if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
     matsCollections.variable.insert({
       name: "variable",
       type: matsTypes.InputTypes.select,
@@ -544,7 +544,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["region-type"].findOne({ name: "region-type" }) == undefined) {
+  if (matsCollections["region-type"].findOne({ name: "region-type" }) === undefined) {
     matsCollections["region-type"].insert({
       name: "region-type",
       type: matsTypes.InputTypes.select,
@@ -563,7 +563,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["data-source"].findOne({ name: "data-source" }) == undefined) {
+  if (matsCollections["data-source"].findOne({ name: "data-source" }) === undefined) {
     matsCollections["data-source"].insert({
       name: "data-source",
       type: matsTypes.InputTypes.select,
@@ -603,7 +603,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.region.findOne({ name: "region" }) == undefined) {
+  if (matsCollections.region.findOne({ name: "region" }) === undefined) {
     matsCollections.region.insert({
       name: "region",
       type: matsTypes.InputTypes.select,
@@ -653,7 +653,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.statistic.findOne({ name: "statistic" }) == undefined) {
+  if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
     const optionsMap = {
       "CSI (Critical Success Index)": ["ctc", "x100", 100],
 
@@ -706,7 +706,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.threshold.findOne({ name: "threshold" }) == undefined) {
+  if (matsCollections.threshold.findOne({ name: "threshold" }) === undefined) {
     matsCollections.threshold.insert({
       name: "threshold",
       type: matsTypes.InputTypes.select,
@@ -760,7 +760,8 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) == undefined
+    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) ===
+    undefined
   ) {
     matsCollections["forecast-length"].insert({
       name: "forecast-length",
@@ -805,7 +806,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["dieoff-type"].findOne({ name: "dieoff-type" }) == undefined) {
+  if (matsCollections["dieoff-type"].findOne({ name: "dieoff-type" }) === undefined) {
     const dieoffOptionsMap = {
       Dieoff: [matsTypes.ForecastTypes.dieoff],
       "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
@@ -840,7 +841,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["valid-time"].findOne({ name: "valid-time" }) == undefined) {
+  if (matsCollections["valid-time"].findOne({ name: "valid-time" }) === undefined) {
     matsCollections["valid-time"].insert({
       name: "valid-time",
       type: matsTypes.InputTypes.select,
@@ -884,7 +885,8 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["utc-cycle-start"].findOne({ name: "utc-cycle-start" }) == undefined
+    matsCollections["utc-cycle-start"].findOne({ name: "utc-cycle-start" }) ===
+    undefined
   ) {
     matsCollections["utc-cycle-start"].insert({
       name: "utc-cycle-start",
@@ -928,7 +930,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.average.findOne({ name: "average" }) == undefined) {
+  if (matsCollections.average.findOne({ name: "average" }) === undefined) {
     const optionsMap = {
       None: [`ceil(${3600}*floor(((m0.time)+${3600}/2)/${3600}))`],
       "3hr": [`ceil(${3600 * 3}*floor(((m0.time)+${3600 * 3}/2)/${3600 * 3}))`],
@@ -978,7 +980,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.sites.findOne({ name: "sites" }) == undefined) {
+  if (matsCollections.sites.findOne({ name: "sites" }) === undefined) {
     matsCollections.sites.insert({
       name: "sites",
       type: matsTypes.InputTypes.select,
@@ -996,7 +998,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.sitesMap.findOne({ name: "sitesMap" }) == undefined) {
+  if (matsCollections.sitesMap.findOne({ name: "sitesMap" }) === undefined) {
     matsCollections.sitesMap.insert({
       name: "sitesMap",
       type: matsTypes.InputTypes.selectMap,
@@ -1018,7 +1020,7 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["bin-parameter"].findOne({ name: "bin-parameter" }) == undefined
+    matsCollections["bin-parameter"].findOne({ name: "bin-parameter" }) === undefined
   ) {
     const optionsMap = {
       "Fcst lead time": "select m0.fcst_len as binVal, ",
@@ -1074,7 +1076,7 @@ const doCurveParams = function () {
     .utc(maxDate)
     .format("MM/DD/YYYY HH:mm")}`;
 
-  if (matsCollections["curve-dates"].findOne({ name: "curve-dates" }) == undefined) {
+  if (matsCollections["curve-dates"].findOne({ name: "curve-dates" }) === undefined) {
     const optionsMap = {
       "1 day": ["1 day"],
       "3 days": ["3 days"],
@@ -1136,11 +1138,11 @@ const doCurveTextPatterns = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.CurveTextPatterns.remove({});
   }
-  if (matsCollections.CurveTextPatterns.find().count() == 0) {
+  if (matsCollections.CurveTextPatterns.find().count() === 0) {
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.timeSeries,
       textPattern: [
@@ -1412,11 +1414,11 @@ const doSavedCurveParams = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.SavedCurveParams.remove({});
   }
-  if (matsCollections.SavedCurveParams.find().count() == 0) {
+  if (matsCollections.SavedCurveParams.find().count() === 0) {
     matsCollections.SavedCurveParams.insert({ clName: "changeList", changeList: [] });
   }
 };
@@ -1425,11 +1427,11 @@ const doPlotGraph = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.PlotGraphFunctions.remove({});
   }
-  if (matsCollections.PlotGraphFunctions.find().count() == 0) {
+  if (matsCollections.PlotGraphFunctions.find().count() === 0) {
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.timeSeries,
       graphFunction: "graphPlotly",
@@ -1504,9 +1506,9 @@ Meteor.startup(function () {
   if (matsCollections.Databases.find({}).count() === 0) {
     let databases;
     if (
-      Meteor.settings == undefined ||
-      Meteor.settings.private == undefined ||
-      Meteor.settings.private.databases == undefined
+      Meteor.settings === undefined ||
+      Meteor.settings.private === undefined ||
+      Meteor.settings.private.databases === undefined
     ) {
       databases = undefined;
     } else {

@@ -19,7 +19,7 @@ const doPlotParams = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.PlotParams.remove({});
   }
@@ -32,7 +32,8 @@ const doPlotParams = function () {
     */
 
   if (
-    matsCollections.PlotParams.findOne({ name: "scorecard-schedule-mode" }) == undefined
+    matsCollections.PlotParams.findOne({ name: "scorecard-schedule-mode" }) ===
+    undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "scorecard-schedule-mode",
@@ -65,7 +66,7 @@ const doPlotParams = function () {
     });
   }
 
-  if (matsCollections.PlotParams.findOne({ name: "dates" }) == undefined) {
+  if (matsCollections.PlotParams.findOne({ name: "dates" }) === undefined) {
     matsCollections.PlotParams.insert({
       name: "dates",
       type: matsTypes.InputTypes.dateRange,
@@ -183,7 +184,7 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: "these-hours-of-the-day" }) == undefined
+    matsCollections.PlotParams.findOne({ name: "these-hours-of-the-day" }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "these-hours-of-the-day",
@@ -227,7 +228,7 @@ const doPlotParams = function () {
     });
   }
   if (
-    matsCollections.PlotParams.findOne({ name: "these-days-of-the-week" }) == undefined
+    matsCollections.PlotParams.findOne({ name: "these-days-of-the-week" }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "these-days-of-the-week",
@@ -254,7 +255,8 @@ const doPlotParams = function () {
     });
   }
   if (
-    matsCollections.PlotParams.findOne({ name: "these-days-of-the-month" }) == undefined
+    matsCollections.PlotParams.findOne({ name: "these-days-of-the-month" }) ===
+    undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "these-days-of-the-month",
@@ -305,7 +307,7 @@ const doPlotParams = function () {
       tooltipPlacement: "right",
     });
   }
-  if (matsCollections.PlotParams.findOne({ name: "these-months" }) == undefined) {
+  if (matsCollections.PlotParams.findOne({ name: "these-months" }) === undefined) {
     matsCollections.PlotParams.insert({
       name: "these-months",
       type: matsTypes.InputTypes.select,
@@ -334,7 +336,7 @@ const doPlotParams = function () {
       tooltipPlacement: "right",
     });
   }
-  if (matsCollections.PlotParams.findOne({ name: "scorecard-ends-on" }) == undefined) {
+  if (matsCollections.PlotParams.findOne({ name: "scorecard-ends-on" }) === undefined) {
     matsCollections.PlotParams.insert({
       name: "scorecard-ends-on",
       type: matsTypes.InputTypes.textInput,
@@ -356,7 +358,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "scorecard-percent-stdv",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "scorecard-percent-stdv",
@@ -384,7 +386,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "minor-threshold-by-percent",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "minor-threshold-by-percent",
@@ -409,7 +411,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "major-threshold-by-percent",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "major-threshold-by-percent",
@@ -435,7 +437,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "minor-threshold-by-stdv",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "minor-threshold-by-stdv",
@@ -461,7 +463,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "major-threshold-by-stdv",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "major-threshold-by-stdv",
@@ -488,7 +490,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "scorecard-color-theme",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "scorecard-color-theme",
@@ -509,7 +511,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "minor-truth-color",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "minor-truth-color",
@@ -533,7 +535,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "major-truth-color",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "major-truth-color",
@@ -557,7 +559,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "minor-source-color",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "minor-source-color",
@@ -581,7 +583,7 @@ const doPlotParams = function () {
   if (
     matsCollections.PlotParams.findOne({
       name: "major-source-color",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.PlotParams.insert({
       name: "major-source-color",
@@ -608,7 +610,7 @@ const doCurveParams = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
@@ -904,7 +906,7 @@ const doCurveParams = function () {
     console.log(err.message);
   }
 
-  if (matsCollections.label.findOne({ name: "label" }) == undefined) {
+  if (matsCollections.label.findOne({ name: "label" }) === undefined) {
     matsCollections.label.insert({
       name: "label",
       type: matsTypes.InputTypes.textInput,
@@ -924,7 +926,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.application.findOne({ name: "application" }) == undefined) {
+  if (matsCollections.application.findOne({ name: "application" }) === undefined) {
     matsCollections.application.insert({
       name: "application",
       type: matsTypes.InputTypes.select,
@@ -971,7 +973,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["data-source"].findOne({ name: "data-source" }) == undefined) {
+  if (matsCollections["data-source"].findOne({ name: "data-source" }) === undefined) {
     matsCollections["data-source"].insert({
       name: "data-source",
       type: matsTypes.InputTypes.select,
@@ -1019,7 +1021,7 @@ const doCurveParams = function () {
   if (
     matsCollections["validation-data-source"].findOne({
       name: "validation-data-source",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections["validation-data-source"].insert({
       name: "validation-data-source",
@@ -1058,7 +1060,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.region.findOne({ name: "region" }) == undefined) {
+  if (matsCollections.region.findOne({ name: "region" }) === undefined) {
     matsCollections.region.insert({
       name: "region",
       type: matsTypes.InputTypes.select,
@@ -1109,7 +1111,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.statistic.findOne({ name: "statistic" }) == undefined) {
+  if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
     matsCollections.statistic.insert({
       name: "statistic",
       type: matsTypes.InputTypes.select,
@@ -1148,7 +1150,7 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.variable.findOne({ name: "variable" }) == undefined) {
+  if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
     matsCollections.variable.insert({
       name: "variable",
       type: matsTypes.InputTypes.select,
@@ -1191,7 +1193,7 @@ const doCurveParams = function () {
   if (
     matsCollections.threshold.findOne({
       name: "threshold",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.threshold.insert({
       name: "threshold",
@@ -1244,7 +1246,7 @@ const doCurveParams = function () {
   if (
     matsCollections.scale.findOne({
       name: "scale",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.scale.insert({
       name: "scale",
@@ -1297,7 +1299,7 @@ const doCurveParams = function () {
   if (
     matsCollections.truth.findOne({
       name: "truth",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.truth.insert({
       name: "truth",
@@ -1348,7 +1350,8 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) == undefined
+    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) ===
+    undefined
   ) {
     matsCollections["forecast-length"].insert({
       name: "forecast-length",
@@ -1408,7 +1411,7 @@ const doCurveParams = function () {
   if (
     matsCollections["forecast-type"].findOne({
       name: "forecast-type",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections["forecast-type"].insert({
       name: "forecast-type",
@@ -1465,7 +1468,7 @@ const doCurveParams = function () {
   if (
     matsCollections["valid-time"].findOne({
       name: "valid-time",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections["valid-time"].insert({
       name: "valid-time",
@@ -1505,7 +1508,7 @@ const doCurveParams = function () {
   if (
     matsCollections.level.findOne({
       name: "level",
-    }) == undefined
+    }) === undefined
   ) {
     matsCollections.level.insert({
       name: "level",
@@ -1579,11 +1582,11 @@ const doCurveTextPatterns = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.CurveTextPatterns.remove({});
   }
-  if (matsCollections.CurveTextPatterns.find().count() == 0) {
+  if (matsCollections.CurveTextPatterns.find().count() === 0) {
     matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.scorecard,
       textPattern: [
@@ -1627,11 +1630,11 @@ const doPlotGraph = function () {
   if (
     matsCollections.Settings.findOne({}) === undefined ||
     matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode == true
+    matsCollections.Settings.findOne({}).resetFromCode === true
   ) {
     matsCollections.PlotGraphFunctions.remove({});
   }
-  if (matsCollections.PlotGraphFunctions.find().count() == 0) {
+  if (matsCollections.PlotGraphFunctions.find().count() === 0) {
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.scorecard,
       graphFunction: "scorecardStatusPage",
@@ -1652,9 +1655,9 @@ Meteor.startup(function () {
   if (matsCollections.Databases.find({}).count() === 0) {
     let databases;
     if (
-      Meteor.settings == undefined ||
-      Meteor.settings.private == undefined ||
-      Meteor.settings.private.databases == undefined
+      Meteor.settings === undefined ||
+      Meteor.settings.private === undefined ||
+      Meteor.settings.private.databases === undefined
     ) {
       databases = undefined;
     } else {

@@ -88,7 +88,7 @@ processScorecard = function (plotParams, plotFunction) {
   // We are thinking that the combination of userName/scorecardName/submitEpoch/processedEpoch is uniq
 
   let interval = {};
-  if ((plotParams["scorecard-schedule-mode"] == "Once") === "Recurring") {
+  if ((plotParams["scorecard-schedule-mode"] === "Once") === "Recurring") {
     switch (plotParams["scorecard-recurrence-interval"]) {
       case "Daily":
         interval = {
@@ -121,7 +121,7 @@ processScorecard = function (plotParams, plotFunction) {
     }
   }
   const dateRange =
-    plotParams["scorecard-schedule-mode"] == "Once" ? plotParams.dates : interval;
+    plotParams["scorecard-schedule-mode"] === "Once" ? plotParams.dates : interval;
 
   // get the union of the fcst-length arrays of all the curves
   const fcstLengthsSet = new Set();
