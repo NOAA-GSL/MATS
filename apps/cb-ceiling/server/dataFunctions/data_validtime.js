@@ -45,16 +45,17 @@ dataValidTime = function (plotParams, plotFunction)
         var curve = curves[curveIndex];
         var regionType = curve['region-type'];
 
+        var queryTemplate = null;
         if (regionType === "Predefined region")
         {
-            var queryTemplate = fs.readFileSync(
+            queryTemplate = fs.readFileSync(
                 process.env.PWD +
                 "/server/dataFunctions/sqlTemplates/tmpl_ValidTime_region.sql",
                 "utf8"
             );
         } else
         {
-            var queryTemplate = fs.readFileSync(
+            queryTemplate = fs.readFileSync(
                 process.env.PWD +
                 "/server/dataFunctions/sqlTemplates/tmpl_ValidTime_stations.sql",
                 "utf8"

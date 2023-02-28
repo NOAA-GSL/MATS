@@ -55,7 +55,7 @@ dataDieOff = function (plotParams, plotFunction)
         {
             if (forecastLength === matsTypes.ForecastTypes.dieoff)
             {
-                var queryTemplate = fs.readFileSync(
+                queryTemplate = fs.readFileSync(
                     process.env.PWD +
                     "/server/dataFunctions/sqlTemplates/tmpl_DieOff_region_DieOff.sql",
                     "utf8"
@@ -63,7 +63,7 @@ dataDieOff = function (plotParams, plotFunction)
             }
             else if (forecastLength === matsTypes.ForecastTypes.utcCycle)
             {
-                var queryTemplate = fs.readFileSync(
+                queryTemplate = fs.readFileSync(
                     process.env.PWD +
                     "/server/dataFunctions/sqlTemplates/tmpl_DieOff_region_UTC.sql",
                     "utf8"
@@ -71,7 +71,7 @@ dataDieOff = function (plotParams, plotFunction)
             }
             else
             {
-                var queryTemplate = fs.readFileSync(
+                queryTemplate = fs.readFileSync(
                     process.env.PWD +
                     "/server/dataFunctions/sqlTemplates/tmpl_DieOff_region_SingleCycle.sql",
                     "utf8"
@@ -81,7 +81,7 @@ dataDieOff = function (plotParams, plotFunction)
         {
             if (forecastLength === matsTypes.ForecastTypes.dieoff)
             {
-                var queryTemplate = fs.readFileSync(
+                queryTemplate = fs.readFileSync(
                     process.env.PWD +
                     "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_DieOff.sql",
                     "utf8"
@@ -89,7 +89,7 @@ dataDieOff = function (plotParams, plotFunction)
             }
             else if (forecastLength === matsTypes.ForecastTypes.utcCycle)
             {
-                var queryTemplate = fs.readFileSync(
+                queryTemplate = fs.readFileSync(
                     process.env.PWD +
                     "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_UTC.sql",
                     "utf8"
@@ -97,7 +97,7 @@ dataDieOff = function (plotParams, plotFunction)
             }
             else
             {
-                var queryTemplate = fs.readFileSync(
+                queryTemplate = fs.readFileSync(
                     process.env.PWD +
                     "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_SingleCycle.sql",
                     "utf8"

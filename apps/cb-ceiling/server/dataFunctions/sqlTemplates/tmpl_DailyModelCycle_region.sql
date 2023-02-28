@@ -15,7 +15,7 @@ WHERE m0.type='DD'
     AND m0.version='V01'
     AND m0.model='vxMODEL'
     AND m0.region='vxREGION'
-    AND m0.fcstLen < vxFCST_LEN
+    AND m0.fcstLen < 24
     AND (m0.fcstValidEpoch - m0.fcstLen*3600)%(24*3600)/3600 IN[vxUTC_CYCLE_START]
     AND m0.fcstValidEpoch >= vxFROM_SECS
     AND m0.fcstValidEpoch <= vxTO_SECS
