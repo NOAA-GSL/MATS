@@ -110,7 +110,7 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: "relative-date-range-type" }) ==
+    matsCollections.PlotParams.findOne({ name: "relative-date-range-type" }) ===
     undefined
   ) {
     matsCollections.PlotParams.insert({
@@ -132,7 +132,7 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: "relative-date-range-value" }) ==
+    matsCollections.PlotParams.findOne({ name: "relative-date-range-value" }) ===
     undefined
   ) {
     matsCollections.PlotParams.insert({
@@ -157,7 +157,7 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: "scorecard-recurrence-interval" }) ==
+    matsCollections.PlotParams.findOne({ name: "scorecard-recurrence-interval" }) ===
     undefined
   ) {
     matsCollections.PlotParams.insert({
