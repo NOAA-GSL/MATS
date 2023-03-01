@@ -2,7 +2,8 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {
+import
+{
     matsCollections,
     matsTypes,
     matsDataUtils,
@@ -10,9 +11,11 @@ import {
     matsDataCurveOpsUtils,
     matsDataPlotOpsUtils
 } from 'meteor/randyp:mats-common';
-import {moment} from 'meteor/momentjs:moment';
+import { moment } from 'meteor/momentjs:moment';
 
-dataMap = function (plotParams, plotFunction) {
+dataMap = function (plotParams, plotFunction)
+{
+    var fs = require("fs");
     const appParams = {
         "plotType": matsTypes.PlotTypes.map,
         "matching": plotParams['plotAction'] === matsTypes.PlotActions.matched,
@@ -22,6 +25,13 @@ dataMap = function (plotParams, plotFunction) {
         "hasLevels": false,
         "isCouchbase": true
     };
+
+    var queryTemplate = fs.readFileSync(
+        process.env.PWD +
+        "/server/dataFunctions/sqlTemplates/tmpl_Map.sql",
+        "utf8"
+    );
+    console.log("\nqueryTemplate:\n" + queryTemplate);
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
@@ -30,104 +40,63 @@ dataMap = function (plotParams, plotFunction) {
     var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
-    if (curves.length > 1) {
+    if (curves.length > 1)
+    {
         throw new Error("INFO:  There must only be one added curve.");
     }
     var dataset = [];
     var curve = curves[0];
     var label = curve['label'];
     var variable = curve['variable'];
-    var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
-    var modelClause = "AND m0.model='" + model + "' ";
-    var queryTableClause = "from vxDBTARGET  AS m0 " +
-        "JOIN mdata AS o " +
-        "ON o.fcstValidEpoch = m0.fcstValidEpoch " +
-        "UNNEST o.data AS odata " +
-        "UNNEST m0.data AS m0data ";
-    var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
+    var model = matsCollections['data-source'].findOne({ name: 'data-source' }).optionsMap[variable][curve['data-source']][0];
+
+    var siteMap = matsCollections.StationMap.findOne({ name: 'stations' }, { optionsMap: 1 })['optionsMap'];
     var thresholdStr = curve['threshold'];
-    var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
+    var threshold = Object.keys(matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable][key] === thresholdStr);
     threshold = threshold.replace(/_/g, ".");
-    var validTimeClause = "";
+    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
+    queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
     var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
+    {
+        queryTemplate = queryTemplate.replace(
+            /vxVALID_TIMES/g,
+            cbPool.trfmListToCSVString(validTimes, null, false)
+        );
+    } else
+    {
+        queryTemplate = cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "vxVALID_TIMES"
+        );
     }
     var forecastLength = curve['forecast-length'];
-    var forecastLengthClause = "AND m0.fcstLen = " + forecastLength;
+    queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
     var statistic = curve['statistic'];
     var sitesList = curve['sites'] === undefined ? [] : curve['sites'];
-    if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        var sitesClause = " and m0data.name in ['" + sitesList.join("','") + "']";
-        sitesClause = sitesClause + " and odata.name in ['" + sitesList.join("','") + "']";
-        var siteMatchClause = "and m0data.name = odata.name ";
-    } else {
+    if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused)
+    {
+        queryTemplate = queryTemplate.replace(
+            /vxSITES_LIST_OBS/g,
+            cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
+        );
+        queryTemplate = queryTemplate.replace(
+            /vxSITES_LIST_MODELS/g,
+            cbPool.trfmListToCSVString(sitesList, "models.data.", false)
+        );
+    } else
+    {
         throw new Error("INFO:  Please add sites in order to get a single/multi station plot.");
     }
-    var statisticClause = "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
-        "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS hit, " +
-        "SUM(CASE WHEN m0data.Ceiling < " + threshold + " " +
-        "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS fa, " +
-        "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-        "AND odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS miss, " +
-        "SUM(CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-        "AND NOT odata.Ceiling < " + threshold + " THEN 1 ELSE 0 END) AS cn, " +
-        "SUM(CASE WHEN m0data.Ceiling IS NOT MISSING " +
-        "AND odata.Ceiling IS NOT MISSING THEN 1 ELSE 0 END) AS N0, " +
-        "ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
-        "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN m0data.Ceiling < " + threshold + " " +
-        "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-        "AND odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END || ';' || CASE WHEN NOT m0data.Ceiling < " + threshold + " " +
-        "AND NOT odata.Ceiling < " + threshold + " THEN '1' ELSE '0' END) AS sub_data ";
-    var dateClause = "and m0.fcstValidEpoch >= " + fromSecs + " and m0.fcstValidEpoch <= " + toSecs + " and m0.fcstValidEpoch = o.fcstValidEpoch";
-    var whereClause = "AND m0.type='DD' " +
-        "AND m0.docType='model' " +
-        "AND m0.subset='METAR' " +
-        "AND m0.version='V01' ";
-    var siteDateClause = "and o.fcstValidEpoch >= " + fromSecs + " and o.fcstValidEpoch <= " + toSecs;
-    var siteWhereClause = "WHERE o.type='DD' " +
-        "AND o.docType='obs' " +
-        "AND o.subset='METAR' " +
-        "AND o.version='V01' ";
-
-    var statement = "SELECT m0data.name as sta_id, " +
-        "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
-        "MIN(m0.fcstValidEpoch) min_secs, " +
-        "MAX(m0.fcstValidEpoch) max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "{{siteWhereClause}} " +
-        "{{whereClause}} " +
-        "{{modelClause}} " +
-        "{{forecastLengthClause}} " +
-        "{{validTimeClause}} " +
-        "{{siteDateClause}} " +
-        "{{dateClause}} " +
-        "{{sitesClause}} " +
-        "{{siteMatchClause}} " +
-        "GROUP BY m0data.name " +
-        "ORDER BY sta_id" +
-        ";";
-
-    statement = statement.replace('{{statisticClause}}', statisticClause);
-    statement = statement.replace('{{queryTableClause}}', queryTableClause);
-    statement = statement.replace('{{siteMatchClause}}', siteMatchClause);
-    statement = statement.replace('{{sitesClause}}', sitesClause);
-    statement = statement.replace('{{whereClause}}', whereClause);
-    statement = statement.replace('{{siteWhereClause}}', siteWhereClause);
-    statement = statement.replace('{{modelClause}}', modelClause);
-    statement = statement.replace('{{validTimeClause}}', validTimeClause);
-    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-    statement = statement.replace('{{dateClause}}', dateClause);
-    statement = statement.replace('{{siteDateClause}}', siteDateClause);
-
-    statement = cbPool.trfmSQLForDbTarget(statement);
+    statement = cbPool.trfmSQLForDbTarget(queryTemplate);
     dataRequests[label] = statement;
 
     var queryResult;
     var startMoment = moment();
     var finishMoment;
-    try {
+    try
+    {
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBMapCTC(cbPool, statement, model, statistic, siteMap, appParams);
         finishMoment = moment();
@@ -150,16 +119,20 @@ dataMap = function (plotParams, plotFunction) {
         var dOrangeRed = queryResult.dataOrangeRed;
         var dRed = queryResult.dataRed;
         var valueLimits = queryResult.valueLimits;
-    } catch (e) {
+    } catch (e)
+    {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
         throw new Error(e.message);
     }
-    if (queryResult.error !== undefined && queryResult.error !== "") {
-        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+    if (queryResult.error !== undefined && queryResult.error !== "")
+    {
+        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND)
+        {
             // this is NOT an error just a no data condition
             dataFoundForCurve = false;
-        } else {
+        } else
+        {
             // this is an error returned by the mysql database
             error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
             throw (new Error(error));
