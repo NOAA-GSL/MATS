@@ -6,7 +6,7 @@ processScorecard = function (plotParams, plotFunction) {
     The left column isn't displayed, it's only for reference
 
     "title"        | userName name  scorecard name  submit date  processed date daterange |
-    "rowTitle:"    | Row label  datasource   validationDatasource |
+    "rowTitle:"    | Row label   Data source   Control data source |
     "rowParameters"| single param1 single param2  ...."|
     "regions"      |               | region 1        | region 2      |  region n |
     "fcstLens"     |               |1|3|6|9|...      |1|3|6|9...     |1|3|6|9...|
@@ -20,7 +20,7 @@ processScorecard = function (plotParams, plotFunction) {
         .........
     "statn-varn"   | statn-varn    |-|^|-|^ ...      |-|^|-|^...     |^|-|^|^...|
 
-    "rowTitle:"    | Row label  datasource  validationDatasource |
+    "rowTitle:"    | Row label   Data source   Control data source |
     "rowParameters"| single param1 single param2  ...."|
     "regions"      |               | region 1        | region 2      |  region n |
     "fcstLens"     |               |1|3|6|9|...      |1|3|6|9...     |1|3|6|9...|
@@ -38,8 +38,8 @@ processScorecard = function (plotParams, plotFunction) {
     *** NOTES statn-varn data fields are an array [res, value]
         values are initially null but will get filled in later
         and res are initially 'u' and will get set to one of
-        D (datasource major), d (datasource minor),
-        V (validationSource major), v (validationSource minor),
+        D (data source major), d (data source minor),
+        V (control source major), v (control source minor),
         n (neutral), u (unknown).
 
         fcstLengths are the union of all the forecast-length's for all the curves
@@ -51,7 +51,7 @@ processScorecard = function (plotParams, plotFunction) {
         "title":userName + " " + name + " " + submitDate + " " + processedDate + " " + daterange,
         rows: {
             Rowlabel1: {
-                "rowTitle":{"label":"Row label","datasource":"datasource","validationDatasource":"validationDatasource"},
+                "rowTitle":{"label":"Row label","dataSource":"dataSource","controlDataSource":"controlDataSource"},
                 "rowParameters":{"param1:"param1 value", "param2":"param2 value",.....},
                 "regions":["region1":"region2"....],
                 "fcstlens":[1,3,6,9,...],
@@ -63,7 +63,7 @@ processScorecard = function (plotParams, plotFunction) {
                 }
             },
             Rowlabel1: {
-                "rowTitle":{"label":"Row label","datasource":"datasource","validationDatasource":"validationDatasource"},
+                "rowTitle":{"label":"Row label","dataSource":"dataSource","controlDataSource":"controlDataSource"},
                 "rowParameters":{"param1:"param1 value", "param2":"param2 value",.....},
                 "regions":["region1":"region2"....],
                 "fcstlens":[1,3,6,9,...],
@@ -85,10 +85,12 @@ processScorecard = function (plotParams, plotFunction) {
   const { userName } = plotParams;
   const name = plotParams["scorecard-name"];
   const singleCurveParamNames = matsParamUtils.getSingleSelectCurveParamNames();
+  singleCurveParamNames.push("valid-time"); // is a multi-select but never goes on scorecard
   // We are thinking that the combination of userName/scorecardName/submitEpoch/processedEpoch is uniq
 
   let interval = {};
-  if ((plotParams["scorecard-schedule-mode"] === "Once") === "Recurring") {
+  let dateRange;
+  if (plotParams["scorecard-schedule-mode"] === "Recurring") {
     switch (plotParams["scorecard-recurrence-interval"]) {
       case "Daily":
         interval = {
@@ -119,9 +121,10 @@ processScorecard = function (plotParams, plotFunction) {
         };
         break;
     }
+    dateRange = interval;
+  } else {
+    dateRange = plotParams.dates;
   }
-  const dateRange =
-    plotParams["scorecard-schedule-mode"] === "Once" ? plotParams.dates : interval;
 
   // get the union of the fcst-length arrays of all the curves
   const fcstLengthsSet = new Set();
@@ -180,88 +183,112 @@ processScorecard = function (plotParams, plotFunction) {
     significanceColors,
     results: {},
   };
-  // insert a title (will change when processedAt is established - easy substitution for the word 'processedAt')
-  (scorecardDocument.results.title = title),
-    (scorecardDocument.results.rows = {}),
-    // fill in the rows - these are all initially default values
-    plotParams.curves.forEach(function (curve) {
-      // create the empty object for this row
-      const { label } = curve;
-      scorecardDocument.results.rows[label] = {};
-      // add the top level elements.
-      // make rowTitle and rowParameters maps, the display page can sort out stringifying them.
-      // map the necessary row parameters
-      // remove these params from the singleCurveParamNames list, all of the row parameters are either single select
-      // or they are handled individually, so we remove the ones that are handled individually from the single select list.
-      const notIncludedParams = ["label", "data-source", "control-data-source"];
-      const rowParameters = singleCurveParamNames.filter(function (paramName) {
-        return !notIncludedParams.includes(paramName);
-      });
 
-      scorecardDocument.results.rows[curve.label].rowTitle = {
-        label,
-        datasource: curve["data-source"],
-        validationDatasource: curve["control-data-source"],
-      };
-      scorecardDocument.results.rows[curve.label].rowParameters = rowParameters;
-      scorecardDocument.results.rows[curve.label].regions = regions;
-      scorecardDocument.results.rows[curve.label].fcstlens = fcstLengths;
-      scorecardDocument.results.rows[curve.label].data = {};
-      regions.forEach(function (region) {
-        if (scorecardDocument.results.rows[curve.label].data[region] === undefined) {
-          scorecardDocument.results.rows[curve.label].data[region] = {};
+  // insert a title (will change when processedAt is established - easy substitution for the word 'processedAt')
+  scorecardDocument.results.title = title;
+  scorecardDocument.results.rows = {};
+  // fill in the rows - these are all initially default values
+  plotParams.curves.forEach(function (curve) {
+    // create the empty object for this row
+    const { label } = curve;
+    scorecardDocument.results.rows[label] = {};
+    // add the top level elements.
+    // make rowTitle and rowParameters maps, the display page can sort out stringifying them.
+    // map the necessary row parameters
+    // remove these params from the singleCurveParamNames list, all of the row parameters are either single select
+    // or they are handled individually, so we remove the ones that are handled individually from the single select list.
+    const notIncludedParams = ["label", "data-source", "control-data-source"];
+    const rowParameters = singleCurveParamNames.filter(function (paramName) {
+      return !notIncludedParams.includes(paramName);
+    });
+
+    scorecardDocument.results.rows[curve.label].rowTitle = {
+      label,
+      dataSource: curve["data-source"],
+      controlDataSource: curve["control-data-source"],
+    };
+    scorecardDocument.results.rows[curve.label].rowParameters = rowParameters;
+    scorecardDocument.results.rows[curve.label].regions = regions;
+    scorecardDocument.results.rows[curve.label].fcstlens = fcstLengths;
+    scorecardDocument.results.rows[curve.label].data = {};
+    curve.threshold =
+      curve.threshold === undefined ? ["threshold_NA"] : curve.threshold;
+    curve.level = curve.level === undefined ? ["level_NA"] : curve.level;
+    regions.forEach(function (region) {
+      if (scorecardDocument.results.rows[curve.label].data[region] === undefined) {
+        scorecardDocument.results.rows[curve.label].data[region] = {};
+      }
+      curve.statistic.forEach(function (stat) {
+        if (
+          scorecardDocument.results.rows[curve.label].data[region][stat] === undefined
+        ) {
+          scorecardDocument.results.rows[curve.label].data[region][stat] = {};
         }
-        curve.statistic.forEach(function (stat) {
+        curve.variable.forEach(function (variable) {
           if (
-            scorecardDocument.results.rows[curve.label].data[region][stat] === undefined
+            scorecardDocument.results.rows[curve.label].data[region][stat][variable] ===
+            undefined
           ) {
-            scorecardDocument.results.rows[curve.label].data[region][stat] = {};
+            scorecardDocument.results.rows[curve.label].data[region][stat][variable] =
+              {};
           }
-          curve.variable.forEach(function (variable) {
-            // iterate the union of fcstLengths and if a curve doesn'thave one mark it undefined
+          curve.threshold.forEach(function (threshold) {
             if (
-              scorecardDocument.results.rows[curve.label].data[region][stat][
-                variable
+              scorecardDocument.results.rows[curve.label].data[region][stat][variable][
+                threshold
               ] === undefined
             ) {
-              scorecardDocument.results.rows[curve.label].data[region][stat][variable] =
-                {};
+              scorecardDocument.results.rows[curve.label].data[region][stat][variable][
+                threshold
+              ] = {};
             }
-            fcstLengths.forEach(function (fcstlen, index) {
-              // this is where we will calculate the significances.
-              // get a random number between 0 and 100
-              let sval = 0;
-              const val = Math.floor(Math.random() * 100);
-              // use the random number to generate a weighted number between -2 and 2
-              if (val >= 0 && val < 10) {
-                sval = -2;
-              } else if (val >= 10 && val < 30) {
-                sval = -1;
-              } else if (val >= 30 && val < 70) {
-                sval = 0;
-              } else if (val >= 70 && val < 90) {
-                sval = 1;
-              } else if (val >= 90 && val <= 100) {
-                sval = 2;
-              }
-
+            curve.level.forEach(function (level) {
               if (
-                scorecardDocument.results.rows[curve.label].fcstlens.includes(fcstlen)
+                scorecardDocument.results.rows[curve.label].data[region][stat][
+                  variable
+                ][threshold][level] === undefined
               ) {
                 scorecardDocument.results.rows[curve.label].data[region][stat][
                   variable
-                ][fcstlen] = sval;
-              } else {
-                // mark this undefined
-                scorecardDocument.results.rows[curve.label].data[region][stat][
-                  variable
-                ][fcstlen] = "undefined";
+                ][threshold][level] = {};
               }
+              fcstLengths.forEach(function (fcstlen, index) {
+                // this is where we will calculate the significances.
+                // get a random number between 0 and 100
+                let sval = 0;
+                const val = Math.floor(Math.random() * 100);
+                // use the random number to generate a weighted number between -2 and 2
+                if (val >= 0 && val < 10) {
+                  sval = -2;
+                } else if (val >= 10 && val < 30) {
+                  sval = -1;
+                } else if (val >= 30 && val < 70) {
+                  sval = 0;
+                } else if (val >= 70 && val < 90) {
+                  sval = 1;
+                } else if (val >= 90 && val <= 100) {
+                  sval = 2;
+                }
+
+                if (
+                  scorecardDocument.results.rows[curve.label].fcstlens.includes(fcstlen)
+                ) {
+                  scorecardDocument.results.rows[curve.label].data[region][stat][
+                    variable
+                  ][threshold][level][fcstlen] = sval;
+                } else {
+                  // mark this undefined
+                  scorecardDocument.results.rows[curve.label].data[region][stat][
+                    variable
+                  ][threshold][level][fcstlen] = "undefined";
+                }
+              });
             });
           });
         });
       });
     });
+  });
   // store the document
   try {
     const scDoc = JSON.stringify(scorecardDocument);

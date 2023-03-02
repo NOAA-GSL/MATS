@@ -51,7 +51,7 @@ const doPlotParams = function () {
         "these-days-of-the-week": ["Once"],
         "these-days-of-the-month": ["Once"],
         "these-months": ["Once"],
-        "dates": ["Recurring"],
+        dates: ["Recurring"],
       },
       controlButtonVisibility: "block",
       displayOrder: 1,
