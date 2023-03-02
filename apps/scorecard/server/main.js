@@ -58,7 +58,7 @@ const doPlotParams = function () {
       displayPriority: 1,
       displayGroup: 1,
       tooltip: `The schedule mode, 'Once' means that this scorecard will be
-             processed only one time. Recurring means that this scorecard will be
+             processed only one time. 'Recurring' means that this scorecard will be
              processed repeatedly on a schedule. If you choose 'Recurring' you will
              need to choose the schedule recurrence parameters as well as the
              date after which processing will cease.`,
@@ -149,7 +149,7 @@ const doPlotParams = function () {
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 2,
-      tooltip: `The number of 'Hours', 'Days', or 'Weeks' for which this Recurring scorecard will be
+      tooltip: `The number of 'Hours', 'Days', or 'Weeks' for which this 'Recurring' scorecard will be
                 calculated relative to its processing time. The time interval will be dynamically set for
                 the period immediately prior to the processing time, which will be determined by the recurrence schedule.`,
       tooltipPlacement: "right",
@@ -176,7 +176,7 @@ const doPlotParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 3,
-      tooltip: `The type of recurrance interval on which this recurring scorecard will be processed.
+      tooltip: `The type of recurrance interval on which this 'Recurring' scorecard will be processed.
                 Each new cycle will create a new viewable scorecard identified by the 'user',
                 'Scorecard Name', and processing date and time.`,
       tooltipPlacement: "right",
@@ -526,8 +526,9 @@ const doPlotParams = function () {
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 8,
-      tooltip: `The color for the minor validation datasource symbol,
-            you can use the eyedropper tool in the color editor to match colors to the major symbol`,
+      tooltip: `The color for cases in which the control data source performs better 
+      than the experimental data source at the minor threshold, you can use the eyedropper 
+      tool in the color editor to match colors to the major symbol`,
       tooltipPlacement: "top",
     });
   }
@@ -550,8 +551,9 @@ const doPlotParams = function () {
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 8,
-      tooltip:
-        "The color for the major validation datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol",
+      tooltip: `The color for cases in which the control data source performs better 
+      than the experimental data source at the major threshold, you can use the eyedropper 
+      tool in the color editor to match colors to the minor symbol`,
       tooltipPlacement: "top",
     });
   }
@@ -574,8 +576,9 @@ const doPlotParams = function () {
       displayOrder: 4,
       displayPriority: 1,
       displayGroup: 8,
-      tooltip:
-        "The color for the minor datasource symbol, you can use the eyedropper tool in the color editor to match colors to the major symbol",
+      tooltip: `The color for cases in which the experimental data source performs better 
+      than the experimental data source at the minor threshold, you can use the eyedropper 
+      tool in the color editor to match colors to the major symbol`,
       tooltipPlacement: "top",
     });
   }
@@ -598,8 +601,9 @@ const doPlotParams = function () {
       displayOrder: 5,
       displayPriority: 1,
       displayGroup: 8,
-      tooltip:
-        "The color for the major datasource symbol, you can use the eyedropper tool in the color editor to match colors to the minor symbol",
+      tooltip: `The color for cases in which the control data source performs better 
+      than the experimental data source at the major threshold, you can use the eyedropper 
+      tool in the color editor to match colors to the minor symbol`,
       tooltipPlacement: "top",
     });
   }
@@ -673,8 +677,8 @@ const doCurveParams = function () {
       );
 
       // store the URL that was used to get each of these apps
-      for (let aIdx = 0; aIdx < expectedApps.length; aIdx++) {
-        const thisApp = expectedApps[aIdx];
+      for (let eaidx = 0; eaidx < expectedApps.length; eaidx++) {
+        const thisApp = expectedApps[eaidx];
         applicationSourceMap[thisApp] = currentApp;
       }
 
@@ -921,7 +925,7 @@ const doCurveParams = function () {
       displayGroup: 1,
       help: "label.html",
       tooltip:
-        "The label for this scorecard row, this will be used to identify this row within the scorecard.",
+        "The label for this scorecard block, this will be used to identify this block within the scorecard.",
       tooltipPlacement: "right",
     });
   }
@@ -937,7 +941,7 @@ const doCurveParams = function () {
       dates: dateOptionsMap,
       dependentNames: [
         "data-source",
-        "validation-data-source",
+        "control-data-source",
         "statistic",
         "variable",
         "threshold",
@@ -953,8 +957,7 @@ const doCurveParams = function () {
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 1,
-      tooltip:
-        "The application for this scorecard row. Parameters will adjust to accomodate the application that you choose.",
+      tooltip: "The application for this scorecard block.",
       tooltipPlacement: "right",
     });
   } else {
@@ -989,15 +992,16 @@ const doCurveParams = function () {
         "forecast-type",
         "dates",
       ],
+      controlButtonText: "experimental data source",
       controlButtonCovered: true,
-      default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
+      default: Object.keys(modelOptionsMap[applicationOptions[0]])[1],
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 2,
       tooltip:
-        "Datasource is the 'experiment' input for this scorecard row. calculations will be compared against the validation datasource.",
+        "The model that will be tested for improvement against the control data source.",
       tooltipPlacement: "right",
     });
   } else {
@@ -1011,7 +1015,7 @@ const doCurveParams = function () {
           $set: {
             optionsMap: modelOptionsMap,
             options: Object.keys(modelOptionsMap[applicationOptions[0]]),
-            default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
+            default: Object.keys(modelOptionsMap[applicationOptions[0]])[1],
           },
         }
       );
@@ -1019,12 +1023,12 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["validation-data-source"].findOne({
-      name: "validation-data-source",
+    matsCollections["control-data-source"].findOne({
+      name: "control-data-source",
     }) === undefined
   ) {
-    matsCollections["validation-data-source"].insert({
-      name: "validation-data-source",
+    matsCollections["control-data-source"].insert({
+      name: "control-data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
       options: Object.keys(modelOptionsMap[applicationOptions[0]]),
@@ -1037,18 +1041,18 @@ const doCurveParams = function () {
       displayPriority: 1,
       displayGroup: 2,
       tooltip:
-        "Validation Datasource is the data source for values that will be compared against the 'experiment' datasource.",
+        "The model against which the experimental data source will be tested for improvement.",
       tooltipPlacement: "right",
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["validation-data-source"].findOne({
-      name: "validation-data-source",
+    var currentParam = matsCollections["control-data-source"].findOne({
+      name: "control-data-source",
     });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
-      matsCollections["validation-data-source"].update(
-        { name: "validation-data-source" },
+      matsCollections["control-data-source"].update(
+        { name: "control-data-source" },
         {
           $set: {
             optionsMap: modelOptionsMap,
@@ -1083,7 +1087,7 @@ const doCurveParams = function () {
       displayPriority: 1,
       displayGroup: 3,
       tooltip:
-        "This defines the meteorological predefined domain over which datasource and validation datasource statistical values will be calculated.",
+        "Select the predefined domains over which the experimental and control data sources will be compared.",
       tooltipPlacement: "right",
     });
   } else {
@@ -1127,9 +1131,7 @@ const doCurveParams = function () {
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 3,
-      tooltip: `The statistical method used for calculations in a given subrow
-                of the scorecard row. Each subrow will be calculated for a combination of
-                statistic and variable over a predefined region.`,
+      tooltip: `Select the statistics over which the experimental and control data sources will be compared.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1166,9 +1168,7 @@ const doCurveParams = function () {
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 3,
-      tooltip: `The variable used for calculations in a given subrow
-                of the scorecard row. Each subrow will be calculated for a combination of
-                statistic and variable over a predefined region.`,
+      tooltip: `Select the variables over which the experimental and control data sources will be compared.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1212,10 +1212,11 @@ const doCurveParams = function () {
           Object.keys(thresholdOptionsMap[applicationOptions[0]])[0]
         ][0],
       controlButtonVisibility: "block",
+      multiple: true,
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 4,
-      tooltip: `The threshold for which contingency variables have been bin'd.`,
+      tooltip: `Select the thresholds over which the experimental and control data sources will be compared.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1268,7 +1269,7 @@ const doCurveParams = function () {
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 4,
-      tooltip: `The grid resolution used for calculations.`,
+      tooltip: `Select the grid resolution over which the experimental and control data sources will be compared.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1321,7 +1322,7 @@ const doCurveParams = function () {
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 4,
-      tooltip: `The source that was used to compare datasource values.`,
+      tooltip: `Select the type of observation/analysis used to produce the statistics being compared.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1374,10 +1375,7 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 5,
-      tooltip: `The set of forecast lead times that are included in the scorecard.
-                Each scorecard row will include the union of the forecast lengths for all the rows. If a given row
-                does not have data for a specific forecast length, that forecast length will be represented with a nuetral
-                color that indicates 'unavailable' data.`,
+      tooltip: `Select the forecast lead times over which the experimental and control data sources will be compared.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1433,7 +1431,7 @@ const doCurveParams = function () {
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 5,
-      tooltip: ``,
+      tooltip: `Select the accumulation length over which the experimental and control data sources will be compared.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1481,10 +1479,11 @@ const doCurveParams = function () {
       default: matsTypes.InputTypes.unused,
       controlButtonVisibility: "block",
       controlButtonText: "valid utc hour",
+      multiple: true,
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 5,
-      tooltip: `Filters the calculated results by the valid forecast lead time.`,
+      tooltip: `Filters the calculated results by valid UTC hour.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1521,10 +1520,11 @@ const doCurveParams = function () {
       default: matsTypes.InputTypes.unused,
       controlButtonVisibility: "block",
       controlButtonText: "pressure level (hPa)",
+      multiple: true,
       displayOrder: 4,
       displayPriority: 1,
       displayGroup: 5,
-      tooltip: `Filters the calculated row by pressure level.`,
+      tooltip: `Select the vertical levels over which the experimental and control data sources will be compared.`,
       tooltipPlacement: "right",
     });
   } else {
@@ -1593,7 +1593,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "application", " in "],
         ["", "data-source", " in "],
-        ["", "validation-data-source", " in "],
+        ["", "control-data-source", " in "],
         ["", "region", ", "],
         ["", "statistic", " at "],
         ["", "variable", " "],
@@ -1609,7 +1609,7 @@ const doCurveTextPatterns = function () {
         "label",
         "application",
         "data-source",
-        "validation-data-source",
+        "control-data-source",
         "region",
         "statistic",
         "variable",

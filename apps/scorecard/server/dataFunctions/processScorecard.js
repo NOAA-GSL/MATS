@@ -193,7 +193,7 @@ processScorecard = function (plotParams, plotFunction) {
       // map the necessary row parameters
       // remove these params from the singleCurveParamNames list, all of the row parameters are either single select
       // or they are handled individually, so we remove the ones that are handled individually from the single select list.
-      const notIncludedParams = ["label", "data-source", "validation-data-source"];
+      const notIncludedParams = ["label", "data-source", "control-data-source"];
       const rowParameters = singleCurveParamNames.filter(function (paramName) {
         return !notIncludedParams.includes(paramName);
       });
@@ -201,7 +201,7 @@ processScorecard = function (plotParams, plotFunction) {
       scorecardDocument.results.rows[curve.label].rowTitle = {
         label,
         datasource: curve["data-source"],
-        validationDatasource: curve["validation-data-source"],
+        validationDatasource: curve["control-data-source"],
       };
       scorecardDocument.results.rows[curve.label].rowParameters = rowParameters;
       scorecardDocument.results.rows[curve.label].regions = regions;
