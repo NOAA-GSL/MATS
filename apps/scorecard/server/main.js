@@ -51,7 +51,7 @@ const doPlotParams = function () {
         "these-days-of-the-week": ["Once"],
         "these-days-of-the-month": ["Once"],
         "these-months": ["Once"],
-        dates: ["Recurring"],
+        "dates": ["Recurring"],
       },
       controlButtonVisibility: "block",
       displayOrder: 1,
@@ -332,7 +332,7 @@ const doPlotParams = function () {
       displayOrder: 4,
       displayPriority: 1,
       displayGroup: 4,
-      tooltip: "The months for which this 'Yearly' scorecard will be reprocessed.",
+      tooltip: `The months for which this 'Yearly' scorecard will be reprocessed.`,
       tooltipPlacement: "right",
     });
   }
@@ -404,7 +404,7 @@ const doPlotParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 7,
-      tooltip: "The threshold for the minor significance defined in percentage.",
+      tooltip: `The threshold for the minor significance defined in percentage.`,
       tooltipPlacement: "right",
     });
   }
@@ -429,7 +429,7 @@ const doPlotParams = function () {
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 7,
-      tooltip: "The threshold for the major significance defined in percentage.",
+      tooltip: `The threshold for the major significance defined in percentage.`,
       tooltipPlacement: "right",
     });
   }
@@ -957,7 +957,7 @@ const doCurveParams = function () {
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 1,
-      tooltip: "The application for this scorecard block.",
+      tooltip: `The application for this scorecard block.`,
       tooltipPlacement: "right",
     });
   } else {
