@@ -49,7 +49,7 @@ dataMap = function (plotParams, plotFunction)
     var label = curve['label'];
     var variable = curve['variable'];
     var model = matsCollections['data-source'].findOne({ name: 'data-source' }).optionsMap[variable][curve['data-source']][0];
-
+    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
     var siteMap = matsCollections.StationMap.findOne({ name: 'stations' }, { optionsMap: 1 })['optionsMap'];
     var thresholdStr = curve['threshold'];
     var threshold = Object.keys(matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable][key] === thresholdStr);
