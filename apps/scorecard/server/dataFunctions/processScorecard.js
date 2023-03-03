@@ -176,7 +176,7 @@ processScorecard = function (plotParams, plotFunction) {
     status: matsTypes.ScorecardStatus.pending,
     submitted: submitEpoch,
     dateRange,
-    schedule: (schedule = plotParams["scorecard-schedule-mode"]),
+    schedule: plotParams["scorecard-schedule-mode"],
     endsOn: plotParams.scorecardEndsOn,
     processedAt,
     significanceThresholds,
@@ -215,16 +215,19 @@ processScorecard = function (plotParams, plotFunction) {
       curve.threshold === undefined ? ["threshold_NA"] : curve.threshold;
     curve.level = curve.level === undefined ? ["level_NA"] : curve.level;
     regions.forEach(function (region) {
+      region = region.replace(/\./g, "__DOT__")
       if (scorecardDocument.results.rows[curve.label].data[region] === undefined) {
         scorecardDocument.results.rows[curve.label].data[region] = {};
       }
       curve.statistic.forEach(function (stat) {
+        stat = stat.replace(/\./g, "__DOT__")
         if (
           scorecardDocument.results.rows[curve.label].data[region][stat] === undefined
         ) {
           scorecardDocument.results.rows[curve.label].data[region][stat] = {};
         }
         curve.variable.forEach(function (variable) {
+          variable = variable.replace(/\./g, "__DOT__")
           if (
             scorecardDocument.results.rows[curve.label].data[region][stat][variable] ===
             undefined
@@ -233,6 +236,7 @@ processScorecard = function (plotParams, plotFunction) {
               {};
           }
           curve.threshold.forEach(function (threshold) {
+            threshold = threshold.replace(/\./g, "__DOT__")
             if (
               scorecardDocument.results.rows[curve.label].data[region][stat][variable][
                 threshold
@@ -243,6 +247,7 @@ processScorecard = function (plotParams, plotFunction) {
               ] = {};
             }
             curve.level.forEach(function (level) {
+              level = level.replace(/\./g, "__DOT__")
               if (
                 scorecardDocument.results.rows[curve.label].data[region][stat][
                   variable
@@ -253,6 +258,7 @@ processScorecard = function (plotParams, plotFunction) {
                 ][threshold][level] = {};
               }
               fcstLengths.forEach(function (fcstlen, index) {
+                fcstlen = fcstlen.replace(/\./g, "__DOT__")
                 // this is where we will calculate the significances.
                 // get a random number between 0 and 100
                 let sval = 0;
