@@ -1022,6 +1022,12 @@ const doCurveParams = function () {
     }
   }
 
+  const defaultControl = Object.keys(modelOptionsMap[applicationOptions[0]]).includes(
+    "HRRR_OPS"
+  )
+    ? "HRRR_OPS"
+    : Object.keys(modelOptionsMap[applicationOptions[0]])[0];
+
   if (
     matsCollections["control-data-source"].findOne({
       name: "control-data-source",
@@ -1034,7 +1040,7 @@ const doCurveParams = function () {
       options: Object.keys(modelOptionsMap[applicationOptions[0]]),
       superiorNames: ["application"],
       controlButtonCovered: true,
-      default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
+      default: defaultControl,
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 2,
@@ -1057,7 +1063,7 @@ const doCurveParams = function () {
           $set: {
             optionsMap: modelOptionsMap,
             options: Object.keys(modelOptionsMap[applicationOptions[0]]),
-            default: Object.keys(modelOptionsMap[applicationOptions[0]])[0],
+            default: defaultControl,
           },
         }
       );
