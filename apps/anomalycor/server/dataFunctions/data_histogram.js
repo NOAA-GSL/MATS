@@ -58,8 +58,10 @@ dataHistogram = function (plotParams, plotFunction) {
     const queryTableClause = `from ${model}_anomcorr_${region} as m0`;
     const { variable } = curve;
     const variableClause = `and m0.variable = '${variable}'`;
-    const validTimeStr = curve["valid-time"] === matsTypes.InputTypes.unused
-        ? "both" : curve["valid-time"];
+    const validTimeStr =
+      curve["valid-time"] === matsTypes.InputTypes.unused
+        ? "both"
+        : curve["valid-time"];
     const validTimeClause = matsCollections["valid-time"].findOne(
       { name: "valid-time" },
       { optionsMap: 1 }
