@@ -177,7 +177,7 @@ hr {
 
 .scRegionTd {
   border: 1px solid black;
-  padding: 5px;
+  padding: 5px 1px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
