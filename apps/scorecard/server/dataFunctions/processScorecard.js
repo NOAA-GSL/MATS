@@ -129,6 +129,7 @@ processScorecard = function (plotParams, plotFunction) {
   // get the union of the fcst-length arrays of all the curves
   const fcstLengthsSet = new Set();
   plotParams.curves.forEach(function (curve) {
+    if (!curve["forecast-length"]) curve["forecast-length"] = ["0"];
     curve["forecast-length"].forEach(function (fcl) {
       fcstLengthsSet.add(fcl);
     });
