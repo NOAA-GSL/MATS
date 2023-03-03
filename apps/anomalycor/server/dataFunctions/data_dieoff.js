@@ -70,7 +70,8 @@ dataDieOff = function (plotParams, plotFunction) {
     const toSecs = dateRange.toSeconds;
     var dateClause;
     if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-      const validTimeStr = curve["valid-time"];
+      const validTimeStr = curve["valid-time"] === matsTypes.InputTypes.unused
+          ? "both" : curve["valid-time"];
       validTimeClause = matsCollections["valid-time"].findOne(
         { name: "valid-time" },
         { optionsMap: 1 }

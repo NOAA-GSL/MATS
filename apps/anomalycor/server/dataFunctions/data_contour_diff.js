@@ -69,7 +69,8 @@ dataContourDiff = function (plotParams, plotFunction) {
     let dateClause = "";
     let levelClause = "";
     if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
-      const validTimeStr = curve["valid-time"];
+      const validTimeStr = curve["valid-time"] === matsTypes.InputTypes.unused
+          ? "both" : curve["valid-time"];
       validTimeClause = matsCollections["valid-time"].findOne(
         { name: "valid-time" },
         { optionsMap: 1 }

@@ -59,7 +59,8 @@ dataSeries = function (plotParams, plotFunction) {
     const queryTableClause = `from ${model}_anomcorr_${region} as m0`;
     const { variable } = curve;
     const variableClause = `and m0.variable = '${variable}'`;
-    const validTimeStr = curve["valid-time"];
+    const validTimeStr = curve["valid-time"] === matsTypes.InputTypes.unused
+        ? "both" : curve["valid-time"];
     const validTimes =
       validTimeStr === "both" ? [] : [Number(validTimeStr.split("-")[0])];
     const validTimeClause = matsCollections["valid-time"].findOne(
