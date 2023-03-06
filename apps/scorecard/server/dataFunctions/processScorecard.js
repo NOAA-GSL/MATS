@@ -1,5 +1,11 @@
 import { matsTypes, matsParamUtils, matsCollections } from "meteor/randyp:mats-common";
 
+/** A function to sanitize JSON keys by replacing the "." character with "__DOT__" */
+const sanitizeKeys = function (str) {
+  str = str.replace(/\./g, "__DOT__");
+  return str;
+};
+
 processScorecard = function (plotParams, plotFunction) {
   /*
     displayScorecard structure:
@@ -216,19 +222,19 @@ processScorecard = function (plotParams, plotFunction) {
       curve.threshold === undefined ? ["threshold_NA"] : curve.threshold;
     curve.level = curve.level === undefined ? ["level_NA"] : curve.level;
     regions.forEach(function (region) {
-      region = region.replace(/\./g, "__DOT__");
+      region = sanitizeKeys(region);
       if (scorecardDocument.results.rows[curve.label].data[region] === undefined) {
         scorecardDocument.results.rows[curve.label].data[region] = {};
       }
       curve.statistic.forEach(function (stat) {
-        stat = stat.replace(/\./g, "__DOT__");
+        stat = sanitizeKeys(stat);
         if (
           scorecardDocument.results.rows[curve.label].data[region][stat] === undefined
         ) {
           scorecardDocument.results.rows[curve.label].data[region][stat] = {};
         }
         curve.variable.forEach(function (variable) {
-          variable = variable.replace(/\./g, "__DOT__");
+          variable = sanitizeKeys(variable);
           if (
             scorecardDocument.results.rows[curve.label].data[region][stat][variable] ===
             undefined
@@ -237,7 +243,7 @@ processScorecard = function (plotParams, plotFunction) {
               {};
           }
           curve.threshold.forEach(function (threshold) {
-            threshold = threshold.replace(/\./g, "__DOT__");
+            threshold = sanitizeKeys(threshold);
             if (
               scorecardDocument.results.rows[curve.label].data[region][stat][variable][
                 threshold
@@ -248,7 +254,7 @@ processScorecard = function (plotParams, plotFunction) {
               ] = {};
             }
             curve.level.forEach(function (level) {
-              level = level.replace(/\./g, "__DOT__");
+              level = sanitizeKeys(level);
               if (
                 scorecardDocument.results.rows[curve.label].data[region][stat][
                   variable
@@ -259,7 +265,7 @@ processScorecard = function (plotParams, plotFunction) {
                 ][threshold][level] = {};
               }
               fcstLengths.forEach(function (fcstlen, index) {
-                fcstlen = fcstlen.replace(/\./g, "__DOT__");
+                fcstlen = sanitizeKeys(fcstlen);
                 // this is where we will calculate the significances.
                 // get a random number between 0 and 100
                 let sval = 0;
