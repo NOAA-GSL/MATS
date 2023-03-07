@@ -1,7 +1,4 @@
 SELECT m0.valid_secs AS avtime,
-        COUNT(DISTINCT m0.valid_secs) AS N_times,
-        MIN(m0.valid_secs) AS min_secs,
-        MAX(m0.valid_secs) AS max_secs,
         {{statisticClause}}
     FROM {{database}}.{{model}}_freq_{{region}} AS m0
     WHERE 1=1
