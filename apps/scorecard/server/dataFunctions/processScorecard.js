@@ -84,6 +84,9 @@ processScorecard = function (plotParams, plotFunction) {
         }
     }
     */
+
+  const fs = require("fs");
+
   // create or retrieve the scorecard document
   // get the submission epoch - right now
   const { submitEpoch } = plotParams;
@@ -189,16 +192,67 @@ processScorecard = function (plotParams, plotFunction) {
     significanceThresholds,
     significanceColors,
     results: {},
+    queryMap: {},
   };
 
   // insert a title (will change when processedAt is established - easy substitution for the word 'processedAt')
   scorecardDocument.results.title = title;
   scorecardDocument.results.rows = {};
+  scorecardDocument.queryMap.rows = {};
   // fill in the rows - these are all initially default values
   plotParams.curves.forEach(function (curve) {
+    /**
+     * Here we are going to pre-load as much as possible for the queries, *before*
+     * we start with the hideous 6th degree loop. This will include:
+     *
+     * Loading the query template for this row
+     * Retrieving all relevant metadata valueMaps for this row
+     * Retrieving all the parameters which are constant for the entire row
+     */
+
+    // get query template for this row
+    const application = matsCollections.application.findOne({ name: "application" })
+      .sourceMap[curve.application];
+    let queryTemplate = fs.readFileSync(
+      `${process.env.PWD}/server/dataFunctions/sqlTemplates/tmpl_${application}_timeseries.sql`,
+      "utf8"
+    );
+
+    if (queryTemplate.includes("{{database}}")) {
+      // pre-load the query-able database for this application
+      // it is constant for the whole row so put it in the template
+      const databaseValue = matsCollections.application.findOne({
+        name: "application",
+      }).optionsMap[curve.application];
+      queryTemplate = queryTemplate.replace(/\{\{database\}\}/g, databaseValue);
+    }
+
+    let regionMap;
+    if (queryTemplate.includes("{{region}}")) {
+      // pre-load the regionMap metadata for this application
+      regionMap = matsCollections.region.findOne({
+        name: "region",
+      }).valuesMap[curve.application];
+      // the upperair apps have weird regionMap notation
+      if (curve.application.includes("RAOB")) {
+        regionMap = regionMap.ID;
+      } else if (curve.application.includes("AMDAR")) {
+        regionMap = regionMap.shortName;
+      }
+    }
+
+    let thresholdMap;
+    if (queryTemplate.includes("{{threshold}}")) {
+      // pre-load the thresholdMap metadata for this application
+      thresholdMap = matsCollections.threshold.findOne({
+        name: "threshold",
+      }).valuesMap[curve.application];
+    }
+
     // create the empty object for this row
     const { label } = curve;
     scorecardDocument.results.rows[label] = {};
+    scorecardDocument.queryMap.rows[label] = {};
     // add the top level elements.
     // make rowTitle and rowParameters maps, the display page can sort out stringifying them.
     // map the necessary row parameters
@@ -218,32 +272,37 @@ processScorecard = function (plotParams, plotFunction) {
     scorecardDocument.results.rows[curve.label].regions = regions;
     scorecardDocument.results.rows[curve.label].fcstlens = fcstLengths;
     scorecardDocument.results.rows[curve.label].data = {};
+    scorecardDocument.queryMap.rows[curve.label].data = {};
     curve.threshold =
       curve.threshold === undefined ? ["threshold_NA"] : curve.threshold;
     curve.level = curve.level === undefined ? ["level_NA"] : curve.level;
-    regions.forEach(function (region) {
-      region = sanitizeKeys(region);
+    regions.forEach(function (regionText) {
+      const region = sanitizeKeys(regionText);
       if (scorecardDocument.results.rows[curve.label].data[region] === undefined) {
         scorecardDocument.results.rows[curve.label].data[region] = {};
+        scorecardDocument.queryMap.rows[curve.label].data[region] = {};
       }
-      curve.statistic.forEach(function (stat) {
-        stat = sanitizeKeys(stat);
+      curve.statistic.forEach(function (statText) {
+        const stat = sanitizeKeys(statText);
         if (
           scorecardDocument.results.rows[curve.label].data[region][stat] === undefined
         ) {
           scorecardDocument.results.rows[curve.label].data[region][stat] = {};
+          scorecardDocument.queryMap.rows[curve.label].data[region][stat] = {};
         }
-        curve.variable.forEach(function (variable) {
-          variable = sanitizeKeys(variable);
+        curve.variable.forEach(function (variableText) {
+          const variable = sanitizeKeys(variableText);
           if (
             scorecardDocument.results.rows[curve.label].data[region][stat][variable] ===
             undefined
           ) {
             scorecardDocument.results.rows[curve.label].data[region][stat][variable] =
               {};
+            scorecardDocument.queryMap.rows[curve.label].data[region][stat][variable] =
+              {};
           }
-          curve.threshold.forEach(function (threshold) {
-            threshold = sanitizeKeys(threshold);
+          curve.threshold.forEach(function (thresholdText) {
+            const threshold = sanitizeKeys(thresholdText);
             if (
               scorecardDocument.results.rows[curve.label].data[region][stat][variable][
                 threshold
@@ -252,9 +311,12 @@ processScorecard = function (plotParams, plotFunction) {
               scorecardDocument.results.rows[curve.label].data[region][stat][variable][
                 threshold
               ] = {};
+              scorecardDocument.queryMap.rows[curve.label].data[region][stat][variable][
+                threshold
+              ] = {};
             }
-            curve.level.forEach(function (level) {
-              level = sanitizeKeys(level);
+            curve.level.forEach(function (levelText) {
+              const level = sanitizeKeys(levelText);
               if (
                 scorecardDocument.results.rows[curve.label].data[region][stat][
                   variable
@@ -263,9 +325,65 @@ processScorecard = function (plotParams, plotFunction) {
                 scorecardDocument.results.rows[curve.label].data[region][stat][
                   variable
                 ][threshold][level] = {};
+                scorecardDocument.queryMap.rows[curve.label].data[region][stat][
+                  variable
+                ][threshold][level] = {};
               }
-              fcstLengths.forEach(function (fcstlen, index) {
-                fcstlen = sanitizeKeys(fcstlen);
+              fcstLengths.forEach(function (fcstlenText) {
+                const fcstlen = sanitizeKeys(fcstlenText);
+
+                // make deep copy of query template
+                let localQueryTemplate = JSON.parse(JSON.stringify(queryTemplate));
+
+                // populate region in query template
+                if (localQueryTemplate.includes("{{region}}")) {
+                  let regionValue = Object.keys(regionMap).find(
+                    (key) => regionMap[key] === regionText
+                  );
+                  if (curve.application.includes("RAOB")) {
+                    // RAOB tables need a region prefix
+                    regionValue = `_Areg${regionValue}`;
+                  }
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{region\}\}/g,
+                    regionValue
+                  );
+                }
+
+                // populate forecastLength in query template
+                if (localQueryTemplate.includes("{{forecastLength}}")) {
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{forecastLength\}\}/g,
+                    fcstlenText
+                  );
+                }
+
+                // populate threshold in query template
+                if (localQueryTemplate.includes("{{threshold}}")) {
+                  let thresholdValue = Object.keys(thresholdMap).find(
+                    (key) => thresholdMap[key] === thresholdText
+                  );
+                  // radar thresholds need to be scaled
+                  thresholdValue =
+                    application === "radar"
+                      ? (Number(thresholdValue) / 10000).toString()
+                      : thresholdValue;
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{threshold\}\}/g,
+                    thresholdValue
+                  );
+                }
+
+                // populate level in query template
+                if (localQueryTemplate.includes("{{level}}")) {
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{level\}\}/g,
+                    levelText
+                  );
+                }
+
+                debugger;
+
                 // this is where we will calculate the significances.
                 // get a random number between 0 and 100
                 let sval = 0;
