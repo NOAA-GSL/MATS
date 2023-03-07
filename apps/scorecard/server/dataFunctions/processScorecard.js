@@ -277,6 +277,38 @@ processScorecard = function (plotParams, plotFunction) {
       queryTemplate = queryTemplate.replace(/\{\{truth\}\}/g, truthValue);
     }
 
+    if (queryTemplate.includes("{{validTimes}}")) {
+      // pre-load the validTimes for this application
+      // it is constant for the whole row so put it in the template
+      const validTimes =
+        curve["valid-time"] &&
+        curve["valid-time"].length !== 0 &&
+        curve["valid-time"] !== matsTypes.InputTypes.unused
+          ? curve["valid-time"]
+          : "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23";
+      queryTemplate = queryTemplate.replace(/\{\{validTimes\}\}/g, validTimes);
+    }
+
+    if (queryTemplate.includes("{{forecastType}}")) {
+      // pre-load the forecastType for this application
+      // it is constant for the whole row so put it in the template
+      const forecastTypeMap = matsCollections["forecast-type"].findOne({
+        name: "forecast-type",
+      }).valuesMap[curve.application];
+      const forecastTypeValue = Object.keys(forecastTypeMap).find(
+        (key) => forecastTypeMap[key] === curve["forecast-type"]
+      );
+      // The database schemas are different for the two apps with a forecast type!!
+      const forecastTypeClause =
+        curve.application === "24 Hour Precipitation"
+          ? `m0.num_fcsts = ${forecastTypeValue}`
+          : `m0.accum_len = ${forecastTypeValue}`;
+      queryTemplate = queryTemplate.replace(
+        /\{\{forecastType\}\}/g,
+        forecastTypeClause
+      );
+    }
+
     // create the empty object for this row
     const { label } = curve;
     scorecardDocument.results.rows[label] = {};
