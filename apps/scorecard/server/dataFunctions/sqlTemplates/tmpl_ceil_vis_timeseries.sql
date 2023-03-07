@@ -1,12 +1,8 @@
 SELECT m0.time AS avtime,
-        COUNT(DISTINCT m0.time) AS N_times,
-        MIN(m0.time) AS min_secs,
-        MAX(m0.time) AS max_secs,
         SUM(m0.yy) AS hit,
         SUM(m0.yn) AS fa,
         SUM(m0.ny) AS miss,
-        SUM(m0.nn) AS cn,
-        COUNT(m0.yy) AS N0
+        SUM(m0.nn) AS cn
     FROM {{database}}.{{model}}_{{region}} AS m0
     WHERE 1=1
         AND m0.time >= {{fromSecs}}

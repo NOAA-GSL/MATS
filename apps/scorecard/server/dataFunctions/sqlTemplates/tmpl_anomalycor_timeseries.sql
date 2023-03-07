@@ -1,9 +1,5 @@
 SELECT unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour AS avtime,
-        COUNT(DISTINCT unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) AS N_times,
-        MIN(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) AS min_secs,
-        MAX(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour) AS max_secs,
-        AVG(m0.wacorr/100) AS stat,
-        COUNT(m0.wacorr) AS N0
+        AVG(m0.wacorr/100) AS stat
     FROM {{database}}.{{model}}_anomcorr_{{region}} AS m0
     WHERE 1=1
         AND unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= {{fromSecs}}
