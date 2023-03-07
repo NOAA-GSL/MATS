@@ -249,6 +249,34 @@ processScorecard = function (plotParams, plotFunction) {
       }).valuesMap[curve.application];
     }
 
+    if (queryTemplate.includes("{{grid_scale}}")) {
+      // pre-load the grid scale for this application
+      // it is constant for the whole row so put it in the template
+      const scaleMap = matsCollections.scale.findOne({
+        name: "scale",
+      }).valuesMap[curve.application];
+      const scaleValue = Object.keys(scaleMap).find(
+        (key) => scaleMap[key] === curve.scale
+      );
+      queryTemplate = queryTemplate.replace(/\{\{grid_scale\}\}/g, scaleValue);
+    }
+
+    if (queryTemplate.includes("{{truth}}")) {
+      // pre-load the truth for this application
+      // it is constant for the whole row so put it in the template
+      let truthValue;
+      const truthMap = matsCollections.truth.findOne({
+        name: "truth",
+      }).valuesMap[curve.application];
+      // not all the apps have a defined truth map
+      if (truthMap) {
+        truthValue = Object.keys(truthMap).find((key) => truthMap[key] === curve.truth);
+      } else {
+        truthValue = curve.truth !== "All" ? `_${curve.truth}` : "";
+      }
+      queryTemplate = queryTemplate.replace(/\{\{truth\}\}/g, truthValue);
+    }
+
     // create the empty object for this row
     const { label } = curve;
     scorecardDocument.results.rows[label] = {};
