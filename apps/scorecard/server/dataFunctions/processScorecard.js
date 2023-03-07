@@ -249,6 +249,15 @@ processScorecard = function (plotParams, plotFunction) {
       }).valuesMap[curve.application];
     }
 
+    let variableMap;
+    // trailing brackets intentionally omitted below -- DO NOT ALTER
+    if (queryTemplate.includes("{{variable")) {
+      // pre-load the variableMap metadata for this application
+      variableMap = matsCollections.variable.findOne({
+        name: "variable",
+      }).valuesMap[curve.application];
+    }
+
     if (queryTemplate.includes("{{grid_scale}}")) {
       // pre-load the grid scale for this application
       // it is constant for the whole row so put it in the template
@@ -440,6 +449,30 @@ processScorecard = function (plotParams, plotFunction) {
                     /\{\{level\}\}/g,
                     levelText
                   );
+                }
+
+                // populate variable in query template -- excepting partial sums
+                if (localQueryTemplate.includes("{{variable}}")) {
+                  const variableValue = variableMap
+                    ? variableMap[variableText]
+                    : variableText;
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{variable\}\}/g,
+                    variableValue
+                  );
+                }
+
+                // populate variable in query template -- partial sums
+                if (localQueryTemplate.includes("{{variable0}}")) {
+                  const variableArray = variableMap[variableText];
+                  for (let vidx = 0; vidx < variableArray.length; vidx++) {
+                    const replaceString = `{{variable${vidx.toString()}}}`;
+                    const regex = new RegExp(replaceString, "g");
+                    localQueryTemplate = localQueryTemplate.replace(
+                      regex,
+                      variableArray[vidx]
+                    );
+                  }
                 }
 
                 debugger;
