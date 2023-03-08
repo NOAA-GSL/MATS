@@ -122,6 +122,7 @@ processScorecard = function (plotParams, plotFunction) {
         };
         break;
       case "Yearly":
+      default:
         interval = {
           type: "yearly",
           hours: plotParams["these-hours-of-the-day"],
@@ -246,6 +247,14 @@ processScorecard = function (plotParams, plotFunction) {
       // pre-load the thresholdMap metadata for this application
       thresholdMap = matsCollections.threshold.findOne({
         name: "threshold",
+      }).valuesMap[curve.application];
+    }
+
+    let statisticMap;
+    if (queryTemplate.includes("{{statisticClause}}")) {
+      // pre-load the statisticMap metadata for this application
+      statisticMap = matsCollections.statistic.findOne({
+        name: "statistic",
       }).valuesMap[curve.application];
     }
 
@@ -448,6 +457,15 @@ processScorecard = function (plotParams, plotFunction) {
                   localQueryTemplate = localQueryTemplate.replace(
                     /\{\{level\}\}/g,
                     levelText
+                  );
+                }
+
+                // populate statisticClause in query template
+                if (localQueryTemplate.includes("{{statisticClause}}")) {
+                  const statisticClauseValue = statisticMap[statText][0].split(",")[0];
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{statisticClause\}\}/g,
+                    statisticClauseValue
                   );
                 }
 
