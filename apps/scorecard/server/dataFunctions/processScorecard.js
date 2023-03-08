@@ -84,6 +84,9 @@ processScorecard = function (plotParams, plotFunction) {
         }
     }
     */
+
+  const fs = require("fs");
+
   // create or retrieve the scorecard document
   // get the submission epoch - right now
   const { submitEpoch } = plotParams;
@@ -119,6 +122,7 @@ processScorecard = function (plotParams, plotFunction) {
         };
         break;
       case "Yearly":
+      default:
         interval = {
           type: "yearly",
           hours: plotParams["these-hours-of-the-day"],
@@ -189,16 +193,153 @@ processScorecard = function (plotParams, plotFunction) {
     significanceThresholds,
     significanceColors,
     results: {},
+    queryMap: {},
   };
 
   // insert a title (will change when processedAt is established - easy substitution for the word 'processedAt')
   scorecardDocument.results.title = title;
   scorecardDocument.results.rows = {};
+  scorecardDocument.queryMap.rows = {};
   // fill in the rows - these are all initially default values
   plotParams.curves.forEach(function (curve) {
+    /**
+     * Here we are going to pre-load as much as possible for the queries, *before*
+     * we start with the hideous 6th degree loop. This will include:
+     *
+     * Loading the query template for this row
+     * Retrieving all relevant metadata valueMaps for this row
+     * Retrieving all the parameters which are constant for the entire row
+     */
+
+    // get query template for this row
+    const application = matsCollections.application.findOne({ name: "application" })
+      .sourceMap[curve.application];
+    let queryTemplate = fs.readFileSync(
+      `${process.env.PWD}/server/dataFunctions/sqlTemplates/tmpl_${application}_timeseries.sql`,
+      "utf8"
+    );
+    queryTemplate = queryTemplate.replace(/\n|\t/g, "");
+
+    if (queryTemplate.includes("{{database}}")) {
+      // pre-load the query-able database for this application
+      // it is constant for the whole row so put it in the template
+      const databaseValue = matsCollections.application.findOne({
+        name: "application",
+      }).optionsMap[curve.application];
+      queryTemplate = queryTemplate.replace(/\{\{database\}\}/g, databaseValue);
+    }
+
+    let modelMap;
+    if (queryTemplate.includes("{{model}}")) {
+      // pre-load the modelMap metadata for this application
+      modelMap = matsCollections["data-source"].findOne({
+        name: "data-source",
+      }).optionsMap[curve.application];
+    }
+
+    let regionMap;
+    if (queryTemplate.includes("{{region}}")) {
+      // pre-load the regionMap metadata for this application
+      regionMap = matsCollections.region.findOne({
+        name: "region",
+      }).valuesMap[curve.application];
+      // the upperair apps have weird regionMap notation
+      if (curve.application.includes("RAOB")) {
+        regionMap = regionMap.ID;
+      } else if (curve.application.includes("AMDAR")) {
+        regionMap = regionMap.shortName;
+      }
+    }
+
+    let thresholdMap;
+    if (queryTemplate.includes("{{threshold}}")) {
+      // pre-load the thresholdMap metadata for this application
+      thresholdMap = matsCollections.threshold.findOne({
+        name: "threshold",
+      }).valuesMap[curve.application];
+    }
+
+    let statisticMap;
+    if (queryTemplate.includes("{{statisticClause}}")) {
+      // pre-load the statisticMap metadata for this application
+      statisticMap = matsCollections.statistic.findOne({
+        name: "statistic",
+      }).valuesMap[curve.application];
+    }
+
+    let variableMap;
+    // trailing brackets intentionally omitted below -- DO NOT ALTER
+    if (queryTemplate.includes("{{variable")) {
+      // pre-load the variableMap metadata for this application
+      variableMap = matsCollections.variable.findOne({
+        name: "variable",
+      }).valuesMap[curve.application];
+    }
+
+    if (queryTemplate.includes("{{grid_scale}}")) {
+      // pre-load the grid scale for this application
+      // it is constant for the whole row so put it in the template
+      const scaleMap = matsCollections.scale.findOne({
+        name: "scale",
+      }).valuesMap[curve.application];
+      const scaleValue = Object.keys(scaleMap).find(
+        (key) => scaleMap[key] === curve.scale
+      );
+      queryTemplate = queryTemplate.replace(/\{\{grid_scale\}\}/g, scaleValue);
+    }
+
+    if (queryTemplate.includes("{{truth}}")) {
+      // pre-load the truth for this application
+      // it is constant for the whole row so put it in the template
+      let truthValue;
+      const truthMap = matsCollections.truth.findOne({
+        name: "truth",
+      }).valuesMap[curve.application];
+      // not all the apps have a defined truth map
+      if (truthMap) {
+        truthValue = Object.keys(truthMap).find((key) => truthMap[key] === curve.truth);
+      } else {
+        truthValue = curve.truth !== "All" ? `_${curve.truth}` : "";
+      }
+      queryTemplate = queryTemplate.replace(/\{\{truth\}\}/g, truthValue);
+    }
+
+    if (queryTemplate.includes("{{validTimes}}")) {
+      // pre-load the validTimes for this application
+      // it is constant for the whole row so put it in the template
+      const validTimes =
+        curve["valid-time"] &&
+        curve["valid-time"].length !== 0 &&
+        curve["valid-time"] !== matsTypes.InputTypes.unused
+          ? curve["valid-time"]
+          : "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23";
+      queryTemplate = queryTemplate.replace(/\{\{validTimes\}\}/g, validTimes);
+    }
+
+    if (queryTemplate.includes("{{forecastType}}")) {
+      // pre-load the forecastType for this application
+      // it is constant for the whole row so put it in the template
+      const forecastTypeMap = matsCollections["forecast-type"].findOne({
+        name: "forecast-type",
+      }).valuesMap[curve.application];
+      const forecastTypeValue = Object.keys(forecastTypeMap).find(
+        (key) => forecastTypeMap[key] === curve["forecast-type"]
+      );
+      // The database schemas are different for the two apps with a forecast type!!
+      const forecastTypeClause =
+        curve.application === "24 Hour Precipitation"
+          ? `m0.num_fcsts = ${forecastTypeValue}`
+          : `m0.accum_len = ${forecastTypeValue}`;
+      queryTemplate = queryTemplate.replace(
+        /\{\{forecastType\}\}/g,
+        forecastTypeClause
+      );
+    }
+
     // create the empty object for this row
     const { label } = curve;
     scorecardDocument.results.rows[label] = {};
+    scorecardDocument.queryMap.rows[label] = {};
     // add the top level elements.
     // make rowTitle and rowParameters maps, the display page can sort out stringifying them.
     // map the necessary row parameters
@@ -218,32 +359,37 @@ processScorecard = function (plotParams, plotFunction) {
     scorecardDocument.results.rows[curve.label].regions = regions;
     scorecardDocument.results.rows[curve.label].fcstlens = fcstLengths;
     scorecardDocument.results.rows[curve.label].data = {};
+    scorecardDocument.queryMap.rows[curve.label].data = {};
     curve.threshold =
       curve.threshold === undefined ? ["threshold_NA"] : curve.threshold;
     curve.level = curve.level === undefined ? ["level_NA"] : curve.level;
-    regions.forEach(function (region) {
-      region = sanitizeKeys(region);
+    regions.forEach(function (regionText) {
+      const region = sanitizeKeys(regionText);
       if (scorecardDocument.results.rows[curve.label].data[region] === undefined) {
         scorecardDocument.results.rows[curve.label].data[region] = {};
+        scorecardDocument.queryMap.rows[curve.label].data[region] = {};
       }
-      curve.statistic.forEach(function (stat) {
-        stat = sanitizeKeys(stat);
+      curve.statistic.forEach(function (statText) {
+        const stat = sanitizeKeys(statText);
         if (
           scorecardDocument.results.rows[curve.label].data[region][stat] === undefined
         ) {
           scorecardDocument.results.rows[curve.label].data[region][stat] = {};
+          scorecardDocument.queryMap.rows[curve.label].data[region][stat] = {};
         }
-        curve.variable.forEach(function (variable) {
-          variable = sanitizeKeys(variable);
+        curve.variable.forEach(function (variableText) {
+          const variable = sanitizeKeys(variableText);
           if (
             scorecardDocument.results.rows[curve.label].data[region][stat][variable] ===
             undefined
           ) {
             scorecardDocument.results.rows[curve.label].data[region][stat][variable] =
               {};
+            scorecardDocument.queryMap.rows[curve.label].data[region][stat][variable] =
+              {};
           }
-          curve.threshold.forEach(function (threshold) {
-            threshold = sanitizeKeys(threshold);
+          curve.threshold.forEach(function (thresholdText) {
+            const threshold = sanitizeKeys(thresholdText);
             if (
               scorecardDocument.results.rows[curve.label].data[region][stat][variable][
                 threshold
@@ -252,9 +398,12 @@ processScorecard = function (plotParams, plotFunction) {
               scorecardDocument.results.rows[curve.label].data[region][stat][variable][
                 threshold
               ] = {};
+              scorecardDocument.queryMap.rows[curve.label].data[region][stat][variable][
+                threshold
+              ] = {};
             }
-            curve.level.forEach(function (level) {
-              level = sanitizeKeys(level);
+            curve.level.forEach(function (levelText) {
+              const level = sanitizeKeys(levelText);
               if (
                 scorecardDocument.results.rows[curve.label].data[region][stat][
                   variable
@@ -263,9 +412,117 @@ processScorecard = function (plotParams, plotFunction) {
                 scorecardDocument.results.rows[curve.label].data[region][stat][
                   variable
                 ][threshold][level] = {};
+                scorecardDocument.queryMap.rows[curve.label].data[region][stat][
+                  variable
+                ][threshold][level] = {};
               }
-              fcstLengths.forEach(function (fcstlen, index) {
-                fcstlen = sanitizeKeys(fcstlen);
+              fcstLengths.forEach(function (fcstlenText) {
+                const fcstlen = sanitizeKeys(fcstlenText);
+
+                // make deep copy of query template
+                let localQueryTemplate = JSON.parse(JSON.stringify(queryTemplate));
+
+                // populate region in query template
+                if (localQueryTemplate.includes("{{region}}")) {
+                  let regionValue = Object.keys(regionMap).find(
+                    (key) => regionMap[key] === regionText
+                  );
+                  if (curve.application.includes("RAOB")) {
+                    // RAOB tables need a region prefix
+                    regionValue = `_Areg${regionValue}`;
+                  }
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{region\}\}/g,
+                    regionValue
+                  );
+                }
+
+                // populate forecastLength in query template
+                if (localQueryTemplate.includes("{{forecastLength}}")) {
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{forecastLength\}\}/g,
+                    fcstlenText
+                  );
+                }
+
+                // populate threshold in query template
+                if (localQueryTemplate.includes("{{threshold}}")) {
+                  let thresholdValue = Object.keys(thresholdMap).find(
+                    (key) => thresholdMap[key] === thresholdText
+                  );
+                  // radar thresholds need to be scaled
+                  thresholdValue =
+                    application === "radar"
+                      ? (Number(thresholdValue) / 10000).toString()
+                      : thresholdValue;
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{threshold\}\}/g,
+                    thresholdValue
+                  );
+                }
+
+                // populate level in query template
+                if (localQueryTemplate.includes("{{level}}")) {
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{level\}\}/g,
+                    levelText
+                  );
+                }
+
+                // populate statisticClause in query template
+                if (localQueryTemplate.includes("{{statisticClause}}")) {
+                  const statisticClauseValue = statisticMap[statText][0].split(",")[0];
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{statisticClause\}\}/g,
+                    statisticClauseValue
+                  );
+                }
+
+                // populate variable in query template -- excepting partial sums
+                if (localQueryTemplate.includes("{{variable}}")) {
+                  const variableValue = variableMap
+                    ? variableMap[variableText]
+                    : variableText;
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{variable\}\}/g,
+                    variableValue
+                  );
+                }
+
+                // populate variable in query template -- partial sums
+                if (localQueryTemplate.includes("{{variable0}}")) {
+                  const variableArray = variableMap[variableText];
+                  for (let vidx = 0; vidx < variableArray.length; vidx++) {
+                    const replaceString = `{{variable${vidx.toString()}}}`;
+                    const regex = new RegExp(replaceString, "g");
+                    localQueryTemplate = localQueryTemplate.replace(
+                      regex,
+                      variableArray[vidx]
+                    );
+                  }
+                }
+
+                // populate experimental model in query template
+                const experimentalModelValue = modelMap[curve["data-source"]];
+                const experimentalQueryTemplate = localQueryTemplate.replace(
+                  /\{\{model\}\}/g,
+                  experimentalModelValue
+                );
+
+                // populate control model in query template
+                const controlModelValue = modelMap[curve["control-data-source"]];
+                const controlQueryTemplate = localQueryTemplate.replace(
+                  /\{\{model\}\}/g,
+                  controlModelValue
+                );
+
+                scorecardDocument.queryMap.rows[curve.label].data[region][stat][
+                  variable
+                ][threshold][level][fcstlen] = {
+                  experimentalQueryTemplate,
+                  controlQueryTemplate,
+                };
+
                 // this is where we will calculate the significances.
                 // get a random number between 0 and 100
                 let sval = 0;
@@ -302,6 +559,7 @@ processScorecard = function (plotParams, plotFunction) {
       });
     });
   });
+
   // store the document
   try {
     const scDoc = JSON.stringify(scorecardDocument);

@@ -92,7 +92,6 @@ dataSeries = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
     const average = averageOptionsMap[averageStr][0];
-    const averageMatchClause = "";
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
@@ -128,7 +127,6 @@ dataSeries = function (plotParams, plotFunction) {
         "{{thresholdClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "{{averageMatchClause}} " +
         "group by avtime " +
         "order by avtime" +
         ";";
@@ -139,7 +137,6 @@ dataSeries = function (plotParams, plotFunction) {
       statement = statement.replace("{{thresholdClause}}", thresholdClause);
       statement = statement.replace("{{validTimeClause}}", validTimeClause);
       statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
-      statement = statement.replace("{{averageMatchClause}}", averageMatchClause);
       statement = statement.replace("{{dateClause}}", dateClause);
       dataRequests[label] = statement;
 

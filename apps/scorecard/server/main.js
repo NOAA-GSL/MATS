@@ -1510,6 +1510,10 @@ const doCurveParams = function () {
     }
   }
 
+  const defaultLevel = levelOptionsMap[Object.keys(levelOptionsMap)[0]].includes("500")
+    ? "500"
+    : levelOptionsMap[Object.keys(levelOptionsMap)[0]][0];
+
   if (
     matsCollections.level.findOne({
       name: "level",
@@ -1523,7 +1527,7 @@ const doCurveParams = function () {
       superiorNames: ["application"],
       controlButtonCovered: true,
       unique: false,
-      default: matsTypes.InputTypes.unused,
+      default: defaultLevel,
       controlButtonVisibility: "block",
       controlButtonText: "pressure level (hPa)",
       multiple: true,
@@ -1544,7 +1548,7 @@ const doCurveParams = function () {
           $set: {
             optionsMap: levelOptionsMap,
             options: levelOptionsMap[Object.keys(levelOptionsMap)[0]],
-            default: levelOptionsMap[Object.keys(levelOptionsMap)[0]][0],
+            default: defaultLevel,
           },
         }
       );
