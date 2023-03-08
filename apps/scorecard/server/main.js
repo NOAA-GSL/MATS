@@ -906,6 +906,23 @@ const doCurveParams = function () {
         hideOtherFor
       );
     }
+
+    // remove excluded stats from the scorecard
+    // we need to do this after the main metadata loop
+    // is finished or we don't have the full list of apps
+    for (let aidx = 0; aidx < applicationOptions.length; aidx++) {
+      // loop through all the applications found inside the app list in the settings
+      const thisApp = applicationOptions[aidx];
+      for (let sidx = statisticOptionsMap[thisApp].length - 1; sidx >= 0; sidx--) {
+        // loop backwards through the statistics for this app
+        const thisStat = statisticOptionsMap[thisApp][sidx];
+        if (matsDataUtils.excludeStatFromScorecard(thisStat)) {
+          // if the statistic is excluded then delete it
+          statisticOptionsMap[thisApp].splice(sidx, 1);
+          delete statisticValuesMap[thisApp][thisStat];
+        }
+      }
+    }
   } catch (err) {
     console.log(err.message);
   }
