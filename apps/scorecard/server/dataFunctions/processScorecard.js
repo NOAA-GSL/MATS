@@ -218,6 +218,7 @@ processScorecard = function (plotParams, plotFunction) {
       `${process.env.PWD}/server/dataFunctions/sqlTemplates/tmpl_${application}_timeseries.sql`,
       "utf8"
     );
+    queryTemplate = queryTemplate.replace(/\n|\t/g, "");
 
     if (queryTemplate.includes("{{database}}")) {
       // pre-load the query-able database for this application
