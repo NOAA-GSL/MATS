@@ -12,8 +12,8 @@ processScorecard = function (plotParams, plotFunction) {
     The left column isn't displayed, it's only for reference
 
     "title"        | userName name  scorecard name  submit date  processed date daterange |
-    "rowTitle:"    | Row label   Data source   Control data source |
-    "rowParameters"| single param1 single param2  ...."|
+    "blockTitle:"    | Block label   Data source   Control data source |
+    "blockParameters"| single param1 single param2  ...."|
     "regions"      |               | region 1        | region 2      |  region n |
     "fcstLens"     |               |1|3|6|9|...      |1|3|6|9...     |1|3|6|9...|
     "stat1-var1"   | stat1-var1    |-|^|-|^ ...      |-|^|-|^...     |^|-|^|^...|
@@ -26,8 +26,8 @@ processScorecard = function (plotParams, plotFunction) {
         .........
     "statn-varn"   | statn-varn    |-|^|-|^ ...      |-|^|-|^...     |^|-|^|^...|
 
-    "rowTitle:"    | Row label   Data source   Control data source |
-    "rowParameters"| single param1 single param2  ...."|
+    "blockTitle:"    | Block label   Data source   Control data source |
+    "blockParameters"| single param1 single param2  ...."|
     "regions"      |               | region 1        | region 2      |  region n |
     "fcstLens"     |               |1|3|6|9|...      |1|3|6|9...     |1|3|6|9...|
     "stat1-var1"   | stat1-var1    |-|^|-|^ ...      |-|^|-|^...     |^|-|^|^...|
@@ -55,10 +55,10 @@ processScorecard = function (plotParams, plotFunction) {
 
     results: {
         "title":userName + " " + name + " " + submitDate + " " + processedDate + " " + daterange,
-        rows: {
-            Rowlabel1: {
-                "rowTitle":{"label":"Row label","dataSource":"dataSource","controlDataSource":"controlDataSource"},
-                "rowParameters":{"param1:"param1 value", "param2":"param2 value",.....},
+        blocks: {
+            Blocklabel1: {
+                "blockTitle":{"label":"Block label","dataSource":"dataSource","controlDataSource":"controlDataSource"},
+                "blockParameters":{"param1:"param1 value", "param2":"param2 value",.....},
                 "regions":["region1":"region2"....],
                 "fcstlens":[1,3,6,9,...],
                 'data': {
@@ -68,9 +68,9 @@ processScorecard = function (plotParams, plotFunction) {
                     ....
                 }
             },
-            Rowlabel1: {
-                "rowTitle":{"label":"Row label","dataSource":"dataSource","controlDataSource":"controlDataSource"},
-                "rowParameters":{"param1:"param1 value", "param2":"param2 value",.....},
+            Blocklabel1: {
+                "blockTitle":{"label":"Block label","dataSource":"dataSource","controlDataSource":"controlDataSource"},
+                "blockParameters":{"param1:"param1 value", "param2":"param2 value",.....},
                 "regions":["region1":"region2"....],
                 "fcstlens":[1,3,6,9,...],
                 'data': {
@@ -198,20 +198,20 @@ processScorecard = function (plotParams, plotFunction) {
 
   // insert a title (will change when processedAt is established - easy substitution for the word 'processedAt')
   scorecardDocument.results.title = title;
-  scorecardDocument.results.rows = {};
-  scorecardDocument.queryMap.rows = {};
-  // fill in the rows - these are all initially default values
+  scorecardDocument.results.blocks = {};
+  scorecardDocument.queryMap.blocks = {};
+  // fill in the blocks - these are all initially default values
   plotParams.curves.forEach(function (curve) {
     /**
      * Here we are going to pre-load as much as possible for the queries, *before*
      * we start with the hideous 6th degree loop. This will include:
      *
-     * Loading the query template for this row
-     * Retrieving all relevant metadata valueMaps for this row
-     * Retrieving all the parameters which are constant for the entire row
+     * Loading the query template for this block
+     * Retrieving all relevant metadata valueMaps for this block
+     * Retrieving all the parameters which are constant for the entire block
      */
 
-    // get query template for this row
+    // get query template for this block
     const application = matsCollections.application.findOne({ name: "application" })
       .sourceMap[curve.application];
     let queryTemplate = fs.readFileSync(
@@ -222,7 +222,7 @@ processScorecard = function (plotParams, plotFunction) {
 
     if (queryTemplate.includes("{{database}}")) {
       // pre-load the query-able database for this application
-      // it is constant for the whole row so put it in the template
+      // it is constant for the whole block so put it in the template
       const databaseValue = matsCollections.application.findOne({
         name: "application",
       }).optionsMap[curve.application];
@@ -278,7 +278,7 @@ processScorecard = function (plotParams, plotFunction) {
 
     if (queryTemplate.includes("{{grid_scale}}")) {
       // pre-load the grid scale for this application
-      // it is constant for the whole row so put it in the template
+      // it is constant for the whole block so put it in the template
       const scaleMap = matsCollections.scale.findOne({
         name: "scale",
       }).valuesMap[curve.application];
@@ -290,7 +290,7 @@ processScorecard = function (plotParams, plotFunction) {
 
     if (queryTemplate.includes("{{truth}}")) {
       // pre-load the truth for this application
-      // it is constant for the whole row so put it in the template
+      // it is constant for the whole block so put it in the template
       let truthValue;
       const truthMap = matsCollections.truth.findOne({
         name: "truth",
@@ -306,7 +306,7 @@ processScorecard = function (plotParams, plotFunction) {
 
     if (queryTemplate.includes("{{validTimes}}")) {
       // pre-load the validTimes for this application
-      // it is constant for the whole row so put it in the template
+      // it is constant for the whole block so put it in the template
       const validTimes =
         curve["valid-time"] &&
         curve["valid-time"].length !== 0 &&
@@ -318,7 +318,7 @@ processScorecard = function (plotParams, plotFunction) {
 
     if (queryTemplate.includes("{{forecastType}}")) {
       // pre-load the forecastType for this application
-      // it is constant for the whole row so put it in the template
+      // it is constant for the whole block so put it in the template
       const forecastTypeMap = matsCollections["forecast-type"].findOne({
         name: "forecast-type",
       }).valuesMap[curve.application];
@@ -336,83 +336,85 @@ processScorecard = function (plotParams, plotFunction) {
       );
     }
 
-    // create the empty object for this row
+    // create the empty object for this block
     const { label } = curve;
-    scorecardDocument.results.rows[label] = {};
-    scorecardDocument.queryMap.rows[label] = {};
+    scorecardDocument.results.blocks[label] = {};
+    scorecardDocument.queryMap.blocks[label] = {};
     // add the top level elements.
-    // make rowTitle and rowParameters maps, the display page can sort out stringifying them.
-    // map the necessary row parameters
-    // remove these params from the singleCurveParamNames list, all of the row parameters are either single select
+    // make blockTitle and blockParameters maps, the display page can sort out stringifying them.
+    // map the necessary block parameters
+    // remove these params from the singleCurveParamNames list, all of the block parameters are either single select
     // or they are handled individually, so we remove the ones that are handled individually from the single select list.
     const notIncludedParams = ["label", "data-source", "control-data-source"];
-    const rowParameters = singleCurveParamNames.filter(function (paramName) {
+    const blockParameters = singleCurveParamNames.filter(function (paramName) {
       return !notIncludedParams.includes(paramName);
     });
 
-    scorecardDocument.results.rows[curve.label].rowTitle = {
+    scorecardDocument.results.blocks[curve.label].blockTitle = {
       label,
       dataSource: curve["data-source"],
       controlDataSource: curve["control-data-source"],
     };
-    scorecardDocument.results.rows[curve.label].rowParameters = rowParameters;
-    scorecardDocument.results.rows[curve.label].regions = regions;
-    scorecardDocument.results.rows[curve.label].fcstlens = fcstLengths;
-    scorecardDocument.results.rows[curve.label].data = {};
-    scorecardDocument.queryMap.rows[curve.label].data = {};
+    scorecardDocument.results.blocks[curve.label].blockParameters = blockParameters;
+    scorecardDocument.results.blocks[curve.label].regions = regions;
+    scorecardDocument.results.blocks[curve.label].fcstlens = fcstLengths;
+    scorecardDocument.results.blocks[curve.label].data = {};
+    scorecardDocument.queryMap.blocks[curve.label].data = {};
     curve.threshold =
       curve.threshold === undefined ? ["threshold_NA"] : curve.threshold;
     curve.level = curve.level === undefined ? ["level_NA"] : curve.level;
     regions.forEach(function (regionText) {
       const region = sanitizeKeys(regionText);
-      if (scorecardDocument.results.rows[curve.label].data[region] === undefined) {
-        scorecardDocument.results.rows[curve.label].data[region] = {};
-        scorecardDocument.queryMap.rows[curve.label].data[region] = {};
+      if (scorecardDocument.results.blocks[curve.label].data[region] === undefined) {
+        scorecardDocument.results.blocks[curve.label].data[region] = {};
+        scorecardDocument.queryMap.blocks[curve.label].data[region] = {};
       }
       curve.statistic.forEach(function (statText) {
         const stat = sanitizeKeys(statText);
         if (
-          scorecardDocument.results.rows[curve.label].data[region][stat] === undefined
+          scorecardDocument.results.blocks[curve.label].data[region][stat] === undefined
         ) {
-          scorecardDocument.results.rows[curve.label].data[region][stat] = {};
-          scorecardDocument.queryMap.rows[curve.label].data[region][stat] = {};
+          scorecardDocument.results.blocks[curve.label].data[region][stat] = {};
+          scorecardDocument.queryMap.blocks[curve.label].data[region][stat] = {};
         }
         curve.variable.forEach(function (variableText) {
           const variable = sanitizeKeys(variableText);
           if (
-            scorecardDocument.results.rows[curve.label].data[region][stat][variable] ===
-            undefined
+            scorecardDocument.results.blocks[curve.label].data[region][stat][
+              variable
+            ] === undefined
           ) {
-            scorecardDocument.results.rows[curve.label].data[region][stat][variable] =
+            scorecardDocument.results.blocks[curve.label].data[region][stat][variable] =
               {};
-            scorecardDocument.queryMap.rows[curve.label].data[region][stat][variable] =
-              {};
+            scorecardDocument.queryMap.blocks[curve.label].data[region][stat][
+              variable
+            ] = {};
           }
           curve.threshold.forEach(function (thresholdText) {
             const threshold = sanitizeKeys(thresholdText);
             if (
-              scorecardDocument.results.rows[curve.label].data[region][stat][variable][
-                threshold
-              ] === undefined
+              scorecardDocument.results.blocks[curve.label].data[region][stat][
+                variable
+              ][threshold] === undefined
             ) {
-              scorecardDocument.results.rows[curve.label].data[region][stat][variable][
-                threshold
-              ] = {};
-              scorecardDocument.queryMap.rows[curve.label].data[region][stat][variable][
-                threshold
-              ] = {};
+              scorecardDocument.results.blocks[curve.label].data[region][stat][
+                variable
+              ][threshold] = {};
+              scorecardDocument.queryMap.blocks[curve.label].data[region][stat][
+                variable
+              ][threshold] = {};
             }
             curve.level.forEach(function (levelText) {
               const level = sanitizeKeys(levelText);
               if (
-                scorecardDocument.results.rows[curve.label].data[region][stat][
+                scorecardDocument.results.blocks[curve.label].data[region][stat][
                   variable
                 ][threshold][level] === undefined
               ) {
-                scorecardDocument.results.rows[curve.label].data[region][stat][
+                scorecardDocument.results.blocks[curve.label].data[region][stat][
                   variable
                 ][threshold][level] = {};
-                scorecardDocument.queryMap.rows[curve.label].data[region][stat][
+                scorecardDocument.queryMap.blocks[curve.label].data[region][stat][
                   variable
                 ][threshold][level] = {};
               }
@@ -516,7 +518,7 @@ processScorecard = function (plotParams, plotFunction) {
                   controlModelValue
                 );
 
-                scorecardDocument.queryMap.rows[curve.label].data[region][stat][
+                scorecardDocument.queryMap.blocks[curve.label].data[region][stat][
                   variable
                 ][threshold][level][fcstlen] = {
                   experimentalQueryTemplate,
@@ -541,14 +543,16 @@ processScorecard = function (plotParams, plotFunction) {
                 }
 
                 if (
-                  scorecardDocument.results.rows[curve.label].fcstlens.includes(fcstlen)
+                  scorecardDocument.results.blocks[curve.label].fcstlens.includes(
+                    fcstlen
+                  )
                 ) {
-                  scorecardDocument.results.rows[curve.label].data[region][stat][
+                  scorecardDocument.results.blocks[curve.label].data[region][stat][
                     variable
                   ][threshold][level][fcstlen] = sval;
                 } else {
                   // mark this undefined
-                  scorecardDocument.results.rows[curve.label].data[region][stat][
+                  scorecardDocument.results.blocks[curve.label].data[region][stat][
                     variable
                   ][threshold][level][fcstlen] = "undefined";
                 }
