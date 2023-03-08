@@ -228,6 +228,14 @@ processScorecard = function (plotParams, plotFunction) {
       queryTemplate = queryTemplate.replace(/\{\{database\}\}/g, databaseValue);
     }
 
+    let modelMap;
+    if (queryTemplate.includes("{{model}}")) {
+      // pre-load the modelMap metadata for this application
+      modelMap = matsCollections["data-source"].findOne({
+        name: "data-source",
+      }).optionsMap[curve.application];
+    }
+
     let regionMap;
     if (queryTemplate.includes("{{region}}")) {
       // pre-load the regionMap metadata for this application
@@ -493,7 +501,26 @@ processScorecard = function (plotParams, plotFunction) {
                   }
                 }
 
-                debugger;
+                // populate experimental model in query template
+                const experimentalModelValue = modelMap[curve["data-source"]];
+                const experimentalQueryTemplate = localQueryTemplate.replace(
+                  /\{\{model\}\}/g,
+                  experimentalModelValue
+                );
+
+                // populate control model in query template
+                const controlModelValue = modelMap[curve["control-data-source"]];
+                const controlQueryTemplate = localQueryTemplate.replace(
+                  /\{\{model\}\}/g,
+                  controlModelValue
+                );
+
+                scorecardDocument.queryMap.rows[curve.label].data[region][stat][
+                  variable
+                ][threshold][level][fcstlen] = {
+                  experimentalQueryTemplate,
+                  controlQueryTemplate,
+                };
 
                 // this is where we will calculate the significances.
                 // get a random number between 0 and 100
@@ -531,6 +558,7 @@ processScorecard = function (plotParams, plotFunction) {
       });
     });
   });
+
   // store the document
   try {
     const scDoc = JSON.stringify(scorecardDocument);
