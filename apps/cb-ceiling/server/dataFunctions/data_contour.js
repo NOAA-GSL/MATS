@@ -124,7 +124,6 @@ dataContour = function (plotParams, plotFunction)
     }
     var regionStr = curve['region'];
     var region = Object.keys(matsCollections['region'].findOne({ name: 'region' }).valuesMap).find(key => matsCollections['region'].findOne({ name: 'region' }).valuesMap[key] === regionStr);
-    var regionClause = "AND m0.region='" + region + "' ";
     var statisticSelect = curve['statistic'];
     var statisticOptionsMap = matsCollections['statistic'].findOne({ name: 'statistic' }, { optionsMap: 1 })['optionsMap'];
 
