@@ -5,12 +5,13 @@ SELECT unix_timestamp(m0.date)+3600*m0.hour AS avtime,
         SUM({{variable3}}) AS model_sum,
         SUM({{variable4}}) AS obs_sum,
         SUM({{variable5}}) AS abs_sum
-    FROM {{database}}.{{model}}{{region}} AS m0
+    FROM {{database}}.{{model}}{{region}} AS m0{{secondaryModelOption}}
     WHERE 1=1
         AND unix_timestamp(m0.date)+3600*m0.hour >= {{fromSecs}}
         AND unix_timestamp(m0.date)+3600*m0.hour <= {{toSecs}}
         AND m0.hour IN({{validTimes}})
         AND m0.fcst_len = {{forecastLength}}
         AND m0.mb10*10 = {{level}}
+        {{phaseClause}}
     GROUP BY avtime
     ORDER BY avtime;

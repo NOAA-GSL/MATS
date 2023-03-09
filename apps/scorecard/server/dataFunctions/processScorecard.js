@@ -6,6 +6,44 @@ const sanitizeKeys = function (str) {
   return str;
 };
 
+const dealWithUATables = function (
+  curve,
+  regionValue,
+  databaseValue,
+  localQueryTemplate
+) {
+  let secondaryModelOption = "";
+  let updatedQueryTemplate = localQueryTemplate;
+  if (curve.application.includes("RAOB")) {
+    if (["5", "14", "15", "16", "17", "18"].includes(regionValue)) {
+      // get obs partial sums from HRRR_OPS
+      secondaryModelOption = `, ${databaseValue}.HRRR_OPS_Areg${regionValue} as m1`;
+    } else if (regionValue === "19") {
+      // get obs partial sums from HRRR_HI
+      secondaryModelOption = `, ${databaseValue}.HRRR_HI_Areg${regionValue} as m1`;
+    } else {
+      // get obs partial sums from the GFS
+      secondaryModelOption = `, ${databaseValue}.GFS_Areg${regionValue} as m1`;
+    }
+    // RAOB tables don't have phases
+    updatedQueryTemplate = updatedQueryTemplate.replace(/\{\{phaseClause\}\}/g, "");
+  } else {
+    // AMDAR tables have all partial sums so we can get them all from the main table
+    updatedQueryTemplate = updatedQueryTemplate.replace(/m1/g, "m0");
+    // AMDAR tables have phases
+    updatedQueryTemplate = updatedQueryTemplate.replace(
+      /\{\{phaseClause\}\}/g,
+      "AND m0.up_dn = 2"
+    );
+  }
+  // either add the m1 clause to the template or remove the secondary model option entirely
+  updatedQueryTemplate = updatedQueryTemplate.replace(
+    /\{\{secondaryModelOption\}\}/g,
+    secondaryModelOption
+  );
+  return updatedQueryTemplate;
+};
+
 processScorecard = function (plotParams, plotFunction) {
   /*
     displayScorecard structure:
@@ -220,10 +258,11 @@ processScorecard = function (plotParams, plotFunction) {
     );
     queryTemplate = queryTemplate.replace(/\n|\t/g, "");
 
+    let databaseValue;
     if (queryTemplate.includes("{{database}}")) {
       // pre-load the query-able database for this application
       // it is constant for the whole block so put it in the template
-      const databaseValue = matsCollections.application.findOne({
+      databaseValue = matsCollections.application.findOne({
         name: "application",
       }).optionsMap[curve.application];
       queryTemplate = queryTemplate.replace(/\{\{database\}\}/g, databaseValue);
@@ -424,21 +463,6 @@ processScorecard = function (plotParams, plotFunction) {
                 // make deep copy of query template
                 let localQueryTemplate = JSON.parse(JSON.stringify(queryTemplate));
 
-                // populate region in query template
-                if (localQueryTemplate.includes("{{region}}")) {
-                  let regionValue = Object.keys(regionMap).find(
-                    (key) => regionMap[key] === regionText
-                  );
-                  if (curve.application.includes("RAOB")) {
-                    // RAOB tables need a region prefix
-                    regionValue = `_Areg${regionValue}`;
-                  }
-                  localQueryTemplate = localQueryTemplate.replace(
-                    /\{\{region\}\}/g,
-                    regionValue
-                  );
-                }
-
                 // populate forecastLength in query template
                 if (localQueryTemplate.includes("{{forecastLength}}")) {
                   localQueryTemplate = localQueryTemplate.replace(
@@ -502,6 +526,26 @@ processScorecard = function (plotParams, plotFunction) {
                       variableArray[vidx]
                     );
                   }
+                }
+
+                // populate region in query template
+                if (localQueryTemplate.includes("{{region}}")) {
+                  const regionValue = Object.keys(regionMap).find(
+                    (key) => regionMap[key] === regionText
+                  );
+                  if (application === "upperair") {
+                    // the upper air tables are unfortuately really inconsistent and need some handling
+                    localQueryTemplate = dealWithUATables(
+                      curve,
+                      regionValue,
+                      databaseValue,
+                      localQueryTemplate
+                    );
+                  }
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{region\}\}/g,
+                    regionValue
+                  );
                 }
 
                 // populate experimental model in query template
