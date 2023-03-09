@@ -189,16 +189,9 @@ dataSeries = function (plotParams, plotFunction)
       var queryResult;
       var startMoment = moment();
       var finishMoment;
-      // TODO : Take out SQL dump
       try
       {
         // send the query statement to the query function
-        fs.writeFileSync(
-          "/Users/gopa.padmanabhan/scratch/appout.sql",
-          statement,
-          "utf8"
-        );
-        // console.log(statement);
         queryResult = matsDataQueryUtils.queryDBTimeSeries(
           cbPool,
           statement,

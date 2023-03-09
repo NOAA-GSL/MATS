@@ -151,6 +151,13 @@ dataContourDiff = function (plotParams, plotFunction)
         statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         dataRequests[label] = statement;
 
+        // TODO - remove SQL write to file
+        fs.writeFileSync(
+            "/Users/gopa.padmanabhan/scratch/appout.sql",
+            statement,
+            "utf8"
+          );
+
         var queryResult;
         var startMoment = moment();
         var finishMoment;
@@ -158,6 +165,7 @@ dataContourDiff = function (plotParams, plotFunction)
         {
             // send the query statement to the query function
             queryResult = matsDataQueryUtils.queryDBContour(cbPool, statement, appParams, statisticSelect);
+            console.log("queryDBContour() done");
             finishMoment = moment();
             dataRequests["data retrieval (query) time - " + label] = {
                 begin: startMoment.format(),
