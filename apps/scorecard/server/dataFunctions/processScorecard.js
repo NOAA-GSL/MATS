@@ -215,7 +215,7 @@ processScorecard = function (plotParams, plotFunction) {
     const application = matsCollections.application.findOne({ name: "application" })
       .sourceMap[curve.application];
     let queryTemplate = fs.readFileSync(
-      `${process.env.PWD}/server/dataFunctions/sqlTemplates/tmpl_${application}_timeseries.sql`,
+      `assets/app/sqlTemplates/tmpl_${application}_timeseries.sql`,
       "utf8"
     );
     queryTemplate = queryTemplate.replace(/\n|\t/g, "");
