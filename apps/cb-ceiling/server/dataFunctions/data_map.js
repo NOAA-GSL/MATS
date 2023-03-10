@@ -26,12 +26,8 @@ dataMap = function (plotParams, plotFunction)
         "isCouchbase": true
     };
 
-    var queryTemplate = fs.readFileSync(
-        process.env.PWD +
-        "/server/dataFunctions/sqlTemplates/tmpl_Map.sql",
-        "utf8"
-    );
-    console.log("\nqueryTemplate:\n" + queryTemplate);
+    var queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_Map.sql", "utf8");
+    
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();

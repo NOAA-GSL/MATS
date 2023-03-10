@@ -47,12 +47,7 @@ dataHistogram = function (plotParams, plotFunction)
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
 
-        queryTemplate = fs.readFileSync(
-            process.env.PWD +
-            "/server/dataFunctions/sqlTemplates/tmpl_Histogram.sql",
-            "utf8"
-        );
-        console.log("\nqueryTemplate:\n" + queryTemplate);
+        queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_Histogram.sql", "utf8");
 
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;

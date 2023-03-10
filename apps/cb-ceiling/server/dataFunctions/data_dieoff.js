@@ -55,56 +55,31 @@ dataDieOff = function (plotParams, plotFunction)
         {
             if (forecastLength === matsTypes.ForecastTypes.dieoff)
             {
-                queryTemplate = fs.readFileSync(
-                    process.env.PWD +
-                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_region_DieOff.sql",
-                    "utf8"
-                );
+                queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_DieOff_region_DieOff.sql","utf8");
             }
             else if (forecastLength === matsTypes.ForecastTypes.utcCycle)
             {
-                queryTemplate = fs.readFileSync(
-                    process.env.PWD +
-                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_region_UTC.sql",
-                    "utf8"
-                );
+                queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_DieOff_region_UTC.sql", "utf8");
             }
             else
             {
-                queryTemplate = fs.readFileSync(
-                    process.env.PWD +
-                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_region_SingleCycle.sql",
-                    "utf8"
-                );
+                queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_DieOff_region_SingleCycle.sql", "utf8");
             }
         } else
         {
             if (forecastLength === matsTypes.ForecastTypes.dieoff)
             {
-                queryTemplate = fs.readFileSync(
-                    process.env.PWD +
-                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_DieOff.sql",
-                    "utf8"
-                );
+                queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_DieOff_stations_DieOff.sql", "utf8");
             }
             else if (forecastLength === matsTypes.ForecastTypes.utcCycle)
             {
-                queryTemplate = fs.readFileSync(
-                    process.env.PWD +
-                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_UTC.sql",
-                    "utf8"
-                );
+                queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_DieOff_stations_UTC.sql", "utf8");
             }
             else
             {
-                queryTemplate = fs.readFileSync(
-                    process.env.PWD +
-                    "/server/dataFunctions/sqlTemplates/tmpl_DieOff_stations_SingleCycle.sql",
-                    "utf8"
-                );
+                queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_DieOff_stations_SingleCycle.sql", "utf8");
             }
         }
-        console.log("\nqueryTemplate:\n" + queryTemplate);
 
         var diffFrom = curve.diffFrom;
         var label = curve["label"];

@@ -45,12 +45,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction)
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
 
-        var queryTemplate = fs.readFileSync(
-            process.env.PWD +
-            "/server/dataFunctions/sqlTemplates/tmpl_PerformanceDiagram.sql",
-            "utf8"
-        );
-        console.log("\nqueryTemplate:\n" + queryTemplate);
+        var queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_PerformanceDiagram.sql", "utf8");
 
         var diffFrom = curve.diffFrom;
         var label = curve['label'];

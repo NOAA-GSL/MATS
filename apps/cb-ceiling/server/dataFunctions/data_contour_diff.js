@@ -54,12 +54,7 @@ dataContourDiff = function (plotParams, plotFunction)
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
 
-        queryTemplate = fs.readFileSync(
-            process.env.PWD +
-            "/server/dataFunctions/sqlTemplates/tmpl_Contour.sql",
-            "utf8"
-        );
-        console.log("\nqueryTemplate:\n" + queryTemplate);
+        queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_Contour.sql", "utf8");
         var label = curve['label'];
         var variable = curve['variable'];
         var model = matsCollections['data-source'].findOne({ name: 'data-source' }).optionsMap[variable][curve['data-source']][0];
@@ -156,7 +151,7 @@ dataContourDiff = function (plotParams, plotFunction)
             "/Users/gopa.padmanabhan/scratch/appout.sql",
             statement,
             "utf8"
-          );
+        );
 
         var queryResult;
         var startMoment = moment();

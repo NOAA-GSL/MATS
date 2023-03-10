@@ -47,12 +47,7 @@ dataContour = function (plotParams, plotFunction)
     // initialize variables specific to the curve
     var curve = curves[0];
 
-    queryTemplate = fs.readFileSync(
-        process.env.PWD +
-        "/server/dataFunctions/sqlTemplates/tmpl_Contour.sql",
-        "utf8"
-    );
-    console.log("\nqueryTemplate:\n" + queryTemplate);
+    queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_Contour.sql", "utf8");
 
     var label = curve['label'];
     var variable = curve['variable'];

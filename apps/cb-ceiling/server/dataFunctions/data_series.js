@@ -56,20 +56,11 @@ dataSeries = function (plotParams, plotFunction)
     var queryTemplate = null;
     if (regionType === "Predefined region")
     {
-      queryTemplate = fs.readFileSync(
-        process.env.PWD +
-        "/server/dataFunctions/sqlTemplates/tmpl_TimeSeries_region.sql",
-        "utf8"
-      );
+      queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_TimeSeries_region.sql", "utf8");
     } else
     {
-      queryTemplate = fs.readFileSync(
-        process.env.PWD +
-        "/server/dataFunctions/sqlTemplates/tmpl_TimeSeries_stations.sql",
-        "utf8"
-      );
+      queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_TimeSeries_stations.sql", "utf8");
     }
-    console.log("\nqueryTemplate:\n" + queryTemplate);
 
     queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
     queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);

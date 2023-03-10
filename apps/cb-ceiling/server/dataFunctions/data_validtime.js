@@ -48,20 +48,11 @@ dataValidTime = function (plotParams, plotFunction)
         var queryTemplate = null;
         if (regionType === "Predefined region")
         {
-            queryTemplate = fs.readFileSync(
-                process.env.PWD +
-                "/server/dataFunctions/sqlTemplates/tmpl_ValidTime_region.sql",
-                "utf8"
-            );
+            queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_ValidTime_region.sql", "utf8");
         } else
         {
-            queryTemplate = fs.readFileSync(
-                process.env.PWD +
-                "/server/dataFunctions/sqlTemplates/tmpl_ValidTime_stations.sql",
-                "utf8"
-            );
+            queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_ValidTime_stations.sql", "utf8");
         }
-        console.log("\nqueryTemplate:\n" + queryTemplate);
 
         var diffFrom = curve.diffFrom;
         var label = curve['label'];

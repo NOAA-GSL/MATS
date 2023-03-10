@@ -51,18 +51,10 @@ dataDailyModelCycle = function (plotParams, plotFunction)
         var queryTemplate = null;
         if (regionType === "Predefined region")
         {
-            queryTemplate = fs.readFileSync(
-                process.env.PWD +
-                "/server/dataFunctions/sqlTemplates/tmpl_DailyModelCycle_region.sql",
-                "utf8"
-            );
+            queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_DailyModelCycle_region.sql", "utf8");
         } else
         {
-            queryTemplate = fs.readFileSync(
-                process.env.PWD +
-                "/server/dataFunctions/sqlTemplates/tmpl_DailyModelCycle_stations.sql",
-                "utf8"
-            );
+            queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_DailyModelCycle_stations.sql", "utf8");
         }
         console.log("\nqueryTemplate:\n" + queryTemplate);
 
