@@ -616,21 +616,24 @@ processScorecard = function (plotParams, plotFunction) {
       cbScorecardPool.upsertCB(id, doc);
     })(id, scDoc).then(() => {
       console.log("upserted doc with id", id);
+      // we do need an actual pause here (500 ms), because the upsert function
+      // returns as successful slightly before the document is fully written.
+      // Therefore this callback needs a little assistance.
+      setTimeout(function () {
+        // now go to status page
+        const result = {
+          error: "",
+          data: scorecardDocument.id,
+          options: {},
+          basis: {
+            plotParams,
+            queries: {},
+          },
+        };
+        plotFunction(result);
+      }, 500);
     });
   } catch (err) {
     console.log(`error writing scorecard to database: ${err.message}`);
   }
-
-  const result = {
-    error: "",
-    data: scorecardDocument.id,
-    options: {},
-    basis: {
-      plotParams,
-      queries: {},
-    },
-  };
-  // save scorecard in the Scorecard collection
-  // matsCollections.Scorecard.insert();
-  plotFunction(result);
 };
