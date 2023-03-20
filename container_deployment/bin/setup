@@ -170,7 +170,8 @@ prodRepository="matsapps/production"
 if [[ ${depenv} == "integration" ]]; then
     repository="matsapps/integration"
     runenv="integration"
-else if [[ ${depenv} == "development" ]]; then
+else 
+    if [[ ${depenv} == "development" ]]; then
         repository="matsapps/development"
         runenv="development"
     fi
@@ -180,7 +181,7 @@ fi
 # get the applist just to check if the environment is valid
 curl -k ${serverUrl}/getStableDeploymentAppList/${depenv} 2>/dev/null > $tmpAppList
 checkapps=($(cat ${tmpAppList} | jq -r '.[].app'))
-if [[ ${#checkapps[@]} < 1 ]]; then
+if [[ ${#checkapps[@]} -lt 1 ]]; then
     echo -e "${RED}There are no apps to configure. exiting.${NC}"
         exit 1
 else 
@@ -439,74 +440,145 @@ defaultEntryPoints = ["http", "https"]
                 echo "," >> $tmpSettingsFile
             fi
         done
-        curveParams="[]"
+        #finish up the document
+        group="Ungrouped"
+        app_order="0"
+        title="Unknown App"
+        color="#3366bb"
         if [[ "${appref}"  == "anomalycor" ]]; then
-            curveParams="[\"label\",\"data-source\",\"region\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"curve-dates\"]"
+            group="Upper Air"
+            app_order="1"
+            title="Anomaly Correlation"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "cb-ceiling" ]]; then
-            curveParams="[\"label\",\"variable\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
+            group="Experimental"
+            app_order="0"
+            title="CB-Ceiling"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "ceil-vis" ]]; then
-            curveParams="[\"label\",\"variable\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
+            group="Ceiling and Visibility"
+            app_order="0"
+            title="Ceiling and Visibility"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "ceil-vis15" ]]; then
-            curveParams="[\"label\",\"variable\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
+            group="Ceiling and Visibility"
+            app_order="1"
+            title="15 Minute Ceiling and Visibility"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "landuse" ]]; then
-            curveParams="[\"label\",\"data-source\",\"vgtyp\",\"statistic\",\"x-statistic\",\"y-statistic\",\"variable\",\"x-variable\",\"y-variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
+            group="Surface"
+            app_order="1"
+            title="Surface Land Use"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "met-airquality" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"threshold\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
+            group="METexpress Surface"
+            app_order="1"
+            title="MET Air Quality"
+            color="darkorchid"
         fi
         if [[ "${appref}"  == "met-anomalycor" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
+            group="METexpress Upper Air"
+            app_order="1"
+            title="MET Anomaly Correlation"
+            color="darkorchid"
         fi
         if [[ "${appref}"  == "met-cyclone" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"basin\",\"statistic\",\"year\",\"storm\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
+            group="METexpress Specialized"
+            app_order="1"
+            title="MET Cyclone"
+            color="darkorchid"
         fi
         if [[ "${appref}"  == "met-ensemble" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
+            group="METexpress Specialized"
+            app_order="0"
+            title="MET Ensemble"
+            color="darkorchid"
         fi
         if [[ "${appref}"  == "met-object" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"statistic\",\"variable\",\"threshold\",\"radius\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"object-matching\",\"object-simplicity\",\"aggregation-method\",\"curve-dates\"]"
+            group="METexpress Specialized"
+            app_order="2"
+            title="MET Object"
+            color="darkorchid"
         fi
         if [[ "${appref}"  == "met-precip" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"threshold\",\"interp-method\",\"scale\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
+            group="METexpress Precipitation"
+            app_order="0"
+            title="MET Precipitation"
+            color="darkorchid"
         fi
         if [[ "${appref}"  == "met-surface" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
+            group="METexpress Surface"
+            app_order="0"
+            title="MET Surface"
+            color="darkorchid"
         fi
         if [[ "${appref}"  == "met-upperair" ]]; then
-            curveParams="[\"label\",\"group\",\"database\",\"data-source\",\"plot-type\",\"region\",\"statistic\",\"variable\",\"interp-method\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"level\",\"description\",\"aggregation-method\",\"curve-dates\"]"
+            group="METexpress Upper Air"
+            app_order="0"
+            title="MET Upper Air"
+            color="darkorchid"
         fi
         if [[ "${appref}"  == "precipAccum" ]]; then
-            curveParams="[\"label\",\"variable\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"scale\",\"forecast-type\",\"average\",\"bin-parameter\",\"curve-dates\"]"
+            group="Precipitation"
+            app_order="0"
+            title="24 Hour / Sub 24 Hour Precipitation"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "precipGauge" ]]; then
-            curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
+            group="Precipitation"
+            app_order="1"
+            title="Gauge Precipitation"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "precipitation1hr" ]]; then
-            curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"scale\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
+            group="Precipitation"
+            app_order="2"
+            title="1 Hour Precipitation"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "ptype" ]]; then
-            curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"variable\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"curve-dates\"]"
+            group="Precipitation"
+            app_order="3"
+            title="Precipitation Type"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "radar" ]]; then
-            curveParams="[\"label\",\"variable\",\"data-source\",\"region\",\"statistic\",\"threshold\",\"scale\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
+            group="Radar"
+            app_order="0"
+            title="Radar"
+            color="#3366bb"
+        fi
+        if [[ "${appref}"  == "scorecard" ]]; then
+            group="Experimental"
+            app_order="1"
+            title="Scorecard"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "surface" ]]; then
-            curveParams="[\"label\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"x-statistic\",\"y-statistic\",\"variable\",\"x-variable\",\"y-variable\",\"truth\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
+            group="Surface"
+            app_order="0"
+            title="Surface"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "surfrad" ]]; then
-            curveParams="[\"label\",\"data-source\",\"region\",\"statistic\",\"x-statistic\",\"y-statistic\",\"variable\",\"x-variable\",\"y-variable\",\"scale\",\"forecast-length\",\"valid-time\",\"utc-cycle-start\",\"average\",\"bin-parameter\",\"curve-dates\"]"
+            group="Surface"
+            app_order="2"
+            title="Surface Radiation"
+            color="#3366bb"
         fi
         if [[ "${appref}"  == "upperair" ]]; then
-            curveParams="[\"label\",\"database\",\"region-type\",\"data-source\",\"region\",\"statistic\",\"x-statistic\",\"y-statistic\",\"variable\",\"x-variable\",\"y-variable\",\"forecast-length\",\"dieoff-type\",\"valid-time\",\"utc-cycle-start\",\"average\",\"top\",\"bottom\",\"phase\",\"sites\",\"sitesMap\",\"bin-parameter\",\"curve-dates\"]"
+            group="Upper Air"
+            app_order="0"
+            title="Upper Air"
+            color="#3366bb"
         fi
-        #finish up the document
-        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\", \"MAPBOX_KEY\":\"${mapbox_key}\" }, \"public\":{\"deployment_environment\":\"${depenv}\",\"curve_params\":${curveParams},\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\"}}" >> $tmpSettingsFile
+        echo "], \"PYTHON_PATH\":\"/usr/bin/python3\", \"MAPBOX_KEY\":\"${mapbox_key}\" }, \"public\":{\"run_environment\":\"${depenv}\",\"proxy_prefix_path\":\"${proxyPath}\",\"home\":\"https://${proxyHost}${proxyPath}/\",\"mysql_wait_timeout\":\"900\",\"group\":\"${group}\",\"app_order\":\"${app_order}\",\"app\":\"${appref}\",\"title\":\"${title}\",\"color\":\"${color}\"}}" >> $tmpSettingsFile
         jq '.' < $tmpSettingsFile > ./settings/${appref}/settings.json
-
     done
         #set up the dockerfile
         echo -e ${ORNG} Setting up a dockercompose file for your apps ${NC}
