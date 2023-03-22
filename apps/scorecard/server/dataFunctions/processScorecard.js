@@ -95,6 +95,7 @@ processScorecard = function (plotParams, plotFunction) {
         "title":userName + " " + name + " " + submitDate + " " + processedDate + " " + daterange,
         blocks: {
             Blocklabel1: {
+                "appUrl": "the app url",
                 "blockTitle":{"label":"Block label","dataSource":"dataSource","controlDataSource":"controlDataSource"},
                 "blockParameters":{"param1:"param1 value", "param2":"param2 value",.....},
                 "regions":["region1":"region2"....],
@@ -394,6 +395,9 @@ processScorecard = function (plotParams, plotFunction) {
       dataSource: curve["data-source"],
       controlDataSource: curve["control-data-source"],
     };
+    const appName = Meteor.settings.public.app;
+    const appUrl = Meteor.settings.public.home + "/" + appName;
+    scorecardDocument.results.blocks[curve.label].blockApplication = appUrl
     scorecardDocument.results.blocks[curve.label].blockParameters = blockParameters;
     scorecardDocument.results.blocks[curve.label].regions = regions;
     scorecardDocument.results.blocks[curve.label].fcstlens = fcstLengths;
