@@ -17,7 +17,7 @@ dataMap = function (plotParams, plotFunction) {
     plotType: matsTypes.PlotTypes.map,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
     completeness: plotParams.completeness,
-    outliers: plotParams["outliers-lite"],
+    outliers: plotParams.outliers,
     hideGaps: plotParams.noGapsCheck,
     hasLevels: true,
   };
