@@ -146,13 +146,6 @@ dataContourDiff = function (plotParams, plotFunction)
         statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         dataRequests[label] = statement;
 
-        // TODO - remove SQL write to file
-        fs.writeFileSync(
-            "/Users/gopa.padmanabhan/scratch/appout.sql",
-            statement,
-            "utf8"
-        );
-
         var queryResult;
         var startMoment = moment();
         var finishMoment;

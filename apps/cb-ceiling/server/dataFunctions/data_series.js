@@ -11,8 +11,6 @@ import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
 import { matsDataProcessUtils } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// TODO: Verify some data points on graph with CB server
-// TODO :All stations for a month ???
 dataSeries = function (plotParams, plotFunction)
 {
   var fs = require("fs");
@@ -116,7 +114,6 @@ dataSeries = function (plotParams, plotFunction)
     var average = averageOptionsMap[averageStr][0];
     queryTemplate = queryTemplate.replace(/vxAVERAGE/g, average);
 
-    // TODO - Move regios/station specific stuff within if..else
     // All SQL template transformations happen inside the
     if (regionType === "Predefined region")
     {
@@ -169,6 +166,14 @@ dataSeries = function (plotParams, plotFunction)
     if (diffFrom == null)
     {
       statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+
+      // TODO - remove SQL write to file
+      fs.writeFileSync(
+        "/Users/gopa.padmanabhan/scratch/time_series.sql",
+        statement,
+        "utf8"
+      );
+
       dataRequests[label] = statement;
 
       // math is done on forecastLength later on -- set all analyses to 0
