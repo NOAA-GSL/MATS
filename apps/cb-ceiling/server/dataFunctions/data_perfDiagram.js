@@ -65,8 +65,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction)
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
             var threshold = Object.keys(matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable][key] === thresholdStr);
-            queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
             allThresholds = [threshold.replace(/_/g, ".")];
+            queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, allThresholds);
         } else
         {
             // catalogue the thresholds now, we'll need to do a separate query for each
@@ -161,6 +161,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction)
                 queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
                 // prepare the query from the above parameters
                 statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+
                 dataRequests[label] = statement;
 
                 var queryResult;

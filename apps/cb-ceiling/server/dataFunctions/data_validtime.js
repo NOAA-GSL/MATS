@@ -114,6 +114,7 @@ dataValidTime = function (plotParams, plotFunction)
         if (diffFrom == null)
         {
             statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+
             dataRequests[label] = statement;
 
             var queryResult;

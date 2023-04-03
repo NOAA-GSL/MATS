@@ -87,12 +87,6 @@ dataMap = function (plotParams, plotFunction)
     }
     statement = cbPool.trfmSQLForDbTarget(queryTemplate);
 
-    // TODO - remove SQL write to file
-    fs.writeFileSync(
-        "/Users/gopa.padmanabhan/scratch/map.sql",
-        statement,
-        "utf8"
-    );
     dataRequests[label] = statement;
 
     var queryResult;
@@ -102,8 +96,6 @@ dataMap = function (plotParams, plotFunction)
     {
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBMapCTC(cbPool, statement, model, statistic, siteMap, appParams);
-        // TODO - remove console log
-        console.log("queryResult:\n" + JSON.stringify(queryResult));
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
             begin: startMoment.format(),

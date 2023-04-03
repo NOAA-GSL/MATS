@@ -115,6 +115,7 @@ dataThreshold = function (plotParams, plotFunction)
                 var threshold = allThresholds[thresholdIndex];
                 const queryTemplate_threshold = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
                 statement = cbPool.trfmSQLForDbTarget(queryTemplate_threshold);
+
                 dataRequests[label] = statement;
 
                 var queryResult;

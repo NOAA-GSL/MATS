@@ -114,6 +114,7 @@ dataHistogram = function (plotParams, plotFunction)
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+
             dataRequests[label] = statement;
 
             var queryResult;

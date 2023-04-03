@@ -167,13 +167,6 @@ dataSeries = function (plotParams, plotFunction)
     {
       statement = cbPool.trfmSQLForDbTarget(queryTemplate);
 
-      // TODO - remove SQL write to file
-      fs.writeFileSync(
-        "/Users/gopa.padmanabhan/scratch/time_series.sql",
-        statement,
-        "utf8"
-      );
-
       dataRequests[label] = statement;
 
       // math is done on forecastLength later on -- set all analyses to 0
