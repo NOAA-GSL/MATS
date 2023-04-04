@@ -2,7 +2,7 @@ SELECT m.name AS sta_id,
        ARRAY_MIN(stats[*].fve) AS min_secs,
        ARRAY_MAX(stats[*].fve) AS max_secs,
        ARRAY_SUM(stats [*].hit) AS hit,
-       ARRAY_SUM(stats [*].miss) AS miss,
+       ARRAY_SUM(stats [*].miss) AS miss
        ARRAY_SUM(stats [*].false_alarm) AS fa,
        ARRAY_SUM(stats [*].correct_negative) AS cn,
        ARRAY_SUM(stats [*].total) AS N0,

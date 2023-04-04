@@ -1,0 +1,50 @@
+{
+  "env": {
+    "node": true,
+    "browser": true
+  },
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "requireConfigFile": false,
+    "allowImportExportEverywhere": true
+  },
+  "extends": ["airbnb", "prettier", "plugin:meteor/recommended"],
+  "plugins": ["prettier", "meteor"],
+  "settings": {
+    "import/resolver": "meteor"
+  },
+  "rules": {
+    "prettier/prettier": "error",
+    "react/jsx-filename-extension": "off",
+    "import/no-absolute-path": "off",
+    "import/extensions": "off",
+    // disabled so that we're not expecting to find 'meteor' within
+    // our dependencies.
+    // XXX: this *should* be taken care of by eslint-import-resolver-meteor, investigate.
+    // "import/no-extraneous-dependencies": "off",
+    "no-underscore-dangle": ["error", { "allow": ["_id", "_ensureIndex"] }],
+    "object-shorthand": ["error", "always", { "avoidQuotes": false }],
+    "space-before-function-paren": "off",
+    // for Meteor API's that rely on `this` context, e.g. Template.onCreated and publications
+    "func-names": "off",
+    "prefer-arrow-callback": "off",
+
+    // Vx Team modifications - Warn on rules that would require refactoring to implement.
+    // We want to be able to turn these back into "error"'s at some point. However, for
+    // our first pass, we'll only consider the checks that ESLint can auto-fix as errors.
+    // https://eslint.org/docs/latest/use/configure/rules#rule-severities
+    "no-undef": "warn",
+    "no-plusplus": "warn",
+    "vars-on-top": "warn",
+    "no-var": "warn",
+    "block-scoped-var": "warn",
+    "no-loop-func": "warn",
+    "no-unused-vars": "warn",
+    "prefer-destructuring": "warn",
+    "no-param-reassign": "warn",
+    "camelcase": "warn",
+    "no-redeclare": "warn",
+    "no-shadow": "warn"
+  }
+}

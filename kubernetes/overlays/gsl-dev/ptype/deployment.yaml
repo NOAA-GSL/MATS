@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ptype
+spec:
+  template:
+    spec:
+      containers:
+        - name: ptype
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: ptype-secret
+          volumeMounts:
+            - name: ptype-settings-file
+              mountPath: /usr/app/settings/ptype/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: ptype-settings-file
+          configMap:
+            name: ptype-config

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: precipgauge
+  labels:
+    app: precipgauge
+spec:
+  selector:
+    app: precipgauge
+  ports:
+  - port: 80
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  type: ClusterIP

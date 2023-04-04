@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: surface
+spec:
+  template:
+    spec:
+      containers:
+        - name: surface
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: surface-secret
+          volumeMounts:
+            - name: surface-settings-file
+              mountPath: /usr/app/settings/surface/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: surface-settings-file
+          configMap:
+            name: surface-config

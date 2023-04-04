@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cb-ceiling
+  labels:
+    app.kubernetes.io/name: cb-ceiling
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: cb-ceiling
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cb-ceiling
+  template:
+    metadata:
+      labels:
+        app: cb-ceiling
+    spec:
+      containers:
+        - name: cb-ceiling
+          image: ghcr.io/noaa-gsl/mats/development/cb-ceiling:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

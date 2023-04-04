@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upperair
+  labels:
+    app.kubernetes.io/name: upperair
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: upperair
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upperair
+  template:
+    metadata:
+      labels:
+        app: upperair
+    spec:
+      containers:
+        - name: upperair
+          image: ghcr.io/noaa-gsl/mats/development/upperair:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

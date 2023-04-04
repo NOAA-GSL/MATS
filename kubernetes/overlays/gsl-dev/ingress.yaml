@@ -1,0 +1,111 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # Omit the rewrite-target annotation as it causes problems with Meteor's ROOT_URL
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  name: mats
+  namespace: mats-dev
+spec:
+  rules:
+    - host: apps-dev.gsd.esrl.noaa.gov
+      http:
+        paths:
+          - path: /mats-dev/scorecard
+            pathType: Prefix
+            backend:
+              service:
+                name: scorecard
+                port:
+                  name: http
+          - path: /mats-dev/anomalycor
+            pathType: Prefix
+            backend:
+              service:
+                name: anomalycor
+                port:
+                  name: http
+          - path: /mats-dev/cb-ceiling
+            pathType: Prefix
+            backend:
+              service:
+                name: cb-ceiling
+                port:
+                  number: 80
+          - path: /mats-dev/ceil-vis
+            pathType: Prefix
+            backend:
+              service:
+                name: ceil-vis
+                port:
+                  number: 80
+          - path: /mats-dev/ceil-vis15
+            pathType: Prefix
+            backend:
+              service:
+                name: ceil-vis15
+                port:
+                  number: 80
+          - path: /mats-dev/landuse
+            pathType: Prefix
+            backend:
+              service:
+                name: landuse
+                port:
+                  number: 80
+          - path: /mats-dev/precipaccum
+            pathType: Prefix
+            backend:
+              service:
+                name: precipaccum
+                port:
+                  number: 80
+          - path: /mats-dev/precipgauge
+            pathType: Prefix
+            backend:
+              service:
+                name: precipgauge
+                port:
+                  number: 80
+          - path: /mats-dev/precipitation1hr
+            pathType: Prefix
+            backend:
+              service:
+                name: precipitation1hr
+                port:
+                  number: 80
+          - path: /mats-dev/ptype
+            pathType: Prefix
+            backend:
+              service:
+                name: ptype
+                port:
+                  number: 80
+          - path: /mats-dev/radar
+            pathType: Prefix
+            backend:
+              service:
+                name: radar
+                port:
+                  number: 80
+          - path: /mats-dev/surface
+            pathType: Prefix
+            backend:
+              service:
+                name: surface
+                port:
+                  number: 80
+          - path: /mats-dev/surfrad
+            pathType: Prefix
+            backend:
+              service:
+                name: surfrad
+                port:
+                  number: 80
+          - path: /mats-dev/upperair
+            pathType: Prefix
+            backend:
+              service:
+                name: upperair
+                port:
+                  number: 80

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: surface
+  labels:
+    app: surface
+spec:
+  selector:
+    app: surface
+  ports:
+  - port: 80
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  type: ClusterIP

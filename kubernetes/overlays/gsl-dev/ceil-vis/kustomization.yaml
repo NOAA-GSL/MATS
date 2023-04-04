@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/ceil-vis
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/ceil-vis
+    newTag: development 
+
+configMapGenerator:
+  - name: ceil-vis-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: ceil-vis-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay

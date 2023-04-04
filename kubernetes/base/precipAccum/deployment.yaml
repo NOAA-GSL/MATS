@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: precipaccum
+  labels:
+    app.kubernetes.io/name: precipaccum
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: precipaccum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: precipaccum
+  template:
+    metadata:
+      labels:
+        app: precipaccum
+    spec:
+      containers:
+        - name: precipaccum
+          image: ghcr.io/noaa-gsl/mats/development/precipaccum:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: surfrad
+  labels:
+    app.kubernetes.io/name: surfrad
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: surfrad
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: surfrad
+  template:
+    metadata:
+      labels:
+        app: surfrad
+    spec:
+      containers:
+        - name: surfrad
+          image: ghcr.io/noaa-gsl/mats/development/surfrad:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

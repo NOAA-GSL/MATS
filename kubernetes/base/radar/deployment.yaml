@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radar
+  labels:
+    app.kubernetes.io/name: radar
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: radar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: radar
+  template:
+    metadata:
+      labels:
+        app: radar
+    spec:
+      containers:
+        - name: radar
+          image: ghcr.io/noaa-gsl/mats/development/radar:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+
