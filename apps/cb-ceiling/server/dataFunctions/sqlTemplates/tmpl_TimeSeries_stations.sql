@@ -1,6 +1,6 @@
 SELECT vxAVERAGE AS avtime,
-       ARRAY_SUM(stats [*].hit) AS hits,
-       ARRAY_SUM(stats [*].miss) AS misses,
+       ARRAY_SUM(stats [*].hit) AS hit,
+       ARRAY_SUM(stats [*].miss) AS miss,
        ARRAY_SUM(stats [*].false_alarm) AS fa,
        ARRAY_SUM(stats [*].correct_negative) AS cn,
        ARRAY_SUM(stats [*].total) AS N0,
