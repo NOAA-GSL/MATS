@@ -1,3 +1,0 @@
-SELECT COUNT(*)
-FROM mdata
-WHERE type = 'dd'
