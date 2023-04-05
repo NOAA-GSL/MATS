@@ -9,7 +9,9 @@ ENV METEOR_PACKAGE_DIRS=/MATScommon/meteor_packages
 # Assume we're passed the repo root as build context
 COPY apps/${APPNAME}/package*.json ${APP_SOURCE_FOLDER}/
 
-RUN bash ${SCRIPTS_FOLDER}/build-app-npm-dependencies.sh
+#RUN bash ${SCRIPTS_FOLDER}/build-app-npm-dependencies.sh
+RUN apt-get update && apt-get install --assume-yes --no-install-recommends cmake && \
+  bash ${SCRIPTS_FOLDER}/build-app-npm-dependencies.sh
 
 # Copy app & MATScommon library source into container
 COPY apps/${APPNAME} ${APP_SOURCE_FOLDER}/
