@@ -396,8 +396,8 @@ processScorecard = function (plotParams, plotFunction) {
       controlDataSource: curve["control-data-source"],
     };
     const appName = Meteor.settings.public.app;
-    const appUrl = Meteor.settings.public.home + "/" + appName;
-    scorecardDocument.results.blocks[curve.label].blockApplication = appUrl
+    const appUrl = `${Meteor.settings.public.home}/${appName}`;
+    scorecardDocument.results.blocks[curve.label].blockApplication = appUrl;
     scorecardDocument.results.blocks[curve.label].blockParameters = blockParameters;
     scorecardDocument.results.blocks[curve.label].regions = regions;
     scorecardDocument.results.blocks[curve.label].fcstlens = fcstLengths;
