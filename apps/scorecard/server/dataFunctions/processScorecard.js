@@ -576,21 +576,8 @@ processScorecard = function (plotParams, plotFunction) {
                 };
 
                 // this is where we will calculate the significances.
-                // get a random number between 0 and 100
-                let sval = 0;
-                const val = Math.floor(Math.random() * 100);
-                // use the random number to generate a weighted number between -2 and 2
-                if (val >= 0 && val < 10) {
-                  sval = -2;
-                } else if (val >= 10 && val < 30) {
-                  sval = -1;
-                } else if (val >= 30 && val < 70) {
-                  sval = 0;
-                } else if (val >= 70 && val < 90) {
-                  sval = 1;
-                } else if (val >= 90 && val <= 100) {
-                  sval = 2;
-                }
+                // initialize with a fill value
+                const sval = -9999;
 
                 if (
                   scorecardDocument.results.blocks[curve.label].fcstlens.includes(
