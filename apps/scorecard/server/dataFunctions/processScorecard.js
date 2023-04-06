@@ -44,7 +44,7 @@ const dealWithUATables = function (
   return updatedQueryTemplate;
 };
 
-const processScorecard = function (plotParams, plotFunction) {
+processScorecard = function (plotParams, plotFunction) {
   /*
     displayScorecard structure:
     The left column isn't displayed, it's only for reference
