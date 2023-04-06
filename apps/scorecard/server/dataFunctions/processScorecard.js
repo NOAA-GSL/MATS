@@ -44,7 +44,7 @@ const dealWithUATables = function (
   return updatedQueryTemplate;
 };
 
-processScorecard = function (plotParams, plotFunction) {
+const processScorecard = function (plotParams, plotFunction) {
   /*
     displayScorecard structure:
     The left column isn't displayed, it's only for reference
@@ -199,6 +199,7 @@ processScorecard = function (plotParams, plotFunction) {
   idDateRange = idDateRange.replace(/:/g, "_");
 
   const id = `SC:${name}:${processedAt}:${idDateRange}`;
+  const version = "Version:V01";
   const title = `${userName}:${name}:${submitEpoch}:${processedAt}:${dateRange}`;
   // process the scorecardDocument
   const significanceThresholds =
@@ -219,6 +220,7 @@ processScorecard = function (plotParams, plotFunction) {
   };
   const scorecardDocument = {
     id,
+    version,
     plotParams,
     type: "SC",
     userName,
@@ -640,4 +642,21 @@ processScorecard = function (plotParams, plotFunction) {
   } catch (err) {
     console.log(`error writing scorecard to database: ${err.message}`);
   }
+  // notify the vxDataProcessor service that the document is ready to be processed
+  // expects something like this ...
+  // "vxdataProcessorUrl":"https://ascend-test1.gsd.esrl.noaa.gov:8080/jobs/create/"
+  // ...
+  // to be in the public section of the scorecard settings file
+  // NOTE: For now we do not have scheduled jobs. When we do we will need to change this.
+  const notifyDataProcessorURL = `${Meteor.settings.public.vxdataProcessorUrl}`;
+  const sDocument = `\{"docid": "${id}"\}`;
+  HTTP.post(
+    notifyDataProcessorURL,
+    { content: `${sDocument}` },
+    function (error, response) {
+      if (error) {
+        console.log(error);
+      }
+    }
+  );
 };
