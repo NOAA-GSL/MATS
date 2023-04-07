@@ -408,7 +408,6 @@ const doCurveParams = async function ()
 
     try
     {
-        // Gopa:TODO
         matsCollections.SiteMap.remove({});
         var rows = await cbPool.queryCB(
             cbPool.trfmSQLForDbTarget('select meta().id, vxCOLLECTION.* from vxDBTARGET where type="MD" and docType="station" and version = "V01"  and subset="vxCOLLECTION";'));

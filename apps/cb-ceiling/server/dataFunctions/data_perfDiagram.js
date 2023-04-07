@@ -2,7 +2,8 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {
+import
+{
     matsCollections,
     matsTypes,
     matsDataUtils,
@@ -10,9 +11,11 @@ import {
     matsDataCurveOpsUtils,
     matsDataProcessUtils
 } from 'meteor/randyp:mats-common';
-import {moment} from 'meteor/momentjs:moment';
+import { moment } from 'meteor/momentjs:moment';
 
-dataPerformanceDiagram = function (plotParams, plotFunction) {
+dataPerformanceDiagram = function (plotParams, plotFunction)
+{
+    var fs = require("fs");
     // initialize variables common to all curves
     const appParams = {
         "plotType": matsTypes.PlotTypes.performanceDiagram,
@@ -37,78 +40,109 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
 
     var allThresholds;
-    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++)
+    {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
+
+        var queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_PerformanceDiagram.sql", "utf8");
+
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var binParam = curve['bin-parameter'];
-        var binClause = matsCollections['bin-parameter'].findOne({name: 'bin-parameter'}).optionsMap[binParam];
+        var binClause = matsCollections['bin-parameter'].findOne({ name: 'bin-parameter' }).optionsMap[binParam];
         var variable = curve['variable'];
-        var model = matsCollections['data-source'].findOne({name: 'data-source'}).optionsMap[variable][curve['data-source']][0];
-        var modelClause = "AND m0.model='" + model + "' ";
-        var queryTableClause = "from vxDBTARGET  m0";
-        var validTimeClause = "";
-        var forecastLengthClause = "";
+        var model = matsCollections['data-source'].findOne({ name: 'data-source' }).optionsMap[variable][curve['data-source']][0];
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
         var dateString = "";
-        if (binParam !== 'Threshold') {
+        if (binParam !== 'Threshold')
+        {
             var thresholdStr = curve['threshold'];
-            if (thresholdStr === undefined) {
+            if (thresholdStr === undefined)
+            {
                 throw new Error("INFO:  " + label + "'s threshold is undefined. Please assign it a value.");
             }
-            var threshold = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable][key] === thresholdStr);
+            var threshold = Object.keys(matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable]).find(key => matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable][key] === thresholdStr);
             allThresholds = [threshold.replace(/_/g, ".")];
-        } else {
+            queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, allThresholds);
+        } else
+        {
             // catalogue the thresholds now, we'll need to do a separate query for each
-            allThresholds = Object.keys(matsCollections['threshold'].findOne({name: 'threshold'}).valuesMap[variable]).sort(function (a, b) {
+            allThresholds = Object.keys(matsCollections['threshold'].findOne({ name: 'threshold' }).valuesMap[variable]).sort(function (a, b)
+            {
                 return Number(a) - Number(b)
             });
-            for (let tidx = 0; tidx < allThresholds.length; tidx++) {
+            for (let tidx = 0; tidx < allThresholds.length; tidx++)
+            {
                 allThresholds[tidx] = allThresholds[tidx].replace(/_/g, ".");
             }
         }
-        if (binParam !== 'Valid UTC hour') {
+
+        queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
+        queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
+        queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
+        queryTemplate = queryTemplate.replace(/vxBIN_CLAUSE/g, binClause);
+
+        if (binParam !== 'Valid UTC hour')
+        {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-            if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = "and m0.fcstValidEpoch%(24*3600)/3600 IN[" + validTimes + "]";
+            if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
+            {
+                queryTemplate = queryTemplate.replace(
+                    /vxVALID_TIMES/g,
+                    cbPool.trfmListToCSVString(validTimes, null, false)
+                );
+            } else
+            {
+                queryTemplate = cbPool.trfmSQLRemoveClause(
+                    queryTemplate,
+                    "vxVALID_TIMES"
+                );
             }
+        } else
+        {
+            queryTemplate = cbPool.trfmSQLRemoveClause(
+                queryTemplate,
+                "vxVALID_TIMES"
+            );
         }
-        if (binParam !== 'Fcst lead time') {
+
+        if (binParam !== 'Fcst lead time')
+        {
             var forecastLength = curve['forecast-length'];
-            if (forecastLength === undefined) {
+            if (forecastLength === undefined)
+            {
                 throw new Error("INFO:  " + label + "'s forecast lead time is undefined. Please assign it a value.");
             }
-            forecastLengthClause = "and m0.fcstLen = " + forecastLength;
+            queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
+        } else
+        {
+            queryTemplate = cbPool.trfmSQLRemoveClause(
+                queryTemplate,
+                "vxFCST_LEN"
+            );
         }
-        if (binParam === 'Init Date') {
+
+        if (binParam === 'Init Date')
+        {
             dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
-        } else {
+        } else
+        {
             dateString = "m0.fcstValidEpoch";
         }
+        queryTemplate = queryTemplate.replace(/vxDATE_STRING/g, dateString);
+
         var regionType = curve['region-type'];
-        if (regionType === 'Select stations') {
+        if (regionType === 'Select stations')
+        {
             throw new Error("INFO:  Single/multi station plotting is not available for performance diagrams.");
         }
         var regionStr = curve['region'];
-        var region = Object.keys(matsCollections['region'].findOne({name: 'region'}).valuesMap).find(key => matsCollections['region'].findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var regionClause = "AND m0.region='" + region + "' ";
+        var region = Object.keys(matsCollections['region'].findOne({ name: 'region' }).valuesMap).find(key => matsCollections['region'].findOne({ name: 'region' }).valuesMap[key] === regionStr);
+        queryTemplate = queryTemplate.replace(/vxREGION/g, region);
         var statisticSelect = 'PerformanceDiagram';
-        var statisticClause = "((sum(m0.data.['{{threshold}}'].hits))/sum(m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses)) as pod, " +
-            "((sum(m0.data.['{{threshold}}'].false_alarms))/sum(m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].hits)) as far, " +
-            "sum(m0.data.['{{threshold}}'].hits+m0.data.['{{threshold}}'].misses) as oy_all, " +
-            "sum(m0.data.['{{threshold}}'].false_alarms+m0.data.['{{threshold}}'].correct_negatives) as on_all, " +
-            "ARRAY_SORT(ARRAY_AGG(TO_STRING(m0.fcstValidEpoch) || ';' || TO_STRING(m0.data.['{{threshold}}'].hits) || ';' || " +
-            "TO_STRING(m0.data.['{{threshold}}'].false_alarms) || ';' || TO_STRING(m0.data.['{{threshold}}'].misses) || ';' || " +
-            "TO_STRING(m0.data.['{{threshold}}'].correct_negatives))) sub_data, count(m0.data.['{{threshold}}'].hits) N0 ";
-        var dateClause = "and " + dateString + " >= " + fromSecs + " and " + dateString + " <= " + toSecs;
-        var whereClause = "WHERE " +
-            "m0.type='DD' " +
-            "AND m0.docType='CTC' " +
-            "AND m0.subset='METAR' " +
-            "AND m0.version='V01' ";
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable + statistic (axisKey) it will use the same axis.
@@ -117,45 +151,24 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         curves[curveIndex].axisKey = statisticSelect; // stash the axisKey to use it later for axis options
 
         var d = {};
-        if (diffFrom == null) {
+        if (diffFrom == null)
+        {
             // this is a database driven curve, not a difference curve
-            for (var thresholdIndex = 0; thresholdIndex < allThresholds.length; thresholdIndex++) {
+            for (var thresholdIndex = 0; thresholdIndex < allThresholds.length; thresholdIndex++)
+            {
                 threshold = allThresholds[thresholdIndex];
+                queryTemplate = queryTemplate.replace(/{{threshold}}/g, threshold);
+                queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
                 // prepare the query from the above parameters
-                var statement = "SELECT {{binClause}} AS binVal, " +
-                    "COUNT(DISTINCT m0.fcstValidEpoch) N_times, " +
-                    "MIN(m0.fcstValidEpoch) min_secs, " +
-                    "MAX(m0.fcstValidEpoch) max_secs, " +
-                    "{{statisticClause}} " +
-                    "{{queryTableClause}} " +
-                    "{{whereClause}} " +
-                    "{{modelClause}} " +
-                    "{{regionClause}} " +
-                    "{{dateClause}} " +
-                    "{{validTimeClause}} " +
-                    "{{forecastLengthClause}} " +
-                    "GROUP BY {{binClause}} " +
-                    "ORDER BY binVal" +
-                    ";";
+                statement = cbPool.trfmSQLForDbTarget(queryTemplate);
 
-                statement = statement.split('{{binClause}}').join(binClause);
-                statement = statement.replace('{{statisticClause}}', statisticClause);
-                statement = statement.replace('{{queryTableClause}}', queryTableClause);
-                statement = statement.replace('{{whereClause}}', whereClause);
-                statement = statement.replace('{{modelClause}}', modelClause);
-                statement = statement.replace('{{regionClause}}', regionClause);
-                statement = statement.split('{{threshold}}').join(threshold);
-                statement = statement.replace('{{validTimeClause}}', validTimeClause);
-                statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-                statement = statement.replace('{{dateClause}}', dateClause);
-
-                statement = cbPool.trfmSQLForDbTarget(statement);
                 dataRequests[label] = statement;
 
                 var queryResult;
                 var startMoment = moment();
                 var finishMoment;
-                try {
+                try
+                {
                     // send the query statement to the query function
                     queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(cbPool, statement, appParams);
                     finishMoment = moment();
@@ -167,35 +180,43 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                     };
                     // get the data back from the query
                     var dTemp = queryResult.data;
-                } catch (e) {
+                } catch (e)
+                {
                     // this is an error produced by a bug in the query function, not an error returned by the mysql database
                     e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                     throw new Error(e.message);
                 }
-                if (queryResult.error !== undefined && queryResult.error !== "") {
-                    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                if (queryResult.error !== undefined && queryResult.error !== "")
+                {
+                    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND)
+                    {
                         // this is NOT an error just a no data condition
                         dataFoundForCurve = false;
-                    } else {
+                    } else
+                    {
                         // this is an error returned by the mysql database
                         error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                         throw (new Error(error));
                     }
-                } else {
+                } else
+                {
                     dataFoundForAnyCurve = true;
                 }
                 // set axis limits based on returned data
                 var postQueryStartMoment = moment();
-                if (dataFoundForCurve) {
+                if (dataFoundForCurve)
+                {
                     xmin = xmin < dTemp.xmin ? xmin : dTemp.xmin;
                     xmax = xmax > dTemp.xmax ? xmax : dTemp.xmax;
                     ymin = ymin < dTemp.ymin ? ymin : dTemp.ymin;
                     ymax = ymax > dTemp.ymax ? ymax : dTemp.ymax;
                 }
                 // consolidate data
-                if (Object.keys(d).length === 0) {
+                if (Object.keys(d).length === 0)
+                {
                     d = dTemp;
-                } else {
+                } else
+                {
                     d.x.push(dTemp.x[0]);
                     d.y.push(dTemp.y[0]);
                     d.binVals.push(dTemp.binVals[0]);
@@ -214,7 +235,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
                     d.ymax = d.ymax > dTemp.ymax ? d.ymax : dTemp.ymax;
                 }
             }
-        } else {
+        } else
+        {
             // this is a difference curve -- not supported for ROC plots
             throw new Error("INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves.");
         }
@@ -240,7 +262,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         };
     }  // end for curves
 
-    if (!dataFoundForAnyCurve) {
+    if (!dataFoundForAnyCurve)
+    {
         // we found no data for any curves so don't bother proceeding
         throw new Error("INFO:  No valid data for any curves.");
     }
@@ -254,7 +277,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         "xmax": xmax,
         "xmin": xmin
     };
-    const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    const bookkeepingParams = { "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart };
     var result = matsDataProcessUtils.processDataPerformanceDiagram(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
 };

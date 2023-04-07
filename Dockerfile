@@ -9,7 +9,8 @@ ENV METEOR_PACKAGE_DIRS=/MATScommon/meteor_packages
 # Assume we're passed the repo root as build context
 COPY apps/${APPNAME}/package*.json ${APP_SOURCE_FOLDER}/
 
-RUN bash ${SCRIPTS_FOLDER}/build-app-npm-dependencies.sh
+RUN apt-get update && apt-get install --assume-yes --no-install-recommends cmake && \
+  bash ${SCRIPTS_FOLDER}/build-app-npm-dependencies.sh
 
 # Copy app & MATScommon library source into container
 COPY apps/${APPNAME} ${APP_SOURCE_FOLDER}/
@@ -41,9 +42,7 @@ COPY --from=meteor-builder /opt/bundle $APP_BUNDLE_FOLDER/
 # Build the native dependencies
 # NOTE - the randyp_mats-common atmosphere package pulls in a native npm couchbase dependency
 # so we need to force an npm rebuild in the node_modules directory there as well
-RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source \
-&& cd $APP_BUNDLE_FOLDER/bundle/programs/server/npm/node_modules/meteor/randyp_mats-common \
-&& npm rebuild --build-from-source
+RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh
 
 
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
