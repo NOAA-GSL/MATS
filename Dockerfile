@@ -42,7 +42,9 @@ COPY --from=meteor-builder /opt/bundle $APP_BUNDLE_FOLDER/
 # Build the native dependencies
 # NOTE - the randyp_mats-common atmosphere package pulls in a native npm couchbase dependency
 # so we need to force an npm rebuild in the node_modules directory there as well
-RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh
+RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source \
+&& cd $APP_BUNDLE_FOLDER/bundle/programs/server/npm/node_modules/meteor/randyp_mats-common \
+&& npm rebuild --build-from-source
 
 
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
