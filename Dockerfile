@@ -19,38 +19,8 @@ COPY MATScommon /MATScommon
 RUN bash ${SCRIPTS_FOLDER}/build-meteor-bundle.sh
 
 
-# Install OS build dependencies
-FROM node:14-alpine AS native-builder
-
-ENV APP_FOLDER=/usr/app
-ENV APP_BUNDLE_FOLDER=${APP_FOLDER}/bundle
-ENV SCRIPTS_FOLDER /docker
-
-# Install OS build dependencies, which stay with this intermediate image but don’t become part of the final published image
-RUN apk --no-cache add \
-    bash \
-    g++ \
-    make \
-    cmake \
-    linux-headers \
-    python3
-
-# Copy in build scripts & entrypoint
-COPY --from=meteor-builder $SCRIPTS_FOLDER $SCRIPTS_FOLDER/
-
-# Copy in app bundle
-COPY --from=meteor-builder /opt/bundle $APP_BUNDLE_FOLDER/
-
-# Build the native dependencies
-# NOTE - the randyp_mats-common atmosphere package pulls in a native npm couchbase dependency
-# so we need to force an npm rebuild in the node_modules directory there as well
-RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh --build-from-source \
-&& cd $APP_BUNDLE_FOLDER/bundle/programs/server/npm/node_modules/meteor/randyp_mats-common \
-&& npm rebuild --build-from-source
-
-
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
-FROM node:14-alpine AS production
+FROM node:14-bullseye-slim AS production
 
 # Set Build ARGS
 ARG APPNAME
@@ -58,15 +28,18 @@ ARG BUILDVER=dev
 ARG COMMITBRANCH=development
 ARG COMMITSHA
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install runtime dependencies
-RUN apk --no-cache add \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
-    mariadb \
+    mariadb-client \
     python3 \
-    py3-numpy \
-    py3-pip \
-    && pip3 --no-cache-dir install pymysql
+    python3-numpy \
+    python3-pip \
+    python3-pymysql \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set Environment
 ENV APP_FOLDER=/usr/app
@@ -82,10 +55,11 @@ ENV BRANCH=${COMMITBRANCH}
 ENV COMMIT=${COMMITSHA}
 
 # Copy in helper scripts with the built and installed dependencies from the previous image
-COPY --from=native-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
+COPY --from=meteor-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
 
 # Copy in app bundle with the built and installed dependencies from the previous image
-COPY --from=native-builder ${APP_BUNDLE_FOLDER} ${APP_BUNDLE_FOLDER}/
+# COPY --from=meteor-builder ${APP_BUNDLE_FOLDER} ${APP_BUNDLE_FOLDER}/
+COPY --from=meteor-builder /opt/bundle ${APP_BUNDLE_FOLDER}/
 
 # We want to use our own launcher script
 COPY container-scripts/run_app.sh ${APP_FOLDER}/
@@ -97,6 +71,10 @@ RUN mkdir -p ${SETTINGS_DIR} \
     && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
     && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
     && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache
+
+# Install the Meteor app's NPM dependencies and update the OS in the container
+RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh
+RUN apt-get update && apt-get -y upgrade && apt-get clean && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 EXPOSE ${PORT}
 USER node
