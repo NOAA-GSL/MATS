@@ -54,11 +54,10 @@ ENV VERSION=${BUILDVER}
 ENV BRANCH=${COMMITBRANCH}
 ENV COMMIT=${COMMITSHA}
 
-# Copy in helper scripts with the built and installed dependencies from the previous image
+# Copy in helper scripts from the previous image
 COPY --from=meteor-builder ${SCRIPTS_FOLDER} ${SCRIPTS_FOLDER}/
 
-# Copy in app bundle with the built and installed dependencies from the previous image
-# COPY --from=meteor-builder ${APP_BUNDLE_FOLDER} ${APP_BUNDLE_FOLDER}/
+# Copy in app bundle from the previous image
 COPY --from=meteor-builder /opt/bundle ${APP_BUNDLE_FOLDER}/
 
 # We want to use our own launcher script
