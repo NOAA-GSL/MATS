@@ -25,8 +25,11 @@ const dealWithUATables = function (
       // get obs partial sums from the GFS
       secondaryModelOption = `, ${databaseValue}.GFS_Areg${regionValue} as m1`;
     }
-    // RAOB tables don't have phases
-    updatedQueryTemplate = updatedQueryTemplate.replace(/\{\{phaseClause\}\}/g, "");
+    // RAOB tables don't have phases, but we use the clause to facilitate the table join
+    updatedQueryTemplate = updatedQueryTemplate.replace(
+      /\{\{phaseClause\}\}/g,
+      "AND m0.date = m1.date AND m0.hour = m1.hour AND m0.mb10 = m1.mb10"
+    );
   } else {
     // AMDAR tables have all partial sums so we can get them all from the main table
     updatedQueryTemplate = updatedQueryTemplate.replace(/m1/g, "m0");
