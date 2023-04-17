@@ -1,5 +1,0 @@
-Query File                  Time (s)  Result
---------------------------------------------------------------------
-count_stations_obs.sql      5           598
-count_stations_model.sql    2           510 
-get_3_stations_obs.sql      5           598
