@@ -1,8 +1,8 @@
 SELECT m0.time AS avtime,
-        SUM(m0.yy) AS hit,
-        SUM(m0.yn) AS fa,
-        SUM(m0.ny) AS miss,
-        SUM(m0.nn) AS cn
+        SUM(m0.hit) AS hit,
+        SUM(m0.fa) AS fa,
+        SUM(m0.miss) AS miss,
+        SUM(m0.cn) AS cn
     FROM {{database}}.{{model}}_{{grid_scale}}{{truth}}_{{region}} AS m0
     WHERE 1=1
         AND m0.time >= {{fromSecs}}
