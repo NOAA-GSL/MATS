@@ -11,6 +11,8 @@ import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
 import { matsDataProcessUtils } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+import { matsMiddle } from "server/matsMiddle/timeSeriesStations";
+
 dataSeries = function (plotParams, plotFunction)
 {
   var fs = require("fs");
@@ -44,6 +46,9 @@ dataSeries = function (plotParams, plotFunction)
   var ymin = Number.MAX_VALUE;
   var idealValues = [];
   var statement = "";
+
+  var tss = new matsMiddle.TimeSeriesStations(cbPool); 
+  tss.processStationQuery("./matsMiddle/dataFiles/station_names_3.json", "HRRR_OPS", 6, 3000, true);
 
   for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++)
   {
@@ -166,6 +171,9 @@ dataSeries = function (plotParams, plotFunction)
     if (diffFrom == null)
     {
       statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+
+      // TODO - remove write top file
+      fs.writeFileSync('/Users/gopa.padmanabhan/scratch/qwuery.sql', statement);
 
       dataRequests[label] = statement;
 
