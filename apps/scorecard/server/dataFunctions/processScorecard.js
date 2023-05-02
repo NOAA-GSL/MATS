@@ -1,3 +1,6 @@
+/* eslint-disable no-shadow */
+/* eslint-disable no-console */
+/* eslint-disable no-undef */
 import { matsTypes, matsParamUtils, matsCollections } from "meteor/randyp:mats-common";
 
 /** A function to sanitize JSON keys by replacing the "." character with "__DOT__" */
@@ -603,47 +606,53 @@ processScorecard = function (plotParams, plotFunction) {
 
   // store the document
   try {
+    // eslint-disable-next-line global-require, import/no-unresolved
     const scDoc = JSON.stringify(scorecardDocument);
     const { id } = scorecardDocument;
+
     (async function (id, doc) {
-      cbScorecardPool.upsertCB(id, doc);
+      // need MAJORITY_AND_PERSIST_TO_ACTIVE to be assured that the document is available for the
+      // vxDataProcessor before notifying the vxDataProcessor service to process it.
+      // see https://docs.couchbase.com/sdk-api/couchbase-node-client/enums/DurabilityLevel.html
+      // eslint-disable-next-line no-undef
+      options = {
+        durabilityLevel: cbScorecardPool.getDurabilityOption(
+          "MAJORITY_AND_PERSIST_TO_ACTIVE"
+        ),
+      };
+      cbScorecardPool.upsertCB(id, doc, options);
     })(id, scDoc).then(() => {
       console.log("upserted doc with id", id);
-      // we do need an actual pause here (500 ms), because the upsert function
-      // returns as successful slightly before the document is fully written.
-      // Therefore this callback needs a little assistance.
-      setTimeout(function () {
-        // now go to status page
-        const result = {
-          error: "",
-          data: scorecardDocument.id,
-          options: {},
-          basis: {
-            plotParams,
-            queries: {},
-          },
-        };
-        plotFunction(result);
-      }, 500);
+      //   // now go to status page
+      const result = {
+        error: "",
+        data: scorecardDocument.id,
+        options: {},
+        basis: {
+          plotParams,
+          queries: {},
+        },
+      };
+      plotFunction(result);
+      // notify the vxDataProcessor service that the document is ready to be processed
+      // expects something like this ...
+      // "vxdataProcessorUrl":"https://ascend-test1.gsd.esrl.noaa.gov:8080/jobs/create/"
+      // ...
+      // to be in the public section of the scorecard settings file
+      // NOTE: For now we do not have scheduled jobs. When we do we will need to change this.
+      const notifyDataProcessorURL = `${Meteor.settings.public.vxdataProcessorUrl}`;
+      const sDocument = `\{"docid": "${id}"\}`;
+      HTTP.post(
+        notifyDataProcessorURL,
+        { content: `${sDocument}` },
+        function (error, response) {
+          if (error) {
+            console.log(error);
+          }
+        }
+      );
     });
   } catch (err) {
     console.log(`error writing scorecard to database: ${err.message}`);
   }
-  // notify the vxDataProcessor service that the document is ready to be processed
-  // expects something like this ...
-  // "vxdataProcessorUrl":"https://ascend-test1.gsd.esrl.noaa.gov:8080/jobs/create/"
-  // ...
-  // to be in the public section of the scorecard settings file
-  // NOTE: For now we do not have scheduled jobs. When we do we will need to change this.
-  const notifyDataProcessorURL = `${Meteor.settings.public.vxdataProcessorUrl}`;
-  const sDocument = `\{"docid": "${id}"\}`;
-  HTTP.post(
-    notifyDataProcessorURL,
-    { content: `${sDocument}` },
-    function (error, response) {
-      if (error) {
-        console.log(error);
-      }
-    }
-  );
 };
