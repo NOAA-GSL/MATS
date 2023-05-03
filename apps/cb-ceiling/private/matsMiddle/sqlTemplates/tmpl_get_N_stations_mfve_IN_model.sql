@@ -6,7 +6,7 @@ FROM
 WHERE
     type = "DD"
     AND docType = "model"
-    AND model = {{model}}
-    AND fcstLen = {{fcstLen}}
+    AND model = {{vxMODEL}}
+    AND fcstLen = {{vxFCST_LEN}}
     AND version = "V01"
     AND fcstValidEpoch IN {{fcstValidEpoch}}

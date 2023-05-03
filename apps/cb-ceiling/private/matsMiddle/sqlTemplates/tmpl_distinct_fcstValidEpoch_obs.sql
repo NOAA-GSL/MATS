@@ -5,6 +5,6 @@ WHERE
     type = "DD"
     AND docType = "obs"
     AND version = "V01"
-    AND fcstValidEpoch BETWEEN 1662249600
-    AND 1664841600
+    AND fcstValidEpoch BETWEEN {{vxFROM_SECS}}
+    AND {{vxTO_SECS}}
     ORDER BY fcstValidEpoch

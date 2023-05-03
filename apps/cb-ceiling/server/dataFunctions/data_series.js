@@ -11,7 +11,7 @@ import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
 import { matsDataProcessUtils } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-import { matsMiddle } from "server/matsMiddle/timeSeriesStations";
+import TimeSeriesStations from "../matsMiddle/timeSeriesStations";
 
 dataSeries = function (plotParams, plotFunction)
 {
@@ -46,9 +46,6 @@ dataSeries = function (plotParams, plotFunction)
   var ymin = Number.MAX_VALUE;
   var idealValues = [];
   var statement = "";
-
-  var tss = new matsMiddle.TimeSeriesStations(cbPool); 
-  tss.processStationQuery("./matsMiddle/dataFiles/station_names_3.json", "HRRR_OPS", 6, 3000, true);
 
   for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++)
   {
@@ -173,7 +170,7 @@ dataSeries = function (plotParams, plotFunction)
       statement = cbPool.trfmSQLForDbTarget(queryTemplate);
 
       // TODO - remove write top file
-      fs.writeFileSync('/Users/gopa.padmanabhan/scratch/qwuery.sql', statement);
+      fs.writeFileSync('/Users/gopa.padmanabhan/scratch/query.sql', statement);
 
       dataRequests[label] = statement;
 
@@ -188,20 +185,47 @@ dataSeries = function (plotParams, plotFunction)
       var finishMoment;
       try
       {
-        // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBTimeSeries(
-          cbPool,
-          statement,
-          model,
-          forecastLength,
-          fromSecs,
-          toSecs,
-          averageStr,
-          statisticSelect,
-          validTimes,
-          appParams,
-          false
-        );
+        if (regionType === "Predefined region")
+        {
+          // send the query statement to the query function
+          queryResult = matsDataQueryUtils.queryDBTimeSeries(
+            cbPool,
+            statement,
+            model,
+            forecastLength,
+            fromSecs,
+            toSecs,
+            averageStr,
+            statisticSelect,
+            validTimes,
+            appParams,
+            false
+          );
+        }
+        else
+        {
+          // send to matsMiddle
+          var tss = new TimeSeriesStations(cbPool);
+          let rows = [];
+          rows = tss.processStationQuery(sitesList, model, forecastLength, threshold, fromSecs, toSecs, true);
+          console.log("matsMiddle done!");
+          // (async () => rows = await tss.processStationQuery(sitesList, model, forecastLength, threshold, fromSecs, toSecs, true))();
+
+          // send the query statement to the query function
+          queryResult = matsDataQueryUtils.queryDBTimeSeriesMT(
+            cbPool,
+            rows,
+            model,
+            forecastLength,
+            fromSecs,
+            toSecs,
+            averageStr,
+            statisticSelect,
+            validTimes,
+            appParams,
+            false
+          );
+        }
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
           begin: startMoment.format(),
