@@ -606,7 +606,6 @@ processScorecard = function (plotParams, plotFunction) {
 
   // store the document
   try {
-    // eslint-disable-next-line global-require, import/no-unresolved
     const scDoc = JSON.stringify(scorecardDocument);
     const { id } = scorecardDocument;
 
