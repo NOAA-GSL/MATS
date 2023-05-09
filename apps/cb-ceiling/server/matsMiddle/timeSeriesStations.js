@@ -7,6 +7,7 @@ class TimeSeriesStations
     fveObs = {};
     fveModels = {};
     stats = [];
+    varName = null;
     stationNames = [];
     stationNames = null;
     model = null;
@@ -21,7 +22,7 @@ class TimeSeriesStations
         this.cbPool = cbPool;
     }
 
-    processStationQuery = (stationNames, model, fcstLen, threshold, fromSecs, toSecs, writeOutput) =>
+    processStationQuery = (varName, stationNames, model, fcstLen, threshold, fromSecs, toSecs, writeOutput) =>
     {
         const Future = require('fibers/future');
 
@@ -29,19 +30,20 @@ class TimeSeriesStations
         let dFuture = new Future();
         (async () =>
         {
-            rv = await this.processStationQuery_int(stationNames, model, fcstLen, threshold, fromSecs, toSecs, writeOutput);
+            rv = await this.processStationQuery_int(varName, stationNames, model, fcstLen, threshold, fromSecs, toSecs, writeOutput);
             dFuture.return();
         })();
         dFuture.wait();
         return rv;
     }
 
-    processStationQuery_int = async (stationNames, model, fcstLen, threshold, fromSecs, toSecs, writeOutput) =>
+    processStationQuery_int = async (varName, stationNames, model, fcstLen, threshold, fromSecs, toSecs, writeOutput) =>
     {
         let fs = require("fs");
 
         console.log("processStationQuery()");
 
+        this.varName = varName;
         this.stationNames = stationNames;
         this.model = model;
         this.fcstLen = fcstLen;
@@ -105,11 +107,11 @@ class TimeSeriesStations
         {
             if (i === 0)
             {
-                stationNames_obs = "obs.data." + this.stationNames[i] + ".Ceiling " + this.stationNames[i];
+                stationNames_obs = "obs.data." + this.stationNames[i] + "." + this.varName + " " + this.stationNames[i];
             }
             else
             {
-                stationNames_obs += ",obs.data." + this.stationNames[i] + ".Ceiling " + this.stationNames[i];
+                stationNames_obs += ",obs.data." + this.stationNames[i] + "." + this.varName + " " + this.stationNames[i];
             }
         }
         let endTime = (new Date()).valueOf();
@@ -183,11 +185,11 @@ class TimeSeriesStations
         {
             if (i === 0)
             {
-                stationNames_models = "models.data." + this.stationNames[i] + ".Ceiling " + this.stationNames[i];
+                stationNames_models = "models.data." + this.stationNames[i] + "." + this.varName + " " + this.stationNames[i];
             }
             else
             {
-                stationNames_models += ",models.data." + this.stationNames[i] + ".Ceiling " + this.stationNames[i];
+                stationNames_models += ",models.data." + this.stationNames[i] + "." + this.varName + " " + this.stationNames[i];
             }
         }
 

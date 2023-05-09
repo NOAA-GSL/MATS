@@ -207,7 +207,7 @@ dataSeries = function (plotParams, plotFunction)
           // send to matsMiddle
           var tss = new TimeSeriesStations(cbPool);
           let rows = [];
-          rows = tss.processStationQuery(sitesList, model, forecastLength, threshold, fromSecs, toSecs, true);
+          rows = tss.processStationQuery("Ceiling", sitesList, model, forecastLength, threshold, fromSecs, toSecs, true);
           console.log("matsMiddle done!");
           // (async () => rows = await tss.processStationQuery(sitesList, model, forecastLength, threshold, fromSecs, toSecs, true))();
 
