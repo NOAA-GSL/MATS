@@ -1,5 +1,6 @@
 SELECT
-    fcstValidEpoch,
+    fcstValidEpoch fve,
+    {{vxAVERAGE}} avtime,
     {{stationNamesList}}
 FROM
     `vxdata`._default.METAR AS models

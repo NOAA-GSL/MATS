@@ -11,7 +11,7 @@ import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
 import { matsDataProcessUtils } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-import TimeSeriesStations from "../matsMiddle/timeSeriesStations";
+// import TimeSeriesStations from "../matsMiddle/timeSeriesStations";
 
 dataSeries = function (plotParams, plotFunction)
 {
@@ -204,17 +204,31 @@ dataSeries = function (plotParams, plotFunction)
         }
         else
         {
+          /*
           // send to matsMiddle
-          var tss = new TimeSeriesStations(cbPool);
+          var tss = new matsMiddle.MatsMiddleTimeSeriesStations(cbPool);
           let rows = [];
-          rows = tss.processStationQuery("Ceiling", sitesList, model, forecastLength, threshold, fromSecs, toSecs, true);
+          rows = tss.processStationQuery("Ceiling", sitesList, model, forecastLength, threshold, average, fromSecs, toSecs, true);
           console.log("matsMiddle done!");
-          // (async () => rows = await tss.processStationQuery(sitesList, model, forecastLength, threshold, fromSecs, toSecs, true))();
 
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBTimeSeriesMT(
             cbPool,
             rows,
+            model,
+            forecastLength,
+            fromSecs,
+            toSecs,
+            averageStr,
+            statisticSelect,
+            validTimes,
+            appParams,
+            false
+          );
+          */
+          queryResult = matsDataQueryUtils.queryDBTimeSeries(
+            cbPool,
+            statement,
             model,
             forecastLength,
             fromSecs,

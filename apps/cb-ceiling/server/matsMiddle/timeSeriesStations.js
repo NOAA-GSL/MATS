@@ -114,11 +114,9 @@ class TimeSeriesStations
                 stationNames_obs += ",obs.data." + this.stationNames[i] + "." + this.varName + " " + this.stationNames[i];
             }
         }
-        let endTime = (new Date()).valueOf();
-        console.log("\tstationNames_obs:" + stationNames_obs.length + " in " + (endTime - startTime) + " ms.");
-        // console.log("\tstationNames_obs:\n" + stationNames_obs);
-
         let tmplWithStationNames_obs = tmpl_get_N_stations_mfve_obs.replace(/{{stationNamesList}}/g, stationNames_obs);
+        let endTime = (new Date()).valueOf();
+        console.log("\tobs query:" + stationNames_obs.length + " in " + (endTime - startTime) + " ms.");
 
         const promises = [];
         for (let iofve = 0; iofve < this.fcstValidEpoch_Array.length; iofve = iofve + 100)
@@ -127,7 +125,7 @@ class TimeSeriesStations
             let sql = tmplWithStationNames_obs.replace(/{{fcstValidEpoch}}/g, JSON.stringify(fveArraySlice));
             if (iofve === 0)
             {
-                // console.log("sql:\n" + sql);
+                fs.writeFileSync('/Users/gopa.padmanabhan/scratch/matsMiddle/output/obs.sql', sql);
             }
             let prSlice = this.conn.cluster.query(sql);
             promises.push(prSlice);
@@ -193,11 +191,9 @@ class TimeSeriesStations
             }
         }
 
-        let endTime = (new Date()).valueOf();
-        console.log("\tstationNames_models:" + stationNames_models.length + " in " + (endTime - startTime) + " ms.");
-        // console.log("\tstationNames_models:\n" + stationNames_models);
-
         let tmplWithStationNames_models = tmpl_get_N_stations_mfve_model.replace(/{{stationNamesList}}/g, stationNames_models);
+        let endTime = (new Date()).valueOf();
+        console.log("\tmodel query:" + stationNames_models.length + " in " + (endTime - startTime) + " ms.");
 
         const promises = [];
         for (let imfve = 0; imfve < this.fcstValidEpoch_Array.length; imfve = imfve + 100)
@@ -206,7 +202,7 @@ class TimeSeriesStations
             let sql = tmplWithStationNames_models.replace(/{{fcstValidEpoch}}/g, JSON.stringify(fveArraySlice));
             if (imfve === 0)
             {
-                //console.log("sql:\n" + sql);
+                fs.writeFileSync('/Users/gopa.padmanabhan/scratch/matsMiddle/output/model.sql', sql);
             }
             let prSlice = this.conn.cluster.query(sql);
 
