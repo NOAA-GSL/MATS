@@ -138,7 +138,7 @@ def regions_per_model_mats_all_categories(mode):
         tablename = list(row.values())[0]
         tablename = tablename.encode('ascii', 'ignore')
         # print( "tablename is " + tablename)
-        if " " + tablename + " " not in skiptables:
+        if " " + str(tablename) + " " not in skiptables:
             # parse the data sources, scales, and regions from the table names
             model = re.sub('_[0-9][0-9]km_.*', '', tablename)
             if model not in all_data_sources:
