@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/scratch1/BMC/amb-verif/miniconda/miniconda3/envs/avid_verify_py3/bin/python
 #
 # Updates the regions_per_model_mats_all_categories table for all models in vil
 
@@ -8,7 +8,13 @@ from datetime import datetime
 
 import re
 import sys
-import pymysql
+
+try:
+    import pymysql
+except ImportError:
+    raise ImportError('--------------------IMPORTANT: This script now requires python 3 to run. \
+                      You can do this in the amb-verif conda environment by running "conda activate \
+                      avid_verify_py3" and then trying this script again.-------------------------')
 
 
 ############################################################################
