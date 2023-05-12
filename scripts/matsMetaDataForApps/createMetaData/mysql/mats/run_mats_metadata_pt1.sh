@@ -1,5 +1,6 @@
-#!/bin/bash --login
-
+#!/bin/tcsh
+source /home/role.amb-verif/.tcshrc
+conda activate avid_verify_py3
 # do not forget the 'deploy' switch
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_ceiling.py deploy
 /home/role.amb-verif/mats_metadata/update_metadata_ceiling.py persis
@@ -31,3 +32,4 @@
 /home/role.amb-verif/mats_metadata/update_metadata_upperair_prepbufr.py persis
 #/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_upperair2.py deploy
 #/home/role.amb-verif/mats_metadata/update_metadata_upperair2.py persis
+conda deactivate
