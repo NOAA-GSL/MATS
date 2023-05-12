@@ -135,7 +135,7 @@ def regions_per_model_mats_all_categories(mode):
     cursor.execute(show_tables)
     for row in cursor:
         tablename = str(list(row.values())[0])
-        print( "tablename is " + tablename)
+        # print( "tablename is " + tablename)
         if " " + tablename + " " not in skiptables:
             # parse the data sources, scales, and regions from the table names
             model = re.sub('_[0-9][0-9]km_.*', '', tablename)
@@ -152,7 +152,7 @@ def regions_per_model_mats_all_categories(mode):
                 scale = re.sub(temp1, "", tablename)
                 scale = re.sub(temp2, "", scale)
                 per_table[tablename]['scale'] = scale
-                print("model is " + model + ", region is " + region + ", scale is " + scale)
+                # print("model is " + model + ", region is " + region + ", scale is " + scale)
 
     # sys.exit(-1)
 
