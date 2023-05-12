@@ -135,7 +135,6 @@ def regions_per_model_mats_all_categories(mode):
     TScleaned = True
     if TScleaned:
         cursor2.execute(clean_tablestats)
-        cnx2.commit()
     else:
         print("NOT executing: " + str(clean_tablestats))
 
