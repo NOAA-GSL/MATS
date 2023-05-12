@@ -121,7 +121,6 @@ def regions_per_model_mats_all_categories(mode):
     TScleaned = True
     if TScleaned:
         cursor.execute(clean_tablestats)
-        cnx.commit()
     else:
         print("NOT executing: " + str(clean_tablestats))
 
@@ -257,11 +256,13 @@ def regions_per_model_mats_all_categories(mode):
     cursor4.execute(get_model_orders)
 
     new_model_list = list(main_models.values())
+    main_model_order_keys = []
     main_model_orders = {}
     for row in cursor4:
         new_model = str(row['model'])
         m_order = int(row['m_order'])
         if new_model in new_model_list:
+            main_model_order_keys.append(new_model)
             main_model_orders[new_model] = m_order
 
     cursor4.close()
@@ -286,7 +287,7 @@ def regions_per_model_mats_all_categories(mode):
     ds_idx = 2
 
     for model in data_sources_in_this_app:
-        if model in main_model_keys:
+        if model in main_model_keys and main_models[model] in main_model_order_keys:
             data_source_cats[model] = 1
         else:
             sub_idx = model.find('_', 0)
@@ -301,7 +302,7 @@ def regions_per_model_mats_all_categories(mode):
     # combine the metadata per table into metadata per data source
     do_non_main = 0
     for model in all_data_sources:
-        if model in main_model_keys:
+        if model in main_model_keys and main_models[model] in main_model_order_keys:
             cat = 1
             display_text = main_models[model]
             do = main_model_orders[display_text]
