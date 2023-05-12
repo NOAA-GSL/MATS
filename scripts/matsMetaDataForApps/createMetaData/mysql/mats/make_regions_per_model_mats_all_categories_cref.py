@@ -21,7 +21,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
     cursor.execute(find_rpm_rec)
     record_id = int(0)
     for row in cursor:
-        val = row.values()[0]
+        val = list(row.values())[0]
         record_id = int(val)
 
     if len(regions) > int(0) and len(fcst_lens) > int(0):
@@ -135,7 +135,7 @@ def regions_per_model_mats_all_categories(mode):
     show_tables = "show tables;"
     cursor.execute(show_tables)
     for row in cursor:
-        tablename = row.values()[0]
+        tablename = list(row.values())[0]
         tablename = tablename.encode('ascii', 'ignore')
         # print( "tablename is " + tablename)
         if " " + tablename + " " not in skiptables:
@@ -167,7 +167,7 @@ def regions_per_model_mats_all_categories(mode):
             per_table[tablename]['fcst_lens'] = []
             this_fcst_lens = []
             for row in cursor:
-                val = row.values()[0]
+                val = list(row.values())[0]
                 this_fcst_lens.append(int(val))
             this_fcst_lens.sort(key=int)
             per_table[tablename]['fcst_lens'] = this_fcst_lens
@@ -179,7 +179,7 @@ def regions_per_model_mats_all_categories(mode):
             per_table[tablename]['trshs'] = []
             this_trshs = []
             for row in cursor:
-                val = row.values()[0]
+                val = list(row.values())[0]
                 this_trshs.append(int(val))
             this_trshs.sort(key=int)
             per_table[tablename]['trshs'] = this_trshs
@@ -257,7 +257,7 @@ def regions_per_model_mats_all_categories(mode):
     get_model_orders = "select model,m_order from primary_model_orders order by m_order;"
     cursor4.execute(get_model_orders)
 
-    new_model_list = main_models.values()
+    new_model_list = list(main_models.values())
     main_model_orders = {}
     for row in cursor4:
         new_model = str(row['model'])
@@ -318,7 +318,7 @@ def regions_per_model_mats_all_categories(mode):
         these_regions_raw = []
         these_regions_orders = []
         for row in cursor:
-            val = str(row.values()[0])
+            val = str(list(row.values())[0])
             these_regions_raw.append(val)
             these_regions_orders.append(valid_region_orders[val])
         these_regions = [x for _, x in sorted(zip(these_regions_orders, these_regions_raw))]
@@ -329,7 +329,7 @@ def regions_per_model_mats_all_categories(mode):
         cursor.execute(get_these_fcst_lens)
         these_fcst_lens = []
         for row in cursor:
-            val_array = ast.literal_eval(row.values()[0])
+            val_array = ast.literal_eval(list(row.values())[0])
             for val in val_array:
                 if val not in these_fcst_lens:
                     these_fcst_lens.append(val)
@@ -341,7 +341,7 @@ def regions_per_model_mats_all_categories(mode):
         cursor.execute(get_these_trshs)
         these_trshs = []
         for row in cursor:
-            val_array = ast.literal_eval(row.values()[0])
+            val_array = ast.literal_eval(list(row.values())[0])
             for val in val_array:
                 if val not in these_trshs:
                     these_trshs.append(val)
@@ -353,7 +353,7 @@ def regions_per_model_mats_all_categories(mode):
         cursor.execute(get_these_scales)
         these_scales = []
         for row in cursor:
-            val = str(row.values()[0])
+            val = str(list(row.values())[0])
             these_scales.append(val)
         these_scales.sort()
         # print( "these_scales:\n" + str(these_scales) )
