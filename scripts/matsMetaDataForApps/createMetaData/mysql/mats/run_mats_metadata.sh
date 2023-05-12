@@ -17,9 +17,9 @@ conda activate avid_verify_py3
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip.py deploy
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip2.py deploy
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip_aqpi.py deploy
-/home/role.amb-verif/mats_metadata/update_metadata_precip_aqpi.py persis
+/home/role.amb-verif/mats_metadata/update_metadata_precip_gauge.py persis
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_precip_1hr.py deploy
-home/amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_ptype.py deploy
+/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_ptype.py deploy
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_cref.py deploy
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_vil.py deploy
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_echotop.py deploy
