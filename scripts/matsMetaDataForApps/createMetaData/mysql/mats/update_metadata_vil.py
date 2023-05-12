@@ -114,7 +114,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
 def reprocess_specific_metadata(models_to_reprocess):
     # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -122,7 +122,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         sys.exit(1)
 
     try:
-        cnx2 = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")
+        cnx2 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx2.autocommit = True
         cursor2 = cnx2.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -130,7 +130,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         sys.exit(1)
 
     try:
-        cnx3 = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")
+        cnx3 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx3.autocommit = True
         cursor3 = cnx3.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:

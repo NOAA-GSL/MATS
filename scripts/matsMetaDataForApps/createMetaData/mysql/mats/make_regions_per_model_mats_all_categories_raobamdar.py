@@ -68,7 +68,7 @@ def update_rpm_record(cnx, cursor, upperair_model, aircraft_model, display_text,
 def regions_per_model_mats_all_categories(mode):
     # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("set session wait_timeout=28800")
@@ -78,7 +78,7 @@ def regions_per_model_mats_all_categories(mode):
         sys.exit(1)
 
     try:
-        cnx2 = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        cnx2 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx2.autocommit = True
         cursor2 = cnx2.cursor(MySQLdb.cursors.DictCursor)
         cursor2.execute("set session wait_timeout=28800")
