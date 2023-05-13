@@ -243,8 +243,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         show_tables = ("show tables like '" + model + "_%';")
         cursor.execute(show_tables)
         for row in cursor:
-            tablename = row.values()[0]
-            tablename = tablename.encode('ascii', 'ignore')
+            tablename = str(list(row.values())[0])
             temp = "^" + model + "_"
             region = re.sub(temp, "", tablename)
             source = "All"
