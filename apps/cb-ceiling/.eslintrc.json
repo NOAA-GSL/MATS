@@ -50,7 +50,7 @@
     "no-shadow": "warn",
     "no-await-in-loop": "warn",
     "no-continue": "warn",
-    "global-require":"warn",
+    "global-require": "warn",
     "no-use-before-define": "warn"
   }
 }
