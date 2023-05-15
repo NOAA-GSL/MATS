@@ -1,5 +1,5 @@
 const fs = require("fs");
-var couchbase = require("couchbase");
+const couchbase = require("couchbase");
 
 const configFile = "./config/config.json";
 const settingsFile = "../../settings/settings.json";
@@ -18,7 +18,7 @@ describe("CouchBase Query Tests", () => {
 
   beforeAll(async () => {
     config = JSON.parse(fs.readFileSync(configFile, "utf-8"));
-    console.log(config.queries.length + " queries loaded from config.");
+    console.log(`${config.queries.length} queries loaded from config.`);
     settings = JSON.parse(fs.readFileSync(settingsFile, "utf-8"));
 
     if (config.host) {
@@ -31,7 +31,7 @@ describe("CouchBase Query Tests", () => {
     } else {
       bucketName = settings.private.databases[0].bucket;
     }
-    console.log("host:" + host + ",bucket:" + bucketName);
+    console.log(`host:${host},bucket:${bucketName}`);
 
     cluster = await init(config, settings);
     bucket = cluster.bucket(bucketName);
@@ -50,7 +50,7 @@ describe("CouchBase Query Tests", () => {
   });
 
   test("Get METAR count", async () => {
-    let res = await run_METAR_count(bucket);
+    const res = await run_METAR_count(bucket);
     expect(res != undefined);
   });
 
@@ -67,7 +67,7 @@ describe("CouchBase Query Tests", () => {
     }
 
     for (let i = 0; i < config.queries.length; i++) {
-      let elapsed = await run_query_file(
+      const elapsed = await run_query_file(
         bucket,
         config.queries[i].queryFile,
         config.queries[i].maxExecutionTime_ms
@@ -81,9 +81,9 @@ describe("CouchBase Query Tests", () => {
 async function init(config, settings) {
   console.log("init()");
 
-  let startTime = new Date().valueOf();
+  const startTime = new Date().valueOf();
 
-  let cluster = await couchbase.connect(config.host, {
+  const cluster = await couchbase.connect(config.host, {
     username: settings.private.databases[0].user,
     password: settings.private.databases[0].password,
     timeouts: {
@@ -92,19 +92,19 @@ async function init(config, settings) {
     },
   });
 
-  let endTime = new Date().valueOf();
+  const endTime = new Date().valueOf();
 
-  console.log("\tconnectToCb() in " + (endTime - startTime) + " ms.");
+  console.log(`\tconnectToCb() in ${endTime - startTime} ms.`);
 
   return cluster;
 }
 
 async function run_query_file(bckt, query_file, maxExecutionTime_ms) {
-  console.log("run_query_file(" + query_file + ")");
+  console.log(`run_query_file(${query_file})`);
 
   const qstr = fs.readFileSync(query_file, "utf-8");
 
-  let startTime = new Date().valueOf();
+  const startTime = new Date().valueOf();
 
   const queryResult = await bckt.scope("_default").query(qstr, {
     parameters: [],
@@ -118,16 +118,16 @@ async function run_query_file(bckt, query_file, maxExecutionTime_ms) {
     });
     */
 
-  let endTime = new Date().valueOf();
-  let elapsed = endTime - startTime;
-  console.log("\trun_query_file(" + query_file + ") in " + elapsed + " ms.");
+  const endTime = new Date().valueOf();
+  const elapsed = endTime - startTime;
+  console.log(`\trun_query_file(${query_file}) in ${elapsed} ms.`);
   return elapsed;
 }
 
 async function run_METAR_count(bckt) {
   console.log("run_METAR_count()");
 
-  let startTime = new Date().valueOf();
+  const startTime = new Date().valueOf();
 
   const queryFile = "./test_queries/METAR_count.sql";
   const qstr = fs.readFileSync(queryFile, "utf-8");
@@ -139,8 +139,8 @@ async function run_METAR_count(bckt) {
     console.log(row);
   });
 
-  let endTime = new Date().valueOf();
-  console.log("\trun_METAR_count() in " + (endTime - startTime) + " ms.");
+  const endTime = new Date().valueOf();
+  console.log(`\trun_METAR_count() in ${endTime - startTime} ms.`);
 
   return queryResult;
 }
