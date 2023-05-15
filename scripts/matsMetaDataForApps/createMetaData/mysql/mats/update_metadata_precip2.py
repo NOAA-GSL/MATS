@@ -288,7 +288,7 @@ def reprocess_specific_metadata(models_to_reprocess):
                     cursor2.execute(get_trsh)
                     thistrsh = []
                     for row2 in cursor2:
-                        val = row2.values()[0]
+                        val = list(row2.values())[0]
                         thistrsh.append(int(val * 100))
                     per_model[model]['trshs'] = list(set(per_model[model]['trshs']) | set(thistrsh))
                     per_model[model]['trshs'].sort(key=int)
