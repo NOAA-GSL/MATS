@@ -11,9 +11,7 @@ import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
 import { matsDataProcessUtils } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// import TimeSeriesStations from "../matsMiddle/timeSeriesStations";
-
-dataSeries = function (plotParams, plotFunction)
+dataSeries_dev = function (plotParams, plotFunction)
 {
   var fs = require("fs");
 
@@ -168,9 +166,7 @@ dataSeries = function (plotParams, plotFunction)
     if (diffFrom == null)
     {
       statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
-      // TODO - remove write top file
-      fs.writeFileSync('/Users/gopa.padmanabhan/scratch/query.sql', statement);
+      fs.writeFileSync('/Users/gopa.padmanabhan/scratch/data_series.sql', statement);
 
       dataRequests[label] = statement;
 
@@ -185,47 +181,20 @@ dataSeries = function (plotParams, plotFunction)
       var finishMoment;
       try
       {
-        if (regionType === "Predefined region")
-        {
-          // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBTimeSeries(
-            cbPool,
-            statement,
-            model,
-            forecastLength,
-            fromSecs,
-            toSecs,
-            averageStr,
-            statisticSelect,
-            validTimes,
-            appParams,
-            false
-          );
-        }
-        else
-        {
-          // send to matsMiddle
-          var tss = new matsMiddle.MatsMiddleTimeSeriesStations(cbPool);
-          let rows = [];
-          rows = tss.processStationQuery("Ceiling", sitesList, model, forecastLength, threshold, average, fromSecs, toSecs, validTimes, true);
-          console.log("matsMiddle done!");
-
-          // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBTimeSeriesMT(
-            cbPool,
-            rows,
-            model,
-            forecastLength,
-            fromSecs,
-            toSecs,
-            averageStr,
-            statisticSelect,
-            validTimes,
-            appParams,
-            false
-          );
-        }
-
+        // send the query statement to the query function
+        queryResult = matsDataQueryUtils.queryDBTimeSeries(
+          cbPool,
+          statement,
+          model,
+          forecastLength,
+          fromSecs,
+          toSecs,
+          averageStr,
+          statisticSelect,
+          validTimes,
+          appParams,
+          false
+        );
         finishMoment = moment();
         dataRequests["data retrieval (query) time - " + label] = {
           begin: startMoment.format(),
