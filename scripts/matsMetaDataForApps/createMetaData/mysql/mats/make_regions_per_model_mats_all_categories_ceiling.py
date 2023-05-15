@@ -9,7 +9,7 @@ from datetime import datetime
 import re
 import sys
 import ast
-import MySQLdb
+import pymysql
 
 
 ############################################################################
@@ -21,7 +21,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
     cursor.execute(find_rpm_rec)
     record_id = int(0)
     for row in cursor:
-        val = row.values()[0]
+        val = list(row.values())[0]
         record_id = int(val)
 
     if len(regions) > int(0) and len(fcst_lens) > int(0):
@@ -66,32 +66,32 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
 def regions_per_model_mats_all_categories(mode):
     # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        cnx = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
-        cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
         cursor.execute("set session wait_timeout=28800")
         cursor.execute("set session interactive_timeout=28800")
-    except MySQLdb.Error as e:
+    except pymysql.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
     try:
-        cnx2 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx2 = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx2.autocommit = True
-        cursor2 = cnx2.cursor(MySQLdb.cursors.DictCursor)
+        cursor2 = cnx2.cursor(pymysql.cursors.DictCursor)
         cursor2.execute("set session wait_timeout=28800")
         cursor2.execute("set session interactive_timeout=28800")
-    except MySQLdb.Error as e:
+    except pymysql.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
     try:
-        cnx3 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx3 = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx3.autocommit = True
-        cursor3 = cnx3.cursor(MySQLdb.cursors.DictCursor)
+        cursor3 = cnx3.cursor(pymysql.cursors.DictCursor)
         cursor3.execute("set session wait_timeout=28800")
         cursor3.execute("set session interactive_timeout=28800")
-    except MySQLdb.Error as e:
+    except pymysql.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
@@ -133,7 +133,6 @@ def regions_per_model_mats_all_categories(mode):
     TScleaned = True
     if TScleaned:
         cursor2.execute(clean_tablestats)
-        cnx2.commit()
     else:
         print("NOT executing: " + str(clean_tablestats))
 
@@ -147,8 +146,7 @@ def regions_per_model_mats_all_categories(mode):
     show_tables = "show tables;"
     cursor.execute(show_tables)
     for row in cursor:
-        tablename = row.values()[0]
-        tablename = tablename.encode('ascii', 'ignore')
+        tablename = str(list(row.values())[0])
         # print( "tablename is " + tablename)
         if " " + tablename + " " not in skiptables:
             # parse the data sources from the table names
@@ -160,8 +158,7 @@ def regions_per_model_mats_all_categories(mode):
             show_tables = "show tables like '" + model + "_%';"
             cursor2.execute(show_tables)
             for row2 in cursor2:
-                sums_table = row2.values()[0]
-                sums_table = sums_table.encode('ascii', 'ignore')
+                sums_table = str(list(row2.values())[0])
                 # print( "sums_table is " + sums_table)
 
                 # parse the regions from the table names
@@ -187,7 +184,7 @@ def regions_per_model_mats_all_categories(mode):
             per_table[tablename]['fcst_lens'] = []
             this_fcst_lens = []
             for row in cursor:
-                val = row.values()[0]
+                val = list(row.values())[0]
                 this_fcst_lens.append(int(val))
             this_fcst_lens.sort(key=int)
             per_table[tablename]['fcst_lens'] = this_fcst_lens
@@ -199,7 +196,7 @@ def regions_per_model_mats_all_categories(mode):
             per_table[tablename]['trshs'] = []
             this_trshs = []
             for row in cursor:
-                val = row.values()[0]
+                val = list(row.values())[0]
                 this_trshs.append(int(val))
             this_trshs.sort(key=int)
             per_table[tablename]['trshs'] = this_trshs
@@ -236,12 +233,12 @@ def regions_per_model_mats_all_categories(mode):
     cnx2.close()
 
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx.autocommit = True
-        cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
         cursor.execute("set session wait_timeout=28800")
         cursor.execute("set session interactive_timeout=28800")
-    except MySQLdb.Error as e:
+    except pymysql.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
@@ -251,12 +248,12 @@ def regions_per_model_mats_all_categories(mode):
 
     # use standardized model names
     try:
-        cnx4 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx4 = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx4.autocommit = True
-        cursor4 = cnx4.cursor(MySQLdb.cursors.DictCursor)
+        cursor4 = cnx4.cursor(pymysql.cursors.DictCursor)
         cursor4.execute("set session wait_timeout=28800")
         cursor4.execute("set session interactive_timeout=28800")
-    except MySQLdb.Error as e:
+    except pymysql.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
@@ -278,12 +275,14 @@ def regions_per_model_mats_all_categories(mode):
     get_model_orders = "select model,m_order from primary_model_orders order by m_order;"
     cursor4.execute(get_model_orders)
 
-    new_model_list = main_models.values()
+    new_model_list = list(main_models.values())
+    main_model_order_keys = []
     main_model_orders = {}
     for row in cursor4:
         new_model = str(row['model'])
         m_order = int(row['m_order'])
         if new_model in new_model_list:
+            main_model_order_keys.append(new_model)
             main_model_orders[new_model] = m_order
 
     cursor4.close()
@@ -308,7 +307,7 @@ def regions_per_model_mats_all_categories(mode):
     ds_idx = 2
 
     for model in data_sources_in_this_app:
-        if model in main_model_keys:
+        if model in main_model_keys and main_models[model] in main_model_order_keys:
             data_source_cats[model] = 1
         else:
             sub_idx = model.find('_', 0)
@@ -323,7 +322,7 @@ def regions_per_model_mats_all_categories(mode):
     # combine the metadata per table into metadata per data source
     do_non_main = 0
     for model in all_data_sources:
-        if model in main_model_keys:
+        if model in main_model_keys and main_models[model] in main_model_order_keys:
             cat = 1
             display_text = main_models[model]
             do = main_model_orders[display_text]
@@ -339,7 +338,7 @@ def regions_per_model_mats_all_categories(mode):
         these_regions_raw = []
         these_regions_orders = []
         for row in cursor:
-            val = str(row.values()[0])
+            val = str(list(row.values())[0])
             these_regions_raw.append(val)
             these_regions_orders.append(valid_region_orders[val])
         these_regions = [x for _, x in sorted(zip(these_regions_orders, these_regions_raw))]
@@ -350,7 +349,7 @@ def regions_per_model_mats_all_categories(mode):
         cursor.execute(get_these_fcst_lens)
         these_fcst_lens = []
         for row in cursor:
-            val_array = ast.literal_eval(row.values()[0])
+            val_array = ast.literal_eval(list(row.values())[0])
             for val in val_array:
                 if val not in these_fcst_lens:
                     these_fcst_lens.append(val)
@@ -362,7 +361,7 @@ def regions_per_model_mats_all_categories(mode):
         cursor.execute(get_these_trshs)
         these_trshs = []
         for row in cursor:
-            val_array = ast.literal_eval(row.values()[0])
+            val_array = ast.literal_eval(list(row.values())[0])
             for val in val_array:
                 if val not in these_trshs:
                     these_trshs.append(val)
