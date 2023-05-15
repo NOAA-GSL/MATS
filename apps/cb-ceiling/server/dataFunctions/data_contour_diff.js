@@ -2,21 +2,19 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import
-  {
-    matsCollections,
-    matsTypes,
-    matsDataUtils,
-    matsDataQueryUtils,
-    matsDataDiffUtils,
-    matsDataCurveOpsUtils,
-    matsDataProcessUtils,
-    matsPlotUtils,
-  } from "meteor/randyp:mats-common";
+import {
+  matsCollections,
+  matsTypes,
+  matsDataUtils,
+  matsDataQueryUtils,
+  matsDataDiffUtils,
+  matsDataCurveOpsUtils,
+  matsDataProcessUtils,
+  matsPlotUtils,
+} from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-dataContourDiff = function (plotParams, plotFunction)
-{
+dataContourDiff = function (plotParams, plotFunction) {
   var fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
@@ -44,15 +42,13 @@ dataContourDiff = function (plotParams, plotFunction)
   var error = "";
   var curves = JSON.parse(JSON.stringify(plotParams.curves));
   var curvesLength = curves.length;
-  if (curvesLength !== 2)
-  {
+  if (curvesLength !== 2) {
     throw new Error("INFO:  There must be two added curves.");
   }
   var dataset = [];
   var axisMap = Object.create(null);
 
-  for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++)
-  {
+  for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
     var curve = curves[curveIndex];
 
@@ -62,11 +58,9 @@ dataContourDiff = function (plotParams, plotFunction)
     var model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
     var dateString = "";
-    if (xAxisParam !== "Threshold" && yAxisParam !== "Threshold")
-    {
+    if (xAxisParam !== "Threshold" && yAxisParam !== "Threshold") {
       var thresholdStr = curve["threshold"];
-      if (thresholdStr === undefined)
-      {
+      if (thresholdStr === undefined) {
         throw new Error(
           "INFO:  " + label + "'s threshold is undefined. Please assign it a value."
         );
@@ -76,43 +70,36 @@ dataContourDiff = function (plotParams, plotFunction)
       ).find(
         (key) =>
           matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[
-          variable
+            variable
           ][key] === thresholdStr
       );
       threshold = threshold.replace(/_/g, ".");
     }
-    if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour")
-    {
+    if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
       var validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
-      if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
-      {
+      if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /vxVALID_TIMES/g,
           cbPool.trfmListToCSVString(validTimes, null, false)
         );
-      } else
-      {
+      } else {
         queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
       }
-    } else
-    {
+    } else {
       queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
     }
 
-    if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time")
-    {
+    if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
       var forecastLength = curve["forecast-length"];
-      if (forecastLength === undefined)
-      {
+      if (forecastLength === undefined) {
         throw new Error(
           "INFO:  " +
-          label +
-          "'s forecast lead time is undefined. Please assign it a value."
+            label +
+            "'s forecast lead time is undefined. Please assign it a value."
         );
       }
       queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
-    } else
-    {
+    } else {
       queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxFCST_LEN");
     }
 
@@ -120,18 +107,15 @@ dataContourDiff = function (plotParams, plotFunction)
       (xAxisParam === "Init Date" || yAxisParam === "Init Date") &&
       xAxisParam !== "Valid Date" &&
       yAxisParam !== "Valid Date"
-    )
-    {
+    ) {
       dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
-    } else
-    {
+    } else {
       dateString = "m0.fcstValidEpoch";
     }
     queryTemplate = queryTemplate.replace(/vxDATE_STRING/g, dateString);
 
     var regionType = curve["region-type"];
-    if (regionType === "Select stations")
-    {
+    if (regionType === "Select stations") {
       throw new Error(
         "INFO:  Single/multi station plotting is not available for performance diagrams."
       );
@@ -172,8 +156,7 @@ dataContourDiff = function (plotParams, plotFunction)
     var queryResult;
     var startMoment = moment();
     var finishMoment;
-    try
-    {
+    try {
       // send the query statement to the query function
       queryResult = matsDataQueryUtils.queryDBContour(
         cbPool,
@@ -192,20 +175,16 @@ dataContourDiff = function (plotParams, plotFunction)
       };
       // get the data back from the query
       d = queryResult.data;
-    } catch (e)
-    {
+    } catch (e) {
       // this is an error produced by a bug in the query function, not an error returned by the mysql database
       e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
       throw new Error(e.message);
     }
-    if (queryResult.error !== undefined && queryResult.error !== "")
-    {
-      if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND)
-      {
+    if (queryResult.error !== undefined && queryResult.error !== "") {
+      if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
         // this is NOT an error just a no data condition
         dataFoundForCurve = false;
-      } else
-      {
+      } else {
         // this is an error returned by the mysql database
         error +=
           "Error from verification query: <br>" +
@@ -252,8 +231,7 @@ dataContourDiff = function (plotParams, plotFunction)
     };
   } // end for curves
 
-  if (dataNotFoundForAnyCurve)
-  {
+  if (dataNotFoundForAnyCurve) {
     // we found no data for at least one curve so don't bother proceeding
     throw new Error(
       "INFO:  No valid data for at least one curve. Try making individual contour plots to determine which one."

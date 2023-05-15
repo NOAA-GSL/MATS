@@ -11,8 +11,7 @@ import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
 import { matsDataProcessUtils } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-dataSeries = function (plotParams, plotFunction)
-{
+dataSeries = function (plotParams, plotFunction) {
   var fs = require("fs");
 
   // initialize variables common to all curves
@@ -45,19 +44,22 @@ dataSeries = function (plotParams, plotFunction)
   var idealValues = [];
   var statement = "";
 
-  for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++)
-  {
+  for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
 
     var curve = curves[curveIndex];
     var regionType = curve["region-type"];
     var queryTemplate = null;
-    if (regionType === "Predefined region")
-    {
-      queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_TimeSeries_region.sql", "utf8");
-    } else
-    {
-      queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_TimeSeries_stations.sql", "utf8");
+    if (regionType === "Predefined region") {
+      queryTemplate = fs.readFileSync(
+        "assets/app/sqlTemplates/tmpl_TimeSeries_region.sql",
+        "utf8"
+      );
+    } else {
+      queryTemplate = fs.readFileSync(
+        "assets/app/sqlTemplates/tmpl_TimeSeries_stations.sql",
+        "utf8"
+      );
     }
 
     queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
@@ -71,32 +73,24 @@ dataSeries = function (plotParams, plotFunction)
     queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
     var thresholdStr = curve["threshold"];
     var threshold = Object.keys(
-      matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[
-      variable
-      ]
+      matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
       (key) =>
-        matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[
-        variable
-        ][key] === thresholdStr
+        matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[variable][
+          key
+        ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
     queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
 
-    var validTimes =
-      curve["valid-time"] === undefined ? [] : curve["valid-time"];
-    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
-    {
+    var validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
         /vxVALID_TIMES/g,
         cbPool.trfmListToCSVString(validTimes, null, false)
       );
-    } else
-    {
-      queryTemplate = cbPool.trfmSQLRemoveClause(
-        queryTemplate,
-        "vxVALID_TIMES"
-      );
+    } else {
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
     }
     var forecastLength = curve["forecast-length"];
     queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
@@ -115,23 +109,19 @@ dataSeries = function (plotParams, plotFunction)
     queryTemplate = queryTemplate.replace(/vxAVERAGE/g, average);
 
     // All SQL template transformations happen inside the
-    if (regionType === "Predefined region")
-    {
+    if (regionType === "Predefined region") {
       var regionStr = curve["region"];
       var region = Object.keys(
         matsCollections["region"].findOne({ name: "region" }).valuesMap
       ).find(
         (key) =>
-          matsCollections["region"].findOne({ name: "region" }).valuesMap[
-          key
-          ] === regionStr
+          matsCollections["region"].findOne({ name: "region" }).valuesMap[key] ===
+          regionStr
       );
       queryTemplate = queryTemplate.replace(/vxREGION/g, region);
-    } else
-    {
+    } else {
       var sitesList = curve["sites"] === undefined ? [] : curve["sites"];
-      if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused)
-      {
+      if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /vxSITES_LIST_OBS/g,
           cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
@@ -140,8 +130,7 @@ dataSeries = function (plotParams, plotFunction)
           /vxSITES_LIST_MODELS/g,
           cbPool.trfmListToCSVString(sitesList, "models.data.", false)
         );
-      } else
-      {
+      } else {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
@@ -157,29 +146,25 @@ dataSeries = function (plotParams, plotFunction)
     var axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     var idealVal = statisticOptionsMap[statisticSelect][2];
-    if (idealVal !== null && idealValues.indexOf(idealVal) === -1)
-    {
+    if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
       idealValues.push(idealVal);
     }
 
     var d;
-    if (diffFrom == null)
-    {
+    if (diffFrom == null) {
       statement = cbPool.trfmSQLForDbTarget(queryTemplate);
 
       dataRequests[label] = statement;
 
       // math is done on forecastLength later on -- set all analyses to 0
-      if (forecastLength === "-99")
-      {
+      if (forecastLength === "-99") {
         forecastLength = "0";
       }
 
       var queryResult;
       var startMoment = moment();
       var finishMoment;
-      try
-      {
+      try {
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBTimeSeries(
           cbPool,
@@ -199,27 +184,21 @@ dataSeries = function (plotParams, plotFunction)
           begin: startMoment.format(),
           finish: finishMoment.format(),
           duration:
-            moment.duration(finishMoment.diff(startMoment)).asSeconds() +
-            " seconds",
+            moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
           recordCount: queryResult.data.x.length,
         };
         // get the data back from the query
         d = queryResult.data;
-      } catch (e)
-      {
+      } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
-        e.message =
-          "Error in queryDB: " + e.message + " for statement: " + statement;
+        e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== "")
-      {
-        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND)
-        {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
+        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
-        } else
-        {
+        } else {
           // this is an error returned by the mysql database
           error +=
             "Error from verification query: <br>" +
@@ -229,22 +208,19 @@ dataSeries = function (plotParams, plotFunction)
             "<br>";
           throw new Error(error);
         }
-      } else
-      {
+      } else {
         dataFoundForAnyCurve = true;
       }
 
       // set axis limits based on returned data
       var postQueryStartMoment = moment();
-      if (dataFoundForCurve)
-      {
+      if (dataFoundForCurve) {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
         ymin = ymin < d.ymin ? ymin : d.ymin;
         ymax = ymax > d.ymax ? ymax : d.ymax;
       }
-    } else
-    {
+    } else {
       // this is a difference curve
       const diffResult = matsDataDiffUtils.getDataForDiffCurve(
         dataset,
@@ -286,14 +262,12 @@ dataSeries = function (plotParams, plotFunction)
       begin: postQueryStartMoment.format(),
       finish: postQueryFinishMoment.format(),
       duration:
-        moment
-          .duration(postQueryFinishMoment.diff(postQueryStartMoment))
-          .asSeconds() + " seconds",
+        moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() +
+        " seconds",
     };
   } // end for curves
 
-  if (!dataFoundForAnyCurve)
-  {
+  if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
     throw new Error("INFO:  No valid data for any curves.");
   }

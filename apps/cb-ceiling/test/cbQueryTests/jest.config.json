@@ -1,5 +1,5 @@
 {
-    "bail": 1,
-    "verbose": true,
-    "testTimeout": 300000
+  "bail": 1,
+  "verbose": true,
+  "testTimeout": 300000
 }
