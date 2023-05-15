@@ -203,7 +203,6 @@ def reprocess_specific_metadata(models_to_reprocess):
     cnx3.close()
 
     per_model = {}
-    print(models_to_reprocess)
     for model in models_to_reprocess:
         # initialize output object
         per_model[model] = {}
@@ -235,9 +234,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         cursor.execute(show_tables)
         for row in cursor:
             tablename = str(list(row.values())[0])
-            print(tablename)
             table_model = re.sub('_[A-Za-z]*_sums$', '', tablename)
-            print(table_model)
             if table_model == model:
                 # this is a table that does belong to this model
                 get_tablestats = "SELECT min(date) AS mindate, max(date) AS maxdate, count(date) AS numrecs FROM " + tablename + ";"
