@@ -277,13 +277,8 @@ def regions_per_model_mats_all_categories(mode):
     data_source_key_cats = {}
 
     ds_idx = 2
-    print("main_model_keys: " + str(main_model_keys) + "\n")
-    print("main_model_order_keys: " + str(main_model_order_keys) + "\n")
-    print("data_sources_in_this_app: " + str(data_sources_in_this_app) + "\n")
 
     for model in data_sources_in_this_app:
-        print("model: " + model)
-        print("main_models[model]: " + main_models[model])
         if model in main_model_keys and main_models[model] in main_model_order_keys:
             data_source_cats[model] = 1
         else:
