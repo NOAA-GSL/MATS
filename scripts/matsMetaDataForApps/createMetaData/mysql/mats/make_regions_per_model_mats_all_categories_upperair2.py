@@ -118,8 +118,8 @@ def regions_per_model_mats_all_categories(mode):
     # clean TABLESTATS_build in order to get updated data source information. If nothing has changed, you can set
     # TScleaned to False and just use the old data source info.
     clean_tablestats = "delete from " + db2 + ".TABLESTATS_build"
-    # TScleaned = False
-    TScleaned = True
+    TScleaned = False
+    # TScleaned = True
     if TScleaned:
         cursor.execute(clean_tablestats)
     else:
@@ -260,7 +260,7 @@ def regions_per_model_mats_all_categories(mode):
     # sys.exit(-1)
 
     # clean metadata build table
-    usedb = "use " + db1
+    usedb = "use " + db2
     cursor.execute(usedb)
 
     clean_rpmmac = "delete from regions_per_model_mats_all_categories_build"

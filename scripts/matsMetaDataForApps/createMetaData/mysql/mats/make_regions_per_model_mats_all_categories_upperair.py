@@ -118,8 +118,8 @@ def regions_per_model_mats_all_categories(mode):
     # clean TABLESTATS_build in order to get updated data source information. If nothing has changed, you can set
     # TScleaned to False and just use the old data source info.
     clean_tablestats = "delete from " + db2 + ".TABLESTATS_build"
-    TScleaned = False
-    # TScleaned = True
+    # TScleaned = False
+    TScleaned = True
     if TScleaned:
         cursor.execute(clean_tablestats)
     else:
@@ -347,19 +347,19 @@ def regions_per_model_mats_all_categories(mode):
 
     # clean metadata publication table and add the build data into it
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
-    # if 'deploy' in mode:
-    #     clean_rpmmac = "delete from regions_per_model_mats_all_categories"
-    #     cursor.execute(clean_rpmmac)
-    #     cnx.commit()
-    #     set_ai = "alter table regions_per_model_mats_all_categories auto_increment = 1"
-    #     cursor.execute(set_ai)
-    #     cnx.commit()
-    #     sync_rpm = "insert into regions_per_model_mats_all_categories select * from regions_per_model_mats_all_categories_build"
-    #     cursor.execute(sync_rpm)
-    #     cnx.commit()
-    #     print("deploy " + db1 + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
-    # else:
-    print("skipping deployment at " + str(updated_utc))
+    if 'deploy' in mode:
+        clean_rpmmac = "delete from regions_per_model_mats_all_categories"
+        cursor.execute(clean_rpmmac)
+        cnx.commit()
+        set_ai = "alter table regions_per_model_mats_all_categories auto_increment = 1"
+        cursor.execute(set_ai)
+        cnx.commit()
+        sync_rpm = "insert into regions_per_model_mats_all_categories select * from regions_per_model_mats_all_categories_build"
+        cursor.execute(sync_rpm)
+        cnx.commit()
+        print("deploy " + db1 + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
+    else:
+        print("skipping deployment at " + str(updated_utc))
 
     cursor.close()
     cnx.close()
