@@ -277,8 +277,8 @@ def regions_per_model_mats_all_categories(mode):
     data_source_key_cats = {}
 
     ds_idx = 2
-    print("main_model_keys: " + main_model_keys)
-    print("main_model_order_keys: " + main_model_order_keys)
+    print("main_model_keys: " + str(main_model_keys))
+    print("main_model_order_keys: " + str(main_model_order_keys))
 
     for model in data_sources_in_this_app:
         print("model: " + model)
