@@ -16,7 +16,7 @@ import re
 import sys
 
 try:
-    import pymysql
+    import MySQLdb
 except ImportError:
     raise ImportError('--------------------IMPORTANT: This script now requires python 3 to run. \
                       You can do this in the amb-verif conda environment by running "conda activate \
@@ -126,26 +126,26 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_types
 def reprocess_specific_metadata(models_to_reprocess):
     # connect to database
     try:
-        cnx = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
-        cursor = cnx.cursor(pymysql.cursors.DictCursor)
-    except pymysql.Error as e:
+        cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
+    except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
     try:
-        cnx2 = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx2 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx2.autocommit = True
-        cursor2 = cnx2.cursor(pymysql.cursors.DictCursor)
-    except pymysql.Error as e:
+        cursor2 = cnx2.cursor(MySQLdb.cursors.DictCursor)
+    except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
     try:
-        cnx3 = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx3 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx3.autocommit = True
-        cursor3 = cnx3.cursor(pymysql.cursors.DictCursor)
-    except pymysql.Error as e:
+        cursor3 = cnx3.cursor(MySQLdb.cursors.DictCursor)
+    except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 

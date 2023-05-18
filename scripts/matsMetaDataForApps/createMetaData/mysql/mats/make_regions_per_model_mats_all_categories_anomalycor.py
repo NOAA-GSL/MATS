@@ -10,7 +10,7 @@ import time
 import re
 import sys
 import ast
-import pymysql
+import MySQLdb
 
 
 ############################################################################
@@ -69,22 +69,22 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens,
 def regions_per_model_mats_all_categories(mode):
     # connect to database
     try:
-        cnx = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
-        cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("set session wait_timeout=28800")
         cursor.execute("set session interactive_timeout=28800")
-    except pymysql.Error as e:
+    except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
     try:
-        cnx3 = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx3 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx3.autocommit = True
-        cursor3 = cnx3.cursor(pymysql.cursors.DictCursor)
+        cursor3 = cnx3.cursor(MySQLdb.cursors.DictCursor)
         cursor3.execute("set session wait_timeout=28800")
         cursor3.execute("set session interactive_timeout=28800")
-    except pymysql.Error as e:
+    except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
@@ -239,12 +239,12 @@ def regions_per_model_mats_all_categories(mode):
     cnx.close()
 
     try:
-        cnx = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx.autocommit = True
-        cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("set session wait_timeout=28800")
         cursor.execute("set session interactive_timeout=28800")
-    except pymysql.Error as e:
+    except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
@@ -254,12 +254,12 @@ def regions_per_model_mats_all_categories(mode):
 
     # use standardized model names
     try:
-        cnx4 = pymysql.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx4 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx4.autocommit = True
-        cursor4 = cnx4.cursor(pymysql.cursors.DictCursor)
+        cursor4 = cnx4.cursor(MySQLdb.cursors.DictCursor)
         cursor4.execute("set session wait_timeout=28800")
         cursor4.execute("set session interactive_timeout=28800")
-    except pymysql.Error as e:
+    except MySQLdb.Error as e:
         print("Error: " + str(e))
         sys.exit(1)
 
