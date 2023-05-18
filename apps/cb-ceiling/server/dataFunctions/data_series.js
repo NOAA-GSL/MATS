@@ -11,8 +11,6 @@ import { matsDataCurveOpsUtils } from "meteor/randyp:mats-common";
 import { matsDataProcessUtils } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// import TimeSeriesStations from "../matsMiddle/timeSeriesStations";
-
 dataSeries = function (plotParams, plotFunction)
 {
   var fs = require("fs");
@@ -46,6 +44,7 @@ dataSeries = function (plotParams, plotFunction)
   var ymin = Number.MAX_VALUE;
   var idealValues = [];
   var statement = "";
+  var queryTemplate = null;
 
   for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++)
   {
@@ -54,23 +53,11 @@ dataSeries = function (plotParams, plotFunction)
     var curve = curves[curveIndex];
     var regionType = curve["region-type"];
     var queryTemplate = null;
-    if (regionType === "Predefined region")
-    {
-      queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_TimeSeries_region.sql", "utf8");
-    } else
-    {
-      queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_TimeSeries_stations.sql", "utf8");
-    }
-
-    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-
     var diffFrom = curve.diffFrom;
     var label = curve["label"];
     var variable = curve["variable"];
     var model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
     var thresholdStr = curve["threshold"];
     var threshold = Object.keys(
       matsCollections["threshold"].findOne({ name: "threshold" }).valuesMap[
@@ -83,25 +70,11 @@ dataSeries = function (plotParams, plotFunction)
         ][key] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
-    queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
 
     var validTimes =
       curve["valid-time"] === undefined ? [] : curve["valid-time"];
-    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
-    {
-      queryTemplate = queryTemplate.replace(
-        /vxVALID_TIMES/g,
-        cbPool.trfmListToCSVString(validTimes, null, false)
-      );
-    } else
-    {
-      queryTemplate = cbPool.trfmSQLRemoveClause(
-        queryTemplate,
-        "vxVALID_TIMES"
-      );
-    }
+
     var forecastLength = curve["forecast-length"];
-    queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
     var statisticSelect = curve["statistic"];
     var statisticOptionsMap = matsCollections["statistic"].findOne(
       { name: "statistic" },
@@ -114,9 +87,7 @@ dataSeries = function (plotParams, plotFunction)
       { optionsMap: 1 }
     )["optionsMap"];
     var average = averageOptionsMap[averageStr][0];
-    queryTemplate = queryTemplate.replace(/vxAVERAGE/g, average);
 
-    // All SQL template transformations happen inside the
     if (regionType === "Predefined region")
     {
       var regionStr = curve["region"];
@@ -128,27 +99,39 @@ dataSeries = function (plotParams, plotFunction)
           key
           ] === regionStr
       );
+      // SQL template replacements
+      queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_TimeSeries_region.sql", "utf8");
+      queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
       queryTemplate = queryTemplate.replace(/vxREGION/g, region);
+      queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
+      queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
+      queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
+      queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
+      queryTemplate = queryTemplate.replace(/vxAVERAGE/g, average);
+
+      if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
+      {
+        queryTemplate = queryTemplate.replace(
+          /vxVALID_TIMES/g,
+          cbPool.trfmListToCSVString(validTimes, null, false)
+        );
+      } else
+      {
+        queryTemplate = cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "vxVALID_TIMES"
+        );
+      }
+
     } else
     {
       var sitesList = curve["sites"] === undefined ? [] : curve["sites"];
-      if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused)
-      {
-        queryTemplate = queryTemplate.replace(
-          /vxSITES_LIST_OBS/g,
-          cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
-        );
-        queryTemplate = queryTemplate.replace(
-          /vxSITES_LIST_MODELS/g,
-          cbPool.trfmListToCSVString(sitesList, "models.data.", false)
-        );
-      } else
+      if (sitesList.length == 0 && sitesList === matsTypes.InputTypes.unused)
       {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
-      queryTemplate = queryTemplate.replace(/m0.fcstValidEpoch/g, "m.mfve");
     }
 
     // axisKey is used to determine which axis a curve should use.
@@ -167,11 +150,6 @@ dataSeries = function (plotParams, plotFunction)
     var d;
     if (diffFrom == null)
     {
-      statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
-      // TODO - remove write top file
-      fs.writeFileSync('/Users/gopa.padmanabhan/scratch/query.sql', statement);
-
       dataRequests[label] = statement;
 
       // math is done on forecastLength later on -- set all analyses to 0
@@ -187,6 +165,10 @@ dataSeries = function (plotParams, plotFunction)
       {
         if (regionType === "Predefined region")
         {
+          statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+          // TODO - remove write top file
+          fs.writeFileSync('/Users/gopa.padmanabhan/scratch/query.sql', statement);
+
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBTimeSeries(
             cbPool,
