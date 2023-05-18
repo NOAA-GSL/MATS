@@ -117,8 +117,8 @@ def regions_per_model_mats_all_categories(mode):
     # clean TABLESTATS_build in order to get updated data source information. If nothing has changed, you can set
     # TScleaned to False and just use the old data source info.
     clean_tablestats = "delete from " + db + ".TABLESTATS_build"
-    # TScleaned = False
-    TScleaned = True
+    TScleaned = False
+    # TScleaned = True
     if TScleaned:
         cursor.execute(clean_tablestats)
     else:
@@ -344,7 +344,7 @@ def regions_per_model_mats_all_categories(mode):
         these_regions_raw = []
         these_regions_orders = []
         for row in cursor:
-            val = str(list(row.values())[0])
+            val = int(list(row.values())[0])
             these_regions_raw.append(val)
             these_regions_orders.append(valid_region_orders[val])
         these_regions = [x for _, x in sorted(zip(these_regions_orders, these_regions_raw))]
