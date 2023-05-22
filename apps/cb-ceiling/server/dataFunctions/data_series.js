@@ -166,8 +166,6 @@ dataSeries = function (plotParams, plotFunction)
         if (regionType === "Predefined region")
         {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-          // TODO - remove write top file
-          fs.writeFileSync('/Users/gopa.padmanabhan/scratch/query.sql', statement);
 
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBTimeSeries(
