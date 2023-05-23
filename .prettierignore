@@ -1,7 +1,6 @@
 .vscode
 container_deployment
 container-scripts
-# MATScommon
 METexpress
 kubernetes
 scripts
