@@ -30,7 +30,6 @@ dataSeries = function (plotParams, plotFunction) {
   let dataFoundForAnyCurve = false;
   const totalProcessingStart = moment();
   const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  console.log(JSON.stringify(plotParams, null, 2));
   const fromSecs = dateRange.fromSeconds;
   const toSecs = dateRange.toSeconds;
   let error = "";
@@ -45,14 +44,12 @@ dataSeries = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
   const idealValues = [];
   let statement = "";
-  var queryTemplate = null;
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
 
     const curve = curves[curveIndex];
     const regionType = curve["region-type"];
-    var queryTemplate = null;
     const { diffFrom } = curve;
     const { label } = curve;
     var { variable } = curve;
@@ -95,7 +92,7 @@ dataSeries = function (plotParams, plotFunction) {
           regionStr
       );
       // SQL template replacements
-      queryTemplate = fs.readFileSync(
+      var queryTemplate = fs.readFileSync(
         "assets/app/sqlTemplates/tmpl_TimeSeries_region.sql",
         "utf8"
       );
@@ -181,7 +178,6 @@ dataSeries = function (plotParams, plotFunction) {
             toSecs,
             validTimes
           );
-          console.log(`matsMiddle done: rows:${rows.length}`);
 
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBTimeSeriesMT(
@@ -196,9 +192,6 @@ dataSeries = function (plotParams, plotFunction) {
             validTimes,
             appParams,
             false
-          );
-          console.log(
-            `queryDBTimeSeriesMT done: rows:${rows.length},recordCount:${queryResult.data.x.length}`
           );
         }
 
