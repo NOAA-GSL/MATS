@@ -47,8 +47,6 @@
     "camelcase": "warn",
     "no-redeclare": "warn",
     "no-shadow": "warn",
-    "no-useless-escape": "warn",
-    "import/no-unresolved": "warn",
     "no-await-in-loop": "warn",
     "no-continue": "warn",
     "global-require": "warn",
