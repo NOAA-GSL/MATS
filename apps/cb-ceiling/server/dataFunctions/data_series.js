@@ -188,7 +188,7 @@ dataSeries = function (plotParams, plotFunction)
           var tss = new matsMiddle.MatsMiddleTimeSeriesStations(cbPool);
           let rows = [];
           rows = tss.processStationQuery("Ceiling", sitesList, model, forecastLength, threshold, average, fromSecs, toSecs, validTimes);
-          console.log("matsMiddle done!");
+          console.log("matsMiddle done: rows:" + rows.length);
 
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBTimeSeriesMT(
@@ -204,6 +204,7 @@ dataSeries = function (plotParams, plotFunction)
             appParams,
             false
           );
+          console.log("queryDBTimeSeriesMT done: rows:" + rows.length + ",recordCount:" + queryResult.data.x.length);
         }
 
         finishMoment = moment();
