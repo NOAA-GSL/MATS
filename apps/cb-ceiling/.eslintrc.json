@@ -51,6 +51,7 @@
     "no-await-in-loop": "warn",
     "no-continue": "warn",
     "no-undef-init": "warn",
-    "no-use-before-define": "warn"
+    "no-use-before-define": "warn",
+    "global-require": "warn"
   }
 }
