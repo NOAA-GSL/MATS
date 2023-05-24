@@ -180,7 +180,7 @@ dataDieOff = function (plotParams, plotFunction) {
     }
 
     var d;
-    if (diffFrom === null) {
+    if (!diffFrom) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       statement = cbPool.trfmSQLForDbTarget(queryTemplate);

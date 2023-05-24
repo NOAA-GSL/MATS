@@ -129,7 +129,7 @@ dataValidTime = function (plotParams, plotFunction) {
     }
 
     var d;
-    if (diffFrom === null) {
+    if (!diffFrom) {
       statement = cbPool.trfmSQLForDbTarget(queryTemplate);
 
       dataRequests[label] = statement;

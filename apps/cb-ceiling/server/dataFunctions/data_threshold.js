@@ -114,7 +114,7 @@ dataThreshold = function (plotParams, plotFunction) {
     }
 
     let d = {};
-    if (diffFrom === null) {
+    if (!diffFrom) {
       // this is a database driven curve, not a difference curve
       for (
         let thresholdIndex = 0;

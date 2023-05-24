@@ -135,7 +135,7 @@ dataSeries = function (plotParams, plotFunction) {
     }
 
     var d;
-    if (diffFrom === null || diffFrom === undefined) {
+    if (!diffFrom) {
       dataRequests[label] = statement;
 
       // math is done on forecastLength later on -- set all analyses to 0
@@ -149,7 +149,6 @@ dataSeries = function (plotParams, plotFunction) {
       try {
         if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-          console.log(statement);
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBTimeSeries(
             cbPool,
