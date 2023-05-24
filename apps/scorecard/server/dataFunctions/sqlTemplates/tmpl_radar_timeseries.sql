@@ -1,7 +1,7 @@
 SELECT m0.time AS avtime,
         SUM(m0.yy) AS hit,
-        SUM(m0.yn) AS fa,
-        SUM(m0.ny) AS miss,
+        SUM(m0.ny) AS fa,
+        SUM(m0.yn) AS miss,
         SUM(m0.nn) AS cn
     FROM {{database}}.{{model}}_{{grid_scale}}_{{region}} AS m0
     WHERE 1=1

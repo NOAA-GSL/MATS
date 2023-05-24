@@ -41,16 +41,16 @@
     "block-scoped-var": "warn",
     "no-loop-func": "warn",
     "no-unused-vars": "warn",
+    "no-console": "warn",
     "prefer-destructuring": "warn",
     "no-param-reassign": "warn",
     "camelcase": "warn",
+    "eqeqeq": "warn",
     "no-redeclare": "warn",
     "no-shadow": "warn",
-    "no-useless-escape": "warn",
-    "import/no-unresolved": "warn",
     "no-await-in-loop": "warn",
     "no-continue": "warn",
-    "no-undef-init": "warn",
+    "global-require": "warn",
     "no-use-before-define": "warn"
   }
 }

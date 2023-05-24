@@ -19,7 +19,7 @@ jobs:
       matrix:
         app: 
           - anomalycor
-          # - cb-ceiling  # Enable once feature_cb_sdk_to_4x is merged
+          - cb-ceiling
           - ceil-vis
           - ceil-vis15
           - landuse

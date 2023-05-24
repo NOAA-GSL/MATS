@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+#!/scratch1/BMC/amb-verif/miniconda/miniconda3/envs/avid_verify_py3/bin/python
+#
+# The reason I am hardcoding the python path above is that this script is usally run by model developers 
+# without guidance from us, and I don't want them to be tripped up by the fact that the default puthon on 
+# Hera is python 2, while this script requires python 3. There's also an error to that effect below, but 
+#I'm trying to cut down on the number of confused emails we get. Our main scripts are all environment-agnostic, 
+#becuause they are run by verification team members who know which conda environment to use.
 #
 # Updates the regions_per_model_mats_all_categories table for all models in ruc_ua and ruc_ua_sums2
 
@@ -9,7 +15,13 @@ from datetime import datetime
 import time
 import re
 import sys
-import MySQLdb
+
+try:
+    import MySQLdb
+except ImportError:
+    raise ImportError('--------------------IMPORTANT: This script now requires python 3 to run. \
+                      You can do this in the amb-verif conda environment by running "conda activate \
+                      avid_verify_py3" and then trying this script again.-------------------------')
 
 
 ############################################################################
@@ -22,7 +34,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, table_name_prefix, 
     cursor.execute(find_rpm_rec)
     build_record_id = int(0)
     for row in cursor:
-        val = row.values()[0]
+        val = list(row.values())[0]
         build_record_id = int(val)
 
     # see if this record already exists in the prod table
@@ -31,7 +43,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, table_name_prefix, 
     cursor.execute(find_rpm_rec)
     prod_record_id = int(0)
     for row in cursor:
-        val = row.values()[0]
+        val = list(row.values())[0]
         prod_record_id = int(val)
 
     if len(regions) > int(0) and len(fcst_lens) > int(0):
@@ -117,7 +129,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, table_name_prefix, 
 def reprocess_specific_metadata(models_to_reprocess):
     # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -125,7 +137,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         sys.exit(1)
 
     try:
-        cnx2 = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")
+        cnx2 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx2.autocommit = True
         cursor2 = cnx2.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -133,7 +145,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         sys.exit(1)
 
     try:
-        cnx3 = MySQLdb.connect(read_default_file="/home/amb-verif/.my.cnf")
+        cnx3 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx3.autocommit = True
         cursor3 = cnx3.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -180,19 +192,21 @@ def reprocess_specific_metadata(models_to_reprocess):
     get_model_orders = "select model,m_order from primary_model_orders order by m_order;"
     cursor3.execute(get_model_orders)
 
-    new_model_list = main_models.values()
+    new_model_list = list(main_models.values())
+    main_model_order_keys = []
     main_model_orders = {}
     for row in cursor3:
         new_model = str(row['model'])
         m_order = int(row['m_order'])
         if new_model in new_model_list:
+            main_model_order_keys.append(new_model)
             main_model_orders[new_model] = m_order
 
     # get max category used so far
     cursor3.execute("use " + db1)
     cursor3.execute("select max(display_category) from regions_per_model_mats_all_categories;")
     for row in cursor3:
-        max_display_category = row.values()[0]
+        max_display_category = list(row.values())[0]
     curr_model_order = 1
 
     cursor3.close()
@@ -211,7 +225,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         per_model[model]['maxhour'] = -1 * sys.float_info.max
         per_model[model]['numrecs'] = 0
 
-        if model in main_model_keys:
+        if model in main_model_keys and main_models[model] in main_model_order_keys:
             per_model[model]['display_text'] = main_models[model]
             per_model[model]['display_category'] = 1
             per_model[model]['display_order'] = main_model_orders[per_model[model]['display_text']]
@@ -232,8 +246,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         show_tables = ("show tables like '" + model + "_%';")
         cursor.execute(show_tables)
         for row in cursor:
-            tablename = row.values()[0]
-            tablename = tablename.encode('ascii', 'ignore')
+            tablename = str(list(row.values())[0])
             if '_Areg' in tablename:
                 table_model = re.sub('_Areg.*', '', tablename)
             elif '_Breg' in tablename:
@@ -270,7 +283,7 @@ def reprocess_specific_metadata(models_to_reprocess):
                     cursor2.execute(get_fcst_lens)
                     thisfcst_lens = []
                     for row2 in cursor2:
-                        val = row2.values()[0]
+                        val = list(row2.values())[0]
                         thisfcst_lens.append(int(val))
                     per_model[model]['fcst_len'] = list(set(per_model[model]['fcst_len']) | set(thisfcst_lens))
                     per_model[model]['fcst_len'].sort(key=int)
