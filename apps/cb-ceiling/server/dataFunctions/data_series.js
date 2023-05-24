@@ -10,6 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
+  matsMiddle
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -65,6 +66,7 @@ dataSeries = function (plotParams, plotFunction) {
         ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
+
 
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
 
@@ -134,7 +136,7 @@ dataSeries = function (plotParams, plotFunction) {
     }
 
     var d;
-    if (diffFrom === null) {
+    if (diffFrom === null || diffFrom === undefined) {
       dataRequests[label] = statement;
 
       // math is done on forecastLength later on -- set all analyses to 0
@@ -148,7 +150,7 @@ dataSeries = function (plotParams, plotFunction) {
       try {
         if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
+          console.log(statement);
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBTimeSeries(
             cbPool,
@@ -299,6 +301,7 @@ dataSeries = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
+
   const result = matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
