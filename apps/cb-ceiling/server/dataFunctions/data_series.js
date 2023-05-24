@@ -10,7 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddle
+  matsMiddle,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -66,7 +66,6 @@ dataSeries = function (plotParams, plotFunction) {
         ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
-
 
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
 
