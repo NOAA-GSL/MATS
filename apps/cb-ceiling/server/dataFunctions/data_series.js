@@ -11,7 +11,7 @@ import
     matsDataDiffUtils,
     matsDataCurveOpsUtils,
     matsDataProcessUtils,
-    matsMiddle
+    matsMiddleTimeSeries
   } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -179,7 +179,7 @@ dataSeries = function (plotParams, plotFunction)
         } else
         {
           // send to matsMiddle
-          const tss = new matsMiddle.MatsMiddleTimeSeries(cbPool);
+          const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
           let rows = [];
           rows = tss.processStationQuery(
             "Ceiling",
