@@ -11,6 +11,7 @@ import
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
+  matsMiddle
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -41,6 +42,7 @@ dataDieOff = function (plotParams, plotFunction)
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
   const idealValues = [];
+  let statement = "";
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++)
   {
@@ -58,7 +60,6 @@ dataDieOff = function (plotParams, plotFunction)
     var { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
     var thresholdStr = curve.threshold;
     let threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
@@ -82,6 +83,7 @@ dataDieOff = function (plotParams, plotFunction)
       { optionsMap: 1 }
     ).optionsMap;
 
+    let sitesList = [];
     if (regionType === "Predefined region")
     {
       var regionStr = curve.region;
@@ -111,6 +113,7 @@ dataDieOff = function (plotParams, plotFunction)
           "utf8"
         );
       }
+      queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
       queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
       queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
       queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
@@ -146,7 +149,7 @@ dataDieOff = function (plotParams, plotFunction)
       }
     } else
     {
-      const sitesList = curve.sites === undefined ? [] : curve.sites;
+      sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused)
       {
         throw new Error(
@@ -204,7 +207,7 @@ dataDieOff = function (plotParams, plotFunction)
         } else
         {
           // send to matsMiddle
-          const tss = new matsMiddle.MatsMiddleDieOffStations(cbPool);
+          const tss = new matsMiddle.MatsMiddleDieOff(cbPool);
           let rows = [];
           rows = tss.processStationQuery(
             "Ceiling",
@@ -212,14 +215,13 @@ dataDieOff = function (plotParams, plotFunction)
             model,
             forecastLength,
             threshold,
-            average,
             fromSecs,
             toSecs,
             validTimes
           );
 
           // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBSpecialtyCurveMatsMiddle(
+          queryResult = tss.queryDBSpecialtyCurve(
             cbPool,
             rows,
             appParams,

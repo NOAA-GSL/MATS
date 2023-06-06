@@ -11,7 +11,7 @@ import
     matsDataDiffUtils,
     matsDataCurveOpsUtils,
     matsDataProcessUtils,
-    matsMiddle,
+    matsMiddle
   } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -179,7 +179,7 @@ dataSeries = function (plotParams, plotFunction)
         } else
         {
           // send to matsMiddle
-          const tss = new matsMiddle.MatsMiddleTimeSeriesStations(cbPool);
+          const tss = new matsMiddle.MatsMiddleTimeSeries(cbPool);
           let rows = [];
           rows = tss.processStationQuery(
             "Ceiling",
@@ -194,7 +194,7 @@ dataSeries = function (plotParams, plotFunction)
           );
 
           // send the query statement to the query function
-          queryResult = tss.queryDBTimeSeriesMatsMiddle(
+          queryResult = tss.queryDBTimeSeries(
             cbPool,
             rows,
             model,
