@@ -1,6 +1,6 @@
 SELECT
     fcstValidEpoch fve,
-    fcstLen fcst,
+    fcstLen fcst_lead,
     {{vxAVERAGE}} avtime,
     {{stationNamesList}}
 FROM
