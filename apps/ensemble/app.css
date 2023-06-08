@@ -1,0 +1,159 @@
+/*
+ * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
+/* CSS declarations go here */
+html,
+body {
+  height: 100%;
+}
+
+@font-face {
+  font-family: "PublicSans-Regular";
+  src: url("/packages/randyp_mats-common/public/fonts/PublicSans-Regular.ttf");
+}
+
+@font-face {
+  font-family: "PublicSans-SemiBold";
+  src: url("/packages/randyp_mats-common/public/fonts/PublicSans-SemiBold.ttf");
+}
+
+@font-face {
+  font-family: "PublicSans-Medium";
+  src: url("/packages/randyp_mats-common/public/fonts/PublicSans-Medium.ttf");
+}
+
+body {
+  margin-top: 1%;
+  margin-left: 2%;
+  margin-right: 2%;
+  margin-bottom: 1%;
+  padding: 0;
+  background: url("/packages/randyp_mats-common/public/img/bg.png") repeat;
+  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  color: #333333; /*#545454;*/
+}
+
+.main {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+  font-size: 15px;
+}
+
+.modal-backdrop {
+  background-color: grey;
+}
+
+.modal-header {
+  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
+}
+
+.modal-body {
+  background-image: url("/packages/randyp_mats-common/public/img/texturetastic_gray.png");
+}
+
+.modal-content {
+  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
+}
+
+.modal-footer {
+  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
+}
+
+#Mongol.Mongol_expand {
+  max-width: 720px !important;
+}
+
+#placeholder .button {
+  position: absolute;
+  cursor: pointer;
+}
+
+#placeholder div.button {
+  font-size: smaller;
+  color: #999;
+  background-color: #eee;
+  padding: 2px;
+}
+
+.message {
+  padding-left: 50px;
+  font-size: smaller;
+}
+
+hr {
+  height: 0;
+  border-top: 1px;
+  color: #eee;
+  background-color: #eee;
+}
+
+.spacer {
+  padding-left: 1em;
+}
+
+.rule {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+}
+
+.spacebutton {
+  background: transparent;
+  border: none;
+}
+
+.input {
+  max-width: 100%;
+}
+
+.select2-selection--multiple {
+  max-height: 200px;
+  overflow: auto;
+}
+
+.boldedPublicSans {
+  font-family: PublicSans-SemiBold, Arial, Helvetica, serif;
+}
+
+.regularPublicSans {
+  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+}
+
+.mediumPublicSans {
+  font-family: PublicSans-Medium, Arial, Helvetica, serif;
+}
+
+.item + .tooltip > .tooltip-inner {
+  background-color: #73ad21;
+  color: #ffffff;
+  border: 1px solid green;
+  padding: 5px;
+  font-size: 15px;
+  max-width: 350px;
+  width: 350px;
+}
+
+.daterangepicker .ranges li {
+  background-color: #bfdfff;
+  font-size: 14px !important;
+  margin: 5px 2px;
+  border-radius: 10px;
+  border-color: #dddddd;
+  border-width: 1px;
+}
+
+.daterangepicker .drp-selected {
+  font-size: 18px !important;
+  color: #990000;
+}
+
+.login-link-text {
+  color: white;
+  font-size: medium;
+  text-decoration: none !important;
+}
