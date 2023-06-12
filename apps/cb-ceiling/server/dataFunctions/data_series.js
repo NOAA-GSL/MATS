@@ -180,8 +180,7 @@ dataSeries = function (plotParams, plotFunction)
         {
           // send to matsMiddle
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
-          let rows = [];
-          rows = tss.processStationQuery(
+          let rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
             model,

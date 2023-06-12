@@ -208,8 +208,7 @@ dataDieOff = function (plotParams, plotFunction)
         {
           // send to matsMiddle
           const tss = new matsMiddleDieOff.MatsMiddleDieOff(cbPool);
-          let rows = [];
-          rows = tss.processStationQuery(
+          let rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
             model,
@@ -219,6 +218,7 @@ dataDieOff = function (plotParams, plotFunction)
             toSecs,
             validTimes
           );
+          console.log("rows:" + rows.length);
 
           // send the query statement to the query function
           queryResult = tss.queryDBSpecialtyCurve(
@@ -227,6 +227,8 @@ dataDieOff = function (plotParams, plotFunction)
             appParams,
             statisticSelect
           );
+
+          d = queryResult.data;
         }
       } catch (e)
       {
