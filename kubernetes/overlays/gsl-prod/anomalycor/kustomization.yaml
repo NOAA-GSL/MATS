@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/anomalycor
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/anomalycor
+    newTag: development 
+
+configMapGenerator:
+  - name: anomalycor-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: anomalycor-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay

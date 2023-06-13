@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radar
+spec:
+  template:
+    spec:
+      containers:
+        - name: radar
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: radar-secret
+          volumeMounts:
+            - name: radar-settings-file
+              mountPath: /usr/app/settings/radar/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: radar-settings-file
+          configMap:
+            name: radar-config
