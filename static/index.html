@@ -47,8 +47,11 @@
                 success(function (data) {
                     for (var di = 0; di < data.length; di++) {
                         data[di].itemColor = '#3366bb';
-                        if (data[di].group.startsWith("MET")) {
+                        if (data[di].group.startsWith("met-")) {
                             data[di].itemColor = 'darkorchid';
+                        }
+                        if (data[di].group.startsWith("cb-")) {
+                            data[di].itemColor = 'teal';
                         }
                         if ($scope.items[data[di].group] == null) {
                             $scope.items[data[di].group] = [data[di]];
