@@ -13,12 +13,11 @@ import {
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
-// This app combines three previous apps, cref, echotop, and vil.
+// This app displays both composite reflectivity and precipitation ensemble stats.
 // This is where we store the databases referenced by those apps.
 const variableDBNames = {
-  "Composite Reflectivity": "cref",
-  "Echo Top": "echotop",
-  "Vertically Integrated Liquid": "vil",
+  "Composite Reflectivity": "ensemble_cref",
+  Precipitation: "ensemble_pqpf",
 };
 const variables = Object.keys(variableDBNames);
 
