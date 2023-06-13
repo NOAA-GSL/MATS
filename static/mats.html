@@ -47,10 +47,10 @@
                 success(function (data) {
                     for (var di = 0; di < data.length; di++) {
                         data[di].itemColor = '#3366bb';
-                        if (data[di].group.startsWith("met-")) {
+                        if (data[di].app.startsWith("met-")) {
                             data[di].itemColor = 'darkorchid';
                         }
-                        if (data[di].group.startsWith("cb-")) {
+                        if (data[di].app.startsWith("cb-")) {
                             data[di].itemColor = 'teal';
                         }
                         if ($scope.items[data[di].group] == null) {
