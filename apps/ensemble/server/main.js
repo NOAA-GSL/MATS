@@ -13,6 +13,15 @@ import {
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
+// This app combines three previous apps, cref, echotop, and vil.
+// This is where we store the databases referenced by those apps.
+const variableDBNames = {
+  "Composite Reflectivity": "cref",
+  "Echo Top": "echotop",
+  "Vertically Integrated Liquid": "vil",
+};
+const variables = Object.keys(variableDBNames);
+
 // determined in doCurveParanms
 let minDate;
 let maxDate;
@@ -33,7 +42,7 @@ const doPlotParams = function () {
       options: [""],
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ["data-source"],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       default: dstr,
       controlButtonVisibility: "block",
@@ -226,12 +235,11 @@ const doPlotParams = function () {
 
     const xOptionsMap = {
       "Fcst lead time": "select m0.fcst_len as xVal, ",
-      Threshold: "select m0.thresh/100 as xVal, ", // produces thresholds in in
-      "Valid UTC hour": "select m0.valid_time%(24*3600)/3600 as xVal, ",
-      "Init UTC hour":
-        "select (m0.valid_time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-      "Valid Date": "select m0.valid_time as xVal, ",
-      "Init Date": "select m0.valid_time-m0.fcst_len*3600 as xVal, ",
+      Threshold: "select m0.trsh as xVal, ",
+      "Valid UTC hour": "select m0.time%(24*3600)/3600 as xVal, ",
+      "Init UTC hour": "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
+      "Valid Date": "select m0.time as xVal, ",
+      "Init Date": "select m0.time-m0.fcst_len*3600 as xVal, ",
     };
 
     matsCollections.PlotParams.insert({
@@ -251,11 +259,11 @@ const doPlotParams = function () {
 
     const yOptionsMap = {
       "Fcst lead time": "m0.fcst_len as yVal, ",
-      Threshold: "m0.thresh/100 as yVal, ", // produces thresholds in in
-      "Valid UTC hour": "m0.valid_time%(24*3600)/3600 as yVal, ",
-      "Init UTC hour": "(m0.valid_time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
-      "Valid Date": "m0.valid_time as yVal, ",
-      "Init Date": "m0.valid_time-m0.fcst_len*3600 as yVal, ",
+      Threshold: "m0.trsh as yVal, ",
+      "Valid UTC hour": "m0.time%(24*3600)/3600 as yVal, ",
+      "Init UTC hour": "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
+      "Valid Date": "m0.time as yVal, ",
+      "Init Date": "m0.time-m0.fcst_len*3600 as yVal, ",
     };
 
     matsCollections.PlotParams.insert({
@@ -266,7 +274,7 @@ const doPlotParams = function () {
       selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(yOptionsMap)[0],
+      default: Object.keys(yOptionsMap)[1],
       controlButtonVisibility: "block",
       displayOrder: 10,
       displayPriority: 1,
@@ -324,14 +332,16 @@ const doCurveParams = function () {
       matsCollections[params[cp]].remove({});
     }
   }
+
   const modelOptionsMap = {};
   let modelDateRangeMap = {};
   const regionModelOptionsMap = {};
   const forecastLengthOptionsMap = {};
   const thresholdsModelOptionsMap = {};
-  const sourceOptionsMap = {};
+  const scaleModelOptionsMap = {};
   const masterRegionValuesMap = {};
   const masterThresholdValuesMap = {};
+  const masterScaleValuesMap = {};
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
@@ -349,77 +359,129 @@ const doCurveParams = function () {
     console.log(err.message);
   }
 
+  let rows;
+  let didx;
+
   try {
-    const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      modelPool,
-      "select trsh,description from threshold_descriptions;"
-    );
-    let masterDescription;
-    let masterTrsh;
-    for (var j = 0; j < rows.length; j++) {
-      masterDescription = rows[j].description.trim();
-      masterTrsh = rows[j].trsh.trim();
-      masterThresholdValuesMap[masterTrsh] = masterDescription;
+    for (didx = 0; didx < variables.length; didx++) {
+      masterThresholdValuesMap[variables[didx]] = {};
+      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool,
+        `select trsh,description from ${
+          variableDBNames[variables[didx]]
+        }.threshold_descriptions;`
+      );
+      var masterDescription;
+      var masterTrsh;
+      var trshTemp;
+      for (var j = 0; j < rows.length; j++) {
+        masterDescription = rows[j].description.trim();
+        trshTemp = rows[j].trsh.trim();
+        masterTrsh = trshTemp * 10000;
+        masterThresholdValuesMap[variables[didx]][masterTrsh] = masterDescription;
+      }
     }
   } catch (err) {
     console.log(err.message);
   }
 
   try {
-    const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool,
-      "select model,regions,sources,display_text,fcst_lens,trsh,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
-    );
-    for (let i = 0; i < rows.length; i++) {
-      const model_value = rows[i].model.trim();
-      const model = rows[i].display_text.trim();
-      modelOptionsMap[model] = [model_value];
-
-      const rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-      const rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-      modelDateRangeMap[model] = { minDate: rowMinDate, maxDate: rowMaxDate };
-
-      const { sources } = rows[i];
-      const sourceArr = sources
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      for (var j = 0; j < sourceArr.length; j++) {
-        sourceArr[j] = sourceArr[j].replace(/'|\[|\]/g, "");
+    for (didx = 0; didx < variables.length; didx++) {
+      masterScaleValuesMap[variables[didx]] = {};
+      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool,
+        `select scale,description from ${
+          variableDBNames[variables[didx]]
+        }.scale_descriptions;`
+      );
+      var masterDescription;
+      var masterScale;
+      for (var j = 0; j < rows.length; j++) {
+        masterDescription = rows[j].description.trim();
+        masterScale = rows[j].scale.trim();
+        masterScaleValuesMap[variables[didx]][masterScale] = masterDescription;
       }
-      sourceOptionsMap[model] = sourceArr;
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
 
-      const forecastLengths = rows[i].fcst_lens;
-      const forecastLengthArr = forecastLengths
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      for (var j = 0; j < forecastLengthArr.length; j++) {
-        forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
-      }
-      forecastLengthOptionsMap[model] = forecastLengthArr;
+  try {
+    for (didx = 0; didx < variables.length; didx++) {
+      modelOptionsMap[variables[didx]] = {};
+      modelDateRangeMap[variables[didx]] = {};
+      forecastLengthOptionsMap[variables[didx]] = {};
+      thresholdsModelOptionsMap[variables[didx]] = {};
+      scaleModelOptionsMap[variables[didx]] = {};
+      regionModelOptionsMap[variables[didx]] = {};
 
-      const thresholds = rows[i].trsh;
-      const thresholdsArrRaw = thresholds
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      const thresholdsArr = [];
-      var dummyThresh;
-      for (var j = 0; j < thresholdsArrRaw.length; j++) {
-        dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "");
-        thresholdsArr.push(masterThresholdValuesMap[dummyThresh]);
-      }
-      thresholdsModelOptionsMap[model] = thresholdsArr;
+      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool,
+        `select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from ${
+          variableDBNames[variables[didx]]
+        }.regions_per_model_mats_all_categories order by display_category, display_order;`
+      );
+      for (let i = 0; i < rows.length; i++) {
+        const model_value = rows[i].model.trim();
+        const model = rows[i].display_text.trim();
+        modelOptionsMap[variables[didx]][model] = [model_value];
 
-      const { regions } = rows[i];
-      const regionsArrRaw = regions
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      const regionsArr = [];
-      var dummyRegion;
-      for (var j = 0; j < regionsArrRaw.length; j++) {
-        dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
-        regionsArr.push(masterRegionValuesMap[dummyRegion]);
+        const rowMinDate = moment
+          .utc(rows[i].mindate * 1000)
+          .format("MM/DD/YYYY HH:mm");
+        const rowMaxDate = moment
+          .utc(rows[i].maxdate * 1000)
+          .format("MM/DD/YYYY HH:mm");
+        modelDateRangeMap[variables[didx]][model] = {
+          minDate: rowMinDate,
+          maxDate: rowMaxDate,
+        };
+
+        const forecastLengths = rows[i].fcst_lens;
+        const forecastLengthArr = forecastLengths
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim);
+        for (var j = 0; j < forecastLengthArr.length; j++) {
+          forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
+        }
+        forecastLengthOptionsMap[variables[didx]][model] = forecastLengthArr;
+
+        const thresholds = rows[i].trsh;
+        const thresholdsArrRaw = thresholds
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim);
+        const thresholdsArr = [];
+        var dummyThresh;
+        for (var j = 0; j < thresholdsArrRaw.length; j++) {
+          dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "") * 10000;
+          thresholdsArr.push(masterThresholdValuesMap[variables[didx]][dummyThresh]);
+        }
+        thresholdsModelOptionsMap[variables[didx]][model] = thresholdsArr;
+
+        const scales = rows[i].scale;
+        const scalesArrRaw = scales
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim);
+        const scalesArr = [];
+        var dummyScale;
+        for (var j = 0; j < scalesArrRaw.length; j++) {
+          dummyScale = scalesArrRaw[j].replace(/'|\[|\]/g, "");
+          scalesArr.push(masterScaleValuesMap[variables[didx]][dummyScale]);
+        }
+        scaleModelOptionsMap[variables[didx]][model] = scalesArr;
+
+        const { regions } = rows[i];
+        const regionsArrRaw = regions
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim);
+        const regionsArr = [];
+        var dummyRegion;
+        for (var j = 0; j < regionsArrRaw.length; j++) {
+          dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
+          regionsArr.push(masterRegionValuesMap[dummyRegion]);
+        }
+        regionModelOptionsMap[variables[didx]][model] = regionsArr;
       }
-      regionModelOptionsMap[model] = regionsArr;
     }
   } catch (err) {
     console.log(err.message);
@@ -442,23 +504,55 @@ const doCurveParams = function () {
     });
   }
 
+  if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
+    matsCollections.variable.insert({
+      name: "variable",
+      type: matsTypes.InputTypes.select,
+      optionsMap: variableDBNames,
+      options: variables,
+      dates: modelDateRangeMap,
+      dependentNames: ["data-source"],
+      controlButtonCovered: true,
+      default: variables[0],
+      unique: false,
+      controlButtonVisibility: "block",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  } else {
+    // it is defined but check for necessary update
+    var currentParam = matsCollections.variable.findOne({ name: "variable" });
+    if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
+      // have to reload variable data
+      matsCollections.variable.update(
+        { name: "variable" },
+        {
+          $set: {
+            dates: modelDateRangeMap,
+          },
+        }
+      );
+    }
+  }
+
   if (matsCollections["data-source"].findOne({ name: "data-source" }) === undefined) {
     matsCollections["data-source"].insert({
       name: "data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
-      dates: modelDateRangeMap,
-      options: Object.keys(modelOptionsMap),
+      options: Object.keys(modelOptionsMap[variables[0]]),
+      superiorNames: ["variable"],
       dependentNames: [
         "region",
         "forecast-length",
         "threshold",
-        "truth",
+        "scale",
         "dates",
         "curve-dates",
       ],
       controlButtonCovered: true,
-      default: Object.keys(modelOptionsMap)[0],
+      default: Object.keys(modelOptionsMap[variables[0]])[0],
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 3,
@@ -468,19 +562,15 @@ const doCurveParams = function () {
   } else {
     // it is defined but check for necessary update
     var currentParam = matsCollections["data-source"].findOne({ name: "data-source" });
-    if (
-      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
-    ) {
+    if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
       matsCollections["data-source"].update(
         { name: "data-source" },
         {
           $set: {
             optionsMap: modelOptionsMap,
-            dates: modelDateRangeMap,
-            options: Object.keys(modelOptionsMap),
-            default: Object.keys(modelOptionsMap)[0],
+            options: Object.keys(modelOptionsMap[variables[0]]),
+            default: Object.keys(modelOptionsMap[variables[0]])[0],
           },
         }
       );
@@ -492,12 +582,18 @@ const doCurveParams = function () {
       name: "region",
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
-      options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
+      options:
+        regionModelOptionsMap[variables[0]][
+          Object.keys(regionModelOptionsMap[variables[0]])[0]
+        ],
       valuesMap: masterRegionValuesMap,
-      superiorNames: ["data-source"],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
-      default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+      default:
+        regionModelOptionsMap[variables[0]][
+          Object.keys(regionModelOptionsMap[variables[0]])[0]
+        ][0],
       controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
@@ -517,8 +613,14 @@ const doCurveParams = function () {
           $set: {
             optionsMap: regionModelOptionsMap,
             valuesMap: masterRegionValuesMap,
-            options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
-            default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+            options:
+              regionModelOptionsMap[variables[0]][
+                Object.keys(regionModelOptionsMap[variables[0]])[0]
+              ],
+            default:
+              regionModelOptionsMap[variables[0]][
+                Object.keys(regionModelOptionsMap[variables[0]])[0]
+              ][0],
           },
         }
       );
@@ -587,12 +689,18 @@ const doCurveParams = function () {
       name: "threshold",
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdsModelOptionsMap,
-      options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],
+      options:
+        thresholdsModelOptionsMap[variables[0]][
+          Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+        ],
       valuesMap: masterThresholdValuesMap,
-      superiorNames: ["data-source"],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
-      default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
+      default:
+        thresholdsModelOptionsMap[variables[0]][
+          Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+        ][0],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
@@ -616,42 +724,63 @@ const doCurveParams = function () {
             optionsMap: thresholdsModelOptionsMap,
             valuesMap: masterThresholdValuesMap,
             options:
-              thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],
+              thresholdsModelOptionsMap[variables[0]][
+                Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+              ],
             default:
-              thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
+              thresholdsModelOptionsMap[variables[0]][
+                Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+              ][0],
           },
         }
       );
     }
   }
 
-  if (matsCollections.truth.find({ name: "truth" }).count() === 0) {
-    matsCollections.truth.insert({
-      name: "truth",
+  if (matsCollections.scale.findOne({ name: "scale" }) === undefined) {
+    matsCollections.scale.insert({
+      name: "scale",
       type: matsTypes.InputTypes.select,
-      optionsMap: sourceOptionsMap,
-      options: sourceOptionsMap[Object.keys(sourceOptionsMap)[0]],
-      superiorNames: ["data-source"],
+      optionsMap: scaleModelOptionsMap,
+      options:
+        scaleModelOptionsMap[variables[0]][
+          Object.keys(scaleModelOptionsMap[variables[0]])[0]
+        ],
+      valuesMap: masterScaleValuesMap,
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
-      default: sourceOptionsMap[Object.keys(sourceOptionsMap)[0]][0],
+      default:
+        scaleModelOptionsMap[variables[0]][
+          Object.keys(scaleModelOptionsMap[variables[0]])[0]
+        ][0],
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 2,
       displayPriority: 1,
       displayGroup: 3,
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.truth.findOne({ name: "truth" });
-    if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, sourceOptionsMap)) {
-      // have to reload truth data
-      matsCollections.truth.update(
-        { name: "truth" },
+    var currentParam = matsCollections.scale.findOne({ name: "scale" });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap)
+    ) {
+      // have to reload scale data
+      matsCollections.scale.update(
+        { name: "scale" },
         {
           $set: {
-            optionsMap: sourceOptionsMap,
-            options: sourceOptionsMap[Object.keys(sourceOptionsMap)[0]],
-            default: sourceOptionsMap[Object.keys(sourceOptionsMap)[0]][0],
+            optionsMap: scaleModelOptionsMap,
+            valuesMap: masterScaleValuesMap,
+            options:
+              scaleModelOptionsMap[variables[0]][
+                Object.keys(scaleModelOptionsMap[variables[0]])[0]
+              ],
+            default:
+              scaleModelOptionsMap[variables[0]][
+                Object.keys(scaleModelOptionsMap[variables[0]])[0]
+              ][0],
           },
         }
       );
@@ -666,8 +795,11 @@ const doCurveParams = function () {
       name: "forecast-length",
       type: matsTypes.InputTypes.select,
       optionsMap: forecastLengthOptionsMap,
-      options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],
-      superiorNames: ["data-source"],
+      options:
+        forecastLengthOptionsMap[variables[0]][
+          Object.keys(forecastLengthOptionsMap[variables[0]])[0]
+        ],
+      superiorNames: ["variable", "data-source"],
       selected: "",
       controlButtonCovered: true,
       unique: false,
@@ -692,7 +824,10 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: forecastLengthOptionsMap,
-            options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],
+            options:
+              forecastLengthOptionsMap[variables[0]][
+                Object.keys(forecastLengthOptionsMap[variables[0]])[0]
+              ],
           },
         }
       );
@@ -825,40 +960,34 @@ const doCurveParams = function () {
 
   if (matsCollections.average.findOne({ name: "average" }) === undefined) {
     const optionsMap = {
-      None: [`ceil(${3600}*floor(((m0.valid_time)+${3600}/2)/${3600}))`],
-      "3hr": [`ceil(${3600 * 3}*floor(((m0.valid_time)+${3600 * 3}/2)/${3600 * 3}))`],
-      "6hr": [`ceil(${3600 * 6}*floor(((m0.valid_time)+${3600 * 6}/2)/${3600 * 6}))`],
-      "12hr": [
-        `ceil(${3600 * 12}*floor(((m0.valid_time)+${3600 * 12}/2)/${3600 * 12}))`,
-      ],
-      "1D": [`ceil(${3600 * 24}*floor(((m0.valid_time)+${3600 * 24}/2)/${3600 * 24}))`],
+      None: [`ceil(${3600}*floor(((m0.time)+${3600}/2)/${3600}))`],
+      "3hr": [`ceil(${3600 * 3}*floor(((m0.time)+${3600 * 3}/2)/${3600 * 3}))`],
+      "6hr": [`ceil(${3600 * 6}*floor(((m0.time)+${3600 * 6}/2)/${3600 * 6}))`],
+      "12hr": [`ceil(${3600 * 12}*floor(((m0.time)+${3600 * 12}/2)/${3600 * 12}))`],
+      "1D": [`ceil(${3600 * 24}*floor(((m0.time)+${3600 * 24}/2)/${3600 * 24}))`],
       "3D": [
-        `ceil(${3600 * 24 * 3}*floor(((m0.valid_time)+${3600 * 24 * 3}/2)/${
-          3600 * 24 * 3
-        }))`,
+        `ceil(${3600 * 24 * 3}*floor(((m0.time)+${3600 * 24 * 3}/2)/${3600 * 24 * 3}))`,
       ],
       "7D": [
-        `ceil(${3600 * 24 * 7}*floor(((m0.valid_time)+${3600 * 24 * 7}/2)/${
-          3600 * 24 * 7
-        }))`,
+        `ceil(${3600 * 24 * 7}*floor(((m0.time)+${3600 * 24 * 7}/2)/${3600 * 24 * 7}))`,
       ],
       "30D": [
-        `ceil(${3600 * 24 * 30}*floor(((m0.valid_time)+${3600 * 24 * 30}/2)/${
+        `ceil(${3600 * 24 * 30}*floor(((m0.time)+${3600 * 24 * 30}/2)/${
           3600 * 24 * 30
         }))`,
       ],
       "60D": [
-        `ceil(${3600 * 24 * 60}*floor(((m0.valid_time)+${3600 * 24 * 60}/2)/${
+        `ceil(${3600 * 24 * 60}*floor(((m0.time)+${3600 * 24 * 60}/2)/${
           3600 * 24 * 60
         }))`,
       ],
       "90D": [
-        `ceil(${3600 * 24 * 90}*floor(((m0.valid_time)+${3600 * 24 * 90}/2)/${
+        `ceil(${3600 * 24 * 90}*floor(((m0.time)+${3600 * 24 * 90}/2)/${
           3600 * 24 * 90
         }))`,
       ],
       "180D": [
-        `ceil(${3600 * 24 * 180}*floor(((m0.valid_time)+${3600 * 24 * 180}/2)/${
+        `ceil(${3600 * 24 * 180}*floor(((m0.time)+${3600 * 24 * 180}/2)/${
           3600 * 24 * 180
         }))`,
       ],
@@ -884,12 +1013,11 @@ const doCurveParams = function () {
   ) {
     const optionsMap = {
       "Fcst lead time": "select m0.fcst_len as binVal, ",
-      Threshold: "select m0.thresh/100 as binVal, ",
-      "Valid UTC hour": "select m0.valid_time%(24*3600)/3600 as binVal, ",
-      "Init UTC hour":
-        "select (m0.valid_time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
-      "Valid Date": "select m0.valid_time as binVal, ",
-      "Init Date": "select m0.valid_time-m0.fcst_len*3600 as binVal, ",
+      Threshold: "select m0.trsh as binVal, ",
+      "Valid UTC hour": "select m0.time%(24*3600)/3600 as binVal, ",
+      "Init UTC hour": "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
+      "Valid Date": "select m0.time as binVal, ",
+      "Init Date": "select m0.time-m0.fcst_len*3600 as binVal, ",
     };
 
     matsCollections["bin-parameter"].insert({
@@ -907,23 +1035,27 @@ const doCurveParams = function () {
       unique: false,
       default: Object.keys(optionsMap)[4],
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 1,
       displayPriority: 1,
       displayGroup: 6,
     });
   }
 
   // determine date defaults for dates and curveDates
+  const defaultDb = matsCollections.variable.findOne(
+    { name: "variable" },
+    { default: 1 }
+  ).default;
+  modelDateRangeMap = matsCollections.variable.findOne(
+    { name: "variable" },
+    { dates: 1 }
+  ).dates;
   const defaultDataSource = matsCollections["data-source"].findOne(
     { name: "data-source" },
     { default: 1 }
   ).default;
-  modelDateRangeMap = matsCollections["data-source"].findOne(
-    { name: "data-source" },
-    { dates: 1 }
-  ).dates;
-  minDate = modelDateRangeMap[defaultDataSource].minDate;
-  maxDate = modelDateRangeMap[defaultDataSource].maxDate;
+  minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
+  maxDate = modelDateRangeMap[variables[0]][defaultDataSource].maxDate;
 
   // need to turn the raw max and min from the metadata into the last valid month of data
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
@@ -950,7 +1082,7 @@ const doCurveParams = function () {
       options: Object.keys(optionsMap).sort(),
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ["data-source"],
+      superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default: dstr,
@@ -1006,23 +1138,25 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
-        ["", "threshold", " "],
-        ["", "statistic", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
-        ["avg: ", "average", ", "],
-        ["", "truth", ""],
+        ["avg: ", "average", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "statistic",
         "threshold",
+        "scale",
         "average",
         "forecast-length",
         "valid-time",
-        "truth",
       ],
       groupSize: 6,
     });
@@ -1032,24 +1166,26 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
-        ["", "threshold", " "],
-        ["", "statistic", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
         ["", "dieoff-type", ", "],
         ["valid-time: ", "valid-time", ", "],
         ["start utc: ", "utc-cycle-start", ", "],
-        ["", "truth", ", "],
         ["", "curve-dates", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "statistic",
         "threshold",
+        "scale",
         "dieoff-type",
         "valid-time",
         "utc-cycle-start",
-        "truth",
         "curve-dates",
       ],
       groupSize: 6,
@@ -1060,20 +1196,22 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
         ["", "statistic", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
-        ["", "truth", ", "],
         ["", "curve-dates", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "statistic",
+        "scale",
         "forecast-length",
         "valid-time",
-        "truth",
         "curve-dates",
       ],
       groupSize: 6,
@@ -1084,20 +1222,22 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
-        ["", "threshold", " "],
-        ["", "statistic", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
-        ["", "truth", ", "],
         ["", "curve-dates", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "statistic",
         "threshold",
+        "scale",
         "forecast-length",
-        "truth",
         "curve-dates",
       ],
       groupSize: 6,
@@ -1108,19 +1248,21 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
-        ["", "threshold", " "],
-        ["", "statistic", ", "],
-        ["start utc: ", "utc-cycle-start", ", "],
-        ["", "truth", ""],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["start utc: ", "utc-cycle-start", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "statistic",
         "threshold",
+        "scale",
         "utc-cycle-start",
-        "truth",
       ],
       groupSize: 6,
     });
@@ -1130,20 +1272,22 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
-        ["", "threshold", " "],
+        ["", "scale", " "],
+        ["", "variable", " at "],
+        ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
-        ["", "truth", ", "],
         ["", "curve-dates", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "threshold",
+        "scale",
         "forecast-length",
         "valid-time",
-        "truth",
         "bin-parameter",
         "curve-dates",
       ],
@@ -1155,22 +1299,24 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
-        ["", "threshold", " "],
-        ["", "statistic", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
-        ["", "truth", ", "],
         ["", "curve-dates", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "statistic",
         "threshold",
+        "scale",
         "forecast-length",
         "valid-time",
-        "truth",
         "curve-dates",
       ],
       groupSize: 6,
@@ -1181,21 +1327,23 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
-        ["", "threshold", " "],
-        ["", "statistic", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
-        ["valid-time: ", "valid-time", ", "],
-        ["", "truth", ""],
+        ["valid-time: ", "valid-time", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "statistic",
         "threshold",
+        "scale",
         "forecast-length",
         "valid-time",
-        "truth",
       ],
       groupSize: 6,
     });
@@ -1205,21 +1353,23 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
-        ["", "threshold", " "],
-        ["", "statistic", ", "],
+        ["", "scale", " "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
-        ["valid-time: ", "valid-time", ", "],
-        ["", "truth", ""],
+        ["valid-time: ", "valid-time", ""],
       ],
       displayParams: [
         "label",
+        "variable",
         "data-source",
         "region",
         "statistic",
         "threshold",
+        "scale",
         "forecast-length",
         "valid-time",
-        "truth",
       ],
       groupSize: 6,
     });
@@ -1382,23 +1532,6 @@ Meteor.startup(function () {
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
 
-  const modelSettings = matsCollections.Databases.findOne(
-    { role: matsTypes.DatabaseRoles.MODEL_DATA, status: "active" },
-    {
-      host: 1,
-      port: 1,
-      user: 1,
-      password: 1,
-      database: 1,
-      connectionLimit: 1,
-    }
-  );
-  // the pool is intended to be global
-  if (modelSettings) {
-    modelPool = mysql.createPool(modelSettings);
-    allPools.push({ pool: "modelPool", role: matsTypes.DatabaseRoles.MODEL_DATA });
-  }
-
   const sumSettings = matsCollections.Databases.findOne(
     {
       role: matsTypes.DatabaseRoles.SUMS_DATA,
@@ -1423,10 +1556,13 @@ Meteor.startup(function () {
   const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", [
     "region_descriptions",
   ]);
-  mdr.addRecord("modelPool", "precip_mesonets2", ["threshold_descriptions"]);
-  mdr.addRecord("sumPool", "precip_mesonets2_sums", [
-    "regions_per_model_mats_all_categories",
-  ]);
+  for (let didx = 0; didx < variables.length; didx++) {
+    mdr.addRecord("sumPool", variableDBNames[variables[didx]], [
+      "threshold_descriptions",
+      "scale_descriptions",
+      "regions_per_model_mats_all_categories",
+    ]);
+  }
   try {
     matsMethods.resetApp({
       appPools: allPools,

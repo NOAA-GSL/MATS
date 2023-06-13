@@ -45,8 +45,11 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     const binClause = matsCollections["bin-parameter"].findOne({
       name: "bin-parameter",
     }).optionsMap[binParam];
+    var { variable } = curve;
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
+      .optionsMap[variable];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+      .optionsMap[variable][curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
       matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -54,12 +57,15 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       (key) =>
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    const source = curve.truth;
-    let sourceStr = "";
-    if (source !== "All") {
-      sourceStr = `_${source}`;
-    }
-    const queryTableClause = `from ${model}_${region}${sourceStr} as m0`;
+    var scaleStr = curve.scale;
+    const grid_scale = Object.keys(
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
+    ).find(
+      (key) =>
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
+        scaleStr
+    );
+    const queryTableClause = `from ${databaseRef}.${model}_${grid_scale}_${region} as m0`;
     let thresholdClause = "";
     let validTimeClause = "";
     let forecastLengthClause = "";
@@ -76,18 +82,19 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         );
       }
       const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[key] ===
-          thresholdStr
+          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
+            key
+          ] === thresholdStr
       );
-      thresholdClause = `and m0.thresh = ${threshold}`;
+      thresholdClause = `and m0.trsh = ${threshold / 10000}`;
     }
     if (binParam !== "Valid UTC hour") {
       const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = `and m0.valid_time%(24*3600)/3600 IN(${validTimes})`;
+        validTimeClause = `and m0.time%(24*3600)/3600 IN(${validTimes})`;
       }
     }
     if (binParam !== "Fcst lead time") {
@@ -100,9 +107,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
     }
     if (binParam === "Init Date") {
-      dateString = "m0.valid_time-m0.fcst_len*3600";
+      dateString = "m0.time-m0.fcst_len*3600";
     } else {
-      dateString = "m0.valid_time";
+      dateString = "m0.time";
     }
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
     const statisticSelect = "PerformanceDiagram";
@@ -122,9 +129,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         "count(distinct {{dateString}}) as N_times, " +
         "min({{dateString}}) as min_secs, " +
         "max({{dateString}}) as max_secs, " +
-        "((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) as pod, ((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) as far, " +
-        "sum(m0.yy+m0.ny) as oy_all, sum(m0.yn+m0.nn) as on_all, group_concat(m0.valid_time, ';', m0.yy, ';', " +
-        "m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as N0 " +
+        "((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, " +
+        "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, group_concat(m0.time, ';', m0.yy, ';', " +
+        "m0.ny, ';', m0.yn, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0 " +
         "{{queryTableClause}} " +
         "where 1=1 " +
         "{{dateClause}} " +

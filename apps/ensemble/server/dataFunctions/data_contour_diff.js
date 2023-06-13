@@ -51,8 +51,11 @@ dataContourDiff = function (plotParams, plotFunction) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
     const { label } = curve;
+    var { variable } = curve;
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
+      .optionsMap[variable];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+      .optionsMap[variable][curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
       matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -60,12 +63,15 @@ dataContourDiff = function (plotParams, plotFunction) {
       (key) =>
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    const source = curve.truth;
-    let sourceStr = "";
-    if (source !== "All") {
-      sourceStr = `_${source}`;
-    }
-    const queryTableClause = `from ${model}_${region}${sourceStr} as m0`;
+    var scaleStr = curve.scale;
+    const grid_scale = Object.keys(
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
+    ).find(
+      (key) =>
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
+        scaleStr
+    );
+    const queryTableClause = `from ${databaseRef}.${model}_${grid_scale}_${region} as m0`;
     let thresholdClause = "";
     let validTimeClause = "";
     let forecastLengthClause = "";
@@ -74,18 +80,19 @@ dataContourDiff = function (plotParams, plotFunction) {
     if (xAxisParam !== "Threshold" && yAxisParam !== "Threshold") {
       var thresholdStr = curve.threshold;
       const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
       ).find(
         (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[key] ===
-          thresholdStr
+          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
+            key
+          ] === thresholdStr
       );
-      thresholdClause = `and m0.thresh = ${threshold}`;
+      thresholdClause = `and m0.trsh = ${threshold / 10000}`;
     }
     if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
       const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = `and m0.valid_time%(24*3600)/3600 IN(${validTimes})`;
+        validTimeClause = `and m0.time%(24*3600)/3600 IN(${validTimes})`;
       }
     }
     if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
@@ -97,9 +104,9 @@ dataContourDiff = function (plotParams, plotFunction) {
       xAxisParam !== "Valid Date" &&
       yAxisParam !== "Valid Date"
     ) {
-      dateString = "m0.valid_time-m0.fcst_len*3600";
+      dateString = "m0.time-m0.fcst_len*3600";
     } else {
-      dateString = "m0.valid_time";
+      dateString = "m0.time";
     }
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
     var statisticSelect = curve.statistic;
@@ -108,7 +115,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
-      "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';',  m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as N0";
+      "sum(m0.yy) as hit, sum(m0.ny) as fa, sum(m0.yn) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.ny, ';', m0.yn, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
     // For contours, this functions as the colorbar label.
     var statType = statisticOptionsMap[statisticSelect][0];
     curves[curveIndex].unitKey = statisticOptionsMap[statisticSelect][1];
@@ -178,7 +185,14 @@ dataContourDiff = function (plotParams, plotFunction) {
       } else {
         // this is an error returned by the mysql database
         error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-        throw new Error(error);
+        if (error.includes("ER_NO_SUCH_TABLE")) {
+          throw new Error(
+            `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
+              `Choose a different scale to continue using this region.`
+          );
+        } else {
+          throw new Error(error);
+        }
       }
       dataNotFoundForAnyCurve = true;
     }

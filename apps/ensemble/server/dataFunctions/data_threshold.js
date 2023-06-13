@@ -44,8 +44,11 @@ dataThreshold = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { diffFrom } = curve;
     const { label } = curve;
+    var { variable } = curve;
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
+      .optionsMap[variable];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+      .optionsMap[variable][curve["data-source"]][0];
     var regionStr = curve.region;
     const region = Object.keys(
       matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -53,31 +56,33 @@ dataThreshold = function (plotParams, plotFunction) {
       (key) =>
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    const source = curve.truth;
-    let sourceStr = "";
-    if (source !== "All") {
-      sourceStr = `_${source}`;
-    }
-    const queryTableClause = `from ${model}_${region}${sourceStr} as m0`;
-    const thresholdClause = "";
+    var scaleStr = curve.scale;
+    const grid_scale = Object.keys(
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
+    ).find(
+      (key) =>
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
+        scaleStr
+    );
+    const queryTableClause = `from ${databaseRef}.${model}_${grid_scale}_${region} as m0`;
     let validTimeClause = "";
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-      validTimeClause = `and floor((m0.valid_time)%(24*3600)/3600) IN(${validTimes})`;
+      validTimeClause = `and floor((m0.time)%(24*3600)/3600) IN(${validTimes})`;
     }
     const forecastLength = curve["forecast-length"];
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    const dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
+    const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
-      "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';',  m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as N0";
+      "sum(m0.yy) as hit, sum(m0.ny) as fa, sum(m0.yn) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.ny, ';', m0.yn, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
@@ -95,15 +100,14 @@ dataThreshold = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        "select m0.thresh/100 as thresh, " + // produces thresholds in inches
-        "count(distinct m0.valid_time) as N_times, " +
-        "min(m0.valid_time) as min_secs, " +
-        "max(m0.valid_time) as max_secs, " +
+        "select m0.trsh as thresh, " +
+        "count(distinct m0.time) as N_times, " +
+        "min(m0.time) as min_secs, " +
+        "max(m0.time) as max_secs, " +
         "{{statisticClause}} " +
         "{{queryTableClause}} " +
         "where 1=1 " +
         "{{dateClause}} " +
-        "{{thresholdClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
         "group by thresh " +
@@ -112,7 +116,6 @@ dataThreshold = function (plotParams, plotFunction) {
 
       statement = statement.replace("{{statisticClause}}", statisticClause);
       statement = statement.replace("{{queryTableClause}}", queryTableClause);
-      statement = statement.replace("{{thresholdClause}}", thresholdClause);
       statement = statement.replace("{{validTimeClause}}", validTimeClause);
       statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
       statement = statement.replace("{{dateClause}}", dateClause);
@@ -152,7 +155,14 @@ dataThreshold = function (plotParams, plotFunction) {
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          throw new Error(error);
+          if (error.includes("ER_NO_SUCH_TABLE")) {
+            throw new Error(
+              `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
+                `Choose a different scale to continue using this region.`
+            );
+          } else {
+            throw new Error(error);
+          }
         }
       } else {
         dataFoundForAnyCurve = true;
