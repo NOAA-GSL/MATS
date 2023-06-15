@@ -140,7 +140,7 @@ def regions_per_model_mats_all_categories(mode):
     all_data_sources = []
     per_table = {}
 
-    show_tables = "show tables like '%count%';"
+    show_tables = "show tables like '%_count_%';"
     cursor.execute(show_tables)
     for row in cursor:
         tablename = str(list(row.values())[0])
