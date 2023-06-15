@@ -246,22 +246,22 @@ def regions_per_model_mats_all_categories(mode):
             stats = cursor.fetchall()[0]
             print(tablename + " stats:\n" + str(stats) )
 
-            replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, mems, fcst_lens, nhd_sizes, trsh, kernels, radii, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
-            qd = []
-            qd.append(str(tablename))
-            qd.append(str(stats['mindate']))
-            qd.append(str(stats['maxdate']))
-            qd.append(str(per_table[tablename]['model']))
-            qd.append(str(per_table[tablename]['region']))
-            qd.append(str(per_table[tablename]['mems']))
-            qd.append(str(per_table[tablename]['fcst_lens']))
-            qd.append(str(per_table[tablename]['nhd_sizes']))
-            qd.append(str(per_table[tablename]['trshs']))
-            qd.append(str(per_table[tablename]['kernels']))
-            qd.append(str(per_table[tablename]['radii']))
-            qd.append(stats['numrecs'])
-            cursor.execute(replace_tablestats_rec, qd)
-            cnx.commit()
+            # replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, mems, fcst_lens, nhd_sizes, trsh, kernels, radii, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            # qd = []
+            # qd.append(str(tablename))
+            # qd.append(str(stats['mindate']))
+            # qd.append(str(stats['maxdate']))
+            # qd.append(str(per_table[tablename]['model']))
+            # qd.append(str(per_table[tablename]['region']))
+            # qd.append(str(per_table[tablename]['mems']))
+            # qd.append(str(per_table[tablename]['fcst_lens']))
+            # qd.append(str(per_table[tablename]['nhd_sizes']))
+            # qd.append(str(per_table[tablename]['trshs']))
+            # qd.append(str(per_table[tablename]['kernels']))
+            # qd.append(str(per_table[tablename]['radii']))
+            # qd.append(stats['numrecs'])
+            # cursor.execute(replace_tablestats_rec, qd)
+            # cnx.commit()
             # sys.exit(-1)
     else:
         print("TScleaned is " + str(TScleaned) +
