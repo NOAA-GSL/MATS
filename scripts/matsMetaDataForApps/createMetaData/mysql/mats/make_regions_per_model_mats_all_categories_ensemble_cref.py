@@ -158,13 +158,26 @@ def regions_per_model_mats_all_categories(mode):
                 per_table[tablename] = {}
                 per_table[tablename]['model'] = model
                 per_table[tablename]['region'] = region
-                print("model is " + model + ", region is " + region)
+                # print("model is " + model + ", region is " + region)
 
-    sys.exit(-1)
+    # sys.exit(-1)
 
     # parse the other metadata contained in the tables
     if TScleaned:
         for tablename in per_table.keys():
+            # get ensemble members from this table
+            get_mems = (
+                "SELECT DISTINCT mem FROM " + tablename + ";")
+            cursor.execute(get_mems)
+            per_table[tablename]['mems'] = []
+            this_mems = []
+            for row in cursor:
+                val = list(row.values())[0]
+                this_mems.append(int(val))
+            this_mems.sort(key=int)
+            per_table[tablename]['mems'] = this_mems
+            print(tablename + " mems: " + str(per_table[tablename]['mems']) )
+
             # get forecast lengths from this table
             get_fcst_lens = (
                 "SELECT DISTINCT fcst_len FROM " + tablename + ";")
@@ -176,7 +189,19 @@ def regions_per_model_mats_all_categories(mode):
                 this_fcst_lens.append(int(val))
             this_fcst_lens.sort(key=int)
             per_table[tablename]['fcst_lens'] = this_fcst_lens
-            # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
+            print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
+
+            # get neighborhood sizes from this table
+            get_nhd_sizes = ("SELECT DISTINCT nhd_size FROM " + tablename + ";")
+            cursor.execute(get_nhd_sizes)
+            per_table[tablename]['nhd_sizes'] = []
+            this_nhd_sizes = []
+            for row in cursor:
+                val = list(row.values())[0]
+                this_nhd_sizes.append(int(val))
+            this_nhd_sizes.sort(key=int)
+            per_table[tablename]['nhd_sizes'] = this_nhd_sizes
+            print(tablename + " nhd_sizes: " + str(per_table[tablename]['nhd_sizes']) )
 
             # get thresholds from this table
             get_trshs = ("SELECT DISTINCT trsh FROM " + tablename + ";")
@@ -188,24 +213,52 @@ def regions_per_model_mats_all_categories(mode):
                 this_trshs.append(int(val))
             this_trshs.sort(key=int)
             per_table[tablename]['trshs'] = this_trshs
-            # print(tablename + " this_trshs: " + str(per_table[tablename]['this_trshs']) )
+            print(tablename + " trshs: " + str(per_table[tablename]['trshs']) )
+
+            # get kernels from this table
+            get_kernels = ("SELECT DISTINCT kernel FROM " + tablename + ";")
+            cursor.execute(get_kernels)
+            per_table[tablename]['kernels'] = []
+            this_kernels = []
+            for row in cursor:
+                val = list(row.values())[0]
+                this_kernels.append(int(val))
+            this_kernels.sort(key=int)
+            per_table[tablename]['kernels'] = this_kernels
+            print(tablename + " kernels: " + str(per_table[tablename]['kernels']) )
+
+            # get fss radii from this table
+            fss_tablename = re.sub('_count_', '_stats_', tablename)
+            get_radii = ("SELECT DISTINCT radius FROM " + fss_tablename + ";")
+            cursor.execute(get_radii)
+            per_table[tablename]['radii'] = []
+            this_radii = []
+            for row in cursor:
+                val = list(row.values())[0]
+                this_radii.append(int(val))
+            this_radii.sort(key=int)
+            per_table[tablename]['radii'] = this_radii
+            print(tablename + " radii: " + str(per_table[tablename]['radii']) )
 
             # get statistics for this table
             get_tablestats = "SELECT min(time) AS mindate, max(time) AS maxdate, count(time) AS numrecs FROM " + tablename + ";"
             cursor.execute(get_tablestats)
             stats = cursor.fetchall()[0]
-            # print(tablename + " stats:\n" + str(stats) )
+            print(tablename + " stats:\n" + str(stats) )
 
-            replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, fcst_lens, trsh, scle, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, mems, fcst_lens, nhd_sizes, trsh, kernels, radii, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd = []
             qd.append(str(tablename))
             qd.append(str(stats['mindate']))
             qd.append(str(stats['maxdate']))
             qd.append(str(per_table[tablename]['model']))
             qd.append(str(per_table[tablename]['region']))
+            qd.append(str(per_table[tablename]['mems']))
             qd.append(str(per_table[tablename]['fcst_lens']))
+            qd.append(str(per_table[tablename]['nhd_sizes']))
             qd.append(str(per_table[tablename]['trshs']))
-            qd.append(str(per_table[tablename]['scale']))
+            qd.append(str(per_table[tablename]['kernels']))
+            qd.append(str(per_table[tablename]['radii']))
             qd.append(stats['numrecs'])
             cursor.execute(replace_tablestats_rec, qd)
             cnx.commit()
@@ -214,7 +267,7 @@ def regions_per_model_mats_all_categories(mode):
         print("TScleaned is " + str(TScleaned) +
               " skipped populating TABLESTATS_build")
 
-    # sys.exit(-1)
+    sys.exit(-1)
 
     # refresh database connection
     cursor.close()
