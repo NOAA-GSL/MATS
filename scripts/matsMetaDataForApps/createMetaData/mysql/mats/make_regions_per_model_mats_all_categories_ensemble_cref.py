@@ -175,7 +175,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_fcst_lens.append(int(val))
             this_fcst_lens.sort(key=int)
             per_table[tablename]['fcst_lens'] = this_fcst_lens
-            print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
+            # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
 
             # get total ensemble members from this table
             get_mems = (
@@ -188,10 +188,11 @@ def regions_per_model_mats_all_categories(mode):
                 this_mems.append(int(val))
             this_mems.sort(key=int)
             per_table[tablename]['mems'] = this_mems
-            print(tablename + " mems: " + str(per_table[tablename]['mems']) )
+            # print(tablename + " mems: " + str(per_table[tablename]['mems']) )
 
             # get neighborhood sizes from this table
-            get_nhd_sizes = ("SELECT DISTINCT nhd_size FROM " + tablename + ";")
+            get_nhd_sizes = (
+                "SELECT DISTINCT nhd_size FROM " + tablename + ";")
             cursor.execute(get_nhd_sizes)
             per_table[tablename]['nhd_sizes'] = []
             this_nhd_sizes = []
@@ -200,7 +201,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_nhd_sizes.append(int(val))
             this_nhd_sizes.sort(key=int)
             per_table[tablename]['nhd_sizes'] = this_nhd_sizes
-            print(tablename + " nhd_sizes: " + str(per_table[tablename]['nhd_sizes']) )
+            # print(tablename + " nhd_sizes: " + str(per_table[tablename]['nhd_sizes']) )
 
             # get thresholds from this table
             get_trshs = ("SELECT DISTINCT trsh FROM " + tablename + ";")
@@ -212,7 +213,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_trshs.append(int(val))
             this_trshs.sort(key=int)
             per_table[tablename]['trshs'] = this_trshs
-            print(tablename + " trshs: " + str(per_table[tablename]['trshs']) )
+            # print(tablename + " trshs: " + str(per_table[tablename]['trshs']) )
 
             # get kernels from this table
             get_kernels = ("SELECT DISTINCT kernel FROM " + tablename + ";")
@@ -224,7 +225,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_kernels.append(int(val))
             this_kernels.sort(key=int)
             per_table[tablename]['kernels'] = this_kernels
-            print(tablename + " kernels: " + str(per_table[tablename]['kernels']) )
+            # print(tablename + " kernels: " + str(per_table[tablename]['kernels']) )
 
             # get fss radii from this table
             fss_tablename = re.sub('_count_', '_stats_', tablename)
@@ -237,13 +238,13 @@ def regions_per_model_mats_all_categories(mode):
                 this_radii.append(int(val))
             this_radii.sort(key=int)
             per_table[tablename]['radii'] = this_radii
-            print(tablename + " radii: " + str(per_table[tablename]['radii']) )
+            # print(tablename + " radii: " + str(per_table[tablename]['radii']) )
 
             # get statistics for this table
             get_tablestats = "SELECT min(time) AS mindate, max(time) AS maxdate, count(time) AS numrecs FROM " + tablename + ";"
             cursor.execute(get_tablestats)
             stats = cursor.fetchall()[0]
-            print(tablename + " stats:\n" + str(stats) )
+            # print(tablename + " stats:\n" + str(stats) )
 
             replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, fcst_lens, mems, nhd_sizes, trsh, kernels, radii, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd = []
@@ -266,7 +267,7 @@ def regions_per_model_mats_all_categories(mode):
         print("TScleaned is " + str(TScleaned) +
               " skipped populating TABLESTATS_build")
 
-    sys.exit(-1)
+    # sys.exit(-1)
 
     # refresh database connection
     cursor.close()
@@ -282,7 +283,7 @@ def regions_per_model_mats_all_categories(mode):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "cref"
+    db = "ensemble_cref"
     usedb = "use " + db
     cursor.execute(usedb)
 
@@ -402,6 +403,34 @@ def regions_per_model_mats_all_categories(mode):
         these_fcst_lens.sort(key=int)
         # print( "these_fcst_lens:\n" + str(these_fcst_lens) )
 
+        # get member count for all tables pertaining to this model
+        get_these_mems = "select distinct(mems) as mems from " + db + ".TABLESTATS_build where tablename like '" + \
+            model + "%' and mems != '[]' and model = '" + model + \
+            "' and numrecs > 0 order by length(mems) desc;"
+        cursor.execute(get_these_mems)
+        these_mems = []
+        for row in cursor:
+            val_array = ast.literal_eval(list(row.values())[0])
+            for val in val_array:
+                if val not in these_mems:
+                    these_mems.append(val)
+        these_mems.sort(key=int)
+        # print( "these_mems:\n" + str(these_mems) )
+
+        # get neighborhood sizes for all tables pertaining to this model
+        get_these_nhd_sizes = "select distinct(nhd_sizes) as nhd_sizes from " + db + ".TABLESTATS_build where tablename like '" + \
+            model + "%' and nhd_sizes != '[]' and model = '" + model + \
+            "' and numrecs > 0 order by length(nhd_sizes) desc;"
+        cursor.execute(get_these_nhd_sizes)
+        these_nhd_sizes = []
+        for row in cursor:
+            val_array = ast.literal_eval(list(row.values())[0])
+            for val in val_array:
+                if val not in these_nhd_sizes:
+                    these_nhd_sizes.append(val)
+        these_nhd_sizes.sort(key=int)
+        # print( "these_nhd_sizes:\n" + str(these_nhd_sizes) )
+
         # get thresholds for all tables pertaining to this model
         get_these_trshs = "select distinct(trsh) from " + db + ".TABLESTATS_build where tablename like '" + \
             model + "%' and trsh != '[]' and model = '" + model + \
@@ -416,16 +445,33 @@ def regions_per_model_mats_all_categories(mode):
         these_trshs.sort(key=int)
         # print( "these_trshs:\n" + str(these_trshs) )
 
-        # get scales for all tables pertaining to this model
-        get_these_scales = "select distinct(scle) from " + db + ".TABLESTATS_build where tablename like '" + \
-            model + "%' and scle != '[]' and model = '" + model + "' and numrecs > 0;"
-        cursor.execute(get_these_scales)
-        these_scales = []
+        # get kernels for all tables pertaining to this model
+        get_these_kernels = "select distinct(kernels) from " + db + ".TABLESTATS_build where tablename like '" + \
+            model + "%' and kernels != '[]' and model = '" + model + \
+            "' and numrecs > 0 order by length(kernels) desc;"
+        cursor.execute(get_these_kernels)
+        these_kernels = []
         for row in cursor:
-            val = str(list(row.values())[0])
-            these_scales.append(val)
-        these_scales.sort()
-        # print( "these_scales:\n" + str(these_scales) )
+            val_array = ast.literal_eval(list(row.values())[0])
+            for val in val_array:
+                if val not in these_kernels:
+                    these_kernels.append(val)
+        these_kernels.sort(key=int)
+        # print( "these_kernels:\n" + str(these_kernels) )
+
+        # get radii for all tables pertaining to this model
+        get_these_radii = "select distinct(radii) from " + db + ".TABLESTATS_build where tablename like '" + \
+            model + "%' and radii != '[]' and model = '" + model + \
+            "' and numrecs > 0 order by length(radii) desc;"
+        cursor.execute(get_these_radii)
+        these_radii = []
+        for row in cursor:
+            val_array = ast.literal_eval(list(row.values())[0])
+            for val in val_array:
+                if val not in these_radii:
+                    these_radii.append(val)
+        these_radii.sort(key=int)
+        # print( "these_radii:\n" + str(these_radii) )
 
         # get statistics for all tables pertaining to this model
         get_cat_stats = "select min(mindate) as mindate, max(maxdate) as maxdate, sum(numrecs) as numrecs from " + \
@@ -437,8 +483,8 @@ def regions_per_model_mats_all_categories(mode):
 
         # update the metadata for this data source in the build table
         if len(these_regions) > 0 and len(these_fcst_lens) > 0 and len(these_trshs) > 0:
-            update_rpm_record(cnx, cursor, model, display_text, these_regions, these_fcst_lens, these_trshs,
-                              these_scales, cat, do, catstats['mindate'], catstats['maxdate'], catstats['numrecs'])
+            update_rpm_record(cnx, cursor, model, display_text, these_mems, these_regions, these_fcst_lens, these_nhd_sizes,
+                              these_trshs, these_kernels, these_radii, cat, do, catstats['mindate'], catstats['maxdate'], catstats['numrecs'])
 
     # clean metadata publication table and add the build data into it
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
@@ -474,9 +520,9 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         if sys.argv[1] == 'deploy':
             utcnow = str(datetime.now())
-            msg = 'CREF MATS METADATA START: ' + utcnow
+            msg = 'ENSEMBLE CREF MATS METADATA START: ' + utcnow
             print(msg)
             regions_per_model_mats_all_categories('deploy')
             utcnow = str(datetime.now())
-            msg = 'CREF MATS METADATA END: ' + utcnow
+            msg = 'ENSEMBLE CREF MATS METADATA END: ' + utcnow
             print(msg)
