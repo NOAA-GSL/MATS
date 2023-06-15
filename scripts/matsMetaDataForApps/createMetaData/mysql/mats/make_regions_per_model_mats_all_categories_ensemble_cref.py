@@ -30,12 +30,12 @@ def update_rpm_record(cnx, cursor, table_name, display_text, mems, regions, fcst
         updated_utc = datetime.utcnow().strftime('%s')
         # if it's a new record (it should be) add it
         if record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, mems, regions, fcst_lens, nhd_sizes, trshs, kernels, radii, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, fcst_lens, mems, nhd_sizes, trshs, kernels, radii, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
-            qd.append(str(mems))
             qd.append(str(regions))
             qd.append(str(fcst_lens))
+            qd.append(str(mems))
             qd.append(str(nhd_sizes))
             qd.append(str(trshs))
             qd.append(str(kernels))
@@ -51,8 +51,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, mems, regions, fcst
             cnx.commit()
         else:
             # if there's a pre-existing record, update it
-            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET mems = %s regions = %s, fcst_lens = %s, nhd_sizes = %s, trshs = %s, kernels = %s, radii = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
-            qd.append(str(mems))
+            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET regions = %s, fcst_lens = %s, mems = %s nhd_sizes = %s, trshs = %s, kernels = %s, radii = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(regions))
             qd.append(str(fcst_lens))
             qd.append(str(nhd_sizes))
@@ -165,19 +164,6 @@ def regions_per_model_mats_all_categories(mode):
     # parse the other metadata contained in the tables
     if TScleaned:
         for tablename in per_table.keys():
-            # get ensemble members from this table
-            get_mems = (
-                "SELECT DISTINCT mem FROM " + tablename + ";")
-            cursor.execute(get_mems)
-            per_table[tablename]['mems'] = []
-            this_mems = []
-            for row in cursor:
-                val = list(row.values())[0]
-                this_mems.append(int(val))
-            this_mems.sort(key=int)
-            per_table[tablename]['mems'] = this_mems
-            print(tablename + " mems: " + str(per_table[tablename]['mems']) )
-
             # get forecast lengths from this table
             get_fcst_lens = (
                 "SELECT DISTINCT fcst_len FROM " + tablename + ";")
@@ -190,6 +176,19 @@ def regions_per_model_mats_all_categories(mode):
             this_fcst_lens.sort(key=int)
             per_table[tablename]['fcst_lens'] = this_fcst_lens
             print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
+
+            # get total ensemble members from this table
+            get_mems = (
+                "SELECT DISTINCT mem FROM " + tablename + ";")
+            cursor.execute(get_mems)
+            per_table[tablename]['mems'] = []
+            this_mems = []
+            for row in cursor:
+                val = list(row.values())[0]
+                this_mems.append(int(val))
+            this_mems.sort(key=int)
+            per_table[tablename]['mems'] = this_mems
+            print(tablename + " mems: " + str(per_table[tablename]['mems']) )
 
             # get neighborhood sizes from this table
             get_nhd_sizes = ("SELECT DISTINCT nhd_size FROM " + tablename + ";")
@@ -246,23 +245,23 @@ def regions_per_model_mats_all_categories(mode):
             stats = cursor.fetchall()[0]
             print(tablename + " stats:\n" + str(stats) )
 
-            # replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, mems, fcst_lens, nhd_sizes, trsh, kernels, radii, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
-            # qd = []
-            # qd.append(str(tablename))
-            # qd.append(str(stats['mindate']))
-            # qd.append(str(stats['maxdate']))
-            # qd.append(str(per_table[tablename]['model']))
-            # qd.append(str(per_table[tablename]['region']))
-            # qd.append(str(per_table[tablename]['mems']))
-            # qd.append(str(per_table[tablename]['fcst_lens']))
-            # qd.append(str(per_table[tablename]['nhd_sizes']))
-            # qd.append(str(per_table[tablename]['trshs']))
-            # qd.append(str(per_table[tablename]['kernels']))
-            # qd.append(str(per_table[tablename]['radii']))
-            # qd.append(stats['numrecs'])
-            # cursor.execute(replace_tablestats_rec, qd)
-            # cnx.commit()
-            # sys.exit(-1)
+            replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, fcst_lens, mems, nhd_sizes, trsh, kernels, radii, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            qd = []
+            qd.append(str(tablename))
+            qd.append(str(stats['mindate']))
+            qd.append(str(stats['maxdate']))
+            qd.append(str(per_table[tablename]['model']))
+            qd.append(str(per_table[tablename]['region']))
+            qd.append(str(per_table[tablename]['fcst_lens']))
+            qd.append(str(per_table[tablename]['mems']))
+            qd.append(str(per_table[tablename]['nhd_sizes']))
+            qd.append(str(per_table[tablename]['trshs']))
+            qd.append(str(per_table[tablename]['kernels']))
+            qd.append(str(per_table[tablename]['radii']))
+            qd.append(stats['numrecs'])
+            cursor.execute(replace_tablestats_rec, qd)
+            cnx.commit()
+            sys.exit(-1)
     else:
         print("TScleaned is " + str(TScleaned) +
               " skipped populating TABLESTATS_build")
