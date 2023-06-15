@@ -364,7 +364,7 @@ def regions_per_model_mats_all_categories(mode):
     # combine the metadata per table into metadata per data source
     do_non_main = 0
     for model in all_data_sources:
-        print("this model: " + model)
+        # print("this model: " + model)
         if model in main_model_keys and main_models[model] in main_model_order_keys:
             cat = 1
             display_text = main_models[model]
@@ -388,7 +388,7 @@ def regions_per_model_mats_all_categories(mode):
             these_regions_orders.append(valid_region_orders[val])
         these_regions = [x for _, x in sorted(
             zip(these_regions_orders, these_regions_raw))]
-        print( "these_regions:\n" + str(these_regions) )
+        # print( "these_regions:\n" + str(these_regions) )
 
         # get forecast lengths for all tables pertaining to this model
         get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db + ".TABLESTATS_build where tablename like '" + \
@@ -402,7 +402,7 @@ def regions_per_model_mats_all_categories(mode):
                 if val not in these_fcst_lens:
                     these_fcst_lens.append(val)
         these_fcst_lens.sort(key=int)
-        print( "these_fcst_lens:\n" + str(these_fcst_lens) )
+        # print( "these_fcst_lens:\n" + str(these_fcst_lens) )
 
         # get member count for all tables pertaining to this model
         get_these_mems = "select distinct(mems) as mems from " + db + ".TABLESTATS_build where tablename like '" + \
@@ -416,7 +416,7 @@ def regions_per_model_mats_all_categories(mode):
                 if val not in these_mems:
                     these_mems.append(val)
         these_mems.sort(key=int)
-        print( "these_mems:\n" + str(these_mems) )
+        # print( "these_mems:\n" + str(these_mems) )
 
         # get neighborhood sizes for all tables pertaining to this model
         get_these_nhd_sizes = "select distinct(nhd_sizes) as nhd_sizes from " + db + ".TABLESTATS_build where tablename like '" + \
@@ -430,7 +430,7 @@ def regions_per_model_mats_all_categories(mode):
                 if val not in these_nhd_sizes:
                     these_nhd_sizes.append(val)
         these_nhd_sizes.sort(key=int)
-        print( "these_nhd_sizes:\n" + str(these_nhd_sizes) )
+        # print( "these_nhd_sizes:\n" + str(these_nhd_sizes) )
 
         # get thresholds for all tables pertaining to this model
         get_these_trshs = "select distinct(trsh) from " + db + ".TABLESTATS_build where tablename like '" + \
@@ -458,7 +458,7 @@ def regions_per_model_mats_all_categories(mode):
                 if val not in these_kernels:
                     these_kernels.append(val)
         these_kernels.sort(key=int)
-        print( "these_kernels:\n" + str(these_kernels) )
+        # print( "these_kernels:\n" + str(these_kernels) )
 
         # get radii for all tables pertaining to this model
         get_these_radii = "select distinct(radii) from " + db + ".TABLESTATS_build where tablename like '" + \
@@ -472,7 +472,7 @@ def regions_per_model_mats_all_categories(mode):
                 if val not in these_radii:
                     these_radii.append(val)
         these_radii.sort(key=int)
-        print( "these_radii:\n" + str(these_radii) )
+        # print( "these_radii:\n" + str(these_radii) )
 
         # get statistics for all tables pertaining to this model
         get_cat_stats = "select min(mindate) as mindate, max(maxdate) as maxdate, sum(numrecs) as numrecs from " + \
@@ -480,7 +480,7 @@ def regions_per_model_mats_all_categories(mode):
             "%' and model = '" + model + "' and numrecs > 0"
         cursor.execute(get_cat_stats)
         catstats = cursor.fetchall()[0]
-        print( "catstats:\n" + str(catstats) )
+        # print( "catstats:\n" + str(catstats) )
 
         # update the metadata for this data source in the build table
         if len(these_regions) > 0 and len(these_fcst_lens) > 0 and len(these_trshs) > 0:
