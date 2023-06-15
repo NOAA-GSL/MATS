@@ -14,7 +14,7 @@ import MySQLdb
 
 ############################################################################
 
-def update_rpm_record(cnx, cursor, table_name, display_text, regions, fcst_lens, trshs, scales, display_category, display_order, mindate, maxdate, numrecs):
+def update_rpm_record(cnx, cursor, table_name, display_text, mems, regions, fcst_lens, nhd_sizes, trshs, kernels, radii, display_category, display_order, mindate, maxdate, numrecs):
 
     # see if this record already exists (it shouldn't, because this script cleaned the tables when it started)
     find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE model = '" + \
