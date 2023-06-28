@@ -84,6 +84,7 @@ dataDieOff = function (plotParams, plotFunction)
     ).optionsMap;
 
     let sitesList = [];
+    let singleCycle = null;
     if (regionType === "Predefined region")
     {
       var regionStr = curve.region;
@@ -94,6 +95,7 @@ dataDieOff = function (plotParams, plotFunction)
           matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
+      
       if (forecastLength === matsTypes.ForecastTypes.dieoff)
       {
         queryTemplate = fs.readFileSync(
@@ -112,6 +114,7 @@ dataDieOff = function (plotParams, plotFunction)
           "assets/app/sqlTemplates/tmpl_DieOff_region_SingleCycle.sql",
           "utf8"
         );
+        singleCycle = fromSecs;
       }
       queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
       queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
@@ -156,6 +159,7 @@ dataDieOff = function (plotParams, plotFunction)
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
+      singleCycle = fromSecs;
     }
 
     // axisKey is used to determine which axis a curve should use.
@@ -216,7 +220,9 @@ dataDieOff = function (plotParams, plotFunction)
             threshold,
             fromSecs,
             toSecs,
-            validTimes
+            validTimes,
+            utcCycleStart,
+            singleCycle
           );
           console.log("rows:" + rows.length);
 
