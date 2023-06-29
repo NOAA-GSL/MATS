@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: precipgauge
+spec:
+  template:
+    spec:
+      containers:
+        - name: precipgauge
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: precipgauge-secret
+          volumeMounts:
+            - name: precipgauge-settings-file
+              mountPath: /usr/app/settings/precipGauge/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: precipgauge-settings-file
+          configMap:
+            name: precipgauge-config
