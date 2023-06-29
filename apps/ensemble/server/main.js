@@ -235,6 +235,7 @@ const doPlotParams = function () {
     const xOptionsMap = {
       "Fcst lead time": "select m0.fcst_len as xVal, ",
       Threshold: "select m0.trsh as xVal, ",
+      Kernel: "select m0.kernel as xVal, ",
       "Valid UTC hour": "select m0.time%(24*3600)/3600 as xVal, ",
       "Init UTC hour": "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
       "Valid Date": "select m0.time as xVal, ",
@@ -249,7 +250,7 @@ const doPlotParams = function () {
       selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(xOptionsMap)[2],
+      default: Object.keys(xOptionsMap)[3],
       controlButtonVisibility: "block",
       displayOrder: 9,
       displayPriority: 1,
@@ -259,6 +260,7 @@ const doPlotParams = function () {
     const yOptionsMap = {
       "Fcst lead time": "m0.fcst_len as yVal, ",
       Threshold: "m0.trsh as yVal, ",
+      Kernel: "m0.kernel as yVal, ",
       "Valid UTC hour": "m0.time%(24*3600)/3600 as yVal, ",
       "Init UTC hour": "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
       "Valid Date": "m0.time as yVal, ",
@@ -280,43 +282,6 @@ const doPlotParams = function () {
       displayGroup: 2,
     });
 
-    matsCollections.PlotParams.insert({
-      name: "significance",
-      type: matsTypes.InputTypes.select,
-      options: ["none", "significance at 95th percentile"],
-      selected: "",
-      controlButtonCovered: true,
-      unique: false,
-      default: "none",
-      controlButtonVisibility: "block",
-      controlButtonText: "overlay significance",
-      displayOrder: 11,
-      displayPriority: 1,
-      displayGroup: 2,
-    });
-  } else {
-    // need to update the dates selector if the metadata has changed
-    const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
-    if (
-      !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
-      !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
-      !matsDataUtils.areObjectsEqual(currentParam.default, dstr)
-    ) {
-      // have to reload model data
-      matsCollections.PlotParams.update(
-        { name: "dates" },
-        {
-          $set: {
-            startDate: minDate,
-            stopDate: maxDate,
-            default: dstr,
-          },
-        }
-      );
-    }
-  }
-};
-
 const doCurveParams = function () {
   // force a reset if requested - simply remove all the existing params to force a reload
   if (
@@ -336,11 +301,12 @@ const doCurveParams = function () {
   let modelDateRangeMap = {};
   const regionModelOptionsMap = {};
   const forecastLengthOptionsMap = {};
+  const memberModelOptionsMap = {};
+  const neighborhoodModelOptionsMap = {};
   const thresholdsModelOptionsMap = {};
-  const scaleModelOptionsMap = {};
+  const kernelModelOptionsMap = {};
+  const radiusModelOptionsMap = {};
   const masterRegionValuesMap = {};
-  const masterThresholdValuesMap = {};
-  const masterScaleValuesMap = {};
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
@@ -363,55 +329,14 @@ const doCurveParams = function () {
 
   try {
     for (didx = 0; didx < variables.length; didx++) {
-      masterThresholdValuesMap[variables[didx]] = {};
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
-        `select trsh,description from ${
-          variableDBNames[variables[didx]]
-        }.threshold_descriptions;`
-      );
-      var masterDescription;
-      var masterTrsh;
-      var trshTemp;
-      for (var j = 0; j < rows.length; j++) {
-        masterDescription = rows[j].description.trim();
-        trshTemp = rows[j].trsh.trim();
-        masterTrsh = trshTemp * 10000;
-        masterThresholdValuesMap[variables[didx]][masterTrsh] = masterDescription;
-      }
-    }
-  } catch (err) {
-    console.log(err.message);
-  }
-
-  try {
-    for (didx = 0; didx < variables.length; didx++) {
-      masterScaleValuesMap[variables[didx]] = {};
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
-        `select scale,description from ${
-          variableDBNames[variables[didx]]
-        }.scale_descriptions;`
-      );
-      var masterDescription;
-      var masterScale;
-      for (var j = 0; j < rows.length; j++) {
-        masterDescription = rows[j].description.trim();
-        masterScale = rows[j].scale.trim();
-        masterScaleValuesMap[variables[didx]][masterScale] = masterDescription;
-      }
-    }
-  } catch (err) {
-    console.log(err.message);
-  }
-
-  try {
-    for (didx = 0; didx < variables.length; didx++) {
       modelOptionsMap[variables[didx]] = {};
       modelDateRangeMap[variables[didx]] = {};
       forecastLengthOptionsMap[variables[didx]] = {};
+      memberModelOptionsMap[variables[didx]] = {};
+      neighborhoodModelOptionsMap[variables[didx]] = {};
       thresholdsModelOptionsMap[variables[didx]] = {};
-      scaleModelOptionsMap[variables[didx]] = {};
+      kernelModelOptionsMap[variables[didx]] = {};
+      radiusModelOptionsMap[variables[didx]] = {};
       regionModelOptionsMap[variables[didx]] = {};
 
       rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
