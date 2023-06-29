@@ -235,7 +235,6 @@ const doPlotParams = function () {
     const xOptionsMap = {
       "Fcst lead time": "select m0.fcst_len as xVal, ",
       Threshold: "select m0.trsh as xVal, ",
-      Kernel: "select m0.kernel as xVal, ",
       "Valid UTC hour": "select m0.time%(24*3600)/3600 as xVal, ",
       "Init UTC hour": "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
       "Valid Date": "select m0.time as xVal, ",
@@ -250,7 +249,7 @@ const doPlotParams = function () {
       selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(xOptionsMap)[3],
+      default: Object.keys(xOptionsMap)[2],
       controlButtonVisibility: "block",
       displayOrder: 9,
       displayPriority: 1,
@@ -260,7 +259,6 @@ const doPlotParams = function () {
     const yOptionsMap = {
       "Fcst lead time": "m0.fcst_len as yVal, ",
       Threshold: "m0.trsh as yVal, ",
-      Kernel: "m0.kernel as yVal, ",
       "Valid UTC hour": "m0.time%(24*3600)/3600 as yVal, ",
       "Init UTC hour": "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
       "Valid Date": "m0.time as yVal, ",
@@ -281,6 +279,28 @@ const doPlotParams = function () {
       displayPriority: 1,
       displayGroup: 2,
     });
+  } else {
+    // need to update the dates selector if the metadata has changed
+    const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
+      !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
+      !matsDataUtils.areObjectsEqual(currentParam.default, dstr)
+    ) {
+      // have to reload model data
+      matsCollections.PlotParams.update(
+        { name: "dates" },
+        {
+          $set: {
+            startDate: minDate,
+            stopDate: maxDate,
+            default: dstr,
+          },
+        }
+      );
+    }
+  }
+};
 
 const doCurveParams = function () {
   // force a reset if requested - simply remove all the existing params to force a reload
@@ -341,7 +361,7 @@ const doCurveParams = function () {
 
       rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
         sumPool,
-        `select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from ${
+        `select model,regions,display_text,fcst_lens,mems,nhd_sizes,trshs,kernels,radii,mindate,maxdate from ${
           variableDBNames[variables[didx]]
         }.regions_per_model_mats_all_categories order by display_category, display_order;`
       );
@@ -370,29 +390,50 @@ const doCurveParams = function () {
         }
         forecastLengthOptionsMap[variables[didx]][model] = forecastLengthArr;
 
-        const thresholds = rows[i].trsh;
-        const thresholdsArrRaw = thresholds
+        const mems = rows[i].mems;
+        const memArr = mems
           .split(",")
           .map(Function.prototype.call, String.prototype.trim);
-        const thresholdsArr = [];
-        var dummyThresh;
-        for (var j = 0; j < thresholdsArrRaw.length; j++) {
-          dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "") * 10000;
-          thresholdsArr.push(masterThresholdValuesMap[variables[didx]][dummyThresh]);
+        for (var j = 0; j < memArr.length; j++) {
+          memArr[j] = memArr[j].replace(/'|\[|\]/g, "");
+        }
+        memberModelOptionsMap[variables[didx]][model] = memArr;
+
+        const nhd_sizes = rows[i].nhd_sizes;
+        const nhd_sizeArr = nhd_sizes
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim);
+        for (var j = 0; j < nhd_sizeArr.length; j++) {
+          nhd_sizeArr[j] = nhd_sizeArr[j].replace(/'|\[|\]/g, "");
+        }
+        neighborhoodModelOptionsMap[variables[didx]][model] = nhd_sizeArr;
+
+        const thresholds = rows[i].trshs;
+        const thresholdsArr = thresholds
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim);
+        for (var j = 0; j < thresholdsArr.length; j++) {
+          thresholdsArr[j] = thresholdsArr[j].replace(/'|\[|\]/g, "");
         }
         thresholdsModelOptionsMap[variables[didx]][model] = thresholdsArr;
 
-        const scales = rows[i].scale;
-        const scalesArrRaw = scales
+        const kernels = rows[i].kernels;
+        const kernelArr = kernels
           .split(",")
           .map(Function.prototype.call, String.prototype.trim);
-        const scalesArr = [];
-        var dummyScale;
-        for (var j = 0; j < scalesArrRaw.length; j++) {
-          dummyScale = scalesArrRaw[j].replace(/'|\[|\]/g, "");
-          scalesArr.push(masterScaleValuesMap[variables[didx]][dummyScale]);
+        for (var j = 0; j < kernelArr.length; j++) {
+          kernelArr[j] = kernelArr[j].replace(/'|\[|\]/g, "");
         }
-        scaleModelOptionsMap[variables[didx]][model] = scalesArr;
+        kernelModelOptionsMap[variables[didx]][model] = kernelArr;
+
+        const radii = rows[i].radii;
+        const radiusArr = radii
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim);
+        for (var j = 0; j < radiusArr.length; j++) {
+          radiusArr[j] = radiusArr[j].replace(/'|\[|\]/g, "");
+        }
+        radiusModelOptionsMap[variables[didx]][model] = radiusArr;
 
         const { regions } = rows[i];
         const regionsArrRaw = regions
@@ -410,7 +451,6 @@ const doCurveParams = function () {
   } catch (err) {
     console.log(err.message);
   }
-
   if (matsCollections.label.findOne({ name: "label" }) === undefined) {
     matsCollections.label.insert({
       name: "label",
