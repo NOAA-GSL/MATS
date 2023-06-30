@@ -601,14 +601,16 @@ const doCurveParams = function () {
   if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
     const optionsMap = {
       "Bias (forecast/actual)": [
-        "avg(m0.{{variable}}) as stat, group_concat(m0.valid_secs, ';', m0.{{variable}} order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0",
+        "avg((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as stat, group_concat(m0.time, ';', (m0.nhdfcstcount/m0.mem)/m0.nhdhitcount order by m0.time) as sub_data, count((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as N0",
         "precalculated",
+        "count",
         "Ratio",
         1,
       ],
       "Mean FSS (fractions skill score)": [
-        "avg(m0.{{variable}} * m0.N) as stat, group_concat(m0.valid_secs, ';', m0.{{variable}} * m0.N order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0",
+        "avg(m0.fss) as stat, group_concat(m0.time, ';', m0.fss order by m0.time) as sub_data, count(m0.fss) as N0",
         "precalculated",
+        "stats",
         "x100",
         1,
       ],
@@ -620,6 +622,7 @@ const doCurveParams = function () {
       options: Object.keys(optionsMap),
       hideOtherFor: {
         kernel: ["Mean FSS (fractions skill score)"],
+        "probability-bins": ["Mean FSS (fractions skill score)"],
         radius: ["Bias (forecast/actual)"],
       },
       controlButtonCovered: true,
@@ -1057,10 +1060,10 @@ const doCurveParams = function () {
     matsCollections["probability-bins"].insert({
       name: "probability-bins",
       type: matsTypes.InputTypes.select,
-      options: ["All bins", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+      options: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
       controlButtonCovered: true,
       unique: false,
-      default: "All bins",
+      default: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
       controlButtonVisibility: "block",
       displayOrder: 5,
       displayPriority: 1,
