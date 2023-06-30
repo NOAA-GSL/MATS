@@ -511,7 +511,10 @@ const doCurveParams = function () {
         "region",
         "forecast-length",
         "threshold",
-        "scale",
+        "members",
+        "neighborhood-size",
+        "kernel",
+        "radius",
         "dates",
         "curve-dates",
       ],
@@ -593,44 +596,17 @@ const doCurveParams = function () {
 
   if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
     const optionsMap = {
-      "CSI (Critical Success Index)": ["ctc", "x100", 100],
-
-      "TSS (True Skill Score)": ["ctc", "x100", 100],
-
-      "PODy (POD of value > threshold)": ["ctc", "x100", 100],
-
-      "PODn (POD of value < threshold)": ["ctc", "x100", 100],
-
-      "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
-
-      "Bias (forecast/actual)": ["ctc", "Ratio", 1],
-
-      "HSS (Heidke Skill Score)": ["ctc", "x100", 100],
-
-      "ETS (Equitable Threat Score)": ["ctc", "x100", 100],
-
-      "Nlow (Number of obs < threshold (false alarms + correct nulls))": [
-        "ctc",
-        "Number",
-        null,
-      ],
-
-      "Nhigh (Number of obs > threshold (hits + misses))": ["ctc", "Number", null],
-
-      "Ntot (Total number of obs, (Nlow + Nhigh))": ["ctc", "Number", null],
-
-      "Ratio Nlow / Ntot ((fa + cn)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
-
-      "Ratio Nhigh / Ntot ((hit + miss)/(hit + miss + fa + cn))": [
-        "ctc",
+      "Bias (forecast/actual)": [
+        "avg(m0.{{variable}}) as stat, group_concat(m0.valid_secs, ';', m0.{{variable}} order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0",
+        "precalculated",
         "Ratio",
-        null,
+        1,
       ],
-
-      "N times*levels(*stations if station plot) per graph point": [
-        "ctc",
-        "Number",
-        null,
+      "FSS (fractions skill score)": [
+        "avg(m0.{{variable}} * m0.N) as stat, group_concat(m0.valid_secs, ';', m0.{{variable}} * m0.N order by m0.valid_secs) as sub_data, count(m0.{{variable}}) as N0",
+        "precalculated",
+        "x100",
+        1,
       ],
     };
     matsCollections.statistic.insert({
@@ -638,6 +614,10 @@ const doCurveParams = function () {
       type: matsTypes.InputTypes.select,
       optionsMap,
       options: Object.keys(optionsMap),
+      hideOtherFor: {
+        kernel: ["FSS (fractions skill score)"],
+        radius: ["Bias (forecast/actual)"],
+      },
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(optionsMap)[0],
@@ -657,7 +637,6 @@ const doCurveParams = function () {
         thresholdsModelOptionsMap[variables[0]][
           Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
         ],
-      valuesMap: masterThresholdValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
@@ -674,11 +653,7 @@ const doCurveParams = function () {
     // it is defined but check for necessary update
     var currentParam = matsCollections.threshold.findOne({ name: "threshold" });
     if (
-      !matsDataUtils.areObjectsEqual(
-        currentParam.optionsMap,
-        thresholdsModelOptionsMap
-      ) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdsModelOptionsMap)
     ) {
       // have to reload threshold data
       matsCollections.threshold.update(
@@ -686,7 +661,6 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: thresholdsModelOptionsMap,
-            valuesMap: masterThresholdValuesMap,
             options:
               thresholdsModelOptionsMap[variables[0]][
                 Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
@@ -701,49 +675,199 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.scale.findOne({ name: "scale" }) === undefined) {
-    matsCollections.scale.insert({
-      name: "scale",
+  if (matsCollections.members.findOne({ name: "members" }) === undefined) {
+    matsCollections.members.insert({
+      name: "members",
       type: matsTypes.InputTypes.select,
-      optionsMap: scaleModelOptionsMap,
+      optionsMap: memberModelOptionsMap,
       options:
-        scaleModelOptionsMap[variables[0]][
-          Object.keys(scaleModelOptionsMap[variables[0]])[0]
+        memberModelOptionsMap[variables[0]][
+          Object.keys(memberModelOptionsMap[variables[0]])[0]
         ],
-      valuesMap: masterScaleValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
-        scaleModelOptionsMap[variables[0]][
-          Object.keys(scaleModelOptionsMap[variables[0]])[0]
+        memberModelOptionsMap[variables[0]][
+          Object.keys(memberModelOptionsMap[variables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
+      controlButtonText: "number of members",
       displayOrder: 2,
       displayPriority: 1,
       displayGroup: 3,
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.scale.findOne({ name: "scale" });
+    var currentParam = matsCollections.members.findOne({ name: "members" });
     if (
-      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, memberModelOptionsMap)
     ) {
-      // have to reload scale data
-      matsCollections.scale.update(
-        { name: "scale" },
+      // have to reload member data
+      matsCollections.members.update(
+        { name: "members" },
         {
           $set: {
-            optionsMap: scaleModelOptionsMap,
-            valuesMap: masterScaleValuesMap,
+            optionsMap: memberModelOptionsMap,
             options:
-              scaleModelOptionsMap[variables[0]][
-                Object.keys(scaleModelOptionsMap[variables[0]])[0]
+              memberModelOptionsMap[variables[0]][
+                Object.keys(memberModelOptionsMap[variables[0]])[0]
               ],
             default:
-              scaleModelOptionsMap[variables[0]][
-                Object.keys(scaleModelOptionsMap[variables[0]])[0]
+              memberModelOptionsMap[variables[0]][
+                Object.keys(memberModelOptionsMap[variables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    matsCollections["neighborhood-size"].findOne({ name: "neighborhood-size" }) ===
+    undefined
+  ) {
+    matsCollections["neighborhood-size"].insert({
+      name: "neighborhood-size",
+      type: matsTypes.InputTypes.select,
+      optionsMap: neighborhoodModelOptionsMap,
+      options:
+        neighborhoodModelOptionsMap[variables[0]][
+          Object.keys(neighborhoodModelOptionsMap[variables[0]])[0]
+        ],
+      superiorNames: ["variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        neighborhoodModelOptionsMap[variables[0]][
+          Object.keys(neighborhoodModelOptionsMap[variables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      controlButtonText: "neighborhood size (km)",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    var currentParam = matsCollections["neighborhood-size"].findOne({
+      name: "neighborhood-size",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(
+        currentParam.optionsMap,
+        neighborhoodModelOptionsMap
+      )
+    ) {
+      // have to reload neighborhood-size data
+      matsCollections["neighborhood-size"].update(
+        { name: "neighborhood-size" },
+        {
+          $set: {
+            optionsMap: neighborhoodModelOptionsMap,
+            options:
+              neighborhoodModelOptionsMap[variables[0]][
+                Object.keys(neighborhoodModelOptionsMap[variables[0]])[0]
+              ],
+            default:
+              neighborhoodModelOptionsMap[variables[0]][
+                Object.keys(neighborhoodModelOptionsMap[variables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (matsCollections.kernel.findOne({ name: "kernel" }) === undefined) {
+    matsCollections.kernel.insert({
+      name: "kernel",
+      type: matsTypes.InputTypes.select,
+      optionsMap: kernelModelOptionsMap,
+      options:
+        kernelModelOptionsMap[variables[0]][
+          Object.keys(kernelModelOptionsMap[variables[0]])[0]
+        ],
+      superiorNames: ["variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        kernelModelOptionsMap[variables[0]][
+          Object.keys(kernelModelOptionsMap[variables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      controlButtonText: "kernel width (km)",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    var currentParam = matsCollections.kernel.findOne({ name: "kernel" });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, kernelModelOptionsMap)
+    ) {
+      // have to reload kernel data
+      matsCollections.kernel.update(
+        { name: "kernel" },
+        {
+          $set: {
+            optionsMap: kernelModelOptionsMap,
+            options:
+              kernelModelOptionsMap[variables[0]][
+                Object.keys(kernelModelOptionsMap[variables[0]])[0]
+              ],
+            default:
+              kernelModelOptionsMap[variables[0]][
+                Object.keys(kernelModelOptionsMap[variables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (matsCollections.radius.findOne({ name: "radius" }) === undefined) {
+    matsCollections.radius.insert({
+      name: "radius",
+      type: matsTypes.InputTypes.select,
+      optionsMap: radiusModelOptionsMap,
+      options:
+        radiusModelOptionsMap[variables[0]][
+          Object.keys(radiusModelOptionsMap[variables[0]])[0]
+        ],
+      superiorNames: ["variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        radiusModelOptionsMap[variables[0]][
+          Object.keys(radiusModelOptionsMap[variables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      controlButtonText: "radius (km)",
+      displayOrder: 5,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    var currentParam = matsCollections.radius.findOne({ name: "radius" });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, radiusModelOptionsMap)
+    ) {
+      // have to reload radius data
+      matsCollections.radius.update(
+        { name: "radius" },
+        {
+          $set: {
+            optionsMap: radiusModelOptionsMap,
+            options:
+              radiusModelOptionsMap[variables[0]][
+                Object.keys(radiusModelOptionsMap[variables[0]])[0]
+              ],
+            default:
+              radiusModelOptionsMap[variables[0]][
+                Object.keys(radiusModelOptionsMap[variables[0]])[0]
               ][0],
           },
         }
@@ -969,39 +1093,6 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 5,
-    });
-  }
-
-  if (
-    matsCollections["bin-parameter"].findOne({ name: "bin-parameter" }) === undefined
-  ) {
-    const optionsMap = {
-      "Fcst lead time": "select m0.fcst_len as binVal, ",
-      Threshold: "select m0.trsh as binVal, ",
-      "Valid UTC hour": "select m0.time%(24*3600)/3600 as binVal, ",
-      "Init UTC hour": "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
-      "Valid Date": "select m0.time as binVal, ",
-      "Init Date": "select m0.time-m0.fcst_len*3600 as binVal, ",
-    };
-
-    matsCollections["bin-parameter"].insert({
-      name: "bin-parameter",
-      type: matsTypes.InputTypes.select,
-      options: Object.keys(optionsMap),
-      optionsMap,
-      hideOtherFor: {
-        "forecast-length": ["Fcst lead time"],
-        threshold: ["Threshold"],
-        "valid-time": ["Valid UTC hour"],
-      },
-      selected: "",
-      controlButtonCovered: true,
-      unique: false,
-      default: Object.keys(optionsMap)[4],
-      controlButtonVisibility: "block",
-      displayOrder: 1,
-      displayPriority: 1,
-      displayGroup: 6,
     });
   }
 
@@ -1522,8 +1613,6 @@ Meteor.startup(function () {
   ]);
   for (let didx = 0; didx < variables.length; didx++) {
     mdr.addRecord("sumPool", variableDBNames[variables[didx]], [
-      "threshold_descriptions",
-      "scale_descriptions",
       "regions_per_model_mats_all_categories",
     ]);
   }
