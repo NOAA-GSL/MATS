@@ -16,6 +16,7 @@ jobs:
           - cb-ceiling
           - ceil-vis
           - ceil-vis15
+          - ensemble
           - landuse
           - precipAccum
           - precipGauge

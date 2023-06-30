@@ -21,13 +21,14 @@ jobs:
           # - cb-ceiling # Don't push this until its ready
           - ceil-vis
           - ceil-vis15
+          - ensemble
           - landuse
           - precipAccum
           - precipGauge
           - precipitation1hr
           - ptype
           - radar
-          # - scorecard # Don't push this until its ready
+          - scorecard
           - surface
           - surfrad
           - upperair
