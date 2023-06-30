@@ -44,50 +44,68 @@ dataContourDiff = function (plotParams, plotFunction) {
   if (curvesLength !== 2) {
     throw new Error("INFO:  There must be two added curves.");
   }
+  let statType;
+  let statisticSelect;
   let dataset = [];
   const axisMap = Object.create(null);
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
     const { label } = curve;
-    var { variable } = curve;
+    const { variable } = curve;
     const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    var regionStr = curve.region;
-    const region = Object.keys(
+    const regionStr = curve.region;
+    let region = Object.keys(
       matsCollections.region.findOne({ name: "region" }).valuesMap
     ).find(
       (key) =>
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    var scaleStr = curve.scale;
-    const grid_scale = Object.keys(
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
-    ).find(
-      (key) =>
-        matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
-        scaleStr
-    );
-    const queryTableClause = `from ${databaseRef}.${model}_${grid_scale}_${region} as m0`;
+    region = region === "Full" ? "Full_domain" : region; // this db doesn't handle the full domain the way the others do
+    statisticSelect = curve.statistic;
+    const statisticOptionsMap = matsCollections.statistic.findOne(
+      { name: "statistic" },
+      { optionsMap: 1 }
+    ).optionsMap;
+    const tableStatPrefix = statisticOptionsMap[statisticSelect][2];
+    const queryTableClause = `from ${databaseRef}.${model}_${tableStatPrefix}_${region} as m0`;
+    const { members } = curve;
+    const memberClause = `and m0.mem = ${members}`;
+    const neighborhoodSize = curve["neighborhood-size"];
+    const neighborhoodClause = `and m0.nhd_size = ${neighborhoodSize}`;
+    let kernelClause = "";
+    let probBinClause = "";
+    let radiusClause = "";
+    if (tableStatPrefix === "count") {
+      const { kernel } = curve;
+      kernelClause = `and m0.kernel = ${kernel}`;
+      const probBins =
+        curve["probability-bins"] === undefined ? [] : curve["probability-bins"];
+      if (probBins.length !== 0 && probBins !== matsTypes.InputTypes.unused) {
+        if (Number(kernel) === 0) {
+          probBinClause = `and m0.prob IN(${probBins})`;
+        } else {
+          probBinClause = `and m0.prob/10 IN(${probBins})`;
+        }
+      } else {
+        throw new Error("INFO:  You need to select at least one probability bin.");
+      }
+    } else {
+      const { radius } = curve;
+      radiusClause = `and m0.radius = ${radius}`;
+    }
     let thresholdClause = "";
     let validTimeClause = "";
     let forecastLengthClause = "";
     let dateString = "";
     let dateClause = "";
     if (xAxisParam !== "Threshold" && yAxisParam !== "Threshold") {
-      var thresholdStr = curve.threshold;
-      const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-            key
-          ] === thresholdStr
-      );
-      thresholdClause = `and m0.trsh = ${threshold / 10000}`;
+      const { threshold } = curve;
+      thresholdClause = `and m0.trsh = ${threshold}`;
     }
     if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
       const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
@@ -109,18 +127,12 @@ dataContourDiff = function (plotParams, plotFunction) {
       dateString = "m0.time";
     }
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
-    var statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
-    ).optionsMap;
-    const statisticClause =
-      "sum(m0.yy) as hit, sum(m0.ny) as fa, sum(m0.yn) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.ny, ';', m0.yn, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as N0";
+    const [statisticClause] = statisticOptionsMap[statisticSelect];
     // For contours, this functions as the colorbar label.
-    var statType = statisticOptionsMap[statisticSelect][0];
-    curves[curveIndex].unitKey = statisticOptionsMap[statisticSelect][1];
+    [statType] = statisticOptionsMap[statisticSelect];
+    [, , , curve.unitKey] = statisticOptionsMap[statisticSelect];
 
-    var d;
+    let d;
     // this is a database driven curve, not a difference curve
     // prepare the query from the above parameters
     let statement =
@@ -133,7 +145,12 @@ dataContourDiff = function (plotParams, plotFunction) {
       "{{queryTableClause}} " +
       "where 1=1 " +
       "{{dateClause}} " +
+      "{{memberClause}} " +
+      "{{neighborhoodClause}} " +
       "{{thresholdClause}} " +
+      "{{kernelClause}} " +
+      "{{probBinClause}} " +
+      "{{radiusClause}} " +
       "{{validTimeClause}} " +
       "{{forecastLengthClause}} " +
       "group by xVal,yVal " +
@@ -144,16 +161,21 @@ dataContourDiff = function (plotParams, plotFunction) {
     statement = statement.replace("{{yValClause}}", yValClause);
     statement = statement.replace("{{statisticClause}}", statisticClause);
     statement = statement.replace("{{queryTableClause}}", queryTableClause);
+    statement = statement.replace("{{memberClause}}", memberClause);
+    statement = statement.replace("{{neighborhoodClause}}", neighborhoodClause);
     statement = statement.replace("{{thresholdClause}}", thresholdClause);
+    statement = statement.replace("{{kernelClause}}", kernelClause);
+    statement = statement.replace("{{probBinClause}}", probBinClause);
+    statement = statement.replace("{{radiusClause}}", radiusClause);
     statement = statement.replace("{{validTimeClause}}", validTimeClause);
     statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
     statement = statement.replace("{{dateClause}}", dateClause);
     statement = statement.split("{{dateString}}").join(dateString);
     dataRequests[label] = statement;
 
-    var queryResult;
+    let queryResult;
     const startMoment = moment();
-    var finishMoment;
+    let finishMoment;
     try {
       // send the query statement to the query function
       queryResult = matsDataQueryUtils.queryDBContour(
@@ -185,22 +207,14 @@ dataContourDiff = function (plotParams, plotFunction) {
       } else {
         // this is an error returned by the mysql database
         error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-        if (error.includes("ER_NO_SUCH_TABLE")) {
-          throw new Error(
-            `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
-              `Choose a different scale to continue using this region.`
-          );
-        } else {
-          throw new Error(error);
-        }
+        throw new Error(error);
       }
       dataNotFoundForAnyCurve = true;
     }
 
-    const postQueryStartMoment = moment();
-
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const { mean } = d.glob_stats;
     const annotation =
       mean === undefined
@@ -249,8 +263,13 @@ dataContourDiff = function (plotParams, plotFunction) {
     statType === "ctc",
     statType === "scalar"
   );
-  plotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
-  curves = plotParams.curves;
+
+  // make a copy of the plotParams that we can modify
+  const diffPlotParams = JSON.parse(JSON.stringify(plotParams));
+  diffPlotParams.curves = matsDataUtils.getDiffContourCurveParams(
+    diffPlotParams.curves
+  );
+  curves = diffPlotParams.curves;
   dataset[0].name = matsPlotUtils.getCurveText(
     matsTypes.PlotTypes.contourDiff,
     curves[0]
@@ -266,7 +285,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   const result = matsDataProcessUtils.processDataContour(
     dataset,
     curveInfoParams,
-    plotParams,
+    diffPlotParams,
     bookkeepingParams
   );
   plotFunction(result);

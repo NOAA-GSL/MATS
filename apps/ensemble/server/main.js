@@ -611,7 +611,7 @@ const doCurveParams = function () {
         "avg(m0.fss) as stat, group_concat(m0.time, ';', m0.fss order by m0.time) as sub_data, count(m0.fss) as N0",
         "precalculated",
         "stats",
-        "x100",
+        "Number",
         1,
       ],
     };
