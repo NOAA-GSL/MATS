@@ -1,4 +1,4 @@
-Feature: Add Remove DieOff Curve
+Feature: Add Remove Dieoff Curve
 
     As an unauthenticated user to the app,
     with the app in its default state,
@@ -14,9 +14,9 @@ Feature: Add Remove DieOff Curve
         Then I expect the app title to be "Radar"
 
     @watch
-    Scenario: addRemoveDieOffCurve
-        When I set the plot type to "DieOff"
-        Then the plot type should be "DieOff"
+    Scenario: addRemoveDieoffCurve
+        When I set the plot type to "Dieoff"
+        Then the plot type should be "Dieoff"
         When I change the "variable" parameter to "Composite Reflectivity"
         Then the "variable" parameter value matches "Composite Reflectivity"
         When I change the "data-source" parameter to "RAP_GSL"
@@ -29,7 +29,7 @@ Feature: Add Remove DieOff Curve
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "DieOff" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page

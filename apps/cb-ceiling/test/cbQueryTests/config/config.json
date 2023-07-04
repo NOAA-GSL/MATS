@@ -16,7 +16,7 @@
       "maxExecutionTime_ms": 11000
     },
     {
-      "name": "DieOff query",
+      "name": "Dieoff query",
       "queryFile": "./test_queries/final_DieOff.sql",
       "maxExecutionTime_ms": 190000
     },
