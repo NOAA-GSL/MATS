@@ -801,7 +801,7 @@ const doCurveParams = function () {
       default:
         kernelModelOptionsMap[variables[0]][
           Object.keys(kernelModelOptionsMap[variables[0]])[0]
-        ][0],
+        ][1],
       controlButtonVisibility: "block",
       controlButtonText: "kernel width (km)",
       displayOrder: 4,
