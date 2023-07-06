@@ -13,10 +13,10 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-dataThreshold = function (plotParams, plotFunction) {
+dataGridScaleProb = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
-    plotType: matsTypes.PlotTypes.threshold,
+    plotType: matsTypes.PlotTypes.gridscaleProb,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
     completeness: plotParams.completeness,
     outliers: plotParams.outliers,
@@ -58,38 +58,18 @@ dataThreshold = function (plotParams, plotFunction) {
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     region = region === "Full" ? "Full_domain" : region; // this db doesn't handle the full domain the way the others do
-    const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
-    ).optionsMap;
-    const tableStatPrefix = statisticOptionsMap[statisticSelect][2];
+    const statisticSelect = "Grid Scale Count";
+    const tableStatPrefix = "count";
     const queryTableClause = `from ${databaseRef}.${model}_${tableStatPrefix}_${region} as m0`;
+    const { threshold } = curve;
+    const thresholdClause = `and m0.trsh = ${threshold}`;
     const { members } = curve;
     const memberClause = `and m0.mem = ${members}`;
     const neighborhoodSize = curve["neighborhood-size"];
     const neighborhoodClause = `and m0.nhd_size = ${neighborhoodSize}`;
     let kernelClause = "";
-    let probBinClause = "";
-    let radiusClause = "";
-    if (tableStatPrefix === "count") {
-      const { kernel } = curve;
-      kernelClause = `and m0.kernel = ${kernel}`;
-      const probBins =
-        curve["probability-bins"] === undefined ? [] : curve["probability-bins"];
-      if (probBins.length !== 0 && probBins !== matsTypes.InputTypes.unused) {
-        if (Number(kernel) !== 0) {
-          probBinClause = `and m0.prob IN(${probBins})`;
-        } else {
-          probBinClause = `and m0.prob*10 IN(${probBins})`;
-        }
-      } else {
-        throw new Error("INFO:  You need to select at least one probability bin.");
-      }
-    } else {
-      const { radius } = curve;
-      radiusClause = `and m0.radius = ${radius}`;
-    }
+    const { kernel } = curve;
+    kernelClause = `and m0.kernel = ${kernel}`;
     let validTimeClause = "";
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -101,25 +81,22 @@ dataThreshold = function (plotParams, plotFunction) {
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
-    const [statisticClause] = statisticOptionsMap[statisticSelect];
+    const statisticClause =
+      "sum(m0.nhdfcstcount) as stat, group_concat(m0.time, ';', m0.nhdfcstcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as N0";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    [, statType] = statisticOptionsMap[statisticSelect];
-    const axisKey = statisticOptionsMap[statisticSelect][3];
+    statType = "precalculated";
+    const axisKey = "Number of Grid Points";
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-    const idealVal = statisticOptionsMap[statisticSelect][4];
-    if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
-      idealValues.push(idealVal);
-    }
 
     let d;
     if (!diffFrom) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        "select m0.trsh as thresh, " +
+        "select m0.prob as binValue, " +
         "count(distinct m0.time) as N_times, " +
         "min(m0.time) as min_secs, " +
         "max(m0.time) as max_secs, " +
@@ -129,22 +106,20 @@ dataThreshold = function (plotParams, plotFunction) {
         "{{dateClause}} " +
         "{{memberClause}} " +
         "{{neighborhoodClause}} " +
+        "{{thresholdClause}} " +
         "{{kernelClause}} " +
-        "{{probBinClause}} " +
-        "{{radiusClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "group by thresh " +
-        "order by thresh" +
+        "group by binValue " +
+        "order by binValue" +
         ";";
 
       statement = statement.replace("{{statisticClause}}", statisticClause);
       statement = statement.replace("{{queryTableClause}}", queryTableClause);
       statement = statement.replace("{{memberClause}}", memberClause);
       statement = statement.replace("{{neighborhoodClause}}", neighborhoodClause);
+      statement = statement.replace("{{thresholdClause}}", thresholdClause);
       statement = statement.replace("{{kernelClause}}", kernelClause);
-      statement = statement.replace("{{probBinClause}}", probBinClause);
-      statement = statement.replace("{{radiusClause}}", radiusClause);
       statement = statement.replace("{{validTimeClause}}", validTimeClause);
       statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
       statement = statement.replace("{{dateClause}}", dateClause);
@@ -249,7 +224,6 @@ dataThreshold = function (plotParams, plotFunction) {
     // we found no data for any curves so don't bother proceeding
     throw new Error("INFO:  No valid data for any curves.");
   }
-
   // process the data returned by the query
   const curveInfoParams = {
     curves,
@@ -265,7 +239,7 @@ dataThreshold = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = matsDataProcessUtils.processDataGridScaleProb(
     dataset,
     appParams,
     curveInfoParams,

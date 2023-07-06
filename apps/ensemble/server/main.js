@@ -1060,10 +1060,10 @@ const doCurveParams = function () {
     matsCollections["probability-bins"].insert({
       name: "probability-bins",
       type: matsTypes.InputTypes.select,
-      options: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+      options: ["0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"],
       controlButtonCovered: true,
       unique: false,
-      default: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+      default: ["0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"],
       controlButtonVisibility: "block",
       displayOrder: 5,
       displayPriority: 1,
@@ -1354,6 +1354,41 @@ const doCurveTextPatterns = function () {
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
+      plotType: matsTypes.PlotTypes.gridscaleProb,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["", "members", " members, "],
+        ["", "neighborhood-size", " km neighborhood, "],
+        ["", "kernel", " km kernel, "],
+        ["", "radius", " km radius, "],
+        ["fcst_len: ", "forecast-length", "h, "],
+        ["valid-time: ", "valid-time", ", "],
+        ["", "curve-dates", ""],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region",
+        "statistic",
+        "threshold",
+        "members",
+        "neighborhood-size",
+        "kernel",
+        "radius",
+        "average",
+        "forecast-length",
+        "valid-time",
+        "curve-dates",
+      ],
+      groupSize: 6,
+    });
+    matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.histogram,
       textPattern: [
         ["", "label", ": "],
@@ -1504,6 +1539,12 @@ const doPlotGraph = function () {
       plotType: matsTypes.PlotTypes.validtime,
       graphFunction: "graphPlotly",
       dataFunction: "dataValidTime",
+      checked: false,
+    });
+    matsCollections.PlotGraphFunctions.insert({
+      plotType: matsTypes.PlotTypes.gridscaleProb,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataGridScaleProb",
       checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
