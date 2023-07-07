@@ -58,7 +58,6 @@ dataReliability = function (plotParams, plotFunction) {
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     region = region === "Full" ? "Full_domain" : region; // this db doesn't handle the full domain the way the others do
-    const statisticSelect = "Reliability";
     const tableStatPrefix = "count";
     const queryTableClause = `from ${databaseRef}.${model}_${tableStatPrefix}_${region} as m0`;
     const { threshold } = curve;
@@ -69,7 +68,7 @@ dataReliability = function (plotParams, plotFunction) {
     const neighborhoodClause = `and m0.nhd_size = ${neighborhoodSize}`;
     let kernelClause = "";
     const { kernel } = curve;
-    kernelClause = `and m0.kernel = ${kernel}`;
+    kernelClause = `and m0.kernel in (0, ${kernel})`;
     let validTimeClause = "";
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -79,7 +78,7 @@ dataReliability = function (plotParams, plotFunction) {
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
     const statisticClause =
-      "sum(m0.nhdfcstcount) as fcstcount, sum(m0.nhdhitcount) as hitcount";
+      "sum(m0.nhdfcstcount) as fcstcount, sum(m0.nhdfcstcount) as rawfcstcount, sum(m0.nhdhitcount) as hitcount";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
@@ -93,7 +92,7 @@ dataReliability = function (plotParams, plotFunction) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       let statement =
-        "select m0.prob as binValue, " +
+        "select m0.prob as binValue, m0.kernel, " +
         "count(distinct m0.time) as N_times, " +
         "min(m0.time) as min_secs, " +
         "max(m0.time) as max_secs, " +
@@ -107,8 +106,8 @@ dataReliability = function (plotParams, plotFunction) {
         "{{kernelClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "group by binValue " +
-        "order by binValue" +
+        "group by binValue, kernel " +
+        "order by binValue, kernel" +
         ";";
 
       statement = statement.replace("{{statisticClause}}", statisticClause);
@@ -127,11 +126,7 @@ dataReliability = function (plotParams, plotFunction) {
       let finishMoment;
       try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBReliability(
-          sumPool,
-          statement,
-          appParams
-        );
+        queryResult = matsDataQueryUtils.queryDBReliability(sumPool, statement, kernel);
         finishMoment = moment();
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
