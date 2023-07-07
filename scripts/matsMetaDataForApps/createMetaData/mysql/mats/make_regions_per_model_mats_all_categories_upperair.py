@@ -17,7 +17,8 @@ import MySQLdb
 def update_rpm_record(cnx, cursor, table_name, display_text, table_name_prefix, regions, fcst_lens, display_category, display_order, mindate, maxdate, minhour, maxhour, numrecs):
 
     # see if this record already exists (it shouldn't, because this script cleaned the tables when it started)
-    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE table_name_prefix = '" + str(table_name_prefix) + "'"
+    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE table_name_prefix = '" + \
+        str(table_name_prefix) + "'"
     cursor.execute(find_rpm_rec)
     record_id = int(0)
     for row in cursor:
@@ -69,7 +70,8 @@ def update_rpm_record(cnx, cursor, table_name, display_text, table_name_prefix, 
 def regions_per_model_mats_all_categories(mode):
     # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        # location of cnf file on Hera; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("set session wait_timeout=28800")
@@ -79,7 +81,8 @@ def regions_per_model_mats_all_categories(mode):
         sys.exit(1)
 
     try:
-        cnx3 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx3 = MySQLdb.connect(
+            read_default_file="/home/role.amb-verif/.my.cnf")
         cnx3.autocommit = True
         cursor3 = cnx3.cursor(MySQLdb.cursors.DictCursor)
         cursor3.execute("set session wait_timeout=28800")
@@ -106,7 +109,8 @@ def regions_per_model_mats_all_categories(mode):
         region_id = row['id']
         valid_regions.append(region_id)
     for region_id in valid_regions:
-        get_region_order = "select region_order from region_orders where id=" + str(region_id) + ";"
+        get_region_order = "select region_order from region_orders where id=" + \
+            str(region_id) + ";"
         cursor3.execute(get_region_order)
         for row in cursor3:
             region_order = int(row['region_order'])
@@ -161,7 +165,8 @@ def regions_per_model_mats_all_categories(mode):
     if TScleaned:
         for tablename in per_table.keys():
             # get forecast lengths from this table
-            get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + tablename + ";")
+            get_fcst_lens = (
+                "SELECT DISTINCT fcst_len FROM " + tablename + ";")
             cursor.execute(get_fcst_lens)
             per_table[tablename]['fcst_lens'] = []
             this_fcst_lens = []
@@ -194,7 +199,8 @@ def regions_per_model_mats_all_categories(mode):
             cnx.commit()
             # sys.exit(-1)
     else:
-        print("TScleaned is " + str(TScleaned) + " skipped populating TABLESTATS_build")
+        print("TScleaned is " + str(TScleaned) +
+              " skipped populating TABLESTATS_build")
 
     # sys.exit(-1)
 
@@ -217,7 +223,8 @@ def regions_per_model_mats_all_categories(mode):
 
     # use standardized model names
     try:
-        cnx4 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx4 = MySQLdb.connect(
+            read_default_file="/home/role.amb-verif/.my.cnf")
         cnx4.autocommit = True
         cursor4 = cnx4.cursor(MySQLdb.cursors.DictCursor)
         cursor4.execute("set session wait_timeout=28800")
@@ -305,7 +312,9 @@ def regions_per_model_mats_all_categories(mode):
             do_non_main = do_non_main + 1
 
         # get regions for all tables pertaining to this model
-        get_these_regions = "select distinct(region) as region from " + db2 + ".TABLESTATS_build where tablename like '" + model + "%' and model = '" + model + "' and numrecs > 0;"
+        get_these_regions = "select distinct(region) as region from " + db2 + \
+            ".TABLESTATS_build where tablename like '" + model + \
+            "%' and model = '" + model + "' and numrecs > 0;"
         cursor.execute(get_these_regions)
         these_regions_raw = []
         these_regions_orders = []
@@ -313,11 +322,14 @@ def regions_per_model_mats_all_categories(mode):
             val = str(list(row.values())[0])
             these_regions_raw.append(val)
             these_regions_orders.append(valid_region_orders[int(val)])
-        these_regions = [x for _, x in sorted(zip(these_regions_orders, these_regions_raw))]
+        these_regions = [x for _, x in sorted(
+            zip(these_regions_orders, these_regions_raw))]
         # print( "these_regions:\n" + str(these_regions) )
 
         # get forecast lengths for all tables pertaining to this model
-        get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db2 + ".TABLESTATS_build where tablename like '" + model + "%' and fcst_lens != '[]' and model = '" + model + "' and numrecs > 0 order by length(fcst_lens) desc;"
+        get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db2 + ".TABLESTATS_build where tablename like '" + \
+            model + "%' and fcst_lens != '[]' and model = '" + model + \
+            "' and numrecs > 0 order by length(fcst_lens) desc;"
         cursor.execute(get_these_fcst_lens)
         these_fcst_lens = []
         for row in cursor:
@@ -329,21 +341,26 @@ def regions_per_model_mats_all_categories(mode):
         # print( "these_fcst_lens:\n" + str(these_fcst_lens) )
 
         # get table prefixes for all tables pertaining to this model
-        get_these_table_prefixes = "select distinct(table_name_prefix) as table_name_prefix from " + db2 + ".TABLESTATS_build where tablename like '" + model + "%' and model = '" + model + "' and numrecs > 0;"
+        get_these_table_prefixes = "select distinct(table_name_prefix) as table_name_prefix from " + db2 + \
+            ".TABLESTATS_build where tablename like '" + model + \
+            "%' and model = '" + model + "' and numrecs > 0;"
         cursor.execute(get_these_table_prefixes)
         for row in cursor:
             this_table_name_prefix = list(row.values())[0]
         # print( "this_table_name_prefix:\n" + str(this_table_name_prefix) )
 
         # get statistics for all tables pertaining to this model
-        get_cat_stats = "select min(mindate) as mindate, max(maxdate) as maxdate, min(minhour) as minhour, max(maxhour) as maxhour, sum(numrecs) as numrecs from " + db2 + ".TABLESTATS_build where tablename like '" + model + "%' and model = '" + model + "' and numrecs > 0;"
+        get_cat_stats = "select min(mindate) as mindate, max(maxdate) as maxdate, min(minhour) as minhour, max(maxhour) as maxhour, sum(numrecs) as numrecs from " + \
+            db2 + ".TABLESTATS_build where tablename like '" + model + \
+            "%' and model = '" + model + "' and numrecs > 0;"
         cursor.execute(get_cat_stats)
         catstats = cursor.fetchall()[0]
         # print( "catstats:\n" + str(catstats) )
 
         # update the metadata for this data source in the build table
         if len(these_regions) > 0 and len(these_fcst_lens) > 0:
-            update_rpm_record(cnx, cursor, model, display_text, this_table_name_prefix, these_regions, these_fcst_lens, cat, do, catstats['mindate'], catstats['maxdate'], catstats['minhour'], catstats['maxhour'], catstats['numrecs'])
+            update_rpm_record(cnx, cursor, model, display_text, this_table_name_prefix, these_regions, these_fcst_lens, cat,
+                              do, catstats['mindate'], catstats['maxdate'], catstats['minhour'], catstats['maxhour'], catstats['numrecs'])
 
     # clean metadata publication table and add the build data into it
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
@@ -357,7 +374,8 @@ def regions_per_model_mats_all_categories(mode):
         sync_rpm = "insert into regions_per_model_mats_all_categories select * from regions_per_model_mats_all_categories_build"
         cursor.execute(sync_rpm)
         cnx.commit()
-        print("deploy " + db1 + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
+        print("deploy " + db1 +
+              ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
     else:
         print("skipping deployment at " + str(updated_utc))
 

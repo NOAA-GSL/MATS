@@ -30,7 +30,7 @@ Feature: Plot and Add buttons are disabled while plotting
         And the "Plot Unmatched" button should not be enabled
         Then I should be on the graph page
         #The button should be disabled so the second click should have no effect.
-        And I should have a "TimeSeries" plot
+        And I should have a "Time Series" plot
 
         When I click the "Back" button
         Then I should be on the main page

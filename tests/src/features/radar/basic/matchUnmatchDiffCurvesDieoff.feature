@@ -1,7 +1,7 @@
 Feature: Match Unmatch Diff Curves Dieoff
 
     As an unauthenticated user to the app,
-    with the app in its default state so that the plots are DieOff,
+    with the app in its default state so that the plots are Dieoff,
     I want to add two curves, plot unmatched, and then return to the main page.
     I then want to add a matched difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
     I then want to add a piecewise difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
@@ -13,8 +13,8 @@ Feature: Match Unmatch Diff Curves Dieoff
 
     @watch
     Scenario: matchUnmatchDiffCurvesDieoff
-        When I set the plot type to "DieOff"
-        Then the plot type should be "DieOff"
+        When I set the plot type to "Dieoff"
+        Then the plot type should be "Dieoff"
         When I change the "variable" parameter to "Composite Reflectivity"
         Then the "variable" parameter value matches "Composite Reflectivity"
         When I change the "data-source" parameter to "RAP_GSL"
@@ -34,7 +34,7 @@ Feature: Match Unmatch Diff Curves Dieoff
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "DieOff" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -42,7 +42,7 @@ Feature: Match Unmatch Diff Curves Dieoff
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "DieOff" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -54,7 +54,7 @@ Feature: Match Unmatch Diff Curves Dieoff
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "DieOff" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -62,7 +62,7 @@ Feature: Match Unmatch Diff Curves Dieoff
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "DieOff" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -75,7 +75,7 @@ Feature: Match Unmatch Diff Curves Dieoff
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "DieOff" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -83,7 +83,7 @@ Feature: Match Unmatch Diff Curves Dieoff
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "DieOff" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page

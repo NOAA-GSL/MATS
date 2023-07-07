@@ -28,7 +28,7 @@ Feature: Add Remove DailyModelCycle Curve
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "DailyModelCycle" plot
+        And I should have a "Daily Model Cycle" plot
 
         When I click the "Back" button
         Then I should be on the main page
