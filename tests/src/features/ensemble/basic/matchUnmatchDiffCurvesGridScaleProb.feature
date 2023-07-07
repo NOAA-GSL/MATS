@@ -1,36 +1,38 @@
-Feature: Match Unmatch Diff Curves DailyModelCycle
+Feature: Match Unmatch Diff Curves Threshold
 
     As an unauthenticated user to the app,
-    with the app in its default state so that the plots are DailyModelCycle,
+    with the app in its default state so that the plots are Threshold,
     I want to add two curves, plot unmatched, and then return to the main page.
     I then want to add a matched difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
     I then want to add a piecewise difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
     I want to end by removing all of the curves.
 
     Background:
-        Given I load the app "/landuse"
-        Then I expect the app title to be "Surface Land Use"
+        Given I load the app "/ensemble"
+        Then I expect the app title to be "Ensemble"
 
     @watch
-    Scenario: matchUnmatchDiffCurvesDailyModelCycle
-        When I set the plot type to "DailyModelCycle"
-        Then the plot type should be "DailyModelCycle"
-        When I change the "data-source" parameter to "RAP_GSL"
-        Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the dates to "03/02/2021 00:00 - 03/03/2021 00:00"
-        Then the dates value is "03/02/2021 00:00 - 03/03/2021 00:00"
+    Scenario: matchUnmatchDiffCurvesGridScaleProb
+        When I set the plot type to "GridScaleProbability"
+        Then the plot type should be "GridScaleProbability"
+        When I change the "variable" parameter to "Composite Reflectivity"
+        Then the "variable" parameter value matches "Composite Reflectivity"
+        When I change the "data-source" parameter to "RRFSE_SP"
+        Then the "data-source" parameter value matches "RRFSE_SP"
+        When I set the curve-dates to "05/10/2023 12:00 - 05/16/2023 00:00"
+        Then the curve-dates value is "05/10/2023 12:00 - 05/16/2023 00:00"
         When I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "RAP_OPS"
-        Then the "data-source" parameter value matches "RAP_OPS"
+        When I change the "threshold" parameter to "50"
+        Then the "threshold" parameter value matches "50"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Daily Model Cycle" plot
+        And I should have a "Grid Scale Probability" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -38,7 +40,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Daily Model Cycle" plot
+        And I should have a "Grid Scale Probability" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -50,7 +52,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Daily Model Cycle" plot
+        And I should have a "Grid Scale Probability" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -58,7 +60,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Daily Model Cycle" plot
+        And I should have a "Grid Scale Probability" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -71,7 +73,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Daily Model Cycle" plot
+        And I should have a "Grid Scale Probability" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -79,7 +81,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Daily Model Cycle" plot
+        And I should have a "Grid Scale Probability" plot
 
         When I click the "Back" button
         Then I should be on the main page
