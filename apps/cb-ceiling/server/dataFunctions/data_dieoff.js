@@ -2,8 +2,7 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import
-{
+import {
   matsCollections,
   matsTypes,
   matsDataUtils,
@@ -11,12 +10,11 @@ import
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleDieoff
+  matsMiddleDieoff,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-dataDieoff = function (plotParams, plotFunction)
-{
+dataDieoff = function (plotParams, plotFunction) {
   const fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
@@ -44,8 +42,7 @@ dataDieoff = function (plotParams, plotFunction)
   const idealValues = [];
   let statement = "";
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++)
-  {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
     let queryTemplate = null;
     const curve = curves[curveIndex];
@@ -66,7 +63,7 @@ dataDieoff = function (plotParams, plotFunction)
     ).find(
       (key) =>
         matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-        key
+          key
         ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
@@ -85,8 +82,7 @@ dataDieoff = function (plotParams, plotFunction)
 
     let sitesList = [];
     let singleCycle = null;
-    if (regionType === "Predefined region")
-    {
+    if (regionType === "Predefined region") {
       var regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -95,21 +91,18 @@ dataDieoff = function (plotParams, plotFunction)
           matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
-      
-      if (forecastLength === matsTypes.ForecastTypes.dieoff)
-      {
+
+      if (forecastLength === matsTypes.ForecastTypes.dieoff) {
         queryTemplate = fs.readFileSync(
           "assets/app/sqlTemplates/tmpl_DieOff_region_DieOff.sql",
           "utf8"
         );
-      } else if (forecastLength === matsTypes.ForecastTypes.utcCycle)
-      {
+      } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
         queryTemplate = fs.readFileSync(
           "assets/app/sqlTemplates/tmpl_DieOff_region_UTC.sql",
           "utf8"
         );
-      } else
-      {
+      } else {
         queryTemplate = fs.readFileSync(
           "assets/app/sqlTemplates/tmpl_DieOff_region_SingleCycle.sql",
           "utf8"
@@ -122,39 +115,37 @@ dataDieoff = function (plotParams, plotFunction)
       queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
       queryTemplate = queryTemplate.replace(/vxREGION/g, region);
 
-      if (forecastLength === matsTypes.ForecastTypes.dieoff)
-      {
+      if (forecastLength === matsTypes.ForecastTypes.dieoff) {
         validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
-        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused)
-        {
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
           queryTemplate = queryTemplate.replace(
             /vxVALID_TIMES/g,
             cbPool.trfmListToCSVString(validTimes, null, false)
           );
-        } else
-        {
+        } else {
           queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
         }
-      } else if (forecastLength === matsTypes.ForecastTypes.utcCycle)
-      {
+      } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
         utcCycleStart =
           curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
-        if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused)
-        {
+        if (
+          utcCycleStart.length !== 0 &&
+          utcCycleStart !== matsTypes.InputTypes.unused
+        ) {
           queryTemplate = queryTemplate.replace(
             /vxUTC_CYCLE_START/g,
             cbPool.trfmListToCSVString(utcCycleStart, null, false)
           );
-        } else
-        {
-          queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxUTC_CYCLE_START");
+        } else {
+          queryTemplate = cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "vxUTC_CYCLE_START"
+          );
         }
       }
-    } else
-    {
+    } else {
       sitesList = curve.sites === undefined ? [] : curve.sites;
-      if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused)
-      {
+      if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
@@ -170,23 +161,19 @@ dataDieoff = function (plotParams, plotFunction)
     const axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][2];
-    if (idealVal !== null && idealValues.indexOf(idealVal) === -1)
-    {
+    if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
       idealValues.push(idealVal);
     }
 
     var d;
-    if (!diffFrom)
-    {
+    if (!diffFrom) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
       var queryResult;
       const startMoment = moment();
       var finishMoment;
-      try
-      {
-        if (regionType === "Predefined region")
-        {
+      try {
+        if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
           dataRequests[label] = statement;
 
@@ -208,11 +195,10 @@ dataDieoff = function (plotParams, plotFunction)
           };
           // get the data back from the query
           d = queryResult.data;
-        } else
-        {
+        } else {
           // send to matsMiddle
           const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
-          let rows = tss.processStationQuery(
+          const rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
             model,
@@ -224,7 +210,7 @@ dataDieoff = function (plotParams, plotFunction)
             utcCycleStart,
             singleCycle
           );
-          console.log("rows:" + rows.length);
+          console.log(`rows:${rows.length}`);
 
           // send the query statement to the query function
           queryResult = tss.queryDBSpecialtyCurve(
@@ -236,40 +222,33 @@ dataDieoff = function (plotParams, plotFunction)
 
           d = queryResult.data;
         }
-      } catch (e)
-      {
+      } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== "")
-      {
-        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND)
-        {
+      if (queryResult.error !== undefined && queryResult.error !== "") {
+        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
-        } else
-        {
+        } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
           throw new Error(error);
         }
-      } else
-      {
+      } else {
         dataFoundForAnyCurve = true;
       }
 
       // set axis limits based on returned data
       var postQueryStartMoment = moment();
-      if (dataFoundForCurve)
-      {
+      if (dataFoundForCurve) {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
         ymin = ymin < d.ymin ? ymin : d.ymin;
         ymax = ymax > d.ymax ? ymax : d.ymax;
       }
-    } else
-    {
+    } else {
       // this is a difference curve
       const diffResult = matsDataDiffUtils.getDataForDiffCurve(
         dataset,
@@ -316,8 +295,7 @@ dataDieoff = function (plotParams, plotFunction)
     };
   } // end for curves
 
-  if (!dataFoundForAnyCurve)
-  {
+  if (!dataFoundForAnyCurve) {
     // we found no data for any curves so don't bother proceeding
     throw new Error("INFO:  No valid data for any curves.");
   }
