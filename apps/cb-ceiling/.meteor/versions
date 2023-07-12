@@ -6,7 +6,7 @@ accounts-ui@1.4.2
 accounts-ui-unstyled@1.7.0
 allow-deny@1.1.1
 autoupdate@1.8.0
-babel-compiler@7.10.3
+babel-compiler@7.10.4
 babel-runtime@1.5.1
 base64@1.0.12
 binary-heap@1.0.11
@@ -25,9 +25,9 @@ ddp-rate-limiter@1.1.1
 ddp-server@2.6.0
 diff-sequence@1.1.2
 differential:event-hooks@1.5.0
-dynamic-import@0.7.2
-ecmascript@0.16.6
-ecmascript-runtime@0.8.0
+dynamic-import@0.7.3
+ecmascript@0.16.7
+ecmascript-runtime@0.8.1
 ecmascript-runtime-client@0.12.1
 ecmascript-runtime-server@0.11.0
 ejson@1.1.3
@@ -49,7 +49,7 @@ less@4.0.0
 localstorage@1.2.0
 logging@1.3.2
 mdg:validated-method@1.3.0
-meteor@1.11.1
+meteor@1.11.2
 meteor-base@1.5.1
 meteorhacks:picker@1.0.3
 meteortoys:toykit@10.0.0
@@ -77,9 +77,9 @@ ostrio:flow-router-extra@3.9.0
 pcel:mysql@0.1.0
 promise@0.12.2
 random@1.2.1
-randyp:mats-common@5.1.0
+randyp:mats-common@5.1.1
 rate-limit@1.0.9
-react-fast-refresh@0.2.6
+react-fast-refresh@0.2.7
 reactive-dict@1.3.1
 reactive-var@1.0.12
 reload@1.3.1
