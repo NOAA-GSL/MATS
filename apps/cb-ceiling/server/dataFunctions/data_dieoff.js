@@ -11,11 +11,11 @@ import
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleDieOff
+  matsMiddleDieoff
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-dataDieOff = function (plotParams, plotFunction)
+dataDieoff = function (plotParams, plotFunction)
 {
   const fs = require("fs");
   // initialize variables common to all curves
@@ -211,7 +211,7 @@ dataDieOff = function (plotParams, plotFunction)
         } else
         {
           // send to matsMiddle
-          const tss = new matsMiddleDieOff.MatsMiddleDieOff(cbPool);
+          const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
           let rows = tss.processStationQuery(
             "Ceiling",
             sitesList,

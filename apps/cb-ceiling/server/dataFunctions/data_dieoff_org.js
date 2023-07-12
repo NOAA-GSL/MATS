@@ -13,7 +13,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-dataDieOff_org = function (plotParams, plotFunction) {
+dataDieoff_org = function (plotParams, plotFunction) {
   const fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
