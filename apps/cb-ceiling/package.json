@@ -13,7 +13,7 @@
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^4.6.2",
     "chai": "^4.3.7",
-    "couchbase": "^4.2.4",
+    "couchbase": "^4.2.5",
     "daterangepicker": "^3.1.0",
     "downsample-lttb": "0.0.1",
     "fibers": "^5.0.3",
