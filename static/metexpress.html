@@ -47,7 +47,7 @@
                 success(function (data) {
                     for (var di = 0; di < data.length; di++) {
                         <!-- skip the non met-express apps -->
-                        if (data[di].group.startsWith("MET")) {
+                        if (data[di].app.startsWith("met-")) {
                             data[di].itemColor = '#3366bb';
                             if ($scope.items[data[di].group] == null) {
                                 $scope.items[data[di].group] = [data[di]];
@@ -224,11 +224,11 @@
                      style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-bottom:1em;padding-top:0;">
                     <ul class="nav navbar-nav"
                         style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-bottom:0;padding-top:0;">
-                        <li style="height:1em"><a href="http://www.noaa.gov/privacy.html" class="navbar-link">NOAA
+                        <li style="height:1em"><a href="http://www.noaa.gov/privacy" class="navbar-link">NOAA
                             Privacy Statement</a></li>
-                        <li style="height:1em"><a href="http://esrl.noaa.gov/gsd/accessibility.html"
-                                                  class="navbar-link">Web Accessibility Statement</a></li>
-                        <li style="height:1em"><a href="http://www.noaa.gov/disclaimer.html" class="navbar-link">Disclaimer
+                        <li style="height:1em"><a href="http://www.noaa.gov/accessibility"
+                                class="navbar-link">Web Accessibility Statement</a></li>
+                        <li style="height:1em"><a href="http://www.noaa.gov/disclaimer" class="navbar-link">Disclaimer
                             for External Links</a></li>
                         <li style="height:1em"><a href="http://www.noaa.gov/" class="navbar-link">NOAA</a></li>
                         <li style="height:1em"><a href="http://www.commerce.gov/" class="navbar-link">U.S. Department of
@@ -247,5 +247,3 @@
 <!-- ng-app -->
 </body>
 </html>
-
-

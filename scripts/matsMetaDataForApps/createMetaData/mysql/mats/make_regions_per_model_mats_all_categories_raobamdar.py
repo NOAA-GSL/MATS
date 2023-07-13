@@ -17,7 +17,8 @@ import MySQLdb
 def update_rpm_record(cnx, cursor, upperair_model, aircraft_model, display_text, table_name_prefix, regions, fcst_lens, truths, display_category, display_order, mindate, maxdate, numrecs):
 
     # see if this record already exists (it shouldn't, because this script cleaned the tables when it started)
-    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE display_text = '" + str(display_text) + "'"
+    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE display_text = '" + \
+        str(display_text) + "'"
     cursor.execute(find_rpm_rec)
     record_id = int(0)
     for row in cursor:
@@ -68,7 +69,8 @@ def update_rpm_record(cnx, cursor, upperair_model, aircraft_model, display_text,
 def regions_per_model_mats_all_categories(mode):
     # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        # location of cnf file on Hera; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("set session wait_timeout=28800")
@@ -78,7 +80,9 @@ def regions_per_model_mats_all_categories(mode):
         sys.exit(1)
 
     try:
-        cnx2 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        # location of cnf file on Hera; edit if running locally
+        cnx2 = MySQLdb.connect(
+            read_default_file="/home/role.amb-verif/.my.cnf")
         cnx2.autocommit = True
         cursor2 = cnx2.cursor(MySQLdb.cursors.DictCursor)
         cursor2.execute("set session wait_timeout=28800")
@@ -109,12 +113,16 @@ def regions_per_model_mats_all_categories(mode):
         display_text = row['display_text']
         aircraft_metadata[display_text] = {}
         aircraft_metadata[display_text]['model'] = row['model']
-        aircraft_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ")
-        aircraft_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ")
+        aircraft_metadata[display_text]['regions'] = row['regions'].strip(
+            "[]").split(", ")
+        aircraft_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip(
+            "[]").split(", ")
         aircraft_metadata[display_text]['display_category'] = row['display_category']
         aircraft_metadata[display_text]['display_order'] = row['display_order']
-        aircraft_metadata[display_text]['mindate'] = datetime.fromtimestamp(row['mindate']).strftime('%Y-%m-%d')
-        aircraft_metadata[display_text]['maxdate'] = datetime.fromtimestamp(row['maxdate']).strftime('%Y-%m-%d')
+        aircraft_metadata[display_text]['mindate'] = datetime.fromtimestamp(
+            row['mindate']).strftime('%Y-%m-%d')
+        aircraft_metadata[display_text]['maxdate'] = datetime.fromtimestamp(
+            row['maxdate']).strftime('%Y-%m-%d')
         aircraft_metadata[display_text]['numrecs'] = row['numrecs']
     all_aircraft_models = aircraft_metadata.keys()
 
@@ -131,8 +139,10 @@ def regions_per_model_mats_all_categories(mode):
         upperair_metadata[display_text] = {}
         upperair_metadata[display_text]['model'] = row['model']
         upperair_metadata[display_text]['table_name_prefix'] = row['table_name_prefix']
-        upperair_metadata[display_text]['regions'] = row['regions'].strip("[]").split(", ")
-        upperair_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip("[]").split(", ")
+        upperair_metadata[display_text]['regions'] = row['regions'].strip(
+            "[]").split(", ")
+        upperair_metadata[display_text]['fcst_lens'] = row['fcst_lens'].strip(
+            "[]").split(", ")
         upperair_metadata[display_text]['display_category'] = row['display_category']
         upperair_metadata[display_text]['display_order'] = row['display_order']
         upperair_metadata[display_text]['mindate'] = row['mindate']
@@ -155,10 +165,13 @@ def regions_per_model_mats_all_categories(mode):
         combined_metadata[display_text]['maxdate'] = upperair_metadata[display_text]['maxdate']
         if model_exists_in_aircraft:
             combined_metadata[display_text]['aircraft_model'] = aircraft_metadata[display_text]['model']
-            combined_metadata[display_text]['regions'] = list(set(upperair_metadata[display_text]['regions']) | set(aircraft_metadata[display_text]['regions']))
-            combined_metadata[display_text]['fcst_lens'] = list(set(upperair_metadata[display_text]['fcst_lens']) | set(aircraft_metadata[display_text]['fcst_lens']))
+            combined_metadata[display_text]['regions'] = list(set(
+                upperair_metadata[display_text]['regions']) | set(aircraft_metadata[display_text]['regions']))
+            combined_metadata[display_text]['fcst_lens'] = list(set(
+                upperair_metadata[display_text]['fcst_lens']) | set(aircraft_metadata[display_text]['fcst_lens']))
             combined_metadata[display_text]['truths'] = ['RAOBs', 'AMDAR']
-            combined_metadata[display_text]['numrecs'] = int(upperair_metadata[display_text]['numrecs']) + int(aircraft_metadata[display_text]['numrecs'])
+            combined_metadata[display_text]['numrecs'] = int(
+                upperair_metadata[display_text]['numrecs']) + int(aircraft_metadata[display_text]['numrecs'])
             all_aircraft_models.remove(display_text)
         else:
             combined_metadata[display_text]['aircraft_model'] = ""
@@ -167,7 +180,8 @@ def regions_per_model_mats_all_categories(mode):
             combined_metadata[display_text]['truths'] = ['RAOBs']
             combined_metadata[display_text]['numrecs'] = upperair_metadata[display_text]['numrecs']
         update_rpm_record(cnx2, cursor2, combined_metadata[display_text]['upperair_model'], combined_metadata[display_text]['aircraft_model'],
-                          display_text, combined_metadata[display_text]['table_name_prefix'], combined_metadata[display_text]['regions'],
+                          display_text, combined_metadata[display_text][
+                              'table_name_prefix'], combined_metadata[display_text]['regions'],
                           combined_metadata[display_text]['fcst_lens'], combined_metadata[display_text]['truths'],
                           combined_metadata[display_text]['display_category'], combined_metadata[display_text]['display_order'],
                           combined_metadata[display_text]['mindate'], combined_metadata[display_text]['maxdate'], combined_metadata[display_text]['numrecs'])
@@ -186,7 +200,8 @@ def regions_per_model_mats_all_categories(mode):
         combined_metadata[display_text]['maxdate'] = aircraft_metadata[display_text]['maxdate']
         combined_metadata[display_text]['numrecs'] = aircraft_metadata[display_text]['numrecs']
         update_rpm_record(cnx2, cursor2, combined_metadata[display_text]['upperair_model'], combined_metadata[display_text]['aircraft_model'],
-                          display_text, combined_metadata[display_text]['table_name_prefix'], combined_metadata[display_text]['regions'],
+                          display_text, combined_metadata[display_text][
+                              'table_name_prefix'], combined_metadata[display_text]['regions'],
                           combined_metadata[display_text]['fcst_lens'], combined_metadata[display_text]['truths'],
                           combined_metadata[display_text]['display_category'], combined_metadata[display_text]['display_order'],
                           combined_metadata[display_text]['mindate'], combined_metadata[display_text]['maxdate'], combined_metadata[display_text]['numrecs'])
@@ -203,7 +218,8 @@ def regions_per_model_mats_all_categories(mode):
         sync_rpm = "insert into regions_per_model_mats_all_categories select * from regions_per_model_mats_all_categories_build"
         cursor2.execute(sync_rpm)
         cnx2.commit()
-        print("deploy " + db2 + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
+        print("deploy " + db2 +
+              ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
     else:
         print("skipping deployment at " + str(updated_utc))
 

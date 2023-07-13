@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upperair
+spec:
+  template:
+    spec:
+      containers:
+        - name: upperair
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: upperair-secret
+          volumeMounts:
+            - name: upperair-settings-file
+              mountPath: /usr/app/settings/upperair/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: upperair-settings-file
+          configMap:
+            name: upperair-config

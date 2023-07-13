@@ -1,10 +1,10 @@
 #!/scratch1/BMC/amb-verif/miniconda/miniconda3/envs/avid_verify_py3/bin/python
 #
-# The reason I am hardcoding the python path above is that this script is usally run by model developers 
-# without guidance from us, and I don't want them to be tripped up by the fact that the default puthon on 
-# Hera is python 2, while this script requires python 3. There's also an error to that effect below, but 
-#I'm trying to cut down on the number of confused emails we get. Our main scripts are all environment-agnostic, 
-#becuause they are run by verification team members who know which conda environment to use.
+# The reason I am hardcoding the python path above is that this script is usally run by model developers
+# without guidance from us, and I don't want them to be tripped up by the fact that the default puthon on
+# Hera is python 2, while this script requires python 3. There's also an error to that effect below, but
+# I'm trying to cut down on the number of confused emails we get. Our main scripts are all environment-agnostic,
+# becuause they are run by verification team members who know which conda environment to use.
 #
 # Updates the regions_per_model_mats_all_categories table for all models in vgtyp_sums
 
@@ -28,7 +28,8 @@ def update_rpm_record(cnx, cursor, table_name, display_text, fcst_lens, vgtyps, 
 
     # see if this record already exists in the build table
     # (does not guarantee the result will be the same for the prod table)
-    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE model = '" + str(table_name) + "'"
+    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE model = '" + \
+        str(table_name) + "'"
     cursor.execute(find_rpm_rec)
     build_record_id = int(0)
     for row in cursor:
@@ -37,7 +38,8 @@ def update_rpm_record(cnx, cursor, table_name, display_text, fcst_lens, vgtyps, 
 
     # see if this record already exists in the prod table
     # (does not guarantee the result will be the same for the build table)
-    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories WHERE model = '" + str(table_name) + "'"
+    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories WHERE model = '" + \
+        str(table_name) + "'"
     cursor.execute(find_rpm_rec)
     prod_record_id = int(0)
     for row in cursor:
@@ -117,7 +119,8 @@ def update_rpm_record(cnx, cursor, table_name, display_text, fcst_lens, vgtyps, 
 def reprocess_specific_metadata(models_to_reprocess):
     # connect to database
     try:
-        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")  # location of cnf file on Hera; edit if running locally
+        # location of cnf file on Hera; edit if running locally
+        cnx = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -125,7 +128,8 @@ def reprocess_specific_metadata(models_to_reprocess):
         sys.exit(1)
 
     try:
-        cnx2 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx2 = MySQLdb.connect(
+            read_default_file="/home/role.amb-verif/.my.cnf")
         cnx2.autocommit = True
         cursor2 = cnx2.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -133,7 +137,8 @@ def reprocess_specific_metadata(models_to_reprocess):
         sys.exit(1)
 
     try:
-        cnx3 = MySQLdb.connect(read_default_file="/home/role.amb-verif/.my.cnf")
+        cnx3 = MySQLdb.connect(
+            read_default_file="/home/role.amb-verif/.my.cnf")
         cnx3.autocommit = True
         cursor3 = cnx3.cursor(MySQLdb.cursors.DictCursor)
     except MySQLdb.Error as e:
@@ -176,7 +181,8 @@ def reprocess_specific_metadata(models_to_reprocess):
 
     # get max category used so far
     cursor3.execute(usedb)
-    cursor3.execute("select max(display_category) from regions_per_model_mats_all_categories;")
+    cursor3.execute(
+        "select max(display_category) from regions_per_model_mats_all_categories;")
     for row in cursor3:
         max_display_category = list(row.values())[0]
     curr_model_order = 1
@@ -204,7 +210,8 @@ def reprocess_specific_metadata(models_to_reprocess):
             cursor2.execute(get_display_params)
             per_model[model]['display_text'] = model
             if cursor2.rowcount == 0:
-                per_model[model]['display_category'] = int(max_display_category) + 1
+                per_model[model]['display_category'] = int(
+                    max_display_category) + 1
                 per_model[model]['display_order'] = curr_model_order
                 curr_model_order = curr_model_order + 1
             else:
@@ -230,26 +237,33 @@ def reprocess_specific_metadata(models_to_reprocess):
 
                 if int(stats['numrecs']) > 0:
                     # make sure the table actually has data
-                    per_model[model]['mindate'] = int(stats['mindate']) if stats['mindate'] != 'None' and int(stats['mindate']) < per_model[model]['mindate'] else per_model[model]['mindate']
-                    per_model[model]['maxdate'] = int(stats['maxdate']) if stats['maxdate'] != 'None' and int(stats['maxdate']) > per_model[model]['maxdate'] else per_model[model]['maxdate']
-                    per_model[model]['numrecs'] = per_model[model]['numrecs'] + int(stats['numrecs'])
+                    per_model[model]['mindate'] = int(stats['mindate']) if stats['mindate'] != 'None' and int(
+                        stats['mindate']) < per_model[model]['mindate'] else per_model[model]['mindate']
+                    per_model[model]['maxdate'] = int(stats['maxdate']) if stats['maxdate'] != 'None' and int(
+                        stats['maxdate']) > per_model[model]['maxdate'] else per_model[model]['maxdate']
+                    per_model[model]['numrecs'] = per_model[model]['numrecs'] + \
+                        int(stats['numrecs'])
 
-                    get_vgtyps = ("SELECT DISTINCT vgtyp FROM " + tablename + ";")
+                    get_vgtyps = (
+                        "SELECT DISTINCT vgtyp FROM " + tablename + ";")
                     cursor2.execute(get_vgtyps)
                     thisvgtyps = []
                     for row2 in cursor2:
                         val = list(row2.values())[0]
                         thisvgtyps.append(int(val))
-                    per_model[model]['vgtyp'] = list(set(per_model[model]['vgtyp']) | set(thisvgtyps))
+                    per_model[model]['vgtyp'] = list(
+                        set(per_model[model]['vgtyp']) | set(thisvgtyps))
                     per_model[model]['vgtyp'].sort(key=int)
 
-                    get_fcst_lens = ("SELECT DISTINCT fcst_len FROM " + tablename + ";")
+                    get_fcst_lens = (
+                        "SELECT DISTINCT fcst_len FROM " + tablename + ";")
                     cursor2.execute(get_fcst_lens)
                     thisfcst_lens = []
                     for row2 in cursor2:
                         val = list(row2.values())[0]
                         thisfcst_lens.append(int(val))
-                    per_model[model]['fcst_len'] = list(set(per_model[model]['fcst_len']) | set(thisfcst_lens))
+                    per_model[model]['fcst_len'] = list(
+                        set(per_model[model]['fcst_len']) | set(thisfcst_lens))
                     per_model[model]['fcst_len'].sort(key=int)
 
         if per_model[model]['mindate'] == sys.float_info.max:
@@ -263,10 +277,12 @@ def reprocess_specific_metadata(models_to_reprocess):
 
     for model in models_to_reprocess:
         if len(per_model[model]['vgtyp']) > 0 and len(per_model[model]['fcst_len']) > 0:
-            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['vgtyp'], per_model[model]['fcst_len'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
+            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['vgtyp'], per_model[model]['fcst_len'], per_model[model]
+                              ['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
 
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
-    print("deploy " + db + ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
+    print("deploy " + db +
+          ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
 
     cursor.close()
     cnx.close()

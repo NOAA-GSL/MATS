@@ -7,9 +7,9 @@
     "format": "prettier --ignore-path ../../.prettierignore --write . && eslint --ignore-path ../../.gitignore --fix ."
   },
   "dependencies": {
-    "@babel/runtime": "^7.21.0",
-    "@fortawesome/fontawesome-free": "^6.3.0",
-    "@popperjs/core": "^2.11.6",
+    "@babel/runtime": "^7.22.6",
+    "@fortawesome/fontawesome-free": "^6.4.0",
+    "@popperjs/core": "^2.11.8",
     "bootstrap": "^4.6.2",
     "chai": "^4.3.7",
     "daterangepicker": "^3.1.0",
@@ -25,9 +25,9 @@
     "xmlbuilder": "^10.1.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.21.3",
-    "@babel/eslint-parser": "^7.21.3",
-    "eslint": "^8.36.0",
+    "@babel/core": "^7.22.8",
+    "@babel/eslint-parser": "^7.22.7",
+    "eslint": "^8.44.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^8.8.0",
     "eslint-import-resolver-meteor": "^0.4.0",
@@ -37,6 +37,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "prettier": "^2.8.5"
+    "prettier": "^2.8.8"
   }
 }

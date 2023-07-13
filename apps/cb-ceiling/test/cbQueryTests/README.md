@@ -13,7 +13,7 @@ To run a particulat test, do:
 Observed run times:
     final_TimeSeries.sql: 7.3 s
     final_Map.sql: 5.5s
-    final_DieOff.sql: 165s
+    final_Dieoff.sql: 165s
     final_ValidTime.sql: 4.7s
     final_DailyModelCycle.sql: 7.6s
     

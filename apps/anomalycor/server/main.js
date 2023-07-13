@@ -1019,7 +1019,7 @@ const doPlotGraph = function () {
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.dieoff,
       graphFunction: "graphPlotly",
-      dataFunction: "dataDieOff",
+      dataFunction: "dataDieoff",
       checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
