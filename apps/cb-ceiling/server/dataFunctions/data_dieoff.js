@@ -210,7 +210,7 @@ dataDieoff = function (plotParams, plotFunction) {
             utcCycleStart,
             singleCycle
           );
-          console.log(`rows:${rows.length}`);
+          // console.log(`rows:${rows.length}`);
 
           // send the query statement to the query function
           queryResult = tss.queryDBSpecialtyCurve(
