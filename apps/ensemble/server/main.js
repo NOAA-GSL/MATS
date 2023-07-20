@@ -1552,7 +1552,7 @@ const doPlotGraph = function () {
       plotType: matsTypes.PlotTypes.timeSeries,
       graphFunction: "graphPlotly",
       dataFunction: "dataSeries",
-      checked: true,
+      checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.dieoff,
@@ -1582,7 +1582,7 @@ const doPlotGraph = function () {
       plotType: matsTypes.PlotTypes.reliability,
       graphFunction: "graphPlotly",
       dataFunction: "dataReliability",
-      checked: false,
+      checked: true,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.histogram,
