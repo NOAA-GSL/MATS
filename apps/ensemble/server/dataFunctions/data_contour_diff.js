@@ -86,11 +86,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       const probBins =
         curve["probability-bins"] === undefined ? [] : curve["probability-bins"];
       if (probBins.length !== 0 && probBins !== matsTypes.InputTypes.unused) {
-        if (Number(kernel) !== 0) {
-          probBinClause = `and m0.prob IN(${probBins})`;
-        } else {
-          probBinClause = `and m0.prob*10 IN(${probBins})`;
-        }
+        probBinClause = `and m0.prob IN(${probBins})`;
       } else {
         throw new Error("INFO:  You need to select at least one probability bin.");
       }
