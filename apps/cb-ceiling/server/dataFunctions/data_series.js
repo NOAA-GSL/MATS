@@ -181,7 +181,7 @@ dataSeries = function (plotParams, plotFunction) {
           );
 
           // send the query statement to the query function
-          queryResult = tss.queryDBTimeSeries(
+          queryResult = matsDataQueryUtils.queryDBTimeSeries(
             cbPool,
             rows,
             model,

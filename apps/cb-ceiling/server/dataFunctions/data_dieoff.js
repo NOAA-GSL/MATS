@@ -198,6 +198,10 @@ dataDieoff = function (plotParams, plotFunction) {
         } else {
           // send to matsMiddle
           const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
+
+          // TODO - remove logToFile = true assignment
+          tss.logToFile = true;
+
           const rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
@@ -213,7 +217,7 @@ dataDieoff = function (plotParams, plotFunction) {
           // console.log(`rows:${rows.length}`);
 
           // send the query statement to the query function
-          queryResult = tss.queryDBSpecialtyCurve(
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
             cbPool,
             rows,
             appParams,
