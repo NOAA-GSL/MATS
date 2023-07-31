@@ -83,11 +83,11 @@ dataValidTime = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
 
-    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
-    queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
-    queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
+    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
 
     if (regionType === "Predefined region") {
       var regionStr = curve.region;
@@ -98,16 +98,16 @@ dataValidTime = function (plotParams, plotFunction) {
           matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
-      queryTemplate = queryTemplate.replace(/vxREGION/g, region);
+      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     } else {
       const sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
-          /vxSITES_LIST_OBS/g,
+          /{{vxSITES_LIST_OBS}}/g,
           cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
         );
         queryTemplate = queryTemplate.replace(
-          /vxSITES_LIST_MODELS/g,
+          /{{vxSITES_LIST_MODELS}}/g,
           cbPool.trfmListToCSVString(sitesList, "models.data.", false)
         );
       } else {

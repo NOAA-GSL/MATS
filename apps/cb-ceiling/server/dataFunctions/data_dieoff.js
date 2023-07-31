@@ -109,21 +109,21 @@ dataDieoff = function (plotParams, plotFunction) {
         );
         singleCycle = fromSecs;
       }
-      queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
-      queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
-      queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-      queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-      queryTemplate = queryTemplate.replace(/vxREGION/g, region);
+      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
 
       if (forecastLength === matsTypes.ForecastTypes.dieoff) {
         validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
           queryTemplate = queryTemplate.replace(
-            /vxVALID_TIMES/g,
+            /{{vxVALID_TIMES}}/g,
             cbPool.trfmListToCSVString(validTimes, null, false)
           );
         } else {
-          queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+          queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
         }
       } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
         utcCycleStart =
@@ -133,13 +133,13 @@ dataDieoff = function (plotParams, plotFunction) {
           utcCycleStart !== matsTypes.InputTypes.unused
         ) {
           queryTemplate = queryTemplate.replace(
-            /vxUTC_CYCLE_START/g,
+            /{{vxUTC_CYCLE_START}}/g,
             cbPool.trfmListToCSVString(utcCycleStart, null, false)
           );
         } else {
           queryTemplate = cbPool.trfmSQLRemoveClause(
             queryTemplate,
-            "vxUTC_CYCLE_START"
+            "{{vxUTC_CYCLE_START}}"
           );
         }
       }

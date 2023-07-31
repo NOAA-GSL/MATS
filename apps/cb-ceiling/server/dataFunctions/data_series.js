@@ -97,21 +97,21 @@ dataSeries = function (plotParams, plotFunction) {
         "assets/app/sqlTemplates/tmpl_TimeSeries_region.sql",
         "utf8"
       );
-      queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
-      queryTemplate = queryTemplate.replace(/vxREGION/g, region);
-      queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-      queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-      queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
-      queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
-      queryTemplate = queryTemplate.replace(/vxAVERAGE/g, average);
+      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+      queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
 
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
-          /vxVALID_TIMES/g,
+          /{{vxVALID_TIMES}}/g,
           cbPool.trfmListToCSVString(validTimes, null, false)
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
       }
     } else {
       var sitesList = curve.sites === undefined ? [] : curve.sites;

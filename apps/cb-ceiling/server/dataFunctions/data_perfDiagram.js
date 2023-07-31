@@ -76,7 +76,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
           ] === thresholdStr
       );
       allThresholds = [threshold.replace(/_/g, ".")];
-      queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, allThresholds);
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, allThresholds);
     } else {
       // catalogue the thresholds now, we'll need to do a separate query for each
       allThresholds = Object.keys(
@@ -89,23 +89,23 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       }
     }
 
-    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
-    queryTemplate = queryTemplate.replace(/vxBIN_CLAUSE/g, binClause);
+    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
 
     if (binParam !== "Valid UTC hour") {
       const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
-          /vxVALID_TIMES/g,
+          /{{vxVALID_TIMES}}/g,
           cbPool.trfmListToCSVString(validTimes, null, false)
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
       }
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
     }
 
     if (binParam !== "Fcst lead time") {
@@ -115,9 +115,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
           `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
         );
       }
-      queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
+      queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxFCST_LEN");
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}");
     }
 
     if (binParam === "Init Date") {
@@ -125,7 +125,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     } else {
       dateString = "m0.fcstValidEpoch";
     }
-    queryTemplate = queryTemplate.replace(/vxDATE_STRING/g, dateString);
+    queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
 
     const regionType = curve["region-type"];
     if (regionType === "Select stations") {
@@ -140,7 +140,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       (key) =>
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    queryTemplate = queryTemplate.replace(/vxREGION/g, region);
+    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     const statisticSelect = "PerformanceDiagram";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -159,7 +159,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       ) {
         threshold = allThresholds[thresholdIndex];
         queryTemplate = queryTemplate.replace(/{{threshold}}/g, threshold);
-        queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
+        queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
         // prepare the query from the above parameters
         statement = cbPool.trfmSQLForDbTarget(queryTemplate);
 

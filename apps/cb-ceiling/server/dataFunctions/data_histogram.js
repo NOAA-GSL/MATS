@@ -68,11 +68,11 @@ dataHistogram = function (plotParams, plotFunction) {
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
-        /vxVALID_TIMES/g,
+        /{{vxVALID_TIMES}}/g,
         cbPool.trfmListToCSVString(validTimes, null, false)
       );
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
     }
 
     const forecastLength = curve["forecast-length"];
@@ -99,12 +99,12 @@ dataHistogram = function (plotParams, plotFunction) {
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
 
-    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-    queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
-    queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
-    queryTemplate = queryTemplate.replace(/vxREGION/g, region);
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
 
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
