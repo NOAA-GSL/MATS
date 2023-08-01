@@ -10,7 +10,9 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleDieoff,
+  // TODO - remove original MW TS
+  // matsMiddleDieoff,
+  matsMiddleTsDieoff
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -197,7 +199,9 @@ dataDieoff = function (plotParams, plotFunction) {
           d = queryResult.data;
         } else {
           // send to matsMiddle
-          const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
+          // TODO - remove orioginal MW TimeSeries
+          // const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
+          const tss = new matsMiddleTsDieoff.MatsMiddleTsDieoff(cbPool);
 
           // TODO - remove logToFile = true assignment
           tss.logToFile = true;
@@ -206,8 +210,9 @@ dataDieoff = function (plotParams, plotFunction) {
             "Ceiling",
             sitesList,
             model,
-            forecastLength,
+            null,
             threshold,
+            null,
             fromSecs,
             toSecs,
             validTimes,
