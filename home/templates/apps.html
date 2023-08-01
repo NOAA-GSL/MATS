@@ -1,0 +1,28 @@
+{{ define "apps.html" }}
+
+<div style="background-color: #dddddd; padding-bottom: 1em;" class="container-fluid" >
+    {{range .Groups }}
+    <div class="container-fluid">
+        <h3 style="font-family: PublicSans-Medium, Arial, Helvetica, sans-serif; padding-top: 0.5em;">
+            {{.Name}}
+        </h3>
+        {{range .Apps}}
+        <ul class="nav nav-pills">
+            <li class="nav-item ">
+            <a
+                class="nav-link"
+                type="button"
+                style="font-size:medium; color: white; background-color: {{.Color}}; font-weight: bold; border-radius:10px; margin: 0.25em 0.25em;"
+                href="{{$.proxy_prefix}}/{{.App}}"
+                >
+                {{.Title}}
+            </a>
+            </li>
+            {{end}}
+        </ul>
+    </div>
+    {{end}}
+</div>
+
+
+{{ end }}

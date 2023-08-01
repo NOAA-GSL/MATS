@@ -1,0 +1,198 @@
+run:
+  tests: true
+
+output:
+  uniq-by-line: false
+  sort-results: true
+  print-linter-name: true
+
+issues:
+  # Show all issues in the project
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+
+
+# Linters & linter-settings inspired by https://olegk.dev/go-linters-configuration-the-right-version
+linters:
+  enable:
+    # Check for passing []any as any in variadic func(...any).
+    - asasalint
+
+    # Prefer plain ASCII identifiers.
+    # I.e. - use `delta` in place of `∆`
+    # TODO - enable
+    # - asciicheck
+
+    # Checks for dangerous unicode character sequences.
+    - bidichk
+
+    # Check that HTTP response bodies are closed
+    - bodyclose
+
+    # Check whether the function uses a non-inherited context.
+    - contextcheck
+
+    # Check for two durations multiplied together.
+    - durationcheck
+
+    # Forces to not skip error check.
+    - errcheck
+
+    # Checks `Err-` prefix for var and `-Error` suffix for error type.
+    - errname
+
+    # Suggests to use `%w` for error-wrapping.
+    - errorlint
+
+    # Checks for pointers to enclosing loop variables.
+    - exportloopref
+
+    - gocritic
+
+    # lint comments
+    # TODO - enable
+    # - godot
+
+    # Make sure everything's auto-formatted
+    - gofmt
+    - gofumpt
+    - goimports
+
+    # Handle replace, retract, exclude directives in go.mod 
+    - gomoddirectives
+
+    # Security-oriented linter
+    # TODO - enable
+    # - gosec
+
+    # Simplify code
+    - gosimple
+
+    # Official go linter
+    - govet
+
+    # Detects when assignments to existing variables are unused
+    - ineffassign
+
+    # Check for misspellings
+    - misspell
+
+    # Finds naked/bare returns
+    - nakedret
+
+    # Both require a bit more explicit returns.
+    - nilerr
+    - nilnil
+
+    # Finds sending HTTP request without context.Context.
+    - noctx
+
+    # Forces comment why another check is disabled.
+    # Better not to have //nolint: at all ;)
+    - nolintlint
+
+    # Finds slices that could potentially be pre-allocated.
+    # - prealloc
+
+    # Finds shadowing of Go's predeclared identifiers.
+    # I hear a lot of complaints from junior developers.
+    # But after some time they find it very useful.
+    - predeclared
+
+    # Lint your Prometheus metrics name.
+    - promlinter
+
+    # Checks that package variables are not reassigned.
+    # Super rare case but can catch bad things (like `io.EOF = nil`)
+    - reassign
+
+    # Drop-in replacement of `golint`
+    - revive
+
+    # Somewhat similar to `bodyclose` but for `database/sql` package.
+    - rowserrcheck
+    - sqlclosecheck
+
+    - staticcheck
+
+    # Checks function and package cyclomatic complexity
+    # Cyclomatic complexity is a measurement, not a goal.
+    # TODO - enable
+    # - cyclop
+
+    - typecheck
+
+    # Is a replacement for `golint`, similar to `revive`.
+    - stylecheck
+
+    # Check struct tags.
+    - tagliatelle
+
+    # Test-related checks.
+    - tenv
+    - testableexamples
+    - thelper
+    - tparallel
+
+    # Remove unnecessary type conversions, make code cleaner
+    - unconvert
+
+    # Might be noisy but better to know what is unused
+    # TODO - enable
+    # - unparam
+
+    # Must have. Finds unused declarations.
+    - unused
+
+    # Detect the possibility to use variables/constants from stdlib.
+    # TODO - enable
+    - usestdlibvars
+
+    # Finds wasted assignment statements.
+    - wastedassign
+
+linters-settings:
+  # See https://go-critic.com/overview.html
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      # - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      # These 3 detect many cases and are mostly useful for helping optimize for
+      # performance oriented code
+      - hugeParam
+      - rangeExprCopy
+      - rangeValCopy
+
+  errcheck:
+    # Report `a := b.(MyStruct)` when `a, ok := ...` should be.
+    # TODO - enable
+    # check-type-assertions: true # Default: false
+
+    # Report skipped checks:`num, _ := strconv.Atoi(numStr)`.
+    # TODO - enable
+    # check-blank: true # Default: false
+
+    # Function to skip.
+    exclude-functions:
+      - io/ioutil.ReadFile
+      - io.Copy(*bytes.Buffer)
+      - io.Copy(os.Stdout)
+
+  nakedret:
+    # No naked returns
+    max-func-lines: 1 # Default: 30
+
+  tagliatelle:
+    case:
+      rules:
+        json: snake
+        yaml: snake
+        xml: camel
+        bson: camel
+        avro: snake
+        mapstructure: kebab
