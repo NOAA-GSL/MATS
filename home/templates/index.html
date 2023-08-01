@@ -1,0 +1,22 @@
+{{ define "index.html" }}
+    <!-- index -->
+    <!DOCTYPE html>
+    <html lang="en">
+
+    {{ template "header.html" . }}
+    <body style="background-image: url('img/bg.png'); font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;">
+    <div id="main" class="container-fluid">
+
+        {{ template "navbar.html" . }}
+
+        {{ template "apps.html" . }}
+
+        {{ if .METexpress }}
+            {{ template "metexpress-footer.html" . }}
+        {{ else }}
+            {{ template "mats-footer.html" . }}
+        {{ end }}
+    </div>
+    </body>
+    </html>
+{{ end }}
