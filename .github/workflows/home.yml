@@ -12,6 +12,10 @@ on:
 env:
     DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
 
+defaults:
+  run:
+    working-directory: "home"
+
 jobs:
   golangci:
     name: lint
