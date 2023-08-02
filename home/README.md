@@ -63,7 +63,7 @@ And now, assuming your shell is in the `MATS/home` directory.
 Run the application with:
 
 ```console
-go run home.go
+go run .
 ```
 
 Lint the application with:

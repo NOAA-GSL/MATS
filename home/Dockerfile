@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -installsuffix 'static' -o home main.go
+RUN CGO_ENABLED=0 go build -installsuffix 'static' -o home ./...
 
 FROM gcr.io/distroless/static
 
