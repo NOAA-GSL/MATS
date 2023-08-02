@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type ConfigJSON struct {
@@ -53,8 +54,8 @@ func main() {
 	}
 
 	router := gin.Default()
-	// FIXME: Add logging middleware
-	// FIXME: Add instrumentation
+	router.Use(prometheusMiddleware()) // Attach our prometheus middleware
+
 	router.StaticFile("/favicon.svg", "./static/img/noaa-logo-rgb-2022.svg")
 	router.Static("/img", "./static/img")
 	router.Static("/css", "./static/bootstrap-5.3.1-dist/css")
@@ -66,6 +67,7 @@ func main() {
 			"message": "App is online",
 		})
 	})
+	router.GET(defaultMetricPath, gin.WrapH(promhttp.Handler()))
 	_ = router.Run(":8080")
 }
 
