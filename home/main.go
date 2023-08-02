@@ -47,12 +47,15 @@ func parseConfig(file string) (ConfigJSON, error) {
 }
 
 func main() {
+	// FIXME: Let user specify config location or pass an env var with config
 	conf, err := parseConfig("settings.json")
 	if err != nil {
 		log.Fatal("Unable to parse config")
 	}
 
 	router := gin.Default()
+	// FIXME: Add logging middleware
+	// FIXME: Add instrumentation
 	router.StaticFile("/favicon.svg", "./static/img/noaa-logo-rgb-2022.svg")
 	router.Static("/img", "./static/img")
 	router.Static("/css", "./static/bootstrap-5.3.1-dist/css")
@@ -65,11 +68,11 @@ func main() {
 func indexHandler(settings ConfigJSON) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Title":        settings.Config.Title,
-			"Environment":  settings.Config.Environment,
-			"proxy_prefix": settings.Config.ProxyPrefix,
-			"METexpress":   settings.Config.METexpress,
-			"Groups":       settings.Groups,
+			"Title":       settings.Config.Title,
+			"Environment": settings.Config.Environment,
+			"ProxyPrefix": settings.Config.ProxyPrefix,
+			"METexpress":  settings.Config.METexpress,
+			"Groups":      settings.Groups,
 		})
 	}
 }

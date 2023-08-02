@@ -11,5 +11,6 @@ docker-compose.yml
 **/*.md
 LICENSE
 home
+main
 coverage.out
 settings.json
