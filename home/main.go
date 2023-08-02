@@ -61,6 +61,11 @@ func main() {
 	router.Static("/js", "./static/bootstrap-5.3.1-dist/js")
 	router.LoadHTMLGlob("templates/*")
 	router.GET("/", indexHandler(conf))
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "App is online",
+		})
+	})
 	_ = router.Run(":8080")
 }
 
