@@ -12,6 +12,9 @@ on:
 env:
     DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
 
+# Update the working directory for any job steps with "run" components.
+# Note this doesn't apply to "uses" steps - those will need to have
+# their working directory updated manually, if they support it.
 defaults:
   run:
     working-directory: "home"
@@ -27,6 +30,8 @@ jobs:
           go-version: "1.20"
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
+        with:
+            working-directory: "home"
 
   test:
     runs-on: ubuntu-latest
