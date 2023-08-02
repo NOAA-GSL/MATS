@@ -21,7 +21,6 @@ type ConfigJSON struct {
 		Apps []struct {
 			App   string `json:"app"`
 			Title string `json:"title"`
-			Group string `json:"group"`
 			Color string `json:"color"`
 		} `json:"apps"`
 	} `json:"groups"`
