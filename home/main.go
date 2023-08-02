@@ -15,7 +15,6 @@ type ConfigJSON struct {
 		Title       string `json:"title"`
 		METexpress  bool   `json:"met_express"`
 		Environment string `json:"environment"`
-		ProxyPrefix string `json:"proxy_prefix"`
 	} `json:"config"`
 	Groups []struct {
 		Name string `json:"name"`
@@ -76,7 +75,6 @@ func indexHandler(settings ConfigJSON) gin.HandlerFunc {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"Title":       settings.Config.Title,
 			"Environment": settings.Config.Environment,
-			"ProxyPrefix": settings.Config.ProxyPrefix,
 			"METexpress":  settings.Config.METexpress,
 			"Groups":      settings.Groups,
 		})
