@@ -12,7 +12,6 @@ import (
 
 type ConfigJSON struct {
 	Config struct {
-		Title       string `json:"title"`
 		METexpress  bool   `json:"met_express"`
 		Environment string `json:"environment"`
 	} `json:"config"`

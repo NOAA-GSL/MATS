@@ -10,7 +10,6 @@ First, you'll need a settings file like so in `MATS/home`:
 ```json
 {
     "config": {
-        "title": "MATS: Model Application Tool Suite",
         "met_express": false,
         "environment": "Development"
     },
