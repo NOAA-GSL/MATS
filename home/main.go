@@ -77,7 +77,6 @@ func main() {
 func indexHandler(settings ConfigJSON) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Title":       settings.Config.Title,
 			"Environment": settings.Config.Environment,
 			"METexpress":  settings.Config.METexpress,
 			"Groups":      settings.Groups,
