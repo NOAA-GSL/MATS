@@ -10,7 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleTimeSeries,
+  matsMiddleTimeSeries
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -165,11 +165,7 @@ dataSeries = function (plotParams, plotFunction) {
           );
         } else {
           // send to matsMiddle
-          // TODO - remove orioginal MW TimeSeries
-          // const tss = new matsMiddleTsDieoff.MatsMiddleTsDieoff(cbPool);
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
-          // TODO - remove logToFile = true assignment
-          tss.logToFile = true;
           const rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
@@ -180,8 +176,6 @@ dataSeries = function (plotParams, plotFunction) {
             fromSecs,
             toSecs,
             validTimes
-            // null,
-            // null
           );
 
           // send the query statement to the query function
