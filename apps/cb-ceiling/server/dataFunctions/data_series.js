@@ -10,7 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleTimeSeries
+  matsMiddleTimeSeries,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 

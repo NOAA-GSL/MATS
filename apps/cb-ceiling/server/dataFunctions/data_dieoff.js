@@ -10,7 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleDieoff
+  matsMiddleDieoff,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -123,7 +123,10 @@ dataDieoff = function (plotParams, plotFunction) {
             cbPool.trfmListToCSVString(validTimes, null, false)
           );
         } else {
-          queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+          queryTemplate = cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
         }
       } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
         utcCycleStart =
