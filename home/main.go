@@ -54,11 +54,16 @@ func main() {
 	router := gin.Default()
 	router.Use(prometheusMiddleware()) // Attach our prometheus middleware
 
+	// Load in the HTML templates
+	router.LoadHTMLGlob("templates/*")
+
+	// Serve up our static files
 	router.StaticFile("/favicon.svg", "./static/img/noaa-logo-rgb-2022.svg")
 	router.Static("/img", "./static/img")
 	router.Static("/css", "./static/bootstrap-5.3.1-dist/css")
 	router.Static("/js", "./static/bootstrap-5.3.1-dist/js")
-	router.LoadHTMLGlob("templates/*")
+
+	// Handle requests
 	router.GET("/", indexHandler(conf))
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
