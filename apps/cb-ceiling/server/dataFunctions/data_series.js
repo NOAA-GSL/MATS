@@ -166,8 +166,8 @@ dataSeries = function (plotParams, plotFunction) {
         } else {
           // send to matsMiddle
           // TODO - remove orioginal MW TimeSeries
-          const tss = new matsMiddleTsDieoff.MatsMiddleTsDieoff(cbPool);
-          // const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
+          // const tss = new matsMiddleTsDieoff.MatsMiddleTsDieoff(cbPool);
+          const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
           // TODO - remove logToFile = true assignment
           tss.logToFile = true;
           const rows = tss.processStationQuery(
@@ -179,9 +179,9 @@ dataSeries = function (plotParams, plotFunction) {
             average,
             fromSecs,
             toSecs,
-            validTimes,
-            null,
-            null
+            validTimes
+            // null,
+            // null
           );
 
           // send the query statement to the query function

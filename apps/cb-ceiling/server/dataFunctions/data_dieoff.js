@@ -200,8 +200,8 @@ dataDieoff = function (plotParams, plotFunction) {
         } else {
           // send to matsMiddle
           // TODO - remove orioginal MW TimeSeries
-          // const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
-          const tss = new matsMiddleTsDieoff.MatsMiddleTsDieoff(cbPool);
+          const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
+          // const tss = new matsMiddleTsDieoff.MatsMiddleTsDieoff(cbPool);
 
           // TODO - remove logToFile = true assignment
           tss.logToFile = true;
@@ -212,7 +212,7 @@ dataDieoff = function (plotParams, plotFunction) {
             model,
             null,
             threshold,
-            null,
+            // null,
             fromSecs,
             toSecs,
             validTimes,
