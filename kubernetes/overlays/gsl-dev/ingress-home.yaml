@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # Use nginx's rewrite-target to strip the path prefix before sending the request to the home service
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+  name: mats-home
+  namespace: mats-dev
+spec:
+  rules:
+    - host: apps-dev.gsd.esrl.noaa.gov
+      http:
+        paths:
+          # Note - this rewrite rule can cause issues if the "path" with the regex capture group
+          # for the nginx rewrite-target gets longer than the paths in ingress-mats.yaml.
+          # This has happened before with the rule for `/mats-dev/ptype`. If multiple paths match,
+          # Kubernetes will prefer the longer path.
+          - path: /mats-dev/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: home
+                port:
+                  number: 80

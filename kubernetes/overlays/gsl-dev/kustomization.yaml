@@ -3,6 +3,7 @@ resources:
   - cb-ceiling
   - ceil-vis
   - ceil-vis15
+  - home
   - landuse
   - precipAccum
   - precipGauge
@@ -14,6 +15,7 @@ resources:
   - surfrad
   - upperair
   - mongo
-  - ingress.yaml
+  - ingress-apps.yaml
+  - ingress-home.yaml
 commonLabels:
   environment: dev

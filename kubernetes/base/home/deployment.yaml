@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: home
+  labels:
+    app.kubernetes.io/name: home
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: home
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: home
+  template:
+    metadata:
+      labels:
+        app: home
+    spec:
+      containers:
+        - name: home
+          image: ghcr.io/noaa-gsl/mats/development/home:development
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+
