@@ -1,0 +1,14 @@
+resources:
+  - ../../../base/home
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/home
+    newTag: 1029-create-new-home-application 
+
+configMapGenerator:
+  - name: home-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
