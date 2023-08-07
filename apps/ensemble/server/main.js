@@ -329,6 +329,7 @@ const doCurveParams = function () {
   const kernelModelOptionsMap = {};
   const radiusModelOptionsMap = {};
   const masterRegionValuesMap = {};
+  let allKernels = [];
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
@@ -427,6 +428,7 @@ const doCurveParams = function () {
           kernelArr[j] = kernelArr[j].replace(/'|\[|\]/g, "");
         }
         kernelModelOptionsMap[variables[didx]][model] = kernelArr;
+        allKernels = _.union(allKernels, kernelArr);
 
         const { radii } = rows[i];
         const radiusArr = radii
@@ -786,6 +788,10 @@ const doCurveParams = function () {
     }
   }
 
+  const defaultKernel =
+    kernelModelOptionsMap[variables[0]][
+      Object.keys(kernelModelOptionsMap[variables[0]])[0]
+    ][1];
   if (matsCollections.kernel.findOne({ name: "kernel" }) === undefined) {
     matsCollections.kernel.insert({
       name: "kernel",
@@ -796,12 +802,10 @@ const doCurveParams = function () {
           Object.keys(kernelModelOptionsMap[variables[0]])[0]
         ],
       superiorNames: ["variable", "data-source"],
+      dependentNames: ["probability-bins"],
       controlButtonCovered: true,
       unique: false,
-      default:
-        kernelModelOptionsMap[variables[0]][
-          Object.keys(kernelModelOptionsMap[variables[0]])[0]
-        ][1],
+      default: defaultKernel,
       controlButtonVisibility: "block",
       controlButtonText: "kernel width (km)",
       displayOrder: 4,
@@ -824,10 +828,7 @@ const doCurveParams = function () {
               kernelModelOptionsMap[variables[0]][
                 Object.keys(kernelModelOptionsMap[variables[0]])[0]
               ],
-            default:
-              kernelModelOptionsMap[variables[0]][
-                Object.keys(kernelModelOptionsMap[variables[0]])[0]
-              ][0],
+            default: defaultKernel,
           },
         }
       );
@@ -1053,6 +1054,29 @@ const doCurveParams = function () {
     });
   }
 
+  const zeroIndex = allKernels.indexOf("0");
+  if (zeroIndex !== -1) {
+    allKernels.splice(zeroIndex, 1);
+  }
+  const probBinOptionsMap = {
+    0: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+  };
+  for (didx = 0; didx < allKernels.length; didx += 1) {
+    probBinOptionsMap[allKernels[didx]] = [
+      "0",
+      "10",
+      "20",
+      "30",
+      "40",
+      "50",
+      "60",
+      "70",
+      "80",
+      "90",
+      "100",
+    ];
+  }
+
   if (
     matsCollections["probability-bins"].findOne({ name: "probability-bins" }) ===
     undefined
@@ -1060,10 +1084,12 @@ const doCurveParams = function () {
     matsCollections["probability-bins"].insert({
       name: "probability-bins",
       type: matsTypes.InputTypes.select,
-      options: ["0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"],
+      optionsMap: probBinOptionsMap,
+      options: probBinOptionsMap[defaultKernel],
+      superiorNames: ["kernel"],
       controlButtonCovered: true,
       unique: false,
-      default: ["0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"],
+      default: probBinOptionsMap[defaultKernel],
       controlButtonVisibility: "block",
       displayOrder: 5,
       displayPriority: 1,
@@ -1552,7 +1578,7 @@ const doPlotGraph = function () {
       plotType: matsTypes.PlotTypes.timeSeries,
       graphFunction: "graphPlotly",
       dataFunction: "dataSeries",
-      checked: true,
+      checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.dieoff,
@@ -1582,7 +1608,7 @@ const doPlotGraph = function () {
       plotType: matsTypes.PlotTypes.reliability,
       graphFunction: "graphPlotly",
       dataFunction: "dataReliability",
-      checked: false,
+      checked: true,
     });
     matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.histogram,

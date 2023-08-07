@@ -37,7 +37,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && python3 -m pip install --upgrade --no-cache-dir pip wheel setuptools \
     && python3 -m pip install --no-cache-dir \
       numpy \
       pymysql
@@ -73,11 +72,8 @@ RUN mkdir -p ${SETTINGS_DIR} \
     && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache
 
 # Install the Meteor app's NPM dependencies
-# g++ & build-essential are needed for Apple Silicon builds
-RUN apt-get update && apt-get install -y --no-install-recommends g++ build-essential \
-    && bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh \
-    && apt-get purge -y g++ build-essential \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# g++ & build-essential would be needed for ARM/Apple Silicon builds in order to recompile fibers
+RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh
 
 # Update the OS packages in the container
 RUN apt-get update \
