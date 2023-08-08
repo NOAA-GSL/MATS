@@ -1,7 +1,7 @@
-Feature: Match Unmatch Diff Curves Threshold
+Feature: Match Unmatch Diff Curves GridScaleProbability
 
     As an unauthenticated user to the app,
-    with the app in its default state so that the plots are Threshold,
+    with the app in its default state so that the plots are GridScaleProbability,
     I want to add two curves, plot unmatched, and then return to the main page.
     I then want to add a matched difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
     I then want to add a piecewise difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
