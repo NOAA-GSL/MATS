@@ -1405,7 +1405,6 @@ const doCurveTextPatterns = function () {
         "neighborhood-size",
         "kernel",
         "radius",
-        "average",
         "forecast-length",
         "valid-time",
         "curve-dates",
@@ -1425,8 +1424,7 @@ const doCurveTextPatterns = function () {
         ["", "kernel", " km kernel, "],
         ["", "radius", " km radius, "],
         ["fcst_len: ", "forecast-length", "h, "],
-        ["valid-time: ", "valid-time", ", "],
-        ["", "curve-dates", ""],
+        ["valid-time: ", "valid-time", ""],
       ],
       displayParams: [
         "label",
@@ -1438,10 +1436,8 @@ const doCurveTextPatterns = function () {
         "neighborhood-size",
         "kernel",
         "radius",
-        "average",
         "forecast-length",
         "valid-time",
-        "curve-dates",
       ],
       groupSize: 6,
     });
