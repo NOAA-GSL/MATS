@@ -166,6 +166,10 @@ dataSeries = function (plotParams, plotFunction) {
         } else {
           // send to matsMiddle
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
+
+          // TODO - remove log to file
+          tss.logToFile = true;
+          
           const rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
