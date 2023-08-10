@@ -2,7 +2,8 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-import {
+import
+{
   matsCollections,
   matsTypes,
   matsDataUtils,
@@ -10,10 +11,12 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
+  matsMiddleValidTime
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-dataValidTime = function (plotParams, plotFunction) {
+dataValidTime = function (plotParams, plotFunction)
+{
   const fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
@@ -39,24 +42,30 @@ dataValidTime = function (plotParams, plotFunction) {
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
   const idealValues = [];
+  let statement = "";
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++)
+  {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
     const regionType = curve["region-type"];
 
     let queryTemplate = null;
-    if (regionType === "Predefined region") {
+    if (regionType === "Predefined region")
+    {
       queryTemplate = fs.readFileSync(
         "assets/app/sqlTemplates/tmpl_ValidTime_region.sql",
         "utf8"
       );
-    } else {
+    }
+    /*
+    else {
       queryTemplate = fs.readFileSync(
         "assets/app/sqlTemplates/tmpl_ValidTime_stations.sql",
         "utf8"
       );
     }
+    */
 
     const { diffFrom } = curve;
     const { label } = curve;
@@ -69,7 +78,7 @@ dataValidTime = function (plotParams, plotFunction) {
     ).find(
       (key) =>
         matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-          key
+        key
         ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
@@ -83,13 +92,9 @@ dataValidTime = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
 
-    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
-    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-
-    if (regionType === "Predefined region") {
+    let sitesList = undefined;
+    if (regionType === "Predefined region")
+    {
       var regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -99,8 +104,22 @@ dataValidTime = function (plotParams, plotFunction) {
           regionStr
       );
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
-    } else {
-      const sitesList = curve.sites === undefined ? [] : curve.sites;
+      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+    }
+    else
+    {
+      sitesList = curve.sites === undefined ? [] : curve.sites;
+      if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused)
+      {
+        throw new Error(
+          "INFO:  Please add sites in order to get a single/multi station plot."
+        );
+      }
+      /*
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /{{vxSITES_LIST_OBS}}/g,
@@ -115,6 +134,7 @@ dataValidTime = function (plotParams, plotFunction) {
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
+      */
     }
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -124,27 +144,59 @@ dataValidTime = function (plotParams, plotFunction) {
     const axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][2];
-    if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
+    if (idealVal !== null && idealValues.indexOf(idealVal) === -1)
+    {
       idealValues.push(idealVal);
     }
 
     var d;
-    if (!diffFrom) {
-      statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
+    if (!diffFrom)
+    {
       dataRequests[label] = statement;
-
       var queryResult;
       const startMoment = moment();
       var finishMoment;
-      try {
-        // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool,
-          statement,
-          appParams,
-          statisticSelect
-        );
+
+      try
+      {
+        if (regionType === "Predefined region")
+        {
+          // send the query statement to the query function
+          statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+            cbPool,
+            statement,
+            appParams,
+            statisticSelect
+          );
+        }
+        else
+        {
+          // send to matsMiddle
+          const tss = new matsMiddleValidTime.MatsMiddleValidTime(cbPool);
+
+          // TODO - remove log to file
+          tss.logToFile = true;
+          
+          const rows = tss.processStationQuery(
+            "Ceiling",
+            sitesList,
+            model,
+            forecastLength,
+            threshold,
+            fromSecs,
+            toSecs
+          );
+
+          // send the query statement to the query function
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+            cbPool,
+            rows,
+            appParams,
+            statisticSelect
+          );
+        }
+
         finishMoment = moment();
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
@@ -156,33 +208,41 @@ dataValidTime = function (plotParams, plotFunction) {
         };
         // get the data back from the query
         d = queryResult.data;
-      } catch (e) {
+      }
+      catch (e)
+      {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
-      if (queryResult.error !== undefined && queryResult.error !== "") {
-        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+      if (queryResult.error !== undefined && queryResult.error !== "")
+      {
+        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND)
+        {
           // this is NOT an error just a no data condition
           dataFoundForCurve = false;
-        } else {
+        } else
+        {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
           throw new Error(error);
         }
-      } else {
+      } else
+      {
         dataFoundForAnyCurve = true;
       }
 
       // set axis limits based on returned data
       var postQueryStartMoment = moment();
-      if (dataFoundForCurve) {
+      if (dataFoundForCurve)
+      {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
         ymin = ymin < d.ymin ? ymin : d.ymin;
         ymax = ymax > d.ymax ? ymax : d.ymax;
       }
-    } else {
+    } else
+    {
       // this is a difference curve
       const diffResult = matsDataDiffUtils.getDataForDiffCurve(
         dataset,
@@ -229,7 +289,8 @@ dataValidTime = function (plotParams, plotFunction) {
     };
   } // end for curves
 
-  if (!dataFoundForAnyCurve) {
+  if (!dataFoundForAnyCurve)
+  {
     // we found no data for any curves so don't bother proceeding
     throw new Error("INFO:  No valid data for any curves.");
   }
