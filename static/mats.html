@@ -192,6 +192,8 @@
             <div style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-left:0;padding-right:0"
                  class="container-fluid">
                 <div>
+                    <h4 style="text-align: center; background-color:#3366bb; color:white; padding-top: 0.5em; padding-bottom: 0.5em; margin-left: 1em; margin-right: 1em; border-radius:10px; text-shadow:0 0 3px black;">Blue buttons are MATS apps that use GSL in-house verification.</h4>
+                    <h4 style="text-align: center; background-color:darkorchid; color:white; padding-top: 0.5em; padding-bottom: 0.5em; margin-left: 1em; margin-right: 1em; border-radius:10px; text-shadow:0 0 3px black;">Purple buttons are METexpress apps that use METplus for verification.</h4>
                     <!--h2><font color="red"> NOTE: Maintenance today (February 21) at 5 pm Eastern time, interruptions are likely. </font></h2>-->
                 </div>
                 <ul class="nav navbar-nav navbar-left" style="min-height:10px;">
@@ -202,7 +204,7 @@
                                     <h3 style="font-family: PublicSans-Medium, Arial, Helvetica, sans-serif;">{{group}}:</h3>
                                     <li ng-repeat="item in items[group]">
                                         <a class="btn-sm btn-primary" type="button"
-                                           style="font-size:medium; background-color: {{item.itemColor}}; font-weight: bold; border-radius:10px; margin: 2px 2px;"
+                                           style="font-size:medium; background-color: {{item.itemColor}}; font-weight: bold; border-radius:10px; margin: 2px 2px; text-shadow:0 0 1px black;"
                                            href="{{proxy_prefix}}/{{item.app}}">{{item.title}}</a>
                                     </li>
                                 </ul>
