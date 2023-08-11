@@ -65,7 +65,7 @@ dataSeries = function (plotParams, plotFunction) {
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
-    ).optionsMap;
+    ).optionsMap[appParams.plotType];
     const tableStatPrefix = statisticOptionsMap[statisticSelect][2];
     const queryTableClause = `from ${databaseRef}.${model}_${tableStatPrefix}_${region} as m0`;
     const { threshold } = curve;

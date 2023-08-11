@@ -599,9 +599,35 @@ const doCurveParams = function () {
       );
     }
   }
+  const defaultPlotType = matsTypes.PlotTypes.reliability;
+  if (matsCollections["plot-type"].findOne({ name: "plot-type" }) === undefined) {
+    matsCollections["plot-type"].insert({
+      name: "plot-type",
+      type: matsTypes.InputTypes.select,
+      options: [
+        matsTypes.PlotTypes.timeSeries,
+        matsTypes.PlotTypes.dieoff,
+        matsTypes.PlotTypes.threshold,
+        matsTypes.PlotTypes.validtime,
+        matsTypes.PlotTypes.gridscaleProb,
+        matsTypes.PlotTypes.reliability,
+        matsTypes.PlotTypes.histogram,
+        matsTypes.PlotTypes.contour,
+        matsTypes.PlotTypes.contourDiff,
+      ],
+      dependentNames: ["statistic"],
+      controlButtonCovered: false,
+      default: defaultPlotType,
+      unique: false,
+      controlButtonVisibility: "none",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  }
 
   if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
-    const optionsMap = {
+    const statOptionsMap = {
       "Bias (forecast/actual)": [
         "avg((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as stat, group_concat(m0.time, ';', (m0.nhdfcstcount/m0.mem)/m0.nhdhitcount order by m0.time) as sub_data, count((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as N0",
         "precalculated",
@@ -617,19 +643,35 @@ const doCurveParams = function () {
         1,
       ],
     };
+    const optionsMap = {};
+    optionsMap[matsTypes.PlotTypes.timeSeries] = statOptionsMap;
+    optionsMap[matsTypes.PlotTypes.dieoff] = statOptionsMap;
+    optionsMap[matsTypes.PlotTypes.threshold] = statOptionsMap;
+    optionsMap[matsTypes.PlotTypes.validtime] = statOptionsMap;
+    optionsMap[matsTypes.PlotTypes.gridscaleProb] = { GridScaleProb: [] };
+    optionsMap[matsTypes.PlotTypes.reliability] = { Reliability: [] };
+    optionsMap[matsTypes.PlotTypes.histogram] = statOptionsMap;
+    optionsMap[matsTypes.PlotTypes.contour] = statOptionsMap;
+    optionsMap[matsTypes.PlotTypes.contourDiff] = statOptionsMap;
+
     matsCollections.statistic.insert({
       name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap,
-      options: Object.keys(optionsMap),
+      options: Object.keys(optionsMap[defaultPlotType]),
       hideOtherFor: {
         kernel: ["Mean FSS (fractions skill score)"],
-        "probability-bins": ["Mean FSS (fractions skill score)"],
-        radius: ["Bias (forecast/actual)"],
+        "probability-bins": [
+          "Mean FSS (fractions skill score)",
+          "GridScaleProb",
+          "Reliability",
+        ],
+        radius: ["Bias (forecast/actual)", "GridScaleProb", "Reliability"],
       },
+      superiorNames: ["plot-type"],
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(optionsMap[defaultPlotType])[0],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
