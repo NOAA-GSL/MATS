@@ -1,8 +1,8 @@
-Feature: Add Remove Threshold Curve
+Feature: Add Remove GridScaleProbability Curve
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want click the threshold radio button,
+    I want click the GridScaleProbability radio button,
     I want to add one curve
     then plot that curve and see the graph,
     then go back to the curve management page,

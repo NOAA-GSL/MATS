@@ -41,7 +41,8 @@
     "http-server": "^14.1.0",
     "npm-run-all": "^4.1.5",
     "wdio-chromedriver-service": "^7.3.1",
-    "webdriverio": "^7.16.15"
+    "webdriverio": "^7.16.15",
+    "chromedriver": "^112.0.0"
   },
   "dependencies": {
     "typescript": "^4.9.5"
