@@ -12,7 +12,7 @@
     "@fortawesome/fontawesome-free-brands": "^5.0.13",
     "@fortawesome/fontawesome-free-regular": "^5.0.13",
     "@fortawesome/fontawesome-free-solid": "^5.0.13",
-    "jquery": "^2.2.4",
+    "jquery": "^3.5.0",
     "meteor-node-stubs": "^1.0.0",
     "popper.js": "^1.16.0"
   },
