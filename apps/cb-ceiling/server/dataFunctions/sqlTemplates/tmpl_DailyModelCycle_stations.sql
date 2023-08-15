@@ -13,13 +13,13 @@ FROM (
            ARRAY_AGG(sdu) AS data
     FROM (
         SELECT stationData
-        FROM vxDBTARGET AS obs
+        FROM {{vxDBTARGET}} AS obs
         LET ofve = obs.fcstValidEpoch,
-            stationData = ARRAY OBJECT_ADD(d, 'ofve', ofve ) FOR d IN ( [vxSITES_LIST_OBS] ) END
+            stationData = ARRAY OBJECT_ADD(d, 'ofve', ofve ) FOR d IN ( [{{vxSITES_LIST_OBS}}] ) END
         WHERE type = "DD"
             AND docType = "obs"
             AND version = "V01"
-            AND obs.fcstValidEpoch BETWEEN vxFROM_SECS AND vxTO_SECS ) sd
+            AND obs.fcstValidEpoch BETWEEN {{vxFROM_SECS}} AND {{vxTO_SECS}} ) sd
     UNNEST sd.stationData sdu
     GROUP BY sdu.ovfe
     ORDER BY sdu.ovfe) o,
@@ -28,35 +28,35 @@ FROM (
            ARRAY_AGG(sdu) AS data
     FROM (
         SELECT modelData
-        FROM vxDBTARGET AS models
+        FROM {{vxDBTARGET}} AS models
         LET mfve = models.fcstValidEpoch,
-            modelData_tmp = ARRAY OBJECT_ADD(d, 'mfve', mfve ) FOR d IN ( [vxSITES_LIST_MODELS] ) END,
+            modelData_tmp = ARRAY OBJECT_ADD(d, 'mfve', mfve ) FOR d IN ( [{{vxSITES_LIST_MODELS}}] ) END,
             modelData = ARRAY OBJECT_ADD(d, 'fcst', models.fcstLen ) FOR d IN ( modelData_tmp ) END
         WHERE type = "DD"
             AND docType = "model"
-            AND model = "vxMODEL"
+            AND model = "{{vxMODEL}}"
             AND version = "V01"
             AND models.fcstLen < 24
-            AND (models.fcstValidEpoch - models.fcstLen*3600)%(24*3600)/3600 IN[vxUTC_CYCLE_START]
-            AND models.fcstValidEpoch BETWEEN vxFROM_SECS AND vxTO_SECS) sd
+            AND (models.fcstValidEpoch - models.fcstLen*3600)%(24*3600)/3600 IN[{{vxUTC_CYCLE_START}}]
+            AND models.fcstValidEpoch BETWEEN {{vxFROM_SECS}} AND {{vxTO_SECS}}) sd
     UNNEST sd.modelData sdu
     GROUP BY sdu.mfve
     ORDER BY sdu.mfve) m
-LET stats = ARRAY( FIRST { 'hit' :CASE WHEN mv.Ceiling < vxTHRESHOLD
-        AND ov.Ceiling < vxTHRESHOLD THEN 1 ELSE 0 END,
-                                          'miss' :CASE WHEN NOT mv.Ceiling < vxTHRESHOLD
-        AND ov.Ceiling < vxTHRESHOLD THEN 1 ELSE 0 END,
-                                          'false_alarm' :CASE WHEN mv.Ceiling < vxTHRESHOLD
-        AND NOT ov.Ceiling < vxTHRESHOLD THEN 1 ELSE 0 END,
-                                              'correct_negative' :CASE WHEN NOT mv.Ceiling < vxTHRESHOLD
-        AND NOT ov.Ceiling < vxTHRESHOLD THEN 1 ELSE 0 END,
+LET stats = ARRAY( FIRST { 'hit' :CASE WHEN mv.Ceiling < {{vxTHRESHOLD}}
+        AND ov.Ceiling < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
+                                          'miss' :CASE WHEN NOT mv.Ceiling < {{vxTHRESHOLD}}
+        AND ov.Ceiling < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
+                                          'false_alarm' :CASE WHEN mv.Ceiling < {{vxTHRESHOLD}}
+        AND NOT ov.Ceiling < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
+                                              'correct_negative' :CASE WHEN NOT mv.Ceiling < {{vxTHRESHOLD}}
+        AND NOT ov.Ceiling < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
                                               'total' :CASE WHEN mv.Ceiling IS NOT MISSING
         AND ov.Ceiling IS NOT MISSING THEN 1 ELSE 0 END,
                                                 'fve': mv.mfve,
                                                 'fcst': mv.fcst,
-                                                'sub': TO_STRING(mv.mfve) || ';' || CASE WHEN mv.Ceiling < vxTHRESHOLD
-        AND ov.Ceiling < vxTHRESHOLD THEN '1' ELSE '0' END || ';' || CASE WHEN mv.Ceiling < vxTHRESHOLD
-        AND NOT ov.Ceiling < vxTHRESHOLD THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.Ceiling < vxTHRESHOLD
-        AND ov.Ceiling < vxTHRESHOLD THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.Ceiling < vxTHRESHOLD
-        AND NOT ov.Ceiling < vxTHRESHOLD THEN '1' ELSE '0' END } FOR ov IN o.data WHEN ov.ofve = mv.mfve
+                                                'sub': TO_STRING(mv.mfve) || ';' || CASE WHEN mv.Ceiling < {{vxTHRESHOLD}}
+        AND ov.Ceiling < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN mv.Ceiling < {{vxTHRESHOLD}}
+        AND NOT ov.Ceiling < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.Ceiling < {{vxTHRESHOLD}}
+        AND ov.Ceiling < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.Ceiling < {{vxTHRESHOLD}}
+        AND NOT ov.Ceiling < {{vxTHRESHOLD}} THEN '1' ELSE '0' END } FOR ov IN o.data WHEN ov.ofve = mv.mfve
         AND ov.name = mv.name END ) FOR mv IN m.data END

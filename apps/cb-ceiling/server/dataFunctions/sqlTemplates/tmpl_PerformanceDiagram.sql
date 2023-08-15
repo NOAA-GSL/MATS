@@ -15,8 +15,8 @@ WHERE m0.type='DD'
     AND m0.version='V01'
     AND m0.model='{{vxMODEL}}'
     AND m0.region='{{vxREGION}}'
-    AND vxDATE_STRING >= {{vxFROM_SECS}}
-    AND vxDATE_STRING <= {{vxTO_SECS}}
+    AND {{vxDATE_STRING}} >= {{vxFROM_SECS}}
+    AND {{vxDATE_STRING}} <= {{vxTO_SECS}}
     AND m0.fcstValidEpoch%(24*3600)/3600 IN[{{vxVALID_TIMES}}]
     AND m0.fcstLen = {{vxFCST_LEN}}
 GROUP BY {{vxBIN_CLAUSE}}

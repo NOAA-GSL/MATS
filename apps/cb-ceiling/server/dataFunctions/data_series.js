@@ -169,7 +169,7 @@ dataSeries = function (plotParams, plotFunction) {
 
           // TODO - remove log to file
           tss.logToFile = true;
-          
+
           const rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
