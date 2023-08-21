@@ -18,10 +18,9 @@ type ConfigJSON struct {
 	Groups []struct {
 		Name string `json:"name"`
 		Apps []struct {
-			Link    string `json:"link"`
-			Title   string `json:"title"`
-			Color   string `json:"color"`
-			AppType string `json:"app_type"`
+			Link  string `json:"link"`
+			Title string `json:"title"`
+			Kind  string `json:"kind"`
 		} `json:"apps"`
 	} `json:"groups"`
 }

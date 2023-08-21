@@ -1,6 +1,6 @@
 {{ define "toggles.html" }}
 
-<div style="background-color: #dddddd; padding-bottom: 1em; padding-top: 1em" class="container-fluid">
+<div class="container-fluid py-3" style="background-color: #dddddd;">
     <div class="container-fluid">
         <h2>Verification Source</h2>
         <div class="btn-group" role="group" aria-label="Radio toggle button group">
@@ -11,9 +11,15 @@
             <label class="btn btn-outline-primary" for="btnradiomats">MATS</label> 
             <!-- style="background-color#3366bb; border-radius:10px;" -->
         
-            <input type="radio" class="btn-check" name="btnradio" id="btnradiometplus" autocomplete="off" data-bs-toggle="collapse" data-bs-target="#collapseMETplus">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradiometplus" autocomplete="off" data-bs-toggle="collapse" data-bs-target="#collapseMETexpress">
             <label class="btn btn-outline-secondary" for="btnradiometplus">METplus</label>
             <!-- style="background-color: darkorchid; border-radius:10px;" -->
+
+            {{ if ne .Environment "Production"}}
+            <input type="radio" class="btn-check" name="btnradio" id="btnradiomatscb" autocomplete="off" data-bs-toggle="collapse" data-bs-target="#collapseMATScb">
+            <label class="btn btn-outline-info" for="btnradiomatscb">MATS Couchbase</label>
+            <!-- style="background-color: teal; border-radius:10px;" -->
+            {{ end }}
         </div>
     </div>
 </div>

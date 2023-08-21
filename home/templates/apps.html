@@ -1,35 +1,48 @@
 {{ define "apps.html" }}
 
-<div style="background-color: #dddddd; padding-bottom: 1em;" class="container-fluid" >
+<div style="background-color: #dddddd;" class="container-fluid pb-3" >
     {{range .Groups }}
-    <div class="container-fluid">
-        <h3 style="font-family: PublicSans-Medium, Arial, Helvetica, sans-serif; padding-top: 0.5em;">
+    <div class="container-fluid pt-3">
+        <h3 style="font-family: PublicSans-Medium, Arial, Helvetica, sans-serif;">
             {{.Name}}
         </h3>
+        <div class="row row-cols-auto">
+            <p>
         {{range .Apps}}
-        <ul class="nav nav-pills">
-            {{ if eq .Color "darkorchid" }}
-            <div class="collapse show multi-collapse" id="collapseMETplus">
-                <li class="nav-item">
-            {{ else if eq .Color "#3366bb"}}
-            <div class="collapse show multi-collapse" id="collapseMATS">
-                <li class="nav-item">
-            {{ else }}
-            <div class="collapse show multi-collapse" id="collapseMATS">
-                <li class="nav-item">
-            {{ end }}
+            {{ if eq .Kind "MATS" }}
+            <div class="collapse show multi-collapse col p-1" id="collapseMATS">
                 <a
-                    class="nav-link"
-                    type="button"
-                    style="font-size:medium; color: white; background-color: {{.Color}}; border-radius:10px; margin: 0.25em 0.25em;"
+                    class="btn btn-primary"
+                    role="button"
                     href="{{.Link}}"
                     >
                     {{.Title}}
                 </a>
-                </li>
             </div>
+            {{ else if eq .Kind "METexpress" }}
+            <div class="collapse show multi-collapse col p-1" id="collapseMETexpress">
+                <a
+                    class="btn btn-secondary"
+                    role="button"
+                    href="{{.Link}}"
+                    >
+                    {{.Title}}
+                </a>
+            </div>
+            {{ else if eq .Kind "MATScb" }}
+            <div class="collapse show multi-collapse col p-1" id="collapseMATScb">
+                <a
+                    class="btn btn-info"
+                    role="button"
+                    href="{{.Link}}"
+                    >
+                    {{.Title}}
+                </a>
+            </div>
+            {{ end }}
         {{end}}
-        </ul>
+        </p>
+        </div>
     </div>
     {{end}}
 </div>
