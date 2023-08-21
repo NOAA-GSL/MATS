@@ -18,37 +18,43 @@ First, you'll need a settings file like so in `MATS/home`:
         "name": "Upper Air",
         "apps": [
         {
-            "app": "upperair",
+            "link": "upperair",
             "title": "Upper Air",
-            "color": "#3366bb"
+            "color": "#3366bb",
+            "app_type": "MATS"
         },
         {
-            "app": "met-upperair",
+            "link": "met-upperair",
             "title": "MET Upper Air",
-            "color": "darkorchid"
+            "color": "darkorchid",
+            "app_type": "METexpress"
         },
         {
-            "app": "met-anomalycor",
+            "link": "met-anomalycor",
             "title": "MET Anomaly Correlation",
-            "color": "darkorchid"
+            "color": "darkorchid",
+            "app_type": "METexpress"
         }]
     },
     {
         "name": "Ceiling and Visibility",
         "apps": [{
-            "app": "ceil-vis",
+            "link": "ceil-vis",
             "title": "Ceiling and Visibility",
-            "color": "#3366bb"
+            "color": "#3366bb",
+            "app_type": "MATS"
         },
         {
-            "app": "cb-ceiling",
+            "link": "cb-ceiling",
             "title": "CB-Ceiling",
-            "color": "teal"
+            "color": "teal",
+            "app_type": "MATS-cb"
         },
         {
-            "app": "ceil-vis15",
+            "link": "ceil-vis15",
             "title": "15 Minute Ceiling and Visibility",
-            "color": "#3366bb"
+            "color": "#3366bb",
+            "app_type": "MATS"
         }]
     },
     // etc...

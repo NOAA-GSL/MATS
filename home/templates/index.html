@@ -10,6 +10,11 @@
 
         {{ template "navbar.html" . }}
 
+        {{ if .METexpress }}
+        {{ else }}
+            {{ template "toggles.html" . }}
+        {{ end }}
+
         {{ template "apps.html" . }}
 
         {{ if .METexpress }}

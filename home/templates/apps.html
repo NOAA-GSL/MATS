@@ -8,17 +8,27 @@
         </h3>
         {{range .Apps}}
         <ul class="nav nav-pills">
-            <li class="nav-item ">
-            <a
-                class="nav-link"
-                type="button"
-                style="font-size:medium; color: white; background-color: {{.Color}}; border-radius:10px; margin: 0.25em 0.25em;"
-                href="{{.App}}"
-                >
-                {{.Title}}
-            </a>
-            </li>
-            {{end}}
+            {{ if eq .Color "darkorchid" }}
+            <div class="collapse show multi-collapse" id="collapseMETplus">
+                <li class="nav-item">
+            {{ else if eq .Color "#3366bb"}}
+            <div class="collapse show multi-collapse" id="collapseMATS">
+                <li class="nav-item">
+            {{ else }}
+            <div class="collapse show multi-collapse" id="collapseMATS">
+                <li class="nav-item">
+            {{ end }}
+                <a
+                    class="nav-link"
+                    type="button"
+                    style="font-size:medium; color: white; background-color: {{.Color}}; border-radius:10px; margin: 0.25em 0.25em;"
+                    href="{{.Link}}"
+                    >
+                    {{.Title}}
+                </a>
+                </li>
+            </div>
+        {{end}}
         </ul>
     </div>
     {{end}}

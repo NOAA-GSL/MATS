@@ -18,9 +18,10 @@ type ConfigJSON struct {
 	Groups []struct {
 		Name string `json:"name"`
 		Apps []struct {
-			App   string `json:"app"`
-			Title string `json:"title"`
-			Color string `json:"color"`
+			Link    string `json:"link"`
+			Title   string `json:"title"`
+			Color   string `json:"color"`
+			AppType string `json:"app_type"`
 		} `json:"apps"`
 	} `json:"groups"`
 }
@@ -60,8 +61,7 @@ func main() {
 	// Serve up our static files
 	router.StaticFile("/favicon.svg", "./static/img/noaa-logo-rgb-2022.svg")
 	router.Static("/img", "./static/img")
-	router.Static("/css", "./static/bootstrap-5.3.1-dist/css")
-	router.Static("/js", "./static/bootstrap-5.3.1-dist/js")
+	router.Static("/bs", "./static/bootstrap-5.3.1-dist")
 
 	// Handle requests
 	router.GET("/", indexHandler(conf))
