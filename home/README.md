@@ -19,17 +19,17 @@ First, you'll need a settings file like so in `MATS/home`:
         "apps": [
         {
             "link": "upperair",
-            "title": "Upper Air",
+            "title": "Upper Air (RAOBs/AMDAR)",
             "kind": "MATS"
         },
         {
             "link": "met-upperair",
-            "title": "MET Upper Air",
+            "title": "MET Upper Air (Grid-to-Grid)",
             "kind": "METexpress"
         },
         {
             "link": "met-anomalycor",
-            "title": "MET Anomaly Correlation",
+            "title": "MET Anomaly Correlation (Grid-to-Grid)",
             "kind": "METexpress"
         }]
     },
@@ -37,7 +37,7 @@ First, you'll need a settings file like so in `MATS/home`:
         "name": "Ceiling and Visibility",
         "apps": [{
             "link": "ceil-vis",
-            "title": "Ceiling and Visibility",
+            "title": "Ceiling and Visibility (METAR)",
             "kind": "MATS"
         },
         {
@@ -47,7 +47,7 @@ First, you'll need a settings file like so in `MATS/home`:
         },
         {
             "link": "ceil-vis15",
-            "title": "15 Minute Ceiling and Visibility",
+            "title": "15 Minute Ceiling and Visibility (METAR)",
             "kind": "MATS"
         }]
     },
