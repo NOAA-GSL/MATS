@@ -60,6 +60,7 @@ func main() {
 	// Serve up our static files
 	router.StaticFile("/favicon.svg", "./static/img/noaa-logo-rgb-2022.svg")
 	router.Static("/img", "./static/img")
+	router.Static("/css", "./static/css")
 	router.Static("/bs", "./static/bootstrap-5.3.1-dist")
 
 	// Handle requests
