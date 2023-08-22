@@ -1,51 +1,30 @@
 {{ define "apps.html" }}
 
-<div style="background-color: #dddddd;" class="container-fluid pb-3" >
-    {{range .Groups }}
-    <div class="container-fluid pt-3">
-        <h3 style="font-family: PublicSans-Medium, Arial, Helvetica, sans-serif;">
-            {{.Name}}
-        </h3>
-        <div class="row row-cols-auto">
-            <p>
-        {{range .Apps}}
-            {{ if eq .Kind "MATS" }}
-            <div class="collapse show multi-collapse col p-1" id="collapseMATS">
-                <a
-                    class="btn btn-primary"
-                    role="button"
-                    href="{{.Link}}"
-                    >
-                    {{.Title}}
-                </a>
-            </div>
-            {{ else if eq .Kind "METexpress" }}
-            <div class="collapse show multi-collapse col p-1" id="collapseMETexpress">
-                <a
-                    class="btn btn-secondary"
-                    role="button"
-                    href="{{.Link}}"
-                    >
-                    {{.Title}}
-                </a>
-            </div>
-            {{ else if eq .Kind "MATScb" }}
-            <div class="collapse show multi-collapse col p-1" id="collapseMATScb">
-                <a
-                    class="btn btn-info"
-                    role="button"
-                    href="{{.Link}}"
-                    >
-                    {{.Title}}
-                </a>
-            </div>
-            {{ end }}
-        {{end}}
-        </p>
+<div style="background-color: #dddddd" class="container-fluid pb-3">
+  {{ range .Groups }}
+  <div class="container-fluid pt-3">
+    <h3 style="font-family: PublicSans-Medium, Arial, Helvetica, sans-serif">
+      {{ .Name }}
+    </h3>
+    <div class="row row-cols-auto">
+    {{ range .Apps }}
+      {{ if eq .Kind "MATS" }}
+        <div class="collapse show multi-collapse col p-1" id="collapseMATS">
+          <a class="btn btn-primary" role="button" href="{{.Link}}"> {{.Title}} </a>
         </div>
+        {{ else if eq .Kind "METexpress" }}
+        <div class="collapse show multi-collapse col p-1" id="collapseMETexpress">
+          <a class="btn btn-secondary" role="button" href="{{.Link}}"> {{.Title}} </a>
+        </div>
+        {{ else if eq .Kind "MATScb" }}
+        <div class="collapse show multi-collapse col p-1" id="collapseMATScb">
+          <a class="btn btn-info" role="button" href="{{.Link}}"> {{.Title}} </a>
+        </div>
+      {{ end }}
+    {{ end }}
     </div>
-    {{end}}
+  </div>
+  {{ end }}
 </div>
-
 
 {{ end }}
