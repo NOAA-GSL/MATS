@@ -9,15 +9,15 @@
     <div class="row row-cols-auto">
     {{ range .Apps }}
       {{ if eq .Kind "MATS" }}
-        <div class="collapse show multi-collapse col p-1" id="collapseMATS">
+        <div class="collapse show multi-collapse col p-1 collapseMATS">
           <a class="btn btn-primary" role="button" href="{{.Link}}"> {{.Title}} </a>
         </div>
         {{ else if eq .Kind "METexpress" }}
-        <div class="collapse show multi-collapse col p-1" id="collapseMETexpress">
+        <div class="collapse show multi-collapse col p-1 collapseMETexpress">
           <a class="btn btn-secondary" role="button" href="{{.Link}}"> {{.Title}} </a>
         </div>
         {{ else if eq .Kind "MATScb" }}
-        <div class="collapse show multi-collapse col p-1" id="collapseMATScb">
+        <div class="collapse show multi-collapse col p-1 collapseMATScb">
           <a class="btn btn-info" role="button" href="{{.Link}}"> {{.Title}} </a>
         </div>
       {{ end }}

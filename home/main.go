@@ -61,6 +61,7 @@ func main() {
 	router.StaticFile("/favicon.svg", "./static/img/noaa-logo-rgb-2022.svg")
 	router.Static("/img", "./static/img")
 	router.Static("/css", "./static/css")
+	router.Static("/js", "./static/js")
 	router.Static("/bs", "./static/bootstrap-5.3.1-dist")
 
 	// Handle requests
