@@ -56,7 +56,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         "assets/app/sqlTemplates/tmpl_DailyModelCycle_region.sql",
         "utf8"
       );
-      console.log(`\nqueryTemplate:\n${queryTemplate}`);
     }
 
     const { diffFrom } = curve;
