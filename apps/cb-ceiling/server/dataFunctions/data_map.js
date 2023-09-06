@@ -99,9 +99,6 @@ dataMap = function (plotParams, plotFunction) {
     // send to matsMiddle
     const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
 
-    // TODO - remove log to file
-    tss.logToFile = true;
-
     const rows = tss.processStationQuery(
       "Ceiling",
       sitesList,
