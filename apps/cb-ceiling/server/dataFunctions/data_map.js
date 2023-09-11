@@ -9,6 +9,7 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataPlotOpsUtils,
+  matsMiddleMap,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -88,23 +89,37 @@ dataMap = function (plotParams, plotFunction) {
       "INFO:  Please add sites in order to get a single/multi station plot."
     );
   }
-  statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
-  dataRequests[label] = statement;
 
   let queryResult;
   const startMoment = moment();
   let finishMoment;
+  const statement = "";
+
   try {
+    // send to matsMiddle
+    const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
+
+    const rows = tss.processStationQuery(
+      "Ceiling",
+      sitesList,
+      model,
+      forecastLength,
+      threshold,
+      fromSecs,
+      toSecs,
+      validTimes
+    );
+
     // send the query statement to the query function
     queryResult = matsDataQueryUtils.queryDBMapCTC(
       cbPool,
-      statement,
+      rows,
       model,
       statistic,
       siteMap,
       appParams
     );
+
     finishMoment = moment();
     dataRequests[`data retrieval (query) time - ${label}`] = {
       begin: startMoment.format(),

@@ -10,6 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
+  matsMiddleValidTime,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -42,6 +43,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
   const idealValues = [];
+  let statement = "";
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
@@ -54,23 +56,13 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         "assets/app/sqlTemplates/tmpl_DailyModelCycle_region.sql",
         "utf8"
       );
-    } else {
-      queryTemplate = fs.readFileSync(
-        "assets/app/sqlTemplates/tmpl_DailyModelCycle_stations.sql",
-        "utf8"
-      );
     }
-    console.log(`\nqueryTemplate:\n${queryTemplate}`);
-
-    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
 
     const { diffFrom } = curve;
     const { label } = curve;
     var { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     var thresholdStr = curve.threshold;
     let threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
@@ -81,7 +73,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
-    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
     if (curve["utc-cycle-start"].length !== 1) {
       throw new Error(
         "INFO:  Please select exactly one UTC Cycle Init Hour for this plot type."
@@ -89,10 +80,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     }
     const utcCycleStart = Number(curve["utc-cycle-start"][0]);
     utcCycleStarts[curveIndex] = utcCycleStart;
-    queryTemplate = queryTemplate.replace(
-      /{{vxUTC_CYCLE_START}}/g,
-      cbPool.trfmListToCSVString(utcCycleStart, null, false)
-    );
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
@@ -109,18 +96,17 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           regionStr
       );
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(
+        /{{vxUTC_CYCLE_START}}/g,
+        cbPool.trfmListToCSVString(utcCycleStart, null, false)
+      );
     } else {
-      const sitesList = curve.sites === undefined ? [] : curve.sites;
-      if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        queryTemplate = queryTemplate.replace(
-          /{{vxSITES_LIST_OBS}}/g,
-          cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
-        );
-        queryTemplate = queryTemplate.replace(
-          /{{vxSITES_LIST_MODELS}}/g,
-          cbPool.trfmListToCSVString(sitesList, "models.data.", false)
-        );
-      } else {
+      sitesList = curve.sites === undefined ? [] : curve.sites;
+      if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
@@ -140,23 +126,45 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
     var d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
       dataRequests[label] = statement;
-
       var queryResult;
       const startMoment = moment();
       var finishMoment;
+
       try {
-        // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool,
-          statement,
-          appParams,
-          statisticSelect
-        );
+        if (regionType === "Predefined region") {
+          // this is a database driven curve, not a difference curve
+          // send the query statement to the query function
+          statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+            cbPool,
+            statement,
+            appParams,
+            statisticSelect
+          );
+        } else {
+          // send to matsMiddle
+          const tss = new matsMiddleDailyModelCycle.MatsMiddleDailyModelCycle(cbPool);
+
+          const rows = tss.processStationQuery(
+            "Ceiling",
+            sitesList,
+            model,
+            threshold,
+            fromSecs,
+            toSecs,
+            utcCycleStart
+          );
+
+          // send the query statement to the query function
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+            cbPool,
+            rows,
+            appParams,
+            statisticSelect
+          );
+        }
+
         finishMoment = moment();
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),

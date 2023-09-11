@@ -79,14 +79,14 @@ dataContourDiff = function (plotParams, plotFunction) {
       const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
-          /vxVALID_TIMES/g,
+          /{{vxVALID_TIMES}}/g,
           cbPool.trfmListToCSVString(validTimes, null, false)
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
       }
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
     }
 
     if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
@@ -96,9 +96,9 @@ dataContourDiff = function (plotParams, plotFunction) {
           `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
         );
       }
-      queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
+      queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxFCST_LEN");
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}");
     }
 
     if (
@@ -110,7 +110,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     } else {
       dateString = "m0.fcstValidEpoch";
     }
-    queryTemplate = queryTemplate.replace(/vxDATE_STRING/g, dateString);
+    queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
 
     const regionType = curve["region-type"];
     if (regionType === "Select stations") {
@@ -131,13 +131,13 @@ dataContourDiff = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
 
-    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-    queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
-    queryTemplate = queryTemplate.replace(/vxREGION/g, region);
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
-    queryTemplate = queryTemplate.replace(/vxXVAL_CLAUSE/g, xValClause);
-    queryTemplate = queryTemplate.replace(/vxYVAL_CLAUSE/g, yValClause);
+    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxXVAL_CLAUSE}}/g, xValClause);
+    queryTemplate = queryTemplate.replace(/{{vxYVAL_CLAUSE}}/g, yValClause);
 
     // For contours, this functions as the colorbar label.
     var statType = statisticOptionsMap[statisticSelect][0];
