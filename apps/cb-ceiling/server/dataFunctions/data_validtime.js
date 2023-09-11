@@ -10,6 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
+  matsMiddleValidTime,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -39,6 +40,7 @@ dataValidTime = function (plotParams, plotFunction) {
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
   const idealValues = [];
+  let statement = "";
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
@@ -49,11 +51,6 @@ dataValidTime = function (plotParams, plotFunction) {
     if (regionType === "Predefined region") {
       queryTemplate = fs.readFileSync(
         "assets/app/sqlTemplates/tmpl_ValidTime_region.sql",
-        "utf8"
-      );
-    } else {
-      queryTemplate = fs.readFileSync(
-        "assets/app/sqlTemplates/tmpl_ValidTime_stations.sql",
         "utf8"
       );
     }
@@ -83,12 +80,7 @@ dataValidTime = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
 
-    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
-    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-
+    let sitesList;
     if (regionType === "Predefined region") {
       var regionStr = curve.region;
       const region = Object.keys(
@@ -99,18 +91,14 @@ dataValidTime = function (plotParams, plotFunction) {
           regionStr
       );
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     } else {
-      const sitesList = curve.sites === undefined ? [] : curve.sites;
-      if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        queryTemplate = queryTemplate.replace(
-          /{{vxSITES_LIST_OBS}}/g,
-          cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
-        );
-        queryTemplate = queryTemplate.replace(
-          /{{vxSITES_LIST_MODELS}}/g,
-          cbPool.trfmListToCSVString(sitesList, "models.data.", false)
-        );
-      } else {
+      sitesList = curve.sites === undefined ? [] : curve.sites;
+      if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
@@ -130,21 +118,44 @@ dataValidTime = function (plotParams, plotFunction) {
 
     var d;
     if (!diffFrom) {
-      statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
       dataRequests[label] = statement;
-
       var queryResult;
       const startMoment = moment();
       var finishMoment;
+
       try {
-        // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool,
-          statement,
-          appParams,
-          statisticSelect
-        );
+        if (regionType === "Predefined region") {
+          // send the query statement to the query function
+          statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+            cbPool,
+            statement,
+            appParams,
+            statisticSelect
+          );
+        } else {
+          // send to matsMiddle
+          const tss = new matsMiddleValidTime.MatsMiddleValidTime(cbPool);
+
+          const rows = tss.processStationQuery(
+            "Ceiling",
+            sitesList,
+            model,
+            forecastLength,
+            threshold,
+            fromSecs,
+            toSecs
+          );
+
+          // send the query statement to the query function
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+            cbPool,
+            rows,
+            appParams,
+            statisticSelect
+          );
+        }
+
         finishMoment = moment();
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),

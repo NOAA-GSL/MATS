@@ -149,6 +149,7 @@ dataSeries = function (plotParams, plotFunction) {
       try {
         if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBTimeSeries(
             cbPool,
@@ -166,6 +167,7 @@ dataSeries = function (plotParams, plotFunction) {
         } else {
           // send to matsMiddle
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
+
           const rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
