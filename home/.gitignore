@@ -1,3 +1,6 @@
 # Go binaries for this project
 home
 main
+
+# Settings file
+settings*.json

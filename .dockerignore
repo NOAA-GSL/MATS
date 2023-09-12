@@ -1,20 +1,29 @@
-.git*
-.idea
-.vscode
-README*
-RELEASE.txt
-appProduction*
-bundle*
-**/node_modules
+# Tooling artifacts
+**/.git
+**/.github
+**/.fleet
+**/.idea
+**/.vscode
+
+# Meteor artifacts
+**/bundle
 **/.npm
-cache*
+**/.meteor/local
+**/node_modules
+
+# MATS artifacts
+**/*.md
 container_deployment
-kubernetes
 home
-logs
+kubernetes
+METexpress
 scripts
 server_configuration_files
-static
-tests
-tmp*
-METexpress
+**/tests
+build.sh
+RELEASE.txt
+
+# Development files
+**/tmp*
+cache*
+logs

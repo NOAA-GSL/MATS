@@ -1,8 +1,9 @@
 # Tooling artifacts
-.git/
-.github/
-.idea/
-.vscode/
+**/.git
+**/.github
+**/.idea
+**/.vscode
+**/.fleet
 .gitignore
 
 # Home app
@@ -16,3 +17,6 @@ home
 main
 coverage.out
 settings.json
+
+# Development files
+**/tmp*
