@@ -5,6 +5,7 @@
 
 version: 2
 updates:
+  # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
@@ -12,3 +13,15 @@ updates:
     pull-request-branch-name:
       separator: "-" # Use "-" instead of "/" in branch names to avoid issues with docker registries
     target-branch: "development" # raise PRs for version updates to GHA against the `development` branch
+    assignees:
+      - "ian-noaa"
+
+  # Maintain dependencies for Go
+  - package-ecosystem: "gomod"
+    directory: "/home"
+    schedule:
+      interval: "weekly"
+    pull-request-branch-name:
+      separator: "-" # Use "-" instead of "/" in branch names to avoid issues with docker registries
+    assignees:
+      - "ian-noaa"
