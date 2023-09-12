@@ -6,6 +6,7 @@ kubernetes
 scripts
 server_configuration_files
 static
+!home/static
 **/.meteor
 **/met-*
 **/README.md

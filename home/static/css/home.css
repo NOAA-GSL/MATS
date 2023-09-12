@@ -1,0 +1,70 @@
+/* hover & active colors from https://www.colorhexa.com */
+
+.btn {
+    border-radius: 10px;
+}
+
+/* All Button */
+.btn-outline-success {
+    --bs-btn-color: green;
+    --bs-btn-border-color: green;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: green;
+}
+
+/* MATS */
+.btn-primary {
+    --bs-btn-bg: #3366bb;
+    --bs-btn-border-color: #3366bb;
+    --bs-btn-hover-bg: #3d72ca;
+    --bs-btn-hover-border-color: #5181d0;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: #3366bb;
+    --bs-btn-border-color: #3366bb;
+    --bs-btn-hover-color: #3d72ca;
+    --bs-btn-hover-border-color: #5181d0;
+    --bs-btn-active-bg: #3366bb;
+    --bs-btn-active-border-color: #3366bb;
+}
+
+/*MATS Couchbase*/
+.btn-info {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: teal;
+    --bs-btn-border-color: teal;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #009a9a;
+    --bs-btn-hover-border-color: #00b3b3;
+}
+
+.btn-outline-info {
+    --bs-btn-color: teal;
+    --bs-btn-border-color: teal;
+    --bs-btn-hover-color: #009a9a;
+    --bs-btn-hover-border-color: #00b3b3;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: teal;
+    --bs-btn-active-border-color: teal;
+}
+
+/*METexpress*/
+.btn-secondary {
+    --bs-btn-bg: darkorchid;
+    --bs-btn-border-color: darkorchid;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #a346d2;
+    --bs-btn-hover-border-color: #ad5ad7;
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: darkorchid;
+    --bs-btn-border-color: darkorchid;
+    --bs-btn-hover-color: #a346d2;
+    --bs-btn-hover-border-color: #ad5ad7;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: darkorchid;
+    --bs-btn-active-border-color: darkorchid;
+}
+

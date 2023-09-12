@@ -1,0 +1,18 @@
+# Tooling artifacts
+.git/
+.github/
+.idea/
+.vscode/
+.gitignore
+
+# Home app
+docs/
+.golangci.yml
+Dockerfile
+docker-compose.yml
+**/*.md
+LICENSE
+home
+main
+coverage.out
+settings.json

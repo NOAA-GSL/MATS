@@ -1,0 +1,118 @@
+name: "Build Home App"
+
+on:
+  push:
+    branches: ["main", "development"]
+    paths:
+        - "home/**"
+  pull_request:
+    paths:
+        - "home/**"
+  workflow_dispatch:
+env:
+    DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
+
+# Update the working directory for any job steps with "run" components.
+# Note this doesn't apply to "uses" steps - those will need to have
+# their working directory updated manually, if they support it.
+defaults:
+  run:
+    working-directory: "home"
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+            working-directory: "home"
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test -v -shuffle=on -cover ./...
+
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    permissions:
+        actions: read
+        contents: read
+        packages: write
+        security-events: write
+    steps:
+        - uses: actions/checkout@v3
+
+        - name: Set env variables
+          shell: bash
+        # Note - this doesn't support branch names with "/" in them
+          run: |
+            DATE=$(git show -s --format=%cd --date=format:'%Y-%m-%d.%H:%M:%S.%z' ${{ github.sha }})
+            if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            # PR build
+            echo "BRANCH=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+            echo "VERSION=dev-${{ github.sha }}-$DATE" >> $GITHUB_ENV
+            elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            # Handle differences between branches/tags
+            if [[ "${GITHUB_REF}" == *"heads"* ]]; then
+                # Branch build
+                echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+                echo "VERSION=dev-${{ github.sha }}-$DATE" >> $GITHUB_ENV
+            elif [[ "${GITHUB_REF}" == *"tags"* ]]; then
+                # Tag build
+                echo "BRANCH=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+                echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+            else
+                echo "ERROR: Unanticipated Git Ref"
+                exit 1
+            fi
+            else
+            echo "ERROR: Unanticipated GitHub Event"
+            exit 1
+            fi
+
+        - name: Build image
+          run: |
+            docker build \
+            --build-arg BUILDVER="${{ env.VERSION }}" \
+            --build-arg COMMITBRANCH=${{ env.BRANCH }} \
+            --build-arg COMMITSHA=${{ github.sha }} \
+            -t ${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }} \
+            .
+
+        - name: Scan image with Trivy
+          uses: aquasecurity/trivy-action@master
+          with:
+            image-ref: '${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}'
+            format: 'sarif'
+            output: 'trivy-results-home.sarif'
+            ignore-unfixed: true
+
+        - name: Upload Trivy scan results to GitHub Security tab
+          uses: github/codeql-action/upload-sarif@v2
+          with:
+            sarif_file: 'trivy-results-home.sarif'
+
+        - name: Login to GitHub Container Registry
+          uses: docker/login-action@v2
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Push image to dev registry
+          run: |
+            docker push ${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}

@@ -1,12 +1,15 @@
-name: "Build"
+name: "Build MATS Apps"
 on:
   push:
     branches: [main, development]
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'
+    paths-ignore:
+      - "home/**"
   pull_request:
-    branches: [main, development]
+    paths-ignore:
+      - "home/**"
   workflow_dispatch:
 env:
   DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
