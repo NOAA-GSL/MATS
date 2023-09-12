@@ -1,4 +1,4 @@
-name: "Build"
+name: "Build MATS Apps"
 on:
   push:
     branches: [main, development]
