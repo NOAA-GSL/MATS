@@ -14,6 +14,7 @@ resources:
   - surfrad
   - upperair
   - mongo
-  - ingress.yaml
+  - ingress-apps.yaml
+  - ingress-home.yaml
 commonLabels:
   environment: local
