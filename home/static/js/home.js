@@ -6,12 +6,12 @@ function showSelector(selector) {
   const collapseElements = document.querySelectorAll(".multi-collapse");
   const showElements = document.querySelectorAll(selector);
 
-  collapseElements.forEach(function (element) {
+  collapseElements.forEach((element) => {
     let bsCollapse = new bootstrap.Collapse(element, { toggle: false });
     bsCollapse.hide();
   });
 
-  showElements.forEach(function (element) {
+  showElements.forEach((element) => {
     let bsShow = new bootstrap.Collapse(element, { toggle: false });
     bsShow.show();
   });
@@ -23,13 +23,13 @@ function showAll() {
   const collapseElements = document.querySelectorAll(".multi-collapse");
 
   // Show all app group headers
-  appGroups.forEach(function (appGroup) {
+  appGroups.forEach((appGroup) => {
     let appGroupCollapse = new bootstrap.Collapse(appGroup, { toggle: false });
     appGroupCollapse.show();
   });
 
   // Show all the apps
-  collapseElements.forEach(function (element) {
+  collapseElements.forEach((element) => {
     let bsCollapse = new bootstrap.Collapse(element, { toggle: false });
     bsCollapse.show();
   });
