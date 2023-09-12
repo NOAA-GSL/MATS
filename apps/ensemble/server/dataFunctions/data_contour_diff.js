@@ -70,7 +70,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
-    ).optionsMap;
+    ).optionsMap[appParams.plotType];
     const tableStatPrefix = statisticOptionsMap[statisticSelect][2];
     const queryTableClause = `from ${databaseRef}.${model}_${tableStatPrefix}_${region} as m0`;
     const { members } = curve;
@@ -86,11 +86,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       const probBins =
         curve["probability-bins"] === undefined ? [] : curve["probability-bins"];
       if (probBins.length !== 0 && probBins !== matsTypes.InputTypes.unused) {
-        if (Number(kernel) !== 0) {
-          probBinClause = `and m0.prob IN(${probBins})`;
-        } else {
-          probBinClause = `and m0.prob*10 IN(${probBins})`;
-        }
+        probBinClause = `and m0.prob IN(${probBins})`;
       } else {
         throw new Error("INFO:  You need to select at least one probability bin.");
       }

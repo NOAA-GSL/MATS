@@ -1,8 +1,8 @@
-Feature: Add Remove GridScaleProbability Curve
+Feature: Add Remove Reliability Curve
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want click the GridScaleProbability radio button,
+    I want click the Reliability radio button,
     I want to add one curve
     then plot that curve and see the graph,
     then go back to the curve management page,
@@ -13,22 +13,22 @@ Feature: Add Remove GridScaleProbability Curve
         Then I expect the app title to be "Ensemble"
 
     @watch
-    Scenario: addRemoveGridScaleProbabCurve
-        When I set the plot type to "GridScaleProbability"
-        Then the plot type should be "GridScaleProbability"
+    Scenario: addRemoveReliability
+        When I set the plot type to "Reliability"
+        Then the plot type should be "Reliability"
         When I change the "variable" parameter to "Composite Reflectivity"
         Then the "variable" parameter value matches "Composite Reflectivity"
         When I change the "data-source" parameter to "RRFSE_SP"
         Then the "data-source" parameter value matches "RRFSE_SP"
-        When I set the curve-dates to "05/10/2023 12:00 - 05/16/2023 00:00"
-        Then the curve-dates value is "05/10/2023 12:00 - 05/16/2023 00:00"
+        When I set the dates to "05/10/2023 12:00 - 05/16/2023 00:00"
+        Then the dates value is "05/10/2023 12:00 - 05/16/2023 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Grid Scale Probability" plot
+        And I should have a "Reliability" plot
 
         When I click the "Back" button
         Then I should be on the main page

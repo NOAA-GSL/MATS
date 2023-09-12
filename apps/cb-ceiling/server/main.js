@@ -334,7 +334,7 @@ const doCurveParams = async function () {
 
   try {
     const queryStr = cbPool.trfmSQLForDbTarget(
-      'select name, description from vxDBTARGET where type="MD" and docType="region" and version = "V01"  and subset="COMMON"'
+      'select name, description from {{vxDBTARGET}} where type="MD" and docType="region" and version = "V01"  and subset="COMMON"'
     );
     const rows = await cbPool.queryCB(queryStr);
     if (rows.includes("queryCB ERROR: ")) {
@@ -359,7 +359,7 @@ const doCurveParams = async function () {
     for (didx = 0; didx < variables.length; didx++) {
       masterThresholdValuesMap[variables[didx]] = {};
       const queryStr = cbPool.trfmSQLForDbTarget(
-        'select raw thresholdDescriptions.ceiling from vxDBTARGET where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"'
+        'select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"'
       );
       const rows = await cbPool.queryCB(queryStr);
       if (rows.includes("queryCB ERROR: ")) {
@@ -391,7 +391,7 @@ const doCurveParams = async function () {
       const queryStr = cbPool.trfmSQLForDbTarget(
         "select model, displayText, mindate, maxdate, fcstLens, " +
           "regions, thresholds " +
-          'from vxDBTARGET where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0 ' +
+          'from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0 ' +
           "order by displayCategory, displayOrder"
       );
       const rows = await cbPool.queryCB(queryStr);
@@ -447,7 +447,7 @@ const doCurveParams = async function () {
     matsCollections.SiteMap.remove({});
     var rows = await cbPool.queryCB(
       cbPool.trfmSQLForDbTarget(
-        'select meta().id, vxCOLLECTION.* from vxDBTARGET where type="MD" and docType="station" and version = "V01"  and subset="vxCOLLECTION";'
+        'select meta().id, {{vxCOLLECTION}}.* from {{vxDBTARGET}} where type="MD" and docType="station" and version = "V01"  and subset="{{vxCOLLECTION}}";'
       )
     );
     if (rows.includes("queryCB ERROR: ")) {

@@ -54,7 +54,7 @@ dataThreshold = function (plotParams, plotFunction) {
     const { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     // catalogue the thresholds now, we'll need to do a separate query for each
     const allThresholdsStr = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
@@ -69,19 +69,19 @@ dataThreshold = function (plotParams, plotFunction) {
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
-        /vxVALID_TIMES/g,
+        /{{vxVALID_TIMES}}/g,
         cbPool.trfmListToCSVString(validTimes, null, false)
       );
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
     }
     const forecastLength = curve["forecast-length"];
-    queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
+    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
@@ -100,7 +100,7 @@ dataThreshold = function (plotParams, plotFunction) {
       (key) =>
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    queryTemplate = queryTemplate.replace(/vxREGION/g, region);
+    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
@@ -123,7 +123,7 @@ dataThreshold = function (plotParams, plotFunction) {
       ) {
         const threshold = allThresholds[thresholdIndex];
         const queryTemplate_threshold = queryTemplate.replace(
-          /vxTHRESHOLD/g,
+          /{{vxTHRESHOLD}}/g,
           threshold
         );
         statement = cbPool.trfmSQLForDbTarget(queryTemplate_threshold);

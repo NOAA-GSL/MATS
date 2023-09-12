@@ -78,7 +78,9 @@ dataReliability = function (plotParams, plotFunction) {
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
     const statisticClause =
-      "sum(m0.nhdfcstcount) as fcstcount, sum(m0.nhdfcstcount) as rawfcstcount, sum(m0.nhdhitcount) as hitcount";
+      "sum(m0.nhdfcstcount) as fcstcount, sum(m0.fcstcount) as rawfcstcount, sum(m0.nhdhitcount) " +
+      "as hitcount, group_concat(m0.time, ';', m0.nhdfcstcount, ';', " +
+      "m0.fcstcount, ';', m0.nhdhitcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as N0";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
@@ -126,7 +128,12 @@ dataReliability = function (plotParams, plotFunction) {
       let finishMoment;
       try {
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBReliability(sumPool, statement, kernel);
+        queryResult = matsDataQueryUtils.queryDBReliability(
+          sumPool,
+          statement,
+          appParams,
+          kernel
+        );
         finishMoment = moment();
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),

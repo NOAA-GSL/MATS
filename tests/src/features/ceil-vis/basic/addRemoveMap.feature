@@ -1,34 +1,33 @@
-Feature: Add Remove Threshold Curve
+Feature: Add Remove Map
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want click the threshold radio button,
     I want to add one curve
     then plot that curve and see the graph,
     then go back to the curve management page,
     then delete that curve.
 
     Background:
-        Given I load the app "/ensemble"
-        Then I expect the app title to be "Ensemble"
+        Given I load the app "/ceil-vis"
+        Then I expect the app title to be "Ceiling and Visibility"
 
     @watch
-    Scenario: addRemoveReliability
-        When I set the plot type to "Reliability"
-        Then the plot type should be "Reliability"
-        When I change the "variable" parameter to "Composite Reflectivity"
-        Then the "variable" parameter value matches "Composite Reflectivity"
-        When I change the "data-source" parameter to "RRFSE_SP"
-        Then the "data-source" parameter value matches "RRFSE_SP"
-        When I set the dates to "05/10/2023 12:00 - 05/16/2023 00:00"
-        Then the dates value is "05/10/2023 12:00 - 05/16/2023 00:00"
+    Scenario: addRemoveCurve
+        When I set the plot type to "Map"
+        Then the plot type should be "Map"
+        When I change the "data-source" parameter to "HRRR_OPS"
+        Then the "data-source" parameter value matches "HRRR_OPS"
+        When I change the "sites" parameter to "KDEN"
+        Then the "sites" parameter value matches "KDEN"
+        When I set the dates to "08/12/2023 00:00 - 08/12/2023 23:59"
+        Then the dates value is "08/12/2023 00:00 - 08/12/2023 23:59"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Reliability" plot
+        And I should have a "Map" plot
 
         When I click the "Back" button
         Then I should be on the main page

@@ -62,15 +62,15 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     }
     console.log(`\nqueryTemplate:\n${queryTemplate}`);
 
-    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
 
     const { diffFrom } = curve;
     const { label } = curve;
     var { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     var thresholdStr = curve.threshold;
     let threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
@@ -81,7 +81,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
-    queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
+    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
     if (curve["utc-cycle-start"].length !== 1) {
       throw new Error(
         "INFO:  Please select exactly one UTC Cycle Init Hour for this plot type."
@@ -90,7 +90,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const utcCycleStart = Number(curve["utc-cycle-start"][0]);
     utcCycleStarts[curveIndex] = utcCycleStart;
     queryTemplate = queryTemplate.replace(
-      /vxUTC_CYCLE_START/g,
+      /{{vxUTC_CYCLE_START}}/g,
       cbPool.trfmListToCSVString(utcCycleStart, null, false)
     );
     const statisticSelect = curve.statistic;
@@ -108,16 +108,16 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
-      queryTemplate = queryTemplate.replace(/vxREGION/g, region);
+      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     } else {
       const sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
-          /vxSITES_LIST_OBS/g,
+          /{{vxSITES_LIST_OBS}}/g,
           cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
         );
         queryTemplate = queryTemplate.replace(
-          /vxSITES_LIST_MODELS/g,
+          /{{vxSITES_LIST_MODELS}}/g,
           cbPool.trfmListToCSVString(sitesList, "models.data.", false)
         );
       } else {

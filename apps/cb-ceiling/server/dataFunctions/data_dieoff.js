@@ -10,6 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
+  matsMiddleDieoff,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -39,9 +40,11 @@ dataDieoff = function (plotParams, plotFunction) {
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
   const idealValues = [];
+  let statement = "";
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
+    let queryTemplate = null;
     const curve = curves[curveIndex];
     const regionType = curve["region-type"];
     const forecastLengthStr = curve["dieoff-type"];
@@ -49,9 +52,46 @@ dataDieoff = function (plotParams, plotFunction) {
       name: "dieoff-type",
     }).optionsMap;
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+    const { diffFrom } = curve;
+    const { label } = curve;
+    var { variable } = curve;
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+      .optionsMap[variable][curve["data-source"]][0];
+    var thresholdStr = curve.threshold;
+    let threshold = Object.keys(
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
+    ).find(
+      (key) =>
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
+          key
+        ] === thresholdStr
+    );
+    threshold = threshold.replace(/_/g, ".");
 
-    let queryTemplate = null;
+    var validTimes;
+    var utcCycleStart;
+
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+    const statisticSelect = curve.statistic;
+    const statisticOptionsMap = matsCollections.statistic.findOne(
+      { name: "statistic" },
+      { optionsMap: 1 }
+    ).optionsMap;
+
+    let sitesList = [];
+    let singleCycle = null;
     if (regionType === "Predefined region") {
+      var regionStr = curve.region;
+      const region = Object.keys(
+        matsCollections.region.findOne({ name: "region" }).valuesMap
+      ).find(
+        (key) =>
+          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
+          regionStr
+      );
+
       if (forecastLength === matsTypes.ForecastTypes.dieoff) {
         queryTemplate = fs.readFileSync(
           "assets/app/sqlTemplates/tmpl_DieOff_region_DieOff.sql",
@@ -67,106 +107,55 @@ dataDieoff = function (plotParams, plotFunction) {
           "assets/app/sqlTemplates/tmpl_DieOff_region_SingleCycle.sql",
           "utf8"
         );
+        singleCycle = fromSecs;
       }
-    } else if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-      queryTemplate = fs.readFileSync(
-        "assets/app/sqlTemplates/tmpl_DieOff_stations_DieOff.sql",
-        "utf8"
-      );
-    } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-      queryTemplate = fs.readFileSync(
-        "assets/app/sqlTemplates/tmpl_DieOff_stations_UTC.sql",
-        "utf8"
-      );
+      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+
+      if (forecastLength === matsTypes.ForecastTypes.dieoff) {
+        validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+          queryTemplate = queryTemplate.replace(
+            /{{vxVALID_TIMES}}/g,
+            cbPool.trfmListToCSVString(validTimes, null, false)
+          );
+        } else {
+          queryTemplate = cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
+        }
+      } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+        utcCycleStart =
+          curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
+        if (
+          utcCycleStart.length !== 0 &&
+          utcCycleStart !== matsTypes.InputTypes.unused
+        ) {
+          queryTemplate = queryTemplate.replace(
+            /{{vxUTC_CYCLE_START}}/g,
+            cbPool.trfmListToCSVString(utcCycleStart, null, false)
+          );
+        } else {
+          queryTemplate = cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxUTC_CYCLE_START}}"
+          );
+        }
+      }
     } else {
-      queryTemplate = fs.readFileSync(
-        "assets/app/sqlTemplates/tmpl_DieOff_stations_SingleCycle.sql",
-        "utf8"
-      );
-    }
-
-    const { diffFrom } = curve;
-    const { label } = curve;
-    var { variable } = curve;
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
-    queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
-    var thresholdStr = curve.threshold;
-    let threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-    ).find(
-      (key) =>
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-          key
-        ] === thresholdStr
-    );
-    threshold = threshold.replace(/_/g, ".");
-    queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
-    var validTimes;
-    var utcCycleStart;
-
-    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
-    const fromSecs = dateRange.fromSeconds;
-    const toSecs = dateRange.toSeconds;
-
-    queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-
-    const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
-    ).optionsMap;
-    if (regionType === "Predefined region") {
-      queryTableClause = "from vxDBTARGET  m0";
-      var regionStr = curve.region;
-      const region = Object.keys(
-        matsCollections.region.findOne({ name: "region" }).valuesMap
-      ).find(
-        (key) =>
-          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
-          regionStr
-      );
-      queryTemplate = queryTemplate.replace(/vxREGION/g, region);
-    } else {
-      const sitesList = curve.sites === undefined ? [] : curve.sites;
-      if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        queryTemplate = queryTemplate.replace(
-          /vxSITES_LIST_OBS/g,
-          cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
-        );
-        queryTemplate = queryTemplate.replace(
-          /vxSITES_LIST_MODELS/g,
-          cbPool.trfmListToCSVString(sitesList, "models.data.", false)
-        );
-      } else {
+      sitesList = curve.sites === undefined ? [] : curve.sites;
+      if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
+      singleCycle = fromSecs;
     }
-    if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-      validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
-      if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        queryTemplate = queryTemplate.replace(
-          /vxVALID_TIMES/g,
-          cbPool.trfmListToCSVString(validTimes, null, false)
-        );
-      } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
-      }
-    } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-      utcCycleStart =
-        curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
-      if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
-        queryTemplate = queryTemplate.replace(
-          /vxUTC_CYCLE_START/g,
-          cbPool.trfmListToCSVString(utcCycleStart, null, false)
-        );
-      } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxUTC_CYCLE_START");
-      }
-    }
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
@@ -183,32 +172,60 @@ dataDieoff = function (plotParams, plotFunction) {
     if (!diffFrom) {
       // this is a database driven curve, not a difference curve
       // prepare the query from the above parameters
-      statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
-      dataRequests[label] = statement;
-
       var queryResult;
       const startMoment = moment();
       var finishMoment;
       try {
-        // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool,
-          statement,
-          appParams,
-          statisticSelect
-        );
-        finishMoment = moment();
-        dataRequests[`data retrieval (query) time - ${label}`] = {
-          begin: startMoment.format(),
-          finish: finishMoment.format(),
-          duration: `${moment
-            .duration(finishMoment.diff(startMoment))
-            .asSeconds()} seconds`,
-          recordCount: queryResult.data.x.length,
-        };
-        // get the data back from the query
-        d = queryResult.data;
+        if (regionType === "Predefined region") {
+          statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+          dataRequests[label] = statement;
+
+          // send the query statement to the query function
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+            cbPool,
+            statement,
+            appParams,
+            statisticSelect
+          );
+          finishMoment = moment();
+          dataRequests[`data retrieval (query) time - ${label}`] = {
+            begin: startMoment.format(),
+            finish: finishMoment.format(),
+            duration: `${moment
+              .duration(finishMoment.diff(startMoment))
+              .asSeconds()} seconds`,
+            recordCount: queryResult.data.x.length,
+          };
+          // get the data back from the query
+          d = queryResult.data;
+        } else {
+          // send to matsMiddle
+          const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
+
+          const rows = tss.processStationQuery(
+            "Ceiling",
+            sitesList,
+            model,
+            null,
+            threshold,
+            fromSecs,
+            toSecs,
+            validTimes,
+            utcCycleStart,
+            singleCycle
+          );
+          // console.log(`rows:${rows.length}`);
+
+          // send the query statement to the query function
+          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+            cbPool,
+            rows,
+            appParams,
+            statisticSelect
+          );
+
+          d = queryResult.data;
+        }
       } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;

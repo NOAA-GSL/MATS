@@ -10,7 +10,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddle,
+  matsMiddleTimeSeries,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
@@ -48,7 +48,7 @@ dataSeries = function (plotParams, plotFunction) {
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
     // initialize variables specific to each curve
-
+    let queryTemplate = null;
     const curve = curves[curveIndex];
     const regionType = curve["region-type"];
     const { diffFrom } = curve;
@@ -93,25 +93,25 @@ dataSeries = function (plotParams, plotFunction) {
           regionStr
       );
       // SQL template replacements
-      var queryTemplate = fs.readFileSync(
+      queryTemplate = fs.readFileSync(
         "assets/app/sqlTemplates/tmpl_TimeSeries_region.sql",
         "utf8"
       );
-      queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
-      queryTemplate = queryTemplate.replace(/vxREGION/g, region);
-      queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-      queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-      queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
-      queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
-      queryTemplate = queryTemplate.replace(/vxAVERAGE/g, average);
+      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+      queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
 
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
-          /vxVALID_TIMES/g,
+          /{{vxVALID_TIMES}}/g,
           cbPool.trfmListToCSVString(validTimes, null, false)
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
       }
     } else {
       var sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -165,9 +165,8 @@ dataSeries = function (plotParams, plotFunction) {
           );
         } else {
           // send to matsMiddle
-          const tss = new matsMiddle.MatsMiddleTimeSeriesStations(cbPool);
-          let rows = [];
-          rows = tss.processStationQuery(
+          const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
+          const rows = tss.processStationQuery(
             "Ceiling",
             sitesList,
             model,
@@ -180,7 +179,7 @@ dataSeries = function (plotParams, plotFunction) {
           );
 
           // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBTimeSeriesMT(
+          queryResult = matsDataQueryUtils.queryDBTimeSeries(
             cbPool,
             rows,
             model,

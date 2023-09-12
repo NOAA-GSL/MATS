@@ -43,7 +43,7 @@ dataMap = function (plotParams, plotFunction) {
   const { variable } = curve;
   const model = matsCollections["data-source"].findOne({ name: "data-source" })
     .optionsMap[variable][curve["data-source"]][0];
-  queryTemplate = queryTemplate.replace(/vxMODEL/g, model);
+  queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
   const siteMap = matsCollections.StationMap.findOne(
     { name: "stations" },
     { optionsMap: 1 }
@@ -58,29 +58,29 @@ dataMap = function (plotParams, plotFunction) {
       ] === thresholdStr
   );
   threshold = threshold.replace(/_/g, ".");
-  queryTemplate = queryTemplate.replace(/vxFROM_SECS/g, fromSecs);
-  queryTemplate = queryTemplate.replace(/vxTO_SECS/g, toSecs);
-  queryTemplate = queryTemplate.replace(/vxTHRESHOLD/g, threshold);
+  queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+  queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+  queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
   if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
     queryTemplate = queryTemplate.replace(
-      /vxVALID_TIMES/g,
+      /{{vxVALID_TIMES}}/g,
       cbPool.trfmListToCSVString(validTimes, null, false)
     );
   } else {
-    queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "vxVALID_TIMES");
+    queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
   }
   const forecastLength = curve["forecast-length"];
-  queryTemplate = queryTemplate.replace(/vxFCST_LEN/g, forecastLength);
+  queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
   const { statistic } = curve;
   const sitesList = curve.sites === undefined ? [] : curve.sites;
   if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
     queryTemplate = queryTemplate.replace(
-      /vxSITES_LIST_OBS/g,
+      /{{vxSITES_LIST_OBS}}/g,
       cbPool.trfmListToCSVString(sitesList, "obs.data.", false)
     );
     queryTemplate = queryTemplate.replace(
-      /vxSITES_LIST_MODELS/g,
+      /{{vxSITES_LIST_MODELS}}/g,
       cbPool.trfmListToCSVString(sitesList, "models.data.", false)
     );
   } else {
