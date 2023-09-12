@@ -1,9 +1,11 @@
+# Tooling artifacts
+.git/
 .github/
 .idea/
 .vscode/
-.git/
 .gitignore
 
+# Home app
 docs/
 .golangci.yml
 Dockerfile
