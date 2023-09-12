@@ -38,12 +38,9 @@ function showAll() {
 // Checks if all ".multi-collapse" children of an ".appgroup" are collapsed
 function allChildrenAreCollapsed(appGroup) {
   const collapseElements = appGroup.querySelectorAll(".multi-collapse");
-  collapseElements.forEach((element) => {
-    if (element.classList.contains("show")) {
-      return false; // At least one child is not collapsed
-    }
-  });
-  return true; // All children are collapsed
+  return [...collapseElements].every(
+    (collapse) => !collapse.classList.contains("show")
+  );
 }
 
 // Handle collapsing/showing the "appgroup" headers
