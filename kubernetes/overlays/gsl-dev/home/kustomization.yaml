@@ -6,7 +6,7 @@ patchesStrategicMerge:
 
 images:
   - name: ghcr.io/noaa-gsl/mats/development/home
-    newTag: 1029-create-new-home-application 
+    newTag: development
 
 configMapGenerator:
   - name: home-config
