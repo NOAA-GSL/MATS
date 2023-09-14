@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ensemble
+  labels:
+    app.kubernetes.io/name: ensemble
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: ensemble
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ensemble
+  template:
+    metadata:
+      labels:
+        app: ensemble
+    spec:
+      containers:
+        - name: ensemble
+          image: ghcr.io/noaa-gsl/mats/development/ensemble:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

@@ -3,6 +3,7 @@ resources:
   - cb-ceiling
   - ceil-vis
   - ceil-vis15
+  - ensemble
   - home
   - landuse
   - precipAccum

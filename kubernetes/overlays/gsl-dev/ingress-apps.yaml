@@ -46,6 +46,13 @@ spec:
                 name: ceil-vis15
                 port:
                   number: 80
+          - path: /mats-dev/ensemble
+            pathType: Prefix
+            backend:
+              service:
+                name: ensemble
+                port:
+                  number: 80
           - path: /mats-dev/landuse
             pathType: Prefix
             backend:

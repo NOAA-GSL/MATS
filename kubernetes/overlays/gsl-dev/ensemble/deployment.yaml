@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ensemble
+spec:
+  template:
+    spec:
+      containers:
+        - name: ensemble
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: ensemble-secret
+          volumeMounts:
+            - name: ensemble-settings-file
+              mountPath: /usr/app/settings/ensemble/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: ensemble-settings-file
+          configMap:
+            name: ensemble-config
