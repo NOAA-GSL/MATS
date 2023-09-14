@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/ensemble
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/ensemble
+    newTag: development 
+
+configMapGenerator:
+  - name: ensemble-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: ensemble-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay
