@@ -13,14 +13,14 @@
     <div id="main" class="container-fluid">
       {{ template "navbar.html" . }}
 
-      {{ if .METexpress }}
+      {{ if .Config.IsMETexpress }}
       {{ else }}
         {{ template "toggles.html" . }}
       {{ end }}
 
       {{ template "apps.html" . }}
 
-      {{ if .METexpress }}
+      {{ if .Config.IsMETexpress }}
         {{ template "metexpress-footer.html" . }}
       {{ else }}
         {{ template "mats-footer.html" . }}
