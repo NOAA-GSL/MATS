@@ -24,14 +24,15 @@
           src="img/noaa-logo-rgb-2022.svg"
           alt="NOAA Logo"
         />
-        {{ if .METexpress }}
+        {{ if .Config.IsMETexpress }}
         <span class="fs-2">METexpress</span>
         {{ else }}
         <span class="fs-2">Model Analysis Tool Suite (MATS)</span>
         {{ end }}
-        {{ if ne .Environment "Production"}}
-        <span class="fs-6">{{.Environment}} Server</span>
-        {{ else }} {{ end }}
+        {{ if .Config.EnvironmentLabel }}
+        <span class="fs-6">{{ .Config.EnvironmentLabel }} Server</span>
+        {{ else }}
+        {{ end }}
       </a>
       <!-- Collect the nav links, forms, and other content for toggling -->
       <!-- Create a navbar collection that's right justified -->

@@ -7,11 +7,13 @@ A home app for MATS & METexpress. Written in Go with the Gin framework.
 First, you'll need a settings file like so in `MATS/home`:
 
 `settings.json`:
+
 ```json
 {
     "config": {
-        "met_express": false,
-        "environment": "Development"
+        "is_met_express": false,
+        "is_production": false,
+        "environment_label": "Development"
     },
     "groups": [
     {
