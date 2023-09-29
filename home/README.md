@@ -14,7 +14,6 @@ First, you'll need a settings file like so in `MATS/home`:
         "is_met_express": false,
         "is_production": false,
         "environment_label": "Development",
-        "display_alert": false,
         "alert_message": "Lorem ipsum dolor shutdown amet..."
     },
     "groups": [
