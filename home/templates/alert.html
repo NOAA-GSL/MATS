@@ -2,6 +2,8 @@
 
 <div class="container-fluid p-3" style="background-color: #dddddd">
   <div class="alert alert-danger" role="alert">
-    <p>{{ .Config.AlertMessage }}</p>
+    <!-- <p>{{ .Config.AlertMessage }}</p> -->
+    <!-- Regrettably, <blink> is no longer available, so we'll have to settle for marquee -->
+    <marquee>{{ .Config.AlertMessage }}</marquee>
   </div>
 </div>
