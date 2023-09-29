@@ -13,6 +13,10 @@
     <div id="main" class="container-fluid">
       {{ template "navbar.html" . }}
 
+      {{ if .Config.AlertMessage }}
+        {{ template "alert.html" . }}
+      {{ end }}
+
       {{ if .Config.IsMETexpress }}
       {{ else }}
         {{ template "toggles.html" . }}

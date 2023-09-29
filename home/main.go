@@ -15,6 +15,7 @@ type ConfigJSON struct {
 		IsMETexpress     bool   `json:"is_met_express"`
 		IsProduction     bool   `json:"is_production"`
 		EnvironmentLabel string `json:"environment_label"`
+		AlertMessage     string `json:"alert_message"`
 	} `json:"config"`
 	Groups []struct {
 		Name string `json:"name"`
