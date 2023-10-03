@@ -3,12 +3,14 @@
  */
 
 import { Meteor } from "meteor/meteor";
+import { moment } from "meteor/momentjs:moment";
 import {
+  matsMethods,
   matsTypes,
   matsCollections,
   matsDataUtils,
-  matsCouchbaseUtils,
   matsParamUtils,
+  matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
 const variableMetadataDocs = {
@@ -321,7 +323,7 @@ const doCurveParams = async function () {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
     }).fetch()[0].curve_params;
-    for (let cp = 0; cp < params.length; cp++) {
+    for (let cp = 0; cp < params.length; cp += 1) {
       matsCollections[params[cp]].remove({});
     }
   }
@@ -347,20 +349,18 @@ const doCurveParams = async function () {
     }
     let masterRegDescription;
     let masterShortName;
-    for (var j = 0; j < rows.length; j++) {
+    for (let j = 0; j < rows.length; j += 1) {
       masterRegDescription = rows[j].description.trim();
       masterShortName = rows[j].name.trim();
       masterRegionValuesMap[masterShortName] = masterRegDescription;
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
-  var rows;
   let didx;
-
   try {
-    for (didx = 0; didx < variables.length; didx++) {
+    for (didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
       masterThresholdValuesMap[variable] = {};
       const queryStr = cbPool.trfmSQLForDbTarget(
@@ -372,22 +372,20 @@ const doCurveParams = async function () {
         // have this local try catch fail properly if the metadata isn't there
         throw new Error(rows);
       }
-      var masterDescription;
-      var masterTrsh;
       let jsonFriendlyTrsh;
-      for (var j = 0; j < Object.keys(rows[0]).length; j++) {
-        masterDescription = rows[0][Object.keys(rows[0])[j]].trim();
-        masterTrsh = Object.keys(rows[0])[j].trim();
+      for (let j = 0; j < Object.keys(rows[0]).length; j += 1) {
+        const masterDescription = rows[0][Object.keys(rows[0])[j]].trim();
+        const masterTrsh = Object.keys(rows[0])[j].trim();
         jsonFriendlyTrsh = masterTrsh.replace(/\./g, "_");
         masterThresholdValuesMap[variable][jsonFriendlyTrsh] = masterDescription;
       }
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   try {
-    for (didx = 0; didx < variables.length; didx++) {
+    for (didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
       modelOptionsMap[variable] = {};
       modelDateRangeMap[variable] = {};
@@ -407,10 +405,10 @@ const doCurveParams = async function () {
         // have this local try catch fail properly if the metadata isn't there
         throw new Error(rows);
       }
-      for (var i = 0; i < rows.length; i++) {
-        const model_value = rows[i].model.trim();
+      for (let i = 0; i < rows.length; i += 1) {
+        const modelValue = rows[i].model.trim();
         const model = rows[i].displayText.trim();
-        modelOptionsMap[variable][model] = [model_value];
+        modelOptionsMap[variable][model] = [modelValue];
 
         const rowMinDate = moment
           .utc(rows[i].mindate * 1000)
@@ -430,7 +428,7 @@ const doCurveParams = async function () {
           return Number(a) - Number(b);
         });
         const thresholdArr = [];
-        for (let t = 0; t < rows[i].thresholds.length; t++) {
+        for (let t = 0; t < rows[i].thresholds.length; t += 1) {
           thresholdArr.push(
             masterThresholdValuesMap[variable][
               rows[i].thresholds[t].replace(/\./g, "_")
@@ -440,19 +438,19 @@ const doCurveParams = async function () {
         thresholdsModelOptionsMap[variable][model] = thresholdArr;
 
         const regionsArr = [];
-        for (let ri = 0; ri < rows[i].regions.length; ri++) {
+        for (let ri = 0; ri < rows[i].regions.length; ri += 1) {
           regionsArr.push(masterRegionValuesMap[rows[i].regions[ri]]);
         }
         regionModelOptionsMap[variable][model] = regionsArr;
       }
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   try {
     matsCollections.SiteMap.remove({});
-    var rows = await cbPool.queryCB(
+    let rows = await cbPool.queryCB(
       cbPool.trfmSQLForDbTarget(
         'select meta().id, {{vxCOLLECTION}}.* from {{vxDBTARGET}} where type="MD" and docType="station" and version = "V01"  and subset="{{vxCOLLECTION}}";'
       )
@@ -462,39 +460,38 @@ const doCurveParams = async function () {
       throw new Error(rows);
     }
     rows = rows.sort((a, b) => (a.name > b.name ? 1 : -1));
-    for (var i = 0; i < rows.length; i++) {
-      const site_id = rows[i].id;
-      const site_name = rows[i].name === undefined ? "unknown" : rows[i].name;
-      const site_description =
+    for (let i = 0; i < rows.length; i += 1) {
+      const siteId = rows[i].id;
+      const siteName = rows[i].name === undefined ? "unknown" : rows[i].name;
+      const siteDescription =
         rows[i].description === undefined ? "unknown" : rows[i].description;
-      const site_lat = rows[i].geo === undefined ? undefined : rows[i].geo[0].lat;
-      const site_lon = rows[i].geo === undefined ? undefined : rows[i].geo[0].lon;
-      const site_elev = rows[i].geo === undefined ? "unknown" : rows[i].geo[0].elev;
-      if (site_lat >= 90 || site_lat <= -90) continue; // there's one station right at the south pole that the map doesn't know how to render at all
-      siteOptionsMap[site_name] = [site_id];
+      const siteLat = rows[i].geo === undefined ? undefined : rows[i].geo[0].lat;
+      const siteLon = rows[i].geo === undefined ? undefined : rows[i].geo[0].lon;
+      const siteElev = rows[i].geo === undefined ? "unknown" : rows[i].geo[0].elev;
+      if (siteLat >= 90 || siteLat <= -90) continue; // there's one station right at the south pole that the map doesn't know how to render at all
+      siteOptionsMap[siteName] = [siteId];
 
-      const point = [site_lat, site_lon];
+      const point = [siteLat, siteLon];
       const obj = {
-        name: site_name,
-        origName: site_name,
+        name: siteName,
+        origName: siteName,
         point,
-        elevation: site_elev,
+        elevation: siteElev,
         options: {
-          title: site_description,
+          title: siteDescription,
           color: "red",
           size: 5,
           network: "METAR",
-          peerOption: site_name,
-          id: site_id,
+          peerOption: siteName,
+          id: siteId,
           highLightColor: "blue",
         },
       };
       sitesLocationMap.push(obj);
-
-      matsCollections.SiteMap.insert({ siteName: site_name, siteId: site_id });
+      matsCollections.SiteMap.insert({ siteName, siteId });
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   matsCollections.StationMap.remove({});
@@ -537,7 +534,7 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.variable.findOne({ name: "variable" });
+    const currentParam = matsCollections.variable.findOne({ name: "variable" });
     if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
       // have to reload variable data
       matsCollections.variable.update(
@@ -594,7 +591,9 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["data-source"].findOne({ name: "data-source" });
+    const currentParam = matsCollections["data-source"].findOne({
+      name: "data-source",
+    });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
       matsCollections["data-source"].update(
@@ -634,7 +633,7 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.region.findOne({ name: "region" });
+    const currentParam = matsCollections.region.findOne({ name: "region" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)
@@ -737,7 +736,7 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.threshold.findOne({ name: "threshold" });
+    const currentParam = matsCollections.threshold.findOne({ name: "threshold" });
     if (
       !matsDataUtils.areObjectsEqual(
         currentParam.optionsMap,
@@ -791,7 +790,7 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["forecast-length"].findOne({
+    const currentParam = matsCollections["forecast-length"].findOne({
       name: "forecast-length",
     });
     if (
@@ -1072,10 +1071,6 @@ const doCurveParams = async function () {
   }
 
   // determine date defaults for dates and curveDates
-  const defaultDb = matsCollections.variable.findOne(
-    { name: "variable" },
-    { default: 1 }
-  ).default;
   modelDateRangeMap = matsCollections.variable.findOne(
     { name: "variable" },
     { dates: 1 }
@@ -1124,7 +1119,9 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["curve-dates"].findOne({ name: "curve-dates" });
+    const currentParam = matsCollections["curve-dates"].findOne({
+      name: "curve-dates",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
@@ -1517,7 +1514,7 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
-    console.log(
+    console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
     matsCollections.Databases.drop();
@@ -1534,7 +1531,7 @@ Meteor.startup(function () {
       databases = Meteor.settings.private.databases;
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
-      for (let di = 0; di < databases.length; di++) {
+      for (let di = 0; di < databases.length; di += 1) {
         matsCollections.Databases.insert(databases[di]);
       }
     }
