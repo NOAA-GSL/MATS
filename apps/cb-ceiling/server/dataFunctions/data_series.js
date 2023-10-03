@@ -14,6 +14,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// file reading is asynchonous
 const fs = require("fs");
 
 dataSeries = function (plotParams, plotFunction) {
@@ -26,38 +27,45 @@ dataSeries = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  const fromSecs = dateRange.fromSeconds;
-  const toSecs = dateRange.toSeconds;
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  const dataset = [];
-  let statType;
-  const utcCycleStarts = [];
+
   const axisMap = Object.create(null);
-  let sitesList;
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
+
+  let statType;
+  let sitesList;
+  const utcCycleStarts = [];
   const idealValues = [];
+
   let statement = "";
+  let rows = "";
+  let error = "";
+  const dataset = [];
+
+  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
+  const fromSecs = dateRange.fromSeconds;
+  const toSecs = dateRange.toSeconds;
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
-    let queryTemplate = null;
     const curve = curves[curveIndex];
-    const regionType = curve["region-type"];
-    const { diffFrom } = curve;
     const { label } = curve;
+    const { diffFrom } = curve;
+
     const { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
+
     const thresholdStr = curve.threshold;
     let threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
@@ -70,8 +78,8 @@ dataSeries = function (plotParams, plotFunction) {
     threshold = threshold.replace(/_/g, ".");
 
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
-
     let forecastLength = curve["forecast-length"];
+
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
@@ -85,6 +93,8 @@ dataSeries = function (plotParams, plotFunction) {
     ).optionsMap;
     const average = averageOptionsMap[averageStr][0];
 
+    let queryTemplate;
+    const regionType = curve["region-type"];
     if (regionType === "Predefined region") {
       const regionStr = curve.region;
       const region = Object.keys(
@@ -139,38 +149,21 @@ dataSeries = function (plotParams, plotFunction) {
 
     let d;
     if (!diffFrom) {
-      dataRequests[label] = statement;
-
-      // math is done on forecastLength later on  -= 1 set all analyses to 0
-      if (forecastLength === "-99") {
-        forecastLength = "0";
-      }
       let queryResult;
       const startMoment = moment();
       let finishMoment;
       try {
+        // math is done on forecastLength later on  -= 1 set all analyses to 0
+        if (forecastLength === "-99") {
+          forecastLength = "0";
+        }
+
         if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
-          // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBTimeSeries(
-            cbPool,
-            statement,
-            model,
-            forecastLength,
-            fromSecs,
-            toSecs,
-            averageStr,
-            statisticSelect,
-            validTimes,
-            appParams,
-            false
-          );
         } else {
           // send to matsMiddle
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
-
-          const rows = tss.processStationQuery(
+          rows = tss.processStationQuery(
             variable,
             sitesList,
             model,
@@ -181,24 +174,25 @@ dataSeries = function (plotParams, plotFunction) {
             toSecs,
             validTimes
           );
-
-          // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBTimeSeries(
-            cbPool,
-            rows,
-            model,
-            forecastLength,
-            fromSecs,
-            toSecs,
-            averageStr,
-            statisticSelect,
-            validTimes,
-            appParams,
-            false
-          );
         }
 
+        // send the query statement to the query function
+        queryResult = matsDataQueryUtils.queryDBTimeSeries(
+          cbPool,
+          regionType === "Predefined region" ? statement : rows,
+          model,
+          forecastLength,
+          fromSecs,
+          toSecs,
+          averageStr,
+          statisticSelect,
+          validTimes,
+          appParams,
+          false
+        );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -214,6 +208,7 @@ dataSeries = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
