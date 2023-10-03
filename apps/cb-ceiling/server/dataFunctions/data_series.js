@@ -14,6 +14,8 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+const fs = require("fs");
+
 dataSeries = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -24,7 +26,6 @@ dataSeries = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
-  const fs = require("fs");
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
@@ -36,8 +37,10 @@ dataSeries = function (plotParams, plotFunction) {
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
   const dataset = [];
+  let statType;
   const utcCycleStarts = [];
   const axisMap = Object.create(null);
+  let sitesList;
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
@@ -45,17 +48,17 @@ dataSeries = function (plotParams, plotFunction) {
   const idealValues = [];
   let statement = "";
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     let queryTemplate = null;
     const curve = curves[curveIndex];
     const regionType = curve["region-type"];
     const { diffFrom } = curve;
     const { label } = curve;
-    var { variable } = curve;
+    const { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    var thresholdStr = curve.threshold;
+    const thresholdStr = curve.threshold;
     let threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
@@ -83,7 +86,7 @@ dataSeries = function (plotParams, plotFunction) {
     const average = averageOptionsMap[averageStr][0];
 
     if (regionType === "Predefined region") {
-      var regionStr = curve.region;
+      const regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
@@ -114,7 +117,7 @@ dataSeries = function (plotParams, plotFunction) {
         queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
       }
     } else {
-      var sitesList = curve.sites === undefined ? [] : curve.sites;
+      sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
@@ -126,7 +129,7 @@ dataSeries = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = statisticOptionsMap[statisticSelect][0];
+    [statType] = statisticOptionsMap[statisticSelect];
     const axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][2];
@@ -134,18 +137,17 @@ dataSeries = function (plotParams, plotFunction) {
       idealValues.push(idealVal);
     }
 
-    var d;
+    let d;
     if (!diffFrom) {
       dataRequests[label] = statement;
 
-      // math is done on forecastLength later on -- set all analyses to 0
+      // math is done on forecastLength later on  -= 1 set all analyses to 0
       if (forecastLength === "-99") {
         forecastLength = "0";
       }
-
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
+      let finishMoment;
       try {
         if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
@@ -226,7 +228,6 @@ dataSeries = function (plotParams, plotFunction) {
       }
 
       // set axis limits based on returned data
-      var postQueryStartMoment = moment();
       if (dataFoundForCurve) {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -249,8 +250,9 @@ dataSeries = function (plotParams, plotFunction) {
       ymax = ymax > d.ymax ? ymax : d.ymax;
     }
 
-    // set curve annotation to be the curve mean -- may be recalculated later
+    // set curve annotation to be the curve mean  -= 1 may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
     const annotation =
       mean === undefined
@@ -300,7 +302,6 @@ dataSeries = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-
   const result = matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
