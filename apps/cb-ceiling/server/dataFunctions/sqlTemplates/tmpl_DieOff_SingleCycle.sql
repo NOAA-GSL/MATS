@@ -1,5 +1,4 @@
-SELECT {{vxXVAL_CLAUSE}} AS xVal,
-       {{vxYVAL_CLAUSE}} yVal,
+SELECT m0.fcstLen AS fcst_lead,
        COUNT(DISTINCT m0.fcstValidEpoch) N_times,
        MIN(m0.fcstValidEpoch) min_secs,
        MAX(m0.fcstValidEpoch) max_secs,
@@ -17,11 +16,7 @@ WHERE m0.type = 'DD'
     AND m0.version = 'V01'
     AND m0.model = '{{vxMODEL}}'
     AND m0.region = '{{vxREGION}}'
-    AND m0.fcstLen = {{vxFCST_LEN}}
-    AND m0.fcstValidEpoch %(24 * 3600) / 3600 IN [{{vxVALID_TIMES}}]
-    AND {{vxDATE_STRING}} >= {{vxFROM_SECS}}
-    AND {{vxDATE_STRING}} <= {{vxTO_SECS}}
-GROUP BY {{vxXVAL_CLAUSE}},
-         {{vxYVAL_CLAUSE}}
-ORDER BY xVal,
-         yVal;
+    AND m0.fcstLen IN [0,3,6,9,12,15,18,21,24,30,36,42,48]
+    AND m0.fcstValidEpoch - m0.fcstLen * 3600 = {{vxFROM_SECS}}
+GROUP BY m0.fcstLen
+ORDER BY fcst_lead;

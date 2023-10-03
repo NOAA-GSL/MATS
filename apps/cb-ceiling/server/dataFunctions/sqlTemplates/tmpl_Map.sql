@@ -41,21 +41,21 @@ FROM (
     UNNEST sd.modelData sdu
     GROUP BY sdu.name
     ORDER BY sdu.name) m
-LET stats = ARRAY( FIRST { 'hit' :CASE WHEN mv.Ceiling < {{vxTHRESHOLD}}
-        AND ov.Ceiling < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
-                                          'miss' :CASE WHEN NOT mv.Ceiling < {{vxTHRESHOLD}}
-        AND ov.Ceiling < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
-                                          'false_alarm' :CASE WHEN mv.Ceiling < {{vxTHRESHOLD}}
-        AND NOT ov.Ceiling < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
-                                              'correct_negative' :CASE WHEN NOT mv.Ceiling < {{vxTHRESHOLD}}
-        AND NOT ov.Ceiling < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
-                                              'total' :CASE WHEN mv.Ceiling IS NOT MISSING
-        AND ov.Ceiling IS NOT MISSING THEN 1 ELSE 0 END,
+LET stats = ARRAY( FIRST { 'hit' :CASE WHEN mv.{{vxVARIABLE}} < {{vxTHRESHOLD}}
+        AND ov.{{vxVARIABLE}} < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
+                                          'miss' :CASE WHEN NOT mv.{{vxVARIABLE}} < {{vxTHRESHOLD}}
+        AND ov.{{vxVARIABLE}} < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
+                                          'false_alarm' :CASE WHEN mv.{{vxVARIABLE}} < {{vxTHRESHOLD}}
+        AND NOT ov.{{vxVARIABLE}} < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
+                                              'correct_negative' :CASE WHEN NOT mv.{{vxVARIABLE}} < {{vxTHRESHOLD}}
+        AND NOT ov.{{vxVARIABLE}} < {{vxTHRESHOLD}} THEN 1 ELSE 0 END,
+                                              'total' :CASE WHEN mv.{{vxVARIABLE}} IS NOT MISSING
+        AND ov.{{vxVARIABLE}} IS NOT MISSING THEN 1 ELSE 0 END,
                                                 'fve': mv.mfve,
-                                                'sub': TO_STRING(mv.mfve) || ';' || CASE WHEN mv.Ceiling < {{vxTHRESHOLD}}
-        AND ov.Ceiling < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN mv.Ceiling < {{vxTHRESHOLD}}
-        AND NOT ov.Ceiling < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.Ceiling < {{vxTHRESHOLD}}
-        AND ov.Ceiling < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.Ceiling < {{vxTHRESHOLD}}
-        AND NOT ov.Ceiling < {{vxTHRESHOLD}} THEN '1' ELSE '0' END } FOR ov IN o.data WHEN ov.ofve = mv.mfve
+                                                'sub': TO_STRING(mv.mfve) || ';' || CASE WHEN mv.{{vxVARIABLE}} < {{vxTHRESHOLD}}
+        AND ov.{{vxVARIABLE}} < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN mv.{{vxVARIABLE}} < {{vxTHRESHOLD}}
+        AND NOT ov.{{vxVARIABLE}} < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.{{vxVARIABLE}} < {{vxTHRESHOLD}}
+        AND ov.{{vxVARIABLE}} < {{vxTHRESHOLD}} THEN '1' ELSE '0' END || ';' || CASE WHEN NOT mv.{{vxVARIABLE}} < {{vxTHRESHOLD}}
+        AND NOT ov.{{vxVARIABLE}} < {{vxTHRESHOLD}} THEN '1' ELSE '0' END } FOR ov IN o.data WHEN ov.ofve = mv.mfve
         AND ov.name = mv.name END ) FOR mv IN m.data END
 WHERE m.name = o.name
