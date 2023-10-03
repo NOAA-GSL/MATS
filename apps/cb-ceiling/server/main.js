@@ -11,7 +11,11 @@ import {
   matsParamUtils,
 } from "meteor/randyp:mats-common";
 
-const variables = ["Ceiling"];
+const variableMetadataDocs = {
+  Ceiling: "cb-ceiling",
+  Visibility: "cb-visibility",
+};
+const variables = Object.keys(variableMetadataDocs);
 
 // determined in doCurveParanms
 let minDate;
@@ -357,9 +361,11 @@ const doCurveParams = async function () {
 
   try {
     for (didx = 0; didx < variables.length; didx++) {
-      masterThresholdValuesMap[variables[didx]] = {};
+      const variable = variables[didx];
+      masterThresholdValuesMap[variable] = {};
       const queryStr = cbPool.trfmSQLForDbTarget(
-        'select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"'
+        // `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
+        `select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
       );
       const rows = await cbPool.queryCB(queryStr);
       if (rows.includes("queryCB ERROR: ")) {
@@ -373,7 +379,7 @@ const doCurveParams = async function () {
         masterDescription = rows[0][Object.keys(rows[0])[j]].trim();
         masterTrsh = Object.keys(rows[0])[j].trim();
         jsonFriendlyTrsh = masterTrsh.replace(/\./g, "_");
-        masterThresholdValuesMap[variables[didx]][jsonFriendlyTrsh] = masterDescription;
+        masterThresholdValuesMap[variable][jsonFriendlyTrsh] = masterDescription;
       }
     }
   } catch (err) {
@@ -382,16 +388,17 @@ const doCurveParams = async function () {
 
   try {
     for (didx = 0; didx < variables.length; didx++) {
-      modelOptionsMap[variables[didx]] = {};
-      modelDateRangeMap[variables[didx]] = {};
-      forecastLengthOptionsMap[variables[didx]] = {};
-      thresholdsModelOptionsMap[variables[didx]] = {};
-      regionModelOptionsMap[variables[didx]] = {};
+      const variable = variables[didx];
+      modelOptionsMap[variable] = {};
+      modelDateRangeMap[variable] = {};
+      forecastLengthOptionsMap[variable] = {};
+      thresholdsModelOptionsMap[variable] = {};
+      regionModelOptionsMap[variable] = {};
 
       const queryStr = cbPool.trfmSQLForDbTarget(
         "select model, displayText, mindate, maxdate, fcstLens, " +
           "regions, thresholds " +
-          'from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="cb-ceiling" and numrecs>0 ' +
+          `from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="${variableMetadataDocs[variable]}" and numrecs>0 ` +
           "order by displayCategory, displayOrder"
       );
       const rows = await cbPool.queryCB(queryStr);
@@ -403,7 +410,7 @@ const doCurveParams = async function () {
       for (var i = 0; i < rows.length; i++) {
         const model_value = rows[i].model.trim();
         const model = rows[i].displayText.trim();
-        modelOptionsMap[variables[didx]][model] = [model_value];
+        modelOptionsMap[variable][model] = [model_value];
 
         const rowMinDate = moment
           .utc(rows[i].mindate * 1000)
@@ -411,12 +418,12 @@ const doCurveParams = async function () {
         const rowMaxDate = moment
           .utc(rows[i].maxdate * 1000)
           .format("MM/DD/YYYY HH:mm");
-        modelDateRangeMap[variables[didx]][model] = {
+        modelDateRangeMap[variable][model] = {
           minDate: rowMinDate,
           maxDate: rowMaxDate,
         };
 
-        forecastLengthOptionsMap[variables[didx]][model] = rows[i].fcstLens.map(String);
+        forecastLengthOptionsMap[variable][model] = rows[i].fcstLens.map(String);
 
         // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
         rows[i].thresholds.sort(function (a, b) {
@@ -425,18 +432,18 @@ const doCurveParams = async function () {
         const thresholdArr = [];
         for (let t = 0; t < rows[i].thresholds.length; t++) {
           thresholdArr.push(
-            masterThresholdValuesMap[variables[didx]][
+            masterThresholdValuesMap[variable][
               rows[i].thresholds[t].replace(/\./g, "_")
             ]
           );
         }
-        thresholdsModelOptionsMap[variables[didx]][model] = thresholdArr;
+        thresholdsModelOptionsMap[variable][model] = thresholdArr;
 
         const regionsArr = [];
         for (let ri = 0; ri < rows[i].regions.length; ri++) {
           regionsArr.push(masterRegionValuesMap[rows[i].regions[ri]]);
         }
-        regionModelOptionsMap[variables[didx]][model] = regionsArr;
+        regionModelOptionsMap[variable][model] = regionsArr;
       }
     }
   } catch (err) {
@@ -463,7 +470,7 @@ const doCurveParams = async function () {
       const site_lat = rows[i].geo === undefined ? undefined : rows[i].geo[0].lat;
       const site_lon = rows[i].geo === undefined ? undefined : rows[i].geo[0].lon;
       const site_elev = rows[i].geo === undefined ? "unknown" : rows[i].geo[0].elev;
-      if (site_lat >= 90 || site_lat <= -90) continue; // there's one station right at the south pole the the map doesn't know how to render at all
+      if (site_lat >= 90 || site_lat <= -90) continue; // there's one station right at the south pole that the map doesn't know how to render at all
       siteOptionsMap[site_name] = [site_id];
 
       const point = [site_lat, site_lon];
