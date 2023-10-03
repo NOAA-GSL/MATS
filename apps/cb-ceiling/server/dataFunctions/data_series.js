@@ -15,8 +15,6 @@ import {
 import { moment } from "meteor/momentjs:moment";
 
 dataSeries = function (plotParams, plotFunction) {
-  const fs = require("fs");
-
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.timeSeries,
@@ -26,6 +24,7 @@ dataSeries = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+  const fs = require("fs");
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
@@ -94,13 +93,14 @@ dataSeries = function (plotParams, plotFunction) {
       );
       // SQL template replacements
       queryTemplate = fs.readFileSync(
-        "assets/app/sqlTemplates/tmpl_TimeSeries_region.sql",
+        "assets/app/sqlTemplates/tmpl_TimeSeries.sql",
         "utf8"
       );
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
       queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
       queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+      queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
       queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
       queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
       queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
@@ -169,7 +169,7 @@ dataSeries = function (plotParams, plotFunction) {
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
 
           const rows = tss.processStationQuery(
-            "Ceiling",
+            variable,
             sitesList,
             model,
             forecastLength,
