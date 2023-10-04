@@ -43,7 +43,6 @@ dataSeries = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
-  let sitesList;
   const utcCycleStarts = [];
   const idealValues = [];
 
@@ -94,6 +93,7 @@ dataSeries = function (plotParams, plotFunction) {
     const average = averageOptionsMap[averageStr][0];
 
     let queryTemplate;
+    let sitesList;
     const regionType = curve["region-type"];
     if (regionType === "Predefined region") {
       const regionStr = curve.region;

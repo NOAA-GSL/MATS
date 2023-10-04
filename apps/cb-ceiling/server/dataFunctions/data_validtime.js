@@ -14,8 +14,10 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// file reading is asynchonous
+const fs = require("fs");
+
 dataValidTime = function (plotParams, plotFunction) {
-  const fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.validtime,
@@ -25,42 +27,41 @@ dataValidTime = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  const dataset = [];
-  const utcCycleStarts = [];
+
   const axisMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
-  const idealValues = [];
-  let statement = "";
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  let statType;
+  const utcCycleStarts = [];
+  const idealValues = [];
+
+  let statement = "";
+  let rows = "";
+  let error = "";
+  const dataset = [];
+
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-    const regionType = curve["region-type"];
-
-    let queryTemplate = null;
-    if (regionType === "Predefined region") {
-      queryTemplate = fs.readFileSync(
-        "assets/app/sqlTemplates/tmpl_ValidTime_region.sql",
-        "utf8"
-      );
-    }
-
-    const { diffFrom } = curve;
     const { label } = curve;
-    var { variable } = curve;
+    const { diffFrom } = curve;
+
+    const { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    var thresholdStr = curve.threshold;
+
+    const thresholdStr = curve.threshold;
     let threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
@@ -70,19 +71,23 @@ dataValidTime = function (plotParams, plotFunction) {
         ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
+
     const forecastLength = curve["forecast-length"];
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
+
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
 
+    let queryTemplate;
     let sitesList;
+    const regionType = curve["region-type"];
     if (regionType === "Predefined region") {
-      var regionStr = curve.region;
+      const regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
@@ -90,10 +95,16 @@ dataValidTime = function (plotParams, plotFunction) {
           matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
+      // SQL template replacements
+      queryTemplate = fs.readFileSync(
+        "assets/app/sqlTemplates/tmpl_ValidTime.sql",
+        "utf8"
+      );
+      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
       queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
       queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+      queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
       queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
       queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     } else {
@@ -104,11 +115,12 @@ dataValidTime = function (plotParams, plotFunction) {
         );
       }
     }
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = statisticOptionsMap[statisticSelect][0];
+    [statType] = statisticOptionsMap[statisticSelect];
     const axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][2];
@@ -116,29 +128,19 @@ dataValidTime = function (plotParams, plotFunction) {
       idealValues.push(idealVal);
     }
 
-    var d;
+    let d;
     if (!diffFrom) {
-      dataRequests[label] = statement;
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
-
+      let finishMoment;
       try {
         if (regionType === "Predefined region") {
-          // send the query statement to the query function
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-            cbPool,
-            statement,
-            appParams,
-            statisticSelect
-          );
         } else {
           // send to matsMiddle
           const tss = new matsMiddleValidTime.MatsMiddleValidTime(cbPool);
-
-          const rows = tss.processStationQuery(
-            "Ceiling",
+          rows = tss.processStationQuery(
+            variable,
             sitesList,
             model,
             forecastLength,
@@ -146,17 +148,18 @@ dataValidTime = function (plotParams, plotFunction) {
             fromSecs,
             toSecs
           );
-
-          // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-            cbPool,
-            rows,
-            appParams,
-            statisticSelect
-          );
         }
 
+        // send the query statement to the query function
+        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+          cbPool,
+          regionType === "Predefined region" ? statement : rows,
+          appParams,
+          statisticSelect
+        );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -172,6 +175,7 @@ dataValidTime = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
@@ -186,7 +190,6 @@ dataValidTime = function (plotParams, plotFunction) {
       }
 
       // set axis limits based on returned data
-      var postQueryStartMoment = moment();
       if (dataFoundForCurve) {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -209,8 +212,9 @@ dataValidTime = function (plotParams, plotFunction) {
       ymax = ymax > d.ymax ? ymax : d.ymax;
     }
 
-    // set curve annotation to be the curve mean -- may be recalculated later
+    // set curve annotation to be the curve mean  -= 1 may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
     const annotation =
       mean === undefined
