@@ -14,8 +14,10 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// file reading is asynchonous
+const fs = require("fs");
+
 dataDieoff = function (plotParams, plotFunction) {
-  const fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.dieoff,
@@ -25,39 +27,41 @@ dataDieoff = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  const dataset = [];
-  const utcCycleStarts = [];
+
   const axisMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
-  const idealValues = [];
-  let statement = "";
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  let statType;
+  const utcCycleStarts = [];
+  const idealValues = [];
+
+  let statement = "";
+  let rows = "";
+  let error = "";
+  const dataset = [];
+
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
-    let queryTemplate = null;
     const curve = curves[curveIndex];
-    const regionType = curve["region-type"];
-    const forecastLengthStr = curve["dieoff-type"];
-    const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne({
-      name: "dieoff-type",
-    }).optionsMap;
-    const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
-    const { diffFrom } = curve;
     const { label } = curve;
-    var { variable } = curve;
+    const { diffFrom } = curve;
+
+    const { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    var thresholdStr = curve.threshold;
+
+    const thresholdStr = curve.threshold;
     let threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
@@ -68,22 +72,29 @@ dataDieoff = function (plotParams, plotFunction) {
     );
     threshold = threshold.replace(/_/g, ".");
 
-    var validTimes;
-    var utcCycleStart;
-
+    let validTimes;
+    let utcCycleStart;
+    const forecastLengthStr = curve["dieoff-type"];
+    const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne({
+      name: "dieoff-type",
+    }).optionsMap;
+    const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
+
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
 
-    let sitesList = [];
-    let singleCycle = null;
+    let queryTemplate;
+    let sitesList;
+    let singleCycle;
+    const regionType = curve["region-type"];
     if (regionType === "Predefined region") {
-      var regionStr = curve.region;
+      const regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
@@ -91,29 +102,30 @@ dataDieoff = function (plotParams, plotFunction) {
           matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
-
+      // SQL template replacements
       if (forecastLength === matsTypes.ForecastTypes.dieoff) {
         queryTemplate = fs.readFileSync(
-          "assets/app/sqlTemplates/tmpl_DieOff_region_DieOff.sql",
+          "assets/app/sqlTemplates/tmpl_DieOff.sql",
           "utf8"
         );
       } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
         queryTemplate = fs.readFileSync(
-          "assets/app/sqlTemplates/tmpl_DieOff_region_UTC.sql",
+          "assets/app/sqlTemplates/tmpl_DieOff_UTC.sql",
           "utf8"
         );
       } else {
         queryTemplate = fs.readFileSync(
-          "assets/app/sqlTemplates/tmpl_DieOff_region_SingleCycle.sql",
+          "assets/app/sqlTemplates/tmpl_DieOff_SingleCycle.sql",
           "utf8"
         );
         singleCycle = fromSecs;
       }
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
-      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
       queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
       queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+      queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
+      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
 
       if (forecastLength === matsTypes.ForecastTypes.dieoff) {
         validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
@@ -160,7 +172,7 @@ dataDieoff = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = statisticOptionsMap[statisticSelect][0];
+    [statType] = statisticOptionsMap[statisticSelect];
     const axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][2];
@@ -168,42 +180,19 @@ dataDieoff = function (plotParams, plotFunction) {
       idealValues.push(idealVal);
     }
 
-    var d;
+    let d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
+      let finishMoment;
       try {
         if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-          dataRequests[label] = statement;
-
-          // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-            cbPool,
-            statement,
-            appParams,
-            statisticSelect
-          );
-          finishMoment = moment();
-          dataRequests[`data retrieval (query) time - ${label}`] = {
-            begin: startMoment.format(),
-            finish: finishMoment.format(),
-            duration: `${moment
-              .duration(finishMoment.diff(startMoment))
-              .asSeconds()} seconds`,
-            recordCount: queryResult.data.x.length,
-          };
-          // get the data back from the query
-          d = queryResult.data;
         } else {
           // send to matsMiddle
           const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
-
-          const rows = tss.processStationQuery(
-            "Ceiling",
+          rows = tss.processStationQuery(
+            variable,
             sitesList,
             model,
             null,
@@ -214,23 +203,34 @@ dataDieoff = function (plotParams, plotFunction) {
             utcCycleStart,
             singleCycle
           );
-          // console.log(`rows:${rows.length}`);
-
-          // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-            cbPool,
-            rows,
-            appParams,
-            statisticSelect
-          );
-
-          d = queryResult.data;
         }
+
+        // send the query statement to the query function
+        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+          cbPool,
+          regionType === "Predefined region" ? statement : rows,
+          appParams,
+          statisticSelect
+        );
+
+        finishMoment = moment();
+        dataRequests[label] = statement;
+        dataRequests[`data retrieval (query) time - ${label}`] = {
+          begin: startMoment.format(),
+          finish: finishMoment.format(),
+          duration: `${moment
+            .duration(finishMoment.diff(startMoment))
+            .asSeconds()} seconds`,
+          recordCount: queryResult.data.x.length,
+        };
+        // get the data back from the query
+        d = queryResult.data;
       } catch (e) {
         // this is an error produced by a bug in the query function, not an error returned by the mysql database
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
@@ -245,7 +245,6 @@ dataDieoff = function (plotParams, plotFunction) {
       }
 
       // set axis limits based on returned data
-      var postQueryStartMoment = moment();
       if (dataFoundForCurve) {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -270,6 +269,7 @@ dataDieoff = function (plotParams, plotFunction) {
 
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
     const annotation =
       mean === undefined
