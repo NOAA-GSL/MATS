@@ -245,7 +245,7 @@ dataSeries = function (plotParams, plotFunction) {
       ymax = ymax > d.ymax ? ymax : d.ymax;
     }
 
-    // set curve annotation to be the curve mean  -= 1 may be recalculated later
+    // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
     const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
