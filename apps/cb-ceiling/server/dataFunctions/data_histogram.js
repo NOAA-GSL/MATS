@@ -11,8 +11,10 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// file reading is asynchonous
+const fs = require("fs");
+
 dataHistogram = function (plotParams, plotFunction) {
-  const fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.histogram,
@@ -22,40 +24,43 @@ dataHistogram = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
-  const alreadyMatched = false;
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   const dataFoundForCurve = [];
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  let error = "";
+  const alreadyMatched = false;
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
+
+  const axisMap = Object.create(null);
+  let statType;
+  let varUnits;
+
+  let statement = "";
+  let error = "";
   const dataset = [];
   const allReturnedSubStats = [];
   const allReturnedSubSecs = [];
-  const axisMap = Object.create(null);
 
   // process user bin customizations
   const binParams = matsDataUtils.setHistogramParameters(plotParams);
   const { yAxisFormat } = binParams;
   const { binNum } = binParams;
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-
-    queryTemplate = fs.readFileSync(
-      "assets/app/sqlTemplates/tmpl_Histogram.sql",
-      "utf8"
-    );
-
-    const { diffFrom } = curve;
     dataFoundForCurve[curveIndex] = true;
     const { label } = curve;
-    var { variable } = curve;
+    const { diffFrom } = curve;
+
+    const { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    var thresholdStr = curve.threshold;
+
+    const thresholdStr = curve.threshold;
     let threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
@@ -65,7 +70,46 @@ dataHistogram = function (plotParams, plotFunction) {
         ] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
+
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    const forecastLength = curve["forecast-length"];
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+
+    const statisticSelect = curve.statistic;
+    const statisticOptionsMap = matsCollections.statistic.findOne(
+      { name: "statistic" },
+      { optionsMap: 1 }
+    ).optionsMap;
+
+    let queryTemplate;
+    const regionType = curve["region-type"];
+    if (regionType === "Select stations") {
+      throw new Error(
+        "INFO:  Single/multi station plotting is not available for histograms."
+      );
+    }
+    const regionStr = curve.region;
+    const region = Object.keys(
+      matsCollections.region.findOne({ name: "region" }).valuesMap
+    ).find(
+      (key) =>
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    );
+    // SQL template replacements
+    queryTemplate = fs.readFileSync(
+      "assets/app/sqlTemplates/tmpl_Histogram.sql",
+      "utf8"
+    );
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
+    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
         /{{vxVALID_TIMES}}/g,
@@ -75,43 +119,12 @@ dataHistogram = function (plotParams, plotFunction) {
       queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
     }
 
-    const forecastLength = curve["forecast-length"];
-    const forecastLengthClause = `and m0.fcstLen = ${forecastLength}`;
-    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
-    const fromSecs = dateRange.fromSeconds;
-    const toSecs = dateRange.toSeconds;
-    const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
-    ).optionsMap;
-    const regionType = curve["region-type"];
-    if (regionType === "Select stations") {
-      throw new Error(
-        "INFO:  Single/multi station plotting is not available for histograms."
-      );
-    }
-    var regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
-    );
-
-    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-    queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
-    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
-
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = statisticOptionsMap[statisticSelect][0];
-    var varUnits = statisticOptionsMap[statisticSelect][1];
+    [statType] = statisticOptionsMap[statisticSelect];
+    [, varUnits] = statisticOptionsMap[statisticSelect];
     let axisKey = yAxisFormat;
     if (yAxisFormat === "Relative frequency") {
       axisKey += " (x100)";
@@ -119,18 +132,14 @@ dataHistogram = function (plotParams, plotFunction) {
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
 
-    var d;
+    let d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      statement = cbPool.trfmSQLForDbTarget(queryTemplate);
-
-      dataRequests[label] = statement;
-
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
+      let finishMoment;
       try {
+        statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
           cbPool,
@@ -138,7 +147,9 @@ dataHistogram = function (plotParams, plotFunction) {
           appParams,
           statisticSelect
         );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -156,6 +167,7 @@ dataHistogram = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
