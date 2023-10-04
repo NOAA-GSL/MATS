@@ -13,8 +13,10 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// file reading is asynchonous
+const fs = require("fs");
+
 dataThreshold = function (plotParams, plotFunction) {
-  const fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.threshold,
@@ -25,36 +27,38 @@ dataThreshold = function (plotParams, plotFunction) {
     hasLevels: false,
   };
 
-  let queryTemplate = fs.readFileSync(
-    "assets/app/sqlTemplates/tmpl_Threshold.sql",
-    "utf8"
-  );
-
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  const dataset = [];
-  const utcCycleStarts = [];
+
   const axisMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
+
+  let statType;
+  const utcCycleStarts = [];
   const idealValues = [];
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  let statement = "";
+  let error = "";
+  const dataset = [];
+
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-    const { diffFrom } = curve;
     const { label } = curve;
+    const { diffFrom } = curve;
+
     const { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+
     // catalogue the thresholds now, we'll need to do a separate query for each
     const allThresholdsStr = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
@@ -67,6 +71,43 @@ dataThreshold = function (plotParams, plotFunction) {
     });
 
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    const forecastLength = curve["forecast-length"];
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+
+    const statisticSelect = curve.statistic;
+    const statisticOptionsMap = matsCollections.statistic.findOne(
+      { name: "statistic" },
+      { optionsMap: 1 }
+    ).optionsMap;
+
+    let queryTemplate;
+    const regionType = curve["region-type"];
+    if (regionType === "Select stations") {
+      throw new Error(
+        "INFO:  Single/multi station plotting is not available for thresholds."
+      );
+    }
+    const regionStr = curve.region;
+    const region = Object.keys(
+      matsCollections.region.findOne({ name: "region" }).valuesMap
+    ).find(
+      (key) =>
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    );
+    // SQL template replacements
+    queryTemplate = fs.readFileSync(
+      "assets/app/sqlTemplates/tmpl_Threshold.sql",
+      "utf8"
+    );
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
+    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
         /{{vxVALID_TIMES}}/g,
@@ -75,37 +116,12 @@ dataThreshold = function (plotParams, plotFunction) {
     } else {
       queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
     }
-    const forecastLength = curve["forecast-length"];
-    queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
-    const fromSecs = dateRange.fromSeconds;
-    const toSecs = dateRange.toSeconds;
-    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-    const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
-    ).optionsMap;
-    const regionType = curve["region-type"];
-    if (regionType === "Select stations") {
-      throw new Error(
-        "INFO:  Single/multi station plotting is not available for thresholds."
-      );
-    }
-    var regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
-    );
-    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = statisticOptionsMap[statisticSelect][0];
+    [statType] = statisticOptionsMap[statisticSelect];
     const axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][2];
@@ -114,26 +130,25 @@ dataThreshold = function (plotParams, plotFunction) {
     }
 
     let d = {};
+    let dTemp;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
       for (
         let thresholdIndex = 0;
         thresholdIndex < allThresholds.length;
-        thresholdIndex++
+        thresholdIndex += 1
       ) {
         const threshold = allThresholds[thresholdIndex];
-        const queryTemplate_threshold = queryTemplate.replace(
+        const queryTemplateThreshold = queryTemplate.replace(
           /{{vxTHRESHOLD}}/g,
           threshold
         );
-        statement = cbPool.trfmSQLForDbTarget(queryTemplate_threshold);
 
-        dataRequests[label] = statement;
-
-        var queryResult;
+        let queryResult;
         const startMoment = moment();
-        var finishMoment;
+        let finishMoment;
         try {
+          statement = cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
+
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
             cbPool,
@@ -141,7 +156,9 @@ dataThreshold = function (plotParams, plotFunction) {
             appParams,
             statisticSelect
           );
+
           finishMoment = moment();
+          dataRequests[label] = statement;
           dataRequests[`data retrieval (query) time - ${label}`] = {
             begin: startMoment.format(),
             finish: finishMoment.format(),
@@ -151,12 +168,13 @@ dataThreshold = function (plotParams, plotFunction) {
             recordCount: queryResult.data.x.length,
           };
           // get the data back from the query
-          var dTemp = queryResult.data;
+          dTemp = queryResult.data;
         } catch (e) {
           // this is an error produced by a bug in the query function, not an error returned by the mysql database
           e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
           throw new Error(e.message);
         }
+
         if (queryResult.error !== undefined && queryResult.error !== "") {
           if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
             // this is NOT an error just a no data condition
@@ -169,8 +187,8 @@ dataThreshold = function (plotParams, plotFunction) {
         } else {
           dataFoundForAnyCurve = true;
         }
+
         // set axis limits based on returned data
-        var postQueryStartMoment = moment();
         if (dataFoundForCurve) {
           xmin = xmin < dTemp.xmin ? xmin : dTemp.xmin;
           xmax = xmax > dTemp.xmax ? xmax : dTemp.xmax;
@@ -215,6 +233,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
     const annotation =
       mean === undefined
