@@ -1042,7 +1042,7 @@ const doCurveParams = async function () {
   ) {
     const optionsMap = {
       "Fcst lead time": "m0.fcstLen",
-      Threshold: "'{{threshold}}'",
+      Threshold: "'{{vxTHRESHOLD}}'",
       "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
       "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
       "Valid Date": "m0.fcstValidEpoch",

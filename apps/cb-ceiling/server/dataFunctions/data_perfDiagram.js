@@ -12,8 +12,10 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// file reading is asynchonous
+const fs = require("fs");
+
 dataPerformanceDiagram = function (plotParams, plotFunction) {
-  const fs = require("fs");
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.performanceDiagram,
@@ -23,51 +25,50 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  const dataset = [];
+
   const axisMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
 
+  let statType;
+
+  let statement = "";
+  let error = "";
+  const dataset = [];
   let allThresholds;
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-
-    let queryTemplate = fs.readFileSync(
-      "assets/app/sqlTemplates/tmpl_PerformanceDiagram.sql",
-      "utf8"
-    );
-
-    const { diffFrom } = curve;
     const { label } = curve;
+    const { diffFrom } = curve;
+
     const binParam = curve["bin-parameter"];
     const binClause = matsCollections["bin-parameter"].findOne({
       name: "bin-parameter",
     }).optionsMap[binParam];
-    var { variable } = curve;
+
+    const { variable } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
-    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
-    const fromSecs = dateRange.fromSeconds;
-    const toSecs = dateRange.toSeconds;
-    let dateString = "";
+
     if (binParam !== "Threshold") {
-      var thresholdStr = curve.threshold;
+      const thresholdStr = curve.threshold;
       if (thresholdStr === undefined) {
         throw new Error(
           `INFO:  ${label}'s threshold is undefined. Please assign it a value.`
         );
       }
-      var threshold = Object.keys(
+      const threshold = Object.keys(
         matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
       ).find(
         (key) =>
@@ -76,7 +77,6 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
           ] === thresholdStr
       );
       allThresholds = [threshold.replace(/_/g, ".")];
-      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, allThresholds);
     } else {
       // catalogue the thresholds now, we'll need to do a separate query for each
       allThresholds = Object.keys(
@@ -89,13 +89,41 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       }
     }
 
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    const forecastLength = curve["forecast-length"];
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+
+    const statisticSelect = "PerformanceDiagram";
+
+    let queryTemplate;
+    const regionType = curve["region-type"];
+    if (regionType === "Select stations") {
+      throw new Error(
+        "INFO:  Single/multi station plotting is not available for performance diagrams."
+      );
+    }
+    const regionStr = curve.region;
+    const region = Object.keys(
+      matsCollections.region.findOne({ name: "region" }).valuesMap
+    ).find(
+      (key) =>
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    );
+    // SQL template replacements
+    queryTemplate = fs.readFileSync(
+      "assets/app/sqlTemplates/tmpl_PerformanceDiagram.sql",
+      "utf8"
+    );
+    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
     queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+    queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
     queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
 
     if (binParam !== "Valid UTC hour") {
-      const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /{{vxVALID_TIMES}}/g,
@@ -109,7 +137,6 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     }
 
     if (binParam !== "Fcst lead time") {
-      const forecastLength = curve["forecast-length"];
       if (forecastLength === undefined) {
         throw new Error(
           `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
@@ -120,6 +147,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}");
     }
 
+    let dateString = "";
     if (binParam === "Init Date") {
       dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
     } else {
@@ -127,55 +155,42 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     }
     queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
 
-    const regionType = curve["region-type"];
-    if (regionType === "Select stations") {
-      throw new Error(
-        "INFO:  Single/multi station plotting is not available for performance diagrams."
-      );
-    }
-    var regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
-    );
-    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
-    const statisticSelect = "PerformanceDiagram";
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // variable + statistic (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = "ctc";
+    statType = "ctc";
     curves[curveIndex].axisKey = statisticSelect; // stash the axisKey to use it later for axis options
 
     let d = {};
+    let dTemp;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
       for (
         let thresholdIndex = 0;
         thresholdIndex < allThresholds.length;
-        thresholdIndex++
+        thresholdIndex += 1
       ) {
-        threshold = allThresholds[thresholdIndex];
-        queryTemplate = queryTemplate.replace(/{{threshold}}/g, threshold);
-        queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-        // prepare the query from the above parameters
-        statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+        const threshold = allThresholds[thresholdIndex];
+        const queryTemplateThreshold = queryTemplate.replace(
+          /{{vxTHRESHOLD}}/g,
+          threshold
+        );
 
-        dataRequests[label] = statement;
-
-        var queryResult;
+        let queryResult;
         const startMoment = moment();
-        var finishMoment;
+        let finishMoment;
         try {
+          statement = cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
+
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(
             cbPool,
             statement,
             appParams
           );
+
           finishMoment = moment();
+          dataRequests[label] = statement;
           dataRequests[`data retrieval (query) time - ${label}`] = {
             begin: startMoment.format(),
             finish: finishMoment.format(),
@@ -185,12 +200,13 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
             recordCount: queryResult.data.x.length,
           };
           // get the data back from the query
-          var dTemp = queryResult.data;
+          dTemp = queryResult.data;
         } catch (e) {
           // this is an error produced by a bug in the query function, not an error returned by the mysql database
           e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
           throw new Error(e.message);
         }
+
         if (queryResult.error !== undefined && queryResult.error !== "") {
           if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
             // this is NOT an error just a no data condition
@@ -203,8 +219,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         } else {
           dataFoundForAnyCurve = true;
         }
+
         // set axis limits based on returned data
-        var postQueryStartMoment = moment();
         if (dataFoundForCurve) {
           xmin = xmin < dTemp.xmin ? xmin : dTemp.xmin;
           xmax = xmax > dTemp.xmax ? xmax : dTemp.xmax;
@@ -234,7 +250,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         }
       }
     } else {
-      // this is a difference curve -- not supported for ROC plots
+      // this is a difference curve -- not supported for performance diagrams
       throw new Error(
         "INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves."
       );
@@ -242,6 +258,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
 
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
     const annotation =
       mean === undefined
