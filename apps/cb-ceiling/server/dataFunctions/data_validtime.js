@@ -95,6 +95,7 @@ dataValidTime = function (plotParams, plotFunction) {
           matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
+
       // SQL template replacements
       queryTemplate = fs.readFileSync(
         "assets/app/sqlTemplates/tmpl_ValidTime.sql",

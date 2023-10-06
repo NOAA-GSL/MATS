@@ -116,6 +116,7 @@ dataContour = function (plotParams, plotFunction) {
     (key) =>
       matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
   );
+
   // SQL template replacements
   queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_Contour.sql", "utf8");
   queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);

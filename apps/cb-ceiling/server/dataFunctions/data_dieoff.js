@@ -102,6 +102,7 @@ dataDieoff = function (plotParams, plotFunction) {
           matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
           regionStr
       );
+
       // SQL template replacements
       if (forecastLength === matsTypes.ForecastTypes.dieoff) {
         queryTemplate = fs.readFileSync(
