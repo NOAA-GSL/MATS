@@ -45,7 +45,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
   let statement = "";
   let error = "";
   const dataset = [];
+
   let allThresholds;
+
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
@@ -81,12 +83,13 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       // catalogue the thresholds now, we'll need to do a separate query for each
       allThresholds = Object.keys(
         matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-      ).sort(function (a, b) {
-        return Number(a) - Number(b);
-      });
-      for (let tidx = 0; tidx < allThresholds.length; tidx++) {
-        allThresholds[tidx] = allThresholds[tidx].replace(/_/g, ".");
-      }
+      )
+        .map(function (x) {
+          return x.replace(/_/g, ".");
+        })
+        .sort(function (a, b) {
+          return Number(a) - Number(b);
+        });
     }
 
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];

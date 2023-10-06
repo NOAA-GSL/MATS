@@ -232,6 +232,7 @@ const doPlotParams = function () {
 
     const xOptionsMap = {
       "Fcst lead time": "m0.fcstLen",
+      Threshold: "'{{vxTHRESHOLD}}'",
       "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
       "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
       "Valid Date": "m0.fcstValidEpoch",
@@ -246,7 +247,7 @@ const doPlotParams = function () {
       selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(xOptionsMap)[1],
+      default: Object.keys(xOptionsMap)[2],
       controlButtonVisibility: "block",
       displayOrder: 9,
       displayPriority: 1,
@@ -255,6 +256,7 @@ const doPlotParams = function () {
 
     const yOptionsMap = {
       "Fcst lead time": "m0.fcstLen",
+      Threshold: "'{{vxTHRESHOLD}}'",
       "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
       "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
       "Valid Date": "m0.fcstValidEpoch",
@@ -1062,7 +1064,7 @@ const doCurveParams = async function () {
       selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[4],
+      default: Object.keys(optionsMap)[0],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
