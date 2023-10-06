@@ -173,7 +173,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
 
     // For contours, this functions as the colorbar label.
-    const statType = statisticOptionsMap[statisticSelect][0];
+    [statType] = statisticOptionsMap[statisticSelect];
     [, curve.unitKey] = statisticOptionsMap[statisticSelect];
 
     let d = {};
