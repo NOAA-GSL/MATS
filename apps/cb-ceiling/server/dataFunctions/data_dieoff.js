@@ -190,6 +190,7 @@ dataDieoff = function (plotParams, plotFunction) {
         if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
+          statement = "Station plot -- no one query.";
           // send to matsMiddle
           const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
           rows = tss.processStationQuery(

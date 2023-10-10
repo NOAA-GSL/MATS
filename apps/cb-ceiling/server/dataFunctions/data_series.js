@@ -163,6 +163,7 @@ dataSeries = function (plotParams, plotFunction) {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
           // send to matsMiddle
+          statement = "Station plot -- no one query.";
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
           rows = tss.processStationQuery(
             variable,

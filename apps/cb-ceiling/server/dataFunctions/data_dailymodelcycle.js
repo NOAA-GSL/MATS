@@ -149,6 +149,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
           // send to matsMiddle
+          statement = "Station plot -- no one query.";
           const tss = new matsMiddleDailyModelCycle.MatsMiddleDailyModelCycle(cbPool);
           rows = tss.processStationQuery(
             variable,

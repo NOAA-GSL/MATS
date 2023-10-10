@@ -138,6 +138,7 @@ dataValidTime = function (plotParams, plotFunction) {
         if (regionType === "Predefined region") {
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
+          statement = "Station plot -- no one query.";
           // send to matsMiddle
           const tss = new matsMiddleValidTime.MatsMiddleValidTime(cbPool);
           rows = tss.processStationQuery(

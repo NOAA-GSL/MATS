@@ -249,9 +249,9 @@ dataContourDiff = function (plotParams, plotFunction) {
         })
       );
     } else {
-      // this is a difference curve -- not supported for performance diagrams
+      // this is a difference curve -- not supported for contours
       throw new Error(
-        "INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves."
+        "INFO:  Difference curves are not supported for contours, as there is only one curve."
       );
     }
 
