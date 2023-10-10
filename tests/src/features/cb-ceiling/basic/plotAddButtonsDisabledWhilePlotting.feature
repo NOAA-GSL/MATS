@@ -8,8 +8,8 @@ Feature: Plot and Add buttons are disabled while plotting
     The app should disable the add button while it is adding the first curve
 
     Background:
-        Given I load the app "/cb-ceiling"
-        Then I expect the app title to be "CB-Ceiling"
+        Given I load the app "/cb-metar"
+        Then I expect the app title to be "CB-METAR"
 
     @watch
     Scenario: plotAddButtonsDisabledWhilePlotting

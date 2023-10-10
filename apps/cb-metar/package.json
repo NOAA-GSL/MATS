@@ -1,5 +1,5 @@
 {
-  "name": "cb-ceiling",
+  "name": "cb-metar",
   "private": true,
   "scripts": {
     "start": "meteor run",

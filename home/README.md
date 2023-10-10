@@ -44,11 +44,6 @@ First, you'll need a settings file like so in `MATS/home`:
             "kind": "MATS"
         },
         {
-            "link": "cb-ceiling",
-            "title": "CB-Ceiling",
-            "kind": "MATS-cb"
-        },
-        {
             "link": "ceil-vis15",
             "title": "15 Minute Ceiling and Visibility (METAR)",
             "kind": "MATS"

@@ -4,7 +4,7 @@ set -euo pipefail
 
 apps=(
     "anomalycor"
-    "cb-ceiling"
+    "cb-metar"
     "ceil-vis"
     "ceil-vis15"
     "landuse"

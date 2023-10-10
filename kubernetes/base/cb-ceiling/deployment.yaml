@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cb-ceiling
+  name: cb-metar
   labels:
-    app.kubernetes.io/name: cb-ceiling
+    app.kubernetes.io/name: cb-metar
     app.kubernetes.io/part-of: mats
     app.kubernetes.io/component: frontend
-    app: cb-ceiling
+    app: cb-metar
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cb-ceiling
+      app: cb-metar
   template:
     metadata:
       labels:
-        app: cb-ceiling
+        app: cb-metar
     spec:
       containers:
-        - name: cb-ceiling
-          image: ghcr.io/noaa-gsl/mats/development/cb-ceiling:development
+        - name: cb-metar
+          image: ghcr.io/noaa-gsl/mats/development/cb-metar:development
           ports:
             - containerPort: 9000
           securityContext:

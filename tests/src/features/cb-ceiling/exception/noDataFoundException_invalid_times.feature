@@ -12,8 +12,8 @@ Feature: No Data Found Exception: invalid_times
     and the plot buttons and add curve buttons are enabled.
 
     Background:
-        Given I load the app "/cb-ceiling"
-        Then I expect the app title to be "CB-Ceiling"
+        Given I load the app "/cb-metar"
+        Then I expect the app title to be "CB-METAR"
 
     @watch
     Scenario: noDataFoundException_invalid_times

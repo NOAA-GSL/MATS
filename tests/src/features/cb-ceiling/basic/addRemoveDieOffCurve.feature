@@ -10,8 +10,8 @@ Feature: Add Remove Dieoff Curve
     then delete that curve.
 
     Background:
-        Given I load the app "/cb-ceiling"
-        Then I expect the app title to be "CB-Ceiling"
+        Given I load the app "/cb-metar"
+        Then I expect the app title to be "CB-METAR"
 
     @watch
     Scenario: addRemoveDieoffCurve

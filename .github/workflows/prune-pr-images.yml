@@ -13,7 +13,7 @@ jobs:
       matrix:
         app:
           - anomalycor
-          - cb-ceiling
+          - cb-metar
           - ceil-vis
           - ceil-vis15
           - ensemble

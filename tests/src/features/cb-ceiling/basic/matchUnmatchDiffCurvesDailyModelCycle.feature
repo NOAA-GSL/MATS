@@ -8,8 +8,8 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
     I want to end by removing all of the curves.
 
     Background:
-        Given I load the app "/cb-ceiling"
-        Then I expect the app title to be "CB-Ceiling"
+        Given I load the app "/cb-metar"
+        Then I expect the app title to be "CB-METAR"
 
     @watch
     Scenario: matchUnmatchDiffCurvesDailyModelCycle

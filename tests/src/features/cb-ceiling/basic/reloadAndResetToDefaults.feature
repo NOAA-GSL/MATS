@@ -7,8 +7,8 @@ Feature: Reload Reset To Defaults
     then I compare the default parameter values to the reloaded parameter values
 
     Background:
-        Given I load the app "/cb-ceiling"
-        Then I expect the app title to be "CB-Ceiling"
+        Given I load the app "/cb-metar"
+        Then I expect the app title to be "CB-METAR"
 
     @watch
     Scenario: reloadAndResetToDefaults
@@ -31,7 +31,7 @@ Feature: Reload Reset To Defaults
         Then I should have 0 curves
 
         When I refresh the browser
-        And I load the app "/cb-ceiling"
+        And I load the app "/cb-metar"
         And I click the "Add Curve" button
         Then "Curve0" is added
         Then I click the "Remove Curve0" button

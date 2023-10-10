@@ -23,11 +23,11 @@ spec:
                 name: anomalycor
                 port:
                   number: 80
-          - path: /cb-ceiling
+          - path: /cb-metar
             pathType: Prefix
             backend:
               service:
-                name: cb-ceiling
+                name: cb-metar
                 port:
                   number: 80
           - path: /ceil-vis
