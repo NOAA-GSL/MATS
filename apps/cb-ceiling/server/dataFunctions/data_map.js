@@ -32,6 +32,7 @@ dataMap = function (plotParams, plotFunction) {
     throw new Error("INFO:  There must only be one added curve.");
   }
 
+  let statement = "";
   let rows = "";
   let error = "";
   const dataset = [];
@@ -94,6 +95,7 @@ dataMap = function (plotParams, plotFunction) {
     let finishMoment;
     try {
       // send to matsMiddle
+      statement = "Station plot -- no one query.";
       const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
       rows = tss.processStationQuery(
         variable,
