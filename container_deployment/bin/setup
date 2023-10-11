@@ -454,7 +454,7 @@ defaultEntryPoints = ["http", "https"]
         if [[ "${appref}"  == "cb-metar" ]]; then
             group="Experimental"
             app_order="0"
-            title="CB-METAR"
+            title="METAR"
             color="#3366bb"
         fi
         if [[ "${appref}"  == "ceil-vis" ]]; then

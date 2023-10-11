@@ -9,7 +9,7 @@ Feature: Match Unmatch Diff Curves Valid Time
 
     Background:
         Given I load the app "/cb-metar"
-        Then I expect the app title to be "CB-METAR"
+        Then I expect the app title to be "METAR"
 
     @watch
     Scenario: matchUnmatchDiffCurvesValidTime

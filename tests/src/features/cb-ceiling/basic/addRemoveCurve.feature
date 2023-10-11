@@ -9,7 +9,7 @@ Feature: Add Remove Curve
 
     Background:
         Given I load the app "/cb-metar"
-        Then I expect the app title to be "CB-METAR"
+        Then I expect the app title to be "METAR"
 
     @watch
     Scenario: addRemoveCurve
