@@ -20,5 +20,5 @@ WHERE m0.type = 'DD'
     AND m0.fcstValidEpoch %(24 * 3600) / 3600 IN [{{vxVALID_TIMES}}]
     AND m0.fcstValidEpoch >= {{vxFROM_SECS}}
     AND m0.fcstValidEpoch <= {{vxTO_SECS}}
-GROUP BY m0.fcstValidEpoch
+GROUP BY {{vxAVERAGE}}
 ORDER BY avtime;
