@@ -28,7 +28,7 @@
     "xmlbuilder": "^10.1.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.8",
+    "@babel/core": "^7.23.2",
     "@babel/eslint-parser": "^7.22.7",
     "eslint": "^8.44.0",
     "eslint-config-airbnb": "^19.0.4",
