@@ -14,9 +14,6 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// file reading is asynchonous
-const fs = require("fs");
-
 dataDailyModelCycle = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -104,10 +101,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       );
 
       // SQL template replacements
-      queryTemplate = fs.readFileSync(
-        "assets/app/sqlTemplates/tmpl_DailyModelCycle.sql",
-        "utf8"
-      );
+      queryTemplate = Assets.getText("sqlTemplates/tmpl_DailyModelCycle.sql");
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
       queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);

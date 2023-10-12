@@ -13,9 +13,6 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// file reading is asynchonous
-const fs = require("fs");
-
 dataThreshold = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -98,10 +95,7 @@ dataThreshold = function (plotParams, plotFunction) {
     );
 
     // SQL template replacements
-    queryTemplate = fs.readFileSync(
-      "assets/app/sqlTemplates/tmpl_Threshold.sql",
-      "utf8"
-    );
+    queryTemplate = Assets.getText("sqlTemplates/tmpl_Threshold.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);

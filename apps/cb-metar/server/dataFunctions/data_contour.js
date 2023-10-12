@@ -11,10 +11,6 @@ import {
   matsDataProcessUtils,
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
-import { _ } from "meteor/underscore";
-
-// file reading is asynchonous
-const fs = require("fs");
 
 dataContour = function (plotParams, plotFunction) {
   // initialize variables common to all curves
@@ -118,7 +114,7 @@ dataContour = function (plotParams, plotFunction) {
   );
 
   // SQL template replacements
-  queryTemplate = fs.readFileSync("assets/app/sqlTemplates/tmpl_Contour.sql", "utf8");
+  queryTemplate = Assets.getText("sqlTemplates/tmpl_Contour.sql");
   queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
   queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
   queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);

@@ -14,9 +14,6 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// file reading is asynchonous
-const fs = require("fs");
-
 dataDieoff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -105,20 +102,11 @@ dataDieoff = function (plotParams, plotFunction) {
 
       // SQL template replacements
       if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-        queryTemplate = fs.readFileSync(
-          "assets/app/sqlTemplates/tmpl_DieOff.sql",
-          "utf8"
-        );
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_Dieoff.sql");
       } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-        queryTemplate = fs.readFileSync(
-          "assets/app/sqlTemplates/tmpl_DieOff_UTC.sql",
-          "utf8"
-        );
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_Dieoff_UTC.sql");
       } else {
-        queryTemplate = fs.readFileSync(
-          "assets/app/sqlTemplates/tmpl_DieOff_SingleCycle.sql",
-          "utf8"
-        );
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_Dieoff_SingleCycle.sql");
         singleCycle = fromSecs;
       }
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
