@@ -102,11 +102,11 @@ dataDieoff = function (plotParams, plotFunction) {
 
       // SQL template replacements
       if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-        queryTemplate = Assets.getText("sqlTemplates/tmpl_Dieoff.sql");
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_DieOff.sql");
       } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-        queryTemplate = Assets.getText("sqlTemplates/tmpl_Dieoff_UTC.sql");
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_DieOff_UTC.sql");
       } else {
-        queryTemplate = Assets.getText("sqlTemplates/tmpl_Dieoff_SingleCycle.sql");
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_DieOff_SingleCycle.sql");
         singleCycle = fromSecs;
       }
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);

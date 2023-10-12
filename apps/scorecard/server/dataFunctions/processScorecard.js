@@ -130,8 +130,6 @@ processScorecard = function (plotParams, plotFunction) {
     }
     */
 
-  const fs = require("fs");
-
   // create or retrieve the scorecard document
   // get the submission epoch - right now
   const { submitEpoch } = plotParams;
@@ -261,9 +259,8 @@ processScorecard = function (plotParams, plotFunction) {
     // get query template for this block
     const application = matsCollections.application.findOne({ name: "application" })
       .sourceMap[curve.application];
-    let queryTemplate = fs.readFileSync(
-      `assets/app/sqlTemplates/tmpl_${application}_timeseries.sql`,
-      "utf8"
+    let queryTemplate = Assets.getText(
+      `sqlTemplates/tmpl_${application}_timeseries.sql`
     );
     queryTemplate = queryTemplate.replace(/\n|\t/g, "");
 
