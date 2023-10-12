@@ -19,7 +19,7 @@ pcel:mysql
 seba:minifiers-autoprefixer
 session@1.2.1
 momentjs:moment
-randyp:mats-common@5.1.1
+randyp:mats-common@5.1.3
 accounts-base@2.2.8
 google-config-ui@1.0.3
 dynamic-import@0.7.3
