@@ -337,8 +337,8 @@ const doCurveParams = async function () {
   const sitesLocationMap = [];
   const forecastLengthOptionsMap = {};
   const thresholdsModelOptionsMap = {};
-  const masterRegionValuesMap = {};
-  const masterThresholdValuesMap = {};
+  const allRegionValuesMap = {};
+  const allThresholdValuesMap = {};
 
   try {
     const queryStr = cbPool.trfmSQLForDbTarget(
@@ -349,22 +349,18 @@ const doCurveParams = async function () {
       // have this local try catch fail properly if the metadata isn't there
       throw new Error(rows);
     }
-    let masterRegDescription;
-    let masterShortName;
+
     for (let j = 0; j < rows.length; j += 1) {
-      masterRegDescription = rows[j].description.trim();
-      masterShortName = rows[j].name.trim();
-      masterRegionValuesMap[masterShortName] = masterRegDescription;
+      allRegionValuesMap[rows[j].name.trim()] = rows[j].description.trim();
     }
   } catch (err) {
     throw new Error(err.message);
   }
 
-  let didx;
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      masterThresholdValuesMap[variable] = {};
+      allThresholdValuesMap[variable] = {};
       const queryStr = cbPool.trfmSQLForDbTarget(
         // `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
         `select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
@@ -374,12 +370,11 @@ const doCurveParams = async function () {
         // have this local try catch fail properly if the metadata isn't there
         throw new Error(rows);
       }
-      let jsonFriendlyTrsh;
-      for (let j = 0; j < Object.keys(rows[0]).length; j += 1) {
-        const masterDescription = rows[0][Object.keys(rows[0])[j]].trim();
-        const masterTrsh = Object.keys(rows[0])[j].trim();
-        jsonFriendlyTrsh = masterTrsh.replace(/\./g, "_");
-        masterThresholdValuesMap[variable][jsonFriendlyTrsh] = masterDescription;
+      const allThresholds = Object.keys(rows[0]);
+      for (let j = 0; j < allThresholds.length; j += 1) {
+        // The replace here is because JSON doesn't like dots in the middle of keys
+        allThresholdValuesMap[variable][allThresholds[j].trim().replace(/\./g, "_")] =
+          rows[0][allThresholds[j]].trim();
       }
     }
   } catch (err) {
@@ -387,7 +382,7 @@ const doCurveParams = async function () {
   }
 
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
       modelOptionsMap[variable] = {};
       modelDateRangeMap[variable] = {};
@@ -426,24 +421,20 @@ const doCurveParams = async function () {
         forecastLengthOptionsMap[variable][model] = rows[i].fcstLens.map(String);
 
         // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
-        rows[i].thresholds.sort(function (a, b) {
-          return Number(a) - Number(b);
-        });
-        const thresholdArr = [];
-        for (let t = 0; t < rows[i].thresholds.length; t += 1) {
-          thresholdArr.push(
-            masterThresholdValuesMap[variable][
-              rows[i].thresholds[t].replace(/\./g, "_")
-            ]
-          );
-        }
-        thresholdsModelOptionsMap[variable][model] = thresholdArr;
+        const { thresholds } = rows[i];
+        thresholdsModelOptionsMap[variable][model] = thresholds
+          .sort(function (a, b) {
+            return Number(a) - Number(b);
+          })
+          .map(function (threshold) {
+            return allThresholdValuesMap[variable][threshold.replace(/\./g, "_")];
+          });
 
-        const regionsArr = [];
-        for (let ri = 0; ri < rows[i].regions.length; ri += 1) {
-          regionsArr.push(masterRegionValuesMap[rows[i].regions[ri]]);
-        }
-        regionModelOptionsMap[variable][model] = regionsArr;
+        // we want the full region descriptions in thresholdsModelOptionsMap, not just the regions
+        const { regions } = rows[i];
+        regionModelOptionsMap[variable][model] = regions.map(function (region) {
+          return allRegionValuesMap[region];
+        });
       }
     }
   } catch (err) {
@@ -623,7 +614,7 @@ const doCurveParams = async function () {
         regionModelOptionsMap[variables[0]][
           Object.keys(regionModelOptionsMap[variables[0]])[0]
         ],
-      valuesMap: masterRegionValuesMap,
+      valuesMap: allRegionValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
@@ -641,7 +632,7 @@ const doCurveParams = async function () {
     const currentParam = matsCollections.region.findOne({ name: "region" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allRegionValuesMap)
     ) {
       // have to reload region data
       matsCollections.region.update(
@@ -649,7 +640,7 @@ const doCurveParams = async function () {
         {
           $set: {
             optionsMap: regionModelOptionsMap,
-            valuesMap: masterRegionValuesMap,
+            valuesMap: allRegionValuesMap,
             options:
               regionModelOptionsMap[variables[0]][
                 Object.keys(regionModelOptionsMap[variables[0]])[0]
@@ -726,7 +717,7 @@ const doCurveParams = async function () {
         thresholdsModelOptionsMap[variables[0]][
           Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
         ],
-      valuesMap: masterThresholdValuesMap,
+      valuesMap: allThresholdValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
@@ -747,7 +738,7 @@ const doCurveParams = async function () {
         currentParam.optionsMap,
         thresholdsModelOptionsMap
       ) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
     ) {
       // have to reload threshold data
       matsCollections.threshold.update(
@@ -755,7 +746,7 @@ const doCurveParams = async function () {
         {
           $set: {
             optionsMap: thresholdsModelOptionsMap,
-            valuesMap: masterThresholdValuesMap,
+            valuesMap: allThresholdValuesMap,
             options:
               thresholdsModelOptionsMap[variables[0]][
                 Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
@@ -1595,7 +1586,7 @@ Meteor.startup(function () {
       dbType: matsTypes.DbTypes.couchbase,
     });
   } catch (error) {
-    console.log(error.message);
+    throw new Error(error.message);
   }
 });
 
