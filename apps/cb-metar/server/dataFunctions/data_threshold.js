@@ -60,7 +60,7 @@ dataThreshold = function (plotParams, plotFunction) {
     const allThresholdsStr = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     );
-    for (let tidx = 0; tidx < allThresholdsStr.length; tidx++) {
+    for (let tidx = 0; tidx < allThresholdsStr.length; tidx += 1) {
       allThresholdsStr[tidx] = allThresholdsStr[tidx].replace(/_/g, ".");
     }
     const allThresholds = allThresholdsStr.sort(function (a, b) {

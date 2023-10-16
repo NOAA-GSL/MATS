@@ -470,27 +470,30 @@ const doCurveParams = async function () {
       const siteLat = rows[i].geo === undefined ? undefined : rows[i].geo[0].lat;
       const siteLon = rows[i].geo === undefined ? undefined : rows[i].geo[0].lon;
       const siteElev = rows[i].geo === undefined ? "unknown" : rows[i].geo[0].elev;
-      if (siteLat >= 90 || siteLat <= -90) continue; // there's one station right at the south pole that the map doesn't know how to render at all
-      siteOptionsMap[siteName] = [siteId];
 
-      const point = [siteLat, siteLon];
-      const obj = {
-        name: siteName,
-        origName: siteName,
-        point,
-        elevation: siteElev,
-        options: {
-          title: siteDescription,
-          color: "red",
-          size: 5,
-          network: "METAR",
-          peerOption: siteName,
-          id: siteId,
-          highLightColor: "blue",
-        },
-      };
-      sitesLocationMap.push(obj);
-      matsCollections.SiteMap.insert({ siteName, siteId });
+      // there's one station right at the south pole that the map doesn't know how to render at all, so exclude it
+      if (siteLat < 90 && siteLat > -90) {
+        siteOptionsMap[siteName] = [siteId];
+
+        const point = [siteLat, siteLon];
+        const obj = {
+          name: siteName,
+          origName: siteName,
+          point,
+          elevation: siteElev,
+          options: {
+            title: siteDescription,
+            color: "red",
+            size: 5,
+            network: "METAR",
+            peerOption: siteName,
+            id: siteId,
+            highLightColor: "blue",
+          },
+        };
+        sitesLocationMap.push(obj);
+        matsCollections.SiteMap.insert({ siteName, siteId });
+      }
     }
   } catch (err) {
     throw new Error(err.message);

@@ -27,7 +27,6 @@ dataContourDiff = function (plotParams, plotFunction) {
 
   const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
-  let dataFoundForCurve = true;
   let dataNotFoundForAnyCurve = false;
 
   let curves = JSON.parse(JSON.stringify(plotParams.curves));
@@ -219,10 +218,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         }
 
         if (queryResult.error !== undefined && queryResult.error !== "") {
-          if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-            // this is NOT an error just a no data condition
-            dataFoundForCurve = false;
-          } else {
+          if (queryResult.error !== matsTypes.Messages.NO_DATA_FOUND) {
             // this is an error returned by the mysql database
             error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
             throw new Error(error);
