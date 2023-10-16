@@ -148,7 +148,7 @@ dataSeries = function (plotParams, plotFunction) {
       const startMoment = moment();
       let finishMoment;
       try {
-        // math is done on forecastLength later on  -= 1 set all analyses to 0
+        // math is done on forecastLength later on -- set all analyses to 0
         if (forecastLength === "-99") {
           forecastLength = "0";
         }
