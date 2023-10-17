@@ -21,20 +21,28 @@ dataMap = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
-  const dataRequests = {}; // used to store data queries
-  let dataFoundForCurve = true;
+
   const totalProcessingStart = moment();
-  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  const fromSecs = dateRange.fromSeconds;
-  const toSecs = dateRange.toSeconds;
-  let error = "";
+  const dataRequests = {}; // used to store data queries
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   if (curves.length > 1) {
     throw new Error("INFO:  There must only be one added curve.");
   }
+
+  let statement = "";
+  let error = "";
   const dataset = [];
+
+  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
+  const fromSecs = dateRange.fromSeconds;
+  const toSecs = dateRange.toSeconds;
+
+  // initialize variables specific to this curve
   const curve = curves[0];
   const { label } = curve;
+  const { diffFrom } = curve;
+
   const { variable } = curve;
   const databaseRef = matsCollections.variable.findOne({ name: "variable" }).optionsMap[
     variable
@@ -44,11 +52,7 @@ dataMap = function (plotParams, plotFunction) {
   const obsTable =
     modelTable.includes("ret_") || modelTable.includes("Ret_") ? "obs_retro" : "obs";
   const queryTableClause = `from ${databaseRef.modelDB}.${obsTable} as o, ${databaseRef.modelDB}.${modelTable} as m0 `;
-  let sitesClause = "";
-  const siteMap = matsCollections.StationMap.findOne(
-    { name: "stations" },
-    { optionsMap: 1 }
-  ).optionsMap;
+
   const thresholdStr = curve.threshold;
   const threshold = Object.keys(
     matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
@@ -58,13 +62,16 @@ dataMap = function (plotParams, plotFunction) {
         key
       ] === thresholdStr
   );
+
   let validTimeClause = "";
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
   if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
     validTimeClause = `and floor((m0.time+1800)%(24*3600)/3600) IN(${validTimes})`;
   }
+
   const forecastLength = curve["forecast-length"];
   const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
+
   const { statistic } = curve;
   let statisticClause =
     "sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, " +
@@ -77,16 +84,19 @@ dataMap = function (plotParams, plotFunction) {
     statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
     statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
   }
+
+  let sitesClause = "";
+
+  const siteMap = matsCollections.StationMap.findOne(
+    { name: "stations" },
+    { optionsMap: 1 }
+  ).optionsMap;
   const sitesList = curve.sites === undefined ? [] : curve.sites;
-  const querySites = [];
+  let querySites = [];
   if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-    let thisSite;
-    let thisSiteObj;
-    for (let sidx = 0; sidx < sitesList.length; sidx++) {
-      thisSite = sitesList[sidx];
-      thisSiteObj = siteMap.find((obj) => obj.origName === thisSite);
-      querySites.push(thisSiteObj.options.id);
-    }
+    querySites = sitesList.map(function (site) {
+      return siteMap.find((obj) => obj.origName === site).options.id;
+    });
     sitesClause = ` and m0.madis_id in('${querySites.join("','")}')`;
   } else {
     throw new Error(
@@ -97,85 +107,105 @@ dataMap = function (plotParams, plotFunction) {
   const siteDateClause = `and o.time >= ${fromSecs} - 900 and o.time <= ${toSecs} + 900`;
   const siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
 
-  let statement =
-    "select m0.madis_id as sta_id, " +
-    "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
-    "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
-    "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
-    "{{statisticClause}} " +
-    "{{queryTableClause}} " +
-    "where 1=1 " +
-    "{{siteMatchClause}} " +
-    "{{sitesClause}} " +
-    "{{dateClause}} " +
-    "{{siteDateClause}} " +
-    "{{validTimeClause}} " +
-    "{{forecastLengthClause}} " +
-    "group by sta_id " +
-    "order by N0" +
-    ";";
+  let d;
+  let dPurple;
+  let dPurpleBlue;
+  let dBlue;
+  let dBlueGreen;
+  let dGreen;
+  let dGreenYellow;
+  let dYellow;
+  let dOrange;
+  let dOrangeRed;
+  let dRed;
+  let valueLimits;
+  if (!diffFrom) {
+    let queryResult;
+    const startMoment = moment();
+    let finishMoment;
+    try {
+      statement =
+        "select m0.madis_id as sta_id, " +
+        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
+        "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
+        "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
+        "{{statisticClause}} " +
+        "{{queryTableClause}} " +
+        "where 1=1 " +
+        "{{siteMatchClause}} " +
+        "{{sitesClause}} " +
+        "{{dateClause}} " +
+        "{{siteDateClause}} " +
+        "{{validTimeClause}} " +
+        "{{forecastLengthClause}} " +
+        "group by sta_id " +
+        "order by N0" +
+        ";";
 
-  statement = statement.replace("{{statisticClause}}", statisticClause);
-  statement = statement.replace("{{queryTableClause}}", queryTableClause);
-  statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
-  statement = statement.replace("{{sitesClause}}", sitesClause);
-  statement = statement.replace("{{validTimeClause}}", validTimeClause);
-  statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
-  statement = statement.replace("{{dateClause}}", dateClause);
-  statement = statement.replace("{{siteDateClause}}", siteDateClause);
-  dataRequests[label] = statement;
+      statement = statement.replace("{{statisticClause}}", statisticClause);
+      statement = statement.replace("{{queryTableClause}}", queryTableClause);
+      statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+      statement = statement.replace("{{sitesClause}}", sitesClause);
+      statement = statement.replace("{{validTimeClause}}", validTimeClause);
+      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+      statement = statement.replace("{{dateClause}}", dateClause);
+      statement = statement.replace("{{siteDateClause}}", siteDateClause);
+      dataRequests[label] = statement;
 
-  let queryResult;
-  const startMoment = moment();
-  let finishMoment;
-  try {
-    // send the query statement to the query function
-    queryResult = matsDataQueryUtils.queryDBMapCTC(
-      sumPool,
-      statement,
-      modelTable,
-      statistic,
-      siteMap,
-      appParams
-    );
-    finishMoment = moment();
-    dataRequests[`data retrieval (query) time - ${label}`] = {
-      begin: startMoment.format(),
-      finish: finishMoment.format(),
-      duration: `${moment
-        .duration(finishMoment.diff(startMoment))
-        .asSeconds()} seconds`,
-      recordCount: queryResult.data.length,
-    };
-    // get the data back from the query
-    var d = queryResult.data;
-    var dPurple = queryResult.dataPurple;
-    var dPurpleBlue = queryResult.dataPurpleBlue;
-    var dBlue = queryResult.dataBlue;
-    var dBlueGreen = queryResult.dataBlueGreen;
-    var dGreen = queryResult.dataGreen;
-    var dGreenYellow = queryResult.dataGreenYellow;
-    var dYellow = queryResult.dataYellow;
-    var dOrange = queryResult.dataOrange;
-    var dOrangeRed = queryResult.dataOrangeRed;
-    var dRed = queryResult.dataRed;
-    var { valueLimits } = queryResult;
-  } catch (e) {
-    // this is an error produced by a bug in the query function, not an error returned by the mysql database
-    e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
-    throw new Error(e.message);
-  }
-  if (queryResult.error !== undefined && queryResult.error !== "") {
-    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-      // this is NOT an error just a no data condition
-      dataFoundForCurve = false;
-    } else {
-      // this is an error returned by the mysql database
-      error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-      throw new Error(error);
+      // send the query statement to the query function
+      queryResult = matsDataQueryUtils.queryDBMapCTC(
+        sumPool,
+        statement,
+        modelTable,
+        statistic,
+        siteMap,
+        appParams
+      );
+
+      finishMoment = moment();
+      dataRequests[label] = "Station plot -- no one query.";
+      dataRequests[`data retrieval (query) time - ${label}`] = {
+        begin: startMoment.format(),
+        finish: finishMoment.format(),
+        duration: `${moment
+          .duration(finishMoment.diff(startMoment))
+          .asSeconds()} seconds`,
+        recordCount: queryResult.data.length,
+      };
+      // get the data back from the query
+      d = queryResult.data;
+      dPurple = queryResult.dataPurple;
+      dPurpleBlue = queryResult.dataPurpleBlue;
+      dBlue = queryResult.dataBlue;
+      dBlueGreen = queryResult.dataBlueGreen;
+      dGreen = queryResult.dataGreen;
+      dGreenYellow = queryResult.dataGreenYellow;
+      dYellow = queryResult.dataYellow;
+      dOrange = queryResult.dataOrange;
+      dOrangeRed = queryResult.dataOrangeRed;
+      dRed = queryResult.dataRed;
+      valueLimits = queryResult.valueLimits;
+    } catch (e) {
+      // this is an error produced by a bug in the query function, not an error returned by the mysql database
+      e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
+      throw new Error(e.message);
     }
+
+    if (queryResult.error !== undefined && queryResult.error !== "") {
+      if (queryResult.error !== matsTypes.Messages.NO_DATA_FOUND) {
+        // this is an error returned by the mysql database
+        error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
+        throw new Error(error);
+      }
+    }
+  } else {
+    // this is a difference curve -- not supported for maps
+    throw new Error(
+      "INFO:  Difference curves are not supported for maps, as there is only one curve."
+    );
   }
 
+  const postQueryStartMoment = moment();
   let cOptions = matsDataCurveOpsUtils.generateCTCMapCurveOptions(curve, d, appParams); // generate map with site data
   dataset.push(cOptions);
 
@@ -302,6 +332,15 @@ dataMap = function (plotParams, plotFunction) {
     dRed
   ); // generate red text layer
   dataset.push(cOptions);
+
+  const postQueryFinishMoment = moment();
+  dataRequests[`post data retrieval (query) process time - ${label}`] = {
+    begin: postQueryStartMoment.format(),
+    finish: postQueryFinishMoment.format(),
+    duration: `${moment
+      .duration(postQueryFinishMoment.diff(postQueryStartMoment))
+      .asSeconds()} seconds`,
+  };
 
   const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(true);
   const totalProcessingFinish = moment();
