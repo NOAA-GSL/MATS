@@ -42,7 +42,7 @@ dataSeries = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
   const idealValues = [100];
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
     const { diffFrom } = curve;

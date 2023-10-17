@@ -4,6 +4,7 @@
 
 import { Meteor } from "meteor/meteor";
 import { mysql } from "meteor/pcel:mysql";
+import { moment } from "meteor/momentjs:moment";
 import {
   matsTypes,
   matsCollections,
@@ -323,7 +324,7 @@ const doCurveParams = function () {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
     }).fetch()[0].curve_params;
-    for (let cp = 0; cp < params.length; cp++) {
+    for (let cp = 0; cp < params.length; cp += 1) {
       matsCollections[params[cp]].remove({});
     }
   }
@@ -342,13 +343,13 @@ const doCurveParams = function () {
     );
     let masterRegDescription;
     let masterId;
-    for (var j = 0; j < rows.length; j++) {
+    for (let j = 0; j < rows.length; j += 1) {
       masterRegDescription = rows[j].description.trim();
       masterId = rows[j].id;
       masterRegionValuesMap[masterId] = masterRegDescription;
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   try {
@@ -356,10 +357,10 @@ const doCurveParams = function () {
       sumPool,
       "select model,regions,display_text,fcst_lens,levels,variable,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
     );
-    for (let i = 0; i < rows.length; i++) {
-      const model_value = rows[i].model.trim();
+    for (let i = 0; i < rows.length; i += 1) {
+      const modelValue = rows[i].model.trim();
       const model = rows[i].display_text.trim();
-      modelOptionsMap[model] = [model_value];
+      modelOptionsMap[model] = [modelValue];
 
       const rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
       const rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
@@ -369,7 +370,7 @@ const doCurveParams = function () {
       const forecastLengthArr = forecastLengths
         .split(",")
         .map(Function.prototype.call, String.prototype.trim);
-      for (var j = 0; j < forecastLengthArr.length; j++) {
+      for (let j = 0; j < forecastLengthArr.length; j += 1) {
         forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
       }
       forecastLengthOptionsMap[model] = forecastLengthArr;
@@ -378,7 +379,7 @@ const doCurveParams = function () {
       const levelArr = levels
         .split(",")
         .map(Function.prototype.call, String.prototype.trim);
-      for (var j = 0; j < levelArr.length; j++) {
+      for (let j = 0; j < levelArr.length; j += 1) {
         levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
       }
       levelOptionsMap[model] = levelArr;
@@ -387,7 +388,7 @@ const doCurveParams = function () {
       const variableArr = variables
         .split(",")
         .map(Function.prototype.call, String.prototype.trim);
-      for (var j = 0; j < variableArr.length; j++) {
+      for (let j = 0; j < variableArr.length; j += 1) {
         variableArr[j] = variableArr[j].replace(/'|\[|\]/g, "");
       }
       variableModelOptionsMap[model] = variableArr;
@@ -397,15 +398,15 @@ const doCurveParams = function () {
         .split(",")
         .map(Function.prototype.call, String.prototype.trim);
       const regionsArr = [];
-      var dummyRegion;
-      for (var j = 0; j < regionsArrRaw.length; j++) {
-        dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
-        regionsArr.push(masterRegionValuesMap[dummyRegion]);
+      for (let j = 0; j < regionsArrRaw.length; j += 1) {
+        regionsArr.push(
+          masterRegionValuesMap[regionsArrRaw[j].replace(/'|\[|\]/g, "")]
+        );
       }
       regionModelOptionsMap[model] = regionsArr;
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   if (matsCollections.label.findOne({ name: "label" }) === undefined) {
@@ -450,7 +451,9 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["data-source"].findOne({ name: "data-source" });
+    const currentParam = matsCollections["data-source"].findOne({
+      name: "data-source",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
@@ -488,7 +491,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.region.findOne({ name: "region" });
+    const currentParam = matsCollections.region.findOne({ name: "region" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)
@@ -547,7 +550,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["forecast-length"].findOne({
+    const currentParam = matsCollections["forecast-length"].findOne({
       name: "forecast-length",
     });
     if (
@@ -734,7 +737,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.level.findOne({ name: "level" });
+    const currentParam = matsCollections.level.findOne({ name: "level" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, levelOptionsMap)) {
       // have to reload level data
       matsCollections.level.update(
@@ -799,7 +802,9 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["curve-dates"].findOne({ name: "curve-dates" });
+    const currentParam = matsCollections["curve-dates"].findOne({
+      name: "curve-dates",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
@@ -1046,7 +1051,7 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
-    console.log(
+    console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
     matsCollections.Databases.drop();
@@ -1063,7 +1068,7 @@ Meteor.startup(function () {
       databases = Meteor.settings.private.databases;
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
-      for (let di = 0; di < databases.length; di++) {
+      for (let di = 0; di < databases.length; di += 1) {
         matsCollections.Databases.insert(databases[di]);
       }
     }
@@ -1152,7 +1157,7 @@ Meteor.startup(function () {
       appType: matsTypes.AppTypes.mats,
     });
   } catch (error) {
-    console.log(error.message);
+    throw new Error(error.message);
   }
 });
 
