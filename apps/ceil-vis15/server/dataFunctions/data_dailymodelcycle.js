@@ -23,48 +23,48 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  const fromSecs = dateRange.fromSeconds;
-  const toSecs = dateRange.toSeconds;
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  const dataset = [];
-  const utcCycleStarts = [];
+
   const axisMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
+
+  let statType;
+  const utcCycleStarts = [];
   const idealValues = [];
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  let statement = "";
+  let error = "";
+  const dataset = [];
+
+  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
+  const fromSecs = dateRange.fromSeconds;
+  const toSecs = dateRange.toSeconds;
+
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-    const { diffFrom } = curve;
     const { label } = curve;
-    var { variable } = curve;
+    const { diffFrom } = curve;
+
+    const { variable } = curve;
     const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
     let queryTableClause = "";
-    let truthClause = "";
-    if (variable === "15 Minute Visibility") {
-      var truthStr = curve.truth;
-      var truth = Object.keys(
-        matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable][key] ===
-          truthStr
-      );
-    }
-    var thresholdStr = curve.threshold;
+
+    let thresholdClause = "";
+    const thresholdStr = curve.threshold;
     const threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(
@@ -73,7 +73,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           key
         ] === thresholdStr
     );
-    let thresholdClause = "";
+
     if (curve["utc-cycle-start"].length !== 1) {
       throw new Error(
         "INFO:  Please select exactly one UTC Cycle Init Hour for this plot type."
@@ -82,24 +82,36 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const utcCycleStart = Number(curve["utc-cycle-start"][0]);
     utcCycleStarts[curveIndex] = utcCycleStart;
     const utcCycleStartClause = `and floor(((m0.time+450) - (m0.fcst_len*60+m0.fcst_min)*60)%(24*3600)/900)/4 IN(${utcCycleStart})`;
+
     const forecastLengthClause = "and m0.fcst_len < 24";
-    var dateClause;
-    let siteDateClause = "";
-    let siteMatchClause = "";
-    let sitesClause = "";
-    const siteMap = matsCollections.StationMap.findOne(
-      { name: "stations" },
-      { optionsMap: 1 }
-    ).optionsMap;
+
+    let truthClause = "";
+    let truth;
+    if (variable === "15 Minute Visibility") {
+      const truthStr = curve.truth;
+      truth = Object.keys(
+        matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable]
+      ).find(
+        (key) =>
+          matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable][key] ===
+          truthStr
+      );
+    }
+    let statisticClause;
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
-    var statisticClause;
+
+    let dateClause;
+    let siteDateClause = "";
+    let siteMatchClause = "";
+    let sitesClause = "";
+
     const regionType = curve["region-type"];
     if (regionType === "Predefined region") {
-      var regionStr = curve.region;
+      const regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
@@ -135,16 +147,17 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           truthClause = "and o.vis_std < 2.4";
         }
       }
+
+      const siteMap = matsCollections.StationMap.findOne(
+        { name: "stations" },
+        { optionsMap: 1 }
+      ).optionsMap;
       const sitesList = curve.sites === undefined ? [] : curve.sites;
-      const querySites = [];
+      let querySites = [];
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        var thisSite;
-        var thisSiteObj;
-        for (let sidx = 0; sidx < sitesList.length; sidx++) {
-          thisSite = sitesList[sidx];
-          thisSiteObj = siteMap.find((obj) => obj.origName === thisSite);
-          querySites.push(thisSiteObj.options.id);
-        }
+        querySites = sitesList.map(function (site) {
+          return siteMap.find((obj) => obj.origName === site).options.id;
+        });
         sitesClause = ` and m0.madis_id in('${querySites.join("','")}')`;
       } else {
         throw new Error(
@@ -155,11 +168,12 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       siteDateClause = `and o.time >= ${fromSecs} - 300 and o.time <= ${toSecs} + 300`;
       siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
     }
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = statisticOptionsMap[statisticSelect][0];
+    [statType] = statisticOptionsMap[statisticSelect];
     const axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][2];
@@ -167,49 +181,47 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       idealValues.push(idealVal);
     }
 
-    var d;
+    let d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      let statement =
-        "select ceil(900*floor((m0.time+450)/900)) as avtime, " +
-        "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +
-        "min(ceil(900*floor((m0.time+450)/900))) as min_secs, " +
-        "max(ceil(900*floor((m0.time+450)/900))) as max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "where 1=1 " +
-        "{{siteMatchClause}} " +
-        "{{sitesClause}} " +
-        "{{dateClause}} " +
-        "{{siteDateClause}} " +
-        "{{utcCycleStartClause}} " +
-        "{{thresholdClause}} " +
-        "{{forecastLengthClause}} " +
-        "{{truthClause}} " +
-        "group by avtime " +
-        "order by avtime" +
-        ";";
-
-      statement = statement.replace("{{statisticClause}}", statisticClause);
-      statement = statement.replace("{{queryTableClause}}", queryTableClause);
-      statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
-      statement = statement.replace("{{sitesClause}}", sitesClause);
-      statement = statement.replace("{{thresholdClause}}", thresholdClause);
-      statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
-      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
-      statement = statement.replace("{{truthClause}}", truthClause);
-      statement = statement.replace("{{dateClause}}", dateClause);
-      statement = statement.replace("{{siteDateClause}}", siteDateClause);
-      if (variable.includes("Visibility")) {
-        statement = statement.replace(/o\.time/g, "o.valid_time");
-      }
-      dataRequests[label] = statement;
-
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
+      let finishMoment;
       try {
+        statement =
+          "select ceil(900*floor((m0.time+450)/900)) as avtime, " +
+          "count(distinct ceil(900*floor((m0.time+450)/900))) as N_times, " +
+          "min(ceil(900*floor((m0.time+450)/900))) as min_secs, " +
+          "max(ceil(900*floor((m0.time+450)/900))) as max_secs, " +
+          "{{statisticClause}} " +
+          "{{queryTableClause}} " +
+          "where 1=1 " +
+          "{{siteMatchClause}} " +
+          "{{sitesClause}} " +
+          "{{dateClause}} " +
+          "{{siteDateClause}} " +
+          "{{utcCycleStartClause}} " +
+          "{{thresholdClause}} " +
+          "{{forecastLengthClause}} " +
+          "{{truthClause}} " +
+          "group by avtime " +
+          "order by avtime" +
+          ";";
+
+        statement = statement.replace("{{statisticClause}}", statisticClause);
+        statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+        statement = statement.replace("{{sitesClause}}", sitesClause);
+        statement = statement.replace("{{thresholdClause}}", thresholdClause);
+        statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
+        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+        statement = statement.replace("{{truthClause}}", truthClause);
+        statement = statement.replace("{{dateClause}}", dateClause);
+        statement = statement.replace("{{siteDateClause}}", siteDateClause);
+        if (variable.includes("Visibility")) {
+          statement = statement.replace(/o\.time/g, "o.valid_time");
+        }
+        dataRequests[label] = statement;
+
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
           sumPool,
@@ -217,7 +229,9 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           appParams,
           statisticSelect
         );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -233,6 +247,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
@@ -247,7 +262,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       }
 
       // set axis limits based on returned data
-      var postQueryStartMoment = moment();
       if (dataFoundForCurve) {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -272,6 +286,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
     const annotation =
       mean === undefined

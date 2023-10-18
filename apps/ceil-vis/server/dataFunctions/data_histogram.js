@@ -91,6 +91,7 @@ dataHistogram = function (plotParams, plotFunction) {
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
+
     const regionStr = curve.region;
     const region = Object.keys(
       matsCollections.region.findOne({ name: "region" }).valuesMap

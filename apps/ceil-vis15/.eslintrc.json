@@ -35,16 +35,6 @@
     // our first pass, we'll only consider the checks that ESLint can auto-fix as errors.
     // https://eslint.org/docs/latest/use/configure/rules#rule-severities
     "no-undef": "warn",
-    "no-plusplus": "warn",
-    "vars-on-top": "warn",
-    "no-var": "warn",
-    "block-scoped-var": "warn",
-    "no-loop-func": "warn",
-    "no-unused-vars": "warn",
-    "prefer-destructuring": "warn",
-    "no-param-reassign": "warn",
-    "camelcase": "warn",
-    "no-redeclare": "warn",
-    "no-shadow": "warn"
+    "no-unused-vars": "warn"
   }
 }
