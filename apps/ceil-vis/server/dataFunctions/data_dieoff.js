@@ -171,6 +171,7 @@ dataDieoff = function (plotParams, plotFunction) {
     } else {
       dateClause = `and m0.time-m0.fcst_len*3600 = ${fromSecs}`;
     }
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
