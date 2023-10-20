@@ -14,6 +14,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataContourDiff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -170,7 +171,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBContour(
-          sumPool,
+          sumPool, // eslint-disable-line no-undef
           statement,
           appParams,
           statisticSelect

@@ -339,7 +339,7 @@ const doCurveParams = function () {
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      metadataPool,
+      metadataPool, // eslint-disable-line no-undef
       "select short_name,description from region_descriptions;"
     );
     for (let j = 0; j < rows.length; j += 1) {
@@ -349,14 +349,11 @@ const doCurveParams = function () {
     throw new Error(err.message);
   }
 
-  let rows;
-  let didx;
-
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       allThresholdValuesMap[variables[didx]] = {};
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
+      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool, // eslint-disable-line no-undef
         `select trsh,description from ${
           variableDBNames[variables[didx]]
         }.threshold_descriptions;`
@@ -371,10 +368,10 @@ const doCurveParams = function () {
   }
 
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       allScaleValuesMap[variables[didx]] = {};
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
+      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool, // eslint-disable-line no-undef
         `select scle,description from ${
           variableDBNames[variables[didx]]
         }.scale_descriptions;`
@@ -389,10 +386,10 @@ const doCurveParams = function () {
   }
 
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       allFcstTypeValuesMap[variables[didx]] = {};
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
+      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool, // eslint-disable-line no-undef
         `select fcst_type,description from ${
           variableDBNames[variables[didx]]
         }.fcst_type_descriptions;`
@@ -407,7 +404,7 @@ const doCurveParams = function () {
   }
 
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
       modelOptionsMap[variable] = {};
       modelDateRangeMap[variable] = {};
@@ -416,8 +413,8 @@ const doCurveParams = function () {
       fcstTypeModelOptionsMap[variable] = {};
       regionModelOptionsMap[variable] = {};
 
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
+      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool, // eslint-disable-line no-undef
         `select model,regions,display_text,fcst_types,trsh,scle,mindate,maxdate from ${variableDBNames[variable]}.regions_per_model_mats_all_categories order by display_category, display_order;`
       );
       for (let i = 0; i < rows.length; i += 1) {
@@ -1215,6 +1212,7 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
+    // eslint-disable-next-line no-console
     console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
@@ -1259,6 +1257,7 @@ Meteor.startup(function () {
   );
   if (cbConnection) {
     // global cbScorecardSettingsPool
+    // eslint-disable-next-line no-undef
     cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
       cbConnection.host,
       cbConnection.bucket,
@@ -1285,6 +1284,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (metadataSettings) {
+    // eslint-disable-next-line no-undef
     metadataPool = mysql.createPool(metadataSettings);
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
@@ -1305,6 +1305,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
+    // eslint-disable-next-line no-undef
     sumPool = mysql.createPool(sumSettings);
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
@@ -1336,6 +1337,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+// eslint-disable-next-line no-undef
 appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,
