@@ -14,6 +14,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataValidTime = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -94,6 +95,7 @@ dataValidTime = function (plotParams, plotFunction) {
       );
 
       // SQL template replacements
+      // eslint-disable-next-line no-undef
       queryTemplate = Assets.getText("sqlTemplates/tmpl_ValidTime.sql");
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -130,10 +132,12 @@ dataValidTime = function (plotParams, plotFunction) {
       let finishMoment;
       try {
         if (regionType === "Predefined region") {
+          // eslint-disable-next-line no-undef
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
           statement = "Station plot -- no one query.";
           // send to matsMiddle
+          // eslint-disable-next-line no-undef
           const tss = new matsMiddleValidTime.MatsMiddleValidTime(cbPool);
           rows = tss.processStationQuery(
             variable,
@@ -148,7 +152,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool,
+          cbPool, // eslint-disable-line no-undef
           regionType === "Predefined region" ? statement : rows,
           appParams,
           statisticSelect

@@ -14,6 +14,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataSeries = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -103,6 +104,7 @@ dataSeries = function (plotParams, plotFunction) {
       );
 
       // SQL template replacements
+      // eslint-disable-next-line no-undef
       queryTemplate = Assets.getText("sqlTemplates/tmpl_TimeSeries.sql");
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -116,10 +118,10 @@ dataSeries = function (plotParams, plotFunction) {
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /{{vxVALID_TIMES}}/g,
-          cbPool.trfmListToCSVString(validTimes, null, false)
+          cbPool.trfmListToCSVString(validTimes, null, false) // eslint-disable-line no-undef
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}"); // eslint-disable-line no-undef
       }
     } else {
       sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -154,10 +156,12 @@ dataSeries = function (plotParams, plotFunction) {
         }
 
         if (regionType === "Predefined region") {
+          // eslint-disable-next-line no-undef
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
+          // eslint-disable-next-line no-undef
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
           rows = tss.processStationQuery(
             variable,
@@ -174,7 +178,7 @@ dataSeries = function (plotParams, plotFunction) {
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBTimeSeries(
-          cbPool,
+          cbPool, // eslint-disable-line no-undef
           regionType === "Predefined region" ? statement : rows,
           model,
           forecastLength,

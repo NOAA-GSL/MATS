@@ -341,9 +341,11 @@ const doCurveParams = async function () {
   const allThresholdValuesMap = {};
 
   try {
+    // eslint-disable-next-line no-undef
     const queryStr = cbPool.trfmSQLForDbTarget(
       'select name, description from {{vxDBTARGET}} where type="MD" and docType="region" and version = "V01"  and subset="COMMON"'
     );
+    // eslint-disable-next-line no-undef
     const rows = await cbPool.queryCB(queryStr);
     if (rows.includes("queryCB ERROR: ")) {
       // have this local try catch fail properly if the metadata isn't there
@@ -361,10 +363,12 @@ const doCurveParams = async function () {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
       allThresholdValuesMap[variable] = {};
+      // eslint-disable-next-line no-undef
       const queryStr = cbPool.trfmSQLForDbTarget(
         // `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
         `select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
       );
+      // eslint-disable-next-line no-undef
       const rows = await cbPool.queryCB(queryStr);
       if (rows.includes("queryCB ERROR: ")) {
         // have this local try catch fail properly if the metadata isn't there
@@ -390,12 +394,14 @@ const doCurveParams = async function () {
       thresholdsModelOptionsMap[variable] = {};
       regionModelOptionsMap[variable] = {};
 
+      // eslint-disable-next-line no-undef
       const queryStr = cbPool.trfmSQLForDbTarget(
         "select model, displayText, mindate, maxdate, fcstLens, " +
           "regions, thresholds " +
           `from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="${variableMetadataDocs[variable]}" and numrecs>0 ` +
           "order by displayCategory, displayOrder"
       );
+      // eslint-disable-next-line no-undef
       const rows = await cbPool.queryCB(queryStr);
 
       if (rows.includes("queryCB ERROR: ")) {
@@ -443,7 +449,9 @@ const doCurveParams = async function () {
 
   try {
     matsCollections.SiteMap.remove({});
+    // eslint-disable-next-line no-undef
     let rows = await cbPool.queryCB(
+      // eslint-disable-next-line no-undef
       cbPool.trfmSQLForDbTarget(
         'select meta().id, {{vxCOLLECTION}}.* from {{vxDBTARGET}} where type="MD" and docType="station" and version = "V01"  and subset="{{vxCOLLECTION}}";'
       )
@@ -1510,6 +1518,7 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
+    // eslint-disable-next-line no-console
     console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
@@ -1535,6 +1544,7 @@ Meteor.startup(function () {
 
   // create list of all pools
   const allPools = [];
+
   // connect to the couchbase cluster
   const cbConnection = matsCollections.Databases.findOne(
     {
@@ -1554,6 +1564,7 @@ Meteor.startup(function () {
 
   // the cluster and bucket are intended to be global
   if (cbConnection) {
+    // eslint-disable-next-line no-undef
     cbPool = new matsCouchbaseUtils.CBUtilities(
       cbConnection.host,
       cbConnection.bucket,
@@ -1594,6 +1605,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+// eslint-disable-next-line no-undef
 appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,

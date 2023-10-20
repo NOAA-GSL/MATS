@@ -36,8 +36,6 @@
     // We want to be able to turn these back into "error"'s at some point. However, for
     // our first pass, we'll only consider the checks that ESLint can auto-fix as errors.
     // https://eslint.org/docs/latest/use/configure/rules#rule-severities
-    "no-undef": "warn",
-    "no-unused-vars": "warn",
     "no-await-in-loop": "warn"
   }
 }

@@ -13,6 +13,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataMap = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -96,6 +97,7 @@ dataMap = function (plotParams, plotFunction) {
     try {
       // send to matsMiddle
       statement = "Station plot -- no one query.";
+      // eslint-disable-next-line no-undef
       const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
       rows = tss.processStationQuery(
         variable,
@@ -110,7 +112,7 @@ dataMap = function (plotParams, plotFunction) {
 
       // send the query statement to the query function
       queryResult = matsDataQueryUtils.queryDBMapCTC(
-        cbPool,
+        cbPool, // eslint-disable-line no-undef
         rows,
         model,
         statisticSelect,

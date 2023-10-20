@@ -14,6 +14,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataContourDiff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -122,6 +123,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     );
 
     // SQL template replacements
+    // eslint-disable-next-line no-undef
     queryTemplate = Assets.getText("sqlTemplates/tmpl_Contour.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -135,13 +137,13 @@ dataContourDiff = function (plotParams, plotFunction) {
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /{{vxVALID_TIMES}}/g,
-          cbPool.trfmListToCSVString(validTimes, null, false)
+          cbPool.trfmListToCSVString(validTimes, null, false) // eslint-disable-line no-undef
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}"); // eslint-disable-line no-undef
       }
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}"); // eslint-disable-line no-undef
     }
 
     if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
@@ -152,7 +154,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       }
       queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}");
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}"); // eslint-disable-line no-undef
     }
 
     let dateString = "";
@@ -189,11 +191,12 @@ dataContourDiff = function (plotParams, plotFunction) {
         const startMoment = moment();
         let finishMoment;
         try {
+          // eslint-disable-next-line no-undef
           statement = cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
 
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBContour(
-            cbPool,
+            cbPool, // eslint-disable-line no-undef
             statement,
             appParams,
             statisticSelect
