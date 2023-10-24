@@ -12,6 +12,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataPerformanceDiagram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -181,7 +182,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(
-          sumPool,
+          sumPool, // eslint-disable-line no-undef
           statement,
           appParams
         );

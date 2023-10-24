@@ -12,6 +12,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataMap = function (plotParams, plotFunction) {
   const appParams = {
     plotType: matsTypes.PlotTypes.map,
@@ -178,7 +179,7 @@ dataMap = function (plotParams, plotFunction) {
 
       // send the query statement to the query function
       queryResult = matsDataQueryUtils.queryDBMapCTC(
-        sumPool,
+        sumPool, // eslint-disable-line no-undef
         statement,
         modelTable,
         statistic,
