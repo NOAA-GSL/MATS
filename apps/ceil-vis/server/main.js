@@ -346,7 +346,7 @@ const doCurveParams = function () {
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      metadataPool,
+      metadataPool, // eslint-disable-line no-undef
       "select short_name,description from region_descriptions;"
     );
     for (let j = 0; j < rows.length; j += 1) {
@@ -356,14 +356,11 @@ const doCurveParams = function () {
     throw new Error(err.message);
   }
 
-  let rows;
-  let didx;
-
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       allThresholdValuesMap[variables[didx]] = {};
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
+      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool, // eslint-disable-line no-undef
         `select trsh,description from ${
           variableDBNames[variables[didx]].modelDB
         }.threshold_descriptions;`
@@ -378,7 +375,7 @@ const doCurveParams = function () {
   }
 
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
       modelOptionsMap[variable] = {};
       modelDateRangeMap[variable] = {};
@@ -386,8 +383,8 @@ const doCurveParams = function () {
       thresholdsModelOptionsMap[variable] = {};
       regionModelOptionsMap[variable] = {};
 
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
+      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool, // eslint-disable-line no-undef
         `select model,regions,display_text,fcst_lens,trsh,mindate,maxdate from ${variableDBNames[variable].sumsDB}.regions_per_model_mats_all_categories order by display_category, display_order;`
       );
       for (let i = 0; i < rows.length; i += 1) {
@@ -437,38 +434,43 @@ const doCurveParams = function () {
 
   try {
     matsCollections.SiteMap.remove({});
-    rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool,
+    const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+      sumPool, // eslint-disable-line no-undef
       "select madis_id,name,lat,lon,elev,description from madis3.metars_mats_global where lat > -16380 and lat < 16380 and lon > -32760 and lon < 32760 order by name;"
     );
     for (let i = 0; i < rows.length; i += 1) {
-      const siteName = rows[i].name;
-      const siteDescription = rows[i].description;
+      const siteName = rows[i].name === undefined ? "unknown" : rows[i].name;
+      const siteDescription =
+        rows[i].description === undefined ? "unknown" : rows[i].description;
       const siteId = rows[i].madis_id;
-      const siteLat = rows[i].lat / 182;
-      const siteLon = rows[i].lon / 182;
-      const siteElev = rows[i].elev;
-      siteOptionsMap[siteName] = [siteId];
+      const siteLat = rows[i].lat === undefined ? -90 : rows[i].lat / 182;
+      const siteLon = rows[i].lon === undefined ? 0 : rows[i].lon / 182;
+      const siteElev = rows[i].elev === undefined ? 0 : rows[i].elev;
 
-      const point = [siteLat, siteLon];
-      const obj = {
-        name: siteName,
-        origName: siteName,
-        point,
-        elevation: siteElev,
-        options: {
-          title: siteDescription,
-          color: "red",
-          size: 5,
-          network: "METAR",
-          peerOption: siteName,
-          id: siteId,
-          highLightColor: "blue",
-        },
-      };
-      sitesLocationMap.push(obj);
+      // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
+      // Also exclude stations with missing data
+      if (siteLat < 90 && siteLat > -90) {
+        siteOptionsMap[siteName] = [siteId];
 
-      matsCollections.SiteMap.insert({ siteName, siteId });
+        const point = [siteLat, siteLon];
+        const obj = {
+          name: siteName,
+          origName: siteName,
+          point,
+          elevation: siteElev,
+          options: {
+            title: siteDescription,
+            color: "red",
+            size: 5,
+            network: "METAR",
+            peerOption: siteName,
+            id: siteId,
+            highLightColor: "blue",
+          },
+        };
+        sitesLocationMap.push(obj);
+        matsCollections.SiteMap.insert({ siteName, siteId });
+      }
     }
   } catch (err) {
     throw new Error(err.message);
@@ -1483,6 +1485,7 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
+    // eslint-disable-next-line no-console
     console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
@@ -1527,6 +1530,7 @@ Meteor.startup(function () {
   );
   if (cbConnection) {
     // global cbScorecardSettingsPool
+    // eslint-disable-next-line no-undef
     cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
       cbConnection.host,
       cbConnection.bucket,
@@ -1553,6 +1557,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (metadataSettings) {
+    // eslint-disable-next-line no-undef
     metadataPool = mysql.createPool(metadataSettings);
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
@@ -1573,6 +1578,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
+    // eslint-disable-next-line no-undef
     sumPool = mysql.createPool(sumSettings);
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
@@ -1604,6 +1610,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+// eslint-disable-next-line no-undef
 appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,

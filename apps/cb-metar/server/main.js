@@ -365,8 +365,8 @@ const doCurveParams = async function () {
       allThresholdValuesMap[variable] = {};
       // eslint-disable-next-line no-undef
       const queryStr = cbPool.trfmSQLForDbTarget(
-        // `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
-        `select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
+        `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
+        // `select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
       );
       // eslint-disable-next-line no-undef
       const rows = await cbPool.queryCB(queryStr);
@@ -462,15 +462,16 @@ const doCurveParams = async function () {
     }
     rows = rows.sort((a, b) => (a.name > b.name ? 1 : -1));
     for (let i = 0; i < rows.length; i += 1) {
-      const siteId = rows[i].id;
       const siteName = rows[i].name === undefined ? "unknown" : rows[i].name;
       const siteDescription =
         rows[i].description === undefined ? "unknown" : rows[i].description;
-      const siteLat = rows[i].geo === undefined ? undefined : rows[i].geo[0].lat;
-      const siteLon = rows[i].geo === undefined ? undefined : rows[i].geo[0].lon;
-      const siteElev = rows[i].geo === undefined ? "unknown" : rows[i].geo[0].elev;
+      const siteId = rows[i].id;
+      const siteLat = rows[i].geo === undefined ? -90 : Number(rows[i].geo[0].lat);
+      const siteLon = rows[i].geo === undefined ? 0 : Number(rows[i].geo[0].lon);
+      const siteElev = rows[i].geo === undefined ? 0 : rows[i].geo[0].elev;
 
-      // there's one station right at the south pole that the map doesn't know how to render at all, so exclude it
+      // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
+      // Also exclude stations with missing data
       if (siteLat < 90 && siteLat > -90) {
         siteOptionsMap[siteName] = [siteId];
 
@@ -1075,14 +1076,14 @@ const doCurveParams = async function () {
   }
 
   // determine date defaults for dates and curveDates
-  modelDateRangeMap = matsCollections.variable.findOne(
-    { name: "variable" },
-    { dates: 1 }
-  ).dates;
   const defaultDataSource = matsCollections["data-source"].findOne(
     { name: "data-source" },
     { default: 1 }
   ).default;
+  modelDateRangeMap = matsCollections.variable.findOne(
+    { name: "variable" },
+    { dates: 1 }
+  ).dates;
   minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
   maxDate = modelDateRangeMap[variables[0]][defaultDataSource].maxDate;
 
