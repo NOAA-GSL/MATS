@@ -89,7 +89,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     ).optionsMap;
     const statisticClause =
       "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as N0";
-    const dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
+
+      const dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
 
     const regionStr = curve.region;
     const region = Object.keys(

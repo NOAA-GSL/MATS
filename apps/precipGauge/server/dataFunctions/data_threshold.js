@@ -55,8 +55,6 @@ dataThreshold = function (plotParams, plotFunction) {
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[curve["data-source"]][0];
 
-    const thresholdClause = "";
-
     let validTimeClause = "";
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -117,7 +115,6 @@ dataThreshold = function (plotParams, plotFunction) {
           "{{queryTableClause}} " +
           "where 1=1 " +
           "{{dateClause}} " +
-          "{{thresholdClause}} " +
           "{{validTimeClause}} " +
           "{{forecastLengthClause}} " +
           "group by thresh " +
@@ -126,7 +123,6 @@ dataThreshold = function (plotParams, plotFunction) {
 
         statement = statement.replace("{{statisticClause}}", statisticClause);
         statement = statement.replace("{{queryTableClause}}", queryTableClause);
-        statement = statement.replace("{{thresholdClause}}", thresholdClause);
         statement = statement.replace("{{validTimeClause}}", validTimeClause);
         statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{dateClause}}", dateClause);
