@@ -77,7 +77,6 @@ dataDieoff = function (plotParams, plotFunction) {
     let utcCycleStartClause = "";
     let utcCycleStart;
 
-    const forecastLengthClause = "";
     const forecastLengthStr = curve["dieoff-type"];
     const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne(
       { name: "dieoff-type" },
@@ -226,7 +225,6 @@ dataDieoff = function (plotParams, plotFunction) {
           "{{siteDateClause}} " +
           "{{thresholdClause}} " +
           "{{validTimeClause}} " +
-          "{{forecastLengthClause}} " +
           "{{utcCycleStartClause}} " +
           "{{truthClause}} " +
           "group by fcst_lead " +
@@ -239,7 +237,6 @@ dataDieoff = function (plotParams, plotFunction) {
         statement = statement.replace("{{sitesClause}}", sitesClause);
         statement = statement.replace("{{thresholdClause}}", thresholdClause);
         statement = statement.replace("{{validTimeClause}}", validTimeClause);
-        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{truthClause}}", truthClause);
         statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
         statement = statement.replace("{{dateClause}}", dateClause);

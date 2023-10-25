@@ -13,6 +13,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataDailyModelCycle = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -23,54 +24,57 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  const fromSecs = dateRange.fromSeconds;
-  const toSecs = dateRange.toSeconds;
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  const dataset = [];
-  const utcCycleStarts = [];
+
   const axisMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
+
+  let statType;
+  const utcCycleStarts = [];
   const idealValues = [];
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  let statement = "";
+  let error = "";
+  const dataset = [];
+
+  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
+  const fromSecs = dateRange.fromSeconds;
+  const toSecs = dateRange.toSeconds;
+
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-    const { diffFrom } = curve;
     const { label } = curve;
+    const { diffFrom } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[curve["data-source"]][0];
-    var regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
-    );
-    var scaleStr = curve.scale;
-    const grid_scale = Object.keys(
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
-    );
-    const scaleClause = `and m0.scale = ${grid_scale}`;
-    const queryTableClause = `from ${model}_freq_${region} as m0`;
+
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
       { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
+
+    const scaleStr = curve.scale;
+    const scale = Object.keys(
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap
+    ).find(
+      (key) =>
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
+    );
+    const scaleClause = `and m0.scale = ${scale}`;
+
     if (curve["utc-cycle-start"].length !== 1) {
       throw new Error(
         "INFO:  Please select exactly one UTC Cycle Init Hour for this plot type."
@@ -79,19 +83,32 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const utcCycleStart = Number(curve["utc-cycle-start"][0]);
     utcCycleStarts[curveIndex] = utcCycleStart;
     const utcCycleStartClause = `and floor(((m0.valid_secs - m0.fcst_len*60))%(24*3600)/900)/4 IN(${utcCycleStart})`;
+
     const forecastLengthClause = "and m0.fcst_len < 24 * 60";
-    const dateClause = `and m0.valid_secs >= ${fromSecs} and m0.valid_secs <= ${toSecs}`;
+
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause = statisticOptionsMap[statisticSelect][0];
+
+    const dateClause = `and m0.valid_secs >= ${fromSecs} and m0.valid_secs <= ${toSecs}`;
+
+    const regionStr = curve.region;
+    const region = Object.keys(
+      matsCollections.region.findOne({ name: "region" }).valuesMap
+    ).find(
+      (key) =>
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    );
+    const queryTableClause = `from ${model}_freq_${region} as m0`;
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    var statType = statisticOptionsMap[statisticSelect][1];
+    [, statType] = statisticOptionsMap[statisticSelect];
     const axisKey = statisticOptionsMap[statisticSelect][2];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][3];
@@ -99,47 +116,47 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       idealValues.push(idealVal);
     }
 
-    var d;
+    let d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      let statement =
-        "select m0.valid_secs as avtime, " +
-        "count(distinct m0.valid_secs) as N_times, " +
-        "min(m0.valid_secs) as min_secs, " +
-        "max(m0.valid_secs) as max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "where 1=1 " +
-        "{{dateClause}} " +
-        "{{utcCycleStartClause}} " +
-        "{{forecastLengthClause}} " +
-        "{{scaleClause}} " +
-        "group by avtime " +
-        "order by avtime" +
-        ";";
-
-      statement = statement.replace("{{statisticClause}}", statisticClause);
-      statement = statement.replace("{{queryTableClause}}", queryTableClause);
-      statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
-      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
-      statement = statement.replace("{{scaleClause}}", scaleClause);
-      statement = statement.replace("{{dateClause}}", dateClause);
-      statement = statement.split("{{variable}}").join(variable);
-      dataRequests[label] = statement;
-
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
+      let finishMoment;
       try {
+        statement =
+          "select m0.valid_secs as avtime, " +
+          "count(distinct m0.valid_secs) as N_times, " +
+          "min(m0.valid_secs) as min_secs, " +
+          "max(m0.valid_secs) as max_secs, " +
+          "{{statisticClause}} " +
+          "{{queryTableClause}} " +
+          "where 1=1 " +
+          "{{dateClause}} " +
+          "{{utcCycleStartClause}} " +
+          "{{forecastLengthClause}} " +
+          "{{scaleClause}} " +
+          "group by avtime " +
+          "order by avtime" +
+          ";";
+
+        statement = statement.replace("{{statisticClause}}", statisticClause);
+        statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
+        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+        statement = statement.replace("{{scaleClause}}", scaleClause);
+        statement = statement.replace("{{dateClause}}", dateClause);
+        statement = statement.split("{{variable}}").join(variable);
+        dataRequests[label] = statement;
+
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool,
+          sumPool, // eslint-disable-line no-undef
           statement,
           appParams,
           statisticSelect
         );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -155,6 +172,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
@@ -164,7 +182,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
           if (error.includes("ER_NO_SUCH_TABLE")) {
             throw new Error(
-              `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${dataSourceStr}]. ` +
+              `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
                 `Choose a different scale to continue using this region.`
             );
           } else {
@@ -176,7 +194,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       }
 
       // set axis limits based on returned data
-      var postQueryStartMoment = moment();
       if (dataFoundForCurve) {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -201,6 +218,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
     const annotation =
       mean === undefined
