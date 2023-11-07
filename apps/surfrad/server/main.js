@@ -4,7 +4,9 @@
 
 import { Meteor } from "meteor/meteor";
 import { mysql } from "meteor/pcel:mysql";
+import { moment } from "meteor/momentjs:moment";
 import {
+  matsMethods,
   matsTypes,
   matsCollections,
   matsDataUtils,
@@ -317,104 +319,93 @@ const doCurveParams = function () {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
     }).fetch()[0].curve_params;
-    for (let cp = 0; cp < params.length; cp++) {
+    for (let cp = 0; cp < params.length; cp += 1) {
       matsCollections[params[cp]].remove({});
     }
   }
+
   const modelOptionsMap = {};
   let modelDateRangeMap = {};
   const regionModelOptionsMap = {};
   const forecastLengthOptionsMap = {};
   const scaleModelOptionsMap = {};
-  const masterRegionValuesMap = {};
-  const masterScaleValuesMap = {};
+  const allRegionValuesMap = {};
+  const allScaleValuesMap = {};
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool,
+      sumPool, // eslint-disable-line no-undef
       "select station,description from station_descriptions;"
     );
-    let masterRegDescription;
-    let masterShortName;
-    for (var j = 0; j < rows.length; j++) {
-      masterRegDescription = rows[j].description.trim();
-      masterShortName = rows[j].station.trim();
-      masterRegionValuesMap[masterShortName] = masterRegDescription;
+    for (let j = 0; j < rows.length; j += 1) {
+      allRegionValuesMap[rows[j].station.trim()] = rows[j].description.trim();
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool,
+      sumPool, // eslint-disable-line no-undef
       "select scle,description from scale_descriptions;"
     );
-    let masterDescription;
-    let masterScale;
-    for (var j = 0; j < rows.length; j++) {
-      masterDescription = rows[j].description.trim();
-      masterScale = rows[j].scle.trim();
-      masterScaleValuesMap[masterScale] = masterDescription;
+    for (let j = 0; j < rows.length; j += 1) {
+      allScaleValuesMap[rows[j].scle.trim()] = rows[j].description.trim();
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool,
+      sumPool, // eslint-disable-line no-undef
       "select model,regions,display_text,fcst_lens,scle,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
     );
-    for (let i = 0; i < rows.length; i++) {
-      const model_value = rows[i].model.trim();
+    for (let i = 0; i < rows.length; i += 1) {
+      const modelValue = rows[i].model.trim();
       const model = rows[i].display_text.trim();
-      modelOptionsMap[model] = [model_value];
+      modelOptionsMap[model] = [modelValue];
 
       const rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
       const rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-      modelDateRangeMap[model] = { minDate: rowMinDate, maxDate: rowMaxDate };
+      modelDateRangeMap[model] = {
+        minDate: rowMinDate,
+        maxDate: rowMaxDate,
+      };
 
       const forecastLengths = rows[i].fcst_lens;
-      const forecastLengthArr = forecastLengths
+      forecastLengthOptionsMap[model] = forecastLengths
         .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      for (var j = 0; j < forecastLengthArr.length; j++) {
-        forecastLengthArr[j] = (
-          Number(forecastLengthArr[j].replace(/'|\[|\]/g, "")) / 60
-        ).toString();
-      }
-      forecastLengthOptionsMap[model] = forecastLengthArr;
+        .map(Function.prototype.call, String.prototype.trim)
+        .map(function (fhr) {
+          return Number(fhr.replace(/'|\[|\]/g, "")) / 60;
+        });
 
       const scales = rows[i].scle;
-      const scalesArrRaw = scales
+      scaleModelOptionsMap[model] = scales
         .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      const scalesArr = [];
-      var dummyScale;
-      for (var j = 0; j < scalesArrRaw.length; j++) {
-        dummyScale = scalesArrRaw[j].replace(/'|\[|\]/g, "");
-        scalesArr.push(masterScaleValuesMap[dummyScale]);
-      }
-      scaleModelOptionsMap[model] = scalesArr;
+        .map(Function.prototype.call, String.prototype.trim)
+        .map(function (scale) {
+          return allScaleValuesMap[scale.replace(/'|\[|\]/g, "")];
+        });
 
       const { regions } = rows[i];
-      const regionsArrRaw = regions
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      const regionsArr = [];
-      regionsArr.push(masterRegionValuesMap.all_stat);
-      regionsArr.push(masterRegionValuesMap.all_surf);
-      regionsArr.push(masterRegionValuesMap.all_sol);
-      var dummyRegion;
-      for (var j = 0; j < regionsArrRaw.length; j++) {
-        dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
-        regionsArr.push(masterRegionValuesMap[dummyRegion]);
-      }
-      regionModelOptionsMap[model] = regionsArr;
+      regionModelOptionsMap[model] = [
+        allRegionValuesMap.all_stat,
+        allRegionValuesMap.all_surf,
+        allRegionValuesMap.all_sol,
+      ];
+      regionModelOptionsMap[model] = regionModelOptionsMap[model].concat(
+        regions
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (region) {
+            return allRegionValuesMap[region.replace(/'|\[|\]/g, "")];
+          })
+      );
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   if (matsCollections.label.findOne({ name: "label" }) === undefined) {
@@ -452,7 +443,9 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["data-source"].findOne({ name: "data-source" });
+    const currentParam = matsCollections["data-source"].findOne({
+      name: "data-source",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
@@ -478,7 +471,7 @@ const doCurveParams = function () {
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
       options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
-      valuesMap: masterRegionValuesMap,
+      valuesMap: allRegionValuesMap,
       superiorNames: ["data-source"],
       controlButtonCovered: true,
       controlButtonText: "site",
@@ -491,10 +484,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.region.findOne({ name: "region" });
+    const currentParam = matsCollections.region.findOne({ name: "region" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allRegionValuesMap)
     ) {
       // have to reload region data
       matsCollections.region.update(
@@ -502,7 +495,7 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: regionModelOptionsMap,
-            valuesMap: masterRegionValuesMap,
+            valuesMap: allRegionValuesMap,
             options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
             default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
           },
@@ -511,7 +504,7 @@ const doCurveParams = function () {
     }
   }
 
-  const optionsMap = {
+  const statOptionsMap = {
     RMSE: "scalar",
 
     "Bias (Model - Obs)": "scalar",
@@ -531,11 +524,11 @@ const doCurveParams = function () {
     matsCollections.statistic.insert({
       name: "statistic",
       type: matsTypes.InputTypes.select,
-      optionsMap,
-      options: Object.keys(optionsMap),
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
@@ -547,11 +540,11 @@ const doCurveParams = function () {
     matsCollections["x-statistic"].insert({
       name: "x-statistic",
       type: matsTypes.InputTypes.select,
-      optionsMap,
-      options: Object.keys(optionsMap),
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
@@ -563,11 +556,11 @@ const doCurveParams = function () {
     matsCollections["y-statistic"].insert({
       name: "y-statistic",
       type: matsTypes.InputTypes.select,
-      optionsMap,
-      options: Object.keys(optionsMap),
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
@@ -733,7 +726,7 @@ const doCurveParams = function () {
       type: matsTypes.InputTypes.select,
       optionsMap: scaleModelOptionsMap,
       options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],
-      valuesMap: masterScaleValuesMap,
+      valuesMap: allScaleValuesMap,
       superiorNames: ["data-source"],
       controlButtonCovered: true,
       unique: false,
@@ -745,10 +738,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.scale.findOne({ name: "scale" });
+    const currentParam = matsCollections.scale.findOne({ name: "scale" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allScaleValuesMap)
     ) {
       // have to reload scale data
       matsCollections.scale.update(
@@ -756,7 +749,7 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: scaleModelOptionsMap,
-            valuesMap: masterScaleValuesMap,
+            valuesMap: allScaleValuesMap,
             options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],
             default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][1],
           },
@@ -787,7 +780,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["forecast-length"].findOne({
+    const currentParam = matsCollections["forecast-length"].findOne({
       name: "forecast-length",
     });
     if (
@@ -1006,7 +999,9 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["curve-dates"].findOne({ name: "curve-dates" });
+    const currentParam = matsCollections["curve-dates"].findOne({
+      name: "curve-dates",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
@@ -1293,7 +1288,8 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
-    console.log(
+    // eslint-disable-next-line no-console
+    console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
     matsCollections.Databases.drop();
@@ -1310,7 +1306,7 @@ Meteor.startup(function () {
       databases = Meteor.settings.private.databases;
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
-      for (let di = 0; di < databases.length; di++) {
+      for (let di = 0; di < databases.length; di += 1) {
         matsCollections.Databases.insert(databases[di]);
       }
     }
@@ -1337,6 +1333,7 @@ Meteor.startup(function () {
   );
   if (cbConnection) {
     // global cbScorecardSettingsPool
+    // eslint-disable-next-line no-undef
     cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
       cbConnection.host,
       cbConnection.bucket,
@@ -1363,6 +1360,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
+    // eslint-disable-next-line no-undef
     sumPool = mysql.createPool(sumSettings);
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
@@ -1380,7 +1378,7 @@ Meteor.startup(function () {
       appType: matsTypes.AppTypes.mats,
     });
   } catch (error) {
-    console.log(error.message);
+    throw new Error(error.message);
   }
 });
 
@@ -1388,6 +1386,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+// eslint-disable-next-line no-undef
 appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,
