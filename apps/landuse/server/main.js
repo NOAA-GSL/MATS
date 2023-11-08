@@ -4,7 +4,9 @@
 
 import { Meteor } from "meteor/meteor";
 import { mysql } from "meteor/pcel:mysql";
+import { moment } from "meteor/momentjs:moment";
 import {
+  matsMethods,
   matsTypes,
   matsCollections,
   matsDataUtils,
@@ -319,71 +321,64 @@ const doCurveParams = function () {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
     }).fetch()[0].curve_params;
-    for (let cp = 0; cp < params.length; cp++) {
+    for (let cp = 0; cp < params.length; cp += 1) {
       matsCollections[params[cp]].remove({});
     }
   }
+
   const modelOptionsMap = {};
   let modelDateRangeMap = {};
   const forecastLengthOptionsMap = {};
   const vgtypsModelOptionsMap = {};
-  const masterVgtypValuesMap = {};
+  const allVgtypValuesMap = {};
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool,
+      sumPool, // eslint-disable-line no-undef
       "select vgtyp,description from vgtyp_descriptions;"
     );
-    let masterDescription;
-    let masterVgtyp;
-    for (var j = 0; j < rows.length; j++) {
-      masterDescription = rows[j].description.trim();
-      masterVgtyp = rows[j].vgtyp.trim();
-      masterVgtypValuesMap[masterVgtyp] = masterDescription;
+    for (let j = 0; j < rows.length; j += 1) {
+      allVgtypValuesMap[rows[j].vgtyp.trim()] = rows[j].description.trim();
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool,
+      sumPool, // eslint-disable-line no-undef
       "select model,display_text,fcst_lens,vgtyp,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
     );
-    for (let i = 0; i < rows.length; i++) {
-      const model_value = rows[i].model.trim();
+    for (let i = 0; i < rows.length; i += 1) {
+      const modelValue = rows[i].model.trim();
       const model = rows[i].display_text.trim();
-      modelOptionsMap[model] = [model_value];
+      modelOptionsMap[model] = [modelValue];
 
       const rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
       const rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-      modelDateRangeMap[model] = { minDate: rowMinDate, maxDate: rowMaxDate };
+      modelDateRangeMap[model] = {
+        minDate: rowMinDate,
+        maxDate: rowMaxDate,
+      };
 
       const forecastLengths = rows[i].fcst_lens;
-      const forecastLengthArr = forecastLengths
+      forecastLengthOptionsMap[model] = forecastLengths
         .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      for (var j = 0; j < forecastLengthArr.length; j++) {
-        forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
-      }
-      forecastLengthOptionsMap[model] = forecastLengthArr;
+        .map(Function.prototype.call, String.prototype.trim)
+        .map(function (fhr) {
+          return fhr.replace(/'|\[|\]/g, "");
+        });
 
       const vgtyps = rows[i].vgtyp;
-      const vgtypsArrRaw = vgtyps
+      vgtypsModelOptionsMap[model] = vgtyps
         .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      const vgtypsArr = [];
-      var dummyVgtyp;
-      for (var j = 0; j < vgtypsArrRaw.length; j++) {
-        dummyVgtyp = vgtypsArrRaw[j].replace(/'|\[|\]/g, "");
-        if (dummyVgtyp !== "0") {
-          vgtypsArr.push(masterVgtypValuesMap[dummyVgtyp]);
-        }
-      }
-      vgtypsModelOptionsMap[model] = vgtypsArr;
+        .map(Function.prototype.call, String.prototype.trim)
+        .map(function (vgtyp) {
+          return allVgtypValuesMap[vgtyp.replace(/'|\[|\]/g, "")];
+        });
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   if (matsCollections.label.findOne({ name: "label" }) === undefined) {
@@ -421,7 +416,9 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["data-source"].findOne({ name: "data-source" });
+    const currentParam = matsCollections["data-source"].findOne({
+      name: "data-source",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
@@ -447,7 +444,7 @@ const doCurveParams = function () {
       type: matsTypes.InputTypes.select,
       optionsMap: vgtypsModelOptionsMap,
       options: vgtypsModelOptionsMap[Object.keys(vgtypsModelOptionsMap)[0]],
-      valuesMap: masterVgtypValuesMap,
+      valuesMap: allVgtypValuesMap,
       superiorNames: ["data-source"],
       controlButtonCovered: true,
       unique: false,
@@ -460,10 +457,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.vgtyp.findOne({ name: "vgtyp" });
+    const currentParam = matsCollections.region.findOne({ name: "vgtyp" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, vgtypsModelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterVgtypValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allVgtypValuesMap)
     ) {
       // have to reload vgtyp data
       matsCollections.vgtyp.update(
@@ -471,7 +468,7 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: vgtypsModelOptionsMap,
-            valuesMap: masterVgtypValuesMap,
+            valuesMap: allVgtypValuesMap,
             options: vgtypsModelOptionsMap[Object.keys(vgtypsModelOptionsMap)[0]],
             default: vgtypsModelOptionsMap[Object.keys(vgtypsModelOptionsMap)[0]][0],
           },
@@ -480,7 +477,7 @@ const doCurveParams = function () {
     }
   }
 
-  const optionsMap = {
+  const statOptionsMap = {
     RMSE: "scalar",
 
     "Bias (Model - Obs)": "scalar",
@@ -500,11 +497,11 @@ const doCurveParams = function () {
     matsCollections.statistic.insert({
       name: "statistic",
       type: matsTypes.InputTypes.select,
-      optionsMap,
-      options: Object.keys(optionsMap),
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
@@ -516,11 +513,11 @@ const doCurveParams = function () {
     matsCollections["x-statistic"].insert({
       name: "x-statistic",
       type: matsTypes.InputTypes.select,
-      optionsMap,
-      options: Object.keys(optionsMap),
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
@@ -532,11 +529,11 @@ const doCurveParams = function () {
     matsCollections["y-statistic"].insert({
       name: "y-statistic",
       type: matsTypes.InputTypes.select,
-      optionsMap,
-      options: Object.keys(optionsMap),
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
@@ -704,7 +701,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["forecast-length"].findOne({
+    const currentParam = matsCollections["forecast-length"].findOne({
       name: "forecast-length",
     });
     if (
@@ -998,7 +995,9 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["curve-dates"].findOne({ name: "curve-dates" });
+    const currentParam = matsCollections["curve-dates"].findOne({
+      name: "curve-dates",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
@@ -1303,7 +1302,8 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
-    console.log(
+    // eslint-disable-next-line no-console
+    console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
     matsCollections.Databases.drop();
@@ -1320,7 +1320,7 @@ Meteor.startup(function () {
       databases = Meteor.settings.private.databases;
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
-      for (let di = 0; di < databases.length; di++) {
+      for (let di = 0; di < databases.length; di += 1) {
         matsCollections.Databases.insert(databases[di]);
       }
     }
@@ -1347,6 +1347,7 @@ Meteor.startup(function () {
   );
   if (cbConnection) {
     // global cbScorecardSettingsPool
+    // eslint-disable-next-line no-undef
     cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
       cbConnection.host,
       cbConnection.bucket,
@@ -1373,6 +1374,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
+    // eslint-disable-next-line no-undef
     sumPool = mysql.createPool(sumSettings);
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
@@ -1389,7 +1391,7 @@ Meteor.startup(function () {
       appType: matsTypes.AppTypes.mats,
     });
   } catch (error) {
-    console.log(error.message);
+    throw new Error(error.message);
   }
 });
 
@@ -1397,6 +1399,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+// eslint-disable-next-line no-undef
 appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,

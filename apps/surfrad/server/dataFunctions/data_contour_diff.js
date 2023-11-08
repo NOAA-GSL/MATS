@@ -160,7 +160,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     );
     statType = statisticOptionsMap[statisticSelect];
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
-    curve.unitKey = varUnits;
+    curves[curveIndex].unitKey = varUnits;
 
     let d;
     if (!diffFrom) {

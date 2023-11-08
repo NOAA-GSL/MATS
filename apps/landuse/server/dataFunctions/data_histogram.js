@@ -11,6 +11,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataHistogram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -21,58 +22,56 @@ dataHistogram = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
-  const alreadyMatched = false;
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   const dataFoundForCurve = [];
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  let error = "";
+  const alreadyMatched = false;
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
+
+  const axisMap = Object.create(null);
+  let statType;
+  let varUnits;
+
+  let statement = "";
+  let error = "";
   const dataset = [];
   const allReturnedSubStats = [];
   const allReturnedSubSecs = [];
-  const axisMap = Object.create(null);
 
   // process user bin customizations
   const binParams = matsDataUtils.setHistogramParameters(plotParams);
   const { yAxisFormat } = binParams;
   const { binNum } = binParams;
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-    const { diffFrom } = curve;
     dataFoundForCurve[curveIndex] = true;
     const { label } = curve;
+    const { diffFrom } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[curve["data-source"]][0];
-    var vgtypStr = curve.vgtyp;
-    const vgtyp = Object.keys(
-      matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap[key] === vgtypStr
-    );
-    const vgtypClause = `and m0.vgtyp IN(${vgtyp})`;
-    const queryTableClause = `from ${model} as m0`;
+
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
       { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
+
     let validTimeClause = "";
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       validTimeClause = `and m0.hour IN(${validTimes})`;
     }
+
     const forecastLength = curve["forecast-length"];
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
-    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
-    const fromSecs = dateRange.fromSeconds;
-    const toSecs = dateRange.toSeconds;
-    const dateClause = `and m0.valid_day+3600*m0.hour >= ${fromSecs} and m0.valid_day+3600*m0.hour <= ${toSecs}`;
+
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
@@ -81,16 +80,33 @@ dataHistogram = function (plotParams, plotFunction) {
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, sum(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
       `group_concat(m0.valid_day+3600*m0.hour, ';', ${variable[0]}, ';', ${variable[1]}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.valid_day+3600*m0.hour) as sub_data, count(${variable[0]}) as N0`;
-    var statType = statisticOptionsMap[statisticSelect];
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
+
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+    const dateClause = `and m0.valid_day+3600*m0.hour >= ${fromSecs} and m0.valid_day+3600*m0.hour <= ${toSecs}`;
+
+    const vgtypStr = curve.vgtyp;
+    const vgtyp = Object.keys(
+      matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap
+    ).find(
+      (key) =>
+        matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap[key] === vgtypStr
     );
-    var varUnits = statVarUnitMap[statisticSelect][variableStr];
+    const vgtypClause = `and m0.vgtyp IN(${vgtyp})`;
+
+    const queryTableClause = `from ${model} as m0`;
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
+    const { statVarUnitMap } = matsCollections.variable.findOne(
+      { name: "variable" },
+      { statVarUnitMap: 1 }
+    );
+    statType = statisticOptionsMap[statisticSelect];
+    varUnits = statVarUnitMap[statisticSelect][variableStr];
     let axisKey = yAxisFormat;
     if (yAxisFormat === "Relative frequency") {
       axisKey += " (x100)";
@@ -98,46 +114,46 @@ dataHistogram = function (plotParams, plotFunction) {
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
 
-    var d;
+    let d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      let statement =
-        "select m0.valid_day+3600*m0.hour as avtime, " +
-        "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
-        "min(m0.valid_day+3600*m0.hour) as min_secs, " +
-        "max(m0.valid_day+3600*m0.hour) as max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "where 1=1 " +
-        "{{dateClause}} " +
-        "{{validTimeClause}} " +
-        "{{forecastLengthClause}} " +
-        "{{vgtypClause}} " +
-        "group by avtime " +
-        "order by avtime" +
-        ";";
-
-      statement = statement.replace("{{statisticClause}}", statisticClause);
-      statement = statement.replace("{{queryTableClause}}", queryTableClause);
-      statement = statement.replace("{{validTimeClause}}", validTimeClause);
-      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
-      statement = statement.replace("{{vgtypClause}}", vgtypClause);
-      statement = statement.replace("{{dateClause}}", dateClause);
-      dataRequests[label] = statement;
-
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
+      let finishMoment;
       try {
+        statement =
+          "select m0.valid_day+3600*m0.hour as avtime, " +
+          "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+          "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+          "max(m0.valid_day+3600*m0.hour) as max_secs, " +
+          "{{statisticClause}} " +
+          "{{queryTableClause}} " +
+          "where 1=1 " +
+          "{{dateClause}} " +
+          "{{validTimeClause}} " +
+          "{{forecastLengthClause}} " +
+          "{{vgtypClause}} " +
+          "group by avtime " +
+          "order by avtime" +
+          ";";
+
+        statement = statement.replace("{{statisticClause}}", statisticClause);
+        statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{validTimeClause}}", validTimeClause);
+        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+        statement = statement.replace("{{vgtypClause}}", vgtypClause);
+        statement = statement.replace("{{dateClause}}", dateClause);
+        dataRequests[label] = statement;
+
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool,
+          sumPool, // eslint-disable-line no-undef
           statement,
           appParams,
           `${statisticSelect}_${variableStr}`
         );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -155,6 +171,7 @@ dataHistogram = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition

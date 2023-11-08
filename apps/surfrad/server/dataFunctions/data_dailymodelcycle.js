@@ -127,11 +127,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
     let d;
     if (!diffFrom) {
-      let queryResult;
-      const startMoment = moment();
-      let finishMoment;
-      try {
-        statement =
           "select m0.secs as avtime, " +
           "count(distinct m0.secs) as N_times, " +
           "min(m0.secs) as min_secs, " +
