@@ -6,6 +6,7 @@ import { Meteor } from "meteor/meteor";
 import { mysql } from "meteor/pcel:mysql";
 import { moment } from "meteor/momentjs:moment";
 import {
+  matsMethods,
   matsTypes,
   matsCollections,
   matsDataUtils,
@@ -328,25 +329,22 @@ const doCurveParams = function () {
       matsCollections[params[cp]].remove({});
     }
   }
+
   const modelOptionsMap = {};
   let modelDateRangeMap = {};
   const regionModelOptionsMap = {};
   const forecastLengthOptionsMap = {};
   const levelOptionsMap = {};
   const variableModelOptionsMap = {};
-  const masterRegionValuesMap = {};
+  const allRegionValuesMap = {};
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      metadataPool,
+      metadataPool, // eslint-disable-line no-undef
       "select id,description from region_descriptions;"
     );
-    let masterRegDescription;
-    let masterId;
     for (let j = 0; j < rows.length; j += 1) {
-      masterRegDescription = rows[j].description.trim();
-      masterId = rows[j].id;
-      masterRegionValuesMap[masterId] = masterRegDescription;
+      allRegionValuesMap[rows[j].id] = rows[j].description.trim();
     }
   } catch (err) {
     throw new Error(err.message);
@@ -354,7 +352,7 @@ const doCurveParams = function () {
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool,
+      sumPool, // eslint-disable-line no-undef
       "select model,regions,display_text,fcst_lens,levels,variable,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
     );
     for (let i = 0; i < rows.length; i += 1) {
@@ -364,46 +362,42 @@ const doCurveParams = function () {
 
       const rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
       const rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-      modelDateRangeMap[model] = { minDate: rowMinDate, maxDate: rowMaxDate };
+      modelDateRangeMap[model] = {
+        minDate: rowMinDate,
+        maxDate: rowMaxDate,
+      };
 
       const forecastLengths = rows[i].fcst_lens;
-      const forecastLengthArr = forecastLengths
+      forecastLengthOptionsMap[model] = forecastLengths
         .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      for (let j = 0; j < forecastLengthArr.length; j += 1) {
-        forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
-      }
-      forecastLengthOptionsMap[model] = forecastLengthArr;
+        .map(Function.prototype.call, String.prototype.trim)
+        .map(function (fhr) {
+          return fhr.replace(/'|\[|\]/g, "");
+        });
 
       const { levels } = rows[i];
-      const levelArr = levels
+      levelOptionsMap[model] = levels
         .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      for (let j = 0; j < levelArr.length; j += 1) {
-        levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
-      }
-      levelOptionsMap[model] = levelArr;
+        .map(Function.prototype.call, String.prototype.trim)
+        .map(function (level) {
+          return level.replace(/'|\[|\]/g, "");
+        });
 
       const variables = rows[i].variable;
-      const variableArr = variables
+      variableModelOptionsMap[model] = variables
         .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      for (let j = 0; j < variableArr.length; j += 1) {
-        variableArr[j] = variableArr[j].replace(/'|\[|\]/g, "");
-      }
-      variableModelOptionsMap[model] = variableArr;
+        .map(Function.prototype.call, String.prototype.trim)
+        .map(function (variable) {
+          return variable.replace(/'|\[|\]/g, "");
+        });
 
       const { regions } = rows[i];
-      const regionsArrRaw = regions
+      regionModelOptionsMap[model] = regions
         .split(",")
-        .map(Function.prototype.call, String.prototype.trim);
-      const regionsArr = [];
-      for (let j = 0; j < regionsArrRaw.length; j += 1) {
-        regionsArr.push(
-          masterRegionValuesMap[regionsArrRaw[j].replace(/'|\[|\]/g, "")]
-        );
-      }
-      regionModelOptionsMap[model] = regionsArr;
+        .map(Function.prototype.call, String.prototype.trim)
+        .map(function (region) {
+          return allRegionValuesMap[region.replace(/'|\[|\]/g, "")];
+        });
     }
   } catch (err) {
     throw new Error(err.message);
@@ -479,7 +473,7 @@ const doCurveParams = function () {
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
       options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
-      valuesMap: masterRegionValuesMap,
+      valuesMap: allRegionValuesMap,
       superiorNames: ["data-source"],
       controlButtonCovered: true,
       unique: false,
@@ -494,7 +488,7 @@ const doCurveParams = function () {
     const currentParam = matsCollections.region.findOne({ name: "region" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allRegionValuesMap)
     ) {
       // have to reload region data
       matsCollections.region.update(
@@ -502,7 +496,7 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: regionModelOptionsMap,
-            valuesMap: masterRegionValuesMap,
+            valuesMap: allRegionValuesMap,
             options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
             default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
           },
@@ -1051,6 +1045,7 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
+    // eslint-disable-next-line no-console
     console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
@@ -1095,6 +1090,7 @@ Meteor.startup(function () {
   );
   if (cbConnection) {
     // global cbScorecardSettingsPool
+    // eslint-disable-next-line no-undef
     cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
       cbConnection.host,
       cbConnection.bucket,
@@ -1121,6 +1117,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (metadataSettings) {
+    // eslint-disable-next-line no-undef
     metadataPool = mysql.createPool(metadataSettings);
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
@@ -1141,6 +1138,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
+    // eslint-disable-next-line no-undef
     sumPool = mysql.createPool(sumSettings);
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
@@ -1165,6 +1163,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+// eslint-disable-next-line no-undef
 appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,

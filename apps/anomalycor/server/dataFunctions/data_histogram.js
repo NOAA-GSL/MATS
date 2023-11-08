@@ -11,6 +11,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataHistogram = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -21,43 +22,43 @@ dataHistogram = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: true,
   };
-  const alreadyMatched = false;
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   const dataFoundForCurve = [];
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  let error = "";
+  const alreadyMatched = false;
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
+
+  const axisMap = Object.create(null);
+  let statType;
+
+  let statement = "";
+  let error = "";
   const dataset = [];
   const allReturnedSubStats = [];
   const allReturnedSubSecs = [];
   const allReturnedSubLevs = [];
-  const axisMap = Object.create(null);
 
   // process user bin customizations
   const binParams = matsDataUtils.setHistogramParameters(plotParams);
   const { yAxisFormat } = binParams;
   const { binNum } = binParams;
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-    const { diffFrom } = curve;
     dataFoundForCurve[curveIndex] = true;
     const { label } = curve;
+    const { diffFrom } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[curve["data-source"]][0];
-    var regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
-    );
-    const queryTableClause = `from ${model}_anomcorr_${region} as m0`;
+
     const { variable } = curve;
     const variableClause = `and m0.variable = '${variable}'`;
+
     const validTimeStr =
       curve["valid-time"] === matsTypes.InputTypes.unused
         ? "both"
@@ -66,28 +67,43 @@ dataHistogram = function (plotParams, plotFunction) {
       { name: "valid-time" },
       { optionsMap: 1 }
     ).optionsMap[validTimeStr][0];
+
     const forecastLength = curve["forecast-length"];
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
-    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
-    const fromSecs = dateRange.fromSeconds;
-    const toSecs = dateRange.toSeconds;
-    const dateClause = `and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= ${fromSecs} and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= ${toSecs}`;
-    let levelClause = "";
-    const levels = curve.level === undefined ? [] : curve.level;
-    if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
-      levelClause = `and m0.level IN(${levels})`;
-    }
+
     const statisticClause =
       "avg(m0.wacorr/100) as stat, " +
       "count(m0.wacorr) as N0, " +
       "group_concat(unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, ';', m0.level, ';', m0.wacorr / 100 " +
       "order by unix_timestamp(m0.valid_date) + 3600 * m0.valid_hour, m0.level) as sub_data";
-    var statType = "ACC";
-    curves[curveIndex].statistic = "Correlation";
+
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+    const dateClause = `and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= ${fromSecs} and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= ${toSecs}`;
+
+    let levelClause = "";
+    const levels = curve.level === undefined ? [] : curve.level;
+    if (levels.length !== 0 && levels !== matsTypes.InputTypes.unused) {
+      levelClause = `and m0.level IN(${levels})`;
+    }
+
+    const regionStr = curve.region;
+    const region = Object.keys(
+      matsCollections.region.findOne({ name: "region" }).valuesMap
+    ).find(
+      (key) =>
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    );
+
+    const queryTableClause = `from ${model}_anomcorr_${region} as m0`;
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
+    statType = "ACC";
+    curves[curveIndex].statistic = "Correlation";
     let axisKey = yAxisFormat;
     if (yAxisFormat === "Relative frequency") {
       axisKey += " (x100)";
@@ -95,48 +111,48 @@ dataHistogram = function (plotParams, plotFunction) {
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
 
-    var d;
+    let d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      let statement =
-        "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour as avtime, " +
-        "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
-        "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
-        "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "where 1=1 " +
-        "{{dateClause}} " +
-        "{{variableClause}} " +
-        "{{validTimeClause}} " +
-        "{{forecastLengthClause}} " +
-        "{{levelClause}} " +
-        "group by avtime " +
-        "order by avtime" +
-        ";";
-
-      statement = statement.replace("{{statisticClause}}", statisticClause);
-      statement = statement.replace("{{queryTableClause}}", queryTableClause);
-      statement = statement.replace("{{variableClause}}", variableClause);
-      statement = statement.replace("{{validTimeClause}}", validTimeClause);
-      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
-      statement = statement.replace("{{levelClause}}", levelClause);
-      statement = statement.replace("{{dateClause}}", dateClause);
-      dataRequests[label] = statement;
-
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
+      let finishMoment;
       try {
+        statement =
+          "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour as avtime, " +
+          "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
+          "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
+          "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
+          "{{statisticClause}} " +
+          "{{queryTableClause}} " +
+          "where 1=1 " +
+          "{{dateClause}} " +
+          "{{variableClause}} " +
+          "{{validTimeClause}} " +
+          "{{forecastLengthClause}} " +
+          "{{levelClause}} " +
+          "group by avtime " +
+          "order by avtime" +
+          ";";
+
+        statement = statement.replace("{{statisticClause}}", statisticClause);
+        statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{variableClause}}", variableClause);
+        statement = statement.replace("{{validTimeClause}}", validTimeClause);
+        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+        statement = statement.replace("{{levelClause}}", levelClause);
+        statement = statement.replace("{{dateClause}}", dateClause);
+        dataRequests[label] = statement;
+
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool,
+          sumPool, // eslint-disable-line no-undef
           statement,
           appParams,
           "Anomaly Correlation"
         );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -155,6 +171,7 @@ dataHistogram = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
