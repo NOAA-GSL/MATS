@@ -12,6 +12,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataReliability = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -22,34 +23,73 @@ dataReliability = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  const fromSecs = dateRange.fromSeconds;
-  const toSecs = dateRange.toSeconds;
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  let statType;
-  const dataset = [];
+
   const axisMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
 
+  let statType;
+
+  let statement = "";
+  let error = "";
+  const dataset = [];
+
+  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
+  const fromSecs = dateRange.fromSeconds;
+  const toSecs = dateRange.toSeconds;
+
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-    const { diffFrom } = curve;
     const { label } = curve;
+    const { diffFrom } = curve;
+
     const { variable } = curve;
     const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
+
+    const { threshold } = curve;
+    const thresholdClause = `and m0.trsh = ${threshold}`;
+
+    const { members } = curve;
+    const memberClause = `and m0.mem = ${members}`;
+
+    const neighborhoodSize = curve["neighborhood-size"];
+    const neighborhoodClause = `and m0.nhd_size = ${neighborhoodSize}`;
+
+    let validTimeClause = "";
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+      validTimeClause = `and floor((m0.time)%(24*3600)/3600) IN(${validTimes})`;
+    }
+
+    const forecastLength = curve["forecast-length"];
+    const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
+
+    const statisticClause =
+      "sum(m0.nhdfcstcount) as fcstcount, sum(m0.fcstcount) as rawfcstcount, sum(m0.nhdhitcount) " +
+      "as hitcount, group_concat(m0.time, ';', m0.nhdfcstcount, ';', " +
+      "m0.fcstcount, ';', m0.nhdhitcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as N0";
+    const tableStatPrefix = "count";
+
+    const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
+
+    let kernelClause = "";
+    const { kernel } = curve;
+    kernelClause = `and m0.kernel in (0, ${kernel})`;
+
     const regionStr = curve.region;
     let region = Object.keys(
       matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -58,29 +98,9 @@ dataReliability = function (plotParams, plotFunction) {
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     region = region === "Full" ? "Full_domain" : region; // this db doesn't handle the full domain the way the others do
-    const tableStatPrefix = "count";
+
     const queryTableClause = `from ${databaseRef}.${model}_${tableStatPrefix}_${region} as m0`;
-    const { threshold } = curve;
-    const thresholdClause = `and m0.trsh = ${threshold}`;
-    const { members } = curve;
-    const memberClause = `and m0.mem = ${members}`;
-    const neighborhoodSize = curve["neighborhood-size"];
-    const neighborhoodClause = `and m0.nhd_size = ${neighborhoodSize}`;
-    let kernelClause = "";
-    const { kernel } = curve;
-    kernelClause = `and m0.kernel in (0, ${kernel})`;
-    let validTimeClause = "";
-    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
-    if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-      validTimeClause = `and floor((m0.time)%(24*3600)/3600) IN(${validTimes})`;
-    }
-    const forecastLength = curve["forecast-length"];
-    const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
-    const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
-    const statisticClause =
-      "sum(m0.nhdfcstcount) as fcstcount, sum(m0.fcstcount) as rawfcstcount, sum(m0.nhdhitcount) " +
-      "as hitcount, group_concat(m0.time, ';', m0.nhdfcstcount, ';', " +
-      "m0.fcstcount, ';', m0.nhdhitcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as N0";
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
@@ -91,50 +111,50 @@ dataReliability = function (plotParams, plotFunction) {
 
     let d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      let statement =
-        "select m0.prob as binValue, m0.kernel, " +
-        "count(distinct m0.time) as N_times, " +
-        "min(m0.time) as min_secs, " +
-        "max(m0.time) as max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "where 1=1 " +
-        "{{dateClause}} " +
-        "{{memberClause}} " +
-        "{{neighborhoodClause}} " +
-        "{{thresholdClause}} " +
-        "{{kernelClause}} " +
-        "{{validTimeClause}} " +
-        "{{forecastLengthClause}} " +
-        "group by binValue, kernel " +
-        "order by binValue, kernel" +
-        ";";
-
-      statement = statement.replace("{{statisticClause}}", statisticClause);
-      statement = statement.replace("{{queryTableClause}}", queryTableClause);
-      statement = statement.replace("{{memberClause}}", memberClause);
-      statement = statement.replace("{{neighborhoodClause}}", neighborhoodClause);
-      statement = statement.replace("{{thresholdClause}}", thresholdClause);
-      statement = statement.replace("{{kernelClause}}", kernelClause);
-      statement = statement.replace("{{validTimeClause}}", validTimeClause);
-      statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
-      statement = statement.replace("{{dateClause}}", dateClause);
-      dataRequests[label] = statement;
-
       let queryResult;
       const startMoment = moment();
       let finishMoment;
       try {
+        statement =
+          "select m0.prob as binValue, m0.kernel, " +
+          "count(distinct m0.time) as N_times, " +
+          "min(m0.time) as min_secs, " +
+          "max(m0.time) as max_secs, " +
+          "{{statisticClause}} " +
+          "{{queryTableClause}} " +
+          "where 1=1 " +
+          "{{dateClause}} " +
+          "{{memberClause}} " +
+          "{{neighborhoodClause}} " +
+          "{{thresholdClause}} " +
+          "{{kernelClause}} " +
+          "{{validTimeClause}} " +
+          "{{forecastLengthClause}} " +
+          "group by binValue, kernel " +
+          "order by binValue, kernel" +
+          ";";
+
+        statement = statement.replace("{{statisticClause}}", statisticClause);
+        statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{memberClause}}", memberClause);
+        statement = statement.replace("{{neighborhoodClause}}", neighborhoodClause);
+        statement = statement.replace("{{thresholdClause}}", thresholdClause);
+        statement = statement.replace("{{kernelClause}}", kernelClause);
+        statement = statement.replace("{{validTimeClause}}", validTimeClause);
+        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
+        statement = statement.replace("{{dateClause}}", dateClause);
+        dataRequests[label] = statement;
+
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBReliability(
-          sumPool,
+          sumPool, // eslint-disable-line no-undef
           statement,
           appParams,
           kernel
         );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -150,6 +170,7 @@ dataReliability = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition

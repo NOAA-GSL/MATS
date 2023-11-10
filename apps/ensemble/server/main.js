@@ -5,6 +5,7 @@
 import { Meteor } from "meteor/meteor";
 import { mysql } from "meteor/pcel:mysql";
 import { moment } from "meteor/momentjs:moment";
+import { _ } from "meteor/underscore";
 import {
   matsMethods,
   matsTypes,
@@ -328,42 +329,36 @@ const doCurveParams = function () {
   const thresholdsModelOptionsMap = {};
   const kernelModelOptionsMap = {};
   const radiusModelOptionsMap = {};
-  const masterRegionValuesMap = {};
+  const allRegionValuesMap = {};
   let allKernels = [];
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      metadataPool,
+      metadataPool, // eslint-disable-line no-undef
       "select short_name,description from region_descriptions;"
     );
-    let masterRegDescription;
-    let masterShortName;
     for (let j = 0; j < rows.length; j += 1) {
-      masterRegDescription = rows[j].description.trim();
-      masterShortName = rows[j].short_name.trim();
-      masterRegionValuesMap[masterShortName] = masterRegDescription;
+      allRegionValuesMap[rows[j].short_name.trim()] = rows[j].description.trim();
     }
   } catch (err) {
     throw new Error(err.message);
   }
 
-  let rows;
-  let didx;
-
   try {
-    for (didx = 0; didx < variables.length; didx += 1) {
-      modelOptionsMap[variables[didx]] = {};
-      modelDateRangeMap[variables[didx]] = {};
-      forecastLengthOptionsMap[variables[didx]] = {};
-      memberModelOptionsMap[variables[didx]] = {};
-      neighborhoodModelOptionsMap[variables[didx]] = {};
-      thresholdsModelOptionsMap[variables[didx]] = {};
-      kernelModelOptionsMap[variables[didx]] = {};
-      radiusModelOptionsMap[variables[didx]] = {};
-      regionModelOptionsMap[variables[didx]] = {};
+    for (let didx = 0; didx < variables.length; didx += 1) {
+      const variable = variables[didx];
+      modelOptionsMap[variable] = {};
+      modelDateRangeMap[variable] = {};
+      forecastLengthOptionsMap[variable] = {};
+      memberModelOptionsMap[variable] = {};
+      neighborhoodModelOptionsMap[variable] = {};
+      thresholdsModelOptionsMap[variable] = {};
+      kernelModelOptionsMap[variable] = {};
+      radiusModelOptionsMap[variable] = {};
+      regionModelOptionsMap[variable] = {};
 
-      rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool,
+      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool, // eslint-disable-line no-undef
         `select model,regions,display_text,fcst_lens,mems,nhd_sizes,trshs,kernels,radii,mindate,maxdate from ${
           variableDBNames[variables[didx]]
         }.regions_per_model_mats_all_categories order by display_category, display_order;`
@@ -371,7 +366,7 @@ const doCurveParams = function () {
       for (let i = 0; i < rows.length; i += 1) {
         const modelValue = rows[i].model.trim();
         const model = rows[i].display_text.trim();
-        modelOptionsMap[variables[didx]][model] = [modelValue];
+        modelOptionsMap[variable][model] = [modelValue];
 
         const rowMinDate = moment
           .utc(rows[i].mindate * 1000)
@@ -379,82 +374,73 @@ const doCurveParams = function () {
         const rowMaxDate = moment
           .utc(rows[i].maxdate * 1000)
           .format("MM/DD/YYYY HH:mm");
-        modelDateRangeMap[variables[didx]][model] = {
+        modelDateRangeMap[variable][model] = {
           minDate: rowMinDate,
           maxDate: rowMaxDate,
         };
 
         const forecastLengths = rows[i].fcst_lens;
-        const forecastLengthArr = forecastLengths
+        forecastLengthOptionsMap[variable][model] = forecastLengths
           .split(",")
-          .map(Function.prototype.call, String.prototype.trim);
-        for (let j = 0; j < forecastLengthArr.length; j += 1) {
-          forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
-        }
-        forecastLengthOptionsMap[variables[didx]][model] = forecastLengthArr;
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (fhr) {
+            return fhr.replace(/'|\[|\]/g, "");
+          });
 
         const { mems } = rows[i];
-        const memArr = mems
+        memberModelOptionsMap[variable][model] = mems
           .split(",")
-          .map(Function.prototype.call, String.prototype.trim);
-        for (let j = 0; j < memArr.length; j += 1) {
-          memArr[j] = memArr[j].replace(/'|\[|\]/g, "");
-        }
-        memberModelOptionsMap[variables[didx]][model] = memArr;
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (mem) {
+            return mem.replace(/'|\[|\]/g, "");
+          });
 
         const nhdSizes = rows[i].nhd_sizes;
-        const nhdSizeArr = nhdSizes
+        neighborhoodModelOptionsMap[variable][model] = nhdSizes
           .split(",")
-          .map(Function.prototype.call, String.prototype.trim);
-        for (let j = 0; j < nhdSizeArr.length; j += 1) {
-          nhdSizeArr[j] = nhdSizeArr[j].replace(/'|\[|\]/g, "");
-        }
-        neighborhoodModelOptionsMap[variables[didx]][model] = nhdSizeArr;
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (nhdSize) {
+            return nhdSize.replace(/'|\[|\]/g, "");
+          });
 
         const thresholds = rows[i].trshs;
-        const thresholdsArr = thresholds
+        thresholdsModelOptionsMap[variable][model] = thresholds
           .split(",")
-          .map(Function.prototype.call, String.prototype.trim);
-        for (let j = 0; j < thresholdsArr.length; j += 1) {
-          thresholdsArr[j] = thresholdsArr[j].replace(/'|\[|\]/g, "");
-        }
-        thresholdsModelOptionsMap[variables[didx]][model] = thresholdsArr;
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (threshold) {
+            return threshold.replace(/'|\[|\]/g, "");
+          });
 
         const { kernels } = rows[i];
-        const kernelArr = kernels
+        kernelModelOptionsMap[variable][model] = kernels
           .split(",")
-          .map(Function.prototype.call, String.prototype.trim);
-        for (let j = 0; j < kernelArr.length; j += 1) {
-          kernelArr[j] = kernelArr[j].replace(/'|\[|\]/g, "");
-        }
-        kernelModelOptionsMap[variables[didx]][model] = kernelArr;
-        allKernels = _.union(allKernels, kernelArr);
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (kernel) {
+            return kernel.replace(/'|\[|\]/g, "");
+          });
+        allKernels = _.union(allKernels, kernelModelOptionsMap[variable][model]);
 
         const { radii } = rows[i];
-        const radiusArr = radii
+        radiusModelOptionsMap[variable][model] = radii
           .split(",")
-          .map(Function.prototype.call, String.prototype.trim);
-        for (let j = 0; j < radiusArr.length; j += 1) {
-          radiusArr[j] = radiusArr[j].replace(/'|\[|\]/g, "");
-        }
-        radiusModelOptionsMap[variables[didx]][model] = radiusArr;
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (radius) {
+            return radius.replace(/'|\[|\]/g, "");
+          });
 
         const { regions } = rows[i];
-        const regionsArrRaw = regions
+        regionModelOptionsMap[variable][model] = regions
           .split(",")
-          .map(Function.prototype.call, String.prototype.trim);
-        const regionsArr = [];
-        let dummyRegion;
-        for (let j = 0; j < regionsArrRaw.length; j += 1) {
-          dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
-          regionsArr.push(masterRegionValuesMap[dummyRegion]);
-        }
-        regionModelOptionsMap[variables[didx]][model] = regionsArr;
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (region) {
+            return allRegionValuesMap[region.replace(/'|\[|\]/g, "")];
+          });
       }
     }
   } catch (err) {
     throw new Error(err.message);
   }
+
   if (matsCollections.label.findOne({ name: "label" }) === undefined) {
     matsCollections.label.insert({
       name: "label",
@@ -559,7 +545,7 @@ const doCurveParams = function () {
         regionModelOptionsMap[variables[0]][
           Object.keys(regionModelOptionsMap[variables[0]])[0]
         ],
-      valuesMap: masterRegionValuesMap,
+      valuesMap: allRegionValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
@@ -577,7 +563,7 @@ const doCurveParams = function () {
     const currentParam = matsCollections.region.findOne({ name: "region" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap)
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allRegionValuesMap)
     ) {
       // have to reload region data
       matsCollections.region.update(
@@ -585,7 +571,7 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: regionModelOptionsMap,
-            valuesMap: masterRegionValuesMap,
+            valuesMap: allRegionValuesMap,
             options:
               regionModelOptionsMap[variables[0]][
                 Object.keys(regionModelOptionsMap[variables[0]])[0]
@@ -1103,7 +1089,7 @@ const doCurveParams = function () {
   const probBinOptionsMap = {
     0: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
   };
-  for (didx = 0; didx < allKernels.length; didx += 1) {
+  for (let didx = 0; didx < allKernels.length; didx += 1) {
     probBinOptionsMap[allKernels[didx]] = [
       "0",
       "10",
@@ -1672,6 +1658,7 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
+    // eslint-disable-next-line no-console
     console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
@@ -1716,6 +1703,7 @@ Meteor.startup(function () {
   );
   if (cbConnection) {
     // global cbScorecardSettingsPool
+    // eslint-disable-next-line no-undef
     cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
       cbConnection.host,
       cbConnection.bucket,
@@ -1742,6 +1730,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (metadataSettings) {
+    // eslint-disable-next-line no-undef
     metadataPool = mysql.createPool(metadataSettings);
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
@@ -1762,6 +1751,7 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
+    // eslint-disable-next-line no-undef
     sumPool = mysql.createPool(sumSettings);
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
@@ -1790,6 +1780,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+// eslint-disable-next-line no-undef
 appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,
