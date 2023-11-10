@@ -3,10 +3,13 @@
  */
 
 import { Meteor } from "meteor/meteor";
+import { moment } from "meteor/momentjs:moment";
 import {
+  matsMethods,
   matsTypes,
   matsCollections,
   matsDataUtils,
+  matsParamUtils,
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
@@ -619,7 +622,7 @@ const doCurveParams = function () {
     const params = matsCollections.CurveParamsInfo.find({
       curve_params: { $exists: true },
     }).fetch()[0].curve_params;
-    for (let cp = 0; cp < params.length; cp++) {
+    for (let cp = 0; cp < params.length; cp += 1) {
       matsCollections[params[cp]].remove({});
     }
   }
@@ -657,8 +660,8 @@ const doCurveParams = function () {
     let currentURL;
     let queryURL;
     let expectedApps = [];
-    for (let aidx = 0; aidx < appsToScore.length; aidx++) {
-      currentApp = Object.keys(appsToScore[aidx])[0];
+    for (let aidx = 0; aidx < appsToScore.length; aidx += 1) {
+      [currentApp] = Object.keys(appsToScore[aidx]);
       currentURL = appsToScore[aidx][currentApp];
 
       // clean up URL if users left a trailing slash or didn't include https://
@@ -677,7 +680,7 @@ const doCurveParams = function () {
       );
 
       // store the URL that was used to get each of these apps
-      for (let eaidx = 0; eaidx < expectedApps.length; eaidx++) {
+      for (let eaidx = 0; eaidx < expectedApps.length; eaidx += 1) {
         const thisApp = expectedApps[eaidx];
         applicationSourceMap[thisApp] = currentApp;
       }
@@ -910,10 +913,10 @@ const doCurveParams = function () {
     // remove excluded stats from the scorecard
     // we need to do this after the main metadata loop
     // is finished or we don't have the full list of apps
-    for (let aidx = 0; aidx < applicationOptions.length; aidx++) {
+    for (let aidx = 0; aidx < applicationOptions.length; aidx += 1) {
       // loop through all the applications found inside the app list in the settings
       const thisApp = applicationOptions[aidx];
-      for (let sidx = statisticOptionsMap[thisApp].length - 1; sidx >= 0; sidx--) {
+      for (let sidx = statisticOptionsMap[thisApp].length - 1; sidx >= 0; sidx -= 1) {
         // loop backwards through the statistics for this app
         const thisStat = statisticOptionsMap[thisApp][sidx];
         if (matsDataUtils.excludeStatFromScorecard(thisStat)) {
@@ -924,7 +927,7 @@ const doCurveParams = function () {
       }
     }
   } catch (err) {
-    console.log(err.message);
+    throw new Error(err.message);
   }
 
   if (matsCollections.label.findOne({ name: "label" }) === undefined) {
@@ -979,7 +982,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.application.findOne({ name: "application" });
+    const currentParam = matsCollections.application.findOne({ name: "application" });
     if (!matsDataUtils.areObjectsEqual(currentParam.dates, dateOptionsMap)) {
       // have to reload application data
       matsCollections.application.update(
@@ -1023,7 +1026,9 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["data-source"].findOne({ name: "data-source" });
+    const currentParam = matsCollections["data-source"].findOne({
+      name: "data-source",
+    });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
       matsCollections["data-source"].update(
@@ -1069,7 +1074,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["control-data-source"].findOne({
+    const currentParam = matsCollections["control-data-source"].findOne({
       name: "control-data-source",
     });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
@@ -1115,7 +1120,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.region.findOne({ name: "region" });
+    const currentParam = matsCollections.region.findOne({ name: "region" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionOptionsMap)) {
       // have to reload region data
       matsCollections.region.update(
@@ -1159,7 +1164,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.statistic.findOne({ name: "statistic" });
+    const currentParam = matsCollections.statistic.findOne({ name: "statistic" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, statisticOptionsMap)) {
       // have to reload statistic data
       matsCollections.statistic.update(
@@ -1196,7 +1201,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.variable.findOne({ name: "variable" });
+    const currentParam = matsCollections.variable.findOne({ name: "variable" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, variableOptionsMap)) {
       // have to reload variable data
       matsCollections.variable.update(
@@ -1244,7 +1249,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.threshold.findOne({ name: "threshold" });
+    const currentParam = matsCollections.threshold.findOne({ name: "threshold" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdOptionsMap)) {
       // have to reload threshold data
       matsCollections.threshold.update(
@@ -1297,7 +1302,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.scale.findOne({ name: "scale" });
+    const currentParam = matsCollections.scale.findOne({ name: "scale" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleOptionsMap)) {
       // have to reload scale data
       matsCollections.scale.update(
@@ -1350,7 +1355,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.truth.findOne({ name: "truth" });
+    const currentParam = matsCollections.truth.findOne({ name: "truth" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthOptionsMap)) {
       // have to reload truth data
       matsCollections.truth.update(
@@ -1403,7 +1408,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["forecast-length"].findOne({
+    const currentParam = matsCollections["forecast-length"].findOne({
       name: "forecast-length",
     });
     if (
@@ -1459,7 +1464,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["forecast-type"].findOne({
+    const currentParam = matsCollections["forecast-type"].findOne({
       name: "forecast-type",
     });
     if (
@@ -1511,7 +1516,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections["valid-time"].findOne({ name: "valid-time" });
+    const currentParam = matsCollections["valid-time"].findOne({ name: "valid-time" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, validTimeOptionsMap)) {
       // have to reload valid time data
       matsCollections["valid-time"].update(
@@ -1556,7 +1561,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    var currentParam = matsCollections.level.findOne({ name: "level" });
+    const currentParam = matsCollections.level.findOne({ name: "level" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, levelOptionsMap)) {
       // have to reload level data
       matsCollections.level.update(
@@ -1674,7 +1679,8 @@ const doPlotGraph = function () {
 Meteor.startup(function () {
   matsCollections.Databases.remove({});
   if (matsCollections.Databases.find({}).count() < 0) {
-    console.log(
+    // eslint-disable-next-line no-console
+    console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
     matsCollections.Databases.drop();
@@ -1691,7 +1697,7 @@ Meteor.startup(function () {
       databases = Meteor.settings.private.databases;
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
-      for (let di = 0; di < databases.length; di++) {
+      for (let di = 0; di < databases.length; di += 1) {
         matsCollections.Databases.insert(databases[di]);
       }
     }
@@ -1723,6 +1729,7 @@ Meteor.startup(function () {
   cbConnections.forEach(function (cbConnection) {
     if (cbConnection.collection === "METAR") {
       // global cbPool
+      // eslint-disable-next-line no-undef
       cbPool = new matsCouchbaseUtils.CBUtilities(
         cbConnection.host,
         cbConnection.bucket,
@@ -1735,6 +1742,7 @@ Meteor.startup(function () {
     }
     if (cbConnection.collection === "SCORECARD") {
       // global cbScorecardPool
+      // eslint-disable-next-line no-undef
       cbScorecardPool = new matsCouchbaseUtils.CBUtilities(
         cbConnection.host,
         cbConnection.bucket,
@@ -1750,6 +1758,7 @@ Meteor.startup(function () {
     }
     if (cbConnection.collection === "SCORECARD_SETTINGS") {
       // global cbScorecardSettingsPool
+      // eslint-disable-next-line no-undef
       cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
         cbConnection.host,
         cbConnection.bucket,
@@ -1776,7 +1785,7 @@ Meteor.startup(function () {
       dbType: matsTypes.DbTypes.couchbase,
     });
   } catch (error) {
-    console.log(error.message);
+    throw new Error(error.message);
   }
 });
 
@@ -1784,6 +1793,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+// eslint-disable-next-line no-undef
 appSpecificResetRoutines = [
   doCurveParams,
   doPlotGraph,

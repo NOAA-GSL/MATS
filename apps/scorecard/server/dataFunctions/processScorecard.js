@@ -5,8 +5,8 @@ import { matsTypes, matsParamUtils, matsCollections } from "meteor/randyp:mats-c
 
 /** A function to sanitize JSON keys by replacing the "." character with "__DOT__" */
 const sanitizeKeys = function (str) {
-  str = str.replace(/\./g, "__DOT__");
-  return str;
+  const newStr = str.replace(/\./g, "__DOT__");
+  return newStr;
 };
 
 const dealWithUATables = function (
@@ -182,10 +182,13 @@ processScorecard = function (plotParams, plotFunction) {
   // get the union of the fcst-length arrays of all the curves
   const fcstLengthsSet = new Set();
   plotParams.curves.forEach(function (curve) {
-    if (!curve["forecast-length"]) curve["forecast-length"] = ["0"];
-    curve["forecast-length"].forEach(function (fcl) {
-      fcstLengthsSet.add(fcl);
-    });
+    if (!curve["forecast-length"]) {
+      fcstLengthsSet.add("0");
+    } else {
+      curve["forecast-length"].forEach(function (fcl) {
+        fcstLengthsSet.add(fcl);
+      });
+    }
   });
   const fcstLengths = Array.from(fcstLengthsSet);
 
@@ -383,6 +386,10 @@ processScorecard = function (plotParams, plotFunction) {
 
     // create the empty object for this block
     const { label } = curve;
+
+    // duplicate the curve so we're not modifying a function parameter, which the linter doesn't like
+    const scorecardCurve = curve;
+
     scorecardDocument.results.blocks[label] = {};
     scorecardDocument.queryMap.blocks[label] = {};
     // add the top level elements.
@@ -395,76 +402,73 @@ processScorecard = function (plotParams, plotFunction) {
       return !notIncludedParams.includes(paramName);
     });
 
-    scorecardDocument.results.blocks[curve.label].blockTitle = {
+    scorecardDocument.results.blocks[label].blockTitle = {
       label,
-      dataSource: curve["data-source"],
-      controlDataSource: curve["control-data-source"],
+      dataSource: scorecardCurve["data-source"],
+      controlDataSource: scorecardCurve["control-data-source"],
     };
     const appName = Meteor.settings.public.app;
     const appUrl = `${Meteor.settings.public.home}/${appName}`;
-    scorecardDocument.results.blocks[curve.label].blockApplication = appUrl;
-    scorecardDocument.results.blocks[curve.label].blockParameters = blockParameters;
-    scorecardDocument.results.blocks[curve.label].regions = regions;
-    scorecardDocument.results.blocks[curve.label].fcstlens = fcstLengths;
-    scorecardDocument.results.blocks[curve.label].data = {};
-    scorecardDocument.queryMap.blocks[curve.label].data = {};
-    curve.threshold =
-      curve.threshold === undefined ? ["threshold_NA"] : curve.threshold;
-    curve.level = curve.level === undefined ? ["level_NA"] : curve.level;
+    scorecardDocument.results.blocks[label].blockApplication = appUrl;
+    scorecardDocument.results.blocks[label].blockParameters = blockParameters;
+    scorecardDocument.results.blocks[label].regions = regions;
+    scorecardDocument.results.blocks[label].fcstlens = fcstLengths;
+    scorecardDocument.results.blocks[label].data = {};
+    scorecardDocument.queryMap.blocks[label].data = {};
+    scorecardCurve.threshold =
+      scorecardCurve.threshold === undefined
+        ? ["threshold_NA"]
+        : scorecardCurve.threshold;
+    scorecardCurve.level =
+      scorecardCurve.level === undefined ? ["level_NA"] : scorecardCurve.level;
     regions.forEach(function (regionText) {
       const region = sanitizeKeys(regionText);
-      if (scorecardDocument.results.blocks[curve.label].data[region] === undefined) {
-        scorecardDocument.results.blocks[curve.label].data[region] = {};
-        scorecardDocument.queryMap.blocks[curve.label].data[region] = {};
+      if (scorecardDocument.results.blocks[label].data[region] === undefined) {
+        scorecardDocument.results.blocks[label].data[region] = {};
+        scorecardDocument.queryMap.blocks[label].data[region] = {};
       }
-      curve.statistic.forEach(function (statText) {
+      scorecardCurve.statistic.forEach(function (statText) {
         const stat = sanitizeKeys(statText);
-        if (
-          scorecardDocument.results.blocks[curve.label].data[region][stat] === undefined
-        ) {
-          scorecardDocument.results.blocks[curve.label].data[region][stat] = {};
-          scorecardDocument.queryMap.blocks[curve.label].data[region][stat] = {};
+        if (scorecardDocument.results.blocks[label].data[region][stat] === undefined) {
+          scorecardDocument.results.blocks[label].data[region][stat] = {};
+          scorecardDocument.queryMap.blocks[label].data[region][stat] = {};
         }
-        curve.variable.forEach(function (variableText) {
+        scorecardCurve.variable.forEach(function (variableText) {
           const variable = sanitizeKeys(variableText);
           if (
-            scorecardDocument.results.blocks[curve.label].data[region][stat][
-              variable
-            ] === undefined
+            scorecardDocument.results.blocks[label].data[region][stat][variable] ===
+            undefined
           ) {
-            scorecardDocument.results.blocks[curve.label].data[region][stat][variable] =
-              {};
-            scorecardDocument.queryMap.blocks[curve.label].data[region][stat][
-              variable
-            ] = {};
+            scorecardDocument.results.blocks[label].data[region][stat][variable] = {};
+            scorecardDocument.queryMap.blocks[label].data[region][stat][variable] = {};
           }
-          curve.threshold.forEach(function (thresholdText) {
+          scorecardCurve.threshold.forEach(function (thresholdText) {
             const threshold = sanitizeKeys(thresholdText);
             if (
-              scorecardDocument.results.blocks[curve.label].data[region][stat][
-                variable
-              ][threshold] === undefined
+              scorecardDocument.results.blocks[label].data[region][stat][variable][
+                threshold
+              ] === undefined
             ) {
-              scorecardDocument.results.blocks[curve.label].data[region][stat][
-                variable
-              ][threshold] = {};
-              scorecardDocument.queryMap.blocks[curve.label].data[region][stat][
-                variable
-              ][threshold] = {};
+              scorecardDocument.results.blocks[label].data[region][stat][variable][
+                threshold
+              ] = {};
+              scorecardDocument.queryMap.blocks[label].data[region][stat][variable][
+                threshold
+              ] = {};
             }
-            curve.level.forEach(function (levelText) {
+            scorecardCurve.level.forEach(function (levelText) {
               const level = sanitizeKeys(levelText);
               if (
-                scorecardDocument.results.blocks[curve.label].data[region][stat][
-                  variable
-                ][threshold][level] === undefined
+                scorecardDocument.results.blocks[label].data[region][stat][variable][
+                  threshold
+                ][level] === undefined
               ) {
-                scorecardDocument.results.blocks[curve.label].data[region][stat][
-                  variable
-                ][threshold][level] = {};
-                scorecardDocument.queryMap.blocks[curve.label].data[region][stat][
-                  variable
-                ][threshold][level] = {};
+                scorecardDocument.results.blocks[label].data[region][stat][variable][
+                  threshold
+                ][level] = {};
+                scorecardDocument.queryMap.blocks[label].data[region][stat][variable][
+                  threshold
+                ][level] = {};
               }
               fcstLengths.forEach(function (fcstlenText) {
                 const fcstlen = sanitizeKeys(fcstlenText);
@@ -527,7 +531,7 @@ processScorecard = function (plotParams, plotFunction) {
                 // populate variable in query template -- partial sums
                 if (localQueryTemplate.includes("{{variable0}}")) {
                   const variableArray = variableMap[variableText];
-                  for (let vidx = 0; vidx < variableArray.length; vidx++) {
+                  for (let vidx = 0; vidx < variableArray.length; vidx += 1) {
                     const replaceString = `{{variable${vidx.toString()}}}`;
                     const regex = new RegExp(replaceString, "g");
                     localQueryTemplate = localQueryTemplate.replace(
@@ -545,7 +549,7 @@ processScorecard = function (plotParams, plotFunction) {
                   if (application === "upperair") {
                     // the upper air tables are unfortuately really inconsistent and need some handling
                     localQueryTemplate = dealWithUATables(
-                      curve,
+                      scorecardCurve,
                       regionValue,
                       databaseValue,
                       localQueryTemplate
@@ -558,22 +562,23 @@ processScorecard = function (plotParams, plotFunction) {
                 }
 
                 // populate experimental model in query template
-                const experimentalModelValue = modelMap[curve["data-source"]];
+                const experimentalModelValue = modelMap[scorecardCurve["data-source"]];
                 const experimentalQueryTemplate = localQueryTemplate.replace(
                   /\{\{model\}\}/g,
                   experimentalModelValue
                 );
 
                 // populate control model in query template
-                const controlModelValue = modelMap[curve["control-data-source"]];
+                const controlModelValue =
+                  modelMap[scorecardCurve["control-data-source"]];
                 const controlQueryTemplate = localQueryTemplate.replace(
                   /\{\{model\}\}/g,
                   controlModelValue
                 );
 
-                scorecardDocument.queryMap.blocks[curve.label].data[region][stat][
-                  variable
-                ][threshold][level][fcstlen] = {
+                scorecardDocument.queryMap.blocks[label].data[region][stat][variable][
+                  threshold
+                ][level][fcstlen] = {
                   experimentalQueryTemplate,
                   controlQueryTemplate,
                 };
@@ -583,18 +588,16 @@ processScorecard = function (plotParams, plotFunction) {
                 const sval = -9999;
 
                 if (
-                  scorecardDocument.results.blocks[curve.label].fcstlens.includes(
-                    fcstlen
-                  )
+                  scorecardDocument.results.blocks[label].fcstlens.includes(fcstlen)
                 ) {
-                  scorecardDocument.results.blocks[curve.label].data[region][stat][
-                    variable
-                  ][threshold][level][fcstlen] = sval;
+                  scorecardDocument.results.blocks[label].data[region][stat][variable][
+                    threshold
+                  ][level][fcstlen] = sval;
                 } else {
                   // mark this undefined
-                  scorecardDocument.results.blocks[curve.label].data[region][stat][
-                    variable
-                  ][threshold][level][fcstlen] = "undefined";
+                  scorecardDocument.results.blocks[label].data[region][stat][variable][
+                    threshold
+                  ][level][fcstlen] = "undefined";
                 }
               });
             });
@@ -640,10 +643,11 @@ processScorecard = function (plotParams, plotFunction) {
       // to be in the public section of the scorecard settings file
       // NOTE: For now we do not have scheduled jobs. When we do we will need to change this.
       const notifyDataProcessorURL = `${Meteor.settings.public.vxdataProcessorUrl}`;
-      const sDocument = `\{"docid": "${id}"\}`;
+      const sDocument = `{"docid": "${id}"}`;
       HTTP.post(
         notifyDataProcessorURL,
         { content: `${sDocument}` },
+        // eslint-disable-next-line no-unused-vars
         function (error, response) {
           if (error) {
             console.log(error);
