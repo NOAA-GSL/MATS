@@ -13,11 +13,28 @@ import {
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
+// first field of each value array is sub-variables, second field is metadata document key,
+// third is boolean for whether or not there are thresholds
 const variableMetadataDocs = {
-  Ceiling: "cb-ceiling",
-  Visibility: "cb-visibility",
+  Ceiling: [["Ceiling"], "cb-ceiling", true],
+  Visibility: [["Visibility"], "cb-visibility", true],
+  Surface: [
+    [
+      "Temperature",
+      "Dewpoint",
+      "Relative Humidity",
+      "Surface Pressure",
+      "Wind Speed",
+      "U-Wind",
+      "V-Wind",
+    ],
+    "cb-surface",
+    false,
+  ],
 };
 const variables = Object.keys(variableMetadataDocs);
+let allVariables = [];
+let allVariablesNoThreshold = [];
 
 // determined in doCurveParanms
 let minDate;
@@ -362,23 +379,34 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      allThresholdValuesMap[variable] = {};
-      // eslint-disable-next-line no-undef
-      const queryStr = cbPool.trfmSQLForDbTarget(
-        `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
-        // `select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
-      );
-      // eslint-disable-next-line no-undef
-      const rows = await cbPool.queryCB(queryStr);
-      if (rows.includes("queryCB ERROR: ")) {
-        // have this local try catch fail properly if the metadata isn't there
-        throw new Error(rows);
+      const subVariables = variableMetadataDocs[variable][0];
+      const hasThresholds = variableMetadataDocs[variable][2];
+      let rows;
+      if (hasThresholds) {
+        // eslint-disable-next-line no-undef
+        const queryStr = cbPool.trfmSQLForDbTarget(
+          `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
+        );
+        // eslint-disable-next-line no-undef
+        rows = await cbPool.queryCB(queryStr);
+        if (rows.includes("queryCB ERROR: ")) {
+          // have this local try catch fail properly if the metadata isn't there
+          throw new Error(rows);
+        }
+      } else {
+        rows = [{ NA: "NA" }];
+        allVariablesNoThreshold = allVariablesNoThreshold.concat(subVariables);
       }
-      const allThresholds = Object.keys(rows[0]);
-      for (let j = 0; j < allThresholds.length; j += 1) {
-        // The replace here is because JSON doesn't like dots in the middle of keys
-        allThresholdValuesMap[variable][allThresholds[j].trim().replace(/\./g, "_")] =
-          rows[0][allThresholds[j]].trim();
+      for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
+        const subVariable = subVariables[sidx];
+        allThresholdValuesMap[subVariable] = {};
+        const allThresholds = Object.keys(rows[0]);
+        for (let j = 0; j < allThresholds.length; j += 1) {
+          // The replace here is because JSON doesn't like dots in the middle of keys
+          allThresholdValuesMap[subVariable][
+            allThresholds[j].trim().replace(/\./g, "_")
+          ] = rows[0][allThresholds[j]].trim();
+        }
       }
     }
   } catch (err) {
@@ -388,17 +416,14 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      modelOptionsMap[variable] = {};
-      modelDateRangeMap[variable] = {};
-      forecastLengthOptionsMap[variable] = {};
-      thresholdsModelOptionsMap[variable] = {};
-      regionModelOptionsMap[variable] = {};
+      const subVariables = variableMetadataDocs[variable][0];
+      allVariables = allVariables.concat(subVariables);
 
       // eslint-disable-next-line no-undef
       const queryStr = cbPool.trfmSQLForDbTarget(
         "select model, displayText, mindate, maxdate, fcstLens, " +
-          "regions, thresholds " +
-          `from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="${variableMetadataDocs[variable]}" and numrecs>0 ` +
+          "regions, ifmissing(thresholds,['NA']) as thresholds " +
+          `from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="${variableMetadataDocs[variable][1]}" and numrecs>0 ` +
           "order by displayCategory, displayOrder"
       );
       // eslint-disable-next-line no-undef
@@ -408,41 +433,51 @@ const doCurveParams = async function () {
         // have this local try catch fail properly if the metadata isn't there
         throw new Error(rows);
       }
-      for (let i = 0; i < rows.length; i += 1) {
-        const modelValue = rows[i].model.trim();
-        const model = rows[i].displayText.trim();
-        modelOptionsMap[variable][model] = [modelValue];
+      for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
+        const subVariable = subVariables[sidx];
+        modelOptionsMap[subVariable] = {};
+        modelDateRangeMap[subVariable] = {};
+        forecastLengthOptionsMap[subVariable] = {};
+        thresholdsModelOptionsMap[subVariable] = {};
+        regionModelOptionsMap[subVariable] = {};
 
-        const rowMinDate = moment
-          .utc(rows[i].mindate * 1000)
-          .format("MM/DD/YYYY HH:mm");
-        const rowMaxDate = moment
-          .utc(rows[i].maxdate * 1000)
-          .format("MM/DD/YYYY HH:mm");
-        modelDateRangeMap[variable][model] = {
-          minDate: rowMinDate,
-          maxDate: rowMaxDate,
-        };
+        for (let i = 0; i < rows.length; i += 1) {
+          const modelValue = rows[i].model.trim();
+          const model = rows[i].displayText.trim();
+          modelOptionsMap[subVariable][model] = [modelValue];
 
-        forecastLengthOptionsMap[variable][model] = rows[i].fcstLens.map(String);
+          const rowMinDate = moment
+            .utc(rows[i].mindate * 1000)
+            .format("MM/DD/YYYY HH:mm");
+          const rowMaxDate = moment
+            .utc(rows[i].maxdate * 1000)
+            .format("MM/DD/YYYY HH:mm");
+          modelDateRangeMap[subVariable][model] = {
+            minDate: rowMinDate,
+            maxDate: rowMaxDate,
+          };
 
-        // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
-        const { thresholds } = rows[i];
-        thresholdsModelOptionsMap[variable][model] = thresholds
-          .sort(function (a, b) {
-            return Number(a) - Number(b);
-          })
-          .map(function (threshold) {
-            return allThresholdValuesMap[variable][threshold.replace(/\./g, "_")];
+          forecastLengthOptionsMap[subVariable][model] = rows[i].fcstLens.map(String);
+
+          // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
+          const { thresholds } = rows[i];
+          thresholdsModelOptionsMap[subVariable][model] = thresholds
+            .sort(function (a, b) {
+              return Number(a) - Number(b);
+            })
+            .map(function (threshold) {
+              return allThresholdValuesMap[subVariable][threshold.replace(/\./g, "_")];
+            });
+
+          // we want the full region descriptions in thresholdsModelOptionsMap, not just the regions
+          const { regions } = rows[i];
+          regionModelOptionsMap[subVariable][model] = regions.map(function (region) {
+            return allRegionValuesMap[region];
           });
-
-        // we want the full region descriptions in thresholdsModelOptionsMap, not just the regions
-        const { regions } = rows[i];
-        regionModelOptionsMap[variable][model] = regions.map(function (region) {
-          return allRegionValuesMap[region];
-        });
+        }
       }
     }
+    allVariables = allVariables.sort();
   } catch (err) {
     throw new Error(err.message);
   }
@@ -526,11 +561,15 @@ const doCurveParams = async function () {
     matsCollections.variable.insert({
       name: "variable",
       type: matsTypes.InputTypes.select,
-      options: variables,
+      options: allVariables,
+      valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
       dependentNames: ["data-source"],
       controlButtonCovered: true,
-      default: variables[0],
+      default: allVariables[0],
+      hideOtherFor: {
+        threshold: allVariablesNoThreshold,
+      },
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 2,
@@ -577,7 +616,7 @@ const doCurveParams = async function () {
       name: "data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
-      options: Object.keys(modelOptionsMap[variables[0]]),
+      options: Object.keys(modelOptionsMap[allVariables[0]]),
       superiorNames: ["variable"],
       dependentNames: [
         "region",
@@ -587,7 +626,7 @@ const doCurveParams = async function () {
         "curve-dates",
       ],
       controlButtonCovered: true,
-      default: Object.keys(modelOptionsMap[variables[0]])[0],
+      default: Object.keys(modelOptionsMap[allVariables[0]])[0],
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 3,
@@ -606,8 +645,8 @@ const doCurveParams = async function () {
         {
           $set: {
             optionsMap: modelOptionsMap,
-            options: Object.keys(modelOptionsMap[variables[0]]),
-            default: Object.keys(modelOptionsMap[variables[0]])[0],
+            options: Object.keys(modelOptionsMap[allVariables[0]]),
+            default: Object.keys(modelOptionsMap[allVariables[0]])[0],
           },
         }
       );
@@ -620,16 +659,16 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
       options:
-        regionModelOptionsMap[variables[0]][
-          Object.keys(regionModelOptionsMap[variables[0]])[0]
+        regionModelOptionsMap[allVariables[0]][
+          Object.keys(regionModelOptionsMap[allVariables[0]])[0]
         ],
       valuesMap: allRegionValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
-        regionModelOptionsMap[variables[0]][
-          Object.keys(regionModelOptionsMap[variables[0]])[0]
+        regionModelOptionsMap[allVariables[0]][
+          Object.keys(regionModelOptionsMap[allVariables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
       displayOrder: 2,
@@ -651,12 +690,12 @@ const doCurveParams = async function () {
             optionsMap: regionModelOptionsMap,
             valuesMap: allRegionValuesMap,
             options:
-              regionModelOptionsMap[variables[0]][
-                Object.keys(regionModelOptionsMap[variables[0]])[0]
+              regionModelOptionsMap[allVariables[0]][
+                Object.keys(regionModelOptionsMap[allVariables[0]])[0]
               ],
             default:
-              regionModelOptionsMap[variables[0]][
-                Object.keys(regionModelOptionsMap[variables[0]])[0]
+              regionModelOptionsMap[allVariables[0]][
+                Object.keys(regionModelOptionsMap[allVariables[0]])[0]
               ][0],
           },
         }
@@ -723,16 +762,16 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdsModelOptionsMap,
       options:
-        thresholdsModelOptionsMap[variables[0]][
-          Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
         ],
       valuesMap: allThresholdValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
-        thresholdsModelOptionsMap[variables[0]][
-          Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
       displayOrder: 1,
@@ -757,12 +796,12 @@ const doCurveParams = async function () {
             optionsMap: thresholdsModelOptionsMap,
             valuesMap: allThresholdValuesMap,
             options:
-              thresholdsModelOptionsMap[variables[0]][
-                Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
               ],
             default:
-              thresholdsModelOptionsMap[variables[0]][
-                Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
               ][0],
           },
         }
@@ -779,8 +818,8 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       optionsMap: forecastLengthOptionsMap,
       options:
-        forecastLengthOptionsMap[variables[0]][
-          Object.keys(forecastLengthOptionsMap[variables[0]])[0]
+        forecastLengthOptionsMap[allVariables[0]][
+          Object.keys(forecastLengthOptionsMap[allVariables[0]])[0]
         ],
       superiorNames: ["variable", "data-source"],
       selected: "",
@@ -808,8 +847,8 @@ const doCurveParams = async function () {
           $set: {
             optionsMap: forecastLengthOptionsMap,
             options:
-              forecastLengthOptionsMap[variables[0]][
-                Object.keys(forecastLengthOptionsMap[variables[0]])[0]
+              forecastLengthOptionsMap[allVariables[0]][
+                Object.keys(forecastLengthOptionsMap[allVariables[0]])[0]
               ],
           },
         }
@@ -1084,8 +1123,8 @@ const doCurveParams = async function () {
     { name: "variable" },
     { dates: 1 }
   ).dates;
-  minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
-  maxDate = modelDateRangeMap[variables[0]][defaultDataSource].maxDate;
+  minDate = modelDateRangeMap[allVariables[0]][defaultDataSource].minDate;
+  maxDate = modelDateRangeMap[allVariables[0]][defaultDataSource].maxDate;
 
   // need to turn the raw max and min from the metadata into the last valid month of data
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
