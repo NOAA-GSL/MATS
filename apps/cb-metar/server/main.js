@@ -35,6 +35,7 @@ const variableMetadataDocs = {
 const variables = Object.keys(variableMetadataDocs);
 let allVariables = [];
 let allVariablesNoThreshold = [];
+let allVariablesYesThreshold = [];
 
 // determined in doCurveParanms
 let minDate;
@@ -393,6 +394,7 @@ const doCurveParams = async function () {
           // have this local try catch fail properly if the metadata isn't there
           throw new Error(rows);
         }
+        allVariablesYesThreshold = allVariablesYesThreshold.concat(subVariables);
       } else {
         rows = [{ NA: "NA" }];
         allVariablesNoThreshold = allVariablesNoThreshold.concat(subVariables);
@@ -557,22 +559,64 @@ const doCurveParams = async function () {
     });
   }
 
+  const defaultPlotType = matsTypes.PlotTypes.timeSeries;
+  if (matsCollections["plot-type"].findOne({ name: "plot-type" }) === undefined) {
+    matsCollections["plot-type"].insert({
+      name: "plot-type",
+      type: matsTypes.InputTypes.select,
+      options: [
+        matsTypes.PlotTypes.timeSeries,
+        matsTypes.PlotTypes.dieoff,
+        matsTypes.PlotTypes.threshold,
+        matsTypes.PlotTypes.validtime,
+        matsTypes.PlotTypes.dailyModelCycle,
+        matsTypes.PlotTypes.performanceDiagram,
+        matsTypes.PlotTypes.map,
+        matsTypes.PlotTypes.histogram,
+        matsTypes.PlotTypes.contour,
+        matsTypes.PlotTypes.contourDiff,
+      ],
+      dependentNames: ["variable"],
+      controlButtonCovered: false,
+      default: defaultPlotType,
+      unique: false,
+      controlButtonVisibility: "none",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  }
+
   if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
+    const optionsMap = {};
+    optionsMap[matsTypes.PlotTypes.timeSeries] = allVariables;
+    optionsMap[matsTypes.PlotTypes.dieoff] = allVariables;
+    optionsMap[matsTypes.PlotTypes.threshold] = allVariablesYesThreshold;
+    optionsMap[matsTypes.PlotTypes.validtime] = allVariables;
+    optionsMap[matsTypes.PlotTypes.dailyModelCycle] = allVariables;
+    optionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariables;
+    optionsMap[matsTypes.PlotTypes.map] = allVariables;
+    optionsMap[matsTypes.PlotTypes.histogram] = allVariables;
+    optionsMap[matsTypes.PlotTypes.contour] = allVariables;
+    optionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
+
     matsCollections.variable.insert({
       name: "variable",
       type: matsTypes.InputTypes.select,
-      options: allVariables,
+      options: optionsMap[defaultPlotType],
+      optionsMap,
       valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
+      superiorNames: ["plot-type"],
       dependentNames: ["data-source"],
       controlButtonCovered: true,
-      default: allVariables[0],
+      default: optionsMap[defaultPlotType][0],
       hideOtherFor: {
         threshold: allVariablesNoThreshold,
       },
       unique: false,
       controlButtonVisibility: "block",
-      displayOrder: 2,
+      displayOrder: 3,
       displayPriority: 1,
       displayGroup: 1,
     });
@@ -629,7 +673,7 @@ const doCurveParams = async function () {
       default: Object.keys(modelOptionsMap[allVariables[0]])[0],
       unique: false,
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 4,
       displayPriority: 1,
       displayGroup: 1,
     });
