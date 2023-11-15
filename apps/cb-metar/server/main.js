@@ -477,7 +477,7 @@ const doCurveParams = async function () {
         }
       }
     }
-    allVariables = allVariables.sort();
+    allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
   } catch (err) {
     throw new Error(err.message);
   }

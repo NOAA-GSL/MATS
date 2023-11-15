@@ -48,6 +48,12 @@ dataMap = function (plotParams, plotFunction) {
   const { diffFrom } = curve;
 
   const { variable } = curve;
+  const variableValuesMap = matsCollections.variable.findOne({
+    name: "variable",
+  }).valuesMap;
+  const queryVariable = Object.keys(variableValuesMap).filter(
+    (qv) => variableValuesMap[qv][0].indexOf(variable) === 0
+  )[0];
   const model = matsCollections["data-source"].findOne({ name: "data-source" })
     .optionsMap[variable][curve["data-source"]][0];
 
@@ -100,7 +106,7 @@ dataMap = function (plotParams, plotFunction) {
       // eslint-disable-next-line no-undef
       const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
       rows = tss.processStationQuery(
-        variable,
+        queryVariable,
         sitesList,
         model,
         forecastLength,

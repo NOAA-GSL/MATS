@@ -60,6 +60,12 @@ dataSeries = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
+    const variableValuesMap = matsCollections.variable.findOne({
+      name: "variable",
+    }).valuesMap;
+    const queryVariable = Object.keys(variableValuesMap).filter(
+      (qv) => variableValuesMap[qv][0].indexOf(variable) === 0
+    )[0];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
 
@@ -110,7 +116,10 @@ dataSeries = function (plotParams, plotFunction) {
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
       queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
       queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-      queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
+      queryTemplate = queryTemplate.replace(
+        /{{vxVARIABLE}}/g,
+        queryVariable.toUpperCase()
+      );
       queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
       queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
       queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
@@ -164,7 +173,7 @@ dataSeries = function (plotParams, plotFunction) {
           // eslint-disable-next-line no-undef
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
           rows = tss.processStationQuery(
-            variable,
+            queryVariable,
             sitesList,
             model,
             forecastLength,
