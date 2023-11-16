@@ -2,6 +2,8 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
+/* global cbPool, Assets */
+
 import {
   matsCollections,
   matsTypes,
@@ -108,7 +110,6 @@ dataHistogram = function (plotParams, plotFunction) {
     );
 
     // SQL template replacements
-    // eslint-disable-next-line no-undef
     queryTemplate = Assets.getText("sqlTemplates/tmpl_Histogram.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -124,10 +125,10 @@ dataHistogram = function (plotParams, plotFunction) {
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
         /{{vxVALID_TIMES}}/g,
-        cbPool.trfmListToCSVString(validTimes, null, false) // eslint-disable-line no-undef
+        cbPool.trfmListToCSVString(validTimes, null, false)
       );
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}"); // eslint-disable-line no-undef
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
     }
 
     // axisKey is used to determine which axis a curve should use.
@@ -149,12 +150,11 @@ dataHistogram = function (plotParams, plotFunction) {
       const startMoment = moment();
       let finishMoment;
       try {
-        // eslint-disable-next-line no-undef
         statement = cbPool.trfmSQLForDbTarget(queryTemplate);
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool, // eslint-disable-line no-undef
+          cbPool,
           statement,
           appParams,
           statisticSelect

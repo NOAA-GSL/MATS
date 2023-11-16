@@ -2,6 +2,8 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
+/* global cbPool, Assets */
+
 import {
   matsCollections,
   matsTypes,
@@ -113,7 +115,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       );
 
       // SQL template replacements
-      // eslint-disable-next-line no-undef
       queryTemplate = Assets.getText("sqlTemplates/tmpl_DailyModelCycle.sql");
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -126,7 +127,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
       queryTemplate = queryTemplate.replace(
         /{{vxUTC_CYCLE_START}}/g,
-        cbPool.trfmListToCSVString(utcCycleStart, null, false) // eslint-disable-line no-undef
+        cbPool.trfmListToCSVString(utcCycleStart, null, false)
       );
     } else {
       sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -156,12 +157,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       let finishMoment;
       try {
         if (regionType === "Predefined region") {
-          // eslint-disable-next-line no-undef
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          // eslint-disable-next-line no-undef
           const tss = new matsMiddleDailyModelCycle.MatsMiddleDailyModelCycle(cbPool);
           rows = tss.processStationQuery(
             queryVariable,
@@ -176,7 +175,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool, // eslint-disable-line no-undef
+          cbPool,
           regionType === "Predefined region" ? statement : rows,
           appParams,
           statisticSelect

@@ -2,6 +2,8 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
+/* global cbPool, Assets */
+
 import {
   matsCollections,
   matsTypes,
@@ -115,7 +117,6 @@ dataSeries = function (plotParams, plotFunction) {
       );
 
       // SQL template replacements
-      // eslint-disable-next-line no-undef
       queryTemplate = Assets.getText("sqlTemplates/tmpl_TimeSeries.sql");
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -132,10 +133,10 @@ dataSeries = function (plotParams, plotFunction) {
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /{{vxVALID_TIMES}}/g,
-          cbPool.trfmListToCSVString(validTimes, null, false) // eslint-disable-line no-undef
+          cbPool.trfmListToCSVString(validTimes, null, false)
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}"); // eslint-disable-line no-undef
+        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
       }
     } else {
       sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -170,12 +171,10 @@ dataSeries = function (plotParams, plotFunction) {
         }
 
         if (regionType === "Predefined region") {
-          // eslint-disable-next-line no-undef
           statement = cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          // eslint-disable-next-line no-undef
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
           rows = tss.processStationQuery(
             queryVariable,
@@ -192,7 +191,7 @@ dataSeries = function (plotParams, plotFunction) {
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBTimeSeries(
-          cbPool, // eslint-disable-line no-undef
+          cbPool,
           regionType === "Predefined region" ? statement : rows,
           model,
           forecastLength,
