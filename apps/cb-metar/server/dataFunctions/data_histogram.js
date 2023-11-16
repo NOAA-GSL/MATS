@@ -59,7 +59,12 @@ dataHistogram = function (plotParams, plotFunction) {
       name: "variable",
     }).valuesMap;
     const queryVariable = Object.keys(variableValuesMap).filter(
-      (qv) => variableValuesMap[qv][0].indexOf(variable) === 0
+      (qv) =>
+        variableValuesMap[qv][0]
+          .map(function (v) {
+            return Object.keys(v)[0];
+          })
+          .indexOf(variable) === 0
     )[0];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
@@ -129,8 +134,8 @@ dataHistogram = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    [statType] = statisticOptionsMap[statisticSelect];
-    [, varUnits] = statisticOptionsMap[statisticSelect];
+    [statType] = statisticOptionsMap[variable][statisticSelect];
+    [, varUnits] = statisticOptionsMap[variable][statisticSelect];
     let axisKey = yAxisFormat;
     if (yAxisFormat === "Relative frequency") {
       axisKey += " (x100)";

@@ -16,17 +16,17 @@ import {
 // first field of each value array is sub-variables, second field is metadata document key,
 // third is boolean for whether or not there are thresholds
 const variableMetadataDocs = {
-  Ceiling: [["Ceiling"], "cb-ceiling", true],
-  Visibility: [["Visibility"], "cb-visibility", true],
+  Ceiling: [[{ Ceiling: "ft" }], "cb-ceiling", true],
+  Visibility: [[{ Visibility: "mi" }], "cb-visibility", true],
   Surface: [
     [
-      "Temperature",
-      "Dewpoint",
-      "Relative Humidity",
-      "Surface Pressure",
-      "Wind Speed",
-      "U-Wind",
-      "V-Wind",
+      { Temperature: "°C" },
+      { Dewpoint: "°C" },
+      { "Relative Humidity": "RH (%)" },
+      { "Surface Pressure": "hPa" },
+      { "Wind Speed": "m/s" },
+      { "U-Wind": "m/s" }, // ALREADY IN M/S, STOP CONVERSION LATER ON
+      { "V-Wind": "m/s" },
     ],
     "cb-surface",
     false,
@@ -380,7 +380,9 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      const subVariables = variableMetadataDocs[variable][0];
+      const subVariables = variableMetadataDocs[variable][0].map(function (v) {
+        return Object.keys(v)[0];
+      });
       const hasThresholds = variableMetadataDocs[variable][2];
       let rows;
       if (hasThresholds) {
@@ -418,7 +420,9 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      const subVariables = variableMetadataDocs[variable][0];
+      const subVariables = variableMetadataDocs[variable][0].map(function (v) {
+        return Object.keys(v)[0];
+      });
       allVariables = allVariables.concat(subVariables);
 
       // eslint-disable-next-line no-undef
@@ -608,7 +612,7 @@ const doCurveParams = async function () {
       valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
       superiorNames: ["plot-type"],
-      dependentNames: ["data-source"],
+      dependentNames: ["data-source", "statistic"],
       controlButtonCovered: true,
       default: optionsMap[defaultPlotType][0],
       hideOtherFor: {
@@ -748,7 +752,7 @@ const doCurveParams = async function () {
   }
 
   if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
-    const optionsMap = {
+    const ctcOptionsMap = {
       "CSI (Critical Success Index)": ["ctc", "x100", 100],
 
       "TSS (True Skill Score)": ["ctc", "x100", 100],
@@ -785,11 +789,35 @@ const doCurveParams = async function () {
         null,
       ],
     };
+    const scalarOptionsMap = {
+      RMSE: ["scalar", "Unknown", null],
+
+      "Bias (Model - Obs)": ["scalar", "Unknown", null],
+
+      N: ["scalar", "Unknown", null],
+
+      "Model average": ["scalar", "Unknown", null],
+
+      "Obs average": ["scalar", "Unknown", null],
+
+      "Std deviation": ["scalar", "Unknown", null],
+
+      "MAE (temp and dewpoint only)": ["scalar", "Unknown", null],
+    };
+    const optionsMap = {};
+    for (let vidx = 0; vidx < allVariables.length; vidx += 1) {
+      const variable = allVariables[vidx];
+      optionsMap[variable] =
+        allVariablesYesThreshold.indexOf(variable) !== -1
+          ? ctcOptionsMap
+          : scalarOptionsMap;
+    }
     matsCollections.statistic.insert({
       name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap,
       options: Object.keys(optionsMap),
+      superiorNames: ["variable"],
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(optionsMap)[0],

@@ -52,7 +52,12 @@ dataMap = function (plotParams, plotFunction) {
     name: "variable",
   }).valuesMap;
   const queryVariable = Object.keys(variableValuesMap).filter(
-    (qv) => variableValuesMap[qv][0].indexOf(variable) === 0
+    (qv) =>
+      variableValuesMap[qv][0]
+        .map(function (v) {
+          return Object.keys(v)[0];
+        })
+        .indexOf(variable) === 0
   )[0];
   const model = matsCollections["data-source"].findOne({ name: "data-source" })
     .optionsMap[variable][curve["data-source"]][0];

@@ -60,7 +60,12 @@ dataDieoff = function (plotParams, plotFunction) {
       name: "variable",
     }).valuesMap;
     const queryVariable = Object.keys(variableValuesMap).filter(
-      (qv) => variableValuesMap[qv][0].indexOf(variable) === 0
+      (qv) =>
+        variableValuesMap[qv][0]
+          .map(function (v) {
+            return Object.keys(v)[0];
+          })
+          .indexOf(variable) === 0
     )[0];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
@@ -176,10 +181,10 @@ dataDieoff = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    [statType] = statisticOptionsMap[statisticSelect];
-    const axisKey = statisticOptionsMap[statisticSelect][1];
+    [statType] = statisticOptionsMap[variable][statisticSelect];
+    const axisKey = statisticOptionsMap[variable][statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-    const idealVal = statisticOptionsMap[statisticSelect][2];
+    const idealVal = statisticOptionsMap[variable][statisticSelect][2];
     if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
       idealValues.push(idealVal);
     }
