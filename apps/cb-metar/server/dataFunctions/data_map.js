@@ -2,6 +2,8 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
+/* global cbPool */
+
 import {
   matsCollections,
   matsTypes,
@@ -97,7 +99,6 @@ dataMap = function (plotParams, plotFunction) {
     try {
       // send to matsMiddle
       statement = "Station plot -- no one query.";
-      // eslint-disable-next-line no-undef
       const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
       rows = tss.processStationQuery(
         variable,
@@ -112,7 +113,7 @@ dataMap = function (plotParams, plotFunction) {
 
       // send the query statement to the query function
       queryResult = matsDataQueryUtils.queryDBMapCTC(
-        cbPool, // eslint-disable-line no-undef
+        cbPool,
         rows,
         model,
         statisticSelect,

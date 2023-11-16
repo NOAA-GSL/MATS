@@ -2,6 +2,8 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
+/* global cbPool, Assets */
+
 import {
   matsCollections,
   matsTypes,
@@ -123,7 +125,6 @@ dataContourDiff = function (plotParams, plotFunction) {
     );
 
     // SQL template replacements
-    // eslint-disable-next-line no-undef
     queryTemplate = Assets.getText("sqlTemplates/tmpl_Contour.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -137,13 +138,13 @@ dataContourDiff = function (plotParams, plotFunction) {
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /{{vxVALID_TIMES}}/g,
-          cbPool.trfmListToCSVString(validTimes, null, false) // eslint-disable-line no-undef
+          cbPool.trfmListToCSVString(validTimes, null, false)
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}"); // eslint-disable-line no-undef
+        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
       }
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}"); // eslint-disable-line no-undef
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
     }
 
     if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
@@ -154,7 +155,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       }
       queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}"); // eslint-disable-line no-undef
+      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}");
     }
 
     let dateString = "";
@@ -191,12 +192,11 @@ dataContourDiff = function (plotParams, plotFunction) {
         const startMoment = moment();
         let finishMoment;
         try {
-          // eslint-disable-next-line no-undef
           statement = cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
 
           // send the query statement to the query function
           queryResult = matsDataQueryUtils.queryDBContour(
-            cbPool, // eslint-disable-line no-undef
+            cbPool,
             statement,
             appParams,
             statisticSelect
