@@ -84,6 +84,9 @@ dataMap = function (plotParams, plotFunction) {
   if (variable.includes("Visibility")) {
     statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
     statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
+  } else if (variable.includes("Cloud Base")) {
+    statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.cloud_base");
+    statisticClause = statisticClause.replace(/o\.ceil/g, "o.cloud_base");
   }
 
   let sitesClause = "";

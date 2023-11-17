@@ -19,6 +19,7 @@ import {
 // This is where we store the databases referenced by those apps.
 const variableDBNames = {
   Ceiling: { modelDB: "ceiling2", sumsDB: "ceiling_sums2" },
+  "Cloud Base Height": { modelDB: "cloud_base", sumsDB: "cloud_base_sums" },
   Visibility: { modelDB: "visibility", sumsDB: "visibility_sums2" },
 };
 const variables = Object.keys(variableDBNames);
