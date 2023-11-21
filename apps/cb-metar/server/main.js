@@ -16,18 +16,18 @@ import {
 // first field of each value array is sub-variables, second field is metadata document key,
 // third is boolean for whether or not there are thresholds
 const variableMetadataDocs = {
-  Ceiling: [[{ Ceiling: "ft" }], "cb-ceiling", true],
-  Visibility: [[{ Visibility: "mi" }], "cb-visibility", true],
+  Ceiling: [{ Ceiling: ["Ceiling", "ft"] }, "cb-ceiling", true],
+  Visibility: [{ Visibility: ["Visibility", "mi"] }, "cb-visibility", true],
   Surface: [
-    [
-      { Temperature: "°C" },
-      { Dewpoint: "°C" },
-      { "Relative Humidity": "RH (%)" },
-      { "Surface Pressure": "hPa" },
-      { "Wind Speed": "m/s" },
-      { "U-Wind": "m/s" }, // ALREADY IN M/S, STOP CONVERSION LATER ON
-      { "V-Wind": "m/s" },
-    ],
+    {
+      "Temperature (2m)": ["Temperature", "°C"],
+      "Dewpoint (2m)": ["DewPoint", "°C"],
+      "Relative Humidity (2m)": ["RelativeHumidity", "RH (%)"],
+      "Surface Pressure": ["SurfacePressure", "hPa"],
+      "Wind Speed (10m)": ["WindSpeed", "m/s"],
+      "U-Wind (10m)": ["WindU", "m/s"], // ALREADY IN M/S, STOP CONVERSION LATER ON
+      "V-Wind (10m)": ["WindV", "m/s"], // ALREADY IN M/S, STOP CONVERSION LATER ON
+    },
     "cb-surface",
     false,
   ],
@@ -380,9 +380,7 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      const subVariables = variableMetadataDocs[variable][0].map(function (v) {
-        return Object.keys(v)[0];
-      });
+      const subVariables = Object.keys(variableMetadataDocs[variable][0]);
       const hasThresholds = variableMetadataDocs[variable][2];
       let rows;
       if (hasThresholds) {
@@ -420,9 +418,7 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      const subVariables = variableMetadataDocs[variable][0].map(function (v) {
-        return Object.keys(v)[0];
-      });
+      const subVariables = Object.keys(variableMetadataDocs[variable][0]);
       allVariables = allVariables.concat(subVariables);
 
       // eslint-disable-next-line no-undef
@@ -598,7 +594,7 @@ const doCurveParams = async function () {
     optionsMap[matsTypes.PlotTypes.threshold] = allVariablesYesThreshold;
     optionsMap[matsTypes.PlotTypes.validtime] = allVariables;
     optionsMap[matsTypes.PlotTypes.dailyModelCycle] = allVariables;
-    optionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariables;
+    optionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariablesYesThreshold;
     optionsMap[matsTypes.PlotTypes.map] = allVariables;
     optionsMap[matsTypes.PlotTypes.histogram] = allVariables;
     optionsMap[matsTypes.PlotTypes.contour] = allVariables;
@@ -794,7 +790,7 @@ const doCurveParams = async function () {
 
       "Bias (Model - Obs)": ["scalar", "Unknown", null],
 
-      N: ["scalar", "Unknown", null],
+      N: ["scalar", "Number", null],
 
       "Model average": ["scalar", "Unknown", null],
 
