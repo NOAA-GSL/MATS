@@ -64,17 +64,19 @@ dataContour = function (plotParams, plotFunction) {
     name: "variable",
   }).valuesMap;
   const queryVariable = Object.keys(variableValuesMap).filter(
-    (qv) =>
-      variableValuesMap[qv][0]
-        .map(function (v) {
-          return Object.keys(v)[0];
-        })
-        .indexOf(variable) !== -1
+    (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
   )[0];
+  const variableDetails = variableValuesMap[queryVariable][0][variable];
   const model = matsCollections["data-source"].findOne({ name: "data-source" })
     .optionsMap[variable][curve["data-source"]][0];
 
-  if (xAxisParam !== "Threshold" && yAxisParam !== "Threshold") {
+  if (
+    xAxisParam !== "Threshold" &&
+    yAxisParam !== "Threshold" &&
+    variableValuesMap[queryVariable][2]
+  ) {
+    // threshold is not an axis param and this is a CTC app
+    // so find which threshold was selected
     const thresholdStr = curve.threshold;
     if (thresholdStr === undefined) {
       throw new Error(
@@ -90,8 +92,9 @@ dataContour = function (plotParams, plotFunction) {
         ] === thresholdStr
     );
     allThresholds = [threshold.replace(/_/g, ".")];
-  } else {
-    // catalogue the thresholds now, we'll need to do a separate query for each
+  } else if (variableValuesMap[queryVariable][2]) {
+    // threshold is an axis param and this is a CTC app
+    // so catalogue the thresholds now, we'll need to do a separate query for each
     allThresholds = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     )
@@ -101,6 +104,16 @@ dataContour = function (plotParams, plotFunction) {
       .sort(function (a, b) {
         return Number(a) - Number(b);
       });
+  } else if (xAxisParam === "Threshold" || yAxisParam === "Threshold") {
+    // threshold is an axis param and this is a scalar app
+    // so throw an error, that's not doable
+    throw new Error(
+      "INFO: Using threshold as an axis parameter doesn't work with this variable. Try ceiling or visibility?"
+    );
+  } else {
+    // threshold is not an axis param and this is a scalar app
+    // so create a dummy threshold for the loop later
+    allThresholds = ["NA"];
   }
 
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
@@ -111,6 +124,7 @@ dataContour = function (plotParams, plotFunction) {
     { name: "statistic" },
     { optionsMap: 1 }
   ).optionsMap;
+  const statType = statisticOptionsMap[variable][statisticSelect][0];
 
   let queryTemplate;
   const regionType = curve["region-type"];
@@ -128,6 +142,7 @@ dataContour = function (plotParams, plotFunction) {
   );
 
   // SQL template replacements
+  let statTemplate;
   queryTemplate = Assets.getText("sqlTemplates/tmpl_Contour.sql");
   queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
   queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -136,6 +151,16 @@ dataContour = function (plotParams, plotFunction) {
   queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, queryVariable.toUpperCase());
   queryTemplate = queryTemplate.replace(/{{vxXVAL_CLAUSE}}/g, xValClause);
   queryTemplate = queryTemplate.replace(/{{vxYVAL_CLAUSE}}/g, yValClause);
+  if (statType === "ctc") {
+    statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+    queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+    queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+  } else {
+    statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
+    queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+    queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
+    queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+  }
 
   if (xAxisParam !== "Valid UTC hour" && yAxisParam !== "Valid UTC hour") {
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -174,8 +199,10 @@ dataContour = function (plotParams, plotFunction) {
   queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
 
   // For contours, this functions as the colorbar label.
-  const statType = statisticOptionsMap[variable][statisticSelect][0];
-  [, curve.unitKey] = statisticOptionsMap[variable][statisticSelect];
+  curve.unitKey =
+    statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
+      ? variableDetails[1]
+      : statisticOptionsMap[variable][statisticSelect][1];
 
   let d = {};
   let dTemp;
@@ -202,7 +229,7 @@ dataContour = function (plotParams, plotFunction) {
           cbPool,
           statement,
           appParams,
-          statisticSelect
+          statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
         );
 
         finishMoment = moment();

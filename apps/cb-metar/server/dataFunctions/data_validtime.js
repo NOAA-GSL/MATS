@@ -70,7 +70,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
     const thresholdStr = curve.threshold;
     let threshold = "";
-    if (thresholdStr) {
+    if (variableValuesMap[queryVariable][2]) {
       threshold = Object.keys(
         matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
       ).find(
