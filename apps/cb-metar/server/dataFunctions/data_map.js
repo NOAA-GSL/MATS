@@ -54,31 +54,35 @@ dataMap = function (plotParams, plotFunction) {
     name: "variable",
   }).valuesMap;
   const queryVariable = Object.keys(variableValuesMap).filter(
-    (qv) =>
-      variableValuesMap[qv][0]
-        .map(function (v) {
-          return Object.keys(v)[0];
-        })
-        .indexOf(variable) !== -1
+    (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
   )[0];
+  // const variableDetails = variableValuesMap[queryVariable][0][variable];
   const model = matsCollections["data-source"].findOne({ name: "data-source" })
     .optionsMap[variable][curve["data-source"]][0];
 
   const thresholdStr = curve.threshold;
-  let threshold = Object.keys(
-    matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-  ).find(
-    (key) =>
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-        key
-      ] === thresholdStr
-  );
-  threshold = threshold.replace(/_/g, ".");
+  let threshold = "";
+  if (thresholdStr) {
+    threshold = Object.keys(
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
+    ).find(
+      (key) =>
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
+          key
+        ] === thresholdStr
+    );
+    threshold = threshold.replace(/_/g, ".");
+  }
 
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
   const forecastLength = curve["forecast-length"];
 
   const statisticSelect = curve.statistic;
+  // const statisticOptionsMap = matsCollections.statistic.findOne(
+  //   { name: "statistic" },
+  //   { optionsMap: 1 }
+  // ).optionsMap;
+  // [statType] = statisticOptionsMap[variable][statisticSelect];
 
   const sitesList = curve.sites === undefined ? [] : curve.sites;
   if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
