@@ -67,7 +67,7 @@ dataDieoff = function (plotParams, plotFunction) {
           .map(function (v) {
             return Object.keys(v)[0];
           })
-          .indexOf(variable) === 0
+          .indexOf(variable) !== -1
     )[0];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
