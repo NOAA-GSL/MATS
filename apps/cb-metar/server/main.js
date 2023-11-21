@@ -411,6 +411,8 @@ const doCurveParams = async function () {
         }
       }
     }
+    allVariablesYesThreshold = [...new Set(allVariablesYesThreshold)].sort(); // make sure all variables are unique, then sort
+    allVariablesNoThreshold = [...new Set(allVariablesNoThreshold)].sort(); // make sure all variables are unique, then sort
   } catch (err) {
     throw new Error(err.message);
   }

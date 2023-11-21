@@ -64,12 +64,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       name: "variable",
     }).valuesMap;
     const queryVariable = Object.keys(variableValuesMap).filter(
-      (qv) =>
-        variableValuesMap[qv][0]
-          .map(function (v) {
-            return Object.keys(v)[0];
-          })
-          .indexOf(variable) !== -1
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
     )[0];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
@@ -110,6 +105,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     const toSecs = dateRange.toSeconds;
 
     const statisticSelect = "PerformanceDiagram";
+    statType = "ctc";
 
     let queryTemplate;
     const regionType = curve["region-type"];
@@ -137,6 +133,13 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       queryVariable.toUpperCase()
     );
     queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
+    if (statType === "ctc") {
+      queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+    } else {
+      throw new Error(
+        "INFO: Performance diagrams are not for continuous variables. Try ceiling or visibility instead?"
+      );
+    }
 
     if (binParam !== "Valid UTC hour") {
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -174,7 +177,6 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // variable + statistic (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    statType = "ctc";
     curves[curveIndex].axisKey = statisticSelect; // stash the axisKey to use it later for axis options
 
     let d = {};

@@ -106,7 +106,6 @@ dataThreshold = function (plotParams, plotFunction) {
     );
 
     // SQL template replacements
-    let statTemplate;
     queryTemplate = Assets.getText("sqlTemplates/tmpl_Threshold.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -118,14 +117,13 @@ dataThreshold = function (plotParams, plotFunction) {
     );
     queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     if (statType === "ctc") {
-      statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+      const statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
       queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
       queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
     } else {
-      statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
-      queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-      queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
-      queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+      throw new Error(
+        "INFO: Threshold plots are not for continuous variables. Try ceiling or visibility instead?"
+      );
     }
 
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -176,7 +174,7 @@ dataThreshold = function (plotParams, plotFunction) {
             cbPool,
             statement,
             appParams,
-            statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
+            statisticSelect
           );
 
           finishMoment = moment();
