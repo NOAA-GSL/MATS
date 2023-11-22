@@ -25,8 +25,8 @@ const variableMetadataDocs = {
       "Relative Humidity (2m)": ["RelativeHumidity", "RH (%)"],
       "Surface Pressure": ["SurfacePressure", "hPa"],
       "Wind Speed (10m)": ["WindSpeed", "m/s"],
-      "U-Wind (10m)": ["WindU", "m/s"], // ALREADY IN M/S, STOP CONVERSION LATER ON
-      "V-Wind (10m)": ["WindV", "m/s"], // ALREADY IN M/S, STOP CONVERSION LATER ON
+      "U-Wind (10m)": ["WindU", "m/s"],
+      "V-Wind (10m)": ["WindV", "m/s"],
     },
     "cb-surface",
     false,

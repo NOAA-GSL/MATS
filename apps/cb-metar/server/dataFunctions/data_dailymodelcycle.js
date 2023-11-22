@@ -43,6 +43,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
+  const allStatTypes = [];
   const utcCycleStarts = [];
   const idealValues = [];
 
@@ -100,6 +101,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
     [statType] = statisticOptionsMap[variable][statisticSelect];
+    allStatTypes.push(statType);
 
     let queryTemplate;
     let sitesList;
@@ -291,7 +293,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     curvesLength,
     idealValues,
     utcCycleStarts,
-    statType,
+    statType: allStatTypes,
     axisMap,
     xmax,
     xmin,

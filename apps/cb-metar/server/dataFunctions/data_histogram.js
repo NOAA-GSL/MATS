@@ -36,6 +36,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
   const axisMap = Object.create(null);
   let statType;
+  const allStatTypes = [];
   let varUnits;
 
   let statement = "";
@@ -93,6 +94,7 @@ dataHistogram = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
     [statType] = statisticOptionsMap[variable][statisticSelect];
+    allStatTypes.push(statType);
 
     let queryTemplate;
     const regionType = curve["region-type"];
@@ -218,7 +220,7 @@ dataHistogram = function (plotParams, plotFunction) {
     curves,
     curvesLength,
     dataFoundForCurve,
-    statType,
+    statType: allStatTypes,
     axisMap,
     yAxisFormat,
     varUnits,

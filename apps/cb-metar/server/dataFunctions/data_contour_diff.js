@@ -42,6 +42,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   const showSignificance = plotParams.significance !== "none";
 
   let statType;
+  const allStatTypes = [];
   let statisticSelect;
 
   let statement = "";
@@ -133,6 +134,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
     [statType] = statisticOptionsMap[variable][statisticSelect];
+    allStatTypes.push(statType);
 
     let queryTemplate;
     const regionType = curve["region-type"];
@@ -352,7 +354,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   dataset[1] = matsDataCurveOpsUtils.getContourSignificanceLayer(dataset);
 
   // process the data returned by the query
-  const curveInfoParams = { curve: curves, statType, axisMap };
+  const curveInfoParams = { curve: curves, statType: allStatTypes, axisMap };
   const bookkeepingParams = {
     dataRequests,
     totalProcessingStart,
