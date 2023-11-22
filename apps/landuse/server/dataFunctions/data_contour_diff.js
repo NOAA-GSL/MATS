@@ -40,6 +40,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   const showSignificance = plotParams.significance !== "none";
 
   let statType;
+  const allStatTypes = [];
   let statisticSelect;
   let variableStr;
 
@@ -130,6 +131,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       { statVarUnitMap: 1 }
     );
     statType = statisticOptionsMap[statisticSelect];
+    allStatTypes.push(statType);
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
     curves[curveIndex].unitKey = varUnits;
 
@@ -262,8 +264,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     showSignificance,
     plotParams.significance,
     `${statisticSelect}_${variableStr}`,
-    statType === "ctc",
-    statType === "scalar"
+    allStatTypes
   );
   const newPlotParams = plotParams;
   newPlotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);

@@ -341,8 +341,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     showSignificance,
     plotParams.significance,
     statisticSelect,
-    statType === "ctc",
-    statType === "scalar"
+    allStatTypes
   );
   const newPlotParams = plotParams;
   newPlotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);

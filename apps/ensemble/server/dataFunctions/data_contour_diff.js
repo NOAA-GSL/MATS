@@ -40,6 +40,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   const showSignificance = plotParams.significance !== "none";
 
   let statType;
+  const allStatTypes = [];
   let statisticSelect;
 
   let statement = "";
@@ -157,6 +158,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
     // For contours, this functions as the colorbar label.
     [statType] = statisticOptionsMap[statisticSelect];
+    allStatTypes.push(statType);
     [, , , curve.unitKey] = statisticOptionsMap[statisticSelect];
 
     let d;
@@ -292,8 +294,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     showSignificance,
     plotParams.significance,
     statisticSelect,
-    statType === "ctc",
-    statType === "scalar"
+    allStatTypes
   );
   const newPlotParams = plotParams;
   newPlotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
