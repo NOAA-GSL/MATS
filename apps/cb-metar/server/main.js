@@ -299,7 +299,12 @@ const doPlotParams = function () {
     matsCollections.PlotParams.insert({
       name: "significance",
       type: matsTypes.InputTypes.select,
-      options: ["none", "significance at 95th percentile"],
+      options: [
+        "none",
+        "95th percentile -- bootstrapping (SKILL SCORES ONLY)",
+        "95th percentile -- standard t-test (CONTINUOUS VARIABLES ONLY)",
+        "95th percentile -- t-test with infinite degrees of freedom (CONTINUOUS VARIABLES ONLY)",
+      ],
       selected: "",
       controlButtonCovered: true,
       unique: false,

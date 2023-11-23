@@ -43,7 +43,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
   let statType;
   const allStatTypes = [];
-  let statisticSelect;
+  const allStatistics = [];
 
   let statement = "";
   let error = "";
@@ -128,7 +128,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     const forecastLength = curve["forecast-length"];
 
-    statisticSelect = curve.statistic;
+    const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
@@ -216,6 +216,11 @@ dataContourDiff = function (plotParams, plotFunction) {
       statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
         ? variableDetails[1]
         : statisticOptionsMap[variable][statisticSelect][1];
+    if (statType === "ctc") {
+      allStatistics.push(statisticSelect);
+    } else {
+      allStatistics.push(`${statisticSelect}_${variable}`);
+    }
 
     let d = {};
     let dTemp;
@@ -340,7 +345,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     appParams,
     showSignificance,
     plotParams.significance,
-    statisticSelect,
+    allStatistics,
     allStatTypes
   );
   const newPlotParams = plotParams;

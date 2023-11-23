@@ -41,8 +41,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
   let statType;
   const allStatTypes = [];
-  let statisticSelect;
-  let variableStr;
+  const allStatistics = [];
 
   let statement = "";
   let error = "";
@@ -69,7 +68,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
     const regionType = "Predefined region";
 
-    variableStr = curve.variable;
+    const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
       { name: "variable" },
       { optionsMap: 1 }
@@ -104,7 +103,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
     }
 
-    statisticSelect = curve.statistic;
+    const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
@@ -145,6 +144,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     allStatTypes.push(statType);
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
     curves[curveIndex].unitKey = varUnits;
+    allStatistics.push(`${statisticSelect}_${variableStr}`);
 
     let d;
     if (!diffFrom) {
@@ -272,7 +272,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     appParams,
     showSignificance,
     plotParams.significance,
-    `${statisticSelect}_${variableStr}`,
+    allStatistics,
     allStatTypes
   );
   const newPlotParams = plotParams;

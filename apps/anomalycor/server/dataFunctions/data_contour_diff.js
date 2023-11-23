@@ -41,6 +41,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
   let statType;
   const allStatTypes = [];
+  const allStatistics = [];
 
   let statement = "";
   let error = "";
@@ -135,6 +136,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     const axisKey = "Correlation";
     curve.statistic = axisKey;
     curve.unitKey = axisKey;
+    allStatistics.push(axisKey);
 
     let d;
     if (!diffFrom) {
@@ -260,7 +262,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     appParams,
     showSignificance,
     plotParams.significance,
-    "Anomaly Correlation",
+    allStatistics,
     allStatTypes
   );
   const newPlotParams = plotParams;

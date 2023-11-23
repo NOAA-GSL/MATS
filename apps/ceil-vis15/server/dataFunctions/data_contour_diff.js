@@ -41,7 +41,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
   let statType;
   const allStatTypes = [];
-  let statisticSelect;
+  const allStatistics = [];
 
   let statement = "";
   let error = "";
@@ -124,7 +124,7 @@ dataContourDiff = function (plotParams, plotFunction) {
       truthClause = `and m0.truth = '${truth}'`;
     }
 
-    statisticSelect = curve.statistic;
+    const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
@@ -158,6 +158,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     [statType] = statisticOptionsMap[statisticSelect];
     allStatTypes.push(statType);
     [, curve.unitKey] = statisticOptionsMap[statisticSelect];
+    allStatistics.push(statisticSelect);
 
     let d;
     if (!diffFrom) {
@@ -283,7 +284,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     appParams,
     showSignificance,
     plotParams.significance,
-    statisticSelect,
+    allStatistics,
     allStatTypes
   );
   const newPlotParams = plotParams;
