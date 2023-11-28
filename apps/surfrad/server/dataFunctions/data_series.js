@@ -40,6 +40,7 @@ dataSeries = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
+  const allStatTypes = [];
   const utcCycleStarts = [];
   const idealValues = [];
 
@@ -132,6 +133,7 @@ dataSeries = function (plotParams, plotFunction) {
       { statVarUnitMap: 1 }
     );
     statType = statisticOptionsMap[statisticSelect];
+    allStatTypes.push(statType);
     const axisKey = statVarUnitMap[statisticSelect][variableStr];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
@@ -244,8 +246,7 @@ dataSeries = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === "ctc",
-        statType === "scalar"
+        allStatTypes
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;

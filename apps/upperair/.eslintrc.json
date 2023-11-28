@@ -28,19 +28,6 @@
     "space-before-function-paren": "off",
     // for Meteor API's that rely on `this` context, e.g. Template.onCreated and publications
     "func-names": "off",
-    "prefer-arrow-callback": "off",
-    "no-undef": "warn",
-    "no-plusplus": "warn",
-    "vars-on-top": "warn",
-    "no-var": "warn",
-    "block-scoped-var": "warn",
-    "no-loop-func": "warn",
-    "no-unused-vars": "warn",
-    "prefer-destructuring": "warn",
-    "no-param-reassign": "warn",
-    "camelcase": "warn",
-    "no-redeclare": "warn",
-    "no-shadow": "warn",
-    "no-useless-escape": "warn"
+    "prefer-arrow-callback": "off"
   }
 }

@@ -40,6 +40,7 @@ dataProfile = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
+  const allStatTypes = [];
   const idealValues = [100];
 
   let statement = "";
@@ -95,6 +96,7 @@ dataProfile = function (plotParams, plotFunction) {
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     statType = "ACC";
+    allStatTypes.push(statType);
     const axisKey = "Correlation";
     curves[curveIndex].statistic = axisKey;
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
@@ -181,8 +183,7 @@ dataProfile = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === "ctc",
-        statType === "scalar"
+        allStatTypes
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
