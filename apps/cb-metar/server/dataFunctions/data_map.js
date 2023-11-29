@@ -56,7 +56,7 @@ dataMap = function (plotParams, plotFunction) {
   const queryVariable = Object.keys(variableValuesMap).filter(
     (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
   )[0];
-  // const variableDetails = variableValuesMap[queryVariable][0][variable];
+  const variableDetails = variableValuesMap[queryVariable][0][variable];
   const model = matsCollections["data-source"].findOne({ name: "data-source" })
     .optionsMap[variable][curve["data-source"]][0];
 
@@ -78,11 +78,11 @@ dataMap = function (plotParams, plotFunction) {
   const forecastLength = curve["forecast-length"];
 
   const statisticSelect = curve.statistic;
-  // const statisticOptionsMap = matsCollections.statistic.findOne(
-  //   { name: "statistic" },
-  //   { optionsMap: 1 }
-  // ).optionsMap;
-  // [statType] = statisticOptionsMap[variable][statisticSelect];
+  const statisticOptionsMap = matsCollections.statistic.findOne(
+    { name: "statistic" },
+    { optionsMap: 1 }
+  ).optionsMap;
+  const statType = statisticOptionsMap[variable][statisticSelect][0];
 
   const sitesList = curve.sites === undefined ? [] : curve.sites;
   if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
@@ -116,7 +116,8 @@ dataMap = function (plotParams, plotFunction) {
       statement = "Station plot -- no one query.";
       const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
       rows = tss.processStationQuery(
-        queryVariable,
+        statType,
+        variableDetails[0],
         sitesList,
         model,
         forecastLength,
