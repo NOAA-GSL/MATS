@@ -168,7 +168,8 @@ dataValidTime = function (plotParams, plotFunction) {
           statement = "Station plot -- no one query.";
           const tss = new matsMiddleValidTime.MatsMiddleValidTime(cbPool);
           rows = tss.processStationQuery(
-            queryVariable,
+            statType,
+            variableDetails[0],
             sitesList,
             model,
             forecastLength,
