@@ -11,7 +11,7 @@ WHERE m0.type = 'DD'
     AND m0.version = 'V01'
     AND m0.model = '{{vxMODEL}}'
     AND m0.region = '{{vxREGION}}'
-    AND m0.fcstLen IN [0,3,6,9,12,15,18,21,24,30,36,42,48]
+    AND (m0.fcstLen % 3) = 0
     AND m0.fcstValidEpoch %(24 * 3600) / 3600 IN [{{vxVALID_TIMES}}]
     AND m0.fcstValidEpoch >= {{vxFROM_SECS}}
     AND m0.fcstValidEpoch <= {{vxTO_SECS}}

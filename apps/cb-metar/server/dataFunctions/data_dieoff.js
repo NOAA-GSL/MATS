@@ -214,7 +214,8 @@ dataDieoff = function (plotParams, plotFunction) {
           statement = "Station plot -- no one query.";
           const tss = new matsMiddleDieoff.MatsMiddleDieoff(cbPool);
           rows = tss.processStationQuery(
-            queryVariable,
+            statType,
+            variableDetails[0],
             sitesList,
             model,
             null,
