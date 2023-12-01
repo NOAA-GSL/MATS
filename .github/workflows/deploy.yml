@@ -18,7 +18,7 @@ jobs:
       matrix:
         deploy: # List of apps to deploy
           - anomalycor
-          # - cb-ceiling # Don't push this until its ready
+          - cb-metar
           - ceil-vis
           - ceil-vis15
           - ensemble
@@ -41,7 +41,7 @@ jobs:
           echo "APP_NAME=${APP,,}" >> $GITHUB_ENV
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

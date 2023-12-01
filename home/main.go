@@ -12,8 +12,10 @@ import (
 
 type ConfigJSON struct {
 	Config struct {
-		METexpress  bool   `json:"met_express"`
-		Environment string `json:"environment"`
+		IsMETexpress     bool   `json:"is_met_express"`
+		IsProduction     bool   `json:"is_production"`
+		EnvironmentLabel string `json:"environment_label"`
+		AlertMessage     string `json:"alert_message"`
 	} `json:"config"`
 	Groups []struct {
 		Name string `json:"name"`
@@ -78,9 +80,8 @@ func main() {
 func indexHandler(settings ConfigJSON) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Environment": settings.Config.Environment,
-			"METexpress":  settings.Config.METexpress,
-			"Groups":      settings.Groups,
+			"Config": settings.Config,
+			"Groups": settings.Groups,
 		})
 	}
 }

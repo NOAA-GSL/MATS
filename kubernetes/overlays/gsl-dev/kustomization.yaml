@@ -1,8 +1,9 @@
 resources:
   - anomalycor
-  - cb-ceiling
+  - cb-metar
   - ceil-vis
   - ceil-vis15
+  - ensemble
   - home
   - landuse
   - precipAccum

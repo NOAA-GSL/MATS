@@ -1,19 +1,19 @@
 resources:
-  - ../../../base/cb-ceiling
+  - ../../../base/cb-metar
 
 patchesStrategicMerge:
   - deployment.yaml
 
 images:
-  - name: ghcr.io/noaa-gsl/mats/development/cb-ceiling
+  - name: ghcr.io/noaa-gsl/mats/development/cb-metar
     newTag: development 
 
 configMapGenerator:
-  - name: cb-ceiling-config
+  - name: cb-metar-config
     files:
       - settings.json # Should mirror the appropriate settings.json file in mats-settings
 
 secretGenerator:
-  - name: cb-ceiling-secret
+  - name: cb-metar-secret
     envs:
       - .env # Should contain mongo_url, root_url, and delay

@@ -451,10 +451,10 @@ defaultEntryPoints = ["http", "https"]
             title="Anomaly Correlation"
             color="#3366bb"
         fi
-        if [[ "${appref}"  == "cb-ceiling" ]]; then
+        if [[ "${appref}"  == "cb-metar" ]]; then
             group="Experimental"
             app_order="0"
-            title="CB-Ceiling"
+            title="METAR"
             color="#3366bb"
         fi
         if [[ "${appref}"  == "ceil-vis" ]]; then

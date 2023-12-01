@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cb-ceiling
+  name: cb-metar
 spec:
   template:
     spec:
       containers:
-        - name: cb-ceiling
+        - name: cb-metar
           # resources:
           #   requests:
           #     memory: "2Gi"
@@ -16,13 +16,13 @@ spec:
           #     cpu: "2"
           envFrom:
             - secretRef:
-                name: cb-ceiling-secret
+                name: cb-metar-secret
           volumeMounts:
-            - name: cb-ceiling-settings-file
-              mountPath: /usr/app/settings/cb-ceiling/settings.json
+            - name: cb-metar-settings-file
+              mountPath: /usr/app/settings/cb-metar/settings.json
               subPath: settings.json
               readOnly: true
       volumes:
-        - name: cb-ceiling-settings-file
+        - name: cb-metar-settings-file
           configMap:
-            name: cb-ceiling-config
+            name: cb-metar-config

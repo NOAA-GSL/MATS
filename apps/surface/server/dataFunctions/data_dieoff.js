@@ -13,6 +13,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+// eslint-disable-next-line no-undef
 dataDieoff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -23,57 +24,87 @@ dataDieoff = function (plotParams, plotFunction) {
     hideGaps: plotParams.noGapsCheck,
     hasLevels: false,
   };
+
+  const totalProcessingStart = moment();
   const dataRequests = {}; // used to store data queries
   let dataFoundForCurve = true;
   let dataFoundForAnyCurve = false;
-  const totalProcessingStart = moment();
-  let error = "";
+
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
-  const dataset = [];
-  const utcCycleStarts = [];
+
   const axisMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
+
+  let statType;
+  const allStatTypes = [];
+  const utcCycleStarts = [];
   const idealValues = [];
 
-  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+  let statement = "";
+  let error = "";
+  const dataset = [];
+
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
-    const { diffFrom } = curve;
     const { label } = curve;
+    const { diffFrom } = curve;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[curve["data-source"]][0];
+
     let queryTableClause = "";
     const regionType = curve["region-type"];
+
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
       { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
     const variable = variableOptionsMap[regionType][variableStr];
+
+    let validTimes;
+    let validTimeClause = "";
+
+    let utcCycleStart;
+    let utcCycleStartClause = "";
+
     const forecastLengthStr = curve["dieoff-type"];
     const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne(
       { name: "dieoff-type" },
       { optionsMap: 1 }
     ).optionsMap;
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+
+    const statisticSelect = curve.statistic;
+    const statisticOptionsMap = matsCollections.statistic.findOne(
+      { name: "statistic" },
+      { optionsMap: 1 }
+    ).optionsMap;
+
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    var timeVar;
-    var dateClause;
+
+    let timeVar;
+    let dateClause;
     let siteDateClause = "";
     let siteMatchClause = "";
     let sitesClause = "";
-    var NAggregate;
-    var NClause;
-    var queryPool;
+    let NAggregate;
+    let NClause;
+    let queryPool;
+
     if (regionType === "Predefined region") {
       timeVar = "m0.valid_day+3600*m0.hour";
-      var metarStringStr = curve.truth;
+      dateClause = `and m0.valid_day+3600*m0.hour >= ${fromSecs} and m0.valid_day+3600*m0.hour <= ${toSecs}`;
+      NAggregate = "sum";
+      [, NClause] = variable;
+
+      const metarStringStr = curve.truth;
       const metarString = Object.keys(
         matsCollections.truth.findOne({ name: "truth" }).valuesMap
       ).find(
@@ -81,8 +112,9 @@ dataDieoff = function (plotParams, plotFunction) {
           matsCollections.truth.findOne({ name: "truth" }).valuesMap[key] ===
           metarStringStr
       );
-      var regionStr = curve.region;
-      var region = Object.keys(
+
+      const regionStr = curve.region;
+      const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
       ).find(
         (key) =>
@@ -90,12 +122,15 @@ dataDieoff = function (plotParams, plotFunction) {
           regionStr
       );
       queryTableClause = `from ${model}_${metarString}_${region} as m0`;
-      dateClause = `and m0.valid_day+3600*m0.hour >= ${fromSecs} and m0.valid_day+3600*m0.hour <= ${toSecs}`;
-      NAggregate = "sum";
-      NClause = variable[1];
-      queryPool = sumPool;
+      queryPool = sumPool; // eslint-disable-line no-undef
     } else {
       timeVar = "m0.time";
+      dateClause = `and m0.time >= ${fromSecs} - 900 and m0.time <= ${toSecs} + 900`;
+      siteDateClause = `and o.time >= ${fromSecs} - 900 and o.time <= ${toSecs} + 900`;
+      siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
+      NAggregate = "count";
+      NClause = "1";
+
       const modelTable =
         model.includes("ret_") || model.includes("Ret_") ? `${model}p` : `${model}qp`;
       const obsTable =
@@ -106,32 +141,20 @@ dataDieoff = function (plotParams, plotFunction) {
         { optionsMap: 1 }
       ).optionsMap;
       const sitesList = curve.sites === undefined ? [] : curve.sites;
-      const querySites = [];
+      let querySites = [];
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
-        var thisSite;
-        var thisSiteObj;
-        for (let sidx = 0; sidx < sitesList.length; sidx++) {
-          thisSite = sitesList[sidx];
-          thisSiteObj = siteMap.find((obj) => obj.origName === thisSite);
-          querySites.push(thisSiteObj.options.id);
-        }
+        querySites = sitesList.map(function (site) {
+          return siteMap.find((obj) => obj.origName === site).options.id;
+        });
         sitesClause = ` and m0.sta_id in('${querySites.join("','")}')`;
       } else {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
-      dateClause = `and m0.time >= ${fromSecs} - 900 and m0.time <= ${toSecs} + 900`;
-      siteDateClause = `and o.time >= ${fromSecs} - 900 and o.time <= ${toSecs} + 900`;
-      siteMatchClause = "and m0.sta_id = o.sta_id and m0.time = o.time";
-      NAggregate = "count";
-      NClause = "1";
-      queryPool = sitePool;
+      queryPool = sitePool; // eslint-disable-line no-undef
     }
-    var validTimes;
-    let validTimeClause = "";
-    var utcCycleStart;
-    let utcCycleStartClause = "";
+
     if (forecastLength === matsTypes.ForecastTypes.dieoff) {
       validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -151,72 +174,70 @@ dataDieoff = function (plotParams, plotFunction) {
     } else {
       dateClause = `and ${timeVar}-m0.fcst_len*3600 = ${fromSecs}`;
     }
-    const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
-    ).optionsMap;
+
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
       `group_concat(${timeVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by ${timeVar}) as sub_data, count(${variable[0]}) as N0`;
-    var statType = statisticOptionsMap[statisticSelect];
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
-    const varUnits = statVarUnitMap[statisticSelect][variableStr];
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
+    const { statVarUnitMap } = matsCollections.variable.findOne(
+      { name: "variable" },
+      { statVarUnitMap: 1 }
+    );
+    statType = statisticOptionsMap[statisticSelect];
+    allStatTypes.push(statType);
+    const varUnits = statVarUnitMap[statisticSelect][variableStr];
     const axisKey = varUnits;
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
-    var d;
+    let d;
     if (!diffFrom) {
-      // this is a database driven curve, not a difference curve
-      // prepare the query from the above parameters
-      let statement =
-        "select m0.fcst_len as fcst_lead, " +
-        "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
-        "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
-        "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
-        "{{statisticClause}} " +
-        "{{queryTableClause}} " +
-        "where 1=1 " +
-        "{{siteMatchClause}} " +
-        "{{sitesClause}} " +
-        "{{dateClause}} " +
-        "{{siteDateClause}} " +
-        "{{validTimeClause}} " +
-        "{{utcCycleStartClause}} " +
-        "group by fcst_lead " +
-        "order by fcst_lead" +
-        ";";
-
-      statement = statement.replace("{{statisticClause}}", statisticClause);
-      statement = statement.replace("{{queryTableClause}}", queryTableClause);
-      statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
-      statement = statement.replace("{{sitesClause}}", sitesClause);
-      statement = statement.replace("{{validTimeClause}}", validTimeClause);
-      statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
-      statement = statement.replace("{{dateClause}}", dateClause);
-      statement = statement.replace("{{siteDateClause}}", siteDateClause);
-      statement = statement.split("{{timeVar}}").join(timeVar);
-      dataRequests[label] = statement;
-
-      var queryResult;
+      let queryResult;
       const startMoment = moment();
-      var finishMoment;
+      let finishMoment;
       try {
+        statement =
+          "select m0.fcst_len as fcst_lead, " +
+          "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
+          "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
+          "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
+          "{{statisticClause}} " +
+          "{{queryTableClause}} " +
+          "where 1=1 " +
+          "{{siteMatchClause}} " +
+          "{{sitesClause}} " +
+          "{{dateClause}} " +
+          "{{siteDateClause}} " +
+          "{{validTimeClause}} " +
+          "{{utcCycleStartClause}} " +
+          "group by fcst_lead " +
+          "order by fcst_lead" +
+          ";";
+
+        statement = statement.replace("{{statisticClause}}", statisticClause);
+        statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+        statement = statement.replace("{{sitesClause}}", sitesClause);
+        statement = statement.replace("{{validTimeClause}}", validTimeClause);
+        statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
+        statement = statement.replace("{{dateClause}}", dateClause);
+        statement = statement.replace("{{siteDateClause}}", siteDateClause);
+        statement = statement.split("{{timeVar}}").join(timeVar);
+        dataRequests[label] = statement;
+
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          queryPool,
+          queryPool, // eslint-disable-line no-undef
           statement,
           appParams,
           `${statisticSelect}_${variableStr}`
         );
+
         finishMoment = moment();
+        dataRequests[label] = statement;
         dataRequests[`data retrieval (query) time - ${label}`] = {
           begin: startMoment.format(),
           finish: finishMoment.format(),
@@ -232,6 +253,7 @@ dataDieoff = function (plotParams, plotFunction) {
         e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
         throw new Error(e.message);
       }
+
       if (queryResult.error !== undefined && queryResult.error !== "") {
         if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
           // this is NOT an error just a no data condition
@@ -241,7 +263,7 @@ dataDieoff = function (plotParams, plotFunction) {
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
           if (error.includes("Unknown column")) {
             throw new Error(
-              `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is not supported by the database for the model/region [${model} and ${region}].`
+              `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is not supported by the database for this model and region].`
             );
           } else {
             throw new Error(error);
@@ -252,7 +274,6 @@ dataDieoff = function (plotParams, plotFunction) {
       }
 
       // set axis limits based on returned data
-      var postQueryStartMoment = moment();
       if (dataFoundForCurve) {
         xmin = xmin < d.xmin ? xmin : d.xmin;
         xmax = xmax > d.xmax ? xmax : d.xmax;
@@ -265,8 +286,7 @@ dataDieoff = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === "ctc",
-        statType === "scalar"
+        allStatTypes
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -277,6 +297,7 @@ dataDieoff = function (plotParams, plotFunction) {
 
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
     const mean = d.sum / d.x.length;
     const annotation =
       mean === undefined

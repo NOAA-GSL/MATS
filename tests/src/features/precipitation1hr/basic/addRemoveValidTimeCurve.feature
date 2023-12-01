@@ -16,10 +16,10 @@ Feature: Add Remove Valid Time Curve
     Scenario: addRemoveValidTimeCurve
         When I set the plot type to "ValidTime"
         Then the plot type should be "ValidTime"
-        When I change the "data-source" parameter to "RAP_GSL"
-        Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the curve-dates to "09/21/2019 00:00 - 09/24/2019 00:00"
-        Then the curve-dates value is "09/21/2019 00:00 - 09/24/2019 00:00"
+        When I change the "data-source" parameter to "RAP_OPS"
+        Then the "data-source" parameter value matches "RAP_OPS"
+        When I set the curve-dates to "11/10/2023 00:00 - 11/13/2023 00:00"
+        Then the curve-dates value is "11/10/2023 00:00 - 11/13/2023 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
