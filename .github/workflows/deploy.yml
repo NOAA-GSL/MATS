@@ -18,7 +18,7 @@ jobs:
       matrix:
         deploy: # List of apps to deploy
           - anomalycor
-          # - cb-metar # Don't push this until its ready
+          - cb-metar
           - ceil-vis
           - ceil-vis15
           - ensemble
