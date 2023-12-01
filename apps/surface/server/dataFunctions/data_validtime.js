@@ -40,6 +40,7 @@ dataValidTime = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
+  const allStatTypes = [];
   const utcCycleStarts = [];
   const idealValues = [];
 
@@ -169,6 +170,7 @@ dataValidTime = function (plotParams, plotFunction) {
       { statVarUnitMap: 1 }
     );
     statType = statisticOptionsMap[statisticSelect];
+    allStatTypes.push(statType);
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
     const axisKey = varUnits;
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
@@ -265,8 +267,7 @@ dataValidTime = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === "ctc",
-        statType === "scalar"
+        allStatTypes
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;

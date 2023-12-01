@@ -3,7 +3,7 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
     As an unauthenticated user to the app,
     with the app in its default state,
     I want to add one curve
-    I want to change the data-source to HRRR_GSL
+    I want to change the data-source to HRRR_OPS
     I want to add one other curve
     then plot unmatched and see the graph,
     then go back to the curve management page,
@@ -18,20 +18,20 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
     Scenario: addThreeCurvesRemoveOneCurveAddAnotherCurve
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "data-source" parameter to "RAP_GSL"
-        Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the dates to "09/21/2019 00:00 - 09/24/2019 00:00"
-        Then the dates value is "09/21/2019 00:00 - 09/24/2019 00:00"
+        When I change the "data-source" parameter to "RAP_OPS"
+        Then the "data-source" parameter value matches "RAP_OPS"
+        When I set the dates to "11/10/2023 00:00 - 11/13/2023 00:00"
+        Then the dates value is "11/10/2023 00:00 - 11/13/2023 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "HRRR_GSL"
-        Then the "data-source" parameter value matches "HRRR_GSL"
+        When I change the "data-source" parameter to "HRRR_OPS"
+        Then the "data-source" parameter value matches "HRRR_OPS"
         When I click the "Add Curve" button
         Then "Curve1" is added
 
-        When I change the "data-source" parameter to "HRRR_OPS"
-        Then the "data-source" parameter value matches "HRRR_OPS"
+        When I change the "data-source" parameter to "RRFS_A"
+        Then the "data-source" parameter value matches "RRFS_A"
         When I click the "Add Curve" button
         Then "Curve2" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve2"
@@ -47,8 +47,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         Then I click the "Remove curve Curve1" button
         And I should see a list of curves containing "Curve0,Curve2"
 
-        When I change the "data-source" parameter to "HRRR_GSL"
-        Then the "data-source" parameter value matches "HRRR_GSL"
+        When I change the "data-source" parameter to "RRFS_B"
+        Then the "data-source" parameter value matches "RRFS_B"
         When I click the "Add Curve" button
         Then "Curve3" is added
 

@@ -42,6 +42,7 @@ dataThreshold = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
+  const allStatTypes = [];
   const utcCycleStarts = [];
   const idealValues = [];
 
@@ -56,6 +57,13 @@ dataThreshold = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
+    const variableValuesMap = matsCollections.variable.findOne({
+      name: "variable",
+    }).valuesMap;
+    const queryVariable = Object.keys(variableValuesMap).filter(
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
+    )[0];
+    const variableDetails = variableValuesMap[queryVariable][0][variable];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
 
@@ -81,6 +89,8 @@ dataThreshold = function (plotParams, plotFunction) {
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
+    [statType] = statisticOptionsMap[variable][statisticSelect];
+    allStatTypes.push(statType);
 
     let queryTemplate;
     const regionType = curve["region-type"];
@@ -103,8 +113,20 @@ dataThreshold = function (plotParams, plotFunction) {
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
     queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-    queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
+    queryTemplate = queryTemplate.replace(
+      /{{vxVARIABLE}}/g,
+      queryVariable.toUpperCase()
+    );
     queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+    if (statType === "ctc") {
+      const statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+      queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+      queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+    } else {
+      throw new Error(
+        "INFO: Threshold plots are not for continuous variables. Try ceiling or visibility instead?"
+      );
+    }
 
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
@@ -119,10 +141,12 @@ dataThreshold = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    [statType] = statisticOptionsMap[statisticSelect];
-    const axisKey = statisticOptionsMap[statisticSelect][1];
+    const axisKey =
+      statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
+        ? variableDetails[1]
+        : statisticOptionsMap[variable][statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-    const idealVal = statisticOptionsMap[statisticSelect][2];
+    const idealVal = statisticOptionsMap[variable][statisticSelect][2];
     if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
       idealValues.push(idealVal);
     }
@@ -219,8 +243,7 @@ dataThreshold = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === "ctc",
-        statType === "scalar"
+        allStatTypes
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -272,7 +295,7 @@ dataThreshold = function (plotParams, plotFunction) {
     curvesLength,
     idealValues,
     utcCycleStarts,
-    statType,
+    statType: allStatTypes,
     axisMap,
     xmax,
     xmin,

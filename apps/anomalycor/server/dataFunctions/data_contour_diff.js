@@ -40,6 +40,8 @@ dataContourDiff = function (plotParams, plotFunction) {
   const showSignificance = plotParams.significance !== "none";
 
   let statType;
+  const allStatTypes = [];
+  const allStatistics = [];
 
   let statement = "";
   let error = "";
@@ -130,9 +132,11 @@ dataContourDiff = function (plotParams, plotFunction) {
 
     // For contours, this functions as the colorbar label.
     statType = "ACC";
+    allStatTypes.push(statType);
     const axisKey = "Correlation";
     curve.statistic = axisKey;
     curve.unitKey = axisKey;
+    allStatistics.push(axisKey);
 
     let d;
     if (!diffFrom) {
@@ -258,8 +262,8 @@ dataContourDiff = function (plotParams, plotFunction) {
     appParams,
     showSignificance,
     plotParams.significance,
-    "Anomaly Correlation",
-    statType === "ctc"
+    allStatistics,
+    allStatTypes
   );
   const newPlotParams = plotParams;
   newPlotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);

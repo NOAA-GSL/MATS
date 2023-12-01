@@ -13,11 +13,29 @@ import {
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
+// first field of each value array is sub-variables, second field is metadata document key,
+// third is boolean for whether or not there are thresholds
 const variableMetadataDocs = {
-  Ceiling: "cb-ceiling",
-  Visibility: "cb-visibility",
+  Ceiling: [{ Ceiling: ["Ceiling", "ft"] }, "cb-ceiling", true],
+  Visibility: [{ Visibility: ["Visibility", "mi"] }, "cb-visibility", true],
+  Surface: [
+    {
+      "Temperature (2m)": ["Temperature", "°C"],
+      "Dewpoint (2m)": ["DewPoint", "°C"],
+      "Relative Humidity (2m)": ["RelativeHumidity", "RH (%)"],
+      "Surface Pressure": ["SurfacePressure", "hPa"],
+      "Wind Speed (10m)": ["WindSpeed", "m/s"],
+      "U-Wind (10m)": ["WindU", "m/s"],
+      "V-Wind (10m)": ["WindV", "m/s"],
+    },
+    "cb-surface",
+    false,
+  ],
 };
 const variables = Object.keys(variableMetadataDocs);
+let allVariables = [];
+let allVariablesNoThreshold = [];
+let allVariablesYesThreshold = [];
 
 // determined in doCurveParanms
 let minDate;
@@ -281,7 +299,12 @@ const doPlotParams = function () {
     matsCollections.PlotParams.insert({
       name: "significance",
       type: matsTypes.InputTypes.select,
-      options: ["none", "significance at 95th percentile"],
+      options: [
+        "none",
+        "95th percentile -- bootstrapping (SKILL SCORES ONLY)",
+        "95th percentile -- standard t-test (CONTINUOUS VARIABLES ONLY)",
+        "95th percentile -- t-test with infinite degrees of freedom (CONTINUOUS VARIABLES ONLY)",
+      ],
       selected: "",
       controlButtonCovered: true,
       unique: false,
@@ -362,25 +385,39 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      allThresholdValuesMap[variable] = {};
-      // eslint-disable-next-line no-undef
-      const queryStr = cbPool.trfmSQLForDbTarget(
-        `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
-        // `select raw thresholdDescriptions.ceiling from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
-      );
-      // eslint-disable-next-line no-undef
-      const rows = await cbPool.queryCB(queryStr);
-      if (rows.includes("queryCB ERROR: ")) {
-        // have this local try catch fail properly if the metadata isn't there
-        throw new Error(rows);
+      const subVariables = Object.keys(variableMetadataDocs[variable][0]);
+      const hasThresholds = variableMetadataDocs[variable][2];
+      let rows;
+      if (hasThresholds) {
+        // eslint-disable-next-line no-undef
+        const queryStr = cbPool.trfmSQLForDbTarget(
+          `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
+        );
+        // eslint-disable-next-line no-undef
+        rows = await cbPool.queryCB(queryStr);
+        if (rows.includes("queryCB ERROR: ")) {
+          // have this local try catch fail properly if the metadata isn't there
+          throw new Error(rows);
+        }
+        allVariablesYesThreshold = allVariablesYesThreshold.concat(subVariables);
+      } else {
+        rows = [{ NA: "NA" }];
+        allVariablesNoThreshold = allVariablesNoThreshold.concat(subVariables);
       }
-      const allThresholds = Object.keys(rows[0]);
-      for (let j = 0; j < allThresholds.length; j += 1) {
-        // The replace here is because JSON doesn't like dots in the middle of keys
-        allThresholdValuesMap[variable][allThresholds[j].trim().replace(/\./g, "_")] =
-          rows[0][allThresholds[j]].trim();
+      for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
+        const subVariable = subVariables[sidx];
+        allThresholdValuesMap[subVariable] = {};
+        const allThresholds = Object.keys(rows[0]);
+        for (let j = 0; j < allThresholds.length; j += 1) {
+          // The replace here is because JSON doesn't like dots in the middle of keys
+          allThresholdValuesMap[subVariable][
+            allThresholds[j].trim().replace(/\./g, "_")
+          ] = rows[0][allThresholds[j]].trim();
+        }
       }
     }
+    allVariablesYesThreshold = [...new Set(allVariablesYesThreshold)].sort(); // make sure all variables are unique, then sort
+    allVariablesNoThreshold = [...new Set(allVariablesNoThreshold)].sort(); // make sure all variables are unique, then sort
   } catch (err) {
     throw new Error(err.message);
   }
@@ -388,17 +425,14 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
-      modelOptionsMap[variable] = {};
-      modelDateRangeMap[variable] = {};
-      forecastLengthOptionsMap[variable] = {};
-      thresholdsModelOptionsMap[variable] = {};
-      regionModelOptionsMap[variable] = {};
+      const subVariables = Object.keys(variableMetadataDocs[variable][0]);
+      allVariables = allVariables.concat(subVariables);
 
       // eslint-disable-next-line no-undef
       const queryStr = cbPool.trfmSQLForDbTarget(
         "select model, displayText, mindate, maxdate, fcstLens, " +
-          "regions, thresholds " +
-          `from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="${variableMetadataDocs[variable]}" and numrecs>0 ` +
+          "regions, ifmissing(thresholds,['NA']) as thresholds " +
+          `from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="${variableMetadataDocs[variable][1]}" and numrecs>0 ` +
           "order by displayCategory, displayOrder"
       );
       // eslint-disable-next-line no-undef
@@ -408,41 +442,51 @@ const doCurveParams = async function () {
         // have this local try catch fail properly if the metadata isn't there
         throw new Error(rows);
       }
-      for (let i = 0; i < rows.length; i += 1) {
-        const modelValue = rows[i].model.trim();
-        const model = rows[i].displayText.trim();
-        modelOptionsMap[variable][model] = [modelValue];
+      for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
+        const subVariable = subVariables[sidx];
+        modelOptionsMap[subVariable] = {};
+        modelDateRangeMap[subVariable] = {};
+        forecastLengthOptionsMap[subVariable] = {};
+        thresholdsModelOptionsMap[subVariable] = {};
+        regionModelOptionsMap[subVariable] = {};
 
-        const rowMinDate = moment
-          .utc(rows[i].mindate * 1000)
-          .format("MM/DD/YYYY HH:mm");
-        const rowMaxDate = moment
-          .utc(rows[i].maxdate * 1000)
-          .format("MM/DD/YYYY HH:mm");
-        modelDateRangeMap[variable][model] = {
-          minDate: rowMinDate,
-          maxDate: rowMaxDate,
-        };
+        for (let i = 0; i < rows.length; i += 1) {
+          const modelValue = rows[i].model.trim();
+          const model = rows[i].displayText.trim();
+          modelOptionsMap[subVariable][model] = [modelValue];
 
-        forecastLengthOptionsMap[variable][model] = rows[i].fcstLens.map(String);
+          const rowMinDate = moment
+            .utc(rows[i].mindate * 1000)
+            .format("MM/DD/YYYY HH:mm");
+          const rowMaxDate = moment
+            .utc(rows[i].maxdate * 1000)
+            .format("MM/DD/YYYY HH:mm");
+          modelDateRangeMap[subVariable][model] = {
+            minDate: rowMinDate,
+            maxDate: rowMaxDate,
+          };
 
-        // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
-        const { thresholds } = rows[i];
-        thresholdsModelOptionsMap[variable][model] = thresholds
-          .sort(function (a, b) {
-            return Number(a) - Number(b);
-          })
-          .map(function (threshold) {
-            return allThresholdValuesMap[variable][threshold.replace(/\./g, "_")];
+          forecastLengthOptionsMap[subVariable][model] = rows[i].fcstLens.map(String);
+
+          // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
+          const { thresholds } = rows[i];
+          thresholdsModelOptionsMap[subVariable][model] = thresholds
+            .sort(function (a, b) {
+              return Number(a) - Number(b);
+            })
+            .map(function (threshold) {
+              return allThresholdValuesMap[subVariable][threshold.replace(/\./g, "_")];
+            });
+
+          // we want the full region descriptions in thresholdsModelOptionsMap, not just the regions
+          const { regions } = rows[i];
+          regionModelOptionsMap[subVariable][model] = regions.map(function (region) {
+            return allRegionValuesMap[region];
           });
-
-        // we want the full region descriptions in thresholdsModelOptionsMap, not just the regions
-        const { regions } = rows[i];
-        regionModelOptionsMap[variable][model] = regions.map(function (region) {
-          return allRegionValuesMap[region];
-        });
+        }
       }
     }
+    allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
   } catch (err) {
     throw new Error(err.message);
   }
@@ -522,18 +566,64 @@ const doCurveParams = async function () {
     });
   }
 
+  const defaultPlotType = matsTypes.PlotTypes.timeSeries;
+  if (matsCollections["plot-type"].findOne({ name: "plot-type" }) === undefined) {
+    matsCollections["plot-type"].insert({
+      name: "plot-type",
+      type: matsTypes.InputTypes.select,
+      options: [
+        matsTypes.PlotTypes.timeSeries,
+        matsTypes.PlotTypes.dieoff,
+        matsTypes.PlotTypes.threshold,
+        matsTypes.PlotTypes.validtime,
+        matsTypes.PlotTypes.dailyModelCycle,
+        matsTypes.PlotTypes.performanceDiagram,
+        matsTypes.PlotTypes.map,
+        matsTypes.PlotTypes.histogram,
+        matsTypes.PlotTypes.contour,
+        matsTypes.PlotTypes.contourDiff,
+      ],
+      dependentNames: ["variable"],
+      controlButtonCovered: false,
+      default: defaultPlotType,
+      unique: false,
+      controlButtonVisibility: "none",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  }
+
   if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
+    const optionsMap = {};
+    optionsMap[matsTypes.PlotTypes.timeSeries] = allVariables;
+    optionsMap[matsTypes.PlotTypes.dieoff] = allVariables;
+    optionsMap[matsTypes.PlotTypes.threshold] = allVariablesYesThreshold;
+    optionsMap[matsTypes.PlotTypes.validtime] = allVariables;
+    optionsMap[matsTypes.PlotTypes.dailyModelCycle] = allVariables;
+    optionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariablesYesThreshold;
+    optionsMap[matsTypes.PlotTypes.map] = allVariables;
+    optionsMap[matsTypes.PlotTypes.histogram] = allVariables;
+    optionsMap[matsTypes.PlotTypes.contour] = allVariables;
+    optionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
+
     matsCollections.variable.insert({
       name: "variable",
       type: matsTypes.InputTypes.select,
-      options: variables,
+      options: optionsMap[defaultPlotType],
+      optionsMap,
+      valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
-      dependentNames: ["data-source"],
+      superiorNames: ["plot-type"],
+      dependentNames: ["data-source", "statistic"],
       controlButtonCovered: true,
-      default: variables[0],
+      default: optionsMap[defaultPlotType][0],
+      hideOtherFor: {
+        threshold: allVariablesNoThreshold,
+      },
       unique: false,
       controlButtonVisibility: "block",
-      displayOrder: 2,
+      displayOrder: 3,
       displayPriority: 1,
       displayGroup: 1,
     });
@@ -577,7 +667,7 @@ const doCurveParams = async function () {
       name: "data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
-      options: Object.keys(modelOptionsMap[variables[0]]),
+      options: Object.keys(modelOptionsMap[allVariables[0]]),
       superiorNames: ["variable"],
       dependentNames: [
         "region",
@@ -587,10 +677,10 @@ const doCurveParams = async function () {
         "curve-dates",
       ],
       controlButtonCovered: true,
-      default: Object.keys(modelOptionsMap[variables[0]])[0],
+      default: Object.keys(modelOptionsMap[allVariables[0]])[0],
       unique: false,
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 4,
       displayPriority: 1,
       displayGroup: 1,
     });
@@ -606,8 +696,8 @@ const doCurveParams = async function () {
         {
           $set: {
             optionsMap: modelOptionsMap,
-            options: Object.keys(modelOptionsMap[variables[0]]),
-            default: Object.keys(modelOptionsMap[variables[0]])[0],
+            options: Object.keys(modelOptionsMap[allVariables[0]]),
+            default: Object.keys(modelOptionsMap[allVariables[0]])[0],
           },
         }
       );
@@ -620,16 +710,16 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
       options:
-        regionModelOptionsMap[variables[0]][
-          Object.keys(regionModelOptionsMap[variables[0]])[0]
+        regionModelOptionsMap[allVariables[0]][
+          Object.keys(regionModelOptionsMap[allVariables[0]])[0]
         ],
       valuesMap: allRegionValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
-        regionModelOptionsMap[variables[0]][
-          Object.keys(regionModelOptionsMap[variables[0]])[0]
+        regionModelOptionsMap[allVariables[0]][
+          Object.keys(regionModelOptionsMap[allVariables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
       displayOrder: 2,
@@ -651,12 +741,12 @@ const doCurveParams = async function () {
             optionsMap: regionModelOptionsMap,
             valuesMap: allRegionValuesMap,
             options:
-              regionModelOptionsMap[variables[0]][
-                Object.keys(regionModelOptionsMap[variables[0]])[0]
+              regionModelOptionsMap[allVariables[0]][
+                Object.keys(regionModelOptionsMap[allVariables[0]])[0]
               ],
             default:
-              regionModelOptionsMap[variables[0]][
-                Object.keys(regionModelOptionsMap[variables[0]])[0]
+              regionModelOptionsMap[allVariables[0]][
+                Object.keys(regionModelOptionsMap[allVariables[0]])[0]
               ][0],
           },
         }
@@ -665,7 +755,7 @@ const doCurveParams = async function () {
   }
 
   if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
-    const optionsMap = {
+    const ctcOptionsMap = {
       "CSI (Critical Success Index)": ["ctc", "x100", 100],
 
       "TSS (True Skill Score)": ["ctc", "x100", 100],
@@ -702,11 +792,35 @@ const doCurveParams = async function () {
         null,
       ],
     };
+    const scalarOptionsMap = {
+      RMSE: ["scalar", "Unknown", null],
+
+      "Bias (Model - Obs)": ["scalar", "Unknown", null],
+
+      N: ["scalar", "Number", null],
+
+      "Model average": ["scalar", "Unknown", null],
+
+      "Obs average": ["scalar", "Unknown", null],
+
+      "Std deviation": ["scalar", "Unknown", null],
+
+      "MAE (temp and dewpoint only)": ["scalar", "Unknown", null],
+    };
+    const optionsMap = {};
+    for (let vidx = 0; vidx < allVariables.length; vidx += 1) {
+      const variable = allVariables[vidx];
+      optionsMap[variable] =
+        allVariablesYesThreshold.indexOf(variable) !== -1
+          ? ctcOptionsMap
+          : scalarOptionsMap;
+    }
     matsCollections.statistic.insert({
       name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap,
       options: Object.keys(optionsMap),
+      superiorNames: ["variable"],
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(optionsMap)[0],
@@ -723,16 +837,16 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdsModelOptionsMap,
       options:
-        thresholdsModelOptionsMap[variables[0]][
-          Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
         ],
       valuesMap: allThresholdValuesMap,
       superiorNames: ["variable", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default:
-        thresholdsModelOptionsMap[variables[0]][
-          Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
       displayOrder: 1,
@@ -757,12 +871,12 @@ const doCurveParams = async function () {
             optionsMap: thresholdsModelOptionsMap,
             valuesMap: allThresholdValuesMap,
             options:
-              thresholdsModelOptionsMap[variables[0]][
-                Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
               ],
             default:
-              thresholdsModelOptionsMap[variables[0]][
-                Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
               ][0],
           },
         }
@@ -779,8 +893,8 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       optionsMap: forecastLengthOptionsMap,
       options:
-        forecastLengthOptionsMap[variables[0]][
-          Object.keys(forecastLengthOptionsMap[variables[0]])[0]
+        forecastLengthOptionsMap[allVariables[0]][
+          Object.keys(forecastLengthOptionsMap[allVariables[0]])[0]
         ],
       superiorNames: ["variable", "data-source"],
       selected: "",
@@ -808,8 +922,8 @@ const doCurveParams = async function () {
           $set: {
             optionsMap: forecastLengthOptionsMap,
             options:
-              forecastLengthOptionsMap[variables[0]][
-                Object.keys(forecastLengthOptionsMap[variables[0]])[0]
+              forecastLengthOptionsMap[allVariables[0]][
+                Object.keys(forecastLengthOptionsMap[allVariables[0]])[0]
               ],
           },
         }
@@ -1084,8 +1198,8 @@ const doCurveParams = async function () {
     { name: "variable" },
     { dates: 1 }
   ).dates;
-  minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
-  maxDate = modelDateRangeMap[variables[0]][defaultDataSource].maxDate;
+  minDate = modelDateRangeMap[allVariables[0]][defaultDataSource].minDate;
+  maxDate = modelDateRangeMap[allVariables[0]][defaultDataSource].maxDate;
 
   // need to turn the raw max and min from the metadata into the last valid month of data
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);

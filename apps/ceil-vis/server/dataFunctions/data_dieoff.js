@@ -40,6 +40,7 @@ dataDieoff = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
+  const allStatTypes = [];
   const utcCycleStarts = [];
   const idealValues = [];
 
@@ -180,6 +181,7 @@ dataDieoff = function (plotParams, plotFunction) {
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     [statType] = statisticOptionsMap[statisticSelect];
+    allStatTypes.push(statType);
     const axisKey = statisticOptionsMap[statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[statisticSelect][2];
@@ -275,8 +277,7 @@ dataDieoff = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === "ctc",
-        statType === "scalar"
+        allStatTypes
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;

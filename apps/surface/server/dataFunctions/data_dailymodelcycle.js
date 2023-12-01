@@ -40,6 +40,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
+  const allStatTypes = [];
   const utcCycleStarts = [];
   const idealValues = [];
 
@@ -69,6 +70,13 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     ).optionsMap;
     const variable = variableOptionsMap[regionType][variableStr];
 
+    if (curve["utc-cycle-start"].length !== 1) {
+      throw new Error(
+        "INFO:  Please select exactly one UTC Cycle Init Hour for this plot type."
+      );
+    }
+    const utcCycleStart = Number(curve["utc-cycle-start"][0]);
+    utcCycleStarts[curveIndex] = utcCycleStart;
     let utcCycleStartClause = "";
 
     const forecastLength = curve["forecast-length"];
@@ -151,13 +159,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       queryPool = sitePool; // eslint-disable-line no-undef
     }
 
-    if (curve["utc-cycle-start"].length !== 1) {
-      throw new Error(
-        "INFO:  Please select exactly one UTC Cycle Init Hour for this plot type."
-      );
-    }
-    const utcCycleStart = Number(curve["utc-cycle-start"][0]);
-    utcCycleStarts[curveIndex] = utcCycleStart;
     if (forecastLength === 1) {
       utcCycleStartClause = `and floor(((${timeVar}+1800)-3600)%(24*3600)/3600) IN(${utcCycleStart})`; // adjust by 1800 seconds to center obs at the top of the hour
     } else {
@@ -167,6 +168,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
       `group_concat(${timeVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by ${timeVar}) as sub_data, count(${variable[0]}) as N0`;
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
@@ -176,6 +178,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       { statVarUnitMap: 1 }
     );
     statType = statisticOptionsMap[statisticSelect];
+    allStatTypes.push(statType);
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
     const axisKey = varUnits;
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
@@ -273,8 +276,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === "ctc",
-        statType === "scalar"
+        allStatTypes
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;

@@ -43,6 +43,7 @@ dataSeries = function (plotParams, plotFunction) {
   let ymin = Number.MAX_VALUE;
 
   let statType;
+  const allStatTypes = [];
   const utcCycleStarts = [];
   const idealValues = [];
 
@@ -62,19 +63,29 @@ dataSeries = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
+    const variableValuesMap = matsCollections.variable.findOne({
+      name: "variable",
+    }).valuesMap;
+    const queryVariable = Object.keys(variableValuesMap).filter(
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
+    )[0];
+    const variableDetails = variableValuesMap[queryVariable][0][variable];
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
 
     const thresholdStr = curve.threshold;
-    let threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-    ).find(
-      (key) =>
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-          key
-        ] === thresholdStr
-    );
-    threshold = threshold.replace(/_/g, ".");
+    let threshold = "";
+    if (variableValuesMap[queryVariable][2]) {
+      threshold = Object.keys(
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
+      ).find(
+        (key) =>
+          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
+            key
+          ] === thresholdStr
+      );
+      threshold = threshold.replace(/_/g, ".");
+    }
 
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     let forecastLength = curve["forecast-length"];
@@ -84,6 +95,8 @@ dataSeries = function (plotParams, plotFunction) {
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
+    [statType] = statisticOptionsMap[variable][statisticSelect];
+    allStatTypes.push(statType);
 
     const averageStr = curve.average;
     const averageOptionsMap = matsCollections.average.findOne(
@@ -106,15 +119,29 @@ dataSeries = function (plotParams, plotFunction) {
       );
 
       // SQL template replacements
+      let statTemplate;
       queryTemplate = Assets.getText("sqlTemplates/tmpl_TimeSeries.sql");
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
       queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
       queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-      queryTemplate = queryTemplate.replace(/{{vxVARIABLE}}/g, variable.toUpperCase());
-      queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+      queryTemplate = queryTemplate.replace(
+        /{{vxVARIABLE}}/g,
+        queryVariable.toUpperCase()
+      );
       queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
       queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
+      if (statType === "ctc") {
+        statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+        queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+      } else {
+        statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
+        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+        queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
+        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+      }
 
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
@@ -137,10 +164,12 @@ dataSeries = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    [statType] = statisticOptionsMap[statisticSelect];
-    const axisKey = statisticOptionsMap[statisticSelect][1];
+    const axisKey =
+      statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
+        ? variableDetails[1]
+        : statisticOptionsMap[variable][statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-    const idealVal = statisticOptionsMap[statisticSelect][2];
+    const idealVal = statisticOptionsMap[variable][statisticSelect][2];
     if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
       idealValues.push(idealVal);
     }
@@ -163,7 +192,8 @@ dataSeries = function (plotParams, plotFunction) {
           statement = "Station plot -- no one query.";
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
           rows = tss.processStationQuery(
-            variable,
+            statType,
+            variableDetails[0],
             sitesList,
             model,
             forecastLength,
@@ -184,7 +214,7 @@ dataSeries = function (plotParams, plotFunction) {
           fromSecs,
           toSecs,
           averageStr,
-          statisticSelect,
+          statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`,
           validTimes,
           appParams,
           false
@@ -234,8 +264,7 @@ dataSeries = function (plotParams, plotFunction) {
         dataset,
         diffFrom,
         appParams,
-        statType === "ctc",
-        statType === "scalar"
+        allStatTypes
       );
       d = diffResult.dataset;
       xmin = xmin < d.xmin ? xmin : d.xmin;
@@ -287,7 +316,7 @@ dataSeries = function (plotParams, plotFunction) {
     curvesLength,
     idealValues,
     utcCycleStarts,
-    statType,
+    statType: allStatTypes,
     axisMap,
     xmax,
     xmin,
