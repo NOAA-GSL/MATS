@@ -1696,7 +1696,11 @@ Meteor.startup(function () {
     `${cbConnection.bucket}:${cbConnection.scope}:${cbConnection.collection}`,
     [
       "MD:matsAux:COMMON:V01",
+      "MD:matsGui:cb-ceiling:RAP_OPS_130:COMMON:V01",
       "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
+      "MD:matsGui:cb-visibility:RAP_OPS_130:COMMON:V01",
+      "MD:matsGui:cb-visibility:HRRR_OPS:COMMON:V01",
+      "MD:matsGui:cb-surface:HRRR_OPS:COMMON:V01",
       "MD:V01:REGION:ALL_HRRR",
       "MD:V01:REGION:E_HRRR",
       "MD:V01:REGION:E_US",
