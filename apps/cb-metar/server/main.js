@@ -36,6 +36,7 @@ const variables = Object.keys(variableMetadataDocs);
 let allVariables = [];
 let allVariablesNoThreshold = [];
 let allVariablesYesThreshold = [];
+let allVariablesNoneOption = [];
 
 // determined in doCurveParanms
 let minDate;
@@ -487,6 +488,7 @@ const doCurveParams = async function () {
       }
     }
     allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
+    allVariablesNoneOption = [...new Set(["None"].concat(allVariables))];
   } catch (err) {
     throw new Error(err.message);
   }
@@ -594,30 +596,30 @@ const doCurveParams = async function () {
     });
   }
 
-  if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
-    const optionsMap = {};
-    optionsMap[matsTypes.PlotTypes.timeSeries] = allVariables;
-    optionsMap[matsTypes.PlotTypes.dieoff] = allVariables;
-    optionsMap[matsTypes.PlotTypes.threshold] = allVariablesYesThreshold;
-    optionsMap[matsTypes.PlotTypes.validtime] = allVariables;
-    optionsMap[matsTypes.PlotTypes.dailyModelCycle] = allVariables;
-    optionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariablesYesThreshold;
-    optionsMap[matsTypes.PlotTypes.map] = allVariables;
-    optionsMap[matsTypes.PlotTypes.histogram] = allVariables;
-    optionsMap[matsTypes.PlotTypes.contour] = allVariables;
-    optionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
+  const varOptionsMap = {};
+  varOptionsMap[matsTypes.PlotTypes.timeSeries] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.dieoff] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.threshold] = allVariablesYesThreshold;
+  varOptionsMap[matsTypes.PlotTypes.validtime] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.dailyModelCycle] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariablesYesThreshold;
+  varOptionsMap[matsTypes.PlotTypes.map] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.histogram] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.contour] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
 
+  if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
     matsCollections.variable.insert({
       name: "variable",
       type: matsTypes.InputTypes.select,
-      options: optionsMap[defaultPlotType],
-      optionsMap,
+      options: varOptionsMap[defaultPlotType],
+      optionsMap: varOptionsMap,
       valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
       superiorNames: ["plot-type"],
       dependentNames: ["data-source", "statistic"],
       controlButtonCovered: true,
-      default: optionsMap[defaultPlotType][0],
+      default: varOptionsMap[defaultPlotType][0],
       hideOtherFor: {
         threshold: allVariablesNoThreshold,
       },
@@ -630,13 +632,20 @@ const doCurveParams = async function () {
   } else {
     // it is defined but check for necessary update
     const currentParam = matsCollections.variable.findOne({ name: "variable" });
-    if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, varOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
+    ) {
       // have to reload variable data
       matsCollections.variable.update(
         { name: "variable" },
         {
           $set: {
+            options: varOptionsMap[defaultPlotType],
+            optionsMap: varOptionsMap,
+            valuesMap: variableMetadataDocs,
             dates: modelDateRangeMap,
+            default: varOptionsMap[defaultPlotType][0],
           },
         }
       );
@@ -1189,6 +1198,82 @@ const doCurveParams = async function () {
     });
   }
 
+  if (matsCollections["filter-by"].findOne({ name: "filter-by" }) === undefined) {
+    matsCollections["filter-by"].insert({
+      name: "filter-by",
+      type: matsTypes.InputTypes.select,
+      options: allVariablesNoneOption,
+      controlButtonCovered: true,
+      default: "None",
+      hideOtherFor: {
+        "filter-max": ["None"],
+        "filter-min": ["None"],
+      },
+      unique: false,
+      controlButtonVisibility: "block",
+      controlButtonText: "Filter by",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 7,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = matsCollections["filter-by"].findOne({
+      name: "filter-by",
+    });
+    if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
+      // have to reload variable data
+      matsCollections["filter-by"].update(
+        { name: "filter-by" },
+        {
+          $set: {
+            options: allVariablesNoneOption,
+          },
+        }
+      );
+    }
+  }
+
+  if (matsCollections["filter-min"].findOne({ name: "filter-min" }) === undefined) {
+    matsCollections["filter-min"].insert({
+      name: "filter-min",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: 0,
+      max: 60000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 0,
+      controlButtonVisibility: "block",
+      controlButtonText: "minimum",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 7,
+    });
+  }
+
+  if (matsCollections["filter-max"].findOne({ name: "filter-max" }) === undefined) {
+    matsCollections["filter-max"].insert({
+      name: "filter-max",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: 0,
+      max: 60000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 60000,
+      controlButtonVisibility: "block",
+      controlButtonText: "maximum",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 7,
+    });
+  }
+
   // determine date defaults for dates and curveDates
   const defaultDataSource = matsCollections["data-source"].findOne(
     { name: "data-source" },
@@ -1233,7 +1318,7 @@ const doCurveParams = async function () {
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
-      displayGroup: 7,
+      displayGroup: 8,
       help: "dateHelp.html",
     });
   } else {
@@ -1290,7 +1375,10 @@ const doCurveTextPatterns = function () {
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
-        ["avg: ", "average", ""],
+        ["avg: ", "average", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1321,7 +1409,10 @@ const doCurveTextPatterns = function () {
         ["", "dieoff-type", ", "],
         ["valid-time: ", "valid-time", ", "],
         ["start utc: ", "utc-cycle-start", ", "],
-        ["", "curve-dates", ""],
+        ["", "curve-dates", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1351,7 +1442,10 @@ const doCurveTextPatterns = function () {
         ["", "statistic", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
-        ["", "curve-dates", ""],
+        ["", "curve-dates", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1376,7 +1470,10 @@ const doCurveTextPatterns = function () {
         ["", "statistic", " at "],
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
-        ["", "curve-dates", ""],
+        ["", "curve-dates", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1403,7 +1500,10 @@ const doCurveTextPatterns = function () {
         ["", "variable", " "],
         ["", "statistic", " at "],
         ["", "threshold", ", "],
-        ["start utc: ", "utc-cycle-start", ""],
+        ["start utc: ", "utc-cycle-start", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1429,7 +1529,10 @@ const doCurveTextPatterns = function () {
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
-        ["", "curve-dates", ""],
+        ["", "curve-dates", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1453,7 +1556,10 @@ const doCurveTextPatterns = function () {
         ["", "statistic", " at "],
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", " h "],
-        [" valid-time:", "valid-time", ""],
+        [" valid-time:", "valid-time", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "variable",
@@ -1479,7 +1585,10 @@ const doCurveTextPatterns = function () {
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
-        ["", "curve-dates", ""],
+        ["", "curve-dates", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1504,7 +1613,10 @@ const doCurveTextPatterns = function () {
         ["", "statistic", " at "],
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
-        ["valid-time: ", "valid-time", ""],
+        ["valid-time: ", "valid-time", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1528,7 +1640,10 @@ const doCurveTextPatterns = function () {
         ["", "statistic", " at "],
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
-        ["valid-time: ", "valid-time", ""],
+        ["valid-time: ", "valid-time", ". "],
+        ["Filtered by: ", "filter-by", " "],
+        ["range: ", "filter-min", " "],
+        ["to ", "filter-max", ". "],
       ],
       displayParams: [
         "label",
