@@ -224,7 +224,7 @@ dataMap = function (plotParams, plotFunction) {
       `Values <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.1
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dPurple
     ); // generate purple text layer
     dataset.push(cOptions);
@@ -234,10 +234,10 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.1
-      ).toFixed(0)} and <= ${(
+      ).toPrecision(3)} and <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dPurpleBlue
     ); // generate purple-blue text layer
     dataset.push(cOptions);
@@ -247,10 +247,10 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
-      ).toFixed(0)} and <= ${(
+      ).toPrecision(3)} and <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.3
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dBlue
     ); // generate blue text layer
     dataset.push(cOptions);
@@ -260,10 +260,10 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.3
-      ).toFixed(0)} and <= ${(
+      ).toPrecision(3)} and <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dBlueGreen
     ); // generate blue-green text layer
     dataset.push(cOptions);
@@ -273,10 +273,10 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
-      ).toFixed(0)} and <= ${(
+      ).toPrecision(3)} and <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.5
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dGreen
     ); // generate green text layer
     dataset.push(cOptions);
@@ -286,10 +286,10 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.5
-      ).toFixed(0)} and <= ${(
+      ).toPrecision(3)} and <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dGreenYellow
     ); // generate green-yellow text layer
     dataset.push(cOptions);
@@ -299,10 +299,10 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
-      ).toFixed(0)} and <= ${(
+      ).toPrecision(3)} and <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.7
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dYellow
     ); // generate yellow text layer
     dataset.push(cOptions);
@@ -312,10 +312,10 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.7
-      ).toFixed(0)} and <= ${(
+      ).toPrecision(3)} and <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dOrange
     ); // generate orange text layer
     dataset.push(cOptions);
@@ -325,10 +325,10 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
-      ).toFixed(0)} and <= ${(
+      ).toPrecision(3)} and <= ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.9
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dOrangeRed
     ); // generate orange-red text layer
     dataset.push(cOptions);
@@ -338,7 +338,7 @@ dataMap = function (plotParams, plotFunction) {
       `Values > ${(
         valueLimits.lowLimit +
         (valueLimits.highLimit - valueLimits.lowLimit) * 0.9
-      ).toFixed(0)}`,
+      ).toPrecision(3)}`,
       dRed
     ); // generate red text layer
     dataset.push(cOptions);

@@ -1212,9 +1212,10 @@ const doCurveParams = async function () {
       unique: false,
       controlButtonVisibility: "block",
       controlButtonText: "Filter by",
+      gapAbove: true,
       displayOrder: 1,
       displayPriority: 1,
-      displayGroup: 7,
+      displayGroup: 8,
     });
   } else {
     // it is defined but check for necessary update
@@ -1250,7 +1251,7 @@ const doCurveParams = async function () {
       controlButtonText: "minimum",
       displayOrder: 2,
       displayPriority: 1,
-      displayGroup: 7,
+      displayGroup: 8,
     });
   }
 
@@ -1270,7 +1271,7 @@ const doCurveParams = async function () {
       controlButtonText: "maximum",
       displayOrder: 3,
       displayPriority: 1,
-      displayGroup: 7,
+      displayGroup: 8,
     });
   }
 
@@ -1318,7 +1319,7 @@ const doCurveParams = async function () {
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
-      displayGroup: 8,
+      displayGroup: 7,
       help: "dateHelp.html",
     });
   } else {
@@ -1393,6 +1394,9 @@ const doCurveTextPatterns = function () {
         "valid-time",
         "sites",
         "sitesMap",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1428,6 +1432,9 @@ const doCurveTextPatterns = function () {
         "sites",
         "sitesMap",
         "curve-dates",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1456,6 +1463,9 @@ const doCurveTextPatterns = function () {
         "forecast-length",
         "valid-time",
         "curve-dates",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1487,6 +1497,9 @@ const doCurveTextPatterns = function () {
         "sites",
         "sitesMap",
         "curve-dates",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1516,6 +1529,9 @@ const doCurveTextPatterns = function () {
         "utc-cycle-start",
         "sites",
         "sitesMap",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1544,6 +1560,9 @@ const doCurveTextPatterns = function () {
         "valid-time",
         "bin-parameter",
         "curve-dates",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1570,6 +1589,9 @@ const doCurveTextPatterns = function () {
         "valid-time",
         "sites",
         "sitesMap",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1600,6 +1622,9 @@ const doCurveTextPatterns = function () {
         "forecast-length",
         "valid-time",
         "curve-dates",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1627,6 +1652,9 @@ const doCurveTextPatterns = function () {
         "threshold",
         "forecast-length",
         "valid-time",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
@@ -1654,6 +1682,9 @@ const doCurveTextPatterns = function () {
         "threshold",
         "forecast-length",
         "valid-time",
+        "filter-by",
+        "filter-max",
+        "filter-min",
       ],
       groupSize: 6,
     });
