@@ -85,7 +85,7 @@ dataMap = function (plotParams, plotFunction) {
   const statType = statisticOptionsMap[variable][statisticSelect][0];
   const varUnits =
     statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-      ? variableDetails[1]
+      ? variableDetails[2]
       : statisticOptionsMap[variable][statisticSelect][1];
 
   const sitesList = curve.sites === undefined ? [] : curve.sites;
@@ -126,7 +126,7 @@ dataMap = function (plotParams, plotFunction) {
       const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
       rows = tss.processStationQuery(
         statType,
-        variableDetails[0],
+        variableDetails[1],
         sitesList,
         model,
         forecastLength,

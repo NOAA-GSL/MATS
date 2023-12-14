@@ -16,17 +16,21 @@ import {
 // first field of each value array is sub-variables, second field is metadata document key,
 // third is boolean for whether or not there are thresholds
 const variableMetadataDocs = {
-  Ceiling: [{ Ceiling: ["Ceiling", "ft"] }, "cb-ceiling", true],
-  Visibility: [{ Visibility: ["Visibility", "mi"] }, "cb-visibility", true],
+  Ceiling: [{ "Ceiling (ft)": ["Ceiling", "Ceiling", "ft"] }, "cb-ceiling", true],
+  Visibility: [
+    { "Visibility (mi)": ["Visibility", "Visibility", "mi"] },
+    "cb-visibility",
+    true,
+  ],
   Surface: [
     {
-      "Temperature (2m)": ["Temperature", "°C"],
-      "Dewpoint (2m)": ["DewPoint", "°C"],
-      "Relative Humidity (2m)": ["RelativeHumidity", "RH (%)"],
-      "Surface Pressure": ["SurfacePressure", "hPa"],
-      "Wind Speed (10m)": ["WindSpeed", "m/s"],
-      "U-Wind (10m)": ["WindU", "m/s"],
-      "V-Wind (10m)": ["WindV", "m/s"],
+      "Temperature at 2m (°C)": ["Temperature", "Temperature", "°C"],
+      "Dewpoint at 2m (°C)": ["DewPoint", "DewPoint", "°C"],
+      "Relative Humidity at 2m (%)": ["RelativeHumidity", "RH", "RH (%)"],
+      "Surface Pressure (hPa)": ["SurfacePressure", "Surface Pressure", "hPa"],
+      "Wind Speed at 10m (m/s)": ["WindSpeed", "WS", "m/s"],
+      "U-Wind at 10m (m/s)": ["WindU", "WindU", "m/s"],
+      "V-Wind at 10m (m/s)": ["WindV", "WindV", "m/s"],
     },
     "cb-surface",
     false,
@@ -1198,20 +1202,23 @@ const doCurveParams = async function () {
     });
   }
 
-  if (matsCollections["filter-by"].findOne({ name: "filter-by" }) === undefined) {
-    matsCollections["filter-by"].insert({
-      name: "filter-by",
+  if (
+    matsCollections["filter-model-by"].findOne({ name: "filter-model-by" }) ===
+    undefined
+  ) {
+    matsCollections["filter-model-by"].insert({
+      name: "filter-model-by",
       type: matsTypes.InputTypes.select,
       options: allVariablesNoneOption,
       controlButtonCovered: true,
       default: "None",
       hideOtherFor: {
-        "filter-max": ["None"],
-        "filter-min": ["None"],
+        "filter-model-max": ["None"],
+        "filter-model-min": ["None"],
       },
       unique: false,
       controlButtonVisibility: "block",
-      controlButtonText: "Filter by",
+      controlButtonText: "Filter model by",
       gapAbove: true,
       displayOrder: 1,
       displayPriority: 1,
@@ -1219,13 +1226,13 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["filter-by"].findOne({
-      name: "filter-by",
+    const currentParam = matsCollections["filter-model-by"].findOne({
+      name: "filter-model-by",
     });
     if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
       // have to reload variable data
-      matsCollections["filter-by"].update(
-        { name: "filter-by" },
+      matsCollections["filter-model-by"].update(
+        { name: "filter-model-by" },
         {
           $set: {
             options: allVariablesNoneOption,
@@ -1235,9 +1242,12 @@ const doCurveParams = async function () {
     }
   }
 
-  if (matsCollections["filter-min"].findOne({ name: "filter-min" }) === undefined) {
-    matsCollections["filter-min"].insert({
-      name: "filter-min",
+  if (
+    matsCollections["filter-model-min"].findOne({ name: "filter-model-min" }) ===
+    undefined
+  ) {
+    matsCollections["filter-model-min"].insert({
+      name: "filter-model-min",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
@@ -1255,9 +1265,12 @@ const doCurveParams = async function () {
     });
   }
 
-  if (matsCollections["filter-max"].findOne({ name: "filter-max" }) === undefined) {
-    matsCollections["filter-max"].insert({
-      name: "filter-max",
+  if (
+    matsCollections["filter-model-max"].findOne({ name: "filter-model-max" }) ===
+    undefined
+  ) {
+    matsCollections["filter-model-max"].insert({
+      name: "filter-model-max",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
       options: [],
@@ -1272,6 +1285,88 @@ const doCurveParams = async function () {
       displayOrder: 3,
       displayPriority: 1,
       displayGroup: 8,
+    });
+  }
+
+  if (
+    matsCollections["filter-obs-by"].findOne({ name: "filter-obs-by" }) === undefined
+  ) {
+    matsCollections["filter-obs-by"].insert({
+      name: "filter-obs-by",
+      type: matsTypes.InputTypes.select,
+      options: allVariablesNoneOption,
+      controlButtonCovered: true,
+      default: "None",
+      hideOtherFor: {
+        "filter-obs-max": ["None"],
+        "filter-obs-min": ["None"],
+      },
+      unique: false,
+      controlButtonVisibility: "block",
+      controlButtonText: "Filter obs by",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = matsCollections["filter-obs-by"].findOne({
+      name: "filter-obs-by",
+    });
+    if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
+      // have to reload variable data
+      matsCollections["filter-obs-by"].update(
+        { name: "filter-obs-by" },
+        {
+          $set: {
+            options: allVariablesNoneOption,
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    matsCollections["filter-obs-min"].findOne({ name: "filter-obs-min" }) === undefined
+  ) {
+    matsCollections["filter-obs-min"].insert({
+      name: "filter-obs-min",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: 0,
+      max: 60000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 0,
+      controlButtonVisibility: "block",
+      controlButtonText: "minimum",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  }
+
+  if (
+    matsCollections["filter-obs-max"].findOne({ name: "filter-obs-max" }) === undefined
+  ) {
+    matsCollections["filter-obs-max"].insert({
+      name: "filter-obs-max",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: 0,
+      max: 60000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 60000,
+      controlButtonVisibility: "block",
+      controlButtonText: "maximum",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 9,
     });
   }
 
@@ -1377,9 +1472,12 @@ const doCurveTextPatterns = function () {
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
         ["avg: ", "average", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1394,9 +1492,12 @@ const doCurveTextPatterns = function () {
         "valid-time",
         "sites",
         "sitesMap",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1414,9 +1515,12 @@ const doCurveTextPatterns = function () {
         ["valid-time: ", "valid-time", ", "],
         ["start utc: ", "utc-cycle-start", ", "],
         ["", "curve-dates", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1432,9 +1536,12 @@ const doCurveTextPatterns = function () {
         "sites",
         "sitesMap",
         "curve-dates",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1450,9 +1557,12 @@ const doCurveTextPatterns = function () {
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
         ["", "curve-dates", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1463,9 +1573,12 @@ const doCurveTextPatterns = function () {
         "forecast-length",
         "valid-time",
         "curve-dates",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1481,9 +1594,12 @@ const doCurveTextPatterns = function () {
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["", "curve-dates", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1497,9 +1613,12 @@ const doCurveTextPatterns = function () {
         "sites",
         "sitesMap",
         "curve-dates",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1514,9 +1633,12 @@ const doCurveTextPatterns = function () {
         ["", "statistic", " at "],
         ["", "threshold", ", "],
         ["start utc: ", "utc-cycle-start", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1529,9 +1651,12 @@ const doCurveTextPatterns = function () {
         "utc-cycle-start",
         "sites",
         "sitesMap",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1546,9 +1671,12 @@ const doCurveTextPatterns = function () {
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
         ["", "curve-dates", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1560,9 +1688,12 @@ const doCurveTextPatterns = function () {
         "valid-time",
         "bin-parameter",
         "curve-dates",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1576,9 +1707,12 @@ const doCurveTextPatterns = function () {
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", " h "],
         [" valid-time:", "valid-time", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "variable",
@@ -1589,9 +1723,12 @@ const doCurveTextPatterns = function () {
         "valid-time",
         "sites",
         "sitesMap",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1608,9 +1745,12 @@ const doCurveTextPatterns = function () {
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ", "],
         ["", "curve-dates", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1622,9 +1762,12 @@ const doCurveTextPatterns = function () {
         "forecast-length",
         "valid-time",
         "curve-dates",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1639,9 +1782,12 @@ const doCurveTextPatterns = function () {
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1652,9 +1798,12 @@ const doCurveTextPatterns = function () {
         "threshold",
         "forecast-length",
         "valid-time",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });
@@ -1669,9 +1818,12 @@ const doCurveTextPatterns = function () {
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
         ["valid-time: ", "valid-time", ". "],
-        ["Filtered by: ", "filter-by", " "],
-        ["range: ", "filter-min", " "],
-        ["to ", "filter-max", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
       ],
       displayParams: [
         "label",
@@ -1682,9 +1834,12 @@ const doCurveTextPatterns = function () {
         "threshold",
         "forecast-length",
         "valid-time",
-        "filter-by",
-        "filter-max",
-        "filter-min",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
       ],
       groupSize: 6,
     });

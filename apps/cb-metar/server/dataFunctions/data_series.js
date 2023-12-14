@@ -105,6 +105,78 @@ dataSeries = function (plotParams, plotFunction) {
     ).optionsMap;
     const average = averageOptionsMap[averageStr][0];
 
+    const filterModelBy = curve["filter-model-by"];
+    const filterObsBy = curve["filter-obs-by"];
+    const filterInfo = {};
+
+    if (filterModelBy !== "None") {
+      // get the variable text that we'll query off of
+      const filterModelVariable = Object.keys(variableValuesMap).filter(
+        (fv) => Object.keys(variableValuesMap[fv][0]).indexOf(filterModelBy) !== -1
+      )[0];
+      const filterModelVariableDetails =
+        variableValuesMap[filterModelVariable][0][filterModelBy];
+      [, filterInfo.filterModelBy] = filterModelVariableDetails;
+
+      // get the bounds and make sure they're in the right units
+      let filterModelMin = Number(curve["filter-model-min"]);
+      let filterModelMax = Number(curve["filter-model-max"]);
+      if (
+        filterModelBy.toLowerCase().includes("temperature") ||
+        filterModelBy.toLowerCase().includes("dewpoint")
+      ) {
+        // convert temperature and dewpoint bounds from Celsius
+        // to Fahrenheit, which is in the database
+        filterModelMin = filterModelMin * 1.8 + 32;
+        filterModelMax = filterModelMax * 1.8 + 32;
+      } else if (
+        filterModelBy.toLowerCase().includes("wind") &&
+        filterModelBy.toLowerCase().includes("speed")
+      ) {
+        // convert wind speed bounds from m/s
+        // to mph, which is in the database.
+        // Note that the u- and v- components are stored in m/s
+        filterModelMin *= 2.23693629;
+        filterModelMax *= 2.23693629;
+      }
+      filterInfo.filterModelMin = filterModelMin;
+      filterInfo.filterModelMax = filterModelMax;
+    }
+
+    if (filterObsBy !== "None") {
+      // get the variable text that we'll query off of
+      const filterObsVariable = Object.keys(variableValuesMap).filter(
+        (fv) => Object.keys(variableValuesMap[fv][0]).indexOf(filterObsBy) !== -1
+      )[0];
+      const filterObsVariableDetails =
+        variableValuesMap[filterObsVariable][0][filterObsBy];
+      [, filterInfo.filterObsBy] = filterObsVariableDetails;
+
+      // get the bounds and make sure they're in the right units
+      let filterObsMin = Number(curve["filter-obs-min"]);
+      let filterObsMax = Number(curve["filter-obs-max"]);
+      if (
+        filterObsBy.toLowerCase().includes("temperature") ||
+        filterObsBy.toLowerCase().includes("dewpoint")
+      ) {
+        // convert temperature and dewpoint bounds from Celsius
+        // to Fahrenheit, which is in the database
+        filterObsMin = filterObsMin * 1.8 + 32;
+        filterObsMax = filterObsMax * 1.8 + 32;
+      } else if (
+        filterObsBy.toLowerCase().includes("wind") &&
+        filterObsBy.toLowerCase().includes("speed")
+      ) {
+        // convert wind speed bounds from m/s
+        // to mph, which is in the database.
+        // Note that the u- and v- components are stored in m/s
+        filterObsMin *= 2.23693629;
+        filterObsMax *= 2.23693629;
+      }
+      filterInfo.filterObsMin = filterObsMin;
+      filterInfo.filterObsMax = filterObsMax;
+    }
+
     let queryTemplate;
     let sitesList;
     const regionType = curve["region-type"];
@@ -166,7 +238,7 @@ dataSeries = function (plotParams, plotFunction) {
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     const axisKey =
       statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[1]
+        ? variableDetails[2]
         : statisticOptionsMap[variable][statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[variable][statisticSelect][2];
@@ -193,7 +265,7 @@ dataSeries = function (plotParams, plotFunction) {
           const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(cbPool);
           rows = tss.processStationQuery(
             statType,
-            variableDetails[0],
+            variableDetails[1],
             sitesList,
             model,
             forecastLength,
@@ -201,7 +273,8 @@ dataSeries = function (plotParams, plotFunction) {
             average,
             fromSecs,
             toSecs,
-            validTimes
+            validTimes,
+            filterInfo
           );
         }
 

@@ -147,7 +147,7 @@ dataValidTime = function (plotParams, plotFunction) {
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     const axisKey =
       statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[1]
+        ? variableDetails[2]
         : statisticOptionsMap[variable][statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[variable][statisticSelect][2];
@@ -169,7 +169,7 @@ dataValidTime = function (plotParams, plotFunction) {
           const tss = new matsMiddleValidTime.MatsMiddleValidTime(cbPool);
           rows = tss.processStationQuery(
             statType,
-            variableDetails[0],
+            variableDetails[1],
             sitesList,
             model,
             forecastLength,
