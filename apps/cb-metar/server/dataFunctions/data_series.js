@@ -179,8 +179,14 @@ dataSeries = function (plotParams, plotFunction) {
 
     let queryTemplate;
     let sitesList;
-    const regionType = curve["region-type"];
-    if (regionType === "Predefined region") {
+    const regionType =
+      filterModelBy === "None" && filterObsBy === "None"
+        ? curve["region-type"]
+        : "Select stations";
+    if (curve["region-type"] === "Predefined region") {
+      // either a true predefined region or a station plot masquerading
+      // as a predefined region that we will have to do filtering on.
+      // the regionType constant defined above knows which on.
       const regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -190,40 +196,52 @@ dataSeries = function (plotParams, plotFunction) {
           regionStr
       );
 
-      // SQL template replacements
-      let statTemplate;
-      queryTemplate = Assets.getText("sqlTemplates/tmpl_TimeSeries.sql");
-      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
-      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
-      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-      queryTemplate = queryTemplate.replace(
-        /{{vxVARIABLE}}/g,
-        queryVariable.toUpperCase()
-      );
-      queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-      queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
-      if (statType === "ctc") {
-        statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
-        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-        queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
-      } else {
-        statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
-        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-        queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
-        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
-      }
-
-      if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+      if (regionType === "Predefined region") {
+        // Predefined region, no filtering.
+        let statTemplate;
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_TimeSeries.sql");
+        queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+        queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+        queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+        queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
         queryTemplate = queryTemplate.replace(
-          /{{vxVALID_TIMES}}/g,
-          cbPool.trfmListToCSVString(validTimes, null, false)
+          /{{vxVARIABLE}}/g,
+          queryVariable.toUpperCase()
         );
+        queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
+        if (statType === "ctc") {
+          statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+        } else {
+          statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLE}}/g,
+            variableDetails[0]
+          );
+          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+        }
+
+        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+          queryTemplate = queryTemplate.replace(
+            /{{vxVALID_TIMES}}/g,
+            cbPool.trfmListToCSVString(validTimes, null, false)
+          );
+        } else {
+          queryTemplate = cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
+        }
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+        // Predefined region, with filtering. Treat like station plot.
+        sitesList = matsDataQueryUtils.getStationsInCouchbaseRegion(cbPool, region);
       }
     } else {
+      // Station plot, with or without filtering
       sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
