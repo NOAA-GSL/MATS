@@ -177,8 +177,14 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
     let queryTemplate;
     let sitesList;
-    const regionType = curve["region-type"];
-    if (regionType === "Predefined region") {
+    const regionType =
+      filterModelBy === "None" && filterObsBy === "None"
+        ? curve["region-type"]
+        : "Select stations";
+    if (curve["region-type"] === "Predefined region") {
+      // either a true predefined region or a station plot masquerading
+      // as a predefined region that we will have to do filtering on.
+      // the regionType constant defined above knows which on.
       const regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -188,33 +194,42 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           regionStr
       );
 
-      // SQL template replacements
-      let statTemplate;
-      queryTemplate = Assets.getText("sqlTemplates/tmpl_DailyModelCycle.sql");
-      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
-      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
-      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-      queryTemplate = queryTemplate.replace(
-        /{{vxVARIABLE}}/g,
-        queryVariable.toUpperCase()
-      );
-      if (statType === "ctc") {
-        statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
-        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-        queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+      if (regionType === "Predefined region") {
+        // Predefined region, no filtering.
+        let statTemplate;
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_DailyModelCycle.sql");
+        queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+        queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+        queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+        queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+        queryTemplate = queryTemplate.replace(
+          /{{vxVARIABLE}}/g,
+          queryVariable.toUpperCase()
+        );
+        if (statType === "ctc") {
+          statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+        } else {
+          statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLE}}/g,
+            variableDetails[0]
+          );
+          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+        }
+        queryTemplate = queryTemplate.replace(
+          /{{vxUTC_CYCLE_START}}/g,
+          cbPool.trfmListToCSVString(utcCycleStart, null, false)
+        );
       } else {
-        statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
-        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-        queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
-        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+        // Predefined region, with filtering. Treat like station plot.
+        sitesList = matsDataQueryUtils.getStationsInCouchbaseRegion(cbPool, region);
       }
-      queryTemplate = queryTemplate.replace(
-        /{{vxUTC_CYCLE_START}}/g,
-        cbPool.trfmListToCSVString(utcCycleStart, null, false)
-      );
     } else {
+      // Station plot, with or without filtering
       sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
