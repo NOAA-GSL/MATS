@@ -1,7 +1,7 @@
-Feature: Match Unmatch Diff Curves Histogram
+Feature: Match Unmatch Diff Curves Dieoff
 
     As an unauthenticated user to the app,
-    with the app in its default state so that the plots are Histogram,
+    with the app in its default state so that the plots are Dieoff,
     I want to add two curves, plot unmatched, and then return to the main page.
     I then want to add a matched difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
     I then want to add a piecewise difference curve, plot unmatched, return to the main page, plot matched, and then return to the main page.
@@ -12,27 +12,29 @@ Feature: Match Unmatch Diff Curves Histogram
         Then I expect the app title to be "METAR"
 
     @watch
-    Scenario: matchUnmatchDiffCurvesHistogram
-        When I set the plot type to "Histogram"
-        Then the plot type should be "Histogram"
-        When I change the "variable" parameter to "Ceiling"
-        Then the "variable" parameter value matches "Ceiling"
+    Scenario: matchUnmatchDiffCurvesDieoff
+        When I set the plot type to "Dieoff"
+        Then the plot type should be "Dieoff"
+        When I change the "variable" parameter to "Ceiling (ft)"
+        Then the "variable" parameter value matches "Ceiling (ft)"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
-        When I set the curve-dates to "08/09/2022 00:00 - 08/12/2022 00:00"
-        Then the curve-dates value is "08/09/2022 00:00 - 08/12/2022 00:00"
-        When I click the "Add Curve" button
+        When I set the curve-dates to "08/01/2023 00:00 - 08/15/2023 00:00"
+        Then the curve-dates value is "08/01/2023 00:00 - 08/15/2023 00:00"
+        When I change the "dieoff-type" parameter to "Dieoff for a specified UTC cycle init hour"
+        Then the "dieoff-type" parameter value matches "Dieoff for a specified UTC cycle init hour"
+        Then I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "variable" parameter to "Visibility"
-        Then the "variable" parameter value matches "Visibility"
+        When I change the "variable" parameter to "Temperature at 2m (°C)"
+        Then the "variable" parameter value matches "Temperature at 2m (°C)"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Histogram" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -40,7 +42,7 @@ Feature: Match Unmatch Diff Curves Histogram
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Histogram" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -52,7 +54,7 @@ Feature: Match Unmatch Diff Curves Histogram
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Histogram" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -60,7 +62,7 @@ Feature: Match Unmatch Diff Curves Histogram
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Histogram" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -73,7 +75,7 @@ Feature: Match Unmatch Diff Curves Histogram
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Histogram" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page
@@ -81,7 +83,7 @@ Feature: Match Unmatch Diff Curves Histogram
 
         When I click the "Plot Matched" button
         Then I should be on the graph page
-        And I should have a "Histogram" plot
+        And I should have a "Dieoff" plot
 
         When I click the "Back" button
         Then I should be on the main page

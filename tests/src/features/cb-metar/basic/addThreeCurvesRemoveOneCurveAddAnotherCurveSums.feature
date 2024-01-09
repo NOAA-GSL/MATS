@@ -18,22 +18,22 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
     Scenario: addThreeCurvesRemoveOneCurveAddAnotherCurve
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "variable" parameter to "Ceiling"
-        Then the "variable" parameter value matches "Ceiling"
+        When I change the "variable" parameter to "Temperature at 2m (°C)"
+        Then the "variable" parameter value matches "Temperature at 2m (°C)"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
-        When I set the dates to "08/09/2022 00:00 - 08/12/2022 00:00"
-        Then the dates value is "08/09/2022 00:00 - 08/12/2022 00:00"
+        When I set the dates to "08/01/2023 00:00 - 08/15/2023 00:00"
+        Then the dates value is "08/01/2023 00:00 - 08/15/2023 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "RAP_OPS_130"
-        Then the "data-source" parameter value matches "RAP_OPS_130"
+        When I change the "region" parameter to "Eastern HRRR domain"
+        Then the "region" parameter value matches "Eastern HRRR domain"
         When I click the "Add Curve" button
         Then "Curve1" is added
 
-        When I change the "data-source" parameter to "HRRR_OPS"
-        Then the "data-source" parameter value matches "HRRR_OPS"
+        When I change the "region" parameter to "Western HRRR domain"
+        Then the "region" parameter value matches "Western HRRR domain"
         When I click the "Add Curve" button
         Then "Curve2" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve2"
