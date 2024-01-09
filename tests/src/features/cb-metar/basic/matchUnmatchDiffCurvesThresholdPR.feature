@@ -24,8 +24,8 @@ Feature: Match Unmatch Diff Curves Threshold
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "variable" parameter to "Temperature at 2m (°C)"
-        Then the "variable" parameter value matches "Temperature at 2m (°C)"
+        When I change the "variable" parameter to "Visibility (mi)"
+        Then the "variable" parameter value matches "Visibility (mi)"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"
