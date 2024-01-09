@@ -103,10 +103,88 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     [statType] = statisticOptionsMap[variable][statisticSelect];
     allStatTypes.push(statType);
 
+    const filterModelBy = curve["filter-model-by"];
+    const filterObsBy = curve["filter-obs-by"];
+    const filterInfo = {};
+
+    if (filterModelBy !== "None") {
+      // get the variable text that we'll query off of
+      const filterModelVariable = Object.keys(variableValuesMap).filter(
+        (fv) => Object.keys(variableValuesMap[fv][0]).indexOf(filterModelBy) !== -1
+      )[0];
+      const filterModelVariableDetails =
+        variableValuesMap[filterModelVariable][0][filterModelBy];
+      [, filterInfo.filterModelBy] = filterModelVariableDetails;
+
+      // get the bounds and make sure they're in the right units
+      let filterModelMin = Number(curve["filter-model-min"]);
+      let filterModelMax = Number(curve["filter-model-max"]);
+      if (
+        filterModelBy.toLowerCase().includes("temperature") ||
+        filterModelBy.toLowerCase().includes("dewpoint")
+      ) {
+        // convert temperature and dewpoint bounds from Celsius
+        // to Fahrenheit, which is in the database
+        filterModelMin = filterModelMin * 1.8 + 32;
+        filterModelMax = filterModelMax * 1.8 + 32;
+      } else if (
+        filterModelBy.toLowerCase().includes("wind") &&
+        filterModelBy.toLowerCase().includes("speed")
+      ) {
+        // convert wind speed bounds from m/s
+        // to mph, which is in the database.
+        // Note that the u- and v- components are stored in m/s
+        filterModelMin *= 2.23693629;
+        filterModelMax *= 2.23693629;
+      }
+      filterInfo.filterModelMin = filterModelMin;
+      filterInfo.filterModelMax = filterModelMax;
+    }
+
+    if (filterObsBy !== "None") {
+      // get the variable text that we'll query off of
+      const filterObsVariable = Object.keys(variableValuesMap).filter(
+        (fv) => Object.keys(variableValuesMap[fv][0]).indexOf(filterObsBy) !== -1
+      )[0];
+      const filterObsVariableDetails =
+        variableValuesMap[filterObsVariable][0][filterObsBy];
+      [, filterInfo.filterObsBy] = filterObsVariableDetails;
+
+      // get the bounds and make sure they're in the right units
+      let filterObsMin = Number(curve["filter-obs-min"]);
+      let filterObsMax = Number(curve["filter-obs-max"]);
+      if (
+        filterObsBy.toLowerCase().includes("temperature") ||
+        filterObsBy.toLowerCase().includes("dewpoint")
+      ) {
+        // convert temperature and dewpoint bounds from Celsius
+        // to Fahrenheit, which is in the database
+        filterObsMin = filterObsMin * 1.8 + 32;
+        filterObsMax = filterObsMax * 1.8 + 32;
+      } else if (
+        filterObsBy.toLowerCase().includes("wind") &&
+        filterObsBy.toLowerCase().includes("speed")
+      ) {
+        // convert wind speed bounds from m/s
+        // to mph, which is in the database.
+        // Note that the u- and v- components are stored in m/s
+        filterObsMin *= 2.23693629;
+        filterObsMax *= 2.23693629;
+      }
+      filterInfo.filterObsMin = filterObsMin;
+      filterInfo.filterObsMax = filterObsMax;
+    }
+
     let queryTemplate;
     let sitesList;
-    const regionType = curve["region-type"];
-    if (regionType === "Predefined region") {
+    const regionType =
+      filterModelBy === "None" && filterObsBy === "None"
+        ? curve["region-type"]
+        : "Select stations";
+    if (curve["region-type"] === "Predefined region") {
+      // either a true predefined region or a station plot masquerading
+      // as a predefined region that we will have to do filtering on.
+      // the regionType constant defined above knows which on.
       const regionStr = curve.region;
       const region = Object.keys(
         matsCollections.region.findOne({ name: "region" }).valuesMap
@@ -116,33 +194,42 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           regionStr
       );
 
-      // SQL template replacements
-      let statTemplate;
-      queryTemplate = Assets.getText("sqlTemplates/tmpl_DailyModelCycle.sql");
-      queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
-      queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
-      queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-      queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-      queryTemplate = queryTemplate.replace(
-        /{{vxVARIABLE}}/g,
-        queryVariable.toUpperCase()
-      );
-      if (statType === "ctc") {
-        statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
-        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-        queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+      if (regionType === "Predefined region") {
+        // Predefined region, no filtering.
+        let statTemplate;
+        queryTemplate = Assets.getText("sqlTemplates/tmpl_DailyModelCycle.sql");
+        queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+        queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+        queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+        queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+        queryTemplate = queryTemplate.replace(
+          /{{vxVARIABLE}}/g,
+          queryVariable.toUpperCase()
+        );
+        if (statType === "ctc") {
+          statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+        } else {
+          statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLE}}/g,
+            variableDetails[0]
+          );
+          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+        }
+        queryTemplate = queryTemplate.replace(
+          /{{vxUTC_CYCLE_START}}/g,
+          cbPool.trfmListToCSVString(utcCycleStart, null, false)
+        );
       } else {
-        statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
-        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-        queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
-        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+        // Predefined region, with filtering. Treat like station plot.
+        sitesList = matsDataQueryUtils.getStationsInCouchbaseRegion(cbPool, region);
       }
-      queryTemplate = queryTemplate.replace(
-        /{{vxUTC_CYCLE_START}}/g,
-        cbPool.trfmListToCSVString(utcCycleStart, null, false)
-      );
     } else {
+      // Station plot, with or without filtering
       sitesList = curve.sites === undefined ? [] : curve.sites;
       if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
@@ -157,7 +244,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     const axisKey =
       statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[1]
+        ? variableDetails[2]
         : statisticOptionsMap[variable][statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[variable][statisticSelect][2];
@@ -179,13 +266,14 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           const tss = new matsMiddleDailyModelCycle.MatsMiddleDailyModelCycle(cbPool);
           rows = tss.processStationQuery(
             statType,
-            variableDetails[0],
+            variableDetails[1],
             sitesList,
             model,
             threshold,
             fromSecs,
             toSecs,
-            utcCycleStart
+            utcCycleStart,
+            filterInfo
           );
         }
 

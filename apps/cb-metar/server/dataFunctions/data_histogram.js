@@ -150,7 +150,7 @@ dataHistogram = function (plotParams, plotFunction) {
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     [, varUnits] =
       statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[1]
+        ? variableDetails[2]
         : statisticOptionsMap[variable][statisticSelect][1];
     let axisKey = yAxisFormat;
     if (yAxisFormat === "Relative frequency") {

@@ -201,7 +201,7 @@ dataContour = function (plotParams, plotFunction) {
   // For contours, this functions as the colorbar label.
   curve.unitKey =
     statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-      ? variableDetails[1]
+      ? variableDetails[2]
       : statisticOptionsMap[variable][statisticSelect][1];
 
   let d = {};
