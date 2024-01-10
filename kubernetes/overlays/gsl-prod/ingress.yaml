@@ -18,13 +18,6 @@ spec:
                 name: scorecard
                 port:
                   name: http
-          - path: /mats-dev/anomalycor
-            pathType: Prefix
-            backend:
-              service:
-                name: anomalycor
-                port:
-                  name: http
           - path: /mats-dev/cb-metar
             pathType: Prefix
             backend:

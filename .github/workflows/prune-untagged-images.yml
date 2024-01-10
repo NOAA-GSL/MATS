@@ -13,7 +13,6 @@ jobs:
       fail-fast: false
       matrix:
         app:
-          - anomalycor
           - cb-metar
           - ceil-vis
           - ceil-vis15

@@ -1,5 +1,4 @@
 resources:
-  - anomalycor
   - cb-metar
   - ceil-vis
   - ceil-vis15
