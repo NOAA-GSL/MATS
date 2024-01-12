@@ -41,11 +41,11 @@ The test suite for MATS consists of cucumber-style acceptance tests powered by w
 The Webdriver tests rely on the XPath so you will most likely need to run MATS with the `--production` flag otherwise it will inject extra `<div>` tags like MeteorToys and some tests will fail. Running MATS with this flag will look something like the below. Your settings path will probably be different.
 
 ```console
-$ cd apps/anomalycor && \
+$ cd apps/radar && \
     env METEOR_PACKAGE_DIRS=../../MATScommon/meteor_packages/ \
     meteor run \
     --production \
-    --settings ~/git/mats-settings/configurations/local/settings/anomalycor/settings.json
+    --settings ~/git/mats-settings/configurations/local/settings/radar/settings.json
 ```
 
 More on testing can be found in [the testing README](./tests/README.md)

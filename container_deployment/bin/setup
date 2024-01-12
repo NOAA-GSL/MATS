@@ -445,14 +445,8 @@ defaultEntryPoints = ["http", "https"]
         app_order="0"
         title="Unknown App"
         color="#3366bb"
-        if [[ "${appref}"  == "anomalycor" ]]; then
-            group="Upper Air"
-            app_order="1"
-            title="Anomaly Correlation"
-            color="#3366bb"
-        fi
         if [[ "${appref}"  == "cb-metar" ]]; then
-            group="Experimental"
+            group="General METAR verification"
             app_order="0"
             title="METAR"
             color="#3366bb"
@@ -469,81 +463,87 @@ defaultEntryPoints = ["http", "https"]
             title="15 Minute Ceiling and Visibility"
             color="#3366bb"
         fi
+        if [[ "${appref}"  == "ensemble" ]]; then
+            group="Ensemble"
+            app_order="0"
+            title="Ensemble"
+            color="#3366bb"
+        fi
         if [[ "${appref}"  == "landuse" ]]; then
             group="Surface"
-            app_order="1"
+            app_order="2"
             title="Surface Land Use"
             color="#3366bb"
         fi
         if [[ "${appref}"  == "met-airquality" ]]; then
-            group="METexpress Surface"
-            app_order="1"
+            group="Surface"
+            app_order="4"
             title="MET Air Quality"
             color="darkorchid"
         fi
         if [[ "${appref}"  == "met-anomalycor" ]]; then
-            group="METexpress Upper Air"
-            app_order="1"
+            group="Upper Air"
+            app_order="2"
             title="MET Anomaly Correlation"
             color="darkorchid"
         fi
         if [[ "${appref}"  == "met-cyclone" ]]; then
-            group="METexpress Specialized"
+            group="Miscellaneous"
             app_order="1"
             title="MET Cyclone"
             color="darkorchid"
         fi
         if [[ "${appref}"  == "met-ensemble" ]]; then
-            group="METexpress Specialized"
-            app_order="0"
+            group="Ensemble"
+            app_order="1"
             title="MET Ensemble"
             color="darkorchid"
         fi
         if [[ "${appref}"  == "met-object" ]]; then
-            group="METexpress Specialized"
+            group="Miscellaneous"
             app_order="2"
             title="MET Object"
             color="darkorchid"
         fi
         if [[ "${appref}"  == "met-precip" ]]; then
-            group="METexpress Precipitation"
-            app_order="0"
+            group="Precipitation By Lead Time"
+            app_order="2"
             title="MET Precipitation"
             color="darkorchid"
         fi
         if [[ "${appref}"  == "met-surface" ]]; then
-            group="METexpress Surface"
-            app_order="0"
+            group="Surface"
+            app_order="1"
             title="MET Surface"
             color="darkorchid"
         fi
         if [[ "${appref}"  == "met-upperair" ]]; then
-            group="METexpress Upper Air"
-            app_order="0"
+            group="Upper Air"
+            app_order="1"
             title="MET Upper Air"
             color="darkorchid"
         fi
         if [[ "${appref}"  == "precipAccum" ]]; then
-            group="Precipitation"
+            group="Precipitation By Accumulation Interval"
             app_order="0"
             title="24 Hour / Sub 24 Hour Precipitation"
             color="#3366bb"
         fi
         if [[ "${appref}"  == "precipGauge" ]]; then
-            group="Precipitation"
-            app_order="1"
+            group="Precipitation By Lead Time"
+            app_order="0"
             title="Gauge Precipitation"
             color="#3366bb"
         fi
         if [[ "${appref}"  == "precipitation1hr" ]]; then
-            group="Precipitation"
-            app_order="2"
+            group="Precipitation By Lead Time"
+            app_order="1"
             title="1 Hour Precipitation"
             color="#3366bb"
         fi
         if [[ "${appref}"  == "ptype" ]]; then
-            group="Precipitation"
-            app_order="3"
+            group="Precipitation Type"
+            app_order="0"
             title="Precipitation Type"
             color="#3366bb"
         fi
@@ -554,8 +554,8 @@ defaultEntryPoints = ["http", "https"]
             color="#3366bb"
         fi
         if [[ "${appref}"  == "scorecard" ]]; then
-            group="Experimental"
-            app_order="1"
+            group="Miscellaneous"
+            app_order="0"
             title="Scorecard"
             color="#3366bb"
         fi
@@ -567,7 +567,7 @@ defaultEntryPoints = ["http", "https"]
         fi
         if [[ "${appref}"  == "surfrad" ]]; then
             group="Surface"
-            app_order="2"
+            app_order="3"
             title="Surface Radiation"
             color="#3366bb"
         fi

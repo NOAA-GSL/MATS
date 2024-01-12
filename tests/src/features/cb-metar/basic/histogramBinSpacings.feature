@@ -17,12 +17,12 @@ Feature: Histogram Bin Spacings
     Scenario: histogramBinSpacings
         When I set the plot type to "Histogram"
         Then the plot type should be "Histogram"
-        When I change the "variable" parameter to "Ceiling"
-        Then the "variable" parameter value matches "Ceiling"
+        When I change the "variable" parameter to "Ceiling (ft)"
+        Then the "variable" parameter value matches "Ceiling (ft)"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
-        When I set the curve-dates to "08/09/2022 00:00 - 08/12/2022 00:00"
-        Then the curve-dates value is "08/09/2022 00:00 - 08/12/2022 00:00"
+        When I set the curve-dates to "08/01/2023 00:00 - 08/15/2023 00:00"
+        Then the curve-dates value is "08/01/2023 00:00 - 08/15/2023 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 

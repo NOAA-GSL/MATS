@@ -3,10 +3,10 @@
 set -euo pipefail
 
 apps=(
-    "anomalycor"
     "cb-metar"
     "ceil-vis"
     "ceil-vis15"
+    "ensemble"
     "landuse"
     "precipAccum"
     "precipGauge"
