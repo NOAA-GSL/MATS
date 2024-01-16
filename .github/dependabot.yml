@@ -23,5 +23,6 @@ updates:
       interval: "weekly"
     pull-request-branch-name:
       separator: "-" # Use "-" instead of "/" in branch names to avoid issues with docker registries
+    target-branch: "development" # raise PRs for version updates to GHA against the `development` branch
     assignees:
       - "ian-noaa"
