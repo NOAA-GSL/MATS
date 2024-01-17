@@ -16,12 +16,8 @@ import {
 // first field of each value array is sub-variables, second field is metadata document key,
 // third is boolean for whether or not there are thresholds
 const variableMetadataDocs = {
-  Ceiling: [{ "Ceiling (ft)": ["Ceiling", "Ceiling", "ft"] }, "cb-ceiling", true],
-  Visibility: [
-    { "Visibility (mi)": ["Visibility", "Visibility", "mi"] },
-    "cb-visibility",
-    true,
-  ],
+  Ceiling: [{ "Ceiling (ft)": ["Ceiling", "Ceiling", "ft"] }, true],
+  Visibility: [{ "Visibility (mi)": ["Visibility", "Visibility", "mi"] }, true],
   Surface: [
     {
       "Temperature at 2m (°C)": ["Temperature", "Temperature", "°C"],
@@ -32,7 +28,6 @@ const variableMetadataDocs = {
       "U-Wind at 10m (m/s)": ["WindU", "WindU", "m/s"],
       "V-Wind at 10m (m/s)": ["WindV", "WindV", "m/s"],
     },
-    "cb-surface",
     false,
   ],
 };
@@ -391,12 +386,12 @@ const doCurveParams = async function () {
     for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
       const subVariables = Object.keys(variableMetadataDocs[variable][0]);
-      const hasThresholds = variableMetadataDocs[variable][2];
+      const hasThresholds = variableMetadataDocs[variable][1];
       let rows;
       if (hasThresholds) {
         // eslint-disable-next-line no-undef
         const queryStr = cbPool.trfmSQLForDbTarget(
-          `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} where type="MD" and docType="matsAux" and subset="COMMON" and version="V01"`
+          `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} use keys "MD:matsAux:COMMON:V01"`
         );
         // eslint-disable-next-line no-undef
         rows = await cbPool.queryCB(queryStr);
@@ -435,18 +430,21 @@ const doCurveParams = async function () {
 
       // eslint-disable-next-line no-undef
       const queryStr = cbPool.trfmSQLForDbTarget(
-        "select model, displayText, mindate, maxdate, fcstLens, " +
-          "regions, ifmissing(thresholds,['NA']) as thresholds " +
-          `from {{vxDBTARGET}} where type="MD" and docType="matsGui" and subset="COMMON" and version="V01" and app="${variableMetadataDocs[variable][1]}" and numrecs>0 ` +
-          "order by displayCategory, displayOrder"
+        "select raw models from {{vxDBTARGET}} " +
+          `USE KEYS "MD:matsGui:${variable.toLowerCase()}:COMMON:V01"`
       );
       // eslint-disable-next-line no-undef
-      const rows = await cbPool.queryCB(queryStr);
-
+      const [rows] = await cbPool.queryCB(queryStr);
       if (rows.includes("queryCB ERROR: ")) {
         // have this local try catch fail properly if the metadata isn't there
         throw new Error(rows);
       }
+
+      rows.sort(
+        (a, b) =>
+          Number(a.displayCategory) - Number(b.displayCategory) ||
+          Number(a.displayOrder) - Number(b.displayOrder)
+      );
       for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
         const subVariable = subVariables[sidx];
         modelOptionsMap[subVariable] = {};
@@ -456,7 +454,8 @@ const doCurveParams = async function () {
         regionModelOptionsMap[subVariable] = {};
 
         for (let i = 0; i < rows.length; i += 1) {
-          const modelValue = rows[i].model.trim();
+          // const modelValue = rows[i].model.trim();
+          const modelValue = rows[i].displayText.trim();
           const model = rows[i].displayText.trim();
           modelOptionsMap[subVariable][model] = [modelValue];
 
@@ -474,7 +473,7 @@ const doCurveParams = async function () {
           forecastLengthOptionsMap[subVariable][model] = rows[i].fcstLens.map(String);
 
           // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
-          const { thresholds } = rows[i];
+          const thresholds = rows[i].thresholds ? rows[i].thresholds : ["NA"];
           thresholdsModelOptionsMap[subVariable][model] = thresholds
             .sort(function (a, b) {
               return Number(a) - Number(b);
@@ -503,7 +502,7 @@ const doCurveParams = async function () {
     let rows = await cbPool.queryCB(
       // eslint-disable-next-line no-undef
       cbPool.trfmSQLForDbTarget(
-        'select meta().id, {{vxCOLLECTION}}.* from {{vxDBTARGET}} where type="MD" and docType="station" and version = "V01"  and subset="{{vxCOLLECTION}}";'
+        'select {{vxCOLLECTION}}.* from {{vxDBTARGET}} where type="MD" and docType="station" and version = "V01" and subset="{{vxCOLLECTION}}";'
       )
     );
     if (rows.includes("queryCB ERROR: ")) {
@@ -1997,16 +1996,9 @@ Meteor.startup(function () {
     `${cbConnection.bucket}:${cbConnection.scope}:${cbConnection.collection}`,
     [
       "MD:matsAux:COMMON:V01",
-      "MD:matsGui:cb-ceiling:RAP_OPS_130:COMMON:V01",
-      "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
-      "MD:matsGui:cb-visibility:RAP_OPS_130:COMMON:V01",
-      "MD:matsGui:cb-visibility:HRRR_OPS:COMMON:V01",
-      "MD:matsGui:cb-surface:HRRR_OPS:COMMON:V01",
-      "MD:V01:REGION:ALL_HRRR",
-      "MD:V01:REGION:E_HRRR",
-      "MD:V01:REGION:E_US",
-      "MD:V01:REGION:GtLk",
-      "MD:V01:REGION:W_HRRR",
+      "MD:matsGui:ceiling:COMMON:V01",
+      "MD:matsGui:visibility:COMMON:V01",
+      "MD:matsGui:surface:COMMON:V01",
     ]
   );
   try {
