@@ -1,0 +1,24 @@
+name: Cleanup Home App PR images
+
+on: 
+  pull_request:
+    types: [closed]
+    paths:
+      - "home/**"
+
+jobs:
+  purge-images:
+    name: Cleanup PR images from ghcr.io
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get tag & appname
+        run: |
+          echo "BRANCH=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+      - name: Cleanup images
+        if: ${{ (env.BRANCH != 'development') && (env.BRANCH != 'main') }} # don't prune images from the development or main branches
+        uses: bots-house/ghcr-delete-image-action@v1.1.0
+        with:
+          owner: noaa-gsl
+          name: mats/development/home
+          token: ${{ secrets.GHCR_CLEANUP_PAT }}
+          tag: ${{ env.BRANCH }}

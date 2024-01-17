@@ -1,8 +1,10 @@
-name: Cleanup PR images
+name: Cleanup MATS PR images
 
 on: 
   pull_request:
     types: [closed]
+    paths-ignore:
+      - "home/**"
 
 jobs:
   purge-images:

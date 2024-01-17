@@ -7,7 +7,7 @@ on:
 
 jobs:
   purge-untagged-images:
-    name: Delete image from ghcr.io
+    name: Remove untagged images from ghcr.io
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -17,6 +17,7 @@ jobs:
           - ceil-vis
           - ceil-vis15
           - ensemble
+          - home
           - landuse
           - precipAccum
           - precipGauge
@@ -32,7 +33,7 @@ jobs:
         uses: snok/container-retention-policy@v2.2.1
         with:
           image-names: mats/development/${{ matrix.app }}
-          cut-off: 1 day ago MST
+          cut-off: 1 week ago MST
           account-type: org
           org-name: noaa-gsl
           untagged-only: true
