@@ -454,8 +454,7 @@ const doCurveParams = async function () {
         regionModelOptionsMap[subVariable] = {};
 
         for (let i = 0; i < rows.length; i += 1) {
-          // const modelValue = rows[i].model.trim();
-          const modelValue = rows[i].displayText.trim();
+          const modelValue = rows[i].model.trim();
           const model = rows[i].displayText.trim();
           modelOptionsMap[subVariable][model] = [modelValue];
 
