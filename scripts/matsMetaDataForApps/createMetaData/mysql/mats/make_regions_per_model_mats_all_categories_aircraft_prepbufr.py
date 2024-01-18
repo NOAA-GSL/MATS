@@ -137,7 +137,7 @@ def regions_per_model_mats_all_categories(mode):
     for row in cursor:
         tablename = str(list(row.values())[0])
         # print( "tablename is " + tablename)
-        if " " + tablename + " " not in skiptables:
+        if " " + tablename + " " not in skiptables and "vapor" not in tablename:
             # parse the data sources, forecast lengths, and regions from the table names
             model = re.sub('_[A-Za-z]*_sums$', '', tablename)
             if model not in all_data_sources:
@@ -146,10 +146,9 @@ def regions_per_model_mats_all_categories(mode):
             per_table[tablename]['model'] = model
             temp = "^" + model + "_"
             region = re.sub(temp, "", tablename)
-            if "vapor" not in region:
-                region = re.sub("_sums", "", region)
-                per_table[tablename]['region'] = region
-                # print("model is " + model + ", region is " + region)
+            region = re.sub("_sums", "", region)
+            per_table[tablename]['region'] = region
+            # print("model is " + model + ", region is " + region)
 
     # sys.exit(-1)
 
