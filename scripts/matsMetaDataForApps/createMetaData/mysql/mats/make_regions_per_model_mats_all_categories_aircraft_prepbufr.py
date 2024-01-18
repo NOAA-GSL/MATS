@@ -146,9 +146,10 @@ def regions_per_model_mats_all_categories(mode):
             per_table[tablename]['model'] = model
             temp = "^" + model + "_"
             region = re.sub(temp, "", tablename)
-            region = re.sub("_sums", "", region)
-            per_table[tablename]['region'] = region
-            # print("model is " + model + ", region is " + region)
+            if "vapor" not in region:
+                region = re.sub("_sums", "", region)
+                per_table[tablename]['region'] = region
+                # print("model is " + model + ", region is " + region)
 
     # sys.exit(-1)
 
@@ -397,9 +398,9 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         if sys.argv[1] == 'deploy':
             utcnow = str(datetime.now())
-            msg = 'AIRCRAFT MATS METADATA START: ' + utcnow
+            msg = 'PB AIRCRAFT MATS METADATA START: ' + utcnow
             print(msg)
             regions_per_model_mats_all_categories('deploy')
             utcnow = str(datetime.now())
-            msg = 'AIRCRAFT MATS METADATA END: ' + utcnow
+            msg = 'PB AIRCRAFT MATS METADATA END: ' + utcnow
             print(msg)
