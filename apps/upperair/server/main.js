@@ -20,7 +20,12 @@ import {
 const dbNames = {
   "RAOBs (Traditional)": { modelDB: "ruc_ua", sumsDB: "ruc_ua_sums2" },
   "RAOBs (GDAS)": { modelDB: "ruc_ua_pb", sumsDB: "ruc_ua_pb_sums2" },
-  AMDAR: { modelDB: "acars_RR2", sumsDB: "acars_RR2" },
+  "AMDAR (Traditional)": { modelDB: "acars_RR2", sumsDB: "acars_RR2" },
+  "AMDAR (GDAS)": { modelDB: "pb_amdar", sumsDB: "pb_amdar" },
+  "AMDAR (GDAS; Only Obs That Include Vapor)": {
+    modelDB: "pb_amdar",
+    sumsDB: "pb_amdar",
+  },
 };
 const dbs = Object.keys(dbNames);
 

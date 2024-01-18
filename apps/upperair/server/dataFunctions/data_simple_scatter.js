@@ -143,7 +143,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     }
 
     let phaseClause = "";
-    if (database === "AMDAR") {
+    if (database.includes("AMDAR")) {
       const phaseStr = curve.phase;
       const phaseOptionsMap = matsCollections.phase.findOne(
         { name: "phase" },
@@ -174,6 +174,8 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       } else {
         queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.GFS_Areg${region} as m1`;
       }
+    } else if (database.includes("Vapor")) {
+      queryTableClause = queryTableClause.replace("_sums", "_vapor_sums");
     }
 
     const { statVarUnitMap } = matsCollections.variable.findOne(
@@ -218,7 +220,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
         statement = statement.replace("{{phaseClause}}", phaseClause);
         statement = statement.replace("{{dateClause}}", dateClause);
         statement = statement.split("{{dateString}}").join(dateString);
-        if (database === "AMDAR") {
+        if (database.includes("AMDAR")) {
           // AMDAR tables have all partial sums so we can get them all from the main table
           statement = statement.split("m1").join("m0");
         }
