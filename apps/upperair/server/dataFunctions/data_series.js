@@ -144,9 +144,11 @@ dataSeries = function (plotParams, plotFunction) {
         } else {
           queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.GFS_Areg${region} as m1`;
         }
+      } else if (database.includes("Vapor")) {
+        queryTableClause = queryTableClause.replace("_sums", "_vapor_sums");
       }
     } else {
-      if (database === "AMDAR") {
+      if (database.includes("AMDAR")) {
         throw new Error(
           "Single/multi-station plotting is not supported by the AMDAR databse."
         );
@@ -200,7 +202,7 @@ dataSeries = function (plotParams, plotFunction) {
       `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ${levelVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, ${levelVar}) as sub_data, count(${variable[0]}) as N0`;
 
     let phaseClause = "";
-    if (database === "AMDAR") {
+    if (database.includes("AMDAR")) {
       const phaseStr = curve.phase;
       const phaseOptionsMap = matsCollections.phase.findOne(
         { name: "phase" },
@@ -262,7 +264,7 @@ dataSeries = function (plotParams, plotFunction) {
         statement = statement.replace("{{phaseClause}}", phaseClause);
         statement = statement.replace("{{dateClause}}", dateClause);
         statement = statement.replace("{{siteDateClause}}", siteDateClause);
-        if (database === "AMDAR") {
+        if (database.includes("AMDAR")) {
           // AMDAR tables have all partial sums so we can get them all from the main table
           statement = statement.split("m1").join("m0");
         }

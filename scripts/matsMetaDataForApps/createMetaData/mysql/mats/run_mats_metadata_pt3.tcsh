@@ -25,6 +25,7 @@ conda activate avid_verify_py3
 /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_echotop.py deploy
 #/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_anomalycor.py deploy
 #/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_aircraft.py deploy
+#/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_aircraft_prepbufr.py deploy
 #/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_vgtyp.py deploy
 #/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_surfrad.py deploy
 #/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_raobamdar.py deploy
