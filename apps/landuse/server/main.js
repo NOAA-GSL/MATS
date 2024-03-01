@@ -371,10 +371,14 @@ const doCurveParams = function () {
 
       const vgtyps = rows[i].vgtyp;
       vgtypsModelOptionsMap[model] = vgtyps
+        .replace(/'|\[|\]/g, "")
         .split(",")
         .map(Function.prototype.call, String.prototype.trim)
+        .filter(function (vgtyp) {
+          return vgtyp !== "0";
+        })
         .map(function (vgtyp) {
-          return allVgtypValuesMap[vgtyp.replace(/'|\[|\]/g, "")];
+          return allVgtypValuesMap[vgtyp];
         });
     }
   } catch (err) {
@@ -549,7 +553,7 @@ const doCurveParams = function () {
     // 3: sum of model values
     // 4: sum of obs values
     // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
-    "2m temperature": [
+    "Temperature at 2m (°C)": [
       "m0.sum2_dt",
       "m0.N_dt",
       "m0.sum_dt",
@@ -557,7 +561,7 @@ const doCurveParams = function () {
       "m0.sum_ob_t",
       "(if(m0.sum_adt is not null,m0.sum_adt,0))",
     ],
-    "2m RH": [
+    "Relative Humidity at 2m (%)": [
       "m0.sum2_drh",
       "m0.N_drh",
       "m0.sum_drh",
@@ -565,7 +569,7 @@ const doCurveParams = function () {
       "m0.sum_ob_rh",
       "0",
     ],
-    "2m dewpoint": [
+    "Dewpoint at 2m (°C)": [
       "m0.sum2_dtd",
       "m0.N_dtd",
       "m0.sum_dtd",
@@ -573,7 +577,7 @@ const doCurveParams = function () {
       "m0.sum_ob_td",
       "(if(m0.sum_adtd is not null,m0.sum_adtd,0))",
     ],
-    "10m wind": [
+    "Wind Speed at 10m (m/s)": [
       "m0.sum2_dw",
       "m0.N_dw",
       "m0.sum_ob_ws-m0.sum_model_ws",
@@ -585,46 +589,46 @@ const doCurveParams = function () {
 
   const statVarUnitMap = {
     RMSE: {
-      "2m temperature": "°C",
-      "2m RH": "RH (%)",
-      "2m dewpoint": "°C",
-      "10m wind": "m/s",
+      "Temperature at 2m (°C)": "°C",
+      "Relative Humidity at 2m (%)": "RH (%)",
+      "Dewpoint at 2m (°C)": "°C",
+      "Wind Speed at 10m (m/s)": "m/s",
     },
     "Bias (Model - Obs)": {
-      "2m temperature": "°C",
-      "2m RH": "RH (%)",
-      "2m dewpoint": "°C",
-      "10m wind": "m/s",
+      "Temperature at 2m (°C)": "°C",
+      "Relative Humidity at 2m (%)": "RH (%)",
+      "Dewpoint at 2m (°C)": "°C",
+      "Wind Speed at 10m (m/s)": "m/s",
     },
     N: {
-      "2m temperature": "Number",
-      "2m RH": "Number",
-      "2m dewpoint": "Number",
-      "10m wind": "Number",
+      "Temperature at 2m (°C)": "Number",
+      "Relative Humidity at 2m (%)": "Number",
+      "Dewpoint at 2m (°C)": "Number",
+      "Wind Speed at 10m (m/s)": "Number",
     },
     "Model average": {
-      "2m temperature": "°C",
-      "2m RH": "RH (%)",
-      "2m dewpoint": "°C",
-      "10m wind": "m/s",
+      "Temperature at 2m (°C)": "°C",
+      "Relative Humidity at 2m (%)": "RH (%)",
+      "Dewpoint at 2m (°C)": "°C",
+      "Wind Speed at 10m (m/s)": "m/s",
     },
     "Obs average": {
-      "2m temperature": "°C",
-      "2m RH": "RH (%)",
-      "2m dewpoint": "°C",
-      "10m wind": "m/s",
+      "Temperature at 2m (°C)": "°C",
+      "Relative Humidity at 2m (%)": "RH (%)",
+      "Dewpoint at 2m (°C)": "°C",
+      "Wind Speed at 10m (m/s)": "m/s",
     },
     "Std deviation": {
-      "2m temperature": "°C",
-      "2m RH": "RH (%)",
-      "2m dewpoint": "°C",
-      "10m wind": "m/s",
+      "Temperature at 2m (°C)": "°C",
+      "Relative Humidity at 2m (%)": "RH (%)",
+      "Dewpoint at 2m (°C)": "°C",
+      "Wind Speed at 10m (m/s)": "m/s",
     },
     "MAE (temp and dewpoint only)": {
-      "2m temperature": "°C",
-      "2m RH": "RH (%)",
-      "2m dewpoint": "°C",
-      "10m wind": "m/s",
+      "Temperature at 2m (°C)": "°C",
+      "Relative Humidity at 2m (%)": "RH (%)",
+      "Dewpoint at 2m (°C)": "°C",
+      "Wind Speed at 10m (m/s)": "m/s",
     },
   };
 
