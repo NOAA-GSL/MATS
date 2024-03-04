@@ -25,6 +25,13 @@ spec:
                 name: cb-metar
                 port:
                   number: 80
+          - path: /mats-dev/cb-metar-capella
+            pathType: Prefix
+            backend:
+              service:
+                name: cb-metar-capella
+                port:
+                  number: 80
           - path: /mats-dev/ceil-vis
             pathType: Prefix
             backend:

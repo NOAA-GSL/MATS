@@ -1,0 +1,19 @@
+resources:
+  - ../../../base/cb-metar-capella
+
+patchesStrategicMerge:
+  - deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/cb-metar
+    newTag: development 
+
+configMapGenerator:
+  - name: cb-metar-capella-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: cb-metar-capella-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay

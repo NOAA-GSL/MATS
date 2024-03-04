@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cb-metar-capella
+  labels:
+    app.kubernetes.io/name: cb-metar-capella
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: cb-metar-capella
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cb-metar-capella
+  template:
+    metadata:
+      labels:
+        app: cb-metar-capella
+    spec:
+      containers:
+        - name: cb-metar-capella
+          image: ghcr.io/noaa-gsl/mats/development/cb-metar:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+

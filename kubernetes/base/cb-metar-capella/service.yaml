@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cb-metar-capella
+  labels:
+    app: cb-metar-capella
+spec:
+  selector:
+    app: cb-metar-capella
+  ports:
+  - port: 80
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  type: ClusterIP
