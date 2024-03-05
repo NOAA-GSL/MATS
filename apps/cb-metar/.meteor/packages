@@ -19,13 +19,13 @@ pcel:mysql
 seba:minifiers-autoprefixer
 session@1.2.1
 momentjs:moment
-randyp:mats-common@5.2.1
+randyp:mats-common@5.2.3
 accounts-google@1.4.0
-accounts-base@2.2.9
+accounts-base@2.2.10
 accounts-ui@1.4.2
 google-config-ui@1.0.3
 dynamic-import@0.7.3
-underscore@1.0.13
+underscore@1.6.0
 kadira:blaze-layout
 ostrio:flow-router-extra
 meteorhacks:picker
