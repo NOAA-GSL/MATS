@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cb-metar-capella
+spec:
+  template:
+    spec:
+      containers:
+        - name: cb-metar-capella
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: cb-metar-capella-secret
+          volumeMounts:
+            - name: cb-metar-capella-settings-file
+              mountPath: /usr/app/settings/cb-metar/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: cb-metar-capella-settings-file
+          configMap:
+            name: cb-metar-capella-config

@@ -1,5 +1,6 @@
 resources:
   - cb-metar
+  - cb-metar-capella
   - ceil-vis
   - ceil-vis15
   - ensemble
