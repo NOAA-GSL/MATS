@@ -18,14 +18,14 @@ spec:
                 name: scorecard
                 port:
                   name: http
-          - path: /mats-dev/cb-metar
+          - path: /mats-dev/on-prem/cb-metar
             pathType: Prefix
             backend:
               service:
                 name: cb-metar
                 port:
                   number: 80
-          - path: /mats-dev/cb-metar-capella
+          - path: /mats-dev/capella/cb-metar
             pathType: Prefix
             backend:
               service:
