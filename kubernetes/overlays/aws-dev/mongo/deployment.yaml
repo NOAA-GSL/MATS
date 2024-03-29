@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  template:
+    spec:
+      containers:
+        - name: mongodb
+          # FIXME: disable resource limits while we do performance tuning
+          # resources:
+          #   requests:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          #   limits:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          envFrom:
+            - secretRef:
+                name: mongo-secret
+          volumeMounts:
+            - name: mongo-config-file
+              mountPath: /etc/mongod.conf
+              readOnly: true
+            # FIXME: Switch to an in-memory store until we have a CSI driver
+            - name: mongo-ephemeral-storage
+              mountPath: /data/db
+            - $patch: delete
+              name: mongo-persistent-storage
+      volumes:
+        - name: mongo-config-file
+          configMap:
+            name: mongo-config
+        # FIXME: Switch to an in-memory store until we have a CSI driver
+        - $patch: delete
+          name: mongo-persistent-storage
+        - name: mongo-ephemeral-storage
+          emptyDir:
+            sizeLimit: "2Gi"
