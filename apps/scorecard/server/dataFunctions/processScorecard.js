@@ -28,19 +28,16 @@ const dealWithUATables = function (
       // get obs partial sums from the GFS
       secondaryModelOption = `, ${databaseValue}.GFS_Areg${regionValue} as m1`;
     }
-    // RAOB tables don't have phases, but we use the clause to facilitate the table join
+    // facilitate the table join
     updatedQueryTemplate = updatedQueryTemplate.replace(
-      /\{\{phaseClause\}\}/g,
+      /\{\{joinClause\}\}/g,
       "AND m0.date = m1.date AND m0.hour = m1.hour AND m0.mb10 = m1.mb10"
     );
   } else {
     // AMDAR tables have all partial sums so we can get them all from the main table
     updatedQueryTemplate = updatedQueryTemplate.replace(/m1/g, "m0");
-    // AMDAR tables have phases
-    updatedQueryTemplate = updatedQueryTemplate.replace(
-      /\{\{phaseClause\}\}/g,
-      "AND m0.up_dn = 2"
-    );
+    // no need to join
+    updatedQueryTemplate = updatedQueryTemplate.replace(/\{\{joinClause\}\}/g, "");
   }
   // either add the m1 clause to the template or remove the secondary model option entirely
   updatedQueryTemplate = updatedQueryTemplate.replace(
@@ -178,28 +175,6 @@ processScorecard = function (plotParams, plotFunction) {
   } else {
     dateRange = plotParams.dates;
   }
-
-  // get the union of the fcst-length arrays of all the curves
-  const fcstLengthsSet = new Set();
-  plotParams.curves.forEach(function (curve) {
-    if (!curve["forecast-length"]) {
-      fcstLengthsSet.add("0");
-    } else {
-      curve["forecast-length"].forEach(function (fcl) {
-        fcstLengthsSet.add(fcl);
-      });
-    }
-  });
-  const fcstLengths = Array.from(fcstLengthsSet);
-
-  // get the union of all the regions of all the curves
-  const regionsSet = new Set();
-  plotParams.curves.forEach(function (curve) {
-    curve.region.forEach(function (r) {
-      regionsSet.add(r);
-    });
-  });
-  const regions = Array.from(regionsSet);
 
   // create an id for the document
   let idDateRange = dateRange.replace(/ /g, "_");
@@ -386,6 +361,9 @@ processScorecard = function (plotParams, plotFunction) {
 
     // create the empty object for this block
     const { label } = curve;
+    const fcstLengths =
+      curve["forecast-length"] === undefined ? [] : curve["forecast-length"];
+    const regions = curve.region === undefined ? [] : curve.region;
 
     // duplicate the curve so we're not modifying a function parameter, which the linter doesn't like
     const scorecardCurve = curve;
