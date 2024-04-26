@@ -72,7 +72,7 @@ dataMap = function (plotParams, plotFunction) {
   const statisticSelect = curve.statistic;
   const statisticClause =
     `sum(${variable[0]}) as square_diff_sum, count(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
-    `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ceil((m0.press-20)/50)*50, ';', ${variable[0]}, ';', 1, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, ceil((m0.press-20)/50)*50) as sub_data, count(${variable[0]}) as N0`;
+    `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ceil((m0.press-25)/50)*50, ';', ${variable[0]}, ';', 1, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, ceil((m0.press-25)/50)*50) as sub_data, count(${variable[0]}) as N0`;
 
   const { top } = curve;
   const { bottom } = curve;
@@ -87,8 +87,8 @@ dataMap = function (plotParams, plotFunction) {
 
   const dateClause = `and unix_timestamp(m0.date)+3600*m0.hour >= ${fromSecs} - 1800 and unix_timestamp(m0.date)+3600*m0.hour <= ${toSecs} + 1800`;
   const siteDateClause = `and unix_timestamp(o.date)+3600*o.hour >= ${fromSecs} - 1800 and unix_timestamp(o.date)+3600*o.hour <= ${toSecs} + 1800`;
-  const levelClause = `and ceil((m0.press-20)/50)*50 >= ${top} and ceil((m0.press-20)/50)*50 <= ${bottom}`;
-  const siteLevelClause = `and ceil((o.press-20)/50)*50 >= ${top} and ceil((o.press-20)/50)*50 <= ${bottom}`;
+  const levelClause = `and ceil((m0.press-25)/50)*50 >= ${top} and ceil((m0.press-25)/50)*50 <= ${bottom}`;
+  const siteLevelClause = `and ceil((o.press-25)/50)*50 >= ${top} and ceil((o.press-25)/50)*50 <= ${bottom}`;
   const siteMatchClause =
     "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
 

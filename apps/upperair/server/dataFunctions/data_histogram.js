@@ -148,13 +148,13 @@ dataHistogram = function (plotParams, plotFunction) {
         );
       }
       siteDateClause = `and unix_timestamp(o.date)+3600*o.hour >= ${fromSecs} - 1800 and unix_timestamp(o.date)+3600*o.hour <= ${toSecs} + 1800`;
-      levelClause = `and ceil((m0.press-20)/50)*50 >= ${top} and ceil((m0.press-20)/50)*50 <= ${bottom}`;
-      siteLevelClause = `and ceil((o.press-20)/50)*50 >= ${top} and ceil((o.press-20)/50)*50 <= ${bottom}`;
+      levelClause = `and ceil((m0.press-25)/50)*50 >= ${top} and ceil((m0.press-25)/50)*50 <= ${bottom}`;
+      siteLevelClause = `and ceil((o.press-25)/50)*50 >= ${top} and ceil((o.press-25)/50)*50 <= ${bottom}`;
       siteMatchClause =
         "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
       NAggregate = "count";
       NClause = "1";
-      levelVar = "ceil((m0.press-20)/50)*50";
+      levelVar = "ceil((m0.press-25)/50)*50";
 
       // remove table prefixes
       const modelComponents = model.split("_");
