@@ -9,7 +9,7 @@ updates:
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     pull-request-branch-name:
       separator: "-" # Use "-" instead of "/" in branch names to avoid issues with docker registries
     target-branch: "development" # raise PRs for version updates to GHA against the `development` branch
@@ -20,7 +20,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/home"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     pull-request-branch-name:
       separator: "-" # Use "-" instead of "/" in branch names to avoid issues with docker registries
     target-branch: "development"
