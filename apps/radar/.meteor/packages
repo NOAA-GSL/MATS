@@ -6,7 +6,7 @@
 
 meteor-base@1.5.1             # Packages every Meteor app needs to have
 mobile-experience@1.1.1       # Packages for a great mobile UX
-mongo@1.16.8                   # The database Meteor supports right now
+mongo@1.16.10                   # The database Meteor supports right now
 blaze-html-templates    # Compile .html files into Meteor Blaze views
 reactive-var@1.0.12            # Reactive variable for tracker
 jquery@1.11.10                  # Helpful client-side library
@@ -19,13 +19,13 @@ pcel:mysql
 seba:minifiers-autoprefixer
 session@1.2.1
 momentjs:moment
-randyp:mats-common@5.2.3
+randyp:mats-common@5.3.1
 accounts-google@1.4.0
-accounts-base@2.2.10
+accounts-base@2.2.11
 accounts-ui@1.4.2
 google-config-ui@1.0.3
 dynamic-import@0.7.3
-underscore@1.6.0
+underscore@1.6.1
 kadira:blaze-layout
 ostrio:flow-router-extra
 meteorhacks:picker
