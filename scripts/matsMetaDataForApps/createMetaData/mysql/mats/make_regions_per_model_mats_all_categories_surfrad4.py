@@ -164,7 +164,7 @@ def regions_per_model_mats_all_categories(mode):
             qd.append(str(stats['numrecs']))
             cursor.execute(replace_tablestats_rec, qd)
             cnx.commit()
-        sys.exit(-1)
+        #sys.exit(-1)
     else:
         print("TScleaned is " + str(TScleaned) +
               " skipped populating TABLESTATS_build")
@@ -185,6 +185,8 @@ def regions_per_model_mats_all_categories(mode):
         print("Error: " + str(e))
         sys.exit(1)
 
+    db = "surfrad4"
+    usedb = "use " + db
     cursor.execute(usedb)
 
     # use standardized model names
@@ -275,16 +277,13 @@ def regions_per_model_mats_all_categories(mode):
             do_non_main = do_non_main + 1
 
         # get regions for all tables pertaining to this model
-        get_these_regions = "select distinct(region) as region from " + db + ".TABLESTATS_build where tablename like '" + \
-            model + "%' and region != '[]' and model = '" + model + \
-            "' and numrecs > 0 order by length(region) desc;"
+        get_these_regions = "select distinct(region) as region from " + db + \
+            ".TABLESTATS_build where tablename like '" + model + \
+            "%' and model = '" + model + "' and numrecs > 0;"
         cursor.execute(get_these_regions)
         these_regions = []
         for row in cursor:
-            val_array = ast.literal_eval(list(row.values())[0])
-            for val in val_array:
-                if val not in these_regions:
-                    these_regions.append(val)
+            val = str(list(row.values())[0])
         these_regions.sort(key=int)
         # print( "these_regions:\n" + str(these_regions) )
 
