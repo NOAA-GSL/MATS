@@ -10,7 +10,6 @@ import re
 import sys
 import ast
 import MySQLdb
-import time
 
 
 ############################################################################
@@ -164,7 +163,7 @@ def regions_per_model_mats_all_categories(mode):
             qd.append(str(stats['numrecs']))
             cursor.execute(replace_tablestats_rec, qd)
             cnx.commit()
-        #sys.exit(-1)
+        # sys.exit(-1)
     else:
         print("TScleaned is " + str(TScleaned) +
               " skipped populating TABLESTATS_build")
@@ -284,6 +283,7 @@ def regions_per_model_mats_all_categories(mode):
         these_regions = []
         for row in cursor:
             val = str(list(row.values())[0])
+            these_regions.append(val)
         these_regions.sort(key=int)
         # print( "these_regions:\n" + str(these_regions) )
 
