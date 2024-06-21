@@ -457,7 +457,7 @@ const doCurveParams = function () {
           .split(",")
           .map(Function.prototype.call, String.prototype.trim)
           .map(function (fhr) {
-            return Number(fhr.replace(/'|\[|\]/g, "")) / 60;
+            return (Number(fhr.replace(/'|\[|\]/g, "")) / 60).toString();
           });
 
         const thresholds = rows[i].trsh;
