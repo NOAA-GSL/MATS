@@ -378,7 +378,7 @@ const doCurveParams = function () {
         .split(",")
         .map(Function.prototype.call, String.prototype.trim)
         .map(function (fhr) {
-          return Number(fhr.replace(/'|\[|\]/g, "")) / 60;
+          return (Number(fhr.replace(/'|\[|\]/g, "")) / 60).toString();
         });
 
       const scales = rows[i].scle;
@@ -680,7 +680,7 @@ const doCurveParams = function () {
       superiorNames: ["data-source"],
       controlButtonCovered: true,
       unique: false,
-      default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][1],
+      default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
