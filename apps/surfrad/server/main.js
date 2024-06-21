@@ -749,6 +749,41 @@ const doCurveParams = function () {
     }
   }
 
+  if (matsCollections["dieoff-type"].findOne({ name: "dieoff-type" }) === undefined) {
+    const dieoffOptionsMap = {
+      Dieoff: [matsTypes.ForecastTypes.dieoff],
+      "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
+      "Single cycle forecast (uses first date in range)": [
+        matsTypes.ForecastTypes.singleCycle,
+      ],
+    };
+    matsCollections["dieoff-type"].insert({
+      name: "dieoff-type",
+      type: matsTypes.InputTypes.select,
+      optionsMap: dieoffOptionsMap,
+      options: Object.keys(dieoffOptionsMap),
+      hideOtherFor: {
+        "valid-time": [
+          "Dieoff for a specified UTC cycle init hour",
+          "Single cycle forecast (uses first date in range)",
+        ],
+        "utc-cycle-start": [
+          "Dieoff",
+          "Single cycle forecast (uses first date in range)",
+        ],
+      },
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(dieoffOptionsMap)[0],
+      controlButtonVisibility: "block",
+      controlButtonText: "dieoff type",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 4,
+    });
+  }
+
   if (matsCollections["valid-time"].findOne({ name: "dieoff-type" }) === undefined) {
     const optionsArrRaw = [...Array(96).keys()].map((x) => x / 4);
     const optionsArr = optionsArrRaw.map(String);
@@ -1016,6 +1051,34 @@ const doCurveTextPatterns = function () {
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
+      plotType: matsTypes.PlotTypes.dieoff,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "scale", ", "],
+        ["", "variable", " "],
+        ["", "statistic", ", "],
+        ["", "dieoff-type", ", "],
+        ["valid-time: ", "valid-time", ", "],
+        ["start utc: ", "utc-cycle-start", ", "],
+        ["", "curve-dates", ""],
+      ],
+      displayParams: [
+        "label",
+        "data-source",
+        "region",
+        "statistic",
+        "variable",
+        "dieoff-type",
+        "scale",
+        "valid-time",
+        "utc-cycle-start",
+        "curve-dates",
+      ],
+      groupSize: 6,
+    });
+    matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.validtime,
       textPattern: [
         ["", "label", ": "],
@@ -1197,6 +1260,12 @@ const doPlotGraph = function () {
       checked: true,
     });
     matsCollections.PlotGraphFunctions.insert({
+      plotType: matsTypes.PlotTypes.dieoff,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataDieoff",
+      checked: false,
+    });
+    matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.validtime,
       graphFunction: "graphPlotly",
       dataFunction: "dataValidTime",
@@ -1316,7 +1385,7 @@ Meteor.startup(function () {
   }
 
   // create list of tables we need to monitor for update
-  const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3", [
+  const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad4", [
     "scale_descriptions",
     "station_descriptions",
     "regions_per_model_mats_all_categories",

@@ -14,10 +14,10 @@ import {
 import { moment } from "meteor/momentjs:moment";
 
 // eslint-disable-next-line no-undef
-dataDailyModelCycle = function (plotParams, plotFunction) {
+dataDieoff = function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
-    plotType: matsTypes.PlotTypes.dailyModelCycle,
+    plotType: matsTypes.PlotTypes.dieoff,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
     completeness: plotParams.completeness,
     outliers: plotParams.outliers,
@@ -48,10 +48,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
   let error = "";
   const dataset = [];
 
-  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  const fromSecs = dateRange.fromSeconds;
-  const toSecs = dateRange.toSeconds;
-
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
@@ -75,11 +71,18 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     );
     const scaleClause = `and m0.scale = ${scale}`;
 
-    const utcCycleStart = Number(curve["utc-cycle-start"][0]);
-    utcCycleStarts[curveIndex] = utcCycleStart;
-    const utcCycleStartClause = `and floor(((m0.secs - m0.fcst_len*60))%(24*3600)/900)/4 IN(${utcCycleStart})`;
+    let validTimeClause = "";
+    let validTimes;
 
-    const forecastLengthClause = "and m0.fcst_len < 24 * 60";
+    let utcCycleStartClause = "";
+    let utcCycleStart;
+
+    const forecastLengthStr = curve["dieoff-type"];
+    const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne(
+      { name: "dieoff-type" },
+      { optionsMap: 1 }
+    ).optionsMap;
+    const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
 
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = matsCollections.statistic.findOne(
@@ -87,7 +90,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
 
-    const dateClause = `and m0.secs >= ${fromSecs} and m0.secs <= ${toSecs}`;
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+    let dateClause;
 
     const regionStr = curve.region;
     const region = Object.keys(
@@ -127,6 +133,23 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
       `group_concat(m0.secs, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.secs) as sub_data, count(${variable[0]}) as N0`;
 
+    if (forecastLength === matsTypes.ForecastTypes.dieoff) {
+      validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+      if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+        validTimeClause = `and floor(m0.secs%(24*3600)/3600) IN(${validTimes})`;
+      }
+      dateClause = `and m0.secs >= ${fromSecs} and m0.secs <= ${toSecs}`;
+    } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+      utcCycleStart =
+        curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
+      if (utcCycleStart.length !== 0 && utcCycleStart !== matsTypes.InputTypes.unused) {
+        utcCycleStartClause = `and floor((m0.secs - m0.fcst_len*3600)%(24*3600)/3600) IN(${utcCycleStart})`;
+      }
+      dateClause = `and m0.secs-m0.fcst_len*3600 >= ${fromSecs} and m0.secs-m0.fcst_len*3600 <= ${toSecs}`;
+    } else {
+      dateClause = `and m0.secs-m0.fcst_len*3600 = ${fromSecs}`;
+    }
+
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
@@ -147,7 +170,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       let finishMoment;
       try {
         statement =
-          "select m0.secs as avtime, " +
+          "select m0.fcst_len/60 as fcst_lead, " +
           "count(distinct m0.secs) as N_times, " +
           "min(m0.secs) as min_secs, " +
           "max(m0.secs) as max_secs, " +
@@ -155,17 +178,17 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
           "{{queryTableClause}} " +
           "where 1=1 " +
           "{{dateClause}} " +
+          "{{validTimeClause}} " +
           "{{utcCycleStartClause}} " +
-          "{{forecastLengthClause}} " +
           "{{scaleClause}} " +
-          "group by avtime " +
-          "order by avtime" +
+          "group by fcst_lead " +
+          "order by fcst_lead" +
           ";";
 
         statement = statement.replace("{{statisticClause}}", statisticClause);
         statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{validTimeClause}}", validTimeClause);
         statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
-        statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{scaleClause}}", scaleClause);
         statement = statement.replace("{{dateClause}}", dateClause);
         dataRequests[label] = statement;
