@@ -61,7 +61,6 @@ dataHistogram = function (plotParams, plotFunction) {
       { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
-    const variable = variableOptionsMap[variableStr];
 
     const scaleStr = curve.scale;
     const scale = Object.keys(
@@ -86,15 +85,11 @@ dataHistogram = function (plotParams, plotFunction) {
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
-    const statisticClause =
-      `sum(${variable[0]}) as square_diff_sum, count(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
-      `group_concat(m0.secs, ';', ${variable[0]}, ';', 1, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.secs) as sub_data, count(${variable[0]}) as N0`;
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    const dateClause = `and o.secs >= ${fromSecs} and o.secs <= ${toSecs} and m0.secs >= ${fromSecs} and m0.secs <= ${toSecs}`;
-    const matchClause = "and m0.id = o.id and m0.secs = o.secs";
+    const dateClause = `and m0.secs >= ${fromSecs} and m0.secs <= ${toSecs}`;
 
     const regionStr = curve.region;
     const region = Object.keys(
@@ -103,18 +98,36 @@ dataHistogram = function (plotParams, plotFunction) {
       (key) =>
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    let regionClause;
+
+    let queryTableClause;
+    let NAggregate;
+    let NClause;
+    let variable;
     if (region === "all_stat") {
-      regionClause = "";
+      variable = variableOptionsMap[variableStr]["Predefined region"];
+      queryTableClause = `from ${model}_all_site_sums as m0`;
+      NAggregate = "sum";
+      [, NClause] = variable;
     } else if (region === "all_surf") {
-      regionClause = "and m0.id in(1,2,3,4,5,6,7) ";
+      variable = variableOptionsMap[variableStr]["Predefined region"];
+      queryTableClause = `from ${model}_all_surfrad_sums as m0`;
+      NAggregate = "sum";
+      [, NClause] = variable;
     } else if (region === "all_sol") {
-      regionClause = "and m0.id in(8,9,10,11,12,13,14) ";
+      variable = variableOptionsMap[variableStr]["Predefined region"];
+      queryTableClause = `from ${model}_all_solrad_sums as m0`;
+      NAggregate = "sum";
+      [, NClause] = variable;
     } else {
-      regionClause = `and m0.id in(${region}) `;
+      variable = variableOptionsMap[variableStr]["Select stations"];
+      queryTableClause = `from ${model}_site_${region} as m0`;
+      NAggregate = "count";
+      NClause = "1";
     }
 
-    const queryTableClause = `from surfrad as o, ${model} as m0`;
+    const statisticClause =
+      `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
+      `group_concat(m0.secs, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.secs) as sub_data, count(${variable[0]}) as N0`;
 
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -147,12 +160,10 @@ dataHistogram = function (plotParams, plotFunction) {
           "{{statisticClause}} " +
           "{{queryTableClause}} " +
           "where 1=1 " +
-          "{{matchClause}} " +
           "{{dateClause}} " +
           "{{validTimeClause}} " +
           "{{forecastLengthClause}} " +
           "{{scaleClause}} " +
-          "{{regionClause}} " +
           "group by avtime " +
           "order by avtime" +
           ";";
@@ -162,20 +173,8 @@ dataHistogram = function (plotParams, plotFunction) {
         statement = statement.replace("{{validTimeClause}}", validTimeClause);
         statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{scaleClause}}", scaleClause);
-        statement = statement.replace("{{regionClause}}", regionClause);
-        statement = statement.replace("{{matchClause}}", matchClause);
         statement = statement.replace("{{dateClause}}", dateClause);
         dataRequests[label] = statement;
-
-        if (
-          model !== "HRRR" &&
-          variableStr !== "dswrf" &&
-          statisticSelect !== "Obs average"
-        ) {
-          throw new Error(
-            `INFO:  The statistic/variable combination [${statisticSelect} and ${variableStr}] is only available for the HRRR data-source.`
-          );
-        }
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(

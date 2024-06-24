@@ -378,7 +378,7 @@ const doCurveParams = function () {
         .split(",")
         .map(Function.prototype.call, String.prototype.trim)
         .map(function (fhr) {
-          return Number(fhr.replace(/'|\[|\]/g, "")) / 60;
+          return (Number(fhr.replace(/'|\[|\]/g, "")) / 60).toString();
         });
 
       const scales = rows[i].scle;
@@ -576,97 +576,47 @@ const doCurveParams = function () {
     // 3: sum of model values
     // 4: sum of obs values
     // 5: sum of absolute obs-model difference  (|bias_0| + |bias_1| + |bias_2| + ... + |bias_n|)
-    dswrf: [
-      "pow(o.direct + o.diffuse - m0.dswrf,2)",
-      "(o.direct + o.diffuse - m0.dswrf)",
-      "(o.direct + o.diffuse - m0.dswrf)",
-      "(if(o.direct + o.diffuse is not null,m0.dswrf,null))",
-      "(if(m0.dswrf is not null,o.direct + o.diffuse,null))",
-      "(abs(o.direct + o.diffuse - m0.dswrf))",
-    ],
-    "direct (experimental HRRR only)": [
-      "pow(o.direct - m0.direct,2)",
-      "(o.direct - m0.direct)",
-      "(o.direct - m0.direct)",
-      "(if(o.direct is not null,m0.direct,null))",
-      "(if(m0.direct is not null,o.direct,null))",
-      "(abs(o.direct - m0.direct))",
-    ],
-    "diffuse (experimental HRRR only)": [
-      "pow(o.diffuse - m0.diffuse,2)",
-      "(o.diffuse - m0.diffuse)",
-      "(o.diffuse - m0.diffuse)",
-      "(if(o.diffuse is not null,m0.diffuse,null))",
-      "(if(m0.diffuse is not null,o.diffuse,null))",
-      "(abs(o.diffuse - m0.diffuse))",
-    ],
-    "15 min avg dswrf (experimental HRRR only)": [
-      "pow(o.direct + o.diffuse - m0.dswrf15,2)",
-      "(o.direct + o.diffuse - m0.dswrf15)",
-      "(o.direct + o.diffuse - m0.dswrf15)",
-      "(if(o.direct + o.diffuse is not null,m0.dswrf15,null))",
-      "(if(m0.dswrf15 is not null,o.direct + o.diffuse,null))",
-      "(abs(o.direct + o.diffuse - m0.dswrf15))",
-    ],
-    "15 min avg direct (experimental HRRR only)": [
-      "pow(o.direct - m0.direct15,2)",
-      "(o.direct - m0.direct15)",
-      "(o.direct - m0.direct15)",
-      "(if(o.direct is not null,m0.direct15,null))",
-      "(if(m0.direct15 is not null,o.direct,null))",
-      "(abs(o.direct - m0.direct15))",
-    ],
+    "Downward Shortwave Radiation Flux (W/m2)": {
+      "Predefined region": [
+        "m0.sum2_d_dswrf",
+        "m0.N_d_dswrf",
+        "m0.sum_d_dswrf",
+        "-1 * (m0.sum_d_dswrf-m0.sum_ob_dswrf)",
+        "m0.sum_ob_dswrf",
+        "m0.sum_ad_dswrf",
+      ],
+      "Select stations": [
+        "pow(m0.obs_direct + m0.obs_diffuse - m0.model_dswrf,2)",
+        "(m0.obs_direct + m0.obs_diffuse - m0.model_dswrf)",
+        "(m0.obs_direct + m0.obs_diffuse - m0.model_dswrf)",
+        "(if(m0.obs_direct + m0.obs_diffuse is not null,m0.model_dswrf,null))",
+        "(if(m0.model_dswrf is not null,m0.obs_direct + m0.obs_diffuse,null))",
+        "(abs(m0.obs_direct + m0.obs_diffuse - m0.model_dswrf))",
+      ],
+    },
   };
 
   const statVarUnitMap = {
     RMSE: {
-      dswrf: "W/m2",
-      "direct (experimental HRRR only)": "W/m2",
-      "diffuse (experimental HRRR only)": "W/m2",
-      "15 min avg dswrf (experimental HRRR only)": "W/m2",
-      "15 min avg direct (experimental HRRR only)": "W/m2",
+      "Downward Shortwave Radiation Flux (W/m2)": "W/m2",
     },
     "Bias (Model - Obs)": {
-      dswrf: "W/m2",
-      "direct (experimental HRRR only)": "W/m2",
-      "diffuse (experimental HRRR only)": "W/m2",
-      "15 min avg dswrf (experimental HRRR only)": "W/m2",
-      "15 min avg direct (experimental HRRR only)": "W/m2",
+      "Downward Shortwave Radiation Flux (W/m2)": "W/m2",
     },
     N: {
-      dswrf: "Number",
-      "direct (experimental HRRR only)": "Number",
-      "diffuse (experimental HRRR only)": "Number",
-      "15 min avg dswrf (experimental HRRR only)": "Number",
-      "15 min avg direct (experimental HRRR only)": "Number",
+      "Downward Shortwave Radiation Flux (W/m2)": "Number",
     },
     "Model average": {
-      dswrf: "W/m2",
-      "direct (experimental HRRR only)": "W/m2",
-      "diffuse (experimental HRRR only)": "W/m2",
-      "15 min avg dswrf (experimental HRRR only)": "W/m2",
-      "15 min avg direct (experimental HRRR only)": "W/m2",
+      "Downward Shortwave Radiation Flux (W/m2)": "W/m2",
     },
     "Obs average": {
-      dswrf: "W/m2",
-      "direct (experimental HRRR only)": "W/m2",
-      "diffuse (experimental HRRR only)": "W/m2",
-      "15 min avg dswrf (experimental HRRR only)": "W/m2",
-      "15 min avg direct (experimental HRRR only)": "W/m2",
+      "Downward Shortwave Radiation Flux (W/m2)": "W/m2",
     },
     "Std deviation": {
-      dswrf: "W/m2",
-      "direct (experimental HRRR only)": "W/m2",
-      "diffuse (experimental HRRR only)": "W/m2",
-      "15 min avg dswrf (experimental HRRR only)": "W/m2",
-      "15 min avg direct (experimental HRRR only)": "W/m2",
+      "Downward Shortwave Radiation Flux (W/m2)": "W/m2",
     },
     MAE: {
-      dswrf: "W/m2",
-      "direct (experimental HRRR only)": "W/m2",
-      "diffuse (experimental HRRR only)": "W/m2",
-      "15 min avg dswrf (experimental HRRR only)": "W/m2",
-      "15 min avg direct (experimental HRRR only)": "W/m2",
+      "Downward Shortwave Radiation Flux (W/m2)": "W/m2",
     },
   };
 
@@ -730,7 +680,7 @@ const doCurveParams = function () {
       superiorNames: ["data-source"],
       controlButtonCovered: true,
       unique: false,
-      default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][1],
+      default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
@@ -797,6 +747,41 @@ const doCurveParams = function () {
         }
       );
     }
+  }
+
+  if (matsCollections["dieoff-type"].findOne({ name: "dieoff-type" }) === undefined) {
+    const dieoffOptionsMap = {
+      Dieoff: [matsTypes.ForecastTypes.dieoff],
+      "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
+      "Single cycle forecast (uses first date in range)": [
+        matsTypes.ForecastTypes.singleCycle,
+      ],
+    };
+    matsCollections["dieoff-type"].insert({
+      name: "dieoff-type",
+      type: matsTypes.InputTypes.select,
+      optionsMap: dieoffOptionsMap,
+      options: Object.keys(dieoffOptionsMap),
+      hideOtherFor: {
+        "valid-time": [
+          "Dieoff for a specified UTC cycle init hour",
+          "Single cycle forecast (uses first date in range)",
+        ],
+        "utc-cycle-start": [
+          "Dieoff",
+          "Single cycle forecast (uses first date in range)",
+        ],
+      },
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(dieoffOptionsMap)[0],
+      controlButtonVisibility: "block",
+      controlButtonText: "dieoff type",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 4,
+    });
   }
 
   if (matsCollections["valid-time"].findOne({ name: "dieoff-type" }) === undefined) {
@@ -1066,6 +1051,34 @@ const doCurveTextPatterns = function () {
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
+      plotType: matsTypes.PlotTypes.dieoff,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "scale", ", "],
+        ["", "variable", " "],
+        ["", "statistic", ", "],
+        ["", "dieoff-type", ", "],
+        ["valid-time: ", "valid-time", ", "],
+        ["start utc: ", "utc-cycle-start", ", "],
+        ["", "curve-dates", ""],
+      ],
+      displayParams: [
+        "label",
+        "data-source",
+        "region",
+        "statistic",
+        "variable",
+        "dieoff-type",
+        "scale",
+        "valid-time",
+        "utc-cycle-start",
+        "curve-dates",
+      ],
+      groupSize: 6,
+    });
+    matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.validtime,
       textPattern: [
         ["", "label", ": "],
@@ -1247,6 +1260,12 @@ const doPlotGraph = function () {
       checked: true,
     });
     matsCollections.PlotGraphFunctions.insert({
+      plotType: matsTypes.PlotTypes.dieoff,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataDieoff",
+      checked: false,
+    });
+    matsCollections.PlotGraphFunctions.insert({
       plotType: matsTypes.PlotTypes.validtime,
       graphFunction: "graphPlotly",
       dataFunction: "dataValidTime",
@@ -1366,7 +1385,7 @@ Meteor.startup(function () {
   }
 
   // create list of tables we need to monitor for update
-  const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3", [
+  const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad4", [
     "scale_descriptions",
     "station_descriptions",
     "regions_per_model_mats_all_categories",
