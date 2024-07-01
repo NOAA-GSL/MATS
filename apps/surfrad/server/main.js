@@ -1385,7 +1385,7 @@ Meteor.startup(function () {
   }
 
   // create list of tables we need to monitor for update
-  const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad4", [
+  const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3_sums", [
     "scale_descriptions",
     "station_descriptions",
     "regions_per_model_mats_all_categories",

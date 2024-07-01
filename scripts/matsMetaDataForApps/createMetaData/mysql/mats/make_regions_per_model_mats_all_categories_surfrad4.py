@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Creates a regions_per_model_mats_all_categories table for all models in surfrad4
+# Creates a regions_per_model_mats_all_categories table for all models in surfrad3_sums
 
 # __future__ must come first
 from __future__ import print_function
@@ -77,7 +77,7 @@ def regions_per_model_mats_all_categories(mode):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "surfrad4"
+    db = "surfrad3_sums"
     usedb = "use " + db
     cursor.execute(usedb)
 
@@ -184,7 +184,7 @@ def regions_per_model_mats_all_categories(mode):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "surfrad4"
+    db = "surfrad3_sums"
     usedb = "use " + db
     cursor.execute(usedb)
 

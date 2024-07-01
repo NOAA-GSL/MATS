@@ -6,7 +6,7 @@
 # I'm trying to cut down on the number of confused emails we get. Our main scripts are all environment-agnostic,
 # becuause they are run by verification team members who know which conda environment to use.
 #
-# Updates the regions_per_model_mats_all_categories table for all models in surfrad4
+# Updates the regions_per_model_mats_all_categories table for all models in surfrad3_sums
 
 # __future__ must come first
 from __future__ import print_function
@@ -150,7 +150,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "surfrad4"
+    db = "surfrad3_sums"
     usedb = "use " + db
     cursor.execute(usedb)
     cursor2.execute(usedb)
