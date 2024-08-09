@@ -52,7 +52,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, sources, metar_stri
         updated_utc = datetime.utcnow().strftime('%s')
         # if it's a new record for the build table, add it
         if build_record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, sources, metar_string, model_type, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, sources, metar_string, model_type, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(sources))
@@ -91,7 +91,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, sources, metar_stri
         qd = []
         # if it's a new record for the prod table, add it
         if prod_record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, sources, metar_string, model_type, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, sources, metar_string, model_type, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(sources))
