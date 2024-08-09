@@ -62,6 +62,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
     let queryTableClause = "";
     const regionType = curve["region-type"];
+    const retroVal = matsCollections["data-source"].findOne({ name: "data-source" })
+      .retroMap[curve["data-source"]][0];
 
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
@@ -134,11 +136,9 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       if (forecastLength === 1) {
         modelTable = `${model}qp1f`;
       } else {
-        modelTable =
-          model.includes("ret_") || model.includes("Ret_") ? `${model}p` : `${model}qp`;
+        modelTable = retroVal === "retro" ? `${model}p` : `${model}qp`;
       }
-      const obsTable =
-        model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
+      const obsTable = retroVal === "retro" ? "obs_retro" : "obs";
       queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
       const siteMap = matsCollections.StationMap.findOne(
         { name: "stations" },

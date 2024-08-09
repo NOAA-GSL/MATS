@@ -47,6 +47,8 @@ dataMap = function (plotParams, plotFunction) {
     .optionsMap[curve["data-source"]][0];
 
   const regionType = "Select stations";
+  const retroVal = matsCollections["data-source"].findOne({ name: "data-source" })
+    .retroMap[curve["data-source"]][0];
 
   const variableStr = curve.variable;
   const variableOptionsMap = matsCollections.variable.findOne(
@@ -80,12 +82,10 @@ dataMap = function (plotParams, plotFunction) {
     modelTable = `${model}qp1f`;
     forecastLengthClause = "";
   } else {
-    modelTable =
-      model.includes("ret_") || model.includes("Ret_") ? `${model}p` : `${model}qp`;
+    modelTable = retroVal === "retro" ? `${model}p` : `${model}qp`;
     forecastLengthClause = `and m0.fcst_len = ${forecastLength} `;
   }
-  const obsTable =
-    model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
+  const obsTable = retroVal === "retro" ? "obs_retro" : "obs";
   const queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
   const siteMap = matsCollections.StationMap.findOne(
     { name: "stations" },

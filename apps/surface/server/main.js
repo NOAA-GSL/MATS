@@ -334,6 +334,7 @@ const doCurveParams = function () {
   const allRegionValuesMap = {};
   const allMETARValuesMap = {};
   let modelDateRangeMap = {};
+  const modelRetroMap = {};
   const metarModelOptionsMap = {};
 
   try {
@@ -363,7 +364,7 @@ const doCurveParams = function () {
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
       sumPool, // eslint-disable-line no-undef
-      "select model,metar_string,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
+      "select model,metar_string,model_type,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
     );
     for (let i = 0; i < rows.length; i += 1) {
       const modelValue = rows[i].model.trim();
@@ -376,6 +377,9 @@ const doCurveParams = function () {
         minDate: rowMinDate,
         maxDate: rowMaxDate,
       };
+
+      const modelType = rows[i].model_type;
+      modelRetroMap[model] = [modelType];
 
       const metars = rows[i].metar_string;
       metarModelOptionsMap[model] = metars
@@ -500,6 +504,7 @@ const doCurveParams = function () {
       optionsMap: modelOptionsMap,
       dates: modelDateRangeMap,
       options: Object.keys(modelOptionsMap),
+      retroMap: modelRetroMap,
       dependentNames: ["region", "forecast-length", "truth", "dates", "curve-dates"],
       controlButtonCovered: true,
       default: Object.keys(modelOptionsMap)[0],
@@ -516,6 +521,7 @@ const doCurveParams = function () {
     });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.retroMap, modelRetroMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
     ) {
       // have to reload model data
@@ -525,6 +531,7 @@ const doCurveParams = function () {
           $set: {
             optionsMap: modelOptionsMap,
             dates: modelDateRangeMap,
+            retroMap: modelRetroMap,
             options: Object.keys(modelOptionsMap),
             default: Object.keys(modelOptionsMap)[0],
           },

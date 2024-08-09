@@ -58,6 +58,8 @@ dataDieoff = function (plotParams, plotFunction) {
 
     let queryTableClause = "";
     const regionType = curve["region-type"];
+    const retroVal = matsCollections["data-source"].findOne({ name: "data-source" })
+      .retroMap[curve["data-source"]][0];
 
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
@@ -131,10 +133,8 @@ dataDieoff = function (plotParams, plotFunction) {
       NAggregate = "count";
       NClause = "1";
 
-      const modelTable =
-        model.includes("ret_") || model.includes("Ret_") ? `${model}p` : `${model}qp`;
-      const obsTable =
-        model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
+      const modelTable = retroVal === "retro" ? `${model}p` : `${model}qp`;
+      const obsTable = retroVal === "retro" ? "obs_retro" : "obs";
       queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
       const siteMap = matsCollections.StationMap.findOne(
         { name: "stations" },
