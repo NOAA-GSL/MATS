@@ -360,7 +360,7 @@ def regions_per_model_mats_all_categories(mode):
                 this_model_type = "realtime"
         usedb = "use " + db
         cursor.execute(usedb)
-        print( "this_model_type:\n" + str(this_model_type) )
+        # print( "this_model_type:\n" + str(this_model_type) )
 
         # get forecast lengths for all tables pertaining to this model
         get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db + ".TABLESTATS_build where tablename like '" + \
