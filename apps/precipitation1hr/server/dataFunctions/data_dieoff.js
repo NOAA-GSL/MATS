@@ -95,7 +95,7 @@ dataDieoff = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
-      "sum(m0.hit) as hit, sum(m0.fa) as fa, sum(m0.miss) as miss, sum(m0.cn) as cn, group_concat(m0.time, ';', m0.hit, ';', m0.fa, ';', m0.miss, ';', m0.cn order by m0.time) as sub_data, count(m0.hit) as N0";
+      "sum(m0.hit) as hit, sum(m0.fa) as fa, sum(m0.miss) as miss, sum(m0.cn) as cn, group_concat(m0.time, ';', m0.hit, ';', m0.fa, ';', m0.miss, ';', m0.cn order by m0.time) as sub_data, count(m0.hit) as n0";
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
@@ -149,7 +149,7 @@ dataDieoff = function (plotParams, plotFunction) {
       try {
         statement =
           "select m0.fcst_len as fcst_lead, " +
-          "count(distinct m0.time) as N_times, " +
+          "count(distinct m0.time) as nTimes, " +
           "min(m0.time) as min_secs, " +
           "max(m0.time) as max_secs, " +
           "{{statisticClause}} " +

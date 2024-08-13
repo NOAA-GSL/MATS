@@ -161,7 +161,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     const statisticClause =
       `sum(${variableX[0]}) as square_diff_sumX, ${NAggregate}(${variableX[1]}) as N_sumX, sum(${variableX[2]}) as obs_model_diff_sumX, sum(${variableX[3]}) as model_sumX, sum(${variableX[4]}) as obs_sumX, sum(${variableX[5]}) as abs_sumX, ` +
       `sum(${variableY[0]}) as square_diff_sumY, ${NAggregate}(${variableY[1]}) as N_sumY, sum(${variableY[2]}) as obs_model_diff_sumY, sum(${variableY[3]}) as model_sumY, sum(${variableY[4]}) as obs_sumY, sum(${variableY[5]}) as abs_sumY, ` +
-      `group_concat(m0.secs, ';', ${variableX[0]}, ';', ${NClauseX}, ';', ${variableX[2]}, ';', ${variableX[3]}, ';', ${variableX[4]}, ';', ${variableX[5]}, ';', ${variableY[0]}, ';', ${NClauseY}, ';', ${variableY[2]}, ';', ${variableY[3]}, ';', ${variableY[4]}, ';', ${variableY[5]} order by m0.secs) as sub_data, count(${variableX[0]}) as N0`;
+      `group_concat(m0.secs, ';', ${variableX[0]}, ';', ${NClauseX}, ';', ${variableX[2]}, ';', ${variableX[3]}, ';', ${variableX[4]}, ';', ${variableX[5]}, ';', ${variableY[0]}, ';', ${NClauseY}, ';', ${variableY[2]}, ';', ${variableY[3]}, ';', ${variableY[4]}, ';', ${variableY[5]} order by m0.secs) as sub_data, count(${variableX[0]}) as n0`;
 
     const { statVarUnitMap } = matsCollections.variable.findOne(
       { name: "variable" },
@@ -179,7 +179,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       try {
         statement =
           "{{binClause}} " +
-          "count(distinct {{dateString}}) as N_times, " +
+          "count(distinct {{dateString}}) as nTimes, " +
           "min({{dateString}}) as min_secs, " +
           "max({{dateString}}) as max_secs, " +
           "{{statisticClause}} " +

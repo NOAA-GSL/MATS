@@ -200,7 +200,7 @@ dataProfile = function (plotParams, plotFunction) {
 
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
-      `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ${levelVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, ${levelVar}) as sub_data, count(${variable[0]}) as N0`;
+      `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ${levelVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, ${levelVar}) as sub_data, count(${variable[0]}) as n0`;
 
     let phaseClause = "";
     if (database.includes("AMDAR")) {
@@ -234,7 +234,7 @@ dataProfile = function (plotParams, plotFunction) {
       try {
         statement =
           "select {{levelVar}} as avVal, " +
-          "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
+          "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as nTimes, " +
           "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
           "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
           "{{statisticClause}} " +

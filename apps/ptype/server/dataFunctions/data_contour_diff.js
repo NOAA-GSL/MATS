@@ -153,7 +153,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement =
           "{{xValClause}} " +
           "{{yValClause}} " +
-          "count(distinct {{dateString}}) as N_times, " +
+          "count(distinct {{dateString}}) as nTimes, " +
           "min({{dateString}}) as min_secs, " +
           "max({{dateString}}) as max_secs, " +
           "{{statisticClause}} " +

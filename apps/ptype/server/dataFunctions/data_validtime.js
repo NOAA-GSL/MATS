@@ -117,7 +117,7 @@ dataValidTime = function (plotParams, plotFunction) {
       try {
         statement =
           "select floor((m0.valid_secs)%(24*3600)/900)/4 as hr_of_day, " +
-          "count(distinct m0.valid_secs) as N_times, " +
+          "count(distinct m0.valid_secs) as nTimes, " +
           "min(m0.valid_secs) as min_secs, " +
           "max(m0.valid_secs) as max_secs, " +
           "{{statisticClause}} " +

@@ -79,7 +79,7 @@ dataHistogram = function (plotParams, plotFunction) {
     ).optionsMap;
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, sum(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
-      `group_concat(m0.valid_day+3600*m0.hour, ';', ${variable[0]}, ';', ${variable[1]}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.valid_day+3600*m0.hour) as sub_data, count(${variable[0]}) as N0`;
+      `group_concat(m0.valid_day+3600*m0.hour, ';', ${variable[0]}, ';', ${variable[1]}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.valid_day+3600*m0.hour) as sub_data, count(${variable[0]}) as n0`;
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
@@ -122,7 +122,7 @@ dataHistogram = function (plotParams, plotFunction) {
       try {
         statement =
           "select m0.valid_day+3600*m0.hour as avtime, " +
-          "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+          "count(distinct m0.valid_day+3600*m0.hour) as nTimes, " +
           "min(m0.valid_day+3600*m0.hour) as min_secs, " +
           "max(m0.valid_day+3600*m0.hour) as max_secs, " +
           "{{statisticClause}} " +

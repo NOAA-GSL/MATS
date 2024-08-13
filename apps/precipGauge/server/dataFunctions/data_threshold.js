@@ -73,7 +73,7 @@ dataThreshold = function (plotParams, plotFunction) {
       { optionsMap: 1 }
     ).optionsMap;
     const statisticClause =
-      "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as N0";
+      "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0";
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
@@ -110,7 +110,7 @@ dataThreshold = function (plotParams, plotFunction) {
       try {
         statement =
           "select m0.thresh/100 as thresh, " + // produces thresholds in inches
-          "count(distinct m0.valid_time) as N_times, " +
+          "count(distinct m0.valid_time) as nTimes, " +
           "min(m0.valid_time) as min_secs, " +
           "max(m0.valid_time) as max_secs, " +
           "{{statisticClause}} " +

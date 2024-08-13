@@ -154,7 +154,7 @@ dataContour = function (plotParams, plotFunction) {
 
   const statisticClause =
     `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
-    `group_concat(m0.secs, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.secs) as sub_data, count(${variable[0]}) as N0`;
+    `group_concat(m0.secs, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.secs) as sub_data, count(${variable[0]}) as n0`;
 
   // For contours, this functions as the colorbar label.
   const { statVarUnitMap } = matsCollections.variable.findOne(
@@ -174,7 +174,7 @@ dataContour = function (plotParams, plotFunction) {
       statement =
         "{{xValClause}} " +
         "{{yValClause}} " +
-        "count(distinct {{dateString}}) as N_times, " +
+        "count(distinct {{dateString}}) as nTimes, " +
         "min({{dateString}}) as min_secs, " +
         "max({{dateString}}) as max_secs, " +
         "{{statisticClause}} " +

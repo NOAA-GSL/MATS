@@ -79,7 +79,7 @@ dataMap = function (plotParams, plotFunction) {
     "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, " +
     "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
     "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
-    "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as N0";
+    "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as n0";
   statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
   if (variable.includes("Visibility")) {
     statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
@@ -130,7 +130,7 @@ dataMap = function (plotParams, plotFunction) {
     try {
       statement =
         "select m0.madis_id as sta_id, " +
-        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
+        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as nTimes, " +
         "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
         "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
         "{{statisticClause}} " +
@@ -143,7 +143,7 @@ dataMap = function (plotParams, plotFunction) {
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
         "group by sta_id " +
-        "order by N0" +
+        "order by n0" +
         ";";
 
       statement = statement.replace("{{statisticClause}}", statisticClause);

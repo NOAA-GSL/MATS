@@ -138,7 +138,7 @@ dataThreshold = function (plotParams, plotFunction) {
       try {
         statement =
           "select m0.trsh as thresh, " +
-          "count(distinct m0.time) as N_times, " +
+          "count(distinct m0.time) as nTimes, " +
           "min(m0.time) as min_secs, " +
           "max(m0.time) as max_secs, " +
           "{{statisticClause}} " +
