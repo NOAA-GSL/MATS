@@ -2,6 +2,7 @@ accounts-base@2.2.11
 accounts-password@2.4.0
 accounts-ui@1.4.2
 accounts-ui-unstyled@1.7.1
+aldeed:simple-schema@1.13.1
 allow-deny@1.1.1
 autoupdate@1.8.0
 babel-compiler@7.10.5
