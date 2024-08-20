@@ -55,7 +55,7 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         And I should see a list of curves containing "Curve0,Curve2,Curve3"
         Then the "Curve0" color should be "rgb(255,0,0)"
         Then the "Curve2" color should be "rgb(255,165,0)"
-        Then the "Curve3" color should be "rgb(128,128,128)"
+        Then the "Curve3" color should be "rgb(95,95,95)"
 
         When I click the "Remove All" button
         And the "Remove all the curves" button should be visible
