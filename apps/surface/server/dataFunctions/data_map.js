@@ -159,7 +159,8 @@ dataMap = function (plotParams, plotFunction) {
         variableStr,
         varUnits,
         siteMap,
-        appParams
+        appParams,
+        plotParams
       );
 
       finishMoment = moment();
