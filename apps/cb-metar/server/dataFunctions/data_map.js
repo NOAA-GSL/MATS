@@ -228,7 +228,8 @@ dataMap = function (plotParams, plotFunction) {
           variable,
           varUnits,
           siteMap,
-          appParams
+          appParams,
+          plotParams
         );
       }
 
