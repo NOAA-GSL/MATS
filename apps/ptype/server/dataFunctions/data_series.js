@@ -131,7 +131,7 @@ dataSeries = function (plotParams, plotFunction) {
       try {
         statement =
           "select {{average}} as avtime, " +
-          "count(distinct m0.valid_secs) as N_times, " +
+          "count(distinct m0.valid_secs) as nTimes, " +
           "min(m0.valid_secs) as min_secs, " +
           "max(m0.valid_secs) as max_secs, " +
           "{{statisticClause}} " +

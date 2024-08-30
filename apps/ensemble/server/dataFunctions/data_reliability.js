@@ -81,7 +81,7 @@ dataReliability = function (plotParams, plotFunction) {
     const statisticClause =
       "sum(m0.nhdfcstcount) as fcstcount, sum(m0.fcstcount) as rawfcstcount, sum(m0.nhdhitcount) " +
       "as hitcount, group_concat(m0.time, ';', m0.nhdfcstcount, ';', " +
-      "m0.fcstcount, ';', m0.nhdhitcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as N0";
+      "m0.fcstcount, ';', m0.nhdhitcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as n0";
     const tableStatPrefix = "count";
 
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
@@ -117,7 +117,7 @@ dataReliability = function (plotParams, plotFunction) {
       try {
         statement =
           "select m0.prob as binValue, m0.kernel, " +
-          "count(distinct m0.time) as N_times, " +
+          "count(distinct m0.time) as nTimes, " +
           "min(m0.time) as min_secs, " +
           "max(m0.time) as max_secs, " +
           "{{statisticClause}} " +

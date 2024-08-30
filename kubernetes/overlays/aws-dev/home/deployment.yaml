@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: home
+spec:
+  template:
+    spec:
+      containers:
+        - name: home
+          # FIXME: disable resource limits while we do performance tuning
+          # resources:
+          #   requests:
+          #     memory: "1Gi"
+          #     cpu: "0.25"
+          #   limits:
+          #     memory: "8Gi"
+          #     cpu: "4"
+          volumeMounts:
+            - name: home-settings-file
+              mountPath: /app/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: home-settings-file
+          configMap:
+            name: home-config

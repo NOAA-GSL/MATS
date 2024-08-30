@@ -22,8 +22,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         Then the "variable" parameter value matches "Composite Reflectivity"
         When I change the "data-source" parameter to "RAP_GSL"
         Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the dates to "09/21/2019 00:00 - 09/24/2019 00:00"
-        Then the dates value is "09/21/2019 00:00 - 09/24/2019 00:00"
+        When I set the dates to "09/21/2020 00:00 - 09/24/2020 00:00"
+        Then the dates value is "09/21/2020 00:00 - 09/24/2020 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
@@ -57,7 +57,7 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         And I should see a list of curves containing "Curve0,Curve2,Curve3"
         Then the "Curve0" color should be "rgb(255,0,0)"
         Then the "Curve2" color should be "rgb(255,165,0)"
-        Then the "Curve3" color should be "rgb(128,128,128)"
+        Then the "Curve3" color should be "rgb(95,95,95)"
 
         When I click the "Remove All" button
         And the "Remove all the curves" button should be visible

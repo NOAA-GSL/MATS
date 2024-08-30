@@ -1,5 +1,5 @@
 SELECT m0.fcstValidEpoch AS avtime,
-       COUNT(DISTINCT m0.fcstValidEpoch) N_times,
+       COUNT(DISTINCT m0.fcstValidEpoch) nTimes,
        MIN(m0.fcstValidEpoch) min_secs,
        MAX(m0.fcstValidEpoch) max_secs,
        {{vxSTATISTIC}}

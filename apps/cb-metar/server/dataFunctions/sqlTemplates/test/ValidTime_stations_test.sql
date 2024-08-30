@@ -5,8 +5,8 @@ SELECT m.mhod AS hr_of_day,
        ARRAY_SUM(stats[*].miss) AS misses,
        ARRAY_SUM(stats[*].false_alarm) AS fa,
        ARRAY_SUM(stats[*].correct_negative) AS cn,
-       ARRAY_SUM(stats[*].total) AS N0,
-       ARRAY_COUNT(ARRAY_DISTINCT(stats[*].fve)) AS N_times,
+       ARRAY_SUM(stats[*].total) AS n0,
+       ARRAY_COUNT(ARRAY_DISTINCT(stats[*].fve)) AS nTimes,
        ARRAY_SORT(stats[*].sub) AS sub_data
 FROM (
     SELECT sdu.ohod AS ohod,

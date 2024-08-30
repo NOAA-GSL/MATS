@@ -63,7 +63,7 @@ const doPlotParams = function () {
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
-      displayGroup: 3,
+      displayGroup: 4,
     });
 
     const yAxisOptionsMap = {
@@ -288,6 +288,59 @@ const doPlotParams = function () {
       displayPriority: 1,
       displayGroup: 2,
     });
+
+    const mapRangeOptionsMap = {
+      "Default range": ["default"],
+      "Set range": ["set"],
+    };
+    matsCollections.PlotParams.insert({
+      name: "map-range-controls",
+      type: matsTypes.InputTypes.select,
+      optionsMap: mapRangeOptionsMap,
+      options: Object.keys(mapRangeOptionsMap),
+      hideOtherFor: {
+        "map-low-limit": ["Default range"],
+        "map-high-limit": ["Default range"],
+      },
+      default: Object.keys(mapRangeOptionsMap)[0],
+      controlButtonCovered: true,
+      controlButtonText: "Map colorscale",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+
+    matsCollections.PlotParams.insert({
+      name: "map-low-limit",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-100",
+      max: "100",
+      step: "any",
+      default: "0",
+      controlButtonCovered: true,
+      controlButtonText: "low limit",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+
+    matsCollections.PlotParams.insert({
+      name: "map-high-limit",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-100",
+      max: "100",
+      step: "any",
+      default: "5",
+      controlButtonCovered: true,
+      controlButtonText: "high limit",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
   } else {
     // need to update the dates selector if the metadata has changed
     const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
@@ -334,6 +387,7 @@ const doCurveParams = function () {
   const allRegionValuesMap = {};
   const allMETARValuesMap = {};
   let modelDateRangeMap = {};
+  const modelRetroMap = {};
   const metarModelOptionsMap = {};
 
   try {
@@ -363,7 +417,7 @@ const doCurveParams = function () {
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
       sumPool, // eslint-disable-line no-undef
-      "select model,metar_string,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
+      "select model,metar_string,model_type,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
     );
     for (let i = 0; i < rows.length; i += 1) {
       const modelValue = rows[i].model.trim();
@@ -376,6 +430,9 @@ const doCurveParams = function () {
         minDate: rowMinDate,
         maxDate: rowMaxDate,
       };
+
+      const modelType = rows[i].model_type;
+      modelRetroMap[model] = [modelType];
 
       const metars = rows[i].metar_string;
       metarModelOptionsMap[model] = metars
@@ -500,6 +557,7 @@ const doCurveParams = function () {
       optionsMap: modelOptionsMap,
       dates: modelDateRangeMap,
       options: Object.keys(modelOptionsMap),
+      retroMap: modelRetroMap,
       dependentNames: ["region", "forecast-length", "truth", "dates", "curve-dates"],
       controlButtonCovered: true,
       default: Object.keys(modelOptionsMap)[0],
@@ -516,6 +574,7 @@ const doCurveParams = function () {
     });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.retroMap, modelRetroMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
     ) {
       // have to reload model data
@@ -525,6 +584,7 @@ const doCurveParams = function () {
           $set: {
             optionsMap: modelOptionsMap,
             dates: modelDateRangeMap,
+            retroMap: modelRetroMap,
             options: Object.keys(modelOptionsMap),
             default: Object.keys(modelOptionsMap)[0],
           },

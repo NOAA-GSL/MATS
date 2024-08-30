@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 #
-# Creates a regions_per_model_mats_all_categories table for all models in surfrad3
+# Creates a regions_per_model_mats_all_categories table for all models in surfrad3_sums
 
 # __future__ must come first
 from __future__ import print_function
 from datetime import datetime, timedelta
 
+import re
 import sys
 import ast
 import MySQLdb
-import time
 
 
 ############################################################################
@@ -77,7 +77,7 @@ def regions_per_model_mats_all_categories(mode):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "surfrad3"
+    db = "surfrad3_sums"
     usedb = "use " + db
     cursor.execute(usedb)
 
@@ -103,29 +103,25 @@ def regions_per_model_mats_all_categories(mode):
     for row in cursor:
         tablename = str(list(row.values())[0])
         # print( "tablename is " + tablename)
-        if " " + tablename + " " not in skiptables:
+        if " " + tablename + " " not in skiptables and "all" not in tablename:
             # parse the data sources from the table names
-            model = tablename
+            model = re.sub("_site_.*", "", tablename)
             if model not in all_data_sources:
                 all_data_sources.append(model)
             per_table[tablename] = {}
             per_table[tablename]['model'] = model
+            region = re.sub(model + "_site_", "", tablename)
+            per_table[tablename]['region'] = region
+            # print("model is " + model + ", region is " + region)
 
     # sys.exit(-1)
 
     # parse the other metadata contained in the tables
     if TScleaned:
         for tablename in per_table.keys():
-            # length limit necessary for the really huge tables in this database
-            length_limiter = "(select * from " + \
-                tablename + " limit 1000000) as m0"
-            length_limiter_test = "select * from " + tablename + " limit 1000000"
-            cursor.execute(length_limiter_test)
-            cursor.fetchall()
-            hits_length_limit = cursor.rowcount == 1000000
             # get forecast lengths from this table
             get_fcst_lens = (
-                "SELECT DISTINCT fcst_len FROM " + length_limiter + ";")
+                "SELECT DISTINCT fcst_len FROM " + tablename + ";")
             cursor.execute(get_fcst_lens)
             per_table[tablename]['fcst_lens'] = []
             this_fcst_lens = []
@@ -137,7 +133,7 @@ def regions_per_model_mats_all_categories(mode):
             # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
 
             # get scales from this table
-            get_scales = ("SELECT DISTINCT scale FROM " + length_limiter + ";")
+            get_scales = ("SELECT DISTINCT scale FROM " + tablename + ";")
             cursor.execute(get_scales)
             per_table[tablename]['scales'] = []
             this_scales = []
@@ -148,27 +144,11 @@ def regions_per_model_mats_all_categories(mode):
             per_table[tablename]['scales'] = this_scales
             # print(tablename + " scales: " + str(per_table[tablename]['scales']) )
 
-            # get regions from this table
-            get_regions = ("SELECT DISTINCT id FROM " + length_limiter + ";")
-            cursor.execute(get_regions)
-            per_table[tablename]['regions'] = []
-            this_regions = []
-            for row in cursor:
-                val = list(row.values())[0]
-                this_regions.append(int(val))
-            this_regions.sort(key=int)
-            per_table[tablename]['regions'] = this_regions
-            # print(tablename + " regions: " + str(per_table[tablename]['regions']) )
-
             # get statistics for this table
-            get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + \
-                length_limiter + ";"
+            get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + tablename + ";"
 
             cursor.execute(get_tablestats)
             stats = cursor.fetchall()[0]
-            if hits_length_limit:
-                nowtime = int(time.time())
-                stats['maxdate'] = nowtime - (nowtime % 3600)
             # print(tablename + " stats:\n" + str(stats) )
 
             replace_tablestats_rec = "REPLACE INTO TABLESTATS_build (tablename, mindate, maxdate, model, region, fcst_lens, scle, numrecs) values( %s, %s, %s, %s, %s, %s, %s, %s )"
@@ -177,7 +157,7 @@ def regions_per_model_mats_all_categories(mode):
             qd.append(str(stats['mindate']))
             qd.append(str(stats['maxdate']))
             qd.append(str(per_table[tablename]['model']))
-            qd.append(str(per_table[tablename]['regions']))
+            qd.append(str(per_table[tablename]['region']))
             qd.append(str(per_table[tablename]['fcst_lens']))
             qd.append(str(per_table[tablename]['scales']))
             qd.append(str(stats['numrecs']))
@@ -204,6 +184,8 @@ def regions_per_model_mats_all_categories(mode):
         print("Error: " + str(e))
         sys.exit(1)
 
+    db = "surfrad3_sums"
+    usedb = "use " + db
     cursor.execute(usedb)
 
     # use standardized model names
@@ -294,16 +276,14 @@ def regions_per_model_mats_all_categories(mode):
             do_non_main = do_non_main + 1
 
         # get regions for all tables pertaining to this model
-        get_these_regions = "select distinct(region) as region from " + db + ".TABLESTATS_build where tablename like '" + \
-            model + "%' and region != '[]' and model = '" + model + \
-            "' and numrecs > 0 order by length(region) desc;"
+        get_these_regions = "select distinct(region) as region from " + db + \
+            ".TABLESTATS_build where tablename like '" + model + \
+            "%' and model = '" + model + "' and numrecs > 0;"
         cursor.execute(get_these_regions)
         these_regions = []
         for row in cursor:
-            val_array = ast.literal_eval(list(row.values())[0])
-            for val in val_array:
-                if val not in these_regions:
-                    these_regions.append(val)
+            val = str(list(row.values())[0])
+            these_regions.append(val)
         these_regions.sort(key=int)
         # print( "these_regions:\n" + str(these_regions) )
 

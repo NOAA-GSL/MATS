@@ -62,6 +62,8 @@ dataSeries = function (plotParams, plotFunction) {
 
     let queryTableClause = "";
     const regionType = curve["region-type"];
+    const retroVal = matsCollections["data-source"].findOne({ name: "data-source" })
+      .retroMap[curve["data-source"]][0];
 
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
@@ -136,12 +138,10 @@ dataSeries = function (plotParams, plotFunction) {
         modelTable = `${model}qp1f`;
         forecastLengthClause = "";
       } else {
-        modelTable =
-          model.includes("ret_") || model.includes("Ret_") ? `${model}p` : `${model}qp`;
+        modelTable = retroVal === "retro" ? `${model}p` : `${model}qp`;
         forecastLengthClause = `and m0.fcst_len = ${forecastLength} `;
       }
-      const obsTable =
-        model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
+      const obsTable = retroVal === "retro" ? "obs_retro" : "obs";
       queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
       const siteMap = matsCollections.StationMap.findOne(
         { name: "stations" },
@@ -169,7 +169,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
-      `group_concat(${timeVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by ${timeVar}) as sub_data, count(${variable[0]}) as N0`;
+      `group_concat(${timeVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by ${timeVar}) as sub_data, count(${variable[0]}) as n0`;
 
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -193,7 +193,7 @@ dataSeries = function (plotParams, plotFunction) {
       try {
         statement =
           "select {{average}} as avtime, " +
-          "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as N_times, " +
+          "count(distinct ceil(3600*floor(({{timeVar}}+1800)/3600))) as nTimes, " +
           "min(ceil(3600*floor(({{timeVar}}+1800)/3600))) as min_secs, " +
           "max(ceil(3600*floor(({{timeVar}}+1800)/3600))) as max_secs, " +
           "{{statisticClause}} " +

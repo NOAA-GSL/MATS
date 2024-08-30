@@ -124,7 +124,16 @@ dataValidTime = function (plotParams, plotFunction) {
         // Most of the RAOBs tables don't store a model sum or an obs sum for some reason.
         // So, we get the obs sum from HRRR_OPS, HRRR_HI, or GFS, because the obs are the same across all models.
         // Then we get the model sum by adding the obs sum to the bias sum (bias = model-obs).
-        if (["5", "14", "15", "16", "17", "18"].includes(region.toString())) {
+        // We exclude GSL's main models, which do have all the sums.
+        const modelsToExclude = [
+          "ncep_oper_Areg",
+          "RAP_130_Areg",
+          "RAP_Areg",
+          "HRRR_Areg",
+        ];
+        if (modelsToExclude.includes(model)) {
+          queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.${model}${region} as m1`;
+        } else if (["5", "14", "15", "16", "17", "18"].includes(region.toString())) {
           queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.HRRR_OPS_Areg${region} as m1`;
         } else if (region.toString() === "19") {
           queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.HRRR_HI_Areg${region} as m1`;
@@ -139,13 +148,13 @@ dataValidTime = function (plotParams, plotFunction) {
         );
       }
       siteDateClause = `and unix_timestamp(o.date)+3600*o.hour >= ${fromSecs} - 1800 and unix_timestamp(o.date)+3600*o.hour <= ${toSecs} + 1800`;
-      levelClause = `and ceil((m0.press-20)/50)*50 >= ${top} and ceil((m0.press-20)/50)*50 <= ${bottom}`;
-      siteLevelClause = `and ceil((o.press-20)/50)*50 >= ${top} and ceil((o.press-20)/50)*50 <= ${bottom}`;
+      levelClause = `and ceil((m0.press-25)/50)*50 >= ${top} and ceil((m0.press-25)/50)*50 <= ${bottom}`;
+      siteLevelClause = `and ceil((o.press-25)/50)*50 >= ${top} and ceil((o.press-25)/50)*50 <= ${bottom}`;
       siteMatchClause =
         "and m0.wmoid = o.wmoid and m0.date = o.date and m0.hour = o.hour and m0.press = o.press";
       NAggregate = "count";
       NClause = "1";
-      levelVar = "ceil((m0.press-20)/50)*50";
+      levelVar = "ceil((m0.press-25)/50)*50";
 
       // remove table prefixes
       const modelComponents = model.split("_");
@@ -184,7 +193,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
-      `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ${levelVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, ${levelVar}) as sub_data, count(${variable[0]}) as N0`;
+      `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', ${levelVar}, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by unix_timestamp(m0.date)+3600*m0.hour, ${levelVar}) as sub_data, count(${variable[0]}) as n0`;
 
     let phaseClause = "";
     if (database === "AMDAR") {
@@ -218,7 +227,7 @@ dataValidTime = function (plotParams, plotFunction) {
       try {
         statement =
           "select m0.hour as hr_of_day, " +
-          "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
+          "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as nTimes, " +
           "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
           "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
           "{{statisticClause}} " +

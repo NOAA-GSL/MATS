@@ -47,6 +47,8 @@ dataMap = function (plotParams, plotFunction) {
     .optionsMap[curve["data-source"]][0];
 
   const regionType = "Select stations";
+  const retroVal = matsCollections["data-source"].findOne({ name: "data-source" })
+    .retroMap[curve["data-source"]][0];
 
   const variableStr = curve.variable;
   const variableOptionsMap = matsCollections.variable.findOne(
@@ -67,7 +69,7 @@ dataMap = function (plotParams, plotFunction) {
   const statisticSelect = curve.statistic;
   const statisticClause =
     `sum(${variable[0]}) as square_diff_sum, count(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
-    `group_concat(m0.time, ';', ${variable[0]}, ';', 1, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.time) as sub_data, count(${variable[0]}) as N0`;
+    `group_concat(m0.time, ';', ${variable[0]}, ';', 1, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.time) as sub_data, count(${variable[0]}) as n0`;
 
   let sitesClause = "";
 
@@ -80,12 +82,10 @@ dataMap = function (plotParams, plotFunction) {
     modelTable = `${model}qp1f`;
     forecastLengthClause = "";
   } else {
-    modelTable =
-      model.includes("ret_") || model.includes("Ret_") ? `${model}p` : `${model}qp`;
+    modelTable = retroVal === "retro" ? `${model}p` : `${model}qp`;
     forecastLengthClause = `and m0.fcst_len = ${forecastLength} `;
   }
-  const obsTable =
-    model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
+  const obsTable = retroVal === "retro" ? "obs_retro" : "obs";
   const queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
   const siteMap = matsCollections.StationMap.findOne(
     { name: "stations" },
@@ -124,7 +124,7 @@ dataMap = function (plotParams, plotFunction) {
     try {
       statement =
         "select m0.sta_id as sta_id, " +
-        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as N_times, " +
+        "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as nTimes, " +
         "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
         "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
         "{{statisticClause}} " +
@@ -159,7 +159,8 @@ dataMap = function (plotParams, plotFunction) {
         variableStr,
         varUnits,
         siteMap,
-        appParams
+        appParams,
+        plotParams
       );
 
       finishMoment = moment();

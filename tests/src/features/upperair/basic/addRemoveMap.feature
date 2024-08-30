@@ -17,10 +17,14 @@ Feature: Add Remove Map
         Then the plot type should be "Map"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
-        When I change the "sites" parameter to "DENVER/STAPLETON ARPT (DNR)"
-        Then the "sites" parameter value matches "DENVER/STAPLETON ARPT (DNR)"
-        When I set the dates to "08/12/2023 00:00 - 08/12/2023 23:59"
-        Then the dates value is "08/12/2023 00:00 - 08/12/2023 23:59"
+        When I select all options in the "sites" parameter
+        Then the "sites" parameter value matches "999 .. ZHENGZHOU (ZHCC)"
+        When I change the "top" number parameter to "500"
+        Then the "top" parameter value matches "500"
+        When I change the "bottom" number parameter to "500"
+        Then the "bottom" parameter value matches "500"
+        When I set the dates to "08/12/2024 00:00 - 08/12/2024 23:59"
+        Then the dates value is "08/12/2024 00:00 - 08/12/2024 23:59"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"

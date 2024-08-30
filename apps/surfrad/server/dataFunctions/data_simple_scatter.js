@@ -66,8 +66,6 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       { name: "variable" },
       { optionsMap: 1 }
     ).optionsMap;
-    const variableX = variableOptionsMap[variableXStr];
-    const variableY = variableOptionsMap[variableYStr];
 
     const scaleStr = curve.scale;
     const scale = Object.keys(
@@ -103,24 +101,18 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
-    const statisticClause =
-      `sum(${variableX[0]}) as square_diff_sumX, count(${variableX[1]}) as N_sumX, sum(${variableX[2]}) as obs_model_diff_sumX, sum(${variableX[3]}) as model_sumX, sum(${variableX[4]}) as obs_sumX, sum(${variableX[5]}) as abs_sumX, ` +
-      `sum(${variableY[0]}) as square_diff_sumY, count(${variableY[1]}) as N_sumY, sum(${variableY[2]}) as obs_model_diff_sumY, sum(${variableY[3]}) as model_sumY, sum(${variableY[4]}) as obs_sumY, sum(${variableY[5]}) as abs_sumY, ` +
-      `group_concat(m0.secs, ';', ${variableX[0]}, ';', 1, ';', ${variableX[2]}, ';', ${variableX[3]}, ';', ${variableX[4]}, ';', ${variableX[5]}, ';', ${variableY[0]}, ';', 1, ';', ${variableY[2]}, ';', ${variableY[3]}, ';', ${variableY[4]}, ';', ${variableY[5]} order by m0.secs) as sub_data, count(${variableX[0]}) as N0`;
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
     let dateString = "";
     let dateClause = "";
-    let matchClause = "";
     if (binParam === "Init Date" && binParam !== "Valid Date") {
       dateString = "m0.secs-m0.fcst_len*60";
     } else {
       dateString = "m0.secs";
     }
-    dateClause = `and o.secs >= ${fromSecs} and o.secs <= ${toSecs} and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
-    matchClause = "and m0.id = o.id and m0.secs = o.secs";
+    dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
 
     const regionStr = curve.region;
     const region = Object.keys(
@@ -129,18 +121,47 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       (key) =>
         matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
-    let regionClause;
+
+    let queryTableClause;
+    let NAggregate;
+    let NClauseX;
+    let NClauseY;
+    let variableX;
+    let variableY;
     if (region === "all_stat") {
-      regionClause = "";
+      variableX = variableOptionsMap[variableXStr]["Predefined region"];
+      variableY = variableOptionsMap[variableYStr]["Predefined region"];
+      queryTableClause = `from ${model}_all_site_sums as m0`;
+      NAggregate = "sum";
+      [, NClauseX] = variableX;
+      [, NClauseY] = variableY;
     } else if (region === "all_surf") {
-      regionClause = "and m0.id in(1,2,3,4,5,6,7) ";
+      variableX = variableOptionsMap[variableXStr]["Predefined region"];
+      variableY = variableOptionsMap[variableYStr]["Predefined region"];
+      queryTableClause = `from ${model}_all_surfrad_sums as m0`;
+      NAggregate = "sum";
+      [, NClauseX] = variableX;
+      [, NClauseY] = variableY;
     } else if (region === "all_sol") {
-      regionClause = "and m0.id in(8,9,10,11,12,13,14) ";
+      variableX = variableOptionsMap[variableXStr]["Predefined region"];
+      variableY = variableOptionsMap[variableYStr]["Predefined region"];
+      queryTableClause = `from ${model}_all_solrad_sums as m0`;
+      NAggregate = "sum";
+      [, NClauseX] = variableX;
+      [, NClauseY] = variableY;
     } else {
-      regionClause = `and m0.id in(${region}) `;
+      variableX = variableOptionsMap[variableXStr]["Select stations"];
+      variableY = variableOptionsMap[variableYStr]["Select stations"];
+      queryTableClause = `from ${model}_site_${region} as m0`;
+      NAggregate = "count";
+      NClauseX = "1";
+      NClauseY = "1";
     }
 
-    const queryTableClause = `from surfrad as o, ${model} as m0`;
+    const statisticClause =
+      `sum(${variableX[0]}) as square_diff_sumX, ${NAggregate}(${variableX[1]}) as N_sumX, sum(${variableX[2]}) as obs_model_diff_sumX, sum(${variableX[3]}) as model_sumX, sum(${variableX[4]}) as obs_sumX, sum(${variableX[5]}) as abs_sumX, ` +
+      `sum(${variableY[0]}) as square_diff_sumY, ${NAggregate}(${variableY[1]}) as N_sumY, sum(${variableY[2]}) as obs_model_diff_sumY, sum(${variableY[3]}) as model_sumY, sum(${variableY[4]}) as obs_sumY, sum(${variableY[5]}) as abs_sumY, ` +
+      `group_concat(m0.secs, ';', ${variableX[0]}, ';', ${NClauseX}, ';', ${variableX[2]}, ';', ${variableX[3]}, ';', ${variableX[4]}, ';', ${variableX[5]}, ';', ${variableY[0]}, ';', ${NClauseY}, ';', ${variableY[2]}, ';', ${variableY[3]}, ';', ${variableY[4]}, ';', ${variableY[5]} order by m0.secs) as sub_data, count(${variableX[0]}) as n0`;
 
     const { statVarUnitMap } = matsCollections.variable.findOne(
       { name: "variable" },
@@ -158,18 +179,16 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       try {
         statement =
           "{{binClause}} " +
-          "count(distinct {{dateString}}) as N_times, " +
+          "count(distinct {{dateString}}) as nTimes, " +
           "min({{dateString}}) as min_secs, " +
           "max({{dateString}}) as max_secs, " +
           "{{statisticClause}} " +
           "{{queryTableClause}} " +
           "where 1=1 " +
-          "{{matchClause}} " +
           "{{dateClause}} " +
           "{{validTimeClause}} " +
           "{{forecastLengthClause}} " +
           "{{scaleClause}} " +
-          "{{regionClause}} " +
           "group by binVal " +
           "order by binVal" +
           ";";
@@ -180,29 +199,9 @@ dataSimpleScatter = function (plotParams, plotFunction) {
         statement = statement.replace("{{validTimeClause}}", validTimeClause);
         statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{scaleClause}}", scaleClause);
-        statement = statement.replace("{{regionClause}}", regionClause);
-        statement = statement.replace("{{matchClause}}", matchClause);
         statement = statement.replace("{{dateClause}}", dateClause);
         statement = statement.split("{{dateString}}").join(dateString);
         dataRequests[label] = statement;
-
-        if (
-          model !== "HRRR" &&
-          variableXStr !== "dswrf" &&
-          statisticXSelect !== "Obs average"
-        ) {
-          throw new Error(
-            `INFO:  The statistic/variable combination [${statisticXSelect} and ${variableXStr}] is only available for the HRRR data-source.`
-          );
-        } else if (
-          model !== "HRRR" &&
-          variableYStr !== "dswrf" &&
-          statisticYSelect !== "Obs average"
-        ) {
-          throw new Error(
-            `INFO:  The statistic/variable combination [${statisticYSelect} and ${variableYStr}] is only available for the HRRR data-source.`
-          );
-        }
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSimpleScatter(

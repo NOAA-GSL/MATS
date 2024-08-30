@@ -1,0 +1,8 @@
+resources:
+  - cb-metar
+  - home
+  - mongo
+  - ingress-apps.yaml
+  - ingress-home.yaml
+commonLabels:
+  environment: dev

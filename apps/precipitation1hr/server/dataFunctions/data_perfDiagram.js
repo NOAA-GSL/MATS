@@ -142,12 +142,12 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       try {
         statement =
           "{{binClause}} " +
-          "count(distinct {{dateString}}) as N_times, " +
+          "count(distinct {{dateString}}) as nTimes, " +
           "min({{dateString}}) as min_secs, " +
           "max({{dateString}}) as max_secs, " +
           "((sum(m0.hit)+0.00)/sum(m0.hit+m0.miss)) as pod, ((sum(m0.fa)+0.00)/sum(m0.fa+m0.hit)) as far, " +
           "sum(m0.hit+m0.miss) as oy_all, sum(m0.fa+m0.cn) as on_all, group_concat(m0.time, ';', m0.hit, ';', " +
-          "m0.fa, ';', m0.miss, ';', m0.cn order by m0.time) as sub_data, count(m0.hit) as N0 " +
+          "m0.fa, ';', m0.miss, ';', m0.cn order by m0.time) as sub_data, count(m0.hit) as n0 " +
           "{{queryTableClause}} " +
           "where 1=1 " +
           "{{dateClause}} " +

@@ -80,7 +80,7 @@ dataGridScaleProb = function (plotParams, plotFunction) {
 
     const statisticSelect = "Grid Scale Count";
     const statisticClause =
-      "sum(m0.nhdfcstcount) as stat, group_concat(m0.time, ';', m0.nhdfcstcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as N0";
+      "sum(m0.nhdfcstcount) as stat, group_concat(m0.time, ';', m0.nhdfcstcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as n0";
     const tableStatPrefix = "count";
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
@@ -120,7 +120,7 @@ dataGridScaleProb = function (plotParams, plotFunction) {
       try {
         statement =
           "select m0.prob as binValue, " +
-          "count(distinct m0.time) as N_times, " +
+          "count(distinct m0.time) as nTimes, " +
           "min(m0.time) as min_secs, " +
           "max(m0.time) as max_secs, " +
           "{{statisticClause}} " +

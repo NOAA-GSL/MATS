@@ -11,4 +11,4 @@
        || ';' || CASE WHEN m0.data.['{{vxSUBVARIABLE}}'].sum_model IS NOT NULL THEN TO_STRING(m0.data.['{{vxSUBVARIABLE}}'].sum_model) ELSE "NULL" END 
        || ';' || CASE WHEN m0.data.['{{vxSUBVARIABLE}}'].sum_obs IS NOT NULL THEN TO_STRING(m0.data.['{{vxSUBVARIABLE}}'].sum_obs) ELSE "NULL" END 
        || ';' || CASE WHEN m0.data.['{{vxSUBVARIABLE}}'].sum_abs IS NOT NULL THEN TO_STRING(m0.data.['{{vxSUBVARIABLE}}'].sum_abs) ELSE "NULL" END  ) ) sub_data,
-       COUNT(m0.data.['{{vxSUBVARIABLE}}'].sum2_diff) N0
+       COUNT(m0.data.['{{vxSUBVARIABLE}}'].sum2_diff) n0

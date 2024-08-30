@@ -12,6 +12,6 @@ SELECT unix_timestamp(m0.date)+3600*m0.hour AS avtime,
         AND m0.hour IN({{validTimes}})
         AND m0.fcst_len = {{forecastLength}}
         AND m0.mb10*10 = {{level}}
-        {{phaseClause}}
+        {{joinClause}}
     GROUP BY avtime
     ORDER BY avtime;

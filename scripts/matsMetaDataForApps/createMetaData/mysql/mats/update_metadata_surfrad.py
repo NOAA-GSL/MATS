@@ -6,14 +6,14 @@
 # I'm trying to cut down on the number of confused emails we get. Our main scripts are all environment-agnostic,
 # becuause they are run by verification team members who know which conda environment to use.
 #
-# Updates the regions_per_model_mats_all_categories table for all models in surfrad3
+# Updates the regions_per_model_mats_all_categories table for all models in surfrad3_sums
 
 # __future__ must come first
 from __future__ import print_function
 from datetime import datetime
 
+import re
 import sys
-import time
 
 try:
     import MySQLdb
@@ -150,7 +150,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         print("Error: " + str(e))
         sys.exit(1)
 
-    db = "surfrad3"
+    db = "surfrad3_sums"
     usedb = "use " + db
     cursor.execute(usedb)
     cursor2.execute(usedb)
@@ -226,22 +226,14 @@ def reprocess_specific_metadata(models_to_reprocess):
                     per_model[model]['display_order'] = row['display_order']
 
         # get all tables that remotely resemble this model name
-        show_tables = ("show tables like '" + model + "';")
+        show_tables = ("show tables like '" + model + "_site_%';")
         cursor.execute(show_tables)
         for row in cursor:
             tablename = str(list(row.values())[0])
-            if tablename == model:
-                # length limit necessary for the really huge tables in this database
-                length_limiter = "(select * from " + \
-                    tablename + " limit 1000000) as m0"
-                length_limiter_test = "select * from " + tablename + " limit 1000000"
-                cursor.execute(length_limiter_test)
-                cursor.fetchall()
-                hits_length_limit = cursor.rowcount == 1000000
-
+            table_model = re.sub("_site_.*", "", tablename)
+            if table_model == model:
                 # this is a table that does belong to this model
-                get_tablestats = (
-                    "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + length_limiter + ";")
+                get_tablestats = "SELECT min(secs) AS mindate, max(secs) AS maxdate, count(secs) AS numrecs FROM " + tablename + ";"
                 cursor2.execute(get_tablestats)
                 stats = {}
                 for row2 in cursor2:
@@ -250,56 +242,45 @@ def reprocess_specific_metadata(models_to_reprocess):
                         val = str(row2[rowkey])
                         stats[rowkey] = val
 
-                if hits_length_limit:
-                    nowtime = int(time.time())
-                    stats['maxdate'] = nowtime - (nowtime % 3600)
+                    if int(stats['numrecs']) > 0:
+                        # make sure the table actually has data
+                        per_model[model]['mindate'] = int(stats['mindate']) if stats['mindate'] != 'None' and int(
+                            stats['mindate']) < per_model[model]['mindate'] else per_model[model]['mindate']
+                        per_model[model]['maxdate'] = int(stats['maxdate']) if stats['maxdate'] != 'None' and int(
+                            stats['maxdate']) > per_model[model]['maxdate'] else per_model[model]['maxdate']
+                        per_model[model]['numrecs'] = per_model[model]['numrecs'] + \
+                            int(stats['numrecs'])
 
-                if int(stats['numrecs']) > 0:
-                    # make sure the table actually has data
-                    per_model[model]['mindate'] = int(stats['mindate']) if stats['mindate'] != 'None' and int(
-                        stats['mindate']) < per_model[model]['mindate'] else per_model[model]['mindate']
-                    per_model[model]['maxdate'] = int(stats['maxdate']) if stats['maxdate'] != 'None' and int(
-                        stats['maxdate']) > per_model[model]['maxdate'] else per_model[model]['maxdate']
-                    per_model[model]['numrecs'] = per_model[model]['numrecs'] + \
-                        int(stats['numrecs'])
+                        region = re.sub(".*_site_", "", tablename)
+                        per_model[model]['region'].append(region)
 
-                    get_regions = ("SELECT DISTINCT id FROM " +
-                                   length_limiter + ";")
-                    cursor2.execute(get_regions)
-                    thisregions = []
-                    for row2 in cursor2:
-                        val = list(row2.values())[0]
-                        thisregions.append(int(val))
-                    per_model[model]['region'] = list(
-                        set(per_model[model]['region']) | set(thisregions))
-                    per_model[model]['region'].sort(key=int)
+                        get_fcst_lens = (
+                            "SELECT DISTINCT fcst_len FROM " + tablename + ";")
+                        cursor2.execute(get_fcst_lens)
+                        thisfcst_lens = []
+                        for row2 in cursor2:
+                            val = list(row2.values())[0]
+                            thisfcst_lens.append(int(val))
+                        per_model[model]['fcst_len'] = list(
+                            set(per_model[model]['fcst_len']) | set(thisfcst_lens))
+                        per_model[model]['fcst_len'].sort(key=int)
 
-                    get_fcst_lens = (
-                        "SELECT DISTINCT fcst_len FROM " + length_limiter + ";")
-                    cursor2.execute(get_fcst_lens)
-                    thisfcst_lens = []
-                    for row2 in cursor2:
-                        val = list(row2.values())[0]
-                        thisfcst_lens.append(int(val))
-                    per_model[model]['fcst_len'] = list(
-                        set(per_model[model]['fcst_len']) | set(thisfcst_lens))
-                    per_model[model]['fcst_len'].sort(key=int)
-
-                    get_scales = ("SELECT DISTINCT scale FROM " +
-                                  length_limiter + ";")
-                    cursor2.execute(get_scales)
-                    thisscales = []
-                    for row2 in cursor2:
-                        val = list(row2.values())[0]
-                        thisscales.append(int(val))
-                    per_model[model]['scales'] = list(
-                        set(per_model[model]['scales']) | set(thisscales))
-                    per_model[model]['scales'].sort(key=int)
+                        get_scales = ("SELECT DISTINCT scale FROM " + tablename + ";")
+                        cursor2.execute(get_scales)
+                        thisscales = []
+                        for row2 in cursor2:
+                            val = list(row2.values())[0]
+                            thisscales.append(int(val))
+                        per_model[model]['scales'] = list(
+                            set(per_model[model]['scales']) | set(thisscales))
+                        per_model[model]['scales'].sort(key=int)
 
         if per_model[model]['mindate'] == sys.float_info.max:
             per_model[model]['mindate'] = str(datetime.now().strftime('%s'))
         if per_model[model]['maxdate'] == 0:
             per_model[model]['maxdate'] = str(datetime.now().strftime('%s'))
+
+        per_model[model]['region'].sort(key=int)
 
     print(per_model)
 

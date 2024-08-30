@@ -615,14 +615,14 @@ const doCurveParams = function () {
   if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
     const statOptionsMap = {
       "Bias (forecast/actual)": [
-        "avg((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as stat, group_concat(m0.time, ';', (m0.nhdfcstcount/m0.mem)/m0.nhdhitcount order by m0.time) as sub_data, count((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as N0",
+        "avg((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as stat, group_concat(m0.time, ';', (m0.nhdfcstcount/m0.mem)/m0.nhdhitcount order by m0.time) as sub_data, count((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as n0",
         "precalculated",
         "count",
         "Ratio",
         1,
       ],
       "Mean FSS (fractions skill score)": [
-        "avg(m0.fss) as stat, group_concat(m0.time, ';', m0.fss order by m0.time) as sub_data, count(m0.fss) as N0",
+        "avg(m0.fss) as stat, group_concat(m0.time, ';', m0.fss order by m0.time) as sub_data, count(m0.fss) as n0",
         "precalculated",
         "stats",
         "Number",

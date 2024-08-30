@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # Omit the rewrite-target annotation as it causes problems with Meteor's ROOT_URL
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  name: mats-apps
+  # namespace: mats-dev
+spec:
+  ingressClassName: nginx
+  rules:
+    -  http:
+        paths:
+          - path: /mats-dev/cb-metar
+            pathType: Prefix
+            backend:
+              service:
+                name: cb-metar
+                port:
+                  number: 80

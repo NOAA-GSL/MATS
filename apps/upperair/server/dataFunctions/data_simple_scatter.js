@@ -107,7 +107,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     const statisticClause =
       `sum(${variableX[0]}) as square_diff_sumX, sum(${variableX[1]}) as N_sumX, sum(${variableX[2]}) as obs_model_diff_sumX, sum(${variableX[3]}) as model_sumX, sum(${variableX[4]}) as obs_sumX, sum(${variableX[5]}) as abs_sumX, ` +
       `sum(${variableY[0]}) as square_diff_sumY, sum(${variableY[1]}) as N_sumY, sum(${variableY[2]}) as obs_model_diff_sumY, sum(${variableY[3]}) as model_sumY, sum(${variableY[4]}) as obs_sumY, sum(${variableY[5]}) as abs_sumY, ` +
-      `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', m0.mb10 * 10, ';', ${variableX[0]}, ';', ${variableX[1]}, ';', ${variableX[2]}, ';', ${variableX[3]}, ';', ${variableX[4]}, ';', ${variableX[5]}, ';', ${variableY[0]}, ';', ${variableY[1]}, ';', ${variableY[2]}, ';', ${variableY[3]}, ';', ${variableY[4]}, ';', ${variableY[5]} order by unix_timestamp(m0.date)+3600*m0.hour, m0.mb10 * 10) as sub_data, count(${variableX[0]}) as N0`;
+      `group_concat(unix_timestamp(m0.date)+3600*m0.hour, ';', m0.mb10 * 10, ';', ${variableX[0]}, ';', ${variableX[1]}, ';', ${variableX[2]}, ';', ${variableX[3]}, ';', ${variableX[4]}, ';', ${variableX[5]}, ';', ${variableY[0]}, ';', ${variableY[1]}, ';', ${variableY[2]}, ';', ${variableY[3]}, ';', ${variableY[4]}, ';', ${variableY[5]} order by unix_timestamp(m0.date)+3600*m0.hour, m0.mb10 * 10) as sub_data, count(${variableX[0]}) as n0`;
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
@@ -167,7 +167,16 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       // Most of the RAOBs tables don't store a model sum or an obs sum for some reason.
       // So, we get the obs sum from HRRR_OPS, HRRR_HI, or GFS, because the obs are the same across all models.
       // Then we get the model sum by adding the obs sum to the bias sum (bias = model-obs).
-      if (["5", "14", "15", "16", "17", "18"].includes(region.toString())) {
+      // We exclude GSL's main models, which do have all the sums.
+      const modelsToExclude = [
+        "ncep_oper_Areg",
+        "RAP_130_Areg",
+        "RAP_Areg",
+        "HRRR_Areg",
+      ];
+      if (modelsToExclude.includes(model)) {
+        queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.${model}${region} as m1`;
+      } else if (["5", "14", "15", "16", "17", "18"].includes(region.toString())) {
         queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.HRRR_OPS_Areg${region} as m1`;
       } else if (region.toString() === "19") {
         queryTableClause = `${queryTableClause}, ${databaseRef.sumsDB}.HRRR_HI_Areg${region} as m1`;
@@ -192,7 +201,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       try {
         statement =
           "{{binClause}} " +
-          "count(distinct {{dateString}}) as N_times, " +
+          "count(distinct {{dateString}}) as nTimes, " +
           "min({{dateString}}) as min_secs, " +
           "max({{dateString}}) as max_secs, " +
           "{{statisticClause}} " +

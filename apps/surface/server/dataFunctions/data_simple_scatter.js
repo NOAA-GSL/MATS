@@ -108,7 +108,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     const statisticClause =
       `sum(${variableX[0]}) as square_diff_sumX, sum(${variableX[1]}) as N_sumX, sum(${variableX[2]}) as obs_model_diff_sumX, sum(${variableX[3]}) as model_sumX, sum(${variableX[4]}) as obs_sumX, sum(${variableX[5]}) as abs_sumX, ` +
       `sum(${variableY[0]}) as square_diff_sumY, sum(${variableY[1]}) as N_sumY, sum(${variableY[2]}) as obs_model_diff_sumY, sum(${variableY[3]}) as model_sumY, sum(${variableY[4]}) as obs_sumY, sum(${variableY[5]}) as abs_sumY, ` +
-      `group_concat(m0.valid_day+3600*m0.hour, ';', ${variableX[0]}, ';', ${variableX[1]}, ';', ${variableX[2]}, ';', ${variableX[3]}, ';', ${variableX[4]}, ';', ${variableX[5]}, ';', ${variableY[0]}, ';', ${variableY[1]}, ';', ${variableY[2]}, ';', ${variableY[3]}, ';', ${variableY[4]}, ';', ${variableY[5]} order by m0.valid_day+3600*m0.hour) as sub_data, count(${variableX[0]}) as N0`;
+      `group_concat(m0.valid_day+3600*m0.hour, ';', ${variableX[0]}, ';', ${variableX[1]}, ';', ${variableX[2]}, ';', ${variableX[3]}, ';', ${variableX[4]}, ';', ${variableX[5]}, ';', ${variableY[0]}, ';', ${variableY[1]}, ';', ${variableY[2]}, ';', ${variableY[3]}, ';', ${variableY[4]}, ';', ${variableY[5]} order by m0.valid_day+3600*m0.hour) as sub_data, count(${variableX[0]}) as n0`;
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
@@ -148,7 +148,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       try {
         statement =
           "{{binClause}} " +
-          "count(distinct {{dateString}}) as N_times, " +
+          "count(distinct {{dateString}}) as nTimes, " +
           "min({{dateString}}) as min_secs, " +
           "max({{dateString}}) as max_secs, " +
           "{{statisticClause}} " +

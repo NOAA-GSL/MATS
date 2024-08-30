@@ -25,7 +25,7 @@ except ImportError:
 
 ############################################################################
 
-def update_rpm_record(cnx, cursor, table_name, display_text, sources, metar_string, regions, fcst_lens, display_category, display_order, mindate, maxdate, numrecs):
+def update_rpm_record(cnx, cursor, table_name, display_text, sources, metar_string, model_type, regions, fcst_lens, display_category, display_order, mindate, maxdate, numrecs):
 
     # see if this record already exists in the build table
     # (does not guarantee the result will be the same for the prod table)
@@ -52,11 +52,12 @@ def update_rpm_record(cnx, cursor, table_name, display_text, sources, metar_stri
         updated_utc = datetime.utcnow().strftime('%s')
         # if it's a new record for the build table, add it
         if build_record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, sources, metar_string, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, sources, metar_string, model_type, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(sources))
             qd.append(str(metar_string))
+            qd.append(str(model_type))
             qd.append(str(regions))
             qd.append(str(fcst_lens))
             qd.append(display_category)
@@ -70,9 +71,10 @@ def update_rpm_record(cnx, cursor, table_name, display_text, sources, metar_stri
             cnx.commit()
         else:
             # if there's a pre-existing record for the build table, update it
-            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET sources = %s, metar_string = %s, regions = %s, fcst_lens = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
+            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET sources = %s, metar_string = %s, model_type = %s, regions = %s, fcst_lens = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(sources))
             qd.append(str(metar_string))
+            qd.append(str(model_type))
             qd.append(str(regions))
             qd.append(str(fcst_lens))
             qd.append(display_category)
@@ -89,11 +91,12 @@ def update_rpm_record(cnx, cursor, table_name, display_text, sources, metar_stri
         qd = []
         # if it's a new record for the prod table, add it
         if prod_record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, sources, metar_string, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, sources, metar_string, model_type, regions, fcst_lens, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(sources))
             qd.append(str(metar_string))
+            qd.append(str(model_type))
             qd.append(str(regions))
             qd.append(str(fcst_lens))
             qd.append(display_category)
@@ -107,9 +110,10 @@ def update_rpm_record(cnx, cursor, table_name, display_text, sources, metar_stri
             cnx.commit()
         else:
             # if there's a pre-existing record for the prod table, update it
-            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories SET sources = %s, metar_string = %s, regions = %s, fcst_lens = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
+            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories SET sources = %s, metar_string = %s, model_type = %s, regions = %s, fcst_lens = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(sources))
             qd.append(str(metar_string))
+            qd.append(str(model_type))
             qd.append(str(regions))
             qd.append(str(fcst_lens))
             qd.append(display_category)
@@ -233,6 +237,7 @@ def reprocess_specific_metadata(models_to_reprocess):
         per_model[model]['display_text'] = ""
         per_model[model]['sources'] = []
         per_model[model]['metar_strings'] = []
+        per_model[model]['model_type'] = ""
         per_model[model]['region'] = []
         per_model[model]['fcst_len'] = []
         per_model[model]['mindate'] = sys.float_info.max
@@ -298,6 +303,19 @@ def reprocess_specific_metadata(models_to_reprocess):
                             per_model[model]['sources'].append(
                                 metar_source_map[metar_str])
 
+                        # get model_type for this model
+                        cursor2.execute("use madis3")
+                        get_this_model_type = "show tables like '" + model + "%';"
+                        cursor2.execute(get_this_model_type)
+                        this_model_type = "retro"
+                        for row2 in cursor2:
+                            val = str(list(row2.values())[0])
+                            if val == model + "qp1f":
+                                this_model_type = "realtime"
+                        per_model[model]['model_type'] = this_model_type
+                        usedb = "use " + db
+                        cursor2.execute(usedb)
+
                         get_fcst_lens = (
                             "SELECT DISTINCT fcst_len FROM " + tablename + ";")
                         cursor2.execute(get_fcst_lens)
@@ -327,7 +345,7 @@ def reprocess_specific_metadata(models_to_reprocess):
 
     for model in models_to_reprocess:
         if len(per_model[model]['region']) > 0 and len(per_model[model]['fcst_len']) > 0:
-            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['sources'], per_model[model]['metar_strings'], per_model[model]['region'], per_model[model]
+            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['sources'], per_model[model]['metar_strings'], per_model[model]['model_type'], per_model[model]['region'], per_model[model]
                               ['fcst_len'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
 
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')

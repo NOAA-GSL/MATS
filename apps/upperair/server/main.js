@@ -72,7 +72,7 @@ const doPlotParams = function () {
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
-      displayGroup: 3,
+      displayGroup: 4,
     });
 
     const yAxisOptionsMap = {
@@ -299,6 +299,59 @@ const doPlotParams = function () {
       displayOrder: 11,
       displayPriority: 1,
       displayGroup: 2,
+    });
+
+    const mapRangeOptionsMap = {
+      "Default range": ["default"],
+      "Set range": ["set"],
+    };
+    matsCollections.PlotParams.insert({
+      name: "map-range-controls",
+      type: matsTypes.InputTypes.select,
+      optionsMap: mapRangeOptionsMap,
+      options: Object.keys(mapRangeOptionsMap),
+      hideOtherFor: {
+        "map-low-limit": ["Default range"],
+        "map-high-limit": ["Default range"],
+      },
+      default: Object.keys(mapRangeOptionsMap)[0],
+      controlButtonCovered: true,
+      controlButtonText: "Map colorscale",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+
+    matsCollections.PlotParams.insert({
+      name: "map-low-limit",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-100",
+      max: "100",
+      step: "any",
+      default: "0",
+      controlButtonCovered: true,
+      controlButtonText: "low limit",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+
+    matsCollections.PlotParams.insert({
+      name: "map-high-limit",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-100",
+      max: "100",
+      step: "any",
+      default: "5",
+      controlButtonCovered: true,
+      controlButtonText: "high limit",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 3,
     });
   } else {
     // need to update the dates selector if the metadata has changed

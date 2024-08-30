@@ -277,7 +277,7 @@ def reprocess_specific_metadata(models_to_reprocess):
 
     for model in models_to_reprocess:
         if len(per_model[model]['vgtyp']) > 0 and len(per_model[model]['fcst_len']) > 0:
-            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['vgtyp'], per_model[model]['fcst_len'], per_model[model]
+            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['fcst_len'], per_model[model]['vgtyp'], per_model[model]
                               ['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
 
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
