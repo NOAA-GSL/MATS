@@ -271,7 +271,6 @@ dataDieoff = function (plotParams, plotFunction) {
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
-      singleCycle = fromSecs;
     }
 
     // axisKey is used to determine which axis a curve should use.
