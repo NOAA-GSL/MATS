@@ -79,7 +79,7 @@ dataMap = function (plotParams, plotFunction) {
 
   let sitesClause = "";
 
-  if (database === "AMDAR") {
+  if (database.includes("AMDAR")) {
     throw new Error(
       "Single/multi-station plotting is not supported by the AMDAR databse."
     );

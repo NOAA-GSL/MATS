@@ -62,7 +62,7 @@ dataMap = function (plotParams, plotFunction) {
 
   const thresholdStr = curve.threshold;
   let threshold = "";
-  if (variableValuesMap[queryVariable][2]) {
+  if (variableValuesMap[queryVariable][1]) {
     threshold = Object.keys(
       matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
     ).find(

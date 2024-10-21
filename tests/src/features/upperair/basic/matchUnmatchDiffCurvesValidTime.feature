@@ -15,8 +15,8 @@ Feature: Match Unmatch Diff Curves Valid Time
     Scenario: matchUnmatchDiffCurvesValidTime
         When I set the plot type to "ValidTime"
         Then the plot type should be "ValidTime"
-        When I change the "database" parameter to "AMDAR"
-        Then the "database" parameter value matches "AMDAR"
+        When I change the "database" parameter to "AMDAR (Traditional)"
+        Then the "database" parameter value matches "AMDAR (Traditional)"
         When I change the "data-source" parameter to "RAP_GSL_iso"
         Then the "data-source" parameter value matches "RAP_GSL_iso"
         When I set the curve-dates to "09/21/2019 00:00 - 09/24/2019 00:00"

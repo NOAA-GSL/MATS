@@ -16,8 +16,8 @@ Feature: Add Remove DailyModelCycle Curve
     Scenario: addRemoveDailyModelCycleCurve
         When I set the plot type to "DailyModelCycle"
         Then the plot type should be "DailyModelCycle"
-        When I change the "database" parameter to "AMDAR"
-        Then the "database" parameter value matches "AMDAR"
+        When I change the "database" parameter to "AMDAR (Traditional)"
+        Then the "database" parameter value matches "AMDAR (Traditional)"
         When I change the "data-source" parameter to "RAP_GSL_iso"
         Then the "data-source" parameter value matches "RAP_GSL_iso"
         When I set the dates to "09/21/2019 00:00 - 09/24/2019 00:00"

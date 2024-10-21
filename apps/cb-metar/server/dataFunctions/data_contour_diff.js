@@ -82,7 +82,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     if (
       xAxisParam !== "Threshold" &&
       yAxisParam !== "Threshold" &&
-      variableValuesMap[queryVariable][2]
+      variableValuesMap[queryVariable][1]
     ) {
       // threshold is not an axis param and this is a CTC app
       // so find which threshold was selected
@@ -101,7 +101,7 @@ dataContourDiff = function (plotParams, plotFunction) {
           ] === thresholdStr
       );
       allThresholds = [threshold.replace(/_/g, ".")];
-    } else if (variableValuesMap[queryVariable][2]) {
+    } else if (variableValuesMap[queryVariable][1]) {
       // threshold is an axis param and this is a CTC app
       // so catalogue the thresholds now, we'll need to do a separate query for each
       allThresholds = Object.keys(
