@@ -15,6 +15,13 @@ import {
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
+// This app references two databases, which are listed here.
+const obsDBNames = {
+  Instantaneous: { sumsDB: "surfrad3_sums" },
+  "Time-averaged according to scale": { sumsDB: "surfrad3_avg_sums" },
+};
+const obs = Object.keys(obsDBNames);
+
 // determined in doCurveParanms
 let minDate;
 let maxDate;
@@ -35,7 +42,7 @@ const doPlotParams = function () {
       options: [""],
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ["data-source"],
+      superiorNames: ["obs-type", "data-source"],
       controlButtonCovered: true,
       default: dstr,
       controlButtonVisibility: "block",
@@ -357,52 +364,67 @@ const doCurveParams = function () {
   }
 
   try {
-    const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool, // eslint-disable-line no-undef
-      "select model,regions,display_text,fcst_lens,scle,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
-    );
-    for (let i = 0; i < rows.length; i += 1) {
-      const modelValue = rows[i].model.trim();
-      const model = rows[i].display_text.trim();
-      modelOptionsMap[model] = [modelValue];
+    for (let didx = 0; didx < obs.length; didx += 1) {
+      const obType = obs[didx];
+      modelOptionsMap[obType] = {};
+      modelDateRangeMap[obType] = {};
+      forecastLengthOptionsMap[obType] = {};
+      scaleModelOptionsMap[obType] = {};
+      regionModelOptionsMap[obType] = {};
 
-      const rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-      const rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-      modelDateRangeMap[model] = {
-        minDate: rowMinDate,
-        maxDate: rowMaxDate,
-      };
+      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+        sumPool, // eslint-disable-line no-undef
+        `select model,regions,display_text,fcst_lens,scle,mindate,maxdate from ${obsDBNames[obType].sumsDB}.regions_per_model_mats_all_categories order by display_category, display_order;`
+      );
+      for (let i = 0; i < rows.length; i += 1) {
+        const modelValue = rows[i].model.trim();
+        const model = rows[i].display_text.trim();
+        modelOptionsMap[obType][model] = [modelValue];
 
-      const forecastLengths = rows[i].fcst_lens;
-      forecastLengthOptionsMap[model] = forecastLengths
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim)
-        .map(function (fhr) {
-          return (Number(fhr.replace(/'|\[|\]/g, "")) / 60).toString();
-        });
+        const rowMinDate = moment
+          .utc(rows[i].mindate * 1000)
+          .format("MM/DD/YYYY HH:mm");
+        const rowMaxDate = moment
+          .utc(rows[i].maxdate * 1000)
+          .format("MM/DD/YYYY HH:mm");
+        modelDateRangeMap[obType][model] = {
+          minDate: rowMinDate,
+          maxDate: rowMaxDate,
+        };
 
-      const scales = rows[i].scle;
-      scaleModelOptionsMap[model] = scales
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim)
-        .map(function (scale) {
-          return allScaleValuesMap[scale.replace(/'|\[|\]/g, "")];
-        });
-
-      const { regions } = rows[i];
-      regionModelOptionsMap[model] = [
-        allRegionValuesMap.all_stat,
-        allRegionValuesMap.all_surf,
-        allRegionValuesMap.all_sol,
-      ];
-      regionModelOptionsMap[model] = regionModelOptionsMap[model].concat(
-        regions
+        const forecastLengths = rows[i].fcst_lens;
+        forecastLengthOptionsMap[obType][model] = forecastLengths
           .split(",")
           .map(Function.prototype.call, String.prototype.trim)
-          .map(function (region) {
-            return allRegionValuesMap[region.replace(/'|\[|\]/g, "")];
-          })
-      );
+          .map(function (fhr) {
+            return (Number(fhr.replace(/'|\[|\]/g, "")) / 60).toString();
+          });
+
+        const scales = rows[i].scle;
+        scaleModelOptionsMap[obType][model] = scales
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (scale) {
+            return allScaleValuesMap[scale.replace(/'|\[|\]/g, "")];
+          });
+
+        const { regions } = rows[i];
+        regionModelOptionsMap[obType][model] = [
+          allRegionValuesMap.all_stat,
+          allRegionValuesMap.all_surf,
+          allRegionValuesMap.all_sol,
+        ];
+        regionModelOptionsMap[obType][model] = regionModelOptionsMap[obType][
+          model
+        ].concat(
+          regions
+            .split(",")
+            .map(Function.prototype.call, String.prototype.trim)
+            .map(function (region) {
+              return allRegionValuesMap[region.replace(/'|\[|\]/g, "")];
+            })
+        );
+      }
     }
   } catch (err) {
     throw new Error(err.message);
@@ -425,16 +447,16 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["data-source"].findOne({ name: "data-source" }) === undefined) {
-    matsCollections["data-source"].insert({
-      name: "data-source",
+  if (matsCollections["obs-type"].findOne({ name: "obs-type" }) === undefined) {
+    matsCollections["obs-type"].insert({
+      name: "obs-type",
       type: matsTypes.InputTypes.select,
-      optionsMap: modelOptionsMap,
+      optionsMap: obsDBNames,
+      options: obs,
       dates: modelDateRangeMap,
-      options: Object.keys(modelOptionsMap),
-      dependentNames: ["region", "forecast-length", "scale", "dates", "curve-dates"],
+      dependentNames: ["data-source"],
       controlButtonCovered: true,
-      default: Object.keys(modelOptionsMap)[0],
+      default: obs[0],
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 2,
@@ -443,22 +465,50 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
+    const currentParam = matsCollections["obs-type"].findOne({ name: "obs-type" });
+    if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
+      // have to reload variable data
+      matsCollections["obs-type"].update(
+        { name: "obs-type" },
+        {
+          $set: {
+            dates: modelDateRangeMap,
+          },
+        }
+      );
+    }
+  }
+
+  if (matsCollections["data-source"].findOne({ name: "data-source" }) === undefined) {
+    matsCollections["data-source"].insert({
+      name: "data-source",
+      type: matsTypes.InputTypes.select,
+      optionsMap: modelOptionsMap,
+      options: Object.keys(modelOptionsMap[obs[0]]),
+      superiorNames: ["obs-type"],
+      dependentNames: ["region", "forecast-length", "scale", "dates", "curve-dates"],
+      controlButtonCovered: true,
+      default: Object.keys(modelOptionsMap[obs[0]])[0],
+      unique: false,
+      controlButtonVisibility: "block",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  } else {
+    // it is defined but check for necessary update
     const currentParam = matsCollections["data-source"].findOne({
       name: "data-source",
     });
-    if (
-      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap) ||
-      !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
-    ) {
+    if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
       matsCollections["data-source"].update(
         { name: "data-source" },
         {
           $set: {
             optionsMap: modelOptionsMap,
-            dates: modelDateRangeMap,
-            options: Object.keys(modelOptionsMap),
-            default: Object.keys(modelOptionsMap)[0],
+            options: Object.keys(modelOptionsMap[obs[0]]),
+            default: Object.keys(modelOptionsMap[obs[0]])[0],
           },
         }
       );
@@ -470,17 +520,19 @@ const doCurveParams = function () {
       name: "region",
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
-      options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
+      options:
+        regionModelOptionsMap[obs[0]][Object.keys(regionModelOptionsMap[obs[0]])[0]],
       valuesMap: allRegionValuesMap,
-      superiorNames: ["data-source"],
+      superiorNames: ["obs-type", "data-source"],
       controlButtonCovered: true,
       controlButtonText: "site",
       unique: false,
-      default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+      default:
+        regionModelOptionsMap[obs[0]][Object.keys(regionModelOptionsMap[obs[0]])[0]][0],
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 1,
       displayPriority: 1,
-      displayGroup: 1,
+      displayGroup: 2,
     });
   } else {
     // it is defined but check for necessary update
@@ -496,8 +548,14 @@ const doCurveParams = function () {
           $set: {
             optionsMap: regionModelOptionsMap,
             valuesMap: allRegionValuesMap,
-            options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
-            default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+            options:
+              regionModelOptionsMap[obs[0]][
+                Object.keys(regionModelOptionsMap[obs[0]])[0]
+              ],
+            default:
+              regionModelOptionsMap[obs[0]][
+                Object.keys(regionModelOptionsMap[obs[0]])[0]
+              ][0],
           },
         }
       );
@@ -530,7 +588,7 @@ const doCurveParams = function () {
       unique: false,
       default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 1,
+      displayOrder: 2,
       displayPriority: 1,
       displayGroup: 2,
     });
@@ -546,7 +604,7 @@ const doCurveParams = function () {
       unique: false,
       default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 4,
       displayPriority: 1,
       displayGroup: 2,
     });
@@ -631,7 +689,7 @@ const doCurveParams = function () {
       unique: false,
       default: Object.keys(statVarOptionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 2,
+      displayOrder: 3,
       displayPriority: 1,
       displayGroup: 2,
     });
@@ -648,7 +706,7 @@ const doCurveParams = function () {
       unique: false,
       default: Object.keys(statVarOptionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 4,
+      displayOrder: 5,
       displayPriority: 1,
       displayGroup: 2,
     });
@@ -670,17 +728,20 @@ const doCurveParams = function () {
       displayGroup: 3,
     });
   }
+
   if (matsCollections.scale.findOne({ name: "scale" }) === undefined) {
     matsCollections.scale.insert({
       name: "scale",
       type: matsTypes.InputTypes.select,
       optionsMap: scaleModelOptionsMap,
-      options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],
+      options:
+        scaleModelOptionsMap[obs[0]][Object.keys(scaleModelOptionsMap[obs[0]])[0]],
       valuesMap: allScaleValuesMap,
-      superiorNames: ["data-source"],
+      superiorNames: ["obs-type", "data-source"],
       controlButtonCovered: true,
       unique: false,
-      default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
+      default:
+        scaleModelOptionsMap[obs[0]][Object.keys(scaleModelOptionsMap[obs[0]])[0]][0],
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
@@ -699,9 +760,14 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: scaleModelOptionsMap,
-            valuesMap: allScaleValuesMap,
-            options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],
-            default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][1],
+            options:
+              scaleModelOptionsMap[obs[0]][
+                Object.keys(scaleModelOptionsMap[obs[0]])[0]
+              ],
+            default:
+              scaleModelOptionsMap[obs[0]][
+                Object.keys(scaleModelOptionsMap[obs[0]])[0]
+              ][0],
           },
         }
       );
@@ -716,8 +782,11 @@ const doCurveParams = function () {
       name: "forecast-length",
       type: matsTypes.InputTypes.select,
       optionsMap: forecastLengthOptionsMap,
-      options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],
-      superiorNames: ["data-source"],
+      options:
+        forecastLengthOptionsMap[obs[0]][
+          Object.keys(forecastLengthOptionsMap[obs[0]])[0]
+        ],
+      superiorNames: ["obs-type", "data-source"],
       selected: "",
       controlButtonCovered: true,
       unique: false,
@@ -742,7 +811,10 @@ const doCurveParams = function () {
         {
           $set: {
             optionsMap: forecastLengthOptionsMap,
-            options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],
+            options:
+              forecastLengthOptionsMap[obs[0]][
+                Object.keys(forecastLengthOptionsMap[obs[0]])[0]
+              ],
           },
         }
       );
@@ -940,12 +1012,12 @@ const doCurveParams = function () {
     { name: "data-source" },
     { default: 1 }
   ).default;
-  modelDateRangeMap = matsCollections["data-source"].findOne(
-    { name: "data-source" },
+  modelDateRangeMap = matsCollections["obs-type"].findOne(
+    { name: "obs-type" },
     { dates: 1 }
   ).dates;
-  minDate = modelDateRangeMap[defaultDataSource].minDate;
-  maxDate = modelDateRangeMap[defaultDataSource].maxDate;
+  minDate = modelDateRangeMap[obs[0]][defaultDataSource].minDate;
+  maxDate = modelDateRangeMap[obs[0]][defaultDataSource].maxDate;
 
   // need to turn the raw max and min from the metadata into the last valid month of data
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
@@ -972,7 +1044,7 @@ const doCurveParams = function () {
       options: Object.keys(optionsMap).sort(),
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ["data-source"],
+      superiorNames: ["obs-type", "data-source"],
       controlButtonCovered: true,
       unique: false,
       default: dstr,
@@ -1030,6 +1102,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "obs-type", " "],
         ["", "scale", ", "],
         ["", "variable", " "],
         ["", "statistic", ", "],
@@ -1039,6 +1112,7 @@ const doCurveTextPatterns = function () {
       ],
       displayParams: [
         "label",
+        "obs-type",
         "data-source",
         "region",
         "statistic",
@@ -1056,6 +1130,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "obs-type", " "],
         ["", "scale", ", "],
         ["", "variable", " "],
         ["", "statistic", ", "],
@@ -1066,6 +1141,7 @@ const doCurveTextPatterns = function () {
       ],
       displayParams: [
         "label",
+        "obs-type",
         "data-source",
         "region",
         "statistic",
@@ -1084,6 +1160,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "obs-type", " "],
         ["", "scale", ", "],
         ["", "variable", " "],
         ["", "statistic", ", "],
@@ -1092,6 +1169,7 @@ const doCurveTextPatterns = function () {
       ],
       displayParams: [
         "label",
+        "obs-type",
         "data-source",
         "region",
         "statistic",
@@ -1108,6 +1186,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "obs-type", " "],
         ["", "scale", ", "],
         ["", "variable", " "],
         ["", "statistic", ", "],
@@ -1115,6 +1194,7 @@ const doCurveTextPatterns = function () {
       ],
       displayParams: [
         "label",
+        "obs-type",
         "data-source",
         "region",
         "statistic",
@@ -1130,6 +1210,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "obs-type", " "],
         ["", "scale", ", "],
         ["", "variable", " "],
         ["", "statistic", ", "],
@@ -1139,6 +1220,7 @@ const doCurveTextPatterns = function () {
       ],
       displayParams: [
         "label",
+        "obs-type",
         "data-source",
         "region",
         "statistic",
@@ -1156,6 +1238,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "obs-type", " "],
         ["", "scale", ", "],
         ["", "variable", " "],
         ["", "statistic", ", "],
@@ -1164,6 +1247,7 @@ const doCurveTextPatterns = function () {
       ],
       displayParams: [
         "label",
+        "obs-type",
         "data-source",
         "region",
         "statistic",
@@ -1180,6 +1264,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "obs-type", " "],
         ["", "scale", ", "],
         ["", "variable", " "],
         ["", "statistic", ", "],
@@ -1188,6 +1273,7 @@ const doCurveTextPatterns = function () {
       ],
       displayParams: [
         "label",
+        "obs-type",
         "data-source",
         "region",
         "statistic",
@@ -1204,6 +1290,7 @@ const doCurveTextPatterns = function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "obs-type", " "],
         ["", "scale", ", "],
         ["", "x-variable", " "],
         ["", "x-statistic", " vs "],
@@ -1214,6 +1301,7 @@ const doCurveTextPatterns = function () {
       ],
       displayParams: [
         "label",
+        "obs-type",
         "data-source",
         "region",
         "x-statistic",
