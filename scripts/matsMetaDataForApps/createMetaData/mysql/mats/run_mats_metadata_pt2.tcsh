@@ -36,4 +36,5 @@ conda activate avid_verify_py3
 # /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_ensemble_cref.py deploy
 # /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_ensemble_pqpf.py deploy
 # /home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_cloud_base.py deploy
+#/home/role.amb-verif/mats_metadata/make_regions_per_model_mats_all_categories_surfrad_avg.py deploy
 conda deactivate
