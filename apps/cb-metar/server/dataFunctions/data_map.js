@@ -161,7 +161,7 @@ dataMap = function (plotParams, plotFunction) {
   }
 
   const sitesList = curve.sites === undefined ? [] : curve.sites;
-  if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
+  if (sitesList.length === 0 || sitesList === matsTypes.InputTypes.unused) {
     throw new Error(
       "INFO:  Please add sites in order to get a single/multi station plot."
     );

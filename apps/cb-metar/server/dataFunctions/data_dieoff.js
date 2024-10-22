@@ -266,12 +266,11 @@ dataDieoff = function (plotParams, plotFunction) {
     } else {
       // Station plot, with or without filtering
       sitesList = curve.sites === undefined ? [] : curve.sites;
-      if (sitesList.length === 0 && sitesList === matsTypes.InputTypes.unused) {
+      if (sitesList.length === 0 || sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
-      singleCycle = fromSecs;
     }
 
     // axisKey is used to determine which axis a curve should use.
