@@ -293,6 +293,59 @@ const doPlotParams = function () {
       displayPriority: 1,
       displayGroup: 2,
     });
+
+    const mapRangeOptionsMap = {
+      "Default range": ["default"],
+      "Set range": ["set"],
+    };
+    matsCollections.PlotParams.insert({
+      name: "map-range-controls",
+      type: matsTypes.InputTypes.select,
+      optionsMap: mapRangeOptionsMap,
+      options: Object.keys(mapRangeOptionsMap),
+      hideOtherFor: {
+        "map-low-limit": ["Default range"],
+        "map-high-limit": ["Default range"],
+      },
+      default: Object.keys(mapRangeOptionsMap)[0],
+      controlButtonCovered: true,
+      controlButtonText: "Map colorscale",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+
+    matsCollections.PlotParams.insert({
+      name: "map-low-limit",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-100",
+      max: "100",
+      step: "any",
+      default: "0",
+      controlButtonCovered: true,
+      controlButtonText: "low limit",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+
+    matsCollections.PlotParams.insert({
+      name: "map-high-limit",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-100",
+      max: "100",
+      step: "any",
+      default: "5",
+      controlButtonCovered: true,
+      controlButtonText: "high limit",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
   } else {
     // need to update the dates selector if the metadata has changed
     const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
@@ -334,6 +387,7 @@ const doCurveParams = function () {
   const modelOptionsMap = {};
   let modelDateRangeMap = {};
   const regionModelOptionsMap = {};
+  const sitesLocationMap = [];
   const forecastLengthOptionsMap = {};
   const scaleModelOptionsMap = {};
   const allRegionValuesMap = {};
@@ -425,6 +479,36 @@ const doCurveParams = function () {
             })
         );
       }
+    }
+  } catch (err) {
+    throw new Error(err.message);
+  }
+
+  try {
+    const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+      sumPool, // eslint-disable-line no-undef
+      "select id,name,net,lat,lon,elev from surfrad3_sums.stations order by id;"
+    );
+    for (let i = 0; i < rows.length; i += 1) {
+      const siteId = rows[i].id;
+      const siteName = rows[i].name;
+      const siteNet = rows[i].net;
+      const siteLat = rows[i].lat;
+      const siteLon = rows[i].lon;
+      const siteElev = rows[i].elev;
+
+      // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
+      // Also exclude stations with missing data
+      const point = [siteLat, siteLon];
+      const obj = {
+        id: siteId,
+        name: siteName,
+        origName: siteName,
+        net: siteNet,
+        point,
+        elevation: siteElev,
+      };
+      sitesLocationMap.push(obj);
     }
   } catch (err) {
     throw new Error(err.message);
@@ -523,6 +607,7 @@ const doCurveParams = function () {
       options:
         regionModelOptionsMap[obs[0]][Object.keys(regionModelOptionsMap[obs[0]])[0]],
       valuesMap: allRegionValuesMap,
+      sitesMap: sitesLocationMap,
       superiorNames: ["obs-type", "data-source"],
       controlButtonCovered: true,
       controlButtonText: "site",
@@ -1205,6 +1290,32 @@ const doCurveTextPatterns = function () {
       groupSize: 6,
     });
     matsCollections.CurveTextPatterns.insert({
+      plotType: matsTypes.PlotTypes.map,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", ": "],
+        ["", "region", ", "],
+        ["", "obs-type", " "],
+        ["", "scale", ", "],
+        ["", "variable", " "],
+        ["", "statistic", ", "],
+        ["fcst_len: ", "forecast-length", " h "],
+        [" valid-time:", "valid-time", ""],
+      ],
+      displayParams: [
+        "label",
+        "obs-type",
+        "data-source",
+        "region",
+        "statistic",
+        "variable",
+        "scale",
+        "forecast-length",
+        "valid-time",
+      ],
+      groupSize: 6,
+    });
+    matsCollections.CurveTextPatterns.insert({
       plotType: matsTypes.PlotTypes.histogram,
       textPattern: [
         ["", "label", ": "],
@@ -1363,6 +1474,12 @@ const doPlotGraph = function () {
       plotType: matsTypes.PlotTypes.dailyModelCycle,
       graphFunction: "graphPlotly",
       dataFunction: "dataDailyModelCycle",
+      checked: false,
+    });
+    matsCollections.PlotGraphFunctions.insert({
+      plotType: matsTypes.PlotTypes.map,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataMap",
       checked: false,
     });
     matsCollections.PlotGraphFunctions.insert({
