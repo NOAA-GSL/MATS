@@ -225,9 +225,3 @@ hr {
 .blink {
   animation: blink 1s step-start 0s infinite;
 }
-
-.login-link-text {
-  color: white;
-  font-size: medium;
-  text-decoration: none !important;
-}
