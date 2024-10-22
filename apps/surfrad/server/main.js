@@ -365,21 +365,21 @@ const doCurveParams = function () {
 
   try {
     for (let didx = 0; didx < obs.length; didx += 1) {
-      const obType = obs[didx];
-      modelOptionsMap[obType] = {};
-      modelDateRangeMap[obType] = {};
-      forecastLengthOptionsMap[obType] = {};
-      scaleModelOptionsMap[obType] = {};
-      regionModelOptionsMap[obType] = {};
+      const obsType = obs[didx];
+      modelOptionsMap[obsType] = {};
+      modelDateRangeMap[obsType] = {};
+      forecastLengthOptionsMap[obsType] = {};
+      scaleModelOptionsMap[obsType] = {};
+      regionModelOptionsMap[obsType] = {};
 
       const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
         sumPool, // eslint-disable-line no-undef
-        `select model,regions,display_text,fcst_lens,scle,mindate,maxdate from ${obsDBNames[obType].sumsDB}.regions_per_model_mats_all_categories order by display_category, display_order;`
+        `select model,regions,display_text,fcst_lens,scle,mindate,maxdate from ${obsDBNames[obsType].sumsDB}.regions_per_model_mats_all_categories order by display_category, display_order;`
       );
       for (let i = 0; i < rows.length; i += 1) {
         const modelValue = rows[i].model.trim();
         const model = rows[i].display_text.trim();
-        modelOptionsMap[obType][model] = [modelValue];
+        modelOptionsMap[obsType][model] = [modelValue];
 
         const rowMinDate = moment
           .utc(rows[i].mindate * 1000)
@@ -387,13 +387,13 @@ const doCurveParams = function () {
         const rowMaxDate = moment
           .utc(rows[i].maxdate * 1000)
           .format("MM/DD/YYYY HH:mm");
-        modelDateRangeMap[obType][model] = {
+        modelDateRangeMap[obsType][model] = {
           minDate: rowMinDate,
           maxDate: rowMaxDate,
         };
 
         const forecastLengths = rows[i].fcst_lens;
-        forecastLengthOptionsMap[obType][model] = forecastLengths
+        forecastLengthOptionsMap[obsType][model] = forecastLengths
           .split(",")
           .map(Function.prototype.call, String.prototype.trim)
           .map(function (fhr) {
@@ -401,7 +401,7 @@ const doCurveParams = function () {
           });
 
         const scales = rows[i].scle;
-        scaleModelOptionsMap[obType][model] = scales
+        scaleModelOptionsMap[obsType][model] = scales
           .split(",")
           .map(Function.prototype.call, String.prototype.trim)
           .map(function (scale) {
@@ -409,12 +409,12 @@ const doCurveParams = function () {
           });
 
         const { regions } = rows[i];
-        regionModelOptionsMap[obType][model] = [
+        regionModelOptionsMap[obsType][model] = [
           allRegionValuesMap.all_stat,
           allRegionValuesMap.all_surf,
           allRegionValuesMap.all_sol,
         ];
-        regionModelOptionsMap[obType][model] = regionModelOptionsMap[obType][
+        regionModelOptionsMap[obsType][model] = regionModelOptionsMap[obsType][
           model
         ].concat(
           regions
