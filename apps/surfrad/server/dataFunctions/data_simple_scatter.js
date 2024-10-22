@@ -57,8 +57,12 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     const binClause = matsCollections["bin-parameter"].findOne({
       name: "bin-parameter",
     }).optionsMap[binParam];
+
+    const obsType = curve["obs-type"];
+    const databaseRef = matsCollections["obs-type"].findOne({ name: "obs-type" })
+      .optionsMap[obsType].sumsDB;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+      .optionsMap[obsType][curve["data-source"]][0];
 
     const variableXStr = curve["x-variable"];
     const variableYStr = curve["y-variable"];
@@ -131,28 +135,28 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     if (region === "all_stat") {
       variableX = variableOptionsMap[variableXStr]["Predefined region"];
       variableY = variableOptionsMap[variableYStr]["Predefined region"];
-      queryTableClause = `from ${model}_all_site_sums as m0`;
+      queryTableClause = `from ${databaseRef}.${model}_all_site_sums as m0`;
       NAggregate = "sum";
       [, NClauseX] = variableX;
       [, NClauseY] = variableY;
     } else if (region === "all_surf") {
       variableX = variableOptionsMap[variableXStr]["Predefined region"];
       variableY = variableOptionsMap[variableYStr]["Predefined region"];
-      queryTableClause = `from ${model}_all_surfrad_sums as m0`;
+      queryTableClause = `from ${databaseRef}.${model}_all_surfrad_sums as m0`;
       NAggregate = "sum";
       [, NClauseX] = variableX;
       [, NClauseY] = variableY;
     } else if (region === "all_sol") {
       variableX = variableOptionsMap[variableXStr]["Predefined region"];
       variableY = variableOptionsMap[variableYStr]["Predefined region"];
-      queryTableClause = `from ${model}_all_solrad_sums as m0`;
+      queryTableClause = `from ${databaseRef}.${model}_all_solrad_sums as m0`;
       NAggregate = "sum";
       [, NClauseX] = variableX;
       [, NClauseY] = variableY;
     } else {
       variableX = variableOptionsMap[variableXStr]["Select stations"];
       variableY = variableOptionsMap[variableYStr]["Select stations"];
-      queryTableClause = `from ${model}_site_${region} as m0`;
+      queryTableClause = `from ${databaseRef}.${model}_site_${region} as m0`;
       NAggregate = "count";
       NClauseX = "1";
       NClauseY = "1";

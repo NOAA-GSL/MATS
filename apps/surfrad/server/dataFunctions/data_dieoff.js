@@ -53,8 +53,12 @@ dataDieoff = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { label } = curve;
     const { diffFrom } = curve;
+
+    const obsType = curve["obs-type"];
+    const databaseRef = matsCollections["obs-type"].findOne({ name: "obs-type" })
+      .optionsMap[obsType].sumsDB;
     const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+      .optionsMap[obsType][curve["data-source"]][0];
 
     const variableStr = curve.variable;
     const variableOptionsMap = matsCollections.variable.findOne(
@@ -109,22 +113,22 @@ dataDieoff = function (plotParams, plotFunction) {
     let variable;
     if (region === "all_stat") {
       variable = variableOptionsMap[variableStr]["Predefined region"];
-      queryTableClause = `from ${model}_all_site_sums as m0`;
+      queryTableClause = `from ${databaseRef}.${model}_all_site_sums as m0`;
       NAggregate = "sum";
       [, NClause] = variable;
     } else if (region === "all_surf") {
       variable = variableOptionsMap[variableStr]["Predefined region"];
-      queryTableClause = `from ${model}_all_surfrad_sums as m0`;
+      queryTableClause = `from ${databaseRef}.${model}_all_surfrad_sums as m0`;
       NAggregate = "sum";
       [, NClause] = variable;
     } else if (region === "all_sol") {
       variable = variableOptionsMap[variableStr]["Predefined region"];
-      queryTableClause = `from ${model}_all_solrad_sums as m0`;
+      queryTableClause = `from ${databaseRef}.${model}_all_solrad_sums as m0`;
       NAggregate = "sum";
       [, NClause] = variable;
     } else {
       variable = variableOptionsMap[variableStr]["Select stations"];
-      queryTableClause = `from ${model}_site_${region} as m0`;
+      queryTableClause = `from ${databaseRef}.${model}_site_${region} as m0`;
       NAggregate = "count";
       NClause = "1";
     }
