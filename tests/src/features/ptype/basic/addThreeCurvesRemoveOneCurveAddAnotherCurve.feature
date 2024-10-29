@@ -30,8 +30,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         When I click the "Add Curve" button
         Then "Curve1" is added
 
-        When I change the "data-source" parameter to "NAMnest_OPS_227"
-        Then the "data-source" parameter value matches "NAMnest_OPS_227"
+        When I change the "data-source" parameter to "NAM_NEST"
+        Then the "data-source" parameter value matches "NAM_NEST"
         When I click the "Add Curve" button
         Then "Curve2" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve2"
