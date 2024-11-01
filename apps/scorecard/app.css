@@ -24,15 +24,11 @@ body {
 }
 
 body {
-  margin-top: 1%;
-  margin-left: 2%;
-  margin-right: 2%;
-  margin-bottom: 1%;
   padding: 0;
   background: url("/packages/randyp_mats-common/public/img/bg.png") repeat;
   font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
   font-size: 15px;
-  color: #333333; /*#545454;*/
+  color: black
 }
 
 .main {
@@ -42,6 +38,11 @@ body {
   background-color: white;
   font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
   font-size: 15px;
+}
+
+.well {
+  border: none;
+  -webkit-box-shadow: none;
 }
 
 .modal-backdrop {

@@ -24,24 +24,25 @@ body {
 }
 
 body {
-  margin-top: 1%;
-  margin-left: 2%;
-  margin-right: 2%;
-  margin-bottom: 1%;
   padding: 0;
-  background: url("/packages/randyp_mats-common/public/img/bg.png") repeat;
+  background-color: grey;
   font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
   font-size: 15px;
-  color: #333333; /*#545454;*/
+  color: black;
 }
 
 .main {
   width: 100%;
   margin: 0;
   padding: 0;
-  background-color: white;
+  background-color: rgb(245, 245, 245);
   font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
   font-size: 15px;
+}
+
+.well {
+  border: none;
+  -webkit-box-shadow: none;
 }
 
 .modal-backdrop {
