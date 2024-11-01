@@ -35,7 +35,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
-  background-color: rgb(245, 245, 245);
+  background-color: white;
   font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
   font-size: 15px;
 }
@@ -43,6 +43,7 @@ body {
 .well {
   border: none;
   -webkit-box-shadow: none;
+  background-color: white;
 }
 
 .modal-backdrop {
