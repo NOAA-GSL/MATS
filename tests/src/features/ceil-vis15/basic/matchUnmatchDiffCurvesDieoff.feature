@@ -48,7 +48,7 @@ Feature: Match Unmatch Diff Curves Dieoff
         Then I should be on the main page
         And the "Plot Matched" button should be visible
 
-        When I click the "matching diffs" radio button
+        When I set the plotFormat parameter to "Diff all curves against the 1st added curve"
         Then "Curve1-Curve0" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve1-Curve0"
 
@@ -68,8 +68,7 @@ Feature: Match Unmatch Diff Curves Dieoff
         Then I should be on the main page
         And the "Plot Matched" button should be visible
 
-        When I click the "pairwise diffs" radio button
-        Then the plot format should be "pairwise"
+        When I set the plotFormat parameter to "Diff the 1st and 2nd curves, 3rd and 4th, etc"
         Then I should see a list of curves containing "Curve0,Curve1,Curve1-Curve0"
         And I should have 3 curves
 
@@ -89,7 +88,7 @@ Feature: Match Unmatch Diff Curves Dieoff
         Then I should be on the main page
         And the "Plot Matched" button should be visible
 
-        When I click the "no diffs" radio button
+        When I set the plotFormat parameter to "none"
         Then I should see a list of curves containing "Curve0,Curve1"
         And I should have 2 curves
 
