@@ -25,10 +25,10 @@ body {
 
 body {
   padding: 0;
-  background: url("/packages/randyp_mats-common/public/img/bg.png") repeat;
+  background-color: grey;
   font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
   font-size: 15px;
-  color: black
+  color: black;
 }
 
 .main {
@@ -46,23 +46,97 @@ body {
 }
 
 .modal-backdrop {
-  background-color: grey;
+  background-color: #ccc;
 }
 
 .modal-header {
-  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
-}
-
-.modal-body {
-  background-image: url("/packages/randyp_mats-common/public/img/texturetastic_gray.png");
-}
-
-.modal-content {
-  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
+  border-bottom: none;
 }
 
 .modal-footer {
-  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
+  border-top: none;
+}
+
+.form-control {
+  color: #000000;
+}
+
+.label-default {
+  background-color: #333333;
+}
+
+.btn-default {
+  color: #000000;
+  background-color: #fff;
+  border-color: #ccc;
+}
+
+.btn-default:hover,
+.btn-default:focus,
+.btn-default:active,
+.btn-default.active,
+.open > .dropdown-toggle.btn-default {
+  color: #000000;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #052c65;
+  border-color: #2e6da4;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.open > .dropdown-toggle.btn-primary {
+  color: #fff;
+  background-color: #114466;
+}
+
+.btn-info {
+  color: #000000;
+  background-color: #d9edf7;
+  border-color: #2e6da4;
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active,
+.btn-info.active,
+.open > .dropdown-toggle.btn-info {
+  color: #000000;
+  background-color: #99ccff;
+}
+
+.btn-success {
+  color: #000000;
+  background-color: #d1e7dd;
+  border-color: #4cae4c;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active,
+.btn-success.active,
+.open > .dropdown-toggle.btn-success {
+  color: #000000;
+  background-color: #aaffcc;
+}
+
+.btn-danger {
+  color: #000000;
+  background-color: #f8d7da;
+  border-color: #d43f3a;
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active,
+.btn-danger.active,
+.open > .dropdown-toggle.btn-danger {
+  color: #000000;
+  background-color: #ff9999;
 }
 
 #Mongol.Mongol_expand {

@@ -45,26 +45,6 @@ body {
   -webkit-box-shadow: none;
 }
 
-.modal-backdrop {
-  background-color: grey;
-}
-
-.modal-header {
-  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
-}
-
-.modal-body {
-  background-image: url("/packages/randyp_mats-common/public/img/texturetastic_gray.png");
-}
-
-.modal-content {
-  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
-}
-
-.modal-footer {
-  background-image: url("/packages/randyp_mats-common/public/img/subtle_grunge_@2X.png");
-}
-
 #Mongol.Mongol_expand {
   max-width: 720px !important;
 }
