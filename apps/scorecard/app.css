@@ -41,6 +41,7 @@ body {
 }
 
 .well {
+  background-color: #fff;
   border: none;
   -webkit-box-shadow: none;
 }
