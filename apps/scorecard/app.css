@@ -45,6 +45,21 @@ body {
   -webkit-box-shadow: none;
 }
 
+.btn-warning {
+  color: #000000;
+  background-color: #fff3cd;
+  border-color: #eebb33;
+}
+
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active,
+.btn-warning.active,
+.open > .dropdown-toggle.btn-warning {
+  color: #000000;
+  background-color: #ffff99;
+}
+
 #Mongol.Mongol_expand {
   max-width: 720px !important;
 }
