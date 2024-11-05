@@ -50,7 +50,6 @@ const doPlotParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: "dateHelp.html",
     });
 
     const plotFormats = {};
@@ -544,7 +543,6 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: "label.html",
     });
   }
 
@@ -1089,7 +1087,6 @@ const doCurveParams = function () {
       displayGroup: 5,
       multiple: true,
       defaultMapView: { point: [50, -92.5], zoomLevel: 1.25 },
-      help: "map-help.html",
     });
   }
 
@@ -1172,7 +1169,6 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 7,
-      help: "dateHelp.html",
     });
   } else {
     // it is defined but check for necessary update

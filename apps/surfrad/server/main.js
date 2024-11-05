@@ -49,7 +49,6 @@ const doPlotParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: "dateHelp.html",
     });
 
     const plotFormats = {};
@@ -527,7 +526,6 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: "label.html",
     });
   }
 
@@ -1137,7 +1135,6 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 7,
-      help: "dateHelp.html",
     });
   } else {
     // it is defined but check for necessary update
