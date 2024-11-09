@@ -6,11 +6,11 @@
   <!-- FIXME: remove the background image -->
   <body
     style="
-      background-image: url('img/bg.png');
+      background-color: grey;
       font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
     "
   >
-    <div id="main" class="container-fluid">
+    <div id="main" class="container-fluid" style="width: 100%; margin: 0; padding: 0;">
       {{ template "navbar.html" . }}
 
       {{ if .Config.AlertMessage }}

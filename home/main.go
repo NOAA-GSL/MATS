@@ -65,6 +65,7 @@ func main() {
 	router.Static("/css", "./static/css")
 	router.Static("/js", "./static/js")
 	router.Static("/bs", "./static/bootstrap-5.3.1-dist")
+	router.Static("/fa", "./static/fontawesome-6.6.0")
 
 	// Handle requests
 	router.GET("/", indexHandler(conf))
