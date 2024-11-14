@@ -3,7 +3,6 @@
   <nav
     id="officialUSABanner"
     class="navbar navbar-expand-sm"
-    data-bs-theme="light"
     style="background: #ffffff; color: black; padding: 0em"
   >
     <div
@@ -72,107 +71,43 @@
     </div>
   </nav>
   <nav
-    id="MATSNavigationBar"
-    class="navbar navbar-default"
-    style="
-      color: white;
-      background: #000066;
-      height: 100%;
-      margin-bottom: 0;
-      margin-top: 0;
-      padding-top: 0;
-      padding-bottom: 1%;
-    "
+    class="navbar navbar-expand-sm"
+    data-bs-theme="dark"
+    style="background: #000066; color: white"
   >
     <div class="container-fluid">
-      <div class="row" style="width: 100%">
-        <div class="col-lg-6 col-8">
-          <div style="display: flex; width: 100%">
-            <div style="width: 20%; text-align: right">
-              <a
-                style="
-                  margin-bottom: 0;
-                  margin-top: 0;
-                  padding: 0;
-                  text-decoration: none;
-                "
-                class="navbar-brand"
-                href="#"
-                target="_blank"
-                ><img
-                  style="
-                    width: 100px;
-                    margin-bottom: 0;
-                    margin-top: 0.5em;
-                    padding-left: 1em;
-                    padding-right: 1em;
-                  "
-                  src="img/noaa-logo-rgb-2022.svg"
-                  alt="NOAA logo"
-              /></a>
-            </div>
-            <div style="width: 80%; text-align: left">
-              <ul style="list-style-type: none; padding: 0; margin: 0">
-                <li>
-                  <div style="margin-top: 0.5em">
-                    <a
-                      href="https://gsl.noaa.gov"
-                      target="_blank"
-                      style="text-decoration: none"
-                    >
-                      {{ if .Config.IsMETexpress }}
-                      <span style="color: white; font-size: small"
-                        >National Weather Service</span
-                      >
-                      {{ else }}
-                      <span style="color: white; font-size: small"
-                        >Global Systems Laboratory</span
-                      >
-                      {{ end }}</a
-                    ><br />
-                    <a href="#" style="text-decoration: none">
-                      {{ if .Config.IsMETexpress }}
-                      <span style="color: white; font-size: x-large">METexpress</span>
-                      {{ else }}
-                      <span style="color: white; font-size: x-large"
-                        >Model Analysis Tool Suite (MATS)</span
-                      >
-                      {{ end }}</a
-                    ><br />
-                  </div>
-                </li>
-              </ul>
-            </div>
+      <a class="navbar-brand" href="#">
+        <div class="row">
+          <div class="col-3" style="text-align: center;">
+            <img
+              style="height: 100%;"
+              class="align-text-center"
+              src="img/noaa-logo-rgb-2022.svg"
+              alt="NOAA Logo"
+            />
+          </div>
+          <div class="col-9">
+            {{ if .Config.IsMETexpress }}
+            <span style="font-size: 1vh;">National Weather Service</span>
+            {{ else }}
+            <span style="font-size: 1vh;">Global Systems Laboratory</span>
+            {{ end }}<br/>{{ if .Config.IsMETexpress }}
+            <span style="font-size: 2vh;">METexpress</span>
+            {{ else }}
+            <span style="font-size: 2vh;">Model Analysis Tool Suite (MATS)</span>
+            {{ end }} {{ if .Config.EnvironmentLabel }}
+            <span class="d-none d-lg-block" style="font-size: 1vh;">{{ .Config.EnvironmentLabel }} Server</span>
+            {{ else }} {{ end }}
           </div>
         </div>
-        <div
-          class="col-lg-5 col-2 align-self-center"
-          style="text-align: right; padding-top: 1%"
-        >
-          <a
-            href="https://github.com/NOAA-GSL/MATS/issues"
-            target="_blank"
-            style="text-decoration: none"
-            ><span style="color: white; font-size: medium"
-              >Bugs/Issues (GitHub)</span
-            ></a
-          >
-        </div>
-        <div
-          class="col-lg-1 col-2 align-self-center"
-          style="text-align: right; padding-top: 1%"
-        >
-          <a
-            href="mailto:mats.gsl@noaa.gov?Subject=User Feedback"
-            target="_blank"
-            style="text-decoration: none"
-            ><span style="color: white; font-size: medium">Contact Us</span></a
-          >
-        </div>
-      </div>
+      </a>
     </div>
   </nav>
-  <div id="disclaimerBar" class="alert alert-info" style="color: black; margin: 0; border-radius:0%; background-color: #d9edf7;">
+  <div
+    id="disclaimerBar"
+    class="alert alert-info"
+    style="color: black; margin: 0; border-radius: 0%; background-color: #d9edf7"
+  >
     PLEASE NOTE: The information on this website is for RESEARCH PURPOSES ONLY. No data
     from this site should be used to make decisions related to the safety of life and
     property. There is no guarantee that data will be updated or that any product will
