@@ -10,7 +10,8 @@
       font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
     "
   >
-    <div id="main" class="container-fluid" style="width: 100%; margin: 0; padding: 0; background-color: white;">
+    <main id="main" class="container-fluid" style="width: 100%; margin: 0; padding: 0; background-color: white;">
+      <a style="display: none" href="#main-content">Skip to main content</a>
       {{ template "navbar.html" . }}
 
       {{ if .Config.AlertMessage }}
@@ -29,7 +30,7 @@
       {{ else }}
         {{ template "mats-footer.html" . }}
       {{ end }}
-    </div>
+    </main>
   </body>
 </html>
 {{ end }}
