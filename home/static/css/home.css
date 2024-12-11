@@ -1,72 +1,76 @@
 /* hover & active colors from https://www.colorhexa.com */
 
+html {
+  background-color: grey;
+  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+}
+
 .btn {
-    border-radius: 10px;
+  border-radius: 10px;
 }
 
 /* All Button */
 .btn-outline-success {
-    --bs-btn-color: #000000;
-    --bs-btn-bg: #ffffff;
-    --bs-btn-border-color: #000000;
-    --bs-btn-active-color: #ffffff;
-    --bs-btn-active-bg: #000000;
-    --bs-btn-active-border-color: #000000;
+  --bs-btn-color: #000000;
+  --bs-btn-bg: #ffffff;
+  --bs-btn-border-color: #000000;
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: #000000;
+  --bs-btn-active-border-color: #000000;
 }
 
 /* MATS */
 .btn-primary {
-    --bs-btn-color: #000000;
-    --bs-btn-bg: #ddeeff;
-    --bs-btn-border-color: #2e6da4;
-    --bs-btn-hover-bg: #99ccff;
-    --bs-btn-hover-border-color: #2e6da4;
+  --bs-btn-color: #000000;
+  --bs-btn-bg: #ddeeff;
+  --bs-btn-border-color: #2e6da4;
+  --bs-btn-hover-bg: #99ccff;
+  --bs-btn-hover-border-color: #2e6da4;
 }
 
 .btn-outline-primary {
-    --bs-btn-color: #000000;
-    --bs-btn-bg: #ddeeff;
-    --bs-btn-border-color: #2e6da4;
-    --bs-btn-active-color: #ffffff;
-    --bs-btn-active-bg: #2e6da4;
-    --bs-btn-active-border-color: #000000;
+  --bs-btn-color: #000000;
+  --bs-btn-bg: #ddeeff;
+  --bs-btn-border-color: #2e6da4;
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: #2e6da4;
+  --bs-btn-active-border-color: #000000;
 }
 
 /*MATS Couchbase*/
 .btn-info {
-    --bs-btn-color: #000000;
-    --bs-btn-bg: #d1e7dd;
-    --bs-btn-border-color: #336633;
-    --bs-btn-hover-color: #000000;
-    --bs-btn-hover-bg: #aaffcc;
-    --bs-btn-hover-border-color: #336633;
+  --bs-btn-color: #000000;
+  --bs-btn-bg: #d1e7dd;
+  --bs-btn-border-color: #336633;
+  --bs-btn-hover-color: #000000;
+  --bs-btn-hover-bg: #aaffcc;
+  --bs-btn-hover-border-color: #336633;
 }
 
 .btn-outline-info {
-    --bs-btn-color: #000000;
-    --bs-btn-bg: #d1e7dd;
-    --bs-btn-border-color: #336633;
-    --bs-btn-active-color: #ffffff;
-    --bs-btn-active-bg: #336633;
-    --bs-btn-active-border-color: #000000;
+  --bs-btn-color: #000000;
+  --bs-btn-bg: #d1e7dd;
+  --bs-btn-border-color: #336633;
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: #336633;
+  --bs-btn-active-border-color: #000000;
 }
 
 /*METexpress*/
 .btn-secondary {
-    --bs-btn-color: #000000;
-    --bs-btn-bg: #e6e6fa;
-    --bs-btn-border-color: darkorchid;
-    --bs-btn-hover-color: #000000;
-    --bs-btn-hover-bg: #b2a4d4;
-    --bs-btn-hover-border-color: darkorchid;
+  --bs-btn-color: #000000;
+  --bs-btn-bg: #e6e6fa;
+  --bs-btn-border-color: darkorchid;
+  --bs-btn-hover-color: #000000;
+  --bs-btn-hover-bg: #b2a4d4;
+  --bs-btn-hover-border-color: darkorchid;
 }
 
 .btn-outline-secondary {
-    --bs-btn-color: #000000;
-    --bs-btn-bg: #e6e6fa;
-    --bs-btn-border-color: darkorchid;
-    --bs-btn-active-color: #ffffff;
-    --bs-btn-active-bg: darkorchid;
-    --bs-btn-active-border-color: #000000;
+  --bs-btn-color: #000000;
+  --bs-btn-bg: #e6e6fa;
+  --bs-btn-border-color: darkorchid;
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: darkorchid;
+  --bs-btn-active-border-color: #000000;
 }
-
