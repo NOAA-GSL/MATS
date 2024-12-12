@@ -42,25 +42,24 @@ const doPlotParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: "dateHelp.html",
     });
 
     const plotFormats = {};
+    plotFormats[matsTypes.PlotFormats.none] = "no diffs";
     plotFormats[matsTypes.PlotFormats.matching] = "show matching diffs";
     plotFormats[matsTypes.PlotFormats.pairwise] = "pairwise diffs";
-    plotFormats[matsTypes.PlotFormats.none] = "no diffs";
     matsCollections.PlotParams.insert({
       name: "plotFormat",
-      type: matsTypes.InputTypes.radioGroup,
+      type: matsTypes.InputTypes.select,
       optionsMap: plotFormats,
       options: [
+        matsTypes.PlotFormats.none,
         matsTypes.PlotFormats.matching,
         matsTypes.PlotFormats.pairwise,
-        matsTypes.PlotFormats.none,
       ],
       default: matsTypes.PlotFormats.none,
-      controlButtonCovered: false,
-      controlButtonVisibility: "block",
+      controlButtonCovered: true,
+      controlButtonText: "Difference Curves",
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 3,
@@ -447,7 +446,6 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: "label.html",
     });
   }
 
@@ -1001,7 +999,6 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 7,
-      help: "dateHelp.html",
     });
   } else {
     // it is defined but check for necessary update

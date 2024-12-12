@@ -85,7 +85,6 @@ const doPlotParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 2,
-      help: "dateHelp.html",
       tooltip: `The date range over which this 'Once' (one time) scorecard will be processed.
                 This scorecard will process only that date range, and process it only one time`,
       tooltipPlacement: "right",
@@ -943,7 +942,6 @@ const doCurveParams = function () {
       displayOrder: 1,
       displayPriority: 1,
       displayGroup: 1,
-      help: "label.html",
       tooltip:
         "The label for this scorecard block, this will be used to identify this block within the scorecard.",
       tooltipPlacement: "right",

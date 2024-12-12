@@ -1,54 +1,108 @@
 {{ define "navbar.html" }}
-<div class="mt-3" id="navbar">
+<div class="mt-0 mb-4" id="navbar">
   <nav
-    class="navbar navbar-expand-sm"
-    data-bs-theme="dark"
-    style="background: #000066; color: white"
+    id="officialUSABanner"
+    class="navbar navbar-expand-sm bg-white text-black p-0 container-fluid"
+    aria-label="Official government website"
   >
-    <div class="container-fluid">
-      <!-- Brand and toggle get grouped for better mobile display -->
-      <button
-        type="button"
-        class="navbar-toggler"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbar-collapse-2"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
+    <div class="accordion h-100 ps-5 pe-3 row" id="usaAccordion">
+      <div class="accordian-item">
+        <header class="accordian-header" id="usaHeadingOne">
+          <button
+            class="accordion-button collapsed"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#usaCollapseOne"
+            aria-expanded="true"
+            aria-controls="usaCollapseOne"
+          >
+            <div class="d-flex col">
+              <p class="m-0 p-0">
+                <img
+                  class="icon-size-small"
+                  src="img/us_flag_small.png"
+                  alt="U.S. flag"
+                />&nbsp;
+                <span class="small-text"
+                  >An official website of the United States government.&nbsp;
+                  <u class="text-blue">Here's how you know</u>
+                </span>
+              </p>
+            </div>
+          </button>
+        </header>
+      </div>
+      <div
+        id="usaCollapseOne"
+        class="accordion-collapse collapse row accordian-body"
+        aria-labelledby="usaHeadingOne"
+        data-bs-parent="#usaAccordion"
       >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <a class="navbar-brand" href="#">
-        <img
-          style="width: 60px"
-          class="align-text-center"
-          src="img/noaa-logo-rgb-2022.svg"
-          alt="NOAA Logo"
-        />
-        {{ if .Config.IsMETexpress }}
-        <span class="fs-2">METexpress</span>
-        {{ else }}
-        <span class="fs-2">Model Analysis Tool Suite (MATS)</span>
-        {{ end }}
-        {{ if .Config.EnvironmentLabel }}
-        <span class="fs-6">{{ .Config.EnvironmentLabel }} Server</span>
-        {{ else }}
-        {{ end }}
-      </a>
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <!-- Create a navbar collection that's right justified -->
-      <div class="collapse navbar-collapse justify-content-end" id="navbar-collapse-2">
-        <ul class="navbar-nav">
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              style="font-size: medium"
-              href="mailto:mats.gsl@noaa.gov?Subject=Feedback from MATS user"
-              >Contact Us
-            </a>
-          </li>
-        </ul>
+        <div class="d-flex w-100">
+          <div class="w-50 p-4 col">
+            <img class="icon-size" src="img/icon-dot-gov.svg" alt="" aria-hidden="true" />
+            <small>
+              <strong>Official websites use .gov</strong><br/>
+              A<strong>.gov</strong> website belongs to an official government
+              organization in the United States.
+            </small>
+          </div>
+          <div class="w-50 p-4 col">
+            <img class="icon-size" src="img/icon-https.svg" alt="" aria-hidden="true" />
+            <small>
+              <strong>Secure .gov websites use HTTPS</strong>
+              <br />
+              A <strong>lock</strong>
+                (<img src="img/lock-fill.svg" fill="currentColor" aria-label="Locked padlock icon" focusable="false" />)
+              or <strong>https://</strong> means you’ve safely connected to the .gov
+              website. Share sensitive information only on official, secure websites.
+            </small>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
+  <nav
+    class="navbar navbar-expand-sm bg-noaa-blue text-white"
+    data-bs-theme="dark"
+    aria-label="MATS navigation bar"
+  >
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <div class="row">
+          <div class="col-3">
+            <img
+              class="align-text-center h-100"
+              src="img/noaa-logo-rgb-2022.svg"
+              alt="NOAA Logo"
+            />
+          </div>
+          <div class="col-9">
+            {{ if .Config.IsMETexpress }}
+            <span class="fs-6">National Weather Service</span>
+            {{ else }}
+            <span class="fs-6">Global Systems Laboratory</span>
+            {{ end }}
+            <br />
+            {{ if .Config.IsMETexpress }}
+            <span class="fs-2">METexpress</span>
+            {{ else }}
+            <span class="fs-2">Model Analysis Tool Suite (MATS)</span>
+            {{ end }}
+            {{ if .Config.EnvironmentLabel }}
+            <span class="d-none d-lg-block fs-6">{{ .Config.EnvironmentLabel }} Server</span>
+            {{ else }}
+            {{ end }}
+          </div>
+        </div>
+      </a>
+    </div>
+  </nav>
+  <div id="disclaimerBar" class="alert alert-info text-black m-0 br-0 bg-disclaimer">
+    PLEASE NOTE: The information on this website is for RESEARCH PURPOSES ONLY. No data
+    from this site should be used to make decisions related to the safety of life and
+    property. There is no guarantee that data will be updated or that any product will
+    continue to be available.
+  </div>
 </div>
 {{ end }}

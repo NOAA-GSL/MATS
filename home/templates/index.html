@@ -3,14 +3,9 @@
 <!DOCTYPE html>
 <html lang="en">
   {{ template "header.html" . }}
-  <!-- FIXME: remove the background image -->
-  <body
-    style="
-      background-image: url('img/bg.png');
-      font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
-    "
-  >
-    <div id="main" class="container-fluid">
+  <body>
+    <main id="main" class="container-fluid bg-white m-0 p-0">
+      <a class="d-none" href="#main-content">Skip to main content</a>
       {{ template "navbar.html" . }}
 
       {{ if .Config.AlertMessage }}
@@ -29,7 +24,7 @@
       {{ else }}
         {{ template "mats-footer.html" . }}
       {{ end }}
-    </div>
+    </main>
   </body>
 </html>
 {{ end }}

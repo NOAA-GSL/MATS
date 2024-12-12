@@ -1,7 +1,10 @@
 {{ define "mats-footer.html" }}
 <footer class="footer">
-  <div id="footer" class="container-fluid" style="background-color: #dddddd">
-    <nav id="footnav" class="navbar navbar-expand-sm">
+  <div
+    id="footer"
+    class="container-fluid bg-lightgray mt-4"
+  >
+    <nav id="footnav" class="navbar navbar-expand-sm" aria-label="MATS footer navbar">
       <div class="navbar-header">
         <button
           type="button"
@@ -16,28 +19,56 @@
       </div>
       <!-- Collect the nav links, forms, and other content for toggling -->
       <div
-        class="collapse navbar-collapse"
+        class="collapse navbar-collapse justify-content-center bg-lightgray"
         id="navbar-collapse-3"
-        style="background-color: #dddddd"
       >
-        <ul class="nav navbar-nav" style="background-color: #dddddd">
+        <ul class="nav navbar-nav bg-lightgray">
           <li class="navbar-item">
-            <a href="https://www.noaa.gov/privacy" class="nav-link">Privacy</a>
-          </li>
-          <li class="navbar-item">
-            <a href="https://www.noaa.gov/accessibility" class="nav-link"
-              >Accessibility</a
+            <a
+              href="http://www.noaa.gov/privacy"
+              class="nav-link text-black"
+              target="_blank"
+              >NOAA Privacy Statement</a
             >
           </li>
           <li class="navbar-item">
-            <a href="https://www.noaa.gov/disclaimer" class="nav-link">Disclaimer</a>
+            <a
+              href="http://www.noaa.gov/accessibility"
+              class="nav-link text-black"
+              target="_blank"
+              >Web Accessibility Statement</a
+            >
           </li>
           <li class="navbar-item">
-            <a href="https://www.noaa.gov/" class="nav-link">NOAA</a>
+            <a
+              href="http://www.noaa.gov/disclaimer"
+              class="nav-link text-black"
+              target="_blank"
+              >Disclaimer for External Links</a
+            >
           </li>
           <li class="navbar-item">
-            <a href="https://gsl.noaa.gov/" class="nav-link"
-              >Global Systems Laboratory</a
+            <a
+              href="http://www.noaa.gov/"
+              class="nav-link text-black"
+              target="_blank"
+              >NOAA</a
+            >
+          </li>
+          <li class="navbar-item">
+            <a
+              href="http://www.commerce.gov/"
+              class="nav-link text-black"
+              target="_blank"
+              >U.S. Department of Commerce</a
+            >
+          </li>
+          <li class="navbar-item">
+            <a
+              href="http://research.noaa.gov/"
+              class="nav-link text-black"
+              target="_blank"
+              >NOAA Research</a
             >
           </li>
         </ul>
