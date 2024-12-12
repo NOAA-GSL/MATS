@@ -44,7 +44,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
         Then I should be on the main page
         And the "Plot Matched" button should be visible
 
-        When I set the plotFormat parameter to "Diff all curves against the 1st added curve"
+        When I change the "plotFormat" parameter to "Diff all curves against the 1st added curve"
         Then "Curve1-Curve0" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve1-Curve0"
 
@@ -64,7 +64,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
         Then I should be on the main page
         And the "Plot Matched" button should be visible
 
-        When I set the plotFormat parameter to "Diff the 1st and 2nd curves, 3rd and 4th, etc"
+        When I change the "plotFormat" parameter to "Diff the 1st and 2nd curves, 3rd and 4th, etc"
         Then I should see a list of curves containing "Curve0,Curve1,Curve1-Curve0"
         And I should have 3 curves
 
@@ -84,7 +84,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
         Then I should be on the main page
         And the "Plot Matched" button should be visible
 
-        When I set the plotFormat parameter to "none"
+        When I change the "plotFormat" parameter to "none"
         Then I should see a list of curves containing "Curve0,Curve1"
         And I should have 2 curves
 
