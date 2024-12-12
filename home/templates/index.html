@@ -4,8 +4,8 @@
 <html lang="en">
   {{ template "header.html" . }}
   <body>
-    <main id="main" class="container-fluid bg-white w-100 m-0 p-0">
-      <a style="display: none" href="#main-content">Skip to main content</a>
+    <main id="main" class="container-fluid bg-white m-0 p-0">
+      <a class="d-none" href="#main-content">Skip to main content</a>
       {{ template "navbar.html" . }}
 
       {{ if .Config.AlertMessage }}

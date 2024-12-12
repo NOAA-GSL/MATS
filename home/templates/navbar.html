@@ -40,26 +40,21 @@
       >
         <div class="d-flex w-100">
           <div class="w-50 p-4 col">
-            <img
-              class="icon-size"
-              src="img/icon-dot-gov.svg"
-              alt=""
-              aria-hidden="true"
-            />
-            <small
-              ><strong>Official websites use .gov</strong><br />A
-              <strong>.gov</strong> website belongs to an official government
-              organization in the United States.</small
-            >
+            <img class="icon-size" src="img/icon-dot-gov.svg" alt="" aria-hidden="true" />
+            <small>
+              <strong>Official websites use .gov</strong><br/>
+              A<strong>.gov</strong> website belongs to an official government
+              organization in the United States.
+            </small>
           </div>
           <div class="w-50 p-4 col">
             <img class="icon-size" src="img/icon-https.svg" alt="" aria-hidden="true" />
             <small>
               <strong>Secure .gov websites use HTTPS</strong>
               <br />
-              A <strong>lock</strong> (
-              <i class="fa-solid fa-lock" alt="Lock icon"></i>
-              ) or <strong>https://</strong> means you’ve safely connected to the .gov
+              A <strong>lock</strong>
+                (<img src="img/lock-fill.svg" fill="currentColor" aria-label="Locked padlock icon" focusable="false" />)
+              or <strong>https://</strong> means you’ve safely connected to the .gov
               website. Share sensitive information only on official, secure websites.
             </small>
           </div>
@@ -95,9 +90,7 @@
             <span class="fs-2">Model Analysis Tool Suite (MATS)</span>
             {{ end }}
             {{ if .Config.EnvironmentLabel }}
-            <span class="d-none d-lg-block fs-6"
-              >{{ .Config.EnvironmentLabel }} Server</span
-            >
+            <span class="d-none d-lg-block fs-6">{{ .Config.EnvironmentLabel }} Server</span>
             {{ else }}
             {{ end }}
           </div>
