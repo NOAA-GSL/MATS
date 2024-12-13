@@ -19,7 +19,8 @@
   --bs-btn-color: #000000;
   --bs-btn-bg: #ddeeff;
   --bs-btn-border-color: #2e6da4;
-  --bs-btn-hover-bg: #99ccff;
+  --bs-btn-hover-color: #000000;
+  --bs-btn-hover-bg: #9fcfff;
   --bs-btn-hover-border-color: #2e6da4;
 }
 
@@ -57,7 +58,7 @@
   --bs-btn-bg: #e6e6fa;
   --bs-btn-border-color: darkorchid;
   --bs-btn-hover-color: #000000;
-  --bs-btn-hover-bg: #b2a4d4;
+  --bs-btn-hover-bg: #ddbbff;
   --bs-btn-hover-border-color: darkorchid;
 }
 
