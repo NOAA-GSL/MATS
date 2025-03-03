@@ -2,7 +2,6 @@ run:
   tests: true
 
 output:
-  uniq-by-line: false
   sort-results: true
   print-linter-name: true
 
@@ -11,7 +10,7 @@ issues:
   max-issues-per-linter: 0
   max-same-issues: 0
   new: false
-
+  uniq-by-line: false
 
 # Linters & linter-settings inspired by https://olegk.dev/go-linters-configuration-the-right-version
 linters:
@@ -45,8 +44,8 @@ linters:
     # Suggests to use `%w` for error-wrapping.
     - errorlint
 
-    # Checks for pointers to enclosing loop variables.
-    - exportloopref
+    # Checks for copied loop variables.
+    - copyloopvar
 
     - gocritic
 
@@ -59,7 +58,7 @@ linters:
     - gofumpt
     - goimports
 
-    # Handle replace, retract, exclude directives in go.mod 
+    # Handle replace, retract, exclude directives in go.mod
     - gomoddirectives
 
     # Security-oriented linter
@@ -130,10 +129,10 @@ linters:
     - tagliatelle
 
     # Test-related checks.
-    - tenv
     - testableexamples
     - thelper
     - tparallel
+    - usetesting
 
     # Remove unnecessary type conversions, make code cleaner
     - unconvert
@@ -146,7 +145,6 @@ linters:
     - unused
 
     # Detect the possibility to use variables/constants from stdlib.
-    # TODO - enable
     - usestdlibvars
 
     # Finds wasted assignment statements.
