@@ -242,8 +242,10 @@ def reprocess_specific_metadata(models_to_reprocess):
         cursor.execute(show_tables)
         for row in cursor:
             tablename = str(list(row.values())[0])
-            table_model = re.sub('_[A-Za-z]*_sums$', '', tablename)
-            if table_model == model:
+            temp = "^" + model + "_" 
+            region1 = re.sub(temp, "", tablename)
+            region = re.sub("_sums", "", region1)
+            if region in valid_regions.keys():
                 # this is a table that does belong to this model
                 get_tablestats = "SELECT min(date) AS mindate, max(date) AS maxdate, count(date) AS numrecs FROM " + tablename + ";"
                 cursor2.execute(get_tablestats)
