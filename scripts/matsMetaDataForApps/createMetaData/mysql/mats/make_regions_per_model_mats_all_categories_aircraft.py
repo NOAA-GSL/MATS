@@ -132,7 +132,7 @@ def regions_per_model_mats_all_categories(mode):
     all_data_sources = []
     per_table = {}
 
-    show_non_sums_tables = "show tables where 'Tables_in_%s' not like '%_sums'" % db
+    show_non_sums_tables = "show tables where 'Tables_in_%s' not like '%%_sums'" % db
     cursor.execute(show_non_sums_tables)
     for row in cursor:
         tablename = str(list(row.values())[0])
@@ -141,7 +141,7 @@ def regions_per_model_mats_all_categories(mode):
                 all_data_sources.append(tablename)
 
     for model in all_data_sources:
-        show_tables = "show tables like '%s_%_sums';" % model
+        show_tables = "show tables like '%s_%%_sums';" % model
         cursor.execute(show_tables)
         for row in cursor:
             tablename = str(list(row.values())[0])

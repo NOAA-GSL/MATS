@@ -1,4 +1,4 @@
-#!/scratch1/BMC/amb-verif/miniconda/miniconda3/envs/avid_verify_py3/bin/python
+#!/scratch1/BMC/amb-verif/miniconda/miniconda3/envs/avid_verify_py3_6/bin/python
 #
 # The reason I am hardcoding the python path above is that this script is usally run by model developers
 # without guidance from us, and I don't want them to be tripped up by the fact that the default puthon on
