@@ -132,22 +132,27 @@ def regions_per_model_mats_all_categories(mode):
     all_data_sources = []
     per_table = {}
 
-    show_tables = "show tables like '%_sums';"
-    cursor.execute(show_tables)
+    show_non_sums_tables = "show tables where 'Tables_in_%s' not like '%_sums'" % db
+    cursor.execute(show_non_sums_tables)
     for row in cursor:
         tablename = str(list(row.values())[0])
-        # print( "tablename is " + tablename)
         if " " + tablename + " " not in skiptables:
-            # parse the data sources, forecast lengths, and regions from the table names
-            model = re.sub('_[A-Za-z]*_sums$', '', tablename)
-            if model not in all_data_sources:
-                all_data_sources.append(model)
-            per_table[tablename] = {}
-            per_table[tablename]['model'] = model
-            temp = "^" + model + "_"
-            region = re.sub(temp, "", tablename)
-            region = re.sub("_sums", "", region)
-            per_table[tablename]['region'] = region
+            if tablename not in all_data_sources:
+                all_data_sources.append(tablename)
+
+    for model in all_data_sources:
+        show_tables = "show tables like '%s_%_sums';" % model
+        cursor.execute(show_tables)
+        for row in cursor:
+            tablename = str(list(row.values())[0])
+            # print( "tablename is " + tablename)
+            if " " + tablename + " " not in skiptables:
+                per_table[tablename] = {}
+                per_table[tablename]['model'] = model
+                temp = "^" + model + "_"
+                region = re.sub(temp, "", tablename)
+                region = re.sub("_sums", "", region)
+                per_table[tablename]['region'] = region
             # print("model is " + model + ", region is " + region)
 
     # sys.exit(-1)
