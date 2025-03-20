@@ -60,7 +60,7 @@ docker compose restart <service>
 
 ```
 docker compose down
-docker prune -af
+docker system prune -af
 docker compose pull
 docker compose up -d
 ```
