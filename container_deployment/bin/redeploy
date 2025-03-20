@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Get the location of our bin directory so we can reliably call the down & up scripts
+scriptdir="$(dirname "$0")"
+
+echo "Taking the services down..."
+"$scriptdir"/down
+
+echo "Running docker prune -af..."
+docker prune -af
+
+echo "Starting the services back up..."
+"$scriptdir"/up

@@ -10,18 +10,24 @@ We use the `up` and `down` scripts here to deploy our services. They're simple w
 
 Commands useful for debugging
 
+### View available Docker Compose services
+
+```
+docker compose config --services
+```
+
 ### Logs
 
 View the entire log with:
 
 ```
-docker logs <container>
+docker compose logs <service>
 ```
 
 Or follow logs with:
 
 ```
-docker logs --follow <container>
+docker compose logs --follow <service>
 ```
 
 ### List containers
@@ -30,10 +36,31 @@ docker logs --follow <container>
 docker container ls
 ```
 
+Or via Compose with:
+
+```
+docker compose ps
+```
+
 ### Get a shell in a container
 
 This is a bit less helpful as containers are relatively locked down, but sometimes can be useful:
 
 ```
-docker exec -it <container-id> bash
+docker compose exec <service> bash
+```
+
+### Restart a service
+
+```
+docker compose restart <service>
+```
+
+### Redeploy services
+
+```
+docker compose down
+docker prune -af
+docker compose pull
+docker compose up -d
 ```

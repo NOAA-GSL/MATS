@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# A function to print usage information
+function print_usage {
+    echo "Usage: $(basename "$0") <service-name>"
+    echo ""
+    echo "Available services are:"
+    docker compose config --services
+}
+
+# Check we have the correct number of args
+if [ $# -ne 1 ]; then
+    print_usage
+    exit 1
+fi
+
+service="$1"
+
+# Restart the service
+docker compose restart "$service" || status=$?
+
+# Check if we had an error and print usage if so
+if [ "${status:-0}" -ne 0 ]; then
+    echo ""
+    print_usage
+    exit "$status"
+fi
