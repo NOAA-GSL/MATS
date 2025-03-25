@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
-serviceNames=($(docker service ls --format "{{.Name}}"))
+
+set -euo pipefail
+
+# Check we have the correct number of args
 if [ $# -ne 1 ]; then
-	echo "$0 - wrong number of params - usage: $0 serviceName (one of ${serviceNames[*]}))"
-	exit 1
+    echo "Usage: $(basename "$0") <service-name>"
+    echo ""
+    echo "Available services are:"
+    docker compose config --services
+    exit 1
 fi
-serviceName=$1
-if [[ ${serviceNames[$serviceName]} ]]; then
-	containerId=$(docker container ls | grep $serviceName | awk '{print $1}')
-	docker exec -it $containerId /bin/sh
-else
-	echo "not a valid serviceName (one of ${serviceNames[@]})"
-	exit 0
-fi 
+
+service="$1"
+
+# Error out if we try to get a shell in the home service
+if [ "$service" = "home" ]; then
+    echo "Error: The home service does not have a shell installed in its container,"
+    echo "       see the README for information on viewing the logs instead."
+    exit 2
+fi
+
+docker compose exec "$service" bash

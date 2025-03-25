@@ -1,74 +1,15 @@
 #!/usr/bin/env bash
-RED='\033[0;31m'
-GRN='\033[0;32m'
-ORNG='\033[0;33m'
-NC='\033[0m' # No Color
-stack="matsStack"
-if [ $# -eq 1 ]; then
-    stack=$1
-fi
-stacks=($(docker stack ls | grep -v NAME | awk '{print $1}'))
-if [[ $# -eq 0 ]] && [[ ${#stacks[@]} -eq 1 ]]; then
-    echo using the only stack - ${stacks[0]}
-    stack=${stacks[0]}
-elif [[ " ${stacks[*]} " == *" $stack "* ]]; then
-    echo -e "${GRN}redeploying stack $stack ${NC}"
-else
-    echo -e "${RED}stack ${stack} doesn't exist. These stacks currently exist... \"${stacks[@]}\"?${NC}"
-    exit 1
-fi
-if [[ " ${stacks[*]} " == *" $stack "* ]]; then
-    echo -e "${GRN}redeploying services for stack $stack ${NC}"
-else
-    echo -e "${RED}stack ${stack} doesn't exist. These stacks currently exist... \"${stacks[@]}\"?${NC}"
-    exit 1
-fi
-# bring down stack
-echo -e "${GRN}bringing down stack $stack ${NC}"
-docker stack rm ${stack}
-docker network rm web
-limit=20
-until [ -z "$(docker service ls --filter label=com.docker.stack.namespace=${stack} -q)" ] || [ "$limit" -lt 0 ]; do
-    sleep 1;
-    limit="$((limit-1))"
-    printf "${GRN}.${NC}"
-done
-limit=20
-until [ -z "$(docker network ls --filter label=com.docker.stack.namespace=web -q)" ] || [ "$limit" -lt 0 ]; do
-    sleep 1;
-    limit="$((limit-1))"
-    printf "${GRN}.${NC}"
-done
-limit=20
-until [ -z "$(docker stack ps ${stack} -q)" ] || [ "$limit" -lt 0 ]; do
-    sleep 1;
-    limit="$((limit-1))"
-    printf "${GRN}.${NC}"
-done
-# leave the swarm
-docker swarm leave --force
-# prune the system
-echo -e "${GRN}Pruning the system - be patient ${NC}"
+
+set -euo pipefail
+
+# Get the location of our bin directory so we can reliably call the down & up scripts
+scriptdir="$(dirname "$0")"
+
+echo "Taking the services down..."
+"$scriptdir"/down
+
+echo "Running 'docker system prune -af'. This may take a few minutes..."
 docker system prune -af
-docker pull -a --disable-content-trust matsapps/${env}
-if docker node ls > /dev/null 2>&1; then
-    echo -e "${GRN}running in swarm mode${NC}"
-else
-    echo -e "${GRN}initializing swarm mode${NC}"
-    docker swarm init --advertise-addr eth0
-fi
-docker network create -d overlay web
-# retrieve images
-dockercompose=$(find ~/container_deployment -type f -name docker-compose.yml 2>/dev/null)
-echo -e "${GRN}Retrieving images - be patient ${NC}"
-grep image ${dockercompose} | awk '{print $2}' | while read i
-do
-  if [[ $i == "ghcr.io"* ]]; then
-  # if [[ $i == "matsapps"* ]]; then
-    echo -e "${ORNG} pulling $i ${NC}"
-    docker pull --disable-content-trust ${i}
-  fi
-done
-# deploy stack
-echo -e "${GRN}deploying stack ${stack}${NC}"
-docker stack deploy -c docker-compose.yml ${stack}
+
+echo "Starting the services back up..."
+"$scriptdir"/up
