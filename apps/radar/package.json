@@ -14,7 +14,6 @@
     "chai": "^4.4.1",
     "daterangepicker": "^3.1.0",
     "downsample-lttb": "0.0.1",
-    "fibers": "^5.0.3",
     "fs-extra": "^7.0.1",
     "html2canvas": "^1.4.1",
     "jquery": "^2.2.4",
