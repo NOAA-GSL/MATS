@@ -4,7 +4,7 @@
 
 import pause from '../action/pause';
 
-export default () => {
+export default async () => {
     /**
      * Is the graph page visible within ms milliseconds?
      */
@@ -12,7 +12,7 @@ export default () => {
     let count = 0;
     let isDisplayed = false;
     while (count < 10 && isDisplayed !== true) {
-        isDisplayed = $('#graph-container').waitForDisplayed();
+        isDisplayed = await $('#graph-container').waitForDisplayed();
         if (isDisplayed !== true) {
             pause(1000);
         }

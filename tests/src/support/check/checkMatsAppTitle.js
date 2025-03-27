@@ -2,7 +2,7 @@
  * Check the title (in the plottype element)
  * @param  {String}   title the selection parameter
  */
-export default (title) => {
+export default async (title) => {
     const command = 'getText';
 
     /**
@@ -15,10 +15,10 @@ export default (title) => {
      * The text of the element
      * @type {String}
      */
-    const elem = $('#appTitleText');
-    elem.waitForDisplayed();
-    elem.scrollIntoView();
-    const text = elem[command]();
+    const elem = await $('#appTitleText');
+    await elem.waitForDisplayed();
+    await elem.scrollIntoView();
+    const text = await elem[command]();
 
     expect(text).toContain(stringExpectedText);
 };

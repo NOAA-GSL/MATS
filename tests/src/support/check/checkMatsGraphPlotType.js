@@ -2,7 +2,7 @@
  * Check if the given elements contains text
  * @param  {String}   plotType  The text to check against
  */
-export default (plotType) => {
+export default async (plotType) => {
     /**
      * Check that the header contains the plot type
      * @plotType {String}
@@ -11,10 +11,10 @@ export default (plotType) => {
 
     const stringExpectedText = plotType;
 
-    const elem = $('#header');
-    elem.waitForDisplayed();
-    elem.scrollIntoView();
-    const text = elem[command]();
+    const elem = await $('#header');
+    await elem.waitForDisplayed();
+    await elem.scrollIntoView();
+    const text = await elem[command]();
 
     expect(text).toContain(stringExpectedText);
 };
