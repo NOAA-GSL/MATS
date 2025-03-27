@@ -7,7 +7,7 @@
 // an array of methods. If one of them returns with a promise,
 // WebdriverIO will wait until that promise is resolved to continue.
 //
-exports.hooks = {
+export const hooks = {
     /**
      * Gets executed once before all workers get launched.
      * @param {Object} config wdio configuration object

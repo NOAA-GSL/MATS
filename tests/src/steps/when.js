@@ -1,3 +1,5 @@
+import { When } from '@cucumber/cucumber';
+
 import clearInputField from '../support/action/clearInputField';
 import clickElement from '../support/action/clickElement';
 import closeLastOpenedWindow from '../support/action/closeLastOpenedWindow';
@@ -28,8 +30,6 @@ import setMatsSelectedNumberSpinner from '../support/action/setMatsSelectedNumbe
 import matsRefreshBrowser from '../support/action/matsRefreshBrowser';
 import matsRefreshPage from '../support/action/matsRefreshPage';
 import matsClearParameter from '../support/action/matsClearParameter';
-
-const { When } = require('@cucumber/cucumber');
 
 When(
     /^I clear the "([^"]*)?" parameter$/,
