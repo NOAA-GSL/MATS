@@ -55,16 +55,16 @@ dataThreshold = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
+    const databaseRef = matsCollections.variable.findOneAsync({ name: "variable" })
       .optionsMap[variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+    const model = matsCollections["data-source"].findOneAsync({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
     const scaleStr = curve.scale;
     const scale = Object.keys(
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
-    ).find(
+      matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable]
+    ).findAsync(
       (key) =>
-        matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
+        matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable][key] ===
         scaleStr
     );
 
@@ -78,7 +78,7 @@ dataThreshold = function (plotParams, plotFunction) {
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
+    const statisticOptionsMap = matsCollections.statistic.findOneAsync(
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
@@ -92,10 +92,10 @@ dataThreshold = function (plotParams, plotFunction) {
 
     const regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
+      matsCollections.region.findOneAsync({ name: "region" }).valuesMap
+    ).findAsync(
       (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+        matsCollections.region.findOneAsync({ name: "region" }).valuesMap[key] === regionStr
     );
     const queryTableClause = `from ${databaseRef}.${model}_${scale}_${region} as m0`;
 

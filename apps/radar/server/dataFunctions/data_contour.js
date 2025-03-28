@@ -45,9 +45,9 @@ dataContour = function (plotParams, plotFunction) {
 
   const xAxisParam = plotParams["x-axis-parameter"];
   const yAxisParam = plotParams["y-axis-parameter"];
-  const xValClause = matsCollections.PlotParams.findOne({ name: "x-axis-parameter" })
+  const xValClause = matsCollections.PlotParams.findOneAsync({ name: "x-axis-parameter" })
     .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOne({ name: "y-axis-parameter" })
+  const yValClause = matsCollections.PlotParams.findOneAsync({ name: "y-axis-parameter" })
     .optionsMap[yAxisParam];
 
   // initialize variables specific to this curve
@@ -56,10 +56,10 @@ dataContour = function (plotParams, plotFunction) {
   const { diffFrom } = curve;
 
   const { variable } = curve;
-  const databaseRef = matsCollections.variable.findOne({ name: "variable" }).optionsMap[
+  const databaseRef = matsCollections.variable.findOneAsync({ name: "variable" }).optionsMap[
     variable
   ];
-  const model = matsCollections["data-source"].findOne({ name: "data-source" })
+  const model = matsCollections["data-source"].findOneAsync({ name: "data-source" })
     .optionsMap[variable][curve["data-source"]][0];
 
   let thresholdClause = "";
@@ -71,10 +71,10 @@ dataContour = function (plotParams, plotFunction) {
       );
     }
     const threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-    ).find(
+      matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[variable]
+    ).findAsync(
       (key) =>
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
+        matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[variable][
           key
         ] === thresholdStr
     );
@@ -83,10 +83,10 @@ dataContour = function (plotParams, plotFunction) {
 
   const scaleStr = curve.scale;
   const scale = Object.keys(
-    matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
-  ).find(
+    matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable]
+  ).findAsync(
     (key) =>
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
+      matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable][key] ===
       scaleStr
   );
 
@@ -110,7 +110,7 @@ dataContour = function (plotParams, plotFunction) {
   }
 
   const statisticSelect = curve.statistic;
-  const statisticOptionsMap = matsCollections.statistic.findOne(
+  const statisticOptionsMap = matsCollections.statistic.findOneAsync(
     { name: "statistic" },
     { optionsMap: 1 }
   ).optionsMap;
@@ -132,10 +132,10 @@ dataContour = function (plotParams, plotFunction) {
 
   const regionStr = curve.region;
   const region = Object.keys(
-    matsCollections.region.findOne({ name: "region" }).valuesMap
-  ).find(
+    matsCollections.region.findOneAsync({ name: "region" }).valuesMap
+  ).findAsync(
     (key) =>
-      matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+      matsCollections.region.findOneAsync({ name: "region" }).valuesMap[key] === regionStr
   );
   const queryTableClause = `from ${databaseRef}.${model}_${scale}_${region} as m0`;
 
