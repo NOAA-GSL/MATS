@@ -7,6 +7,7 @@ const dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const debug = process.env.DEBUG;
 const headless = process.env.HEADLESS;
+const testFirefox = process.env.TEST_FIREFOX;
 const defaultTimeout = 90000;
 export const config = {
     //
@@ -72,9 +73,17 @@ export const config = {
         // it is possible to configure which logTypes to include/exclude.
         // excludeDriverLogs: ['*'], // pass '*' to exclude all driver session logs
         // excludeDriverLogs: ['bugreport', 'server'],
-    }] : [{
+    },...(testFirefox ? [{
+        maxInstances: 1,
+
+        browserName: 'firefox',
+        browserVersion: 'stable',
+        'moz:firefoxOptions': {
+            args: headless ? ['-headless',] : [],
+        },
+    }] : [])] : [{
         // Normal config
-        
+
         maxInstances: 3,
         
         browserName: 'chrome',
@@ -82,7 +91,15 @@ export const config = {
         'goog:chromeOptions': {
             args: headless ? ['headless', 'disable-gpu'] : [],
         },
-    }],
+    },...(testFirefox ? [{
+        maxInstances: 3,
+
+        browserName: 'firefox',
+        browserVersion: 'stable',
+        'moz:firefoxOptions': {
+            args: headless ? ['-headless',] : [],
+        },
+    }] : [])],
     //
     // ===================
     // Test Configurations
