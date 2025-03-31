@@ -12,10 +12,10 @@
     "scripts": {
       "wdio": "wdio run ./wdio.conf.js",
       "clean-logs": "rm -rf logs/*",
-      "test": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" npx wdio run wdio.conf.js",
-      "test:headless": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" HEADLESS=\"true\" npx wdio run wdio.conf.js",
-      "test:debug": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" npx wdio run wdio.conf.js",
-      "test:debug:headless": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" HEADLESS=\"true\" npx wdio run wdio.conf.js"
+      "test": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" wdio run ./wdio.conf.js",
+      "test:headless": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" HEADLESS=\"true\" wdio run ./wdio.conf.js",
+      "test:debug": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" wdio run ./wdio.conf.js",
+      "test:debug:headless": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" HEADLESS=\"true\" wdio run ./wdio.conf.js"
     }
   }
   
