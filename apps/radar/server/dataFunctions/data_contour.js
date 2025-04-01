@@ -13,7 +13,7 @@ import {
 import { moment } from "meteor/momentjs:moment";
 
 // eslint-disable-next-line no-undef
-dataContour = function (plotParams, plotFunction) {
+dataContour = async function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.contour,
@@ -45,10 +45,12 @@ dataContour = function (plotParams, plotFunction) {
 
   const xAxisParam = plotParams["x-axis-parameter"];
   const yAxisParam = plotParams["y-axis-parameter"];
-  const xValClause = matsCollections.PlotParams.findOneAsync({ name: "x-axis-parameter" })
-    .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOneAsync({ name: "y-axis-parameter" })
-    .optionsMap[yAxisParam];
+  const xValClause = await matsCollections.PlotParams.findOneAsync({
+    name: "x-axis-parameter",
+  }).optionsMap[xAxisParam];
+  const yValClause = await matsCollections.PlotParams.findOneAsync({
+    name: "y-axis-parameter",
+  }).optionsMap[yAxisParam];
 
   // initialize variables specific to this curve
   const curve = curves[0];
@@ -56,11 +58,13 @@ dataContour = function (plotParams, plotFunction) {
   const { diffFrom } = curve;
 
   const { variable } = curve;
-  const databaseRef = matsCollections.variable.findOneAsync({ name: "variable" }).optionsMap[
-    variable
-  ];
-  const model = matsCollections["data-source"].findOneAsync({ name: "data-source" })
-    .optionsMap[variable][curve["data-source"]][0];
+  // eslint-disable-next-line no-await-in-loop
+  const databaseRef = await matsCollections.variable.findOneAsync({ name: "variable" })
+    .optionsMap[variable];
+  // eslint-disable-next-line no-await-in-loop
+  const model = await matsCollections["data-source"].findOneAsync({
+    name: "data-source",
+  }).optionsMap[variable][curve["data-source"]][0];
 
   let thresholdClause = "";
   if (xAxisParam !== "Threshold" && yAxisParam !== "Threshold") {
@@ -71,23 +75,28 @@ dataContour = function (plotParams, plotFunction) {
       );
     }
     const threshold = Object.keys(
-      matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[variable]
-    ).findAsync(
-      (key) =>
-        matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[variable][
-          key
-        ] === thresholdStr
+      // eslint-disable-next-line no-await-in-loop
+      await matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[
+        variable
+      ]
+    ).find(
+      async (key) =>
+        (await matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[
+          variable
+        ][key]) === thresholdStr
     );
     thresholdClause = `and m0.trsh = ${threshold / 10000}`;
   }
 
   const scaleStr = curve.scale;
   const scale = Object.keys(
-    matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable]
-  ).findAsync(
-    (key) =>
-      matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable][key] ===
-      scaleStr
+    // eslint-disable-next-line no-await-in-loop
+    await matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable]
+  ).find(
+    async (key) =>
+      (await matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable][
+        key
+      ]) === scaleStr
   );
 
   let validTimeClause = "";
@@ -110,7 +119,8 @@ dataContour = function (plotParams, plotFunction) {
   }
 
   const statisticSelect = curve.statistic;
-  const statisticOptionsMap = matsCollections.statistic.findOneAsync(
+  // eslint-disable-next-line no-await-in-loop
+  const statisticOptionsMap = await matsCollections.statistic.findOneAsync(
     { name: "statistic" },
     { optionsMap: 1 }
   ).optionsMap;
@@ -132,10 +142,12 @@ dataContour = function (plotParams, plotFunction) {
 
   const regionStr = curve.region;
   const region = Object.keys(
-    matsCollections.region.findOneAsync({ name: "region" }).valuesMap
-  ).findAsync(
-    (key) =>
-      matsCollections.region.findOneAsync({ name: "region" }).valuesMap[key] === regionStr
+    // eslint-disable-next-line no-await-in-loop
+    await matsCollections.region.findOneAsync({ name: "region" }).valuesMap
+  ).find(
+    async (key) =>
+      (await matsCollections.region.findOneAsync({ name: "region" }).valuesMap[key]) ===
+      regionStr
   );
   const queryTableClause = `from ${databaseRef}.${model}_${scale}_${region} as m0`;
 
