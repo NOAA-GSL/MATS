@@ -8,7 +8,7 @@ export default async (page) => {
      * The URL to navigate to
      * @type {String}
      */
-    const url = await browser.options.baseUrl + page;
+    const url = browser.options.baseUrl + page;
     await browser.url(url);
     const ms = 120000;
     // wait for the curve label selector to exist
