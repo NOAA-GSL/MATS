@@ -7,7 +7,7 @@ const dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const debug = process.env.DEBUG;
 const headless = process.env.HEADLESS;
-const testFirefox = process.env.TEST_FIREFOX;
+const testFirefox = process.env.TEST_FIREFOX !== 'false'; // default to true unless explicitly set
 const defaultTimeout = 90000;
 export const config = {
     //

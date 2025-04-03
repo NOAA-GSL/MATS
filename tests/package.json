@@ -10,11 +10,12 @@
       "@wdio/spec-reporter": "^9.11.0"
     },
     "scripts": {
-      "wdio": "wdio run ./wdio.conf.js",
       "clean-logs": "rm -rf logs/*",
       "test": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" wdio run ./wdio.conf.js",
+      "test:nofirefox": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" TEST_FIREFOX=\"false\" wdio run ./wdio.conf.js",
       "test:headless": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" HEADLESS=\"true\" wdio run ./wdio.conf.js",
       "test:debug": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" wdio run ./wdio.conf.js",
+      "test:debug:nofirefox": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" TEST_FIREFOX=\"false\" wdio run ./wdio.conf.js",
       "test:debug:headless": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" HEADLESS=\"true\" wdio run ./wdio.conf.js"
     }
   }
