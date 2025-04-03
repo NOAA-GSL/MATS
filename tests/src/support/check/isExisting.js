@@ -3,12 +3,12 @@
  * @param  {String}   selector  Element selector
  * @param  {String}   falseCase Whether to check if the element exists or not
  */
-export default (selector, falseCase) => {
+export default async (selector, falseCase) => {
     /**
      * Elements found in the DOM
      * @type {Object}
      */
-    const elements = $$(selector);
+    const elements = await $$(selector);
 
     if (falseCase) {
         expect(elements).toHaveLength(

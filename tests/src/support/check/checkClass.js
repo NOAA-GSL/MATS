@@ -5,12 +5,12 @@
  *                                      or not ('has', 'does not have')
  * @param  {String}   expectedClassName The class name to check
  */
-export default (selector, falseCase, expectedClassName) => {
+export default async (selector, falseCase, expectedClassName) => {
     /**
      * List of all the classes of the element
      * @type {Array}
      */
-    const classesList = $(selector).getAttribute('className').split(' ');
+    const classesList = await $(selector).getAttribute('className').split(' ');
 
     if (falseCase === 'does not have') {
         expect(classesList).not.toContain(
