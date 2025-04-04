@@ -2,7 +2,7 @@
  * Perform an click action on the button with the given label
  * @param  {String}   label button label
  */
-export default (label) => {
+export default async (label) => {
     /**
      * LabelOf the Mats button to click
      * @type {String}
@@ -12,76 +12,72 @@ export default (label) => {
     let cPart;
     // special buttons first
     if (label === 'Remove All') {
-        nrOfElements = $$('#remove-all').length;
-        $('#remove-all').waitForClickable();
-        $('#remove-all').click();
+        selector = await $('#remove-all');
+        await selector.waitForDisplayed();
+        await selector.scrollIntoView();
+        await selector.waitForClickable();
+        await selector.click();
     } else if (label === 'Remove all the curves') {
-        nrOfElements = $$('#confirm-remove-all').length;
-        // I don't know why there are two of the confirm buttons
-        // there has to be a better way to handle this
-        $$('#confirm-remove-all')[1].waitForClickable();
-        $$('#confirm-remove-all')[1].click();
+        // Note, there are two #confirm-remove-all id's present on the 
+        // page. Until that's fixed workaround it by grabbing the button text.
+        // selector = await $('#confirm-remove-all');
+        selector = await $('button=Remove all the curves');
+        await selector.waitForDisplayed();
+        await selector.scrollIntoView();
+        await selector.waitForClickable();
+        await selector.click();
     } else if (label.match('Remove curve .*')) {
         // this is the 'Remove curve curvelabel' confirm button
-        cPart = label.replace('Remove curve ', '');
-        nrOfElements = $$(`#confirm-remove-curve*=${cPart}`).length;
-        expect(nrOfElements).toBeGreaterThan(0, `Expected an "${selector}" button to exist`);
-        $$(`#confirm-remove-curve*=${cPart}`)[1].waitForDisplayed();
-        $$(`#confirm-remove-curve*=${cPart}`)[1].scrollIntoView();
-        $$(`#confirm-remove-curve*=${cPart}`)[1].waitForClickable();
-        $$(`#confirm-remove-curve*=${cPart}`)[1].click();
+        await browser.pause(200); // TODO - this is flaky without a slight pause
+        selector = await $(`#confirm-remove-curve`);
+        await selector.waitForDisplayed();
+        await selector.scrollIntoView();
+        await selector.waitForClickable();
+        await selector.click();
     } else if (label.match('Remove .*')) {
         // This is the 'Remove curvelabel' remove button
         cPart = label.replace('Remove ', '');
-        nrOfElements = $$(`#curve-list-remove*=${cPart}`).length;
-        expect(nrOfElements).toBeGreaterThan(0, `Expected an "${selector}" button to exist`);
-        $(`#curve-list-remove*=${cPart}`).waitForClickable();
-        $(`#curve-list-remove*=${cPart}`).click();
+        await $(`#curve-list-remove*=${cPart}`).waitForClickable();
+        await $(`#curve-list-remove*=${cPart}`).click();
     } else {
         // normal buttons
         switch (label) {
             case 'Add Curve':
-                selector = $('#add');
-                selector.waitForDisplayed();
-                selector.scrollIntoView();
-                nrOfElements = $$('#add').length;
+                selector = await $('#add');
+                await selector.waitForDisplayed();
+                await selector.scrollIntoView();
                 break;
             case 'Back':
-                selector = $('#backButton');
-                selector.waitForDisplayed();
-                selector.scrollIntoView();
-                nrOfElements = $$('#backButton').length;
+                selector = await $('#backButton');
+                await selector.waitForDisplayed();
+                await selector.scrollIntoView();
                 break;
             case 'Plot Unmatched':
-                selector = $('#plotUnmatched');
-                selector.waitForDisplayed();
-                selector.scrollIntoView();
-                nrOfElements = $$('#plotUnmatched').length;
+                selector = await $('#plotUnmatched');
+                await selector.waitForDisplayed();
+                await selector.scrollIntoView();
                 break;
             case 'Plot Matched':
-                selector = $('#plotMatched');
-                selector.waitForDisplayed();
-                selector.scrollIntoView();
-                nrOfElements = $$('#plotMatched').length;
+                selector = await $('#plotMatched');
+                await selector.waitForDisplayed();
+                await selector.scrollIntoView();
                 break;
             case 'Reset to Defaults':
-                selector = $('#reset');
-                selector.waitForDisplayed();
-                selector.scrollIntoView();
-                nrOfElements = $$('#reset').length;
+                selector = await $('#reset');
+                await selector.waitForDisplayed();
+                await selector.scrollIntoView();
                 break;
             case 'Clear':
-                selector = $('#clear-info');
-                selector.waitForDisplayed();
-                selector.scrollIntoView();
-                nrOfElements = $$('#clear-info').length;
+                selector = await $('#clear-info');
+                await selector.waitForDisplayed();
+                await selector.scrollIntoView();
                 break;
             default:
                 throw new Error('Unhandled button label???');
         }
         // these are for the switch statement i.e. 'normal buttons'
-        expect(nrOfElements).toBeGreaterThan(0, `Expected an "${selector}" button to exist`);
-        selector.waitForClickable();
-        selector.click();
+        await selector.waitForClickable();
+        await selector.click();
     }
 };
+// TODO - Ian debug nrOfElements

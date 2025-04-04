@@ -3,14 +3,14 @@
  * of the plot-format selector against a provided value
  * @param  {String} value the expected value
  */
-export default (value) => {
+export default async (value) => {
     /**
      * The selected state
      * @type {Boolean}
      */
-    const selected = $$('input[name=plotFormat]').find(
+    const selected = await $$('input[name=plotFormat]').find(
         (elem) => elem.isSelected()
     );
-    const selectedValue = $(selected).getValue();
+    const selectedValue = await $(selected).getValue();
     expect(selectedValue).toBe(value, `"plot format" should be ${value} and is ${selectedValue}`);
 };

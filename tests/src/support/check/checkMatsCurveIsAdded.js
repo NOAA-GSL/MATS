@@ -3,9 +3,9 @@
  * @param  {String}  the label of the curve
  */
 
-export default (curve) => {
+export default async (curve) => {
     const command = 'getText';
-    const selector = $(`#curveItem-${curve}`);
+    const selector = await $(`#curveItem-${curve}`);
     /**
      * The expected text
      * @type {String}
@@ -16,9 +16,9 @@ export default (curve) => {
      * The text of the element
      * @type {String}
      */
-    selector.waitForDisplayed();
-    selector.scrollIntoView();
-    const text = selector[command]();
+    await selector.waitForDisplayed();
+    await selector.scrollIntoView();
+    const text = await selector[command]();
 
     expect(text).toContain(stringExpectedText);
 };

@@ -3,7 +3,7 @@
  * @param  {String}   buttonLabel   Button label
  * @param  {String}   falseCase     Whether to check if the button is enabled or not
  * */
-export default (buttonLabel, falseCase) => {
+export default async (buttonLabel, falseCase) => {
     /**
      * Visible state of the give element
      * @type {String}
@@ -33,13 +33,13 @@ export default (buttonLabel, falseCase) => {
         boolFalseCase = !!falseCase;
     }
     if (boolFalseCase) {
-        const isEnabled = selector.isEnabled();
+        const isEnabled = await selector.isEnabled();
         expect(isEnabled).toEqual(
             false,
             `Expected element "${buttonLabel}" to be enabled`
         );
     } else {
-        const isEnabled = selector.waitForEnabled();
+        const isEnabled = await selector.waitForEnabled();
         expect(isEnabled).toEqual(
             true,
             `Expected element "${buttonLabel}" to be enabled`

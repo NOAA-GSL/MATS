@@ -1,3 +1,5 @@
+import { Then } from '@cucumber/cucumber';
+
 import checkClass from '../support/check/checkClass';
 import checkContainsAnyText from '../support/check/checkContainsAnyText';
 import checkIsEmpty from '../support/check/checkIsEmpty';
@@ -52,7 +54,7 @@ import checkMatsInfoMessage from '../support/check/checkMatsInfoMessage';
 import matsDebug from '../support/action/matsDebug';
 import isMatsButtonEnabled from '../support/check/isMatsButtonEnabled';
 
-const { Then } = require('@cucumber/cucumber');
+
 
 Then(/^I debug$/, matsDebug);
 

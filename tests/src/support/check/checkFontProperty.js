@@ -8,7 +8,7 @@
  *                                  attribute matches or not
  * @param  {String}   expectedValue The value to match against
  */
-export default (isCSS, attrName, elem, falseCase, expectedValue) => {
+export default async (isCSS, attrName, elem, falseCase, expectedValue) => {
     /**
      * The command to use for fetching the expected value
      * @type {String}
@@ -25,7 +25,7 @@ export default (isCSS, attrName, elem, falseCase, expectedValue) => {
      * The actual attribute value
      * @type {Mixed}
      */
-    let attributeValue = browser[command](elem, attrName);
+    let attributeValue = await browser[command](elem, attrName);
 
     /**
      * when getting something with a color or font-weight WebdriverIO returns a

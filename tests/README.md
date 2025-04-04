@@ -23,10 +23,15 @@ You can run tests via `npm` by calling the scripts in `package.json` like so:
 
 You can pass flags like so:
 
-- `npm run test -- --baseUrl 'https://esrl.noaa.gov/gsd/int-mats'`
+- `npm run test -- --baseUrl 'https://gsl.noaa.gov/int-mats'`
 
 Otherwise, there are also some shell scripts in the `MATS/tests` directory that offer an easy start to running the test suite.
 
+## Updating
+
+These tests are directly inspired from webdriver's cucumber-boilerplate repo. If you're looking to update to the latest version of Webdriver, take a peek at what they have going on here: https://github.com/webdriverio/cucumber-boilerplate
+
+Note that repo isn't always up-to-date with webdriver's latest configuration file so it can be a good idea to cross reference the official webdriverio docs.
 
 ## Directory structure
 
@@ -71,11 +76,11 @@ It will run 3 instances and it will test against MATS internal dev server.
 
 #### This will test against mats-int
 
-- `npx wdio run wdio.conf.js --baseUrl 'https://esrl.noaa.gov/gsd/int-mats'`
+- `npx wdio run wdio.conf.js --baseUrl 'https://gsl.noaa.gov/int-mats'`
 
 #### This will use 2 parallel instances and run against mats-int
 
-- `npx wdio run wdio.conf.js --baseUrl 'https://esrl.noaa.gov/gsd/int-mats' --maxInstances 2`
+- `npx wdio run wdio.conf.js --baseUrl 'https://gsl.noaa.gov/int-mats' --maxInstances 2`
 
 #### This will run a single feature
 
@@ -83,8 +88,8 @@ Note this is a relative path - you need to be in the `MATS/tests` directory
 
 ```console
 npx wdio run wdio.conf.js \
-    --baseUrl 'https://esrl.noaa.gov/gsd/int-mats' \
-    --spec ./src/features/met-airquality/basic/addRemoveContour.feature
+    --baseUrl 'https://gsl.noaa.gov/gsd/int-mats' \
+    --spec ./src/features/ceil-vis/basic/addRemoveContour.feature
 ```
 
 #### Running tests with different reporters

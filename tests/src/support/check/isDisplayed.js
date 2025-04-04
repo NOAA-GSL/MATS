@@ -3,12 +3,12 @@
  * @param  {String}   selector   Element selector
  * @param  {String}   falseCase Check for a visible or a hidden element
  */
-export default (selector, falseCase) => {
+export default async (selector, falseCase) => {
     /**
      * Visible state of the give element
      * @type {String}
      */
-    const isDisplayed = $(selector).isDisplayed();
+    const isDisplayed = await $(selector).isDisplayed();
 
     if (falseCase) {
         expect(isDisplayed).not.toEqual(
