@@ -6,6 +6,7 @@ export default async (parameter, value) => {
      * @param  {String}   parameter   paramaeter
      * @param  {String}   value the selected option
      */
+    await browser.pause(100); // TODO - this is flaky without a slight pause
     await $(`#controlButton-${parameter}-value`).waitForDisplayed();
     await $(`#controlButton-${parameter}-value`).scrollIntoView();
     let count = 0;
@@ -22,5 +23,5 @@ export default async (parameter, value) => {
         }
         count += 1;
     }
-    expect(text).toEqual(value, `Expexted ${text} to be ${value} for parameter: ${parameter}`);
+    expect(text).toEqual(value, `Expected ${text} to be ${value} for parameter: ${parameter}`);
 };

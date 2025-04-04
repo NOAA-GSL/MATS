@@ -31,6 +31,8 @@ Otherwise, there are also some shell scripts in the `MATS/tests` directory that 
 
 These tests are directly inspired from webdriver's cucumber-boilerplate repo. If you're looking to update to the latest version of Webdriver, take a peek at what they have going on here: https://github.com/webdriverio/cucumber-boilerplate
 
+Note that repo isn't always up-to-date with webdriver's latest configuration file so it can be a good idea to cross reference the official webdriverio docs.
+
 ## Directory structure
 
 The `MATS/tests/src` directory structure is from the [webdriver.io cucumber boilerplate project](https://github.com/webdriverio/cucumber-boilerplate) because that is what was used to make the tests run, their directory structure is easy to navigate.  

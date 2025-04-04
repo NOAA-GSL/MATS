@@ -50,19 +50,18 @@ export const config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 3,
+    maxInstances: 10,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://docs.saucelabs.com/reference/platforms-configurator
     //
-    capabilities: debug ? [{
-        // Debug config
-
+    
+    capabilities: [{
         // maxInstances can get overwritten per capability. So if you have an in-house Selenium
         // grid with only 5 firefox instances available you can make sure that not more than
         // 5 instances get started at a time.
-        maxInstances: 1,
+        'wdio:maxInstances': debug ? 1 : 3,
 
         browserName: 'chrome',
         browserVersion: 'stable',
@@ -74,25 +73,7 @@ export const config = {
         // excludeDriverLogs: ['*'], // pass '*' to exclude all driver session logs
         // excludeDriverLogs: ['bugreport', 'server'],
     },...(testFirefox ? [{
-        maxInstances: 1,
-
-        browserName: 'firefox',
-        browserVersion: 'stable',
-        'moz:firefoxOptions': {
-            args: headless ? ['-headless',] : [],
-        },
-    }] : [])] : [{
-        // Normal config
-
-        maxInstances: 3,
-        
-        browserName: 'chrome',
-        browserVersion: 'stable',
-        'goog:chromeOptions': {
-            args: headless ? ['headless', 'disable-gpu'] : [],
-        },
-    },...(testFirefox ? [{
-        maxInstances: 3,
+        'wdio:maxInstances': debug ? 0 : 3, // Don't run Firefox in debug mode
 
         browserName: 'firefox',
         browserVersion: 'stable',
@@ -100,6 +81,7 @@ export const config = {
             args: headless ? ['-headless',] : [],
         },
     }] : [])],
+
     //
     // ===================
     // Test Configurations
