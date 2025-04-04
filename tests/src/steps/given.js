@@ -6,7 +6,6 @@ import checkContainsText from '../support/check/checkContainsText';
 import checkCookieContent from '../support/check/checkCookieContent';
 import checkCookieExists from '../support/check/checkCookieExists';
 import checkDimension from '../support/check/checkDimension';
-import checkElementExists from '../support/check/checkElementExists';
 import checkEqualsText from '../support/check/checkEqualsText';
 import checkModal from '../support/check/checkModal';
 import checkOffset from '../support/check/checkOffset';
@@ -14,12 +13,10 @@ import checkProperty from '../support/check/checkProperty';
 import checkSelected from '../support/check/checkSelected';
 import checkTitle from '../support/check/checkTitle';
 import checkUrl from '../support/check/checkURL';
-import closeAllButFirstTab from '../support/action/closeAllButFirstTab';
 import compareText from '../support/check/compareText';
 import isEnabled from '../support/check/isEnabled';
 import isDisplayed from '../support/check/isDisplayed';
 import openWebsite from '../support/action/openWebsite';
-import setWindowSize from '../support/action/setWindowSize';
 import openWebsiteAndWaitForPlotType from '../support/action/openWebsiteAndWaitForPlotType';
 import saveMatsParameters from '../support/action/saveMatsParameters';
 
@@ -56,11 +53,6 @@ Given(
 Given(
     /^the checkbox "([^"]*)?" is( not)* checked$/,
     checkSelected
-);
-
-Given(
-    /^there is (an|no) element "([^"]*)?" on the page$/,
-    checkElementExists
 );
 
 Given(
@@ -121,16 +113,6 @@ Given(
 Given(
     /^the element "([^"]*)?" is( not)* positioned at ([\d]+)px on the (x|y) axis$/,
     checkOffset
-);
-
-Given(
-    /^I have a screen that is ([\d]+) by ([\d]+) pixels$/,
-    setWindowSize
-);
-
-Given(
-    /^I have closed all but the first (window|tab)$/,
-    closeAllButFirstTab
 );
 
 Given(
