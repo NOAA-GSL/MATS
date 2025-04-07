@@ -1,12 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 resources:
   - ../../../base/ceil-vis15
 
-patchesStrategicMerge:
-  - deployment.yaml
+patches:
+  - path: deployment.yaml
 
 images:
   - name: ghcr.io/noaa-gsl/mats/development/ceil-vis15
-    newTag: development 
+    newTag: development
 
 configMapGenerator:
   - name: ceil-vis15-config

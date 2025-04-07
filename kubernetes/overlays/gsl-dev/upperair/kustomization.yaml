@@ -1,12 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 resources:
   - ../../../base/upperair
 
-patchesStrategicMerge:
-  - deployment.yaml
+patches:
+  - path: deployment.yaml
 
 images:
   - name: ghcr.io/noaa-gsl/mats/development/upperair
-    newTag: development 
+    newTag: development
 
 configMapGenerator:
   - name: upperair-config
