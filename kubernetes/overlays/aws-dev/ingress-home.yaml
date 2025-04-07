@@ -17,7 +17,7 @@ spec:
           # This has happened before with the rule for `/mats-dev/ptype`. If multiple paths match,
           # Kubernetes will prefer the longer path.
           - path: /mats-dev/(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: home
