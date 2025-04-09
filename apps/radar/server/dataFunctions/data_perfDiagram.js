@@ -257,7 +257,8 @@ dataPerformanceDiagram = async function (plotParams, plotFunction) {
     curve.ymax = d.ymax;
     curve.axisKey = statisticSelect;
     curve.binParam = binParam;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    // eslint-disable-next-line no-await-in-loop
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
