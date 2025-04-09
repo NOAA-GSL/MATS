@@ -283,7 +283,7 @@ dataContour = async function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataContour(
+  const result = await matsDataProcessUtils.processDataContour(
     dataset,
     curveInfoParams,
     plotParams,
