@@ -1,6 +1,6 @@
 /**
  * Refresh the current page.
  */
-export default () => {
-    browser.refresh();
+export default async () => {
+    await browser.refresh();
 };

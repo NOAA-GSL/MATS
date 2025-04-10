@@ -6,12 +6,12 @@
  *
  * @todo  merge with waitfor
  */
-export default (selector, falseCase) => {
+export default async (selector, falseCase) => {
     /**
      * Maximum number of milliseconds to wait for
      * @type {Int}
      */
     const ms = 10000;
 
-    $(selector).waitForDisplayed(ms, !!falseCase);
+    await $(selector).waitForDisplayed(ms, !!falseCase);
 };

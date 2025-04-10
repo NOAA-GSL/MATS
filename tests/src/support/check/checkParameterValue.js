@@ -3,12 +3,12 @@
  * @param  {String}   parameter the selection parameter
  * @param  {String}   option the selected option
  */
-export default (parameter, option) => {
+export default async (parameter, option) => {
     /**
      * The selected state
      * @type {Boolean}
      */
-    const isSelected = $(parameter).isSelected();
+    const isSelected = await $(parameter).isSelected();
 
     if (option) {
         expect(isSelected)

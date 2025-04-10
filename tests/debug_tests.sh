@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #example invocation
-#./debug_tests.sh --spec ~/WebstormProjects/mats-testing/src/features/ceiling15
+#./debug_tests.sh  --spec MATS/tests/src/features/upperair
 if [ ! -f wdio.conf.js ]; then
     echo "No wdio.conf.js file found - not in a testing directory?"
     exit 1

@@ -6,7 +6,7 @@
  * @param  {String}   state                    State to check for (default
  *                                             existence)
  */
-export default (selector, ms, falseState, state) => {
+export default async (selector, ms, falseState, state) => {
     /**
      * Maximum number of milliseconds to wait, default 3000
      * @type {Int}
@@ -46,5 +46,5 @@ export default (selector, ms, falseState, state) => {
         boolFalseState = false;
     }
 
-    $(selector)[command](intMs, boolFalseState);
+    await $(selector)[command](intMs, boolFalseState);
 };

@@ -4,22 +4,22 @@
  * */
 import pause from './pause';
 
-export default (value) => {
+export default async (value) => {
     const dateRange = value;
     const dateCharArray = dateRange.split('');
-    $('#controlButton-dates-value').waitForDisplayed();
-    $('#controlButton-dates-value').scrollIntoView();
-    $('#controlButton-dates-value').waitForClickable();
-    $('#controlButton-dates-value').click();
-    $('#dates-dateRange').click(); // brings up date menu
-    browser.keys(['Meta', 'a']);
-    browser.keys("Backspace");
-    browser.keys(dateCharArray);
-    $('#dates-applyBtn').click();
+    await $('#controlButton-dates-value').waitForDisplayed();
+    await $('#controlButton-dates-value').scrollIntoView();
+    await $('#controlButton-dates-value').waitForClickable();
+    await $('#controlButton-dates-value').click();
+    await $('#dates-dateRange').click(); // brings up date menu
+    await browser.keys(['Meta', 'a']);
+    await browser.keys("Backspace");
+    await browser.keys(dateCharArray);
+    await $('#dates-applyBtn').click();
     let datesValue = '';
     let count = 0;
     while (count < 10 && datesValue !== dateRange) {
-        datesValue = $('#controlButton-dates-value').getText();
+        datesValue = await $('#controlButton-dates-value').getText();
         if (datesValue !== dateRange) {
             pause(2000);
         }

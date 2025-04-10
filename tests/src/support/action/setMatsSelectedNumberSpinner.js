@@ -5,21 +5,21 @@
  */
 import pause from "./pause";
 
-export default (parameter, selectionValue) => {
+export default async (parameter, selectionValue) => {
   /**
    * The method to use for selecting the option
    * @type {String}
    */
 
   // noinspection JSJQueryEfficiency
-  $(`#controlButton-${parameter}`).waitForDisplayed();
-  $(`#controlButton-${parameter}`).scrollIntoView();
-  $(`#controlButton-${parameter}`).waitForClickable();
-  $(`#controlButton-${parameter}`).click();
-  $(`#${parameter}-numberSpinner`).waitForDisplayed();
-  $(`#${parameter}-numberSpinner`).setValue(parseInt(selectionValue));
-  $(`#controlButton-${parameter}`).waitForClickable();
-  $(`#controlButton-${parameter}`).click();
+  await $(`#controlButton-${parameter}`).waitForDisplayed();
+  await $(`#controlButton-${parameter}`).scrollIntoView();
+  await $(`#controlButton-${parameter}`).waitForClickable();
+  await $(`#controlButton-${parameter}`).click();
+  await $(`#${parameter}-numberSpinner`).waitForDisplayed();
+  await $(`#${parameter}-numberSpinner`).setValue(parseInt(selectionValue));
+  await $(`#controlButton-${parameter}`).waitForClickable();
+  await $(`#controlButton-${parameter}`).click();
 
   let matchValue = selectionValue;
   let text = "";
@@ -27,7 +27,7 @@ export default (parameter, selectionValue) => {
   // this is essentially giving the parameter 20 seconds to show the new value
   // this is mostly for when it is really busy doing parallel instances
   while (count < 20 && text !== matchValue) {
-    text = $(`#controlButton-${parameter}-value`).getText();
+    text = await $(`#controlButton-${parameter}-value`).getText();
     if (text !== matchValue) {
       pause(2000);
     }

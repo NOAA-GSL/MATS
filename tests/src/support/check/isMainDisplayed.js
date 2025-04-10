@@ -1,11 +1,11 @@
 /**
  * Check if the graph page is visible
  */
-export default () => {
+export default async () => {
     /**
      * Is the main page visible?
      */
-    const isDisplayed = $('#plotType').isDisplayed();
+    const isDisplayed = await $('#plotType').isDisplayed();
 
     expect(isDisplayed).toEqual(
         true,
