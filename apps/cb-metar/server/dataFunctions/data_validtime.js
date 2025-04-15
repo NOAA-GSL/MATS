@@ -17,7 +17,7 @@ import {
 import { moment } from "meteor/momentjs:moment";
 
 // eslint-disable-next-line no-undef
-dataValidTime = function (plotParams, plotFunction) {
+dataValidTime = async function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.validtime,
@@ -216,7 +216,7 @@ dataValidTime = function (plotParams, plotFunction) {
         }
       } else {
         // Predefined region, with filtering. Treat like station plot.
-        sitesList = matsDataQueryUtils.getStationsInCouchbaseRegion(cbPool, region);
+        sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(cbPool, region);
       }
     } else {
       // Station plot, with or without filtering

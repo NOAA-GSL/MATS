@@ -190,7 +190,7 @@ dataContour = async function (plotParams, plotFunction) {
       dataRequests[label] = statement;
 
       // send the query statement to the query function
-      queryResult = matsDataQueryUtils.queryDBContour(
+      queryResult = await matsDataQueryUtils.queryDBContour(
         sumPool, // eslint-disable-line no-undef
         statement,
         appParams,

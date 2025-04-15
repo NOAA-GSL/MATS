@@ -17,7 +17,7 @@ import {
 import { moment } from "meteor/momentjs:moment";
 
 // eslint-disable-next-line no-undef
-dataDieoff = function (plotParams, plotFunction) {
+dataDieoff = async function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.dieoff,
@@ -261,7 +261,7 @@ dataDieoff = function (plotParams, plotFunction) {
         }
       } else {
         // Predefined region, with filtering. Treat like station plot.
-        sitesList = matsDataQueryUtils.getStationsInCouchbaseRegion(cbPool, region);
+        sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(cbPool, region);
       }
     } else {
       // Station plot, with or without filtering

@@ -183,7 +183,8 @@ dataSeries = async function (plotParams, plotFunction) {
         }
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBTimeSeries(
+        // eslint-disable-next-line no-await-in-loop
+        queryResult = await matsDataQueryUtils.queryDBTimeSeries(
           sumPool, // eslint-disable-line no-undef
           statement,
           model,

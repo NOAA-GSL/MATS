@@ -168,7 +168,8 @@ dataHistogram = async function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+        // eslint-disable-next-line no-await-in-loop
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
           sumPool, // eslint-disable-line no-undef
           statement,
           appParams,
