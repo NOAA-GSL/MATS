@@ -64,6 +64,7 @@ natestrauser:select2@4.0.3
 npm-mongo@6.10.2
 observe-sequence@2.0.0
 ordered-dict@1.2.0
+ostrio:flow-router-extra@3.12.0
 pcel:mysql@0.1.0
 promise@1.0.0
 pwix:blaze-layout@2.3.3

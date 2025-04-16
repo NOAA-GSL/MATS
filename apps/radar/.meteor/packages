@@ -25,6 +25,7 @@ google-config-ui@1.0.3
 dynamic-import@0.7.3
 underscore@1.6.1
 pwix:blaze-layout
+ostrio:flow-router-extra
 jkuester:http
 aldeed:simple-schema
 hot-module-replacement@0.5.4  # Update client in development without reloading the page

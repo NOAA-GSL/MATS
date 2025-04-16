@@ -37,7 +37,7 @@ const doPlotParams = async function () {
   ) {
     await matsCollections.PlotParams.removeAsync({});
   }
-  if ((await matsCollections.PlotParams.findAsync().countAsync()) === 0) {
+  if ((await matsCollections.PlotParams.find().countAsync()) === 0) {
     await matsCollections.PlotParams.insertAsync({
       name: "dates",
       type: matsTypes.InputTypes.dateRange,
@@ -329,9 +329,9 @@ const doCurveParams = async function () {
     settings.resetFromCode === undefined ||
     settings.resetFromCode === true
   ) {
-    const params = await matsCollections.CurveParamsInfo.findAsync({
+    const params = await matsCollections.CurveParamsInfo.findOneAsync({
       curve_params: { $exists: true },
-    }).fetch()[0].curve_params;
+    }).curve_params;
     for (let cp = 0; cp < params.length; cp += 1) {
       // eslint-disable-next-line no-await-in-loop
       await matsCollections[params[cp]].removeAsync({});
@@ -350,7 +350,7 @@ const doCurveParams = async function () {
 
   try {
     const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      metadataPool, // eslint-disable-line no-undef
+      global.metadataPool,
       "select short_name,description from region_descriptions;"
     );
     for (let j = 0; j < rows.length; j += 1) {
@@ -364,7 +364,7 @@ const doCurveParams = async function () {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allThresholdValuesMap[variables[didx]] = {};
       const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool, // eslint-disable-line no-undef
+        global.sumPool,
         `select trsh,description from ${
           variableDBNames[variables[didx]]
         }.threshold_descriptions;`
@@ -382,7 +382,7 @@ const doCurveParams = async function () {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allScaleValuesMap[variables[didx]] = {};
       const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool, // eslint-disable-line no-undef
+        global.sumPool,
         `select scale,description from ${
           variableDBNames[variables[didx]]
         }.scale_descriptions;`
@@ -407,7 +407,7 @@ const doCurveParams = async function () {
       regionModelOptionsMap[variable] = {};
 
       const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool, // eslint-disable-line no-undef
+        sumPool,
         `select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from ${variableDBNames[variable]}.regions_per_model_mats_all_categories order by display_category, display_order;`
       );
       for (let i = 0; i < rows.length; i += 1) {
@@ -1133,7 +1133,7 @@ const doCurveTextPatterns = async function () {
   ) {
     await matsCollections.CurveTextPatterns.removeAsync({});
   }
-  if ((await matsCollections.CurveTextPatterns.findAsync().countAsync()) === 0) {
+  if ((await matsCollections.CurveTextPatterns.find().countAsync()) === 0) {
     await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.timeSeries,
       textPattern: [
@@ -1387,7 +1387,7 @@ const doSavedCurveParams = async function () {
   ) {
     await matsCollections.SavedCurveParams.removeAsync({});
   }
-  if ((await matsCollections.SavedCurveParams.findAsync().countAsync()) === 0) {
+  if ((await matsCollections.SavedCurveParams.find().countAsync()) === 0) {
     await matsCollections.SavedCurveParams.insertAsync({
       clName: "changeList",
       changeList: [],
@@ -1404,7 +1404,7 @@ const doPlotGraph = async function () {
   ) {
     await matsCollections.PlotGraphFunctions.removeAsync({});
   }
-  if ((await matsCollections.PlotGraphFunctions.findAsync().countAsync()) === 0) {
+  if ((await matsCollections.PlotGraphFunctions.find().countAsync()) === 0) {
     await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.timeSeries,
       graphFunction: "graphPlotly",
@@ -1464,14 +1464,14 @@ const doPlotGraph = async function () {
 
 Meteor.startup(async function () {
   await matsCollections.Databases.removeAsync({});
-  if ((await matsCollections.Databases.findAsync({}).countAsync()) < 0) {
+  if ((await matsCollections.Databases.find({}).countAsync()) < 0) {
     // eslint-disable-next-line no-console
     console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
     await matsCollections.Databases.dropAsync();
   }
-  if ((await matsCollections.Databases.findAsync({}).countAsync()) === 0) {
+  if ((await matsCollections.Databases.find({}).countAsync()) === 0) {
     let databases;
     if (
       Meteor.settings === undefined ||
@@ -1510,9 +1510,7 @@ Meteor.startup(async function () {
     }
   );
   if (cbConnection) {
-    // global cbScorecardSettingsPool
-    // eslint-disable-next-line no-undef
-    cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+    global.cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
       cbConnection.host,
       cbConnection.bucket,
       cbConnection.scope,
@@ -1538,8 +1536,7 @@ Meteor.startup(async function () {
   );
   // the pool is intended to be global
   if (metadataSettings) {
-    // eslint-disable-next-line no-undef
-    metadataPool = mysql.createPool(metadataSettings);
+    global.metadataPool = mysql.createPool(metadataSettings);
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
 
@@ -1559,8 +1556,7 @@ Meteor.startup(async function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
-    // eslint-disable-next-line no-undef
-    sumPool = mysql.createPool(sumSettings);
+    global.sumPool = mysql.createPool(sumSettings);
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
 
@@ -1590,8 +1586,7 @@ Meteor.startup(async function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
-// eslint-disable-next-line no-undef
-appSpecificResetRoutines = [
+global.appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,
   doSavedCurveParams,

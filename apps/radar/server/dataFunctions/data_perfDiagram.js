@@ -12,8 +12,7 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataPerformanceDiagram = async function (plotParams, plotFunction) {
+global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.performanceDiagram,
