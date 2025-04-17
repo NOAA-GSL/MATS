@@ -152,7 +152,7 @@ global.dataThreshold = async function (plotParams, plotFunction) {
         // send the query statement to the query function
         // eslint-disable-next-line no-await-in-loop
         queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+          global.sumPool,
           statement,
           appParams,
           statisticSelect

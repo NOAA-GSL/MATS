@@ -17,6 +17,7 @@
     "jquery": "^3.7.1",
     "jspdf": "^3.0.1",
     "modules": "^0.4.0",
+    "mysql2": "^3.14.0",
     "object-hash": "^3.0.0",
     "object-sizeof": "^2.6.5",
     "xmlbuilder": "^15.1.1"

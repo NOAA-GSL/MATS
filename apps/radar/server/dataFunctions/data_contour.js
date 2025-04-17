@@ -190,7 +190,7 @@ global.dataContour = async function (plotParams, plotFunction) {
 
       // send the query statement to the query function
       queryResult = await matsDataQueryUtils.queryDBContour(
-        sumPool, // eslint-disable-line no-undef
+        global.sumPool,
         statement,
         appParams,
         statisticSelect

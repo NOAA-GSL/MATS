@@ -2,7 +2,6 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 import { Meteor } from "meteor/meteor";
-import { mysql } from "meteor/pcel:mysql";
 import { moment } from "meteor/momentjs:moment";
 import {
   matsMethods,
@@ -13,6 +12,7 @@ import {
   matsParamUtils,
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
+import mysql from 'mysql2/promise';
 
 // This app combines three previous apps, cref, echotop, and vil.
 // This is where we store the databases referenced by those apps.
@@ -349,7 +349,7 @@ const doCurveParams = async function () {
   const allScaleValuesMap = {};
 
   try {
-    const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+    const rows = await matsDataQueryUtils.queryMySQL(
       global.metadataPool,
       "select short_name,description from region_descriptions;"
     );
@@ -363,7 +363,7 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allThresholdValuesMap[variables[didx]] = {};
-      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+      const rows = await matsDataQueryUtils.queryMySQL(
         global.sumPool,
         `select trsh,description from ${
           variableDBNames[variables[didx]]
@@ -381,7 +381,7 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allScaleValuesMap[variables[didx]] = {};
-      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+      const rows = await matsDataQueryUtils.queryMySQL(
         global.sumPool,
         `select scale,description from ${
           variableDBNames[variables[didx]]
@@ -406,7 +406,7 @@ const doCurveParams = async function () {
       scaleModelOptionsMap[variable] = {};
       regionModelOptionsMap[variable] = {};
 
-      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
+      const rows = await matsDataQueryUtils.queryMySQL(
         sumPool,
         `select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from ${variableDBNames[variable]}.regions_per_model_mats_all_categories order by display_category, display_order;`
       );
@@ -1043,14 +1043,15 @@ const doCurveParams = async function () {
   }
 
   // determine date defaults for dates and curveDates
-  const defaultDataSource = await matsCollections["data-source"].findOneAsync(
+  const defaultDataSource = (await matsCollections["data-source"].findOneAsync(
     { name: "data-source" },
     { default: 1 }
-  ).default;
-  modelDateRangeMap = await matsCollections.variable.findOneAsync(
+  ))["default"];
+  modelDateRangeMap = (await matsCollections.variable.findOneAsync(
     { name: "variable" },
     { dates: 1 }
-  ).dates;
+  ))["dates"];
+
   minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
   maxDate = modelDateRangeMap[variables[0]][defaultDataSource].maxDate;
 
