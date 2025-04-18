@@ -12,7 +12,8 @@ import {
   matsParamUtils,
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
-import mysql from 'mysql2/promise';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import mysql from "mysql2/promise";
 
 // This app combines three previous apps, cref, echotop, and vil.
 // This is where we store the databases referenced by those apps.
@@ -363,6 +364,7 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allThresholdValuesMap[variables[didx]] = {};
+      // eslint-disable-next-line no-await-in-loop
       const rows = await matsDataQueryUtils.queryMySQL(
         global.sumPool,
         `select trsh,description from ${
@@ -381,6 +383,7 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allScaleValuesMap[variables[didx]] = {};
+      // eslint-disable-next-line no-await-in-loop
       const rows = await matsDataQueryUtils.queryMySQL(
         global.sumPool,
         `select scale,description from ${
@@ -406,8 +409,9 @@ const doCurveParams = async function () {
       scaleModelOptionsMap[variable] = {};
       regionModelOptionsMap[variable] = {};
 
+      // eslint-disable-next-line no-await-in-loop
       const rows = await matsDataQueryUtils.queryMySQL(
-        sumPool,
+        global.sumPool,
         `select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from ${variableDBNames[variable]}.regions_per_model_mats_all_categories order by display_category, display_order;`
       );
       for (let i = 0; i < rows.length; i += 1) {
@@ -1043,14 +1047,15 @@ const doCurveParams = async function () {
   }
 
   // determine date defaults for dates and curveDates
-  const defaultDataSource = (await matsCollections["data-source"].findOneAsync(
-    { name: "data-source" },
-    { default: 1 }
-  ))["default"];
-  modelDateRangeMap = (await matsCollections.variable.findOneAsync(
-    { name: "variable" },
-    { dates: 1 }
-  ))["dates"];
+  const defaultDataSource = (
+    await matsCollections["data-source"].findOneAsync(
+      { name: "data-source" },
+      { default: 1 }
+    )
+  ).default;
+  modelDateRangeMap = (
+    await matsCollections.variable.findOneAsync({ name: "variable" }, { dates: 1 })
+  ).dates;
 
   minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
   maxDate = modelDateRangeMap[variables[0]][defaultDataSource].maxDate;
@@ -1537,7 +1542,14 @@ Meteor.startup(async function () {
   );
   // the pool is intended to be global
   if (metadataSettings) {
-    global.metadataPool = mysql.createPool(metadataSettings);
+    global.metadataPool = mysql.createPool({
+      host: metadataSettings.host,
+      port: metadataSettings.port,
+      user: metadataSettings.user,
+      password: metadataSettings.password,
+      database: metadataSettings.database,
+      connectionLimit: metadataSettings.connectionLimit,
+    });
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
 
@@ -1557,7 +1569,14 @@ Meteor.startup(async function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
-    global.sumPool = mysql.createPool(sumSettings);
+    global.sumPool = mysql.createPool({
+      host: sumSettings.host,
+      port: sumSettings.port,
+      user: sumSettings.user,
+      password: sumSettings.password,
+      database: sumSettings.database,
+      connectionLimit: sumSettings.connectionLimit,
+    });
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
 

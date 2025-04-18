@@ -27,7 +27,6 @@ pwix:blaze-layout
 ostrio:flow-router-extra
 jkuester:http
 aldeed:simple-schema
-hot-module-replacement@0.5.4  # Update client in development without reloading the page
 randyp:mats-common@6.1.0
 
 # static-html@1.4.0             # Define static page content in .html files
