@@ -7,9 +7,11 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'
     paths-ignore:
       - "home/**"
+      - "kubernetes/**"
   pull_request:
     paths-ignore:
       - "home/**"
+      - "kubernetes/**"
   workflow_dispatch:
 env:
   DEV_REGISTRY: ghcr.io/noaa-gsl/mats/development
