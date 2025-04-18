@@ -9,11 +9,11 @@ spec:
         - name: cb-metar
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "0.25"
+              memory: "500MiB" # based on test suite performance, appears to hover around 1 GB
+              cpu: "0.25" # based on test suite performance, appears to hover around 1 CPU
             limits:
-              memory: "8Gi"
-              cpu: "4"
+              memory: "3Gi"
+              cpu: "1.5"
           envFrom:
             - secretRef:
                 name: cb-metar-secret

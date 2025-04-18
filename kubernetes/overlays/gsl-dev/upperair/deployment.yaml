@@ -9,11 +9,11 @@ spec:
         - name: upperair
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "0.25"
+              memory: "500Mi" # Test suite is showing we usually hover around 500Mi memory
+              cpu: "0.25" # Test suite is showing we usually hover around 500m CPU
             limits:
-              memory: "8Gi"
-              cpu: "4"
+              memory: "2Gi"
+              cpu: "1"
           envFrom:
             - secretRef:
                 name: upperair-secret
@@ -22,7 +22,7 @@ spec:
               mountPath: /usr/app/settings/upperair/settings.json
               subPath: settings.json
               readOnly: true
-          imagePullPolicy: Always  # Since we track a long-lived tag
+          imagePullPolicy: Always # Since we track a long-lived tag
       imagePullSecrets:
         - name: mats-ghcr
       volumes:
