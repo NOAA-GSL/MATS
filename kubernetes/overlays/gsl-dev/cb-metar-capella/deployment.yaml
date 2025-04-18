@@ -9,7 +9,7 @@ spec:
         - name: cb-metar-capella
           resources:
             requests:
-              memory: "500MiB" # based on test suite performance, appears to hover around 1 GB
+              memory: "500Mi" # based on test suite performance, appears to hover around 1 GB
               cpu: "0.25" # based on test suite performance, appears to hover around 1 CPU
             limits:
               memory: "3Gi"
