@@ -9,8 +9,8 @@ spec:
         - name: mongodb
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "1"
+              memory: "500Mi"
+              cpu: "0.25" 
             limits:
               memory: "2Gi"
               cpu: "1"
