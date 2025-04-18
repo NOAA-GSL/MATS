@@ -12,6 +12,8 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
+/* eslint-disable no-await-in-loop */
+
 global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
   // initialize variables common to all curves
   const appParams = {
@@ -50,20 +52,19 @@ global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const binParam = curve["bin-parameter"];
-    // eslint-disable-next-line no-await-in-loop
-    const binClause = await matsCollections["bin-parameter"].findOneAsync({
-      name: "bin-parameter",
-    }).optionsMap[binParam];
+    const binClause = (
+      await matsCollections["bin-parameter"].findOneAsync({
+        name: "bin-parameter",
+      })
+    ).optionsMap[binParam];
 
     const { variable } = curve;
-    // eslint-disable-next-line no-await-in-loop
-    const databaseRef = await matsCollections.variable.findOneAsync({
-      name: "variable",
-    }).optionsMap[variable];
-    // eslint-disable-next-line no-await-in-loop
-    const model = await matsCollections["data-source"].findOneAsync({
-      name: "data-source",
-    }).optionsMap[variable][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
+    ).optionsMap[variable];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     let thresholdClause = "";
     if (binParam !== "Threshold") {
@@ -74,27 +75,25 @@ global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
         );
       }
       const threshold = Object.keys(
-        // eslint-disable-next-line no-await-in-loop
-        await matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[
+        (await matsCollections.threshold.findOneAsync({ name: "threshold" })).valuesMap[
           variable
         ]
       ).find(
         async (key) =>
-          (await matsCollections.threshold.findOneAsync({ name: "threshold" })
-            .valuesMap[variable][key]) === thresholdStr
+          (await matsCollections.threshold.findOneAsync({ name: "threshold" }))
+            .valuesMap[variable][key] === thresholdStr
       );
       thresholdClause = `and m0.trsh = ${threshold / 10000}`;
     }
 
     const scaleStr = curve.scale;
     const scale = Object.keys(
-      // eslint-disable-next-line no-await-in-loop
-      await matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable]
+      (await matsCollections.scale.findOneAsync({ name: "scale" })).valuesMap[variable]
     ).find(
       async (key) =>
-        (await matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[
+        (await matsCollections.scale.findOneAsync({ name: "scale" })).valuesMap[
           variable
-        ][key]) === scaleStr
+        ][key] === scaleStr
     );
 
     let validTimeClause = "";
@@ -132,13 +131,12 @@ global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
 
     const regionStr = curve.region;
     const region = Object.keys(
-      // eslint-disable-next-line no-await-in-loop
-      await matsCollections.region.findOneAsync({ name: "region" }).valuesMap
+      (await matsCollections.region.findOneAsync({ name: "region" })).valuesMap
     ).find(
       async (key) =>
-        (await matsCollections.region.findOneAsync({ name: "region" }).valuesMap[
+        (await matsCollections.region.findOneAsync({ name: "region" })).valuesMap[
           key
-        ]) === regionStr
+        ] === regionStr
     );
     const queryTableClause = `from ${databaseRef}.${model}_${scale}_${region} as m0`;
 
@@ -183,7 +181,6 @@ global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        // eslint-disable-next-line no-await-in-loop
         queryResult = await matsDataQueryUtils.queryDBPerformanceDiagram(
           global.sumPool,
           statement,
@@ -257,7 +254,6 @@ global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
     curve.ymax = d.ymax;
     curve.axisKey = statisticSelect;
     curve.binParam = binParam;
-    // eslint-disable-next-line no-await-in-loop
     const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,

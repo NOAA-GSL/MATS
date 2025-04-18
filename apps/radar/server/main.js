@@ -15,6 +15,8 @@ import {
 // eslint-disable-next-line import/no-extraneous-dependencies
 import mysql from "mysql2/promise";
 
+/* eslint-disable no-await-in-loop */
+
 // This app combines three previous apps, cref, echotop, and vil.
 // This is where we store the databases referenced by those apps.
 const variableDBNames = {
@@ -330,11 +332,12 @@ const doCurveParams = async function () {
     settings.resetFromCode === undefined ||
     settings.resetFromCode === true
   ) {
-    const params = await matsCollections.CurveParamsInfo.findOneAsync({
-      curve_params: { $exists: true },
-    }).curve_params;
+    const params = (
+      await matsCollections.CurveParamsInfo.findOneAsync({
+        curve_params: { $exists: true },
+      })
+    ).curve_params;
     for (let cp = 0; cp < params.length; cp += 1) {
-      // eslint-disable-next-line no-await-in-loop
       await matsCollections[params[cp]].removeAsync({});
     }
   }
@@ -364,7 +367,6 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allThresholdValuesMap[variables[didx]] = {};
-      // eslint-disable-next-line no-await-in-loop
       const rows = await matsDataQueryUtils.queryMySQL(
         global.sumPool,
         `select trsh,description from ${
@@ -383,7 +385,6 @@ const doCurveParams = async function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allScaleValuesMap[variables[didx]] = {};
-      // eslint-disable-next-line no-await-in-loop
       const rows = await matsDataQueryUtils.queryMySQL(
         global.sumPool,
         `select scale,description from ${
@@ -409,7 +410,6 @@ const doCurveParams = async function () {
       scaleModelOptionsMap[variable] = {};
       regionModelOptionsMap[variable] = {};
 
-      // eslint-disable-next-line no-await-in-loop
       const rows = await matsDataQueryUtils.queryMySQL(
         global.sumPool,
         `select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from ${variableDBNames[variable]}.regions_per_model_mats_all_categories order by display_category, display_order;`
@@ -1490,7 +1490,6 @@ Meteor.startup(async function () {
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
       for (let di = 0; di < databases.length; di += 1) {
-        // eslint-disable-next-line no-await-in-loop
         await matsCollections.Databases.insertAsync(databases[di]);
       }
     }
