@@ -27,6 +27,7 @@ pwix:blaze-layout
 ostrio:flow-router-extra
 jkuester:http
 aldeed:simple-schema
+accounts-password@3.0.3
 randyp:mats-common@6.1.0
 
 # static-html@1.4.0             # Define static page content in .html files
