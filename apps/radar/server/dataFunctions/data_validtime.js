@@ -64,27 +64,18 @@ global.dataValidTime = async function (plotParams, plotFunction) {
     ).optionsMap[variable][curve["data-source"]][0];
 
     const thresholdStr = curve.threshold;
-    const threshold = Object.keys(
-      (await matsCollections.threshold.findOneAsync({ name: "threshold" })).valuesMap[
-        variable
-      ]
-    ).find(
-      async (key) =>
-        (await matsCollections.threshold.findOneAsync({ name: "threshold" })).valuesMap[
-          variable
-        ][key] === thresholdStr
+    const thresholdValues = (
+      await matsCollections.threshold.findOneAsync({ name: "threshold" })
+    ).valuesMap[variable];
+    const threshold = Object.keys(thresholdValues).find(
+      (key) => thresholdValues[key] === thresholdStr
     );
     const thresholdClause = `and m0.trsh = ${threshold / 10000}`;
 
     const scaleStr = curve.scale;
-    const scale = Object.keys(
-      (await matsCollections.scale.findOneAsync({ name: "scale" })).valuesMap[variable]
-    ).find(
-      async (key) =>
-        (await matsCollections.scale.findOneAsync({ name: "scale" })).valuesMap[
-          variable
-        ][key] === scaleStr
-    );
+    const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+      .valuesMap[variable];
+    const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
 
     const forecastLength = curve["forecast-length"];
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
@@ -102,13 +93,10 @@ global.dataValidTime = async function (plotParams, plotFunction) {
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
 
     const regionStr = curve.region;
-    const region = Object.keys(
-      (await matsCollections.region.findOneAsync({ name: "region" })).valuesMap
-    ).find(
-      async (key) =>
-        (await matsCollections.region.findOneAsync({ name: "region" })).valuesMap[
-          key
-        ] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
     const queryTableClause = `from ${databaseRef}.${model}_${scale}_${region} as m0`;
 
