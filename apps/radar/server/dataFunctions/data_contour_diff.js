@@ -264,7 +264,7 @@ global.dataContourDiff = async function (plotParams, plotFunction) {
     curve.zmax = d.zmax;
     curve.xAxisKey = xAxisParam;
     curve.yAxisKey = yAxisParam;
-    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateContourCurveOptions(
       curve,
       axisMap,
       d,
