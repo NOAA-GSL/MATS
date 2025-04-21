@@ -1,10 +1,9 @@
 ---
 name: Task
-about: A task breaks a Project down into discrete steps
-title: ''
-labels: task
-assignees: ''
-
+about: A bit of work that isn't an epic, feature, or bug
+title: ""
+labels: ["task"]
+assignees: ""
 ---
 
 Describe what needs to be done here.
