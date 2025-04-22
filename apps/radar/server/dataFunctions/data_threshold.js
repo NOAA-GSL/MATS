@@ -15,7 +15,7 @@ import { moment } from "meteor/momentjs:moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataThreshold = async function (plotParams, plotFunction) {
+global.dataThreshold = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.threshold,
@@ -265,5 +265,5 @@ global.dataThreshold = async function (plotParams, plotFunction) {
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

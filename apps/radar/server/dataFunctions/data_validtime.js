@@ -15,7 +15,7 @@ import { moment } from "meteor/momentjs:moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataValidTime = async function (plotParams, plotFunction) {
+global.dataValidTime = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.validtime,
@@ -268,5 +268,5 @@ global.dataValidTime = async function (plotParams, plotFunction) {
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

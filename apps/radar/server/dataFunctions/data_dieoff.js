@@ -15,7 +15,7 @@ import { moment } from "meteor/momentjs:moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataDieoff = async function (plotParams, plotFunction) {
+global.dataDieoff = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.dieoff,
@@ -296,5 +296,5 @@ global.dataDieoff = async function (plotParams, plotFunction) {
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

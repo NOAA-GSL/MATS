@@ -15,7 +15,7 @@ import { moment } from "meteor/momentjs:moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataDailyModelCycle = async function (plotParams, plotFunction) {
+global.dataDailyModelCycle = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.dailyModelCycle,
@@ -279,5 +279,5 @@ global.dataDailyModelCycle = async function (plotParams, plotFunction) {
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

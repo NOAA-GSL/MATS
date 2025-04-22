@@ -14,7 +14,7 @@ import { moment } from "meteor/momentjs:moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
+global.dataPerformanceDiagram = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.performanceDiagram,
@@ -286,5 +286,5 @@ global.dataPerformanceDiagram = async function (plotParams, plotFunction) {
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

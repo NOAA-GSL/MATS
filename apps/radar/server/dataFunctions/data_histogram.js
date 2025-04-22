@@ -13,7 +13,7 @@ import { moment } from "meteor/momentjs:moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataHistogram = async function (plotParams, plotFunction) {
+global.dataHistogram = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.histogram,
@@ -230,5 +230,5 @@ global.dataHistogram = async function (plotParams, plotFunction) {
     binParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

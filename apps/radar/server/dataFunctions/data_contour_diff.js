@@ -16,7 +16,7 @@ import { moment } from "meteor/momentjs:moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataContourDiff = async function (plotParams, plotFunction) {
+global.dataContourDiff = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.contourDiff,
@@ -307,5 +307,5 @@ global.dataContourDiff = async function (plotParams, plotFunction) {
     newPlotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };
