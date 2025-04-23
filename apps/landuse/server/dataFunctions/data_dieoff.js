@@ -13,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataDieoff = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataDieoff = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.dieoff,
@@ -53,13 +54,13 @@ dataDieoff = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { label } = curve;
     const { diffFrom } = curve;
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[curve["data-source"]][0];
 
     const variableStr = curve.variable;
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
 
@@ -70,16 +71,14 @@ dataDieoff = function (plotParams, plotFunction) {
     let utcCycleStart;
 
     const forecastLengthStr = curve["dieoff-type"];
-    const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne(
-      { name: "dieoff-type" },
-      { optionsMap: 1 }
+    const forecastLengthOptionsMap = (
+      await matsCollections["dieoff-type"].findOneAsync({ name: "dieoff-type" })
     ).optionsMap;
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, sum(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
@@ -91,12 +90,9 @@ dataDieoff = function (plotParams, plotFunction) {
     let dateClause;
 
     const vgtypStr = curve.vgtyp;
-    const vgtyp = Object.keys(
-      matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap[key] === vgtypStr
-    );
+    const vgtypValues = (await matsCollections.vgtyp.findOneAsync({ name: "vgtyp" }))
+      .valuesMap;
+    const vgtyp = Object.keys(vgtypValues).find((key) => vgtypValues[key] === vgtypStr);
     const vgtypClause = `and m0.vgtyp IN(${vgtyp})`;
 
     const queryTableClause = `from ${model} as m0`;
@@ -122,10 +118,9 @@ dataDieoff = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
+    const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     statType = statisticOptionsMap[statisticSelect];
     allStatTypes.push(statType);
     const axisKey = statVarUnitMap[statisticSelect][variableStr];
@@ -162,8 +157,8 @@ dataDieoff = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.sumPool,
           statement,
           appParams,
           `${statisticSelect}_${variableStr}`
@@ -242,7 +237,7 @@ dataDieoff = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -280,12 +275,12 @@ dataDieoff = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };
