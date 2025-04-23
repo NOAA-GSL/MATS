@@ -1,6 +1,6 @@
 ---
 name: Epic
-about: Describe the requirements for a larger intiaitive
+about: Describe the requirements for a larger initiative
 title: ""
 labels: ["epic", "needs requirements"]
 assignees: ""
