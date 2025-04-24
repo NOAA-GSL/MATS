@@ -826,16 +826,10 @@ const doCurveParams = async function () {
 
   // determine date defaults for dates and curveDates
   const defaultDataSource = (
-    await matsCollections["data-source"].findOneAsync(
-      { name: "data-source" },
-      { default: 1 }
-    )
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
   ).default;
   modelDateRangeMap = (
-    await matsCollections["data-source"].findOneAsync(
-      { name: "data-source" },
-      { dates: 1 }
-    )
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
   ).dates;
 
   minDate = modelDateRangeMap[defaultDataSource].minDate;
