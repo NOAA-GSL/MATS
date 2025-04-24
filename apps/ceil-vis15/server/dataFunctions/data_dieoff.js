@@ -13,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataDieoff = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataDieoff = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.dieoff,
@@ -55,21 +56,21 @@ dataDieoff = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
-      .optionsMap[variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
+    ).optionsMap[variable];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
     let queryTableClause = "";
 
     let thresholdClause = "";
     const thresholdStr = curve.threshold;
-    const threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-    ).find(
-      (key) =>
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-          key
-        ] === thresholdStr
+    const thresholdValues = (
+      await matsCollections.threshold.findOneAsync({ name: "threshold" })
+    ).valuesMap[variable];
+    const threshold = Object.keys(thresholdValues).find(
+      (key) => thresholdValues[key] === thresholdStr
     );
 
     let validTimeClause = "";
@@ -79,9 +80,8 @@ dataDieoff = function (plotParams, plotFunction) {
     let utcCycleStart;
 
     const forecastLengthStr = curve["dieoff-type"];
-    const forecastLengthOptionsMap = matsCollections["dieoff-type"].findOne(
-      { name: "dieoff-type" },
-      { optionsMap: 1 }
+    const forecastLengthOptionsMap = (
+      await matsCollections["dieoff-type"].findOneAsync({ name: "dieoff-type" })
     ).optionsMap;
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
 
@@ -89,20 +89,15 @@ dataDieoff = function (plotParams, plotFunction) {
     let truth;
     if (variable === "15 Minute Visibility") {
       const truthStr = curve.truth;
-      truth = Object.keys(
-        matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable][key] ===
-          truthStr
-      );
+      const truthValues = (await matsCollections.truth.findOneAsync({ name: "truth" }))
+        .valuesMap[variable];
+      truth = Object.keys(truthValues).find((key) => truthValues[key] === truthStr);
     }
 
     let statisticClause;
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
@@ -117,12 +112,11 @@ dataDieoff = function (plotParams, plotFunction) {
     const regionType = curve["region-type"];
     if (regionType === "Predefined region") {
       const regionStr = curve.region;
-      const region = Object.keys(
-        matsCollections.region.findOne({ name: "region" }).valuesMap
-      ).find(
-        (key) =>
-          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
-          regionStr
+      const regionValues = (
+        await matsCollections.region.findOneAsync({ name: "region" })
+      ).valuesMap;
+      const region = Object.keys(regionValues).find(
+        (key) => regionValues[key] === regionStr
       );
       queryTableClause = `from ${databaseRef.sumsDB}.${model}_${region} as m0`;
       if (variable === "15 Minute Visibility") {
@@ -153,9 +147,10 @@ dataDieoff = function (plotParams, plotFunction) {
         }
       }
 
-      const siteMap = matsCollections.StationMap.findOne(
-        { name: "stations" },
-        { optionsMap: 1 }
+      const siteMap = (
+        await matsCollections.StationMap.findOneAsync({
+          name: "stations",
+        })
       ).optionsMap;
       const sitesList = curve.sites === undefined ? [] : curve.sites;
       let querySites = [];
@@ -249,8 +244,8 @@ dataDieoff = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.sumPool,
           statement,
           appParams,
           statisticSelect
@@ -323,7 +318,7 @@ dataDieoff = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -361,12 +356,12 @@ dataDieoff = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };
