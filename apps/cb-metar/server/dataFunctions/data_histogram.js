@@ -2,7 +2,7 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-/* global cbPool, Assets */
+/* global Assets */
 
 import {
   matsCollections,
@@ -13,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataHistogram = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataHistogram = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.histogram,
@@ -58,26 +59,27 @@ dataHistogram = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const variableValuesMap = matsCollections.variable.findOne({
-      name: "variable",
-    }).valuesMap;
+    const variableValuesMap = (
+      await matsCollections.variable.findOneAsync({
+        name: "variable",
+      })
+    ).valuesMap;
     const queryVariable = Object.keys(variableValuesMap).filter(
       (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
     )[0];
     const variableDetails = variableValuesMap[queryVariable][0][variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     const thresholdStr = curve.threshold;
     let threshold = "";
     if (variableValuesMap[queryVariable][1]) {
-      threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-            key
-          ] === thresholdStr
+      const thresholdValues = (
+        await matsCollections.threshold.findOneAsync({ name: "threshold" })
+      ).valuesMap[variable];
+      threshold = Object.keys(thresholdValues).find(
+        (key) => thresholdValues[key] === thresholdStr
       );
       threshold = threshold.replace(/_/g, ".");
     }
@@ -89,9 +91,8 @@ dataHistogram = function (plotParams, plotFunction) {
     const toSecs = dateRange.toSeconds;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     [statType] = statisticOptionsMap[variable][statisticSelect];
     allStatTypes.push(statType);
@@ -104,16 +105,15 @@ dataHistogram = function (plotParams, plotFunction) {
       );
     }
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
 
     // SQL template replacements
     let statTemplate;
-    queryTemplate = Assets.getText("sqlTemplates/tmpl_Histogram.sql");
+    queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Histogram.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
@@ -124,12 +124,12 @@ dataHistogram = function (plotParams, plotFunction) {
     );
     queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     if (statType === "ctc") {
-      statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+      statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
       queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
       queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
       queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
     } else {
-      statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
+      statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
       queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
       queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
       queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
@@ -138,10 +138,13 @@ dataHistogram = function (plotParams, plotFunction) {
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
         /{{vxVALID_TIMES}}/g,
-        cbPool.trfmListToCSVString(validTimes, null, false)
+        global.cbPool.trfmListToCSVString(validTimes, null, false)
       );
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+      queryTemplate = global.cbPool.trfmSQLRemoveClause(
+        queryTemplate,
+        "{{vxVALID_TIMES}}"
+      );
     }
 
     // axisKey is used to determine which axis a curve should use.
@@ -165,11 +168,11 @@ dataHistogram = function (plotParams, plotFunction) {
       const startMoment = moment();
       let finishMoment;
       try {
-        statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+        statement = global.cbPool.trfmSQLForDbTarget(queryTemplate);
 
         // send the query statement to the query function
         queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool,
+          global.cbPool,
           statement,
           appParams,
           statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
@@ -230,7 +233,7 @@ dataHistogram = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataHistogram(
+  const result = await matsDataProcessUtils.processDataHistogram(
     allReturnedSubStats,
     allReturnedSubSecs,
     [],
@@ -241,5 +244,5 @@ dataHistogram = function (plotParams, plotFunction) {
     binParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

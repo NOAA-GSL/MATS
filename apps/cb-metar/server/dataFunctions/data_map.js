@@ -2,8 +2,6 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-/* global cbPool */
-
 import {
   matsCollections,
   matsTypes,
@@ -15,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataMap = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataMap = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.map,
@@ -50,26 +49,27 @@ dataMap = function (plotParams, plotFunction) {
   const { diffFrom } = curve;
 
   const { variable } = curve;
-  const variableValuesMap = matsCollections.variable.findOne({
-    name: "variable",
-  }).valuesMap;
+  const variableValuesMap = (
+    await matsCollections.variable.findOneAsync({
+      name: "variable",
+    })
+  ).valuesMap;
   const queryVariable = Object.keys(variableValuesMap).filter(
     (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
   )[0];
   const variableDetails = variableValuesMap[queryVariable][0][variable];
-  const model = matsCollections["data-source"].findOne({ name: "data-source" })
-    .optionsMap[variable][curve["data-source"]][0];
+  const model = (
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+  ).optionsMap[variable][curve["data-source"]][0];
 
   const thresholdStr = curve.threshold;
   let threshold = "";
   if (variableValuesMap[queryVariable][1]) {
-    threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-    ).find(
-      (key) =>
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-          key
-        ] === thresholdStr
+    const thresholdValues = (
+      await matsCollections.threshold.findOneAsync({ name: "threshold" })
+    ).valuesMap[variable];
+    threshold = Object.keys(thresholdValues).find(
+      (key) => thresholdValues[key] === thresholdStr
     );
     threshold = threshold.replace(/_/g, ".");
   }
@@ -78,9 +78,8 @@ dataMap = function (plotParams, plotFunction) {
   const forecastLength = curve["forecast-length"];
 
   const statisticSelect = curve.statistic;
-  const statisticOptionsMap = matsCollections.statistic.findOne(
-    { name: "statistic" },
-    { optionsMap: 1 }
+  const statisticOptionsMap = (
+    await matsCollections.statistic.findOneAsync({ name: "statistic" })
   ).optionsMap;
   const statType = statisticOptionsMap[variable][statisticSelect][0];
   const varUnits =
@@ -166,9 +165,10 @@ dataMap = function (plotParams, plotFunction) {
       "INFO:  Please add sites in order to get a single/multi station plot."
     );
   }
-  const siteMap = matsCollections.StationMap.findOne(
-    { name: "stations" },
-    { optionsMap: 1 }
+  const siteMap = (
+    await matsCollections.StationMap.findOneAsync({
+      name: "stations",
+    })
   ).optionsMap;
 
   let d;
@@ -195,8 +195,8 @@ dataMap = function (plotParams, plotFunction) {
     try {
       // send to matsMiddle
       statement = "Station plot -- no one query.";
-      const tss = new matsMiddleMap.MatsMiddleMap(cbPool);
-      rows = tss.processStationQuery(
+      const tss = new matsMiddleMap.MatsMiddleMap(global.cbPool);
+      rows = await tss.processStationQuery(
         statType,
         variableDetails[1],
         sitesList,
@@ -211,8 +211,8 @@ dataMap = function (plotParams, plotFunction) {
 
       // send the query statement to the query function
       if (statType === "ctc") {
-        queryResult = matsDataQueryUtils.queryDBMapCTC(
-          cbPool,
+        queryResult = await matsDataQueryUtils.queryDBMapCTC(
+          global.cbPool,
           rows,
           model,
           statisticSelect,
@@ -220,8 +220,8 @@ dataMap = function (plotParams, plotFunction) {
           appParams
         );
       } else {
-        queryResult = matsDataQueryUtils.queryDBMapScalar(
-          cbPool,
+        queryResult = await matsDataQueryUtils.queryDBMapScalar(
+          global.cbPool,
           rows,
           model,
           statisticSelect,
@@ -286,7 +286,7 @@ dataMap = function (plotParams, plotFunction) {
 
   const postQueryStartMoment = moment();
   if (statType === "ctc") {
-    let cOptions = matsDataCurveOpsUtils.generateCTCMapCurveOptions(
+    let cOptions = await matsDataCurveOpsUtils.generateCTCMapCurveOptions(
       curve,
       d,
       appParams
@@ -494,7 +494,7 @@ dataMap = function (plotParams, plotFunction) {
       .asSeconds()} seconds`,
   };
 
-  const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(true);
+  const resultOptions = await matsDataPlotOpsUtils.generateMapPlotOptions(true);
   const totalProcessingFinish = moment();
   dataRequests["total retrieval and processing time for curve set"] = {
     begin: totalProcessingStart.format(),
@@ -512,5 +512,5 @@ dataMap = function (plotParams, plotFunction) {
       queries: dataRequests,
     },
   };
-  plotFunction(result);
+  return result;
 };
