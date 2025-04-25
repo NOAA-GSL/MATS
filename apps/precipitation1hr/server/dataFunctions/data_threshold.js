@@ -171,7 +171,7 @@ global.dataThreshold = async function (plotParams) {
           if (error.includes("ER_NO_SUCH_TABLE")) {
             throw new Error(
               `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
-                `Choose a different scale to continue using this region.`
+                `Choose a different region to continue using this scale.`
             );
           } else {
             throw new Error(error);
