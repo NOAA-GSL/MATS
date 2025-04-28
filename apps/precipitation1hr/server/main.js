@@ -1472,7 +1472,7 @@ Meteor.startup(async function () {
   );
   // the pool is intended to be global
   if (metadataSettings) {
-    global.metadataPool = mysql.createPool({
+    const thisMetadataPool = mysql.createPool({
       host: metadataSettings.host,
       port: metadataSettings.port,
       user: metadataSettings.user,
@@ -1480,6 +1480,7 @@ Meteor.startup(async function () {
       database: metadataSettings.database,
       connectionLimit: metadataSettings.connectionLimit,
     });
+    global.metadataPool = await thisMetadataPool.getConnection();
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
 
@@ -1499,7 +1500,7 @@ Meteor.startup(async function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
-    global.sumPool = mysql.createPool({
+    const thisSumPool = mysql.createPool({
       host: sumSettings.host,
       port: sumSettings.port,
       user: sumSettings.user,
@@ -1507,6 +1508,7 @@ Meteor.startup(async function () {
       database: sumSettings.database,
       connectionLimit: sumSettings.connectionLimit,
     });
+    global.sumPool = await thisSumPool.getConnection();
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
 

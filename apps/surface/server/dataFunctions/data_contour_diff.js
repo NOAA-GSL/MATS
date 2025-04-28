@@ -14,8 +14,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataContourDiff = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataContourDiff = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.contourDiff,
@@ -53,35 +54,39 @@ dataContourDiff = function (plotParams, plotFunction) {
 
   const xAxisParam = plotParams["x-axis-parameter"];
   const yAxisParam = plotParams["y-axis-parameter"];
-  const xValClause = matsCollections.PlotParams.findOne({ name: "x-axis-parameter" })
-    .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOne({ name: "y-axis-parameter" })
-    .optionsMap[yAxisParam];
+  const xValClause = (
+    await matsCollections.PlotParams.findOneAsync({
+      name: "x-axis-parameter",
+    })
+  ).optionsMap[xAxisParam];
+  const yValClause = (
+    await matsCollections.PlotParams.findOneAsync({
+      name: "y-axis-parameter",
+    })
+  ).optionsMap[yAxisParam];
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
     const { label } = curve;
     const { diffFrom } = curve;
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[curve["data-source"]][0];
 
     const regionType = "Predefined region";
 
     const variableStr = curve.variable;
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
     const variable = variableOptionsMap[regionType][variableStr];
 
     const metarStringStr = curve.truth;
-    const metarString = Object.keys(
-      matsCollections.truth.findOne({ name: "truth" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.truth.findOne({ name: "truth" }).valuesMap[key] ===
-        metarStringStr
+    const metarValues = (await matsCollections.truth.findOneAsync({ name: "truth" }))
+      .valuesMap;
+    const metarString = Object.keys(metarValues).find(
+      (key) => metarValues[key] === metarStringStr
     );
 
     let validTimeClause = "";
@@ -104,9 +109,8 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, sum(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
@@ -126,20 +130,18 @@ dataContourDiff = function (plotParams, plotFunction) {
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
 
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
 
     const queryTableClause = `from ${model}_${metarString}_${region} as m0`;
 
     // For contours, this functions as the colorbar label.
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
+    const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     statType = statisticOptionsMap[statisticSelect];
     allStatTypes.push(statType);
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -179,8 +181,8 @@ dataContourDiff = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBContour(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBContour(
+          global.sumPool,
           statement,
           appParams,
           `${statisticSelect}_${variableStr}`
@@ -242,7 +244,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     curve.zmax = d.zmax;
     curve.xAxisKey = xAxisParam;
     curve.yAxisKey = yAxisParam;
-    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateContourCurveOptions(
       curve,
       axisMap,
       d,
@@ -290,11 +292,11 @@ dataContourDiff = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataContour(
+  const result = await matsDataProcessUtils.processDataContour(
     dataset,
     curveInfoParams,
     newPlotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };
