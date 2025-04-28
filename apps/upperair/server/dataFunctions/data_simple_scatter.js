@@ -12,8 +12,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataSimpleScatter = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataSimpleScatter = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.simpleScatter,
@@ -54,22 +55,26 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const binParam = curve["bin-parameter"];
-    const binClause = matsCollections["bin-parameter"].findOne({
-      name: "bin-parameter",
-    }).optionsMap[binParam];
+    const binClause = (
+      await matsCollections["bin-parameter"].findOneAsync({
+        name: "bin-parameter",
+      })
+    ).optionsMap[binParam];
+
     const { database } = curve;
-    const databaseRef = matsCollections.database.findOne({ name: "database" })
-      .optionsMap[database];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[database][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections.database.findOneAsync({ name: "database" })
+    ).optionsMap[database];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[database][curve["data-source"]][0];
 
     const regionType = "Predefined region";
 
     const variableXStr = curve["x-variable"];
     const variableYStr = curve["y-variable"];
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
     const variableX = variableOptionsMap[regionType][variableXStr];
     const variableY = variableOptionsMap[regionType][variableYStr];
@@ -100,9 +105,8 @@ dataSimpleScatter = function (plotParams, plotFunction) {
 
     const statisticXSelect = curve["x-statistic"];
     const statisticYSelect = curve["y-statistic"];
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause =
       `sum(${variableX[0]}) as square_diff_sumX, sum(${variableX[1]}) as N_sumX, sum(${variableX[2]}) as obs_model_diff_sumX, sum(${variableX[3]}) as model_sumX, sum(${variableX[4]}) as obs_sumX, sum(${variableX[5]}) as abs_sumX, ` +
@@ -145,23 +149,19 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     let phaseClause = "";
     if (database.includes("AMDAR")) {
       const phaseStr = curve.phase;
-      const phaseOptionsMap = matsCollections.phase.findOne(
-        { name: "phase" },
-        { optionsMap: 1 }
+      const phaseOptionsMap = (
+        await matsCollections.phase.findOneAsync({ name: "phase" })
       ).optionsMap;
       phaseClause = phaseOptionsMap[phaseStr];
     }
 
     const regionStr = curve.region;
     const regionDB = database.includes("RAOBs") ? "ID" : "shortName";
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap[regionDB]
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[regionDB][key] ===
-        regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap[regionDB];
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
-
     let queryTableClause = `from ${databaseRef.sumsDB}.${model}${region} as m0`;
     if (database.includes("RAOBs")) {
       // Most of the RAOBs tables don't store a model sum or an obs sum for some reason.
@@ -187,10 +187,9 @@ dataSimpleScatter = function (plotParams, plotFunction) {
       queryTableClause = queryTableClause.replace("_sums", "_vapor_sums");
     }
 
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
+    const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     statType = statisticOptionsMap[statisticXSelect];
     varUnitsX = statVarUnitMap[statisticXSelect][variableXStr];
     varUnitsY = statVarUnitMap[statisticYSelect][variableYStr];
@@ -236,8 +235,8 @@ dataSimpleScatter = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSimpleScatter(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSimpleScatter(
+          global.sumPool,
           statement,
           appParams,
           `${statisticXSelect}_${variableXStr}`,
@@ -311,7 +310,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     curve.axisXKey = varUnitsX;
     curve.axisYKey = varUnitsY;
     curve.binParam = binParam;
-    const cOptions = matsDataCurveOpsUtils.generateScatterCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateScatterCurveOptions(
       curve,
       curveIndex,
       axisXMap,
@@ -349,12 +348,12 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataSimpleScatter(
+  const result = await matsDataProcessUtils.processDataSimpleScatter(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };
