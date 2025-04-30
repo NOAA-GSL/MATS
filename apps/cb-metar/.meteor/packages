@@ -25,6 +25,6 @@ dynamic-import@0.7.4
 underscore@1.6.1
 pwix:blaze-layout
 ostrio:flow-router-extra
-jkuester:http
+fetch
 aldeed:simple-schema
 randyp:mats-common@6.1.0
