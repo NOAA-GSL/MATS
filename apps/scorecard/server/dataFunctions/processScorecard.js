@@ -1,7 +1,10 @@
 /* eslint-disable no-shadow */
 /* eslint-disable no-console */
-/* eslint-disable no-undef */
+import { Meteor } from "meteor/meteor";
 import { matsTypes, matsParamUtils, matsCollections } from "meteor/randyp:mats-common";
+import { fetch } from "meteor/fetch";
+
+/* global Assets */
 
 /** A function to sanitize JSON keys by replacing the "." character with "__DOT__" */
 const sanitizeKeys = function (str) {
@@ -47,7 +50,7 @@ const dealWithUATables = function (
   return updatedQueryTemplate;
 };
 
-processScorecard = function (plotParams, plotFunction) {
+global.processScorecard = async function (plotParams) {
   /*
     displayScorecard structure:
     The left column isn't displayed, it's only for reference
@@ -133,7 +136,7 @@ processScorecard = function (plotParams, plotFunction) {
   const processedAt = 0; // should be filled in when processing is finished
   const { userName } = plotParams;
   const name = plotParams["scorecard-name"];
-  const singleCurveParamNames = matsParamUtils.getSingleSelectCurveParamNames();
+  const singleCurveParamNames = await matsParamUtils.getSingleSelectCurveParamNames();
   singleCurveParamNames.push("valid-time"); // is a multi-select but never goes on scorecard
   // We are thinking that the combination of userName/scorecardName/submitEpoch/processedEpoch is uniq
 
@@ -224,7 +227,7 @@ processScorecard = function (plotParams, plotFunction) {
   scorecardDocument.results.blocks = {};
   scorecardDocument.queryMap.blocks = {};
   // fill in the blocks - these are all initially default values
-  plotParams.curves.forEach(function (curve) {
+  plotParams.curves.forEach(async function (curve) {
     /**
      * Here we are going to pre-load as much as possible for the queries, *before*
      * we start with the hideous 6th degree loop. This will include:
@@ -235,9 +238,10 @@ processScorecard = function (plotParams, plotFunction) {
      */
 
     // get query template for this block
-    const application = matsCollections.application.findOne({ name: "application" })
-      .sourceMap[curve.application];
-    let queryTemplate = Assets.getText(
+    const application = (
+      await matsCollections.application.findOneAsync({ name: "application" })
+    ).sourceMap[curve.application];
+    let queryTemplate = await Assets.getTextAsync(
       `sqlTemplates/tmpl_${application}_timeseries.sql`
     );
     queryTemplate = queryTemplate.replace(/\n|\t/g, "");
@@ -246,26 +250,25 @@ processScorecard = function (plotParams, plotFunction) {
     if (queryTemplate.includes("{{database}}")) {
       // pre-load the query-able database for this application
       // it is constant for the whole block so put it in the template
-      databaseValue = matsCollections.application.findOne({
-        name: "application",
-      }).optionsMap[curve.application];
+      databaseValue = (
+        await matsCollections.application.findOneAsync({ name: "application" })
+      ).optionsMap[curve.application];
       queryTemplate = queryTemplate.replace(/\{\{database\}\}/g, databaseValue);
     }
 
     let modelMap;
     if (queryTemplate.includes("{{model}}")) {
       // pre-load the modelMap metadata for this application
-      modelMap = matsCollections["data-source"].findOne({
-        name: "data-source",
-      }).optionsMap[curve.application];
+      modelMap = (
+        await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+      ).optionsMap[curve.application];
     }
 
     let regionMap;
     if (queryTemplate.includes("{{region}}")) {
       // pre-load the regionMap metadata for this application
-      regionMap = matsCollections.region.findOne({
-        name: "region",
-      }).valuesMap[curve.application];
+      regionMap = (await matsCollections.region.findOneAsync({ name: "region" }))
+        .valuesMap[curve.application];
       // the upperair apps have weird regionMap notation
       if (curve.application.includes("RAOB")) {
         regionMap = regionMap.ID;
@@ -277,34 +280,32 @@ processScorecard = function (plotParams, plotFunction) {
     let thresholdMap;
     if (queryTemplate.includes("{{threshold}}")) {
       // pre-load the thresholdMap metadata for this application
-      thresholdMap = matsCollections.threshold.findOne({
-        name: "threshold",
-      }).valuesMap[curve.application];
+      thresholdMap = (
+        await matsCollections.threshold.findOneAsync({ name: "threshold" })
+      ).valuesMap[curve.application];
     }
 
     let statisticMap;
     if (queryTemplate.includes("{{statisticClause}}")) {
       // pre-load the statisticMap metadata for this application
-      statisticMap = matsCollections.statistic.findOne({
-        name: "statistic",
-      }).valuesMap[curve.application];
+      statisticMap = (
+        await matsCollections.statistic.findOneAsync({ name: "statistic" })
+      ).valuesMap[curve.application];
     }
 
     let variableMap;
     // trailing brackets intentionally omitted below -- DO NOT ALTER
     if (queryTemplate.includes("{{variable")) {
       // pre-load the variableMap metadata for this application
-      variableMap = matsCollections.variable.findOne({
-        name: "variable",
-      }).valuesMap[curve.application];
+      variableMap = (await matsCollections.variable.findOneAsync({ name: "variable" }))
+        .valuesMap[curve.application];
     }
 
     if (queryTemplate.includes("{{grid_scale}}")) {
       // pre-load the grid scale for this application
       // it is constant for the whole block so put it in the template
-      const scaleMap = matsCollections.scale.findOne({
-        name: "scale",
-      }).valuesMap[curve.application];
+      const scaleMap = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+        .valuesMap[curve.application];
       const scaleValue = Object.keys(scaleMap).find(
         (key) => scaleMap[key] === curve.scale
       );
@@ -315,9 +316,8 @@ processScorecard = function (plotParams, plotFunction) {
       // pre-load the truth for this application
       // it is constant for the whole block so put it in the template
       let truthValue;
-      const truthMap = matsCollections.truth.findOne({
-        name: "truth",
-      }).valuesMap[curve.application];
+      const truthMap = (await matsCollections.truth.findOneAsync({ name: "truth" }))
+        .valuesMap[curve.application];
       // not all the apps have a defined truth map
       if (truthMap) {
         truthValue = Object.keys(truthMap).find((key) => truthMap[key] === curve.truth);
@@ -342,9 +342,9 @@ processScorecard = function (plotParams, plotFunction) {
     if (queryTemplate.includes("{{forecastType}}")) {
       // pre-load the forecastType for this application
       // it is constant for the whole block so put it in the template
-      const forecastTypeMap = matsCollections["forecast-type"].findOne({
-        name: "forecast-type",
-      }).valuesMap[curve.application];
+      const forecastTypeMap = (
+        await matsCollections["forecast-type"].findOneAsync({ name: "forecast-type" })
+      ).valuesMap[curve.application];
       const forecastTypeValue = Object.keys(forecastTypeMap).find(
         (key) => forecastTypeMap[key] === curve["forecast-type"]
       );
@@ -590,50 +590,47 @@ processScorecard = function (plotParams, plotFunction) {
     const scDoc = JSON.stringify(scorecardDocument);
     const { id } = scorecardDocument;
 
-    (async function (id, doc) {
-      // need MAJORITY_AND_PERSIST_TO_ACTIVE to be assured that the document is available for the
-      // vxDataProcessor before notifying the vxDataProcessor service to process it.
-      // see https://docs.couchbase.com/sdk-api/couchbase-node-client/enums/DurabilityLevel.html
-      // eslint-disable-next-line no-undef
-      options = {
-        durabilityLevel: cbScorecardPool.getDurabilityOption(
-          "MAJORITY_AND_PERSIST_TO_ACTIVE"
-        ),
-      };
-      cbScorecardPool.upsertCB(id, doc, options);
-    })(id, scDoc).then(() => {
-      console.log("upserted doc with id", id);
-      //   // now go to status page
-      const result = {
-        error: "",
-        data: scorecardDocument.id,
-        options: {},
-        basis: {
-          plotParams,
-          queries: {},
-        },
-      };
-      plotFunction(result);
-      // notify the vxDataProcessor service that the document is ready to be processed
-      // expects something like this ...
-      // "vxdataProcessorUrl":"https://ascend-test1.gsd.esrl.noaa.gov:8080/jobs/create/"
-      // ...
-      // to be in the public section of the scorecard settings file
-      // NOTE: For now we do not have scheduled jobs. When we do we will need to change this.
-      const notifyDataProcessorURL = `${Meteor.settings.public.vxdataProcessorUrl}`;
-      const sDocument = `{"docid": "${id}"}`;
-      HTTP.post(
-        notifyDataProcessorURL,
-        { content: `${sDocument}` },
-        // eslint-disable-next-line no-unused-vars
-        function (error, response) {
-          if (error) {
-            console.log(error);
-          }
-        }
-      );
-    });
+    // need MAJORITY_AND_PERSIST_TO_ACTIVE to be assured that the document is available for the
+    // vxDataProcessor before notifying the vxDataProcessor service to process it.
+    // see https://docs.couchbase.com/sdk-api/couchbase-node-client/enums/DurabilityLevel.html
+    // eslint-disable-next-line no-undef
+    const options = {
+      durabilityLevel: global.cbScorecardPool.getDurabilityOption(
+        "MAJORITY_AND_PERSIST_TO_ACTIVE"
+      ),
+    };
+    await global.cbScorecardPool.upsertCB(id, scDoc, options);
+    console.log("upserted doc with id", id);
+    //   // now go to status page
+    // notify the vxDataProcessor service that the document is ready to be processed
+    // expects something like this ...
+    // "vxdataProcessorUrl":"https://ascend-test1.gsd.esrl.noaa.gov:8080/jobs/create/"
+    // ...
+    // to be in the public section of the scorecard settings file
+    // NOTE: For now we do not have scheduled jobs. When we do we will need to change this.
+    const notifyDataProcessorURL = `${Meteor.settings.public.vxdataProcessorUrl}`;
+    const sDocument = `{"docid": "${id}"}`;
+
+    try {
+      await fetch(notifyDataProcessorURL, {
+        method: "POST",
+        body: `${sDocument}`,
+      });
+    } catch (err) {
+      console.log(err.message);
+    }
+    const result = {
+      error: "",
+      data: scorecardDocument.id,
+      options: {},
+      basis: {
+        plotParams,
+        queries: {},
+      },
+    };
+    return result;
   } catch (err) {
     console.log(`error writing scorecard to database: ${err.message}`);
   }
+  return null;
 };
