@@ -296,7 +296,7 @@ global.dataContourDiff = async function (plotParams) {
   }
 
   // turn the two contours into one difference contour
-  dataset = matsDataDiffUtils.getDataForDiffContour(
+  dataset = await matsDataDiffUtils.getDataForDiffContour(
     dataset,
     appParams,
     showSignificance,

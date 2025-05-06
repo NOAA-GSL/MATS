@@ -162,7 +162,7 @@ global.dataMap = async function (plotParams) {
       );
 
       finishMoment = moment();
-      dataRequests[label] = "Station plot -- no one query.";
+      dataRequests[label] = statement;
       dataRequests[`data retrieval (query) time - ${label}`] = {
         begin: startMoment.format(),
         finish: finishMoment.format(),
