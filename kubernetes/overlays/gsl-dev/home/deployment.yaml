@@ -9,11 +9,11 @@ spec:
         - name: home
           resources:
             requests:
-              memory: "1Gi"
+              memory: "500Mi"
               cpu: "0.25"
             limits:
-              memory: "8Gi"
-              cpu: "4"
+              memory: "2Gi"
+              cpu: "1"
           volumeMounts:
             - name: home-settings-file
               mountPath: /app/settings.json

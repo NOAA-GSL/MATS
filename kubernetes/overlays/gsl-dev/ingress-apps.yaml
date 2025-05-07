@@ -18,7 +18,7 @@ spec:
                 name: scorecard
                 port:
                   name: http
-          - path: /mats-dev/on-prem/cb-metar
+          - path: /mats-dev/cb-metar
             pathType: Prefix
             backend:
               service:
@@ -67,7 +67,7 @@ spec:
                 name: precipaccum
                 port:
                   number: 80
-          - path: /mats-dev/precipgauge
+          - path: /mats-dev/precipGauge
             pathType: Prefix
             backend:
               service:
