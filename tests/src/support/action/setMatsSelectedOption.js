@@ -33,30 +33,31 @@ export default async (parameter, selectionValue) => {
     if (await $(`#${parameter}-select-clear`).isDisplayed()) {
         multi = true;
         // if it is a multi-select selector it has a clear button. Better clear it
+        await $(`#${parameter}-select-clear`).scrollIntoView();
         await $(`#${parameter}-select-clear`).waitForClickable();
         await $(`#${parameter}-select-clear`).click();
     }
     // noinspection JSJQueryEfficiency
     await $(`.select2-results__option=${selectionValue}`).scrollIntoView();
-    // noinspection JSJQueryEfficiency
     await $(`.select2-results__option=${selectionValue}`).waitForClickable();
     await $(`.select2-results__option=${selectionValue}`).click();
-    if (await $(`#${parameter}-select-done`).isDisplayed()) {
+    if (multi) {
         // if it is a multi-select selector, have to click the done button
+        await $(`#${parameter}-select-done`).scrollIntoView();
         await $(`#${parameter}-select-done`).waitForClickable();
         await $(`#${parameter}-select-done`).click();
     }
 
     let matchValue = selectionValue;
-    if (multi === true) {
+    if (multi) {
         // multi-selects have a range value
         matchValue = `${selectionValue} .. ${selectionValue}`;
     }
     let text = '';
     let count = 0;
-    // this is essentially giving the parameter 20 seconds to show the new value
+    // this is essentially giving the parameter 60 seconds to show the new value
     // this is mostly for when it is really busy doing parallel instances
-    while (count < 20 && text !== matchValue) {
+    while (count < 30 && text !== matchValue) {
         text = await $(`#controlButton-${parameter}-value`).getText();
         if (text !== matchValue) {
             pause(2000);
