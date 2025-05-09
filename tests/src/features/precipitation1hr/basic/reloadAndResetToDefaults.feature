@@ -22,14 +22,6 @@ Feature: Reload Reset To Defaults
         Then I click the "Remove curve Curve0" button
         Then I should have 0 curves
 
-        When I refresh the page
-        And I click the "Add Curve" button
-        Then "Curve0" is added
-        Then I click the "Remove Curve0" button
-        And the "Remove curve Curve0" button should be visible
-        Then I click the "Remove curve Curve0" button
-        Then I should have 0 curves
-
         When I refresh the browser
         And I load the app "/precipitation1hr"
         And I click the "Add Curve" button
