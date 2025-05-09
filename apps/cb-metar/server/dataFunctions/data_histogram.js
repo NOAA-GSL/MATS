@@ -171,7 +171,7 @@ global.dataHistogram = async function (plotParams) {
         statement = global.cbPool.trfmSQLForDbTarget(queryTemplate);
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
           global.cbPool,
           statement,
           appParams,

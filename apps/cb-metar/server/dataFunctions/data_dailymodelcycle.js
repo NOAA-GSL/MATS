@@ -285,7 +285,7 @@ global.dataDailyModelCycle = async function (plotParams) {
         }
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
           global.cbPool,
           regionType === "Predefined region" ? statement : rows,
           appParams,

@@ -185,7 +185,7 @@ global.dataDailyModelCycle = async function (plotParams) {
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          if (error.includes("ER_NO_SUCH_TABLE")) {
+          if (error.includes("ER_NO_SUCH_TABLE") || error.includes("doesn't exist")) {
             throw new Error(
               `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
                 `Choose a different scale to continue using this region.`
