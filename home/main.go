@@ -12,10 +12,11 @@ import (
 
 type ConfigJSON struct {
 	Config struct {
-		IsMETexpress     bool   `json:"is_met_express"`
-		IsProduction     bool   `json:"is_production"`
-		EnvironmentLabel string `json:"environment_label"`
-		AlertMessage     string `json:"alert_message"`
+		IsMETexpress           bool   `json:"is_met_express"`
+		IsProduction           bool   `json:"is_production"`
+		UseProductionAnalytics bool   `json:"use_production_analytics"`
+		EnvironmentLabel       string `json:"environment_label"`
+		AlertMessage           string `json:"alert_message"`
 	} `json:"config"`
 	Groups []struct {
 		Name string `json:"name"`
