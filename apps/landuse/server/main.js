@@ -1417,7 +1417,7 @@ Meteor.startup(async function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
-    const thisSumPool = mysql.createPool({
+    global.sumPool = mysql.createPool({
       host: sumSettings.host,
       port: sumSettings.port,
       user: sumSettings.user,
@@ -1425,7 +1425,6 @@ Meteor.startup(async function () {
       database: sumSettings.database,
       connectionLimit: sumSettings.connectionLimit,
     });
-    global.sumPool = await thisSumPool.getConnection();
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
 
