@@ -1674,14 +1674,19 @@ Meteor.startup(async function () {
     }
   );
   if (cbConnection) {
-    global.cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
-      cbConnection.host,
-      cbConnection.bucket,
-      cbConnection.scope,
-      cbConnection.collection,
-      cbConnection.user,
-      cbConnection.password
-    );
+    try {
+      global.cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+        cbConnection.host,
+        cbConnection.bucket,
+        cbConnection.scope,
+        cbConnection.collection,
+        cbConnection.user,
+        cbConnection.password
+      );
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn(`Error when initializing couchbase conenction: ${e.message}`);
+    }
   }
 
   const metadataSettings = await matsCollections.Databases.findOneAsync(
