@@ -156,10 +156,6 @@ body {
   background-color: #ffff99;
 }
 
-#Mongol.Mongol_expand {
-  max-width: 720px !important;
-}
-
 #placeholder .button {
   position: absolute;
   cursor: pointer;
