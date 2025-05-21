@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
-
 import { Meteor } from "meteor/meteor";
 import { moment } from "meteor/momentjs:moment";
 import {
