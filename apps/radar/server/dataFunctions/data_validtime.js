@@ -55,17 +55,17 @@ dataValidTime = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const databaseRef = matsCollections.variable.findOneAsync({ name: "variable" })
+    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
       .optionsMap[variable];
-    const model = matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    const model = matsCollections["data-source"].findOne({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
 
     const thresholdStr = curve.threshold;
     const threshold = Object.keys(
-      matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[variable]
-    ).findAsync(
+      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
+    ).find(
       (key) =>
-        matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[variable][
+        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
           key
         ] === thresholdStr
     );
@@ -73,10 +73,10 @@ dataValidTime = function (plotParams, plotFunction) {
 
     const scaleStr = curve.scale;
     const scale = Object.keys(
-      matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable]
-    ).findAsync(
+      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
+    ).find(
       (key) =>
-        matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable][key] ===
+        matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
         scaleStr
     );
 
@@ -84,7 +84,7 @@ dataValidTime = function (plotParams, plotFunction) {
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOneAsync(
+    const statisticOptionsMap = matsCollections.statistic.findOne(
       { name: "statistic" },
       { optionsMap: 1 }
     ).optionsMap;
@@ -98,10 +98,10 @@ dataValidTime = function (plotParams, plotFunction) {
 
     const regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOneAsync({ name: "region" }).valuesMap
-    ).findAsync(
+      matsCollections.region.findOne({ name: "region" }).valuesMap
+    ).find(
       (key) =>
-        matsCollections.region.findOneAsync({ name: "region" }).valuesMap[key] === regionStr
+        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
     );
     const queryTableClause = `from ${databaseRef}.${model}_${scale}_${region} as m0`;
 
