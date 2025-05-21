@@ -1,5 +1,5 @@
 # This tag here should match the app's Meteor version, per .meteor/release
-FROM geoffreybooth/meteor-base:2.16 AS meteor-builder
+FROM geoffreybooth/meteor-base:3.2 AS meteor-builder
 
 ARG APPNAME
 
@@ -20,7 +20,7 @@ RUN bash ${SCRIPTS_FOLDER}/build-meteor-bundle.sh
 
 
 # Use the specific version of Node expected by your Meteor release, per https://docs.meteor.com/changelog.html
-FROM node:14-bullseye-slim AS production
+FROM node:22-bookworm-slim AS production
 
 # Set Build ARGS
 ARG APPNAME
@@ -32,14 +32,25 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash \
-    ca-certificates \
-    python3 \
-    python3-pip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && python3 -m pip install --no-cache-dir \
-      numpy \
-      pymysql
+  bash \
+  ca-certificates \
+  python3 \
+  python3-pip \
+  python3-venv \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create & activate a Python virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv ${VIRTUAL_ENV}
+ENV  PATH="${VIRTUAL_ENV}/bin:$PATH"
+
+# Ensure the Python tooling is up-to-date
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Install Python dependencies for MATScomon in the virtual environment
+RUN python3 -m pip install --no-cache-dir \
+  numpy \
+  pymysql
 
 # Set Environment
 ENV APP_FOLDER=/usr/app
@@ -65,11 +76,11 @@ COPY container-scripts/run_app.sh ${APP_FOLDER}/
 
 # The app won't work without a writeable settings dir and local Node fileCache
 RUN mkdir -p ${SETTINGS_DIR} \
-    && chown -R node:node ${APP_FOLDER}/settings \
-    && chmod -R 755 ${APP_FOLDER}/settings \
-    && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
-    && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
-    && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache
+  && chown -R node:node ${APP_FOLDER}/settings \
+  && chmod -R 755 ${APP_FOLDER}/settings \
+  && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
+  && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
+  && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache
 
 # Install the Meteor app's NPM dependencies
 # g++ & build-essential would be needed for ARM/Apple Silicon builds in order to recompile fibers
@@ -77,8 +88,8 @@ RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh
 
 # Update the OS packages in the container
 RUN apt-get update \
-    && apt-get -y upgrade \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+  && apt-get -y upgrade \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 EXPOSE ${PORT}
 USER node

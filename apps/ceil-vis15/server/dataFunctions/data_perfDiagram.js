@@ -12,8 +12,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataPerformanceDiagram = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataPerformanceDiagram = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.performanceDiagram,
@@ -51,15 +52,19 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const binParam = curve["bin-parameter"];
-    const binClause = matsCollections["bin-parameter"].findOne({
-      name: "bin-parameter",
-    }).optionsMap[binParam];
+    const binClause = (
+      await matsCollections["bin-parameter"].findOneAsync({
+        name: "bin-parameter",
+      })
+    ).optionsMap[binParam];
 
     const { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
-      .optionsMap[variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
+    ).optionsMap[variable];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     let thresholdClause = "";
     if (binParam !== "Threshold") {
@@ -69,13 +74,11 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
           `INFO:  ${label}'s threshold is undefined. Please assign it a value.`
         );
       }
-      const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-            key
-          ] === thresholdStr
+      const thresholdValues = (
+        await matsCollections.threshold.findOneAsync({ name: "threshold" })
+      ).valuesMap[variable];
+      const threshold = Object.keys(thresholdValues).find(
+        (key) => thresholdValues[key] === thresholdStr
       );
       thresholdClause = `and m0.trsh = ${threshold}`;
     }
@@ -105,13 +108,9 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     let truth;
     if (variable === "15 Minute Visibility") {
       const truthStr = curve.truth;
-      truth = Object.keys(
-        matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.truth.findOne({ name: "truth" }).valuesMap[variable][key] ===
-          truthStr
-      );
+      const truthValues = (await matsCollections.truth.findOneAsync({ name: "truth" }))
+        .valuesMap[variable];
+      truth = Object.keys(truthValues).find((key) => truthValues[key] === truthStr);
       truthClause = `and m0.truth = '${truth}'`;
     }
 
@@ -130,11 +129,10 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
 
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
     const queryTableClause = `from ${databaseRef.sumsDB}.${model}_${region} as m0`;
 
@@ -181,8 +179,8 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBPerformanceDiagram(
+          global.sumPool,
           statement,
           appParams
         );
@@ -247,7 +245,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     curve.ymax = d.ymax;
     curve.axisKey = statisticSelect;
     curve.binParam = binParam;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -283,12 +281,12 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataPerformanceDiagram(
+  const result = await matsDataProcessUtils.processDataPerformanceDiagram(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

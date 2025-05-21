@@ -12,8 +12,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataMap = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataMap = async function (plotParams) {
   const appParams = {
     plotType: matsTypes.PlotTypes.map,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
@@ -45,23 +46,22 @@ dataMap = function (plotParams, plotFunction) {
   const { diffFrom } = curve;
 
   const { variable } = curve;
-  const databaseRef = matsCollections.variable.findOne({ name: "variable" }).optionsMap[
-    variable
-  ];
-  const modelTable = matsCollections["data-source"].findOne({ name: "data-source" })
-    .optionsMap[variable][curve["data-source"]][0];
+  const databaseRef = (
+    await matsCollections.variable.findOneAsync({ name: "variable" })
+  ).optionsMap[variable];
+  const modelTable = (
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+  ).optionsMap[variable][curve["data-source"]][0];
   const obsTable =
     modelTable.includes("ret_") || modelTable.includes("Ret_") ? "obs_retro" : "obs";
   const queryTableClause = `from ${databaseRef.modelDB}.${obsTable} as o, ${databaseRef.modelDB}.${modelTable} as m0 `;
 
   const thresholdStr = curve.threshold;
-  const threshold = Object.keys(
-    matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-  ).find(
-    (key) =>
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-        key
-      ] === thresholdStr
+  const thresholdValues = (
+    await matsCollections.threshold.findOneAsync({ name: "threshold" })
+  ).valuesMap[variable];
+  const threshold = Object.keys(thresholdValues).find(
+    (key) => thresholdValues[key] === thresholdStr
   );
 
   let validTimeClause = "";
@@ -91,9 +91,10 @@ dataMap = function (plotParams, plotFunction) {
 
   let sitesClause = "";
 
-  const siteMap = matsCollections.StationMap.findOne(
-    { name: "stations" },
-    { optionsMap: 1 }
+  const siteMap = (
+    await matsCollections.StationMap.findOneAsync({
+      name: "stations",
+    })
   ).optionsMap;
   const sitesList = curve.sites === undefined ? [] : curve.sites;
   let querySites = [];
@@ -157,8 +158,8 @@ dataMap = function (plotParams, plotFunction) {
       dataRequests[label] = statement;
 
       // send the query statement to the query function
-      queryResult = matsDataQueryUtils.queryDBMapCTC(
-        sumPool, // eslint-disable-line no-undef
+      queryResult = await matsDataQueryUtils.queryDBMapCTC(
+        global.sumPool,
         statement,
         modelTable,
         statistic,
@@ -210,7 +211,11 @@ dataMap = function (plotParams, plotFunction) {
   }
 
   const postQueryStartMoment = moment();
-  let cOptions = matsDataCurveOpsUtils.generateCTCMapCurveOptions(curve, d, appParams); // generate map with site data
+  let cOptions = await matsDataCurveOpsUtils.generateCTCMapCurveOptions(
+    curve,
+    d,
+    appParams
+  ); // generate map with site data
   dataset.push(cOptions);
 
   cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
@@ -346,7 +351,7 @@ dataMap = function (plotParams, plotFunction) {
       .asSeconds()} seconds`,
   };
 
-  const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(true);
+  const resultOptions = await matsDataPlotOpsUtils.generateMapPlotOptions(true);
   const totalProcessingFinish = moment();
   dataRequests["total retrieval and processing time for curve set"] = {
     begin: totalProcessingStart.format(),
@@ -364,5 +369,5 @@ dataMap = function (plotParams, plotFunction) {
       queries: dataRequests,
     },
   };
-  plotFunction(result);
+  return result;
 };

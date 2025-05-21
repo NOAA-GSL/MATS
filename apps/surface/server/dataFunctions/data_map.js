@@ -12,8 +12,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataMap = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataMap = async function (plotParams) {
   const appParams = {
     plotType: matsTypes.PlotTypes.map,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
@@ -43,17 +44,18 @@ dataMap = function (plotParams, plotFunction) {
   const curve = curves[0];
   const { label } = curve;
   const { diffFrom } = curve;
-  const model = matsCollections["data-source"].findOne({ name: "data-source" })
-    .optionsMap[curve["data-source"]][0];
+  const model = (
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+  ).optionsMap[curve["data-source"]][0];
 
   const regionType = "Select stations";
-  const retroVal = matsCollections["data-source"].findOne({ name: "data-source" })
-    .retroMap[curve["data-source"]][0];
+  const retroVal = (
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+  ).retroMap[curve["data-source"]][0];
 
   const variableStr = curve.variable;
-  const variableOptionsMap = matsCollections.variable.findOne(
-    { name: "variable" },
-    { optionsMap: 1 }
+  const variableOptionsMap = (
+    await matsCollections.variable.findOneAsync({ name: "variable" })
   ).optionsMap;
   const variable = variableOptionsMap[regionType][variableStr];
 
@@ -87,9 +89,10 @@ dataMap = function (plotParams, plotFunction) {
   }
   const obsTable = retroVal === "retro" ? "obs_retro" : "obs";
   const queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
-  const siteMap = matsCollections.StationMap.findOne(
-    { name: "stations" },
-    { optionsMap: 1 }
+  const siteMap = (
+    await matsCollections.StationMap.findOneAsync({
+      name: "stations",
+    })
   ).optionsMap;
   const sitesList = curve.sites === undefined ? [] : curve.sites;
   let querySites = [];
@@ -104,10 +107,9 @@ dataMap = function (plotParams, plotFunction) {
     );
   }
 
-  const { statVarUnitMap } = matsCollections.variable.findOne(
-    { name: "variable" },
-    { statVarUnitMap: 1 }
-  );
+  const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+    name: "variable",
+  });
   const varUnits = statVarUnitMap[statisticSelect][variableStr];
 
   let d;
@@ -151,8 +153,8 @@ dataMap = function (plotParams, plotFunction) {
       dataRequests[label] = statement;
 
       // send the query statement to the query function
-      queryResult = matsDataQueryUtils.queryDBMapScalar(
-        sitePool, // eslint-disable-line no-undef
+      queryResult = await matsDataQueryUtils.queryDBMapScalar(
+        global.sitePool,
         statement,
         model,
         statisticSelect,
@@ -208,7 +210,7 @@ dataMap = function (plotParams, plotFunction) {
   }
 
   const postQueryStartMoment = moment();
-  let cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(
+  let cOptions = await matsDataCurveOpsUtils.generateMapCurveOptions(
     curve,
     d,
     appParams,
@@ -284,7 +286,7 @@ dataMap = function (plotParams, plotFunction) {
       .asSeconds()} seconds`,
   };
 
-  const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(false);
+  const resultOptions = await matsDataPlotOpsUtils.generateMapPlotOptions(false);
   const totalProcessingFinish = moment();
   dataRequests["total retrieval and processing time for curve set"] = {
     begin: totalProcessingStart.format(),
@@ -302,5 +304,5 @@ dataMap = function (plotParams, plotFunction) {
       queries: dataRequests,
     },
   };
-  plotFunction(result);
+  return result;
 };

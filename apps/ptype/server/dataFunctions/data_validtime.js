@@ -13,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataValidTime = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataValidTime = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.validtime,
@@ -53,32 +54,28 @@ dataValidTime = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { label } = curve;
     const { diffFrom } = curve;
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[curve["data-source"]][0];
 
     const variableStr = curve.variable;
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
 
     const scaleStr = curve.scale;
-    const scale = Object.keys(
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
-    );
+    const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+      .valuesMap;
+    const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
     const scaleClause = `and m0.scale = ${scale}`;
 
     const forecastLength = Number(curve["forecast-length"]) * 60;
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause = statisticOptionsMap[statisticSelect][0];
 
@@ -88,11 +85,10 @@ dataValidTime = function (plotParams, plotFunction) {
     const dateClause = `and m0.valid_secs >= ${fromSecs} and m0.valid_secs <= ${toSecs}`;
 
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
     const queryTableClause = `from ${model}_freq_${region} as m0`;
 
@@ -139,8 +135,8 @@ dataValidTime = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.sumPool,
           statement,
           appParams,
           statisticSelect
@@ -171,7 +167,7 @@ dataValidTime = function (plotParams, plotFunction) {
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          if (error.includes("ER_NO_SUCH_TABLE")) {
+          if (error.includes("ER_NO_SUCH_TABLE") || error.includes("doesn't exist")) {
             throw new Error(
               `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
                 `Choose a different scale to continue using this region.`
@@ -220,7 +216,7 @@ dataValidTime = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -258,12 +254,12 @@ dataValidTime = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

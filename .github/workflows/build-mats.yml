@@ -44,7 +44,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-node@v4
         with:
-          node-version: '14'  # This needs to match the version used by our Meteor release
+          node-version: '22'
       - name: Install dependencies
         working-directory: apps/${{ matrix.app }}
         run: npm ci

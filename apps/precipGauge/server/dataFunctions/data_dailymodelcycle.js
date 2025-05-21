@@ -13,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataDailyModelCycle = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataDailyModelCycle = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.dailyModelCycle,
@@ -57,16 +58,16 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { label } = curve;
     const { diffFrom } = curve;
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[curve["data-source"]][0];
 
     const thresholdStr = curve.threshold;
-    const threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[key] ===
-        thresholdStr
+    const thresholdValues = (
+      await matsCollections.threshold.findOneAsync({ name: "threshold" })
+    ).valuesMap;
+    const threshold = Object.keys(thresholdValues).find(
+      (key) => thresholdValues[key] === thresholdStr
     );
     const thresholdClause = `and m0.thresh = ${threshold}`;
 
@@ -84,9 +85,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const source = curve.truth === "All" ? "" : `_${curve.truth}`;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause =
       "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0";
@@ -94,11 +94,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
 
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
     const queryTableClause = `from ${model}_${region}${source} as m0`;
 
@@ -146,8 +145,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.sumPool,
           statement,
           appParams,
           statisticSelect
@@ -220,7 +219,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -258,12 +257,12 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

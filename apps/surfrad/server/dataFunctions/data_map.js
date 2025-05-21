@@ -12,8 +12,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataMap = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataMap = async function (plotParams) {
   const appParams = {
     plotType: matsTypes.PlotTypes.map,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
@@ -45,24 +46,22 @@ dataMap = function (plotParams, plotFunction) {
   const { diffFrom } = curve;
 
   const obsType = curve["obs-type"];
-  const databaseRef = matsCollections["obs-type"].findOne({ name: "obs-type" })
-    .optionsMap[obsType].sumsDB;
-  const model = matsCollections["data-source"].findOne({ name: "data-source" })
-    .optionsMap[obsType][curve["data-source"]][0];
+  const databaseRef = (
+    await matsCollections["obs-type"].findOneAsync({ name: "obs-type" })
+  ).optionsMap[obsType].sumsDB;
+  const model = (
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+  ).optionsMap[obsType][curve["data-source"]][0];
 
   const variableStr = curve.variable;
-  const variableOptionsMap = matsCollections.variable.findOne(
-    { name: "variable" },
-    { optionsMap: 1 }
+  const variableOptionsMap = (
+    await matsCollections.variable.findOneAsync({ name: "variable" })
   ).optionsMap;
 
   const scaleStr = curve.scale;
-  const scale = Object.keys(
-    matsCollections.scale.findOne({ name: "scale" }).valuesMap
-  ).find(
-    (key) =>
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
-  );
+  const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+    .valuesMap;
+  const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
   const scaleClause = `and m0.scale = ${scale}`;
 
   let validTimeClause = "";
@@ -79,14 +78,13 @@ dataMap = function (plotParams, plotFunction) {
   const dateClause = `and m0.secs >= ${fromSecs} and m0.secs <= ${toSecs}`;
 
   const regionStr = curve.region;
-  const region = Object.keys(
-    matsCollections.region.findOne({ name: "region" }).valuesMap
-  ).find(
-    (key) =>
-      matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+  const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+    .valuesMap;
+  const region = Object.keys(regionValues).find(
+    (key) => regionValues[key] === regionStr
   );
 
-  const { sitesMap } = matsCollections.region.findOne({ name: "region" });
+  const { sitesMap } = await matsCollections.region.findOneAsync({ name: "region" });
 
   let querySites = [];
 
@@ -109,10 +107,9 @@ dataMap = function (plotParams, plotFunction) {
     `sum(${variable[0]}) as square_diff_sum, ${NAggregate}(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
     `group_concat(m0.secs, ';', ${variable[0]}, ';', ${NClause}, ';', ${variable[2]}, ';', ${variable[3]}, ';', ${variable[4]}, ';', ${variable[5]} order by m0.secs) as sub_data, count(${variable[0]}) as n0`;
 
-  const { statVarUnitMap } = matsCollections.variable.findOne(
-    { name: "variable" },
-    { statVarUnitMap: 1 }
-  );
+  const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+    name: "variable",
+  });
   const varUnits = statVarUnitMap[statisticSelect][variableStr];
 
   let d;
@@ -152,8 +149,8 @@ dataMap = function (plotParams, plotFunction) {
       dataRequests[label] = statement;
 
       // send the query statement to the query function
-      queryResult = matsDataQueryUtils.queryDBMapScalarLoop(
-        sumPool, // eslint-disable-line no-undef
+      queryResult = await matsDataQueryUtils.queryDBMapScalarLoop(
+        global.sumPool,
         statement,
         model,
         statisticSelect,
@@ -165,7 +162,7 @@ dataMap = function (plotParams, plotFunction) {
       );
 
       finishMoment = moment();
-      dataRequests[label] = "Station plot -- no one query.";
+      dataRequests[label] = statement;
       dataRequests[`data retrieval (query) time - ${label}`] = {
         begin: startMoment.format(),
         finish: finishMoment.format(),
@@ -209,7 +206,7 @@ dataMap = function (plotParams, plotFunction) {
   }
 
   const postQueryStartMoment = moment();
-  let cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(
+  let cOptions = await matsDataCurveOpsUtils.generateMapCurveOptions(
     curve,
     d,
     appParams,
@@ -285,7 +282,7 @@ dataMap = function (plotParams, plotFunction) {
       .asSeconds()} seconds`,
   };
 
-  const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions(false);
+  const resultOptions = await matsDataPlotOpsUtils.generateMapPlotOptions(false);
   const totalProcessingFinish = moment();
   dataRequests["total retrieval and processing time for curve set"] = {
     begin: totalProcessingStart.format(),
@@ -303,5 +300,5 @@ dataMap = function (plotParams, plotFunction) {
       queries: dataRequests,
     },
   };
-  plotFunction(result);
+  return result;
 };

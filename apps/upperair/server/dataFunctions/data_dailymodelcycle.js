@@ -13,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataDailyModelCycle = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataDailyModelCycle = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.dailyModelCycle,
@@ -59,18 +60,19 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { database } = curve;
-    const databaseRef = matsCollections.database.findOne({ name: "database" })
-      .optionsMap[database];
-    let model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[database][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections.database.findOneAsync({ name: "database" })
+    ).optionsMap[database];
+    let model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[database][curve["data-source"]][0];
 
     let queryTableClause = "";
     const regionType = curve["region-type"];
 
     const variableStr = curve.variable;
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
     const variable = variableOptionsMap[regionType][variableStr];
 
@@ -90,9 +92,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     }
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
 
     let levelVar;
@@ -119,13 +120,11 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
       const regionStr = curve.region;
       const regionDB = database.includes("RAOBs") ? "ID" : "shortName";
-      const region = Object.keys(
-        matsCollections.region.findOne({ name: "region" }).valuesMap[regionDB]
-      ).find(
-        (key) =>
-          matsCollections.region.findOne({ name: "region" }).valuesMap[regionDB][
-            key
-          ] === regionStr
+      const regionValues = (
+        await matsCollections.region.findOneAsync({ name: "region" })
+      ).valuesMap[regionDB];
+      const region = Object.keys(regionValues).find(
+        (key) => regionValues[key] === regionStr
       );
       queryTableClause = `from ${databaseRef.sumsDB}.${model}${region} as m0`;
       if (database.includes("RAOBs")) {
@@ -176,9 +175,11 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
       }
       const obsTable = "RAOB";
       queryTableClause = `from ${databaseRef.modelDB}.${obsTable} as o, ${databaseRef.modelDB}.${model} as m0 `;
-      const siteMap = matsCollections.StationMap.findOne(
-        { name: "stations" },
-        { optionsMap: 1 }
+
+      const siteMap = (
+        await matsCollections.StationMap.findOneAsync({
+          name: "stations",
+        })
       ).optionsMap;
       const sitesList = curve.sites === undefined ? [] : curve.sites;
       let querySites = [];
@@ -208,9 +209,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     let phaseClause = "";
     if (database.includes("AMDAR")) {
       const phaseStr = curve.phase;
-      const phaseOptionsMap = matsCollections.phase.findOne(
-        { name: "phase" },
-        { optionsMap: 1 }
+      const phaseOptionsMap = (
+        await matsCollections.phase.findOneAsync({ name: "phase" })
       ).optionsMap;
       phaseClause = phaseOptionsMap[phaseStr];
     }
@@ -219,10 +219,9 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
+    const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     statType = statisticOptionsMap[statisticSelect];
     allStatTypes.push(statType);
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -274,8 +273,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.sumPool,
           statement,
           appParams,
           `${statisticSelect}_${variableStr}`
@@ -354,7 +353,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -392,12 +391,12 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

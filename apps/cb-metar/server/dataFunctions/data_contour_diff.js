@@ -2,7 +2,7 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-/* global cbPool, Assets */
+/* global Assets */
 
 import {
   matsCollections,
@@ -16,8 +16,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataContourDiff = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataContourDiff = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.contourDiff,
@@ -55,10 +56,16 @@ dataContourDiff = function (plotParams, plotFunction) {
 
   const xAxisParam = plotParams["x-axis-parameter"];
   const yAxisParam = plotParams["y-axis-parameter"];
-  const xValClause = matsCollections.PlotParams.findOne({ name: "x-axis-parameter" })
-    .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOne({ name: "y-axis-parameter" })
-    .optionsMap[yAxisParam];
+  const xValClause = (
+    await matsCollections.PlotParams.findOneAsync({
+      name: "x-axis-parameter",
+    })
+  ).optionsMap[xAxisParam];
+  const yValClause = (
+    await matsCollections.PlotParams.findOneAsync({
+      name: "y-axis-parameter",
+    })
+  ).optionsMap[yAxisParam];
 
   let allThresholds;
 
@@ -69,15 +76,18 @@ dataContourDiff = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const variableValuesMap = matsCollections.variable.findOne({
-      name: "variable",
-    }).valuesMap;
+    const variableValuesMap = (
+      await matsCollections.variable.findOneAsync({
+        name: "variable",
+      })
+    ).valuesMap;
     const queryVariable = Object.keys(variableValuesMap).filter(
       (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
     )[0];
     const variableDetails = variableValuesMap[queryVariable][0][variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     if (
       xAxisParam !== "Threshold" &&
@@ -92,20 +102,20 @@ dataContourDiff = function (plotParams, plotFunction) {
           `INFO:  ${label}'s threshold is undefined. Please assign it a value.`
         );
       }
-      const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-            key
-          ] === thresholdStr
+      const thresholdValues = (
+        await matsCollections.threshold.findOneAsync({ name: "threshold" })
+      ).valuesMap[variable];
+      const threshold = Object.keys(thresholdValues).find(
+        (key) => thresholdValues[key] === thresholdStr
       );
       allThresholds = [threshold.replace(/_/g, ".")];
     } else if (variableValuesMap[queryVariable][1]) {
       // threshold is an axis param and this is a CTC app
       // so catalogue the thresholds now, we'll need to do a separate query for each
       allThresholds = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
+        (await matsCollections.threshold.findOneAsync({ name: "threshold" })).valuesMap[
+          variable
+        ]
       )
         .map(function (x) {
           return x.replace(/_/g, ".");
@@ -129,9 +139,8 @@ dataContourDiff = function (plotParams, plotFunction) {
     const forecastLength = curve["forecast-length"];
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     [statType] = statisticOptionsMap[variable][statisticSelect];
     allStatTypes.push(statType);
@@ -144,16 +153,15 @@ dataContourDiff = function (plotParams, plotFunction) {
       );
     }
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
 
     // SQL template replacements
     let statTemplate;
-    queryTemplate = Assets.getText("sqlTemplates/tmpl_Contour.sql");
+    queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Contour.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
@@ -165,11 +173,11 @@ dataContourDiff = function (plotParams, plotFunction) {
     queryTemplate = queryTemplate.replace(/{{vxXVAL_CLAUSE}}/g, xValClause);
     queryTemplate = queryTemplate.replace(/{{vxYVAL_CLAUSE}}/g, yValClause);
     if (statType === "ctc") {
-      statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+      statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
       queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
       queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
     } else {
-      statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
+      statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
       queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
       queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
       queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
@@ -179,13 +187,19 @@ dataContourDiff = function (plotParams, plotFunction) {
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /{{vxVALID_TIMES}}/g,
-          cbPool.trfmListToCSVString(validTimes, null, false)
+          global.cbPool.trfmListToCSVString(validTimes, null, false)
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxVALID_TIMES}}"
+        );
       }
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+      queryTemplate = global.cbPool.trfmSQLRemoveClause(
+        queryTemplate,
+        "{{vxVALID_TIMES}}"
+      );
     }
 
     if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
@@ -196,7 +210,10 @@ dataContourDiff = function (plotParams, plotFunction) {
       }
       queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}");
+      queryTemplate = global.cbPool.trfmSQLRemoveClause(
+        queryTemplate,
+        "{{vxFCST_LEN}}"
+      );
     }
 
     let dateString = "";
@@ -240,11 +257,11 @@ dataContourDiff = function (plotParams, plotFunction) {
         const startMoment = moment();
         let finishMoment;
         try {
-          statement = cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
+          statement = global.cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
 
           // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBContour(
-            cbPool,
+          queryResult = await matsDataQueryUtils.queryDBContour(
+            global.cbPool,
             statement,
             appParams,
             statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
@@ -315,7 +332,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     curve.zmax = d.zmax;
     curve.xAxisKey = xAxisParam;
     curve.yAxisKey = yAxisParam;
-    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateContourCurveOptions(
       curve,
       axisMap,
       d,
@@ -340,7 +357,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   }
 
   // turn the two contours into one difference contour
-  dataset = matsDataDiffUtils.getDataForDiffContour(
+  dataset = await matsDataDiffUtils.getDataForDiffContour(
     dataset,
     appParams,
     showSignificance,
@@ -363,11 +380,11 @@ dataContourDiff = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataContour(
+  const result = await matsDataProcessUtils.processDataContour(
     dataset,
     curveInfoParams,
     newPlotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

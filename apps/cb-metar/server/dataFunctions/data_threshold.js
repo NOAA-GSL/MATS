@@ -2,7 +2,7 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-/* global cbPool, Assets */
+/* global Assets */
 
 import {
   matsCollections,
@@ -15,8 +15,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataThreshold = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataThreshold = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.threshold,
@@ -57,19 +58,24 @@ dataThreshold = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const variableValuesMap = matsCollections.variable.findOne({
-      name: "variable",
-    }).valuesMap;
+    const variableValuesMap = (
+      await matsCollections.variable.findOneAsync({
+        name: "variable",
+      })
+    ).valuesMap;
     const queryVariable = Object.keys(variableValuesMap).filter(
       (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
     )[0];
     const variableDetails = variableValuesMap[queryVariable][0][variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     // catalogue the thresholds now, we'll need to do a separate query for each
     const allThresholdsStr = Object.keys(
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
+      (await matsCollections.threshold.findOneAsync({ name: "threshold" })).valuesMap[
+        variable
+      ]
     );
     for (let tidx = 0; tidx < allThresholdsStr.length; tidx += 1) {
       allThresholdsStr[tidx] = allThresholdsStr[tidx].replace(/_/g, ".");
@@ -85,9 +91,8 @@ dataThreshold = function (plotParams, plotFunction) {
     const toSecs = dateRange.toSeconds;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     [statType] = statisticOptionsMap[variable][statisticSelect];
     allStatTypes.push(statType);
@@ -100,15 +105,14 @@ dataThreshold = function (plotParams, plotFunction) {
       );
     }
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
 
     // SQL template replacements
-    queryTemplate = Assets.getText("sqlTemplates/tmpl_Threshold.sql");
+    queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Threshold.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
@@ -119,7 +123,7 @@ dataThreshold = function (plotParams, plotFunction) {
     );
     queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     if (statType === "ctc") {
-      const statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+      const statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
       queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
       queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
     } else {
@@ -131,10 +135,13 @@ dataThreshold = function (plotParams, plotFunction) {
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
       queryTemplate = queryTemplate.replace(
         /{{vxVALID_TIMES}}/g,
-        cbPool.trfmListToCSVString(validTimes, null, false)
+        global.cbPool.trfmListToCSVString(validTimes, null, false)
       );
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+      queryTemplate = global.cbPool.trfmSQLRemoveClause(
+        queryTemplate,
+        "{{vxVALID_TIMES}}"
+      );
     }
 
     // axisKey is used to determine which axis a curve should use.
@@ -169,11 +176,11 @@ dataThreshold = function (plotParams, plotFunction) {
         const startMoment = moment();
         let finishMoment;
         try {
-          statement = cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
+          statement = global.cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
 
           // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-            cbPool,
+          queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+            global.cbPool,
             statement,
             appParams,
             statisticSelect
@@ -266,7 +273,7 @@ dataThreshold = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -304,12 +311,12 @@ dataThreshold = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

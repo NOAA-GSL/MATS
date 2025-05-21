@@ -11,8 +11,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataHistogram = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataHistogram = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.histogram,
@@ -53,13 +54,13 @@ dataHistogram = function (plotParams, plotFunction) {
     dataFoundForCurve[curveIndex] = true;
     const { label } = curve;
     const { diffFrom } = curve;
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[curve["data-source"]][0];
 
     const variableStr = curve.variable;
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
     const variable = variableOptionsMap[variableStr];
 
@@ -73,9 +74,8 @@ dataHistogram = function (plotParams, plotFunction) {
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause =
       `sum(${variable[0]}) as square_diff_sum, sum(${variable[1]}) as N_sum, sum(${variable[2]}) as obs_model_diff_sum, sum(${variable[3]}) as model_sum, sum(${variable[4]}) as obs_sum, sum(${variable[5]}) as abs_sum, ` +
@@ -87,12 +87,9 @@ dataHistogram = function (plotParams, plotFunction) {
     const dateClause = `and m0.valid_day+3600*m0.hour >= ${fromSecs} and m0.valid_day+3600*m0.hour <= ${toSecs}`;
 
     const vgtypStr = curve.vgtyp;
-    const vgtyp = Object.keys(
-      matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.vgtyp.findOne({ name: "vgtyp" }).valuesMap[key] === vgtypStr
-    );
+    const vgtypValues = (await matsCollections.vgtyp.findOneAsync({ name: "vgtyp" }))
+      .valuesMap;
+    const vgtyp = Object.keys(vgtypValues).find((key) => vgtypValues[key] === vgtypStr);
     const vgtypClause = `and m0.vgtyp IN(${vgtyp})`;
 
     const queryTableClause = `from ${model} as m0`;
@@ -101,10 +98,9 @@ dataHistogram = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
+    const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     statType = statisticOptionsMap[statisticSelect];
     varUnits = statVarUnitMap[statisticSelect][variableStr];
     let axisKey = yAxisFormat;
@@ -145,8 +141,8 @@ dataHistogram = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.sumPool,
           statement,
           appParams,
           `${statisticSelect}_${variableStr}`
@@ -213,7 +209,7 @@ dataHistogram = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataHistogram(
+  const result = await matsDataProcessUtils.processDataHistogram(
     allReturnedSubStats,
     allReturnedSubSecs,
     [],
@@ -224,5 +220,5 @@ dataHistogram = function (plotParams, plotFunction) {
     binParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

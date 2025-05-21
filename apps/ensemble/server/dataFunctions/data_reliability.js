@@ -12,8 +12,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataReliability = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataReliability = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.reliability,
@@ -55,10 +56,12 @@ dataReliability = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
-      .optionsMap[variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
+    ).optionsMap[variable];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     const { threshold } = curve;
     const thresholdClause = `and m0.trsh = ${threshold}`;
@@ -91,11 +94,10 @@ dataReliability = function (plotParams, plotFunction) {
     kernelClause = `and m0.kernel in (0, ${kernel})`;
 
     const regionStr = curve.region;
-    let region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    let region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
     region = region === "Full" ? "Full_domain" : region; // this db doesn't handle the full domain the way the others do
 
@@ -146,8 +148,8 @@ dataReliability = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBReliability(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBReliability(
+          global.sumPool,
           statement,
           appParams,
           kernel
@@ -212,7 +214,7 @@ dataReliability = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -248,12 +250,12 @@ dataReliability = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataReliability(
+  const result = await matsDataProcessUtils.processDataReliability(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

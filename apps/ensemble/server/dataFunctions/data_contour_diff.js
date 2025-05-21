@@ -14,8 +14,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataContourDiff = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataContourDiff = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.contourDiff,
@@ -53,10 +54,16 @@ dataContourDiff = function (plotParams, plotFunction) {
 
   const xAxisParam = plotParams["x-axis-parameter"];
   const yAxisParam = plotParams["y-axis-parameter"];
-  const xValClause = matsCollections.PlotParams.findOne({ name: "x-axis-parameter" })
-    .optionsMap[xAxisParam];
-  const yValClause = matsCollections.PlotParams.findOne({ name: "y-axis-parameter" })
-    .optionsMap[yAxisParam];
+  const xValClause = (
+    await matsCollections.PlotParams.findOneAsync({
+      name: "x-axis-parameter",
+    })
+  ).optionsMap[xAxisParam];
+  const yValClause = (
+    await matsCollections.PlotParams.findOneAsync({
+      name: "y-axis-parameter",
+    })
+  ).optionsMap[yAxisParam];
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
@@ -65,10 +72,12 @@ dataContourDiff = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
-      .optionsMap[variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
+    ).optionsMap[variable];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     let thresholdClause = "";
     if (xAxisParam !== "Threshold" && yAxisParam !== "Threshold") {
@@ -107,9 +116,8 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap[appParams.plotType];
     const [statisticClause] = statisticOptionsMap[statisticSelect];
     const tableStatPrefix = statisticOptionsMap[statisticSelect][2];
@@ -146,11 +154,10 @@ dataContourDiff = function (plotParams, plotFunction) {
     }
 
     const regionStr = curve.region;
-    let region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    let region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
     region = region === "Full" ? "Full_domain" : region; // this db doesn't handle the full domain the way the others do
 
@@ -207,8 +214,8 @@ dataContourDiff = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBContour(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBContour(
+          global.sumPool,
           statement,
           appParams,
           statisticSelect
@@ -264,7 +271,7 @@ dataContourDiff = function (plotParams, plotFunction) {
     curve.zmax = d.zmax;
     curve.xAxisKey = xAxisParam;
     curve.yAxisKey = yAxisParam;
-    const cOptions = matsDataCurveOpsUtils.generateContourCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateContourCurveOptions(
       curve,
       axisMap,
       d,
@@ -289,7 +296,7 @@ dataContourDiff = function (plotParams, plotFunction) {
   }
 
   // turn the two contours into one difference contour
-  dataset = matsDataDiffUtils.getDataForDiffContour(
+  dataset = await matsDataDiffUtils.getDataForDiffContour(
     dataset,
     appParams,
     showSignificance,
@@ -312,11 +319,11 @@ dataContourDiff = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataContour(
+  const result = await matsDataProcessUtils.processDataContour(
     dataset,
     curveInfoParams,
     newPlotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

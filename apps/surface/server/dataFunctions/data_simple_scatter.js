@@ -12,8 +12,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataSimpleScatter = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataSimpleScatter = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.simpleScatter,
@@ -54,30 +55,31 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const binParam = curve["bin-parameter"];
-    const binClause = matsCollections["bin-parameter"].findOne({
-      name: "bin-parameter",
-    }).optionsMap[binParam];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+    const binClause = (
+      await matsCollections["bin-parameter"].findOneAsync({
+        name: "bin-parameter",
+      })
+    ).optionsMap[binParam];
+
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[curve["data-source"]][0];
 
     const regionType = "Predefined region";
 
     const variableXStr = curve["x-variable"];
     const variableYStr = curve["y-variable"];
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
     const variableX = variableOptionsMap[regionType][variableXStr];
     const variableY = variableOptionsMap[regionType][variableYStr];
 
     const metarStringStr = curve.truth;
-    const metarString = Object.keys(
-      matsCollections.truth.findOne({ name: "truth" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.truth.findOne({ name: "truth" }).valuesMap[key] ===
-        metarStringStr
+    const metarValues = (await matsCollections.truth.findOneAsync({ name: "truth" }))
+      .valuesMap;
+    const metarString = Object.keys(metarValues).find(
+      (key) => metarValues[key] === metarStringStr
     );
 
     let validTimeClause = "";
@@ -101,9 +103,8 @@ dataSimpleScatter = function (plotParams, plotFunction) {
 
     const statisticXSelect = curve["x-statistic"];
     const statisticYSelect = curve["y-statistic"];
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause =
       `sum(${variableX[0]}) as square_diff_sumX, sum(${variableX[1]}) as N_sumX, sum(${variableX[2]}) as obs_model_diff_sumX, sum(${variableX[3]}) as model_sumX, sum(${variableX[4]}) as obs_sumX, sum(${variableX[5]}) as abs_sumX, ` +
@@ -123,19 +124,17 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
 
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
 
     const queryTableClause = `from ${model}_${metarString}_${region} as m0`;
 
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
+    const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     statType = statisticOptionsMap[statisticXSelect];
     varUnitsX = statVarUnitMap[statisticXSelect][variableXStr];
     varUnitsY = statVarUnitMap[statisticYSelect][variableYStr];
@@ -171,8 +170,8 @@ dataSimpleScatter = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSimpleScatter(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSimpleScatter(
+          global.sumPool,
           statement,
           appParams,
           `${statisticXSelect}_${variableXStr}`,
@@ -246,7 +245,7 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     curve.axisXKey = varUnitsX;
     curve.axisYKey = varUnitsY;
     curve.binParam = binParam;
-    const cOptions = matsDataCurveOpsUtils.generateScatterCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateScatterCurveOptions(
       curve,
       curveIndex,
       axisXMap,
@@ -284,12 +283,12 @@ dataSimpleScatter = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataSimpleScatter(
+  const result = await matsDataProcessUtils.processDataSimpleScatter(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

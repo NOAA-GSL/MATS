@@ -13,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataValidTime = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataValidTime = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.validtime,
@@ -53,18 +54,19 @@ dataValidTime = function (plotParams, plotFunction) {
     const curve = curves[curveIndex];
     const { label } = curve;
     const { diffFrom } = curve;
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[curve["data-source"]][0];
 
     let queryTableClause = "";
     const regionType = curve["region-type"];
-    const retroVal = matsCollections["data-source"].findOne({ name: "data-source" })
-      .retroMap[curve["data-source"]][0];
+    const retroVal = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).retroMap[curve["data-source"]][0];
 
     const variableStr = curve.variable;
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
     const variable = variableOptionsMap[regionType][variableStr];
 
@@ -74,9 +76,8 @@ dataValidTime = function (plotParams, plotFunction) {
     let forecastLengthClause = "";
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
@@ -101,24 +102,21 @@ dataValidTime = function (plotParams, plotFunction) {
       [, NClause] = variable;
 
       const metarStringStr = curve.truth;
-      const metarString = Object.keys(
-        matsCollections.truth.findOne({ name: "truth" }).valuesMap
-      ).find(
-        (key) =>
-          matsCollections.truth.findOne({ name: "truth" }).valuesMap[key] ===
-          metarStringStr
+      const metarValues = (await matsCollections.truth.findOneAsync({ name: "truth" }))
+        .valuesMap;
+      const metarString = Object.keys(metarValues).find(
+        (key) => metarValues[key] === metarStringStr
       );
 
       const regionStr = curve.region;
-      const region = Object.keys(
-        matsCollections.region.findOne({ name: "region" }).valuesMap
-      ).find(
-        (key) =>
-          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
-          regionStr
+      const regionValues = (
+        await matsCollections.region.findOneAsync({ name: "region" })
+      ).valuesMap;
+      const region = Object.keys(regionValues).find(
+        (key) => regionValues[key] === regionStr
       );
       queryTableClause = `from ${model}_${metarString}_${region} as m0`;
-      queryPool = sumPool; // eslint-disable-line no-undef
+      queryPool = global.sumPool;
     } else {
       timeVar = "m0.time";
       validTimeVar = `floor((${timeVar}+1800)%(24*3600)/3600)`; // adjust by 1800 seconds to center obs at the top of the hour
@@ -138,9 +136,11 @@ dataValidTime = function (plotParams, plotFunction) {
       }
       const obsTable = retroVal === "retro" ? "obs_retro" : "obs";
       queryTableClause = `from ${obsTable} as o, ${modelTable} as m0 `;
-      const siteMap = matsCollections.StationMap.findOne(
-        { name: "stations" },
-        { optionsMap: 1 }
+
+      const siteMap = (
+        await matsCollections.StationMap.findOneAsync({
+          name: "stations",
+        })
       ).optionsMap;
       const sitesList = curve.sites === undefined ? [] : curve.sites;
       let querySites = [];
@@ -154,7 +154,7 @@ dataValidTime = function (plotParams, plotFunction) {
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
-      queryPool = sitePool; // eslint-disable-line no-undef
+      queryPool = global.sitePool;
     }
 
     const statisticClause =
@@ -165,10 +165,9 @@ dataValidTime = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
+    const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     statType = statisticOptionsMap[statisticSelect];
     allStatTypes.push(statType);
     const varUnits = statVarUnitMap[statisticSelect][variableStr];
@@ -210,8 +209,8 @@ dataValidTime = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          queryPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          queryPool,
           statement,
           appParams,
           `${statisticSelect}_${variableStr}`
@@ -290,7 +289,7 @@ dataValidTime = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -328,12 +327,12 @@ dataValidTime = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

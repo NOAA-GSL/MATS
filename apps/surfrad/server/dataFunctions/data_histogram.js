@@ -11,8 +11,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataHistogram = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataHistogram = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.histogram,
@@ -55,24 +56,22 @@ dataHistogram = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const obsType = curve["obs-type"];
-    const databaseRef = matsCollections["obs-type"].findOne({ name: "obs-type" })
-      .optionsMap[obsType].sumsDB;
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[obsType][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections["obs-type"].findOneAsync({ name: "obs-type" })
+    ).optionsMap[obsType].sumsDB;
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[obsType][curve["data-source"]][0];
 
     const variableStr = curve.variable;
-    const variableOptionsMap = matsCollections.variable.findOne(
-      { name: "variable" },
-      { optionsMap: 1 }
+    const variableOptionsMap = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
     ).optionsMap;
 
     const scaleStr = curve.scale;
-    const scale = Object.keys(
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
-    );
+    const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+      .valuesMap;
+    const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
     const scaleClause = `and m0.scale = ${scale}`;
 
     let validTimeClause = "";
@@ -85,9 +84,8 @@ dataHistogram = function (plotParams, plotFunction) {
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
@@ -96,11 +94,10 @@ dataHistogram = function (plotParams, plotFunction) {
     const dateClause = `and m0.secs >= ${fromSecs} and m0.secs <= ${toSecs}`;
 
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
 
     let queryTableClause;
@@ -137,10 +134,9 @@ dataHistogram = function (plotParams, plotFunction) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const { statVarUnitMap } = matsCollections.variable.findOne(
-      { name: "variable" },
-      { statVarUnitMap: 1 }
-    );
+    const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     statType = statisticOptionsMap[statisticSelect];
     varUnits = statVarUnitMap[statisticSelect][variableStr];
     let axisKey = yAxisFormat;
@@ -181,8 +177,8 @@ dataHistogram = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.sumPool,
           statement,
           appParams,
           `${statisticSelect}_${variableStr}`
@@ -243,7 +239,7 @@ dataHistogram = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataHistogram(
+  const result = await matsDataProcessUtils.processDataHistogram(
     allReturnedSubStats,
     allReturnedSubSecs,
     [],
@@ -254,5 +250,5 @@ dataHistogram = function (plotParams, plotFunction) {
     binParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

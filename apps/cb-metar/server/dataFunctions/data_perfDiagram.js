@@ -2,7 +2,7 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-/* global cbPool, Assets */
+/* global Assets */
 
 import {
   matsCollections,
@@ -14,8 +14,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataPerformanceDiagram = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataPerformanceDiagram = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.performanceDiagram,
@@ -55,19 +56,24 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const binParam = curve["bin-parameter"];
-    const binClause = matsCollections["bin-parameter"].findOne({
-      name: "bin-parameter",
-    }).optionsMap[binParam];
+    const binClause = (
+      await matsCollections["bin-parameter"].findOneAsync({
+        name: "bin-parameter",
+      })
+    ).optionsMap[binParam];
 
     const { variable } = curve;
-    const variableValuesMap = matsCollections.variable.findOne({
-      name: "variable",
-    }).valuesMap;
+    const variableValuesMap = (
+      await matsCollections.variable.findOneAsync({
+        name: "variable",
+      })
+    ).valuesMap;
     const queryVariable = Object.keys(variableValuesMap).filter(
       (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
     )[0];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     if (binParam !== "Threshold") {
       const thresholdStr = curve.threshold;
@@ -76,19 +82,19 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
           `INFO:  ${label}'s threshold is undefined. Please assign it a value.`
         );
       }
-      const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-            key
-          ] === thresholdStr
+      const thresholdValues = (
+        await matsCollections.threshold.findOneAsync({ name: "threshold" })
+      ).valuesMap[variable];
+      const threshold = Object.keys(thresholdValues).find(
+        (key) => thresholdValues[key] === thresholdStr
       );
       allThresholds = [threshold.replace(/_/g, ".")];
     } else {
       // catalogue the thresholds now, we'll need to do a separate query for each
       allThresholds = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
+        (await matsCollections.threshold.findOneAsync({ name: "threshold" })).valuesMap[
+          variable
+        ]
       )
         .map(function (x) {
           return x.replace(/_/g, ".");
@@ -115,15 +121,16 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       );
     }
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
 
     // SQL template replacements
-    queryTemplate = Assets.getText("sqlTemplates/tmpl_PerformanceDiagram.sql");
+    queryTemplate = await Assets.getTextAsync(
+      "sqlTemplates/tmpl_PerformanceDiagram.sql"
+    );
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
@@ -145,13 +152,19 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
         queryTemplate = queryTemplate.replace(
           /{{vxVALID_TIMES}}/g,
-          cbPool.trfmListToCSVString(validTimes, null, false)
+          global.cbPool.trfmListToCSVString(validTimes, null, false)
         );
       } else {
-        queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxVALID_TIMES}}"
+        );
       }
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxVALID_TIMES}}");
+      queryTemplate = global.cbPool.trfmSQLRemoveClause(
+        queryTemplate,
+        "{{vxVALID_TIMES}}"
+      );
     }
 
     if (binParam !== "Fcst lead time") {
@@ -162,7 +175,10 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
       }
       queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
     } else {
-      queryTemplate = cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxFCST_LEN}}");
+      queryTemplate = global.cbPool.trfmSQLRemoveClause(
+        queryTemplate,
+        "{{vxFCST_LEN}}"
+      );
     }
 
     let dateString = "";
@@ -197,11 +213,11 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         const startMoment = moment();
         let finishMoment;
         try {
-          statement = cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
+          statement = global.cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
 
           // send the query statement to the query function
-          queryResult = matsDataQueryUtils.queryDBPerformanceDiagram(
-            cbPool,
+          queryResult = await matsDataQueryUtils.queryDBPerformanceDiagram(
+            global.cbPool,
             statement,
             appParams
           );
@@ -288,7 +304,7 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     curve.ymax = d.ymax;
     curve.axisKey = statisticSelect;
     curve.binParam = binParam;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -324,12 +340,12 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataPerformanceDiagram(
+  const result = await matsDataProcessUtils.processDataPerformanceDiagram(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

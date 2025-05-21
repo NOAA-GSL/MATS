@@ -11,8 +11,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataHistogram = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataHistogram = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.histogram,
@@ -53,27 +54,23 @@ dataHistogram = function (plotParams, plotFunction) {
     dataFoundForCurve[curveIndex] = true;
     const { label } = curve;
     const { diffFrom } = curve;
-
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[curve["data-source"]][0];
 
     const thresholdStr = curve.threshold;
-    const threshold = Object.keys(
-      matsCollections.threshold.findOne({ name: "threshold" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[key] ===
-        thresholdStr
+    const thresholdValues = (
+      await matsCollections.threshold.findOneAsync({ name: "threshold" })
+    ).valuesMap;
+    const threshold = Object.keys(thresholdValues).find(
+      (key) => thresholdValues[key] === thresholdStr
     );
     const thresholdClause = `and m0.trsh = ${threshold * 0.01}`;
 
     const scaleStr = curve.scale;
-    const scale = Object.keys(
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.scale.findOne({ name: "scale" }).valuesMap[key] === scaleStr
-    );
+    const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+      .valuesMap;
+    const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
 
     let validTimeClause = "";
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
@@ -87,9 +84,8 @@ dataHistogram = function (plotParams, plotFunction) {
     const source = curve.truth === "All" ? "" : `_${curve.truth}`;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause =
       "sum(m0.hit) as hit, sum(m0.fa) as fa, sum(m0.miss) as miss, sum(m0.cn) as cn, group_concat(m0.time, ';', m0.hit, ';', m0.fa, ';', m0.miss, ';', m0.cn order by m0.time) as sub_data, count(m0.hit) as n0";
@@ -99,11 +95,10 @@ dataHistogram = function (plotParams, plotFunction) {
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
 
     const regionStr = curve.region;
-    const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    const region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
     const queryTableClause = `from ${model}_${scale}${source}_${region} as m0`;
 
@@ -151,8 +146,8 @@ dataHistogram = function (plotParams, plotFunction) {
         dataRequests[label] = statement;
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.sumPool,
           statement,
           appParams,
           statisticSelect
@@ -185,7 +180,14 @@ dataHistogram = function (plotParams, plotFunction) {
         } else {
           // this is an error returned by the mysql database
           error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          throw new Error(error);
+          if (error.includes("ER_NO_SUCH_TABLE") || error.includes("doesn't exist")) {
+            throw new Error(
+              `INFO:  The region/scale combination [${regionStr} and ${scaleStr}] is not supported by the database for the model [${model}]. ` +
+                `Choose a different region to continue using this scale.`
+            );
+          } else {
+            throw new Error(error);
+          }
         }
       } else {
         dataFoundForAnyCurve = true;
@@ -213,7 +215,7 @@ dataHistogram = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataHistogram(
+  const result = await matsDataProcessUtils.processDataHistogram(
     allReturnedSubStats,
     allReturnedSubSecs,
     [],
@@ -224,5 +226,5 @@ dataHistogram = function (plotParams, plotFunction) {
     binParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

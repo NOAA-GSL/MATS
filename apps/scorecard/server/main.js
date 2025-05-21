@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
-
 import { Meteor } from "meteor/meteor";
 import { moment } from "meteor/momentjs:moment";
 import {
@@ -13,18 +12,21 @@ import {
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
 
+/* eslint-disable no-await-in-loop */
+
 // determined in doCurveParanms
 let minDate;
 let maxDate;
 let dstr;
 
-const doPlotParams = function () {
+const doPlotParams = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    matsCollections.PlotParams.remove({});
+    await matsCollections.PlotParams.removeAsync({});
   }
   /*
     NOTE: hideOtherFor - radio button groups
@@ -35,10 +37,11 @@ const doPlotParams = function () {
     */
 
   if (
-    matsCollections.PlotParams.findOne({ name: "scorecard-schedule-mode" }) ===
-    undefined
+    (await matsCollections.PlotParams.findOneAsync({
+      name: "scorecard-schedule-mode",
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "scorecard-schedule-mode",
       type: matsTypes.InputTypes.radioGroup,
       options: ["Once", "Recurring"],
@@ -69,8 +72,10 @@ const doPlotParams = function () {
     });
   }
 
-  if (matsCollections.PlotParams.findOne({ name: "dates" }) === undefined) {
-    matsCollections.PlotParams.insert({
+  if (
+    (await matsCollections.PlotParams.findOneAsync({ name: "dates" })) === undefined
+  ) {
+    await matsCollections.PlotParams.insertAsync({
       name: "dates",
       type: matsTypes.InputTypes.dateRange,
       optionsMap: {},
@@ -91,14 +96,16 @@ const doPlotParams = function () {
     });
   } else {
     // need to update the dates selector if the metadata has changed
-    const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
+    const currentParam = await matsCollections.PlotParams.findOneAsync({
+      name: "dates",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.default, dstr)
     ) {
       // have to reload model data
-      matsCollections.PlotParams.update(
+      await matsCollections.PlotParams.updateAsync(
         { name: "dates" },
         {
           $set: {
@@ -112,10 +119,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: "relative-date-range-type" }) ===
-    undefined
+    (await matsCollections.PlotParams.findOneAsync({
+      name: "relative-date-range-type",
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "relative-date-range-type",
       type: matsTypes.InputTypes.select,
       options: ["Hours", "Days", "Weeks"],
@@ -134,10 +142,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: "relative-date-range-value" }) ===
-    undefined
+    (await matsCollections.PlotParams.findOneAsync({
+      name: "relative-date-range-value",
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "relative-date-range-value",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -159,10 +168,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: "scorecard-recurrence-interval" }) ===
-    undefined
+    (await matsCollections.PlotParams.findOneAsync({
+      name: "scorecard-recurrence-interval",
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "scorecard-recurrence-interval",
       type: matsTypes.InputTypes.radioGroup,
       options: ["Daily", "Weekly", "Monthly", "Yearly"],
@@ -186,9 +196,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({ name: "these-hours-of-the-day" }) === undefined
+    (await matsCollections.PlotParams.findOneAsync({
+      name: "these-hours-of-the-day",
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "these-hours-of-the-day",
       type: matsTypes.InputTypes.select,
       options: [
@@ -230,9 +242,11 @@ const doPlotParams = function () {
     });
   }
   if (
-    matsCollections.PlotParams.findOne({ name: "these-days-of-the-week" }) === undefined
+    (await matsCollections.PlotParams.findOneAsync({
+      name: "these-days-of-the-week",
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "these-days-of-the-week",
       type: matsTypes.InputTypes.select,
       options: [
@@ -257,10 +271,11 @@ const doPlotParams = function () {
     });
   }
   if (
-    matsCollections.PlotParams.findOne({ name: "these-days-of-the-month" }) ===
-    undefined
+    (await matsCollections.PlotParams.findOneAsync({
+      name: "these-days-of-the-month",
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "these-days-of-the-month",
       type: matsTypes.InputTypes.select,
       options: [
@@ -309,8 +324,11 @@ const doPlotParams = function () {
       tooltipPlacement: "right",
     });
   }
-  if (matsCollections.PlotParams.findOne({ name: "these-months" }) === undefined) {
-    matsCollections.PlotParams.insert({
+  if (
+    (await matsCollections.PlotParams.findOneAsync({ name: "these-months" })) ===
+    undefined
+  ) {
+    await matsCollections.PlotParams.insertAsync({
       name: "these-months",
       type: matsTypes.InputTypes.select,
       options: [
@@ -338,8 +356,11 @@ const doPlotParams = function () {
       tooltipPlacement: "right",
     });
   }
-  if (matsCollections.PlotParams.findOne({ name: "scorecard-ends-on" }) === undefined) {
-    matsCollections.PlotParams.insert({
+  if (
+    (await matsCollections.PlotParams.findOneAsync({ name: "scorecard-ends-on" })) ===
+    undefined
+  ) {
+    await matsCollections.PlotParams.insertAsync({
       name: "scorecard-ends-on",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
@@ -358,11 +379,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "scorecard-percent-stdv",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "scorecard-percent-stdv",
       type: matsTypes.InputTypes.radioGroup,
       options: ["Percent", "Standard Deviation"],
@@ -386,11 +407,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "minor-threshold-by-percent",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "minor-threshold-by-percent",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -411,11 +432,11 @@ const doPlotParams = function () {
     });
   }
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "major-threshold-by-percent",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "major-threshold-by-percent",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -437,11 +458,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "minor-threshold-by-stdv",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "minor-threshold-by-stdv",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -463,11 +484,11 @@ const doPlotParams = function () {
     });
   }
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "major-threshold-by-stdv",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "major-threshold-by-stdv",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -490,11 +511,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "scorecard-color-theme",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "scorecard-color-theme",
       type: matsTypes.InputTypes.radioGroup,
       options: ["RedGreen", "RedBlue"],
@@ -511,11 +532,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "minor-truth-color",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "minor-truth-color",
       type: matsTypes.InputTypes.color,
       optionsMap: {},
@@ -536,11 +557,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "major-truth-color",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "major-truth-color",
       type: matsTypes.InputTypes.color,
       optionsMap: {},
@@ -561,11 +582,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "minor-source-color",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "minor-source-color",
       type: matsTypes.InputTypes.color,
       optionsMap: {},
@@ -586,11 +607,11 @@ const doPlotParams = function () {
   }
 
   if (
-    matsCollections.PlotParams.findOne({
+    (await matsCollections.PlotParams.findOneAsync({
       name: "major-source-color",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "major-source-color",
       type: matsTypes.InputTypes.color,
       optionsMap: {},
@@ -611,25 +632,30 @@ const doPlotParams = function () {
   }
 };
 
-const doCurveParams = function () {
+const doCurveParams = async function () {
   // force a reset if requested - simply remove all the existing params to force a reload
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    const params = matsCollections.CurveParamsInfo.find({
-      curve_params: { $exists: true },
-    }).fetch()[0].curve_params;
+    const params = (
+      await matsCollections.CurveParamsInfo.findOneAsync({
+        curve_params: { $exists: true },
+      })
+    ).curve_params;
     for (let cp = 0; cp < params.length; cp += 1) {
-      matsCollections[params[cp]].remove({});
+      await matsCollections[params[cp]].removeAsync({});
     }
   }
 
   // get a map of the apps included in this scorecard, and which URLs we're pulling their metadata from
-  const appsToScore = matsCollections.AppsToScore.find({
-    apps_to_score: { $exists: true },
-  }).fetch()[0].apps_to_score;
+  const appsToScore = (
+    await matsCollections.AppsToScore.findOneAsync({
+      apps_to_score: { $exists: true },
+    })
+  ).apps_to_score;
 
   let hideOtherFor = {};
   let applicationOptions = [];
@@ -669,14 +695,15 @@ const doCurveParams = function () {
 
       // get database-defined apps in this MATS app
       queryURL = `${currentURL}/${currentApp}/getApps`;
-      [applicationOptions, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "application",
-        queryURL,
-        applicationOptions,
-        expectedApps,
-        [],
-        hideOtherFor
-      );
+      [applicationOptions, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "application",
+          queryURL,
+          applicationOptions,
+          expectedApps,
+          [],
+          hideOtherFor
+        );
 
       // store the URL that was used to get each of these apps
       for (let eaidx = 0; eaidx < expectedApps.length; eaidx += 1) {
@@ -687,7 +714,7 @@ const doCurveParams = function () {
       // get databases that correspond with apps
       queryURL = `${currentURL}/${currentApp}/getAppSumsDBs`;
       [applicationOptionsMap, expectedApps, hideOtherFor] =
-        matsDataUtils.callMetadataAPI(
+        await matsDataUtils.callMetadataAPI(
           "application-values",
           queryURL,
           applicationOptionsMap,
@@ -698,151 +725,164 @@ const doCurveParams = function () {
 
       // get models in this MATS app
       queryURL = `${currentURL}/${currentApp}/getModels`;
-      [modelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "data-source",
-        queryURL,
-        modelOptionsMap,
-        expectedApps,
-        {},
-        hideOtherFor
-      );
+      [modelOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "data-source",
+          queryURL,
+          modelOptionsMap,
+          expectedApps,
+          {},
+          hideOtherFor
+        );
 
       // get regions in this MATS app
       queryURL = `${currentURL}/${currentApp}/getRegions`;
-      [regionOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "region",
-        queryURL,
-        regionOptionsMap,
-        expectedApps,
-        { NULL: ["NULL"] },
-        hideOtherFor
-      );
+      [regionOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "region",
+          queryURL,
+          regionOptionsMap,
+          expectedApps,
+          { NULL: ["NULL"] },
+          hideOtherFor
+        );
 
       // get region values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getRegionsValuesMap`;
-      [regionValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "region-values",
-        queryURL,
-        regionValuesMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [regionValuesMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "region-values",
+          queryURL,
+          regionValuesMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get statistics in this MATS app
       queryURL = `${currentURL}/${currentApp}/getStatistics`;
-      [statisticOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "statistic",
-        queryURL,
-        statisticOptionsMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [statisticOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "statistic",
+          queryURL,
+          statisticOptionsMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get statistic values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getStatisticsValuesMap`;
-      [statisticValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "statistic-values",
-        queryURL,
-        statisticValuesMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [statisticValuesMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "statistic-values",
+          queryURL,
+          statisticValuesMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get variables in this MATS app
       queryURL = `${currentURL}/${currentApp}/getVariables`;
-      [variableOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "variable",
-        queryURL,
-        variableOptionsMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [variableOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "variable",
+          queryURL,
+          variableOptionsMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get variable values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getVariablesValuesMap`;
-      [variableValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "variable-values",
-        queryURL,
-        variableValuesMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [variableValuesMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "variable-values",
+          queryURL,
+          variableValuesMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get thresholds in this MATS app
       queryURL = `${currentURL}/${currentApp}/getThresholds`;
-      [thresholdOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "threshold",
-        queryURL,
-        thresholdOptionsMap,
-        expectedApps,
-        { NULL: ["NULL"] },
-        hideOtherFor
-      );
+      [thresholdOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "threshold",
+          queryURL,
+          thresholdOptionsMap,
+          expectedApps,
+          { NULL: ["NULL"] },
+          hideOtherFor
+        );
 
       // get threshold values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getThresholdsValuesMap`;
-      [thresholdValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "threshold-values",
-        queryURL,
-        thresholdValuesMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [thresholdValuesMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "threshold-values",
+          queryURL,
+          thresholdValuesMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get scales in this MATS app
       queryURL = `${currentURL}/${currentApp}/getScales`;
-      [scaleOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "scale",
-        queryURL,
-        scaleOptionsMap,
-        expectedApps,
-        { NULL: ["NULL"] },
-        hideOtherFor
-      );
+      [scaleOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "scale",
+          queryURL,
+          scaleOptionsMap,
+          expectedApps,
+          { NULL: ["NULL"] },
+          hideOtherFor
+        );
 
       // get scale values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getScalesValuesMap`;
-      [scaleValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "scale-values",
-        queryURL,
-        scaleValuesMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [scaleValuesMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "scale-values",
+          queryURL,
+          scaleValuesMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get truths in this MATS app
       queryURL = `${currentURL}/${currentApp}/getTruths`;
-      [truthOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "truth",
-        queryURL,
-        truthOptionsMap,
-        expectedApps,
-        { NULL: ["NULL"] },
-        hideOtherFor
-      );
+      [truthOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "truth",
+          queryURL,
+          truthOptionsMap,
+          expectedApps,
+          { NULL: ["NULL"] },
+          hideOtherFor
+        );
 
       // get truth values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getTruthsValuesMap`;
-      [truthValuesMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "truth-values",
-        queryURL,
-        truthValuesMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [truthValuesMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "truth-values",
+          queryURL,
+          truthValuesMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get forecast lengths in this MATS app
       queryURL = `${currentURL}/${currentApp}/getFcstLengths`;
       [forecastLengthOptionsMap, expectedApps, hideOtherFor] =
-        matsDataUtils.callMetadataAPI(
+        await matsDataUtils.callMetadataAPI(
           "forecast-length",
           queryURL,
           forecastLengthOptionsMap,
@@ -854,7 +894,7 @@ const doCurveParams = function () {
       // get forecast types in this MATS app
       queryURL = `${currentURL}/${currentApp}/getFcstTypes`;
       [forecastTypeOptionsMap, expectedApps, hideOtherFor] =
-        matsDataUtils.callMetadataAPI(
+        await matsDataUtils.callMetadataAPI(
           "forecast-type",
           queryURL,
           forecastTypeOptionsMap,
@@ -866,7 +906,7 @@ const doCurveParams = function () {
       // get forecast type values in this MATS app
       queryURL = `${currentURL}/${currentApp}/getFcstTypesValuesMap`;
       [forecastTypeValuesMap, expectedApps, hideOtherFor] =
-        matsDataUtils.callMetadataAPI(
+        await matsDataUtils.callMetadataAPI(
           "forecast-type-values",
           queryURL,
           forecastTypeValuesMap,
@@ -877,36 +917,39 @@ const doCurveParams = function () {
 
       // get valid times in this MATS app
       queryURL = `${currentURL}/${currentApp}/getValidTimes`;
-      [validTimeOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "valid-time",
-        queryURL,
-        validTimeOptionsMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [validTimeOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "valid-time",
+          queryURL,
+          validTimeOptionsMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get levels in this MATS app
       queryURL = `${currentURL}/${currentApp}/getLevels`;
-      [levelOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "level",
-        queryURL,
-        levelOptionsMap,
-        expectedApps,
-        ["NULL"],
-        hideOtherFor
-      );
+      [levelOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "level",
+          queryURL,
+          levelOptionsMap,
+          expectedApps,
+          ["NULL"],
+          hideOtherFor
+        );
 
       // get dates in this MATS app
       queryURL = `${currentURL}/${currentApp}/getDates`;
-      [dateOptionsMap, expectedApps, hideOtherFor] = matsDataUtils.callMetadataAPI(
-        "dates",
-        queryURL,
-        dateOptionsMap,
-        expectedApps,
-        {},
-        hideOtherFor
-      );
+      [dateOptionsMap, expectedApps, hideOtherFor] =
+        await matsDataUtils.callMetadataAPI(
+          "dates",
+          queryURL,
+          dateOptionsMap,
+          expectedApps,
+          {},
+          hideOtherFor
+        );
     }
 
     // remove excluded stats from the scorecard
@@ -929,8 +972,8 @@ const doCurveParams = function () {
     throw new Error(err.message);
   }
 
-  if (matsCollections.label.findOne({ name: "label" }) === undefined) {
-    matsCollections.label.insert({
+  if ((await matsCollections.label.findOneAsync({ name: "label" })) === undefined) {
+    await matsCollections.label.insertAsync({
       name: "label",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
@@ -948,8 +991,11 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.application.findOne({ name: "application" }) === undefined) {
-    matsCollections.application.insert({
+  if (
+    (await matsCollections.application.findOneAsync({ name: "application" })) ===
+    undefined
+  ) {
+    await matsCollections.application.insertAsync({
       name: "application",
       type: matsTypes.InputTypes.select,
       optionsMap: applicationOptionsMap,
@@ -980,10 +1026,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.application.findOne({ name: "application" });
+    const currentParam = await matsCollections.application.findOneAsync({
+      name: "application",
+    });
     if (!matsDataUtils.areObjectsEqual(currentParam.dates, dateOptionsMap)) {
       // have to reload application data
-      matsCollections.application.update(
+      await matsCollections.application.updateAsync(
         { name: "application" },
         {
           $set: {
@@ -994,8 +1042,11 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["data-source"].findOne({ name: "data-source" }) === undefined) {
-    matsCollections["data-source"].insert({
+  if (
+    (await matsCollections["data-source"].findOneAsync({ name: "data-source" })) ===
+    undefined
+  ) {
+    await matsCollections["data-source"].insertAsync({
       name: "data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
@@ -1024,12 +1075,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["data-source"].findOne({
+    const currentParam = await matsCollections["data-source"].findOneAsync({
       name: "data-source",
     });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
-      matsCollections["data-source"].update(
+      await matsCollections["data-source"].updateAsync(
         { name: "data-source" },
         {
           $set: {
@@ -1049,11 +1100,11 @@ const doCurveParams = function () {
     : Object.keys(modelOptionsMap[applicationOptions[0]])[0];
 
   if (
-    matsCollections["control-data-source"].findOne({
+    (await matsCollections["control-data-source"].findOneAsync({
       name: "control-data-source",
-    }) === undefined
+    })) === undefined
   ) {
-    matsCollections["control-data-source"].insert({
+    await matsCollections["control-data-source"].insertAsync({
       name: "control-data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
@@ -1072,12 +1123,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["control-data-source"].findOne({
+    const currentParam = await matsCollections["control-data-source"].findOneAsync({
       name: "control-data-source",
     });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
-      matsCollections["control-data-source"].update(
+      await matsCollections["control-data-source"].updateAsync(
         { name: "control-data-source" },
         {
           $set: {
@@ -1090,8 +1141,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.region.findOne({ name: "region" }) === undefined) {
-    matsCollections.region.insert({
+  if ((await matsCollections.region.findOneAsync({ name: "region" })) === undefined) {
+    await matsCollections.region.insertAsync({
       name: "region",
       type: matsTypes.InputTypes.select,
       optionsMap: regionOptionsMap,
@@ -1118,10 +1169,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.region.findOne({ name: "region" });
+    const currentParam = await matsCollections.region.findOneAsync({ name: "region" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionOptionsMap)) {
       // have to reload region data
-      matsCollections.region.update(
+      await matsCollections.region.updateAsync(
         { name: "region" },
         {
           $set: {
@@ -1141,8 +1192,10 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
-    matsCollections.statistic.insert({
+  if (
+    (await matsCollections.statistic.findOneAsync({ name: "statistic" })) === undefined
+  ) {
+    await matsCollections.statistic.insertAsync({
       name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statisticOptionsMap,
@@ -1162,10 +1215,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.statistic.findOne({ name: "statistic" });
+    const currentParam = await matsCollections.statistic.findOneAsync({
+      name: "statistic",
+    });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, statisticOptionsMap)) {
       // have to reload statistic data
-      matsCollections.statistic.update(
+      await matsCollections.statistic.updateAsync(
         { name: "statistic" },
         {
           $set: {
@@ -1178,8 +1233,10 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
-    matsCollections.variable.insert({
+  if (
+    (await matsCollections.variable.findOneAsync({ name: "variable" })) === undefined
+  ) {
+    await matsCollections.variable.insertAsync({
       name: "variable",
       type: matsTypes.InputTypes.select,
       optionsMap: variableOptionsMap,
@@ -1199,10 +1256,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.variable.findOne({ name: "variable" });
+    const currentParam = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, variableOptionsMap)) {
       // have to reload variable data
-      matsCollections.variable.update(
+      await matsCollections.variable.updateAsync(
         { name: "variable" },
         {
           $set: {
@@ -1217,11 +1276,9 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections.threshold.findOne({
-      name: "threshold",
-    }) === undefined
+    (await matsCollections.threshold.findOneAsync({ name: "threshold" })) === undefined
   ) {
-    matsCollections.threshold.insert({
+    await matsCollections.threshold.insertAsync({
       name: "threshold",
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdOptionsMap,
@@ -1247,10 +1304,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.threshold.findOne({ name: "threshold" });
+    const currentParam = await matsCollections.threshold.findOneAsync({
+      name: "threshold",
+    });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdOptionsMap)) {
       // have to reload threshold data
-      matsCollections.threshold.update(
+      await matsCollections.threshold.updateAsync(
         { name: "threshold" },
         {
           $set: {
@@ -1270,12 +1329,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (
-    matsCollections.scale.findOne({
-      name: "scale",
-    }) === undefined
-  ) {
-    matsCollections.scale.insert({
+  if ((await matsCollections.scale.findOneAsync({ name: "scale" })) === undefined) {
+    await matsCollections.scale.insertAsync({
       name: "scale",
       type: matsTypes.InputTypes.select,
       optionsMap: scaleOptionsMap,
@@ -1300,10 +1355,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.scale.findOne({ name: "scale" });
+    const currentParam = await matsCollections.scale.findOneAsync({ name: "scale" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleOptionsMap)) {
       // have to reload scale data
-      matsCollections.scale.update(
+      await matsCollections.scale.updateAsync(
         { name: "scale" },
         {
           $set: {
@@ -1323,12 +1378,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (
-    matsCollections.truth.findOne({
-      name: "truth",
-    }) === undefined
-  ) {
-    matsCollections.truth.insert({
+  if ((await matsCollections.truth.findOneAsync({ name: "truth" })) === undefined) {
+    await matsCollections.truth.insertAsync({
       name: "truth",
       type: matsTypes.InputTypes.select,
       optionsMap: truthOptionsMap,
@@ -1353,10 +1404,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.truth.findOne({ name: "truth" });
+    const currentParam = await matsCollections.truth.findOneAsync({ name: "truth" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthOptionsMap)) {
       // have to reload truth data
-      matsCollections.truth.update(
+      await matsCollections.truth.updateAsync(
         { name: "truth" },
         {
           $set: {
@@ -1377,10 +1428,11 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) ===
-    undefined
+    (await matsCollections["forecast-length"].findOneAsync({
+      name: "forecast-length",
+    })) === undefined
   ) {
-    matsCollections["forecast-length"].insert({
+    await matsCollections["forecast-length"].insertAsync({
       name: "forecast-length",
       type: matsTypes.InputTypes.select,
       optionsMap: forecastLengthOptionsMap,
@@ -1406,14 +1458,14 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["forecast-length"].findOne({
+    const currentParam = await matsCollections["forecast-length"].findOneAsync({
       name: "forecast-length",
     });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)
     ) {
       // have to reload forecast length data
-      matsCollections["forecast-length"].update(
+      await matsCollections["forecast-length"].updateAsync(
         { name: "forecast-length" },
         {
           $set: {
@@ -1433,11 +1485,10 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["forecast-type"].findOne({
-      name: "forecast-type",
-    }) === undefined
+    (await matsCollections["forecast-type"].findOneAsync({ name: "forecast-type" })) ===
+    undefined
   ) {
-    matsCollections["forecast-type"].insert({
+    await matsCollections["forecast-type"].insertAsync({
       name: "forecast-type",
       type: matsTypes.InputTypes.select,
       optionsMap: forecastTypeOptionsMap,
@@ -1462,14 +1513,14 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["forecast-type"].findOne({
+    const currentParam = await matsCollections["forecast-type"].findOneAsync({
       name: "forecast-type",
     });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastTypeOptionsMap)
     ) {
       // have to reload forecast type data
-      matsCollections["forecast-type"].update(
+      await matsCollections["forecast-type"].updateAsync(
         { name: "forecast-type" },
         {
           $set: {
@@ -1490,11 +1541,10 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["valid-time"].findOne({
-      name: "valid-time",
-    }) === undefined
+    (await matsCollections["valid-time"].findOneAsync({ name: "valid-time" })) ===
+    undefined
   ) {
-    matsCollections["valid-time"].insert({
+    await matsCollections["valid-time"].insertAsync({
       name: "valid-time",
       type: matsTypes.InputTypes.select,
       optionsMap: validTimeOptionsMap,
@@ -1514,10 +1564,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["valid-time"].findOne({ name: "valid-time" });
+    const currentParam = await matsCollections["valid-time"].findOneAsync({
+      name: "valid-time",
+    });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, validTimeOptionsMap)) {
       // have to reload valid time data
-      matsCollections["valid-time"].update(
+      await matsCollections["valid-time"].updateAsync(
         { name: "valid-time" },
         {
           $set: {
@@ -1534,12 +1586,8 @@ const doCurveParams = function () {
     ? "500"
     : levelOptionsMap[Object.keys(levelOptionsMap)[0]][0];
 
-  if (
-    matsCollections.level.findOne({
-      name: "level",
-    }) === undefined
-  ) {
-    matsCollections.level.insert({
+  if ((await matsCollections.level.findOneAsync({ name: "level" })) === undefined) {
+    await matsCollections.level.insertAsync({
       name: "level",
       type: matsTypes.InputTypes.select,
       optionsMap: levelOptionsMap,
@@ -1559,10 +1607,10 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.level.findOne({ name: "level" });
+    const currentParam = await matsCollections.level.findOneAsync({ name: "level" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, levelOptionsMap)) {
       // have to reload level data
-      matsCollections.level.update(
+      await matsCollections.level.updateAsync(
         { name: "level" },
         {
           $set: {
@@ -1576,18 +1624,16 @@ const doCurveParams = function () {
   }
 
   // determine date defaults for dates
-  const defaultApp = matsCollections.application.findOne(
-    { name: "application" },
-    { default: 1 }
+  const defaultApp = (
+    await matsCollections.application.findOneAsync({ name: "application" })
   ).default;
-  dateOptionsMap = matsCollections.application.findOne(
-    { name: "application" },
-    { dates: 1 }
+  const defaultDataSource = (
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+  ).default;
+  dateOptionsMap = (
+    await matsCollections.application.findOneAsync({ name: "application" })
   ).dates;
-  const defaultDataSource = matsCollections["data-source"].findOne(
-    { name: "data-source" },
-    { default: 1 }
-  ).default;
+
   minDate = dateOptionsMap[defaultApp][defaultDataSource].minDate;
   maxDate = dateOptionsMap[defaultApp][defaultDataSource].maxDate;
 
@@ -1608,16 +1654,17 @@ const doCurveParams = function () {
  The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
  See curve_item.js and standAlone.js.
  */
-const doCurveTextPatterns = function () {
+const doCurveTextPatterns = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    matsCollections.CurveTextPatterns.remove({});
+    await matsCollections.CurveTextPatterns.removeAsync({});
   }
-  if (matsCollections.CurveTextPatterns.find().count() === 0) {
-    matsCollections.CurveTextPatterns.insert({
+  if ((await matsCollections.CurveTextPatterns.find().countAsync()) === 0) {
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.scorecard,
       textPattern: [
         ["", "label", ": "],
@@ -1656,16 +1703,17 @@ const doCurveTextPatterns = function () {
   }
 };
 
-const doPlotGraph = function () {
+const doPlotGraph = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    matsCollections.PlotGraphFunctions.remove({});
+    await matsCollections.PlotGraphFunctions.removeAsync({});
   }
-  if (matsCollections.PlotGraphFunctions.find().count() === 0) {
-    matsCollections.PlotGraphFunctions.insert({
+  if ((await matsCollections.PlotGraphFunctions.find().countAsync()) === 0) {
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.scorecard,
       graphFunction: "scorecardStatusPage",
       dataFunction: "processScorecard",
@@ -1674,16 +1722,16 @@ const doPlotGraph = function () {
   }
 };
 
-Meteor.startup(function () {
-  matsCollections.Databases.remove({});
-  if (matsCollections.Databases.find({}).count() < 0) {
+Meteor.startup(async function () {
+  await matsCollections.Databases.removeAsync({});
+  if ((await matsCollections.Databases.find({}).countAsync()) < 0) {
     // eslint-disable-next-line no-console
     console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
-    matsCollections.Databases.drop();
+    await matsCollections.Databases.dropAsync();
   }
-  if (matsCollections.Databases.find({}).count() === 0) {
+  if ((await matsCollections.Databases.find({}).countAsync()) === 0) {
     let databases;
     if (
       Meteor.settings === undefined ||
@@ -1696,18 +1744,19 @@ Meteor.startup(function () {
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
       for (let di = 0; di < databases.length; di += 1) {
-        matsCollections.Databases.insert(databases[di]);
+        await matsCollections.Databases.insertAsync(databases[di]);
       }
     }
   }
 
   // create list of all pools
   const allPools = [];
+
   // connect to the couchbase cluster
   // there should be two connections,
   // one for METAR collection (readonly)
   // and one for scorecard (writes SCORECARD)
-  const cbConnections = matsCollections.Databases.find(
+  const cbConnections = await matsCollections.Databases.find(
     {
       role: matsTypes.DatabaseRoles.COUCHBASE,
       status: "active",
@@ -1721,14 +1770,16 @@ Meteor.startup(function () {
       user: 1,
       password: 1,
     }
-  ).fetch();
+  ).fetchAsync();
+
+  let cbPoolConnection;
 
   // the pool names intended to be global
   cbConnections.forEach(function (cbConnection) {
     if (cbConnection.collection === "METAR") {
       // global cbPool
       // eslint-disable-next-line no-undef
-      cbPool = new matsCouchbaseUtils.CBUtilities(
+      global.cbPool = new matsCouchbaseUtils.CBUtilities(
         cbConnection.host,
         cbConnection.bucket,
         cbConnection.scope,
@@ -1736,12 +1787,13 @@ Meteor.startup(function () {
         cbConnection.user,
         cbConnection.password
       );
+      cbPoolConnection = cbConnection;
       allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
     }
     if (cbConnection.collection === "SCORECARD") {
       // global cbScorecardPool
       // eslint-disable-next-line no-undef
-      cbScorecardPool = new matsCouchbaseUtils.CBUtilities(
+      global.cbScorecardPool = new matsCouchbaseUtils.CBUtilities(
         cbConnection.host,
         cbConnection.bucket,
         cbConnection.scope,
@@ -1757,7 +1809,7 @@ Meteor.startup(function () {
     if (cbConnection.collection === "SCORECARD_SETTINGS") {
       // global cbScorecardSettingsPool
       // eslint-disable-next-line no-undef
-      cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+      global.cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
         cbConnection.host,
         cbConnection.bucket,
         cbConnection.scope,
@@ -1771,10 +1823,18 @@ Meteor.startup(function () {
       });
     }
   });
+
   // create list of tables we need to monitor for update
-  const mdr = new matsTypes.MetaDataDBRecord("cbPool", "mdata", [
-    "MD:matsGui:cb-ceiling:HRRR_OPS:COMMON:V01",
-  ]);
+  const mdr = new matsTypes.MetaDataDBRecord(
+    "cbPool",
+    `${cbPoolConnection.bucket}:${cbPoolConnection.scope}:${cbPoolConnection.collection}`,
+    [
+      "MD:matsAux:COMMON:V01",
+      "MD:matsGui:ceiling:COMMON:V01",
+      "MD:matsGui:visibility:COMMON:V01",
+      "MD:matsGui:surface:COMMON:V01",
+    ]
+  );
   try {
     matsMethods.resetApp({
       appPools: allPools,
@@ -1791,8 +1851,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
-// eslint-disable-next-line no-undef
-appSpecificResetRoutines = [
+global.appSpecificResetRoutines = [
   doCurveParams,
   doPlotGraph,
   doPlotParams,

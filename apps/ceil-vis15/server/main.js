@@ -1,9 +1,7 @@
 /*
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
-
 import { Meteor } from "meteor/meteor";
-import { mysql } from "meteor/pcel:mysql";
 import { moment } from "meteor/momentjs:moment";
 import {
   matsMethods,
@@ -14,6 +12,10 @@ import {
   matsParamUtils,
   matsCouchbaseUtils,
 } from "meteor/randyp:mats-common";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import mysql from "mysql2/promise";
+
+/* eslint-disable no-await-in-loop */
 
 // This app combines two previous apps, ceiling15 and visibility15.
 // This is where we store the databases referenced by those apps.
@@ -28,16 +30,17 @@ let minDate;
 let maxDate;
 let dstr;
 
-const doPlotParams = function () {
+const doPlotParams = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    matsCollections.PlotParams.remove({});
+    await matsCollections.PlotParams.removeAsync({});
   }
-  if (matsCollections.PlotParams.find().count() === 0) {
-    matsCollections.PlotParams.insert({
+  if ((await matsCollections.PlotParams.find().countAsync()) === 0) {
+    await matsCollections.PlotParams.insertAsync({
       name: "dates",
       type: matsTypes.InputTypes.dateRange,
       options: [""],
@@ -56,7 +59,7 @@ const doPlotParams = function () {
     plotFormats[matsTypes.PlotFormats.none] = "no diffs";
     plotFormats[matsTypes.PlotFormats.matching] = "show matching diffs";
     plotFormats[matsTypes.PlotFormats.pairwise] = "pairwise diffs";
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "plotFormat",
       type: matsTypes.InputTypes.select,
       optionsMap: plotFormats,
@@ -77,7 +80,7 @@ const doPlotParams = function () {
       "Relative frequency": ["relFreq"],
       Number: ["number"],
     };
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "histogram-yaxis-controls",
       type: matsTypes.InputTypes.select,
       optionsMap: yAxisOptionsMap,
@@ -100,7 +103,7 @@ const doPlotParams = function () {
       "Manual bins": ["manual"],
       "Manual bin start, number, and stride": ["manualStride"],
     };
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "histogram-bin-controls",
       type: matsTypes.InputTypes.select,
       optionsMap: binOptionsMap,
@@ -156,7 +159,7 @@ const doPlotParams = function () {
       displayGroup: 2,
     });
 
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "bin-number",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -172,7 +175,7 @@ const doPlotParams = function () {
       displayGroup: 2,
     });
 
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "bin-pivot",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -188,7 +191,7 @@ const doPlotParams = function () {
       displayGroup: 2,
     });
 
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "bin-start",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -204,7 +207,7 @@ const doPlotParams = function () {
       displayGroup: 2,
     });
 
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "bin-stride",
       type: matsTypes.InputTypes.numberSpinner,
       optionsMap: {},
@@ -220,7 +223,7 @@ const doPlotParams = function () {
       displayGroup: 2,
     });
 
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "bin-bounds",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
@@ -243,7 +246,7 @@ const doPlotParams = function () {
       "Init Date": "select m0.time-(m0.fcst_len*3600+m0.fcst_min*60) as xVal, ",
     };
 
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "x-axis-parameter",
       type: matsTypes.InputTypes.select,
       options: Object.keys(xOptionsMap),
@@ -268,7 +271,7 @@ const doPlotParams = function () {
       "Init Date": "m0.time-(m0.fcst_len*3600+m0.fcst_min*60) as yVal, ",
     };
 
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "y-axis-parameter",
       type: matsTypes.InputTypes.select,
       options: Object.keys(yOptionsMap),
@@ -283,7 +286,7 @@ const doPlotParams = function () {
       displayGroup: 2,
     });
 
-    matsCollections.PlotParams.insert({
+    await matsCollections.PlotParams.insertAsync({
       name: "significance",
       type: matsTypes.InputTypes.select,
       options: ["none", "significance at 95th percentile"],
@@ -299,14 +302,16 @@ const doPlotParams = function () {
     });
   } else {
     // need to update the dates selector if the metadata has changed
-    const currentParam = matsCollections.PlotParams.findOne({ name: "dates" });
+    const currentParam = await matsCollections.PlotParams.findOneAsync({
+      name: "dates",
+    });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
       !matsDataUtils.areObjectsEqual(currentParam.default, dstr)
     ) {
       // have to reload model data
-      matsCollections.PlotParams.update(
+      await matsCollections.PlotParams.updateAsync(
         { name: "dates" },
         {
           $set: {
@@ -320,18 +325,21 @@ const doPlotParams = function () {
   }
 };
 
-const doCurveParams = function () {
+const doCurveParams = async function () {
   // force a reset if requested - simply remove all the existing params to force a reload
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    const params = matsCollections.CurveParamsInfo.find({
-      curve_params: { $exists: true },
-    }).fetch()[0].curve_params;
+    const params = (
+      await matsCollections.CurveParamsInfo.findOneAsync({
+        curve_params: { $exists: true },
+      })
+    ).curve_params;
     for (let cp = 0; cp < params.length; cp += 1) {
-      matsCollections[params[cp]].remove({});
+      await matsCollections[params[cp]].removeAsync({});
     }
   }
 
@@ -348,8 +356,8 @@ const doCurveParams = function () {
   const allTruthValuesMap = {};
 
   try {
-    const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      metadataPool, // eslint-disable-line no-undef
+    const rows = await matsDataQueryUtils.queryMySQL(
+      global.metadataPool,
       "select short_name,description from region_descriptions;"
     );
     for (let j = 0; j < rows.length; j += 1) {
@@ -362,8 +370,8 @@ const doCurveParams = function () {
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allThresholdValuesMap[variables[didx]] = {};
-      const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-        sumPool, // eslint-disable-line no-undef
+      const rows = await matsDataQueryUtils.queryMySQL(
+        global.sumPool,
         `select trsh,description from ${
           variableDBNames[variables[didx]].modelDB
         }.threshold_descriptions;`
@@ -381,8 +389,8 @@ const doCurveParams = function () {
     for (let didx = 0; didx < variables.length; didx += 1) {
       allTruthValuesMap[variables[didx]] = {};
       if (variables[didx] === "15 Minute Visibility") {
-        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-          sumPool, // eslint-disable-line no-undef
+        const rows = await matsDataQueryUtils.queryMySQL(
+          global.sumPool,
           `select truth,description from ${
             variableDBNames[variables[didx]].modelDB
           }.truth_descriptions;`
@@ -411,13 +419,13 @@ const doCurveParams = function () {
 
       let rows;
       if (variable === "15 Minute Visibility") {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-          sumPool, // eslint-disable-line no-undef
+        rows = await matsDataQueryUtils.queryMySQL(
+          global.sumPool,
           `select model,regions,display_text,fcst_lens,trsh,truth,mindate,maxdate from ${variableDBNames[variable].sumsDB}.regions_per_model_mats_all_categories order by display_category, display_order;`
         );
       } else {
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-          sumPool, // eslint-disable-line no-undef
+        rows = await matsDataQueryUtils.queryMySQL(
+          global.sumPool,
           `select model,regions,display_text,fcst_lens,trsh,mindate,maxdate from ${variableDBNames[variable].sumsDB}.regions_per_model_mats_all_categories order by display_category, display_order;`
         );
       }
@@ -481,9 +489,9 @@ const doCurveParams = function () {
   }
 
   try {
-    matsCollections.SiteMap.remove({});
-    const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(
-      sumPool, // eslint-disable-line no-undef
+    await matsCollections.SiteMap.removeAsync({});
+    const rows = await matsDataQueryUtils.queryMySQL(
+      global.sumPool,
       "select madis_id,name,lat,lon,elev,description from madis3.metars_mats_global where lat > -16380 and lat < 16380 and lon > -32760 and lon < 32760 order by name;"
     );
     for (let i = 0; i < rows.length; i += 1) {
@@ -517,21 +525,21 @@ const doCurveParams = function () {
           },
         };
         sitesLocationMap.push(obj);
-        matsCollections.SiteMap.insert({ siteName, siteId });
+        await matsCollections.SiteMap.insertAsync({ siteName, siteId });
       }
     }
   } catch (err) {
     throw new Error(err.message);
   }
 
-  matsCollections.StationMap.remove({});
-  matsCollections.StationMap.insert({
+  await matsCollections.StationMap.removeAsync({});
+  await matsCollections.StationMap.insertAsync({
     name: "stations",
     optionsMap: sitesLocationMap,
   });
 
-  if (matsCollections.label.findOne({ name: "label" }) === undefined) {
-    matsCollections.label.insert({
+  if ((await matsCollections.label.findOneAsync({ name: "label" })) === undefined) {
+    await matsCollections.label.insertAsync({
       name: "label",
       type: matsTypes.InputTypes.textInput,
       optionsMap: {},
@@ -546,8 +554,10 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.variable.findOne({ name: "variable" }) === undefined) {
-    matsCollections.variable.insert({
+  if (
+    (await matsCollections.variable.findOneAsync({ name: "variable" })) === undefined
+  ) {
+    await matsCollections.variable.insertAsync({
       name: "variable",
       type: matsTypes.InputTypes.select,
       optionsMap: variableDBNames,
@@ -567,10 +577,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.variable.findOne({ name: "variable" });
+    const currentParam = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
     if (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) {
       // have to reload variable data
-      matsCollections.variable.update(
+      await matsCollections.variable.updateAsync(
         { name: "variable" },
         {
           $set: {
@@ -581,8 +593,11 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["region-type"].findOne({ name: "region-type" }) === undefined) {
-    matsCollections["region-type"].insert({
+  if (
+    (await matsCollections["region-type"].findOneAsync({ name: "region-type" })) ===
+    undefined
+  ) {
+    await matsCollections["region-type"].insertAsync({
       name: "region-type",
       type: matsTypes.InputTypes.select,
       options: ["Predefined region", "Select stations"],
@@ -600,8 +615,11 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["data-source"].findOne({ name: "data-source" }) === undefined) {
-    matsCollections["data-source"].insert({
+  if (
+    (await matsCollections["data-source"].findOneAsync({ name: "data-source" })) ===
+    undefined
+  ) {
+    await matsCollections["data-source"].insertAsync({
       name: "data-source",
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
@@ -625,12 +643,12 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["data-source"].findOne({
+    const currentParam = await matsCollections["data-source"].findOneAsync({
       name: "data-source",
     });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
       // have to reload model data
-      matsCollections["data-source"].update(
+      await matsCollections["data-source"].updateAsync(
         { name: "data-source" },
         {
           $set: {
@@ -643,8 +661,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.region.findOne({ name: "region" }) === undefined) {
-    matsCollections.region.insert({
+  if ((await matsCollections.region.findOneAsync({ name: "region" })) === undefined) {
+    await matsCollections.region.insertAsync({
       name: "region",
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
@@ -667,13 +685,13 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.region.findOne({ name: "region" });
+    const currentParam = await matsCollections.region.findOneAsync({ name: "region" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allRegionValuesMap)
     ) {
       // have to reload region data
-      matsCollections.region.update(
+      await matsCollections.region.updateAsync(
         { name: "region" },
         {
           $set: {
@@ -693,7 +711,9 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.statistic.findOne({ name: "statistic" }) === undefined) {
+  if (
+    (await matsCollections.statistic.findOneAsync({ name: "statistic" })) === undefined
+  ) {
     const optionsMap = {
       "CSI (Critical Success Index)": ["ctc", "x100", 100],
 
@@ -731,7 +751,7 @@ const doCurveParams = function () {
         null,
       ],
     };
-    matsCollections.statistic.insert({
+    await matsCollections.statistic.insertAsync({
       name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap,
@@ -746,8 +766,10 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.threshold.findOne({ name: "threshold" }) === undefined) {
-    matsCollections.threshold.insert({
+  if (
+    (await matsCollections.threshold.findOneAsync({ name: "threshold" })) === undefined
+  ) {
+    await matsCollections.threshold.insertAsync({
       name: "threshold",
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdsModelOptionsMap,
@@ -770,7 +792,9 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.threshold.findOne({ name: "threshold" });
+    const currentParam = await matsCollections.threshold.findOneAsync({
+      name: "threshold",
+    });
     if (
       !matsDataUtils.areObjectsEqual(
         currentParam.optionsMap,
@@ -779,7 +803,7 @@ const doCurveParams = function () {
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
     ) {
       // have to reload threshold data
-      matsCollections.threshold.update(
+      await matsCollections.threshold.updateAsync(
         { name: "threshold" },
         {
           $set: {
@@ -799,8 +823,8 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections.truth.findOne({ name: "truth" }) === undefined) {
-    matsCollections.truth.insert({
+  if ((await matsCollections.truth.findOneAsync({ name: "truth" })) === undefined) {
+    await matsCollections.truth.insertAsync({
       name: "truth",
       type: matsTypes.InputTypes.select,
       optionsMap: truthsModelOptionsMap,
@@ -823,13 +847,13 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections.truth.findOne({ name: "truth" });
+    const currentParam = await matsCollections.truth.findOneAsync({ name: "truth" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, truthsModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allTruthValuesMap)
     ) {
       // have to reload truth data
-      matsCollections.truth.update(
+      await matsCollections.truth.updateAsync(
         { name: "truth" },
         {
           $set: {
@@ -850,10 +874,11 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["forecast-length"].findOne({ name: "forecast-length" }) ===
-    undefined
+    (await matsCollections["forecast-length"].findOneAsync({
+      name: "forecast-length",
+    })) === undefined
   ) {
-    matsCollections["forecast-length"].insert({
+    await matsCollections["forecast-length"].insertAsync({
       name: "forecast-length",
       type: matsTypes.InputTypes.select,
       optionsMap: forecastLengthOptionsMap,
@@ -874,14 +899,14 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["forecast-length"].findOne({
+    const currentParam = await matsCollections["forecast-length"].findOneAsync({
       name: "forecast-length",
     });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)
     ) {
       // have to reload forecast length data
-      matsCollections["forecast-length"].update(
+      await matsCollections["forecast-length"].updateAsync(
         { name: "forecast-length" },
         {
           $set: {
@@ -896,7 +921,10 @@ const doCurveParams = function () {
     }
   }
 
-  if (matsCollections["dieoff-type"].findOne({ name: "dieoff-type" }) === undefined) {
+  if (
+    (await matsCollections["dieoff-type"].findOneAsync({ name: "dieoff-type" })) ===
+    undefined
+  ) {
     const dieoffOptionsMap = {
       Dieoff: [matsTypes.ForecastTypes.dieoff],
       "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
@@ -904,7 +932,7 @@ const doCurveParams = function () {
         matsTypes.ForecastTypes.singleCycle,
       ],
     };
-    matsCollections["dieoff-type"].insert({
+    await matsCollections["dieoff-type"].insertAsync({
       name: "dieoff-type",
       type: matsTypes.InputTypes.select,
       optionsMap: dieoffOptionsMap,
@@ -931,11 +959,14 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections["valid-time"].findOne({ name: "valid-time" }) === undefined) {
+  if (
+    (await matsCollections["valid-time"].findOneAsync({ name: "valid-time" })) ===
+    undefined
+  ) {
     const optionsArrRaw = [...Array(96).keys()].map((x) => x / 4);
     const optionsArr = optionsArrRaw.map(String);
 
-    matsCollections["valid-time"].insert({
+    await matsCollections["valid-time"].insertAsync({
       name: "valid-time",
       type: matsTypes.InputTypes.select,
       options: optionsArr,
@@ -953,10 +984,11 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["utc-cycle-start"].findOne({ name: "utc-cycle-start" }) ===
-    undefined
+    (await matsCollections["utc-cycle-start"].findOneAsync({
+      name: "utc-cycle-start",
+    })) === undefined
   ) {
-    matsCollections["utc-cycle-start"].insert({
+    await matsCollections["utc-cycle-start"].insertAsync({
       name: "utc-cycle-start",
       type: matsTypes.InputTypes.select,
       options: [
@@ -998,7 +1030,7 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.average.findOne({ name: "average" }) === undefined) {
+  if ((await matsCollections.average.findOneAsync({ name: "average" })) === undefined) {
     const optionsMap = {
       None: [`ceil(${900}*floor(((m0.time)+${900}/2)/${900}))`],
       "30m": [`ceil(${1800}*floor(((m0.time)+${1800}/2)/${1800}))`],
@@ -1036,7 +1068,7 @@ const doCurveParams = function () {
         }))`,
       ],
     };
-    matsCollections.average.insert({
+    await matsCollections.average.insertAsync({
       name: "average",
       type: matsTypes.InputTypes.select,
       optionsMap,
@@ -1052,8 +1084,8 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.sites.findOne({ name: "sites" }) === undefined) {
-    matsCollections.sites.insert({
+  if ((await matsCollections.sites.findOneAsync({ name: "sites" })) === undefined) {
+    await matsCollections.sites.insertAsync({
       name: "sites",
       type: matsTypes.InputTypes.select,
       optionsMap: siteOptionsMap,
@@ -1070,8 +1102,10 @@ const doCurveParams = function () {
     });
   }
 
-  if (matsCollections.sitesMap.findOne({ name: "sitesMap" }) === undefined) {
-    matsCollections.sitesMap.insert({
+  if (
+    (await matsCollections.sitesMap.findOneAsync({ name: "sitesMap" })) === undefined
+  ) {
+    await matsCollections.sitesMap.insertAsync({
       name: "sitesMap",
       type: matsTypes.InputTypes.selectMap,
       optionsMap: sitesLocationMap,
@@ -1091,7 +1125,8 @@ const doCurveParams = function () {
   }
 
   if (
-    matsCollections["bin-parameter"].findOne({ name: "bin-parameter" }) === undefined
+    (await matsCollections["bin-parameter"].findOneAsync({ name: "bin-parameter" })) ===
+    undefined
   ) {
     const optionsMap = {
       "Fcst lead time": "select m0.fcst_len+m0.fcst_min/60 as binVal, ",
@@ -1103,7 +1138,7 @@ const doCurveParams = function () {
       "Init Date": "select m0.time-(m0.fcst_len*3600+m0.fcst_min*60) as binVal, ",
     };
 
-    matsCollections["bin-parameter"].insert({
+    await matsCollections["bin-parameter"].insertAsync({
       name: "bin-parameter",
       type: matsTypes.InputTypes.select,
       options: Object.keys(optionsMap),
@@ -1125,14 +1160,13 @@ const doCurveParams = function () {
   }
 
   // determine date defaults for dates and curveDates
-  const defaultDataSource = matsCollections["data-source"].findOne(
-    { name: "data-source" },
-    { default: 1 }
+  const defaultDataSource = (
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
   ).default;
-  modelDateRangeMap = matsCollections.variable.findOne(
-    { name: "variable" },
-    { dates: 1 }
+  modelDateRangeMap = (
+    await matsCollections.variable.findOneAsync({ name: "variable" })
   ).dates;
+
   minDate = modelDateRangeMap[variables[0]][defaultDataSource].minDate;
   maxDate = modelDateRangeMap[variables[0]][defaultDataSource].maxDate;
 
@@ -1144,7 +1178,10 @@ const doCurveParams = function () {
     .utc(maxDate)
     .format("MM/DD/YYYY HH:mm")}`;
 
-  if (matsCollections["curve-dates"].findOne({ name: "curve-dates" }) === undefined) {
+  if (
+    (await matsCollections["curve-dates"].findOneAsync({ name: "curve-dates" })) ===
+    undefined
+  ) {
     const optionsMap = {
       "1 day": ["1 day"],
       "3 days": ["3 days"],
@@ -1154,7 +1191,7 @@ const doCurveParams = function () {
       "180 days": ["180 days"],
       "365 days": ["365 days"],
     };
-    matsCollections["curve-dates"].insert({
+    await matsCollections["curve-dates"].insertAsync({
       name: "curve-dates",
       type: matsTypes.InputTypes.dateRange,
       optionsMap,
@@ -1172,7 +1209,7 @@ const doCurveParams = function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = matsCollections["curve-dates"].findOne({
+    const currentParam = await matsCollections["curve-dates"].findOneAsync({
       name: "curve-dates",
     });
     if (
@@ -1181,7 +1218,7 @@ const doCurveParams = function () {
       !matsDataUtils.areObjectsEqual(currentParam.default, dstr)
     ) {
       // have to reload dates data
-      matsCollections["curve-dates"].update(
+      await matsCollections["curve-dates"].updateAsync(
         { name: "curve-dates" },
         {
           $set: {
@@ -1203,16 +1240,17 @@ const doCurveParams = function () {
  The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
  See curve_item.js and standAlone.js.
  */
-const doCurveTextPatterns = function () {
+const doCurveTextPatterns = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    matsCollections.CurveTextPatterns.remove({});
+    await matsCollections.CurveTextPatterns.removeAsync({});
   }
-  if (matsCollections.CurveTextPatterns.find().count() === 0) {
-    matsCollections.CurveTextPatterns.insert({
+  if ((await matsCollections.CurveTextPatterns.find().countAsync()) === 0) {
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.timeSeries,
       textPattern: [
         ["", "label", ": "],
@@ -1244,7 +1282,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.dieoff,
       textPattern: [
         ["", "label", ": "],
@@ -1278,7 +1316,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.threshold,
       textPattern: [
         ["", "label", ": "],
@@ -1305,7 +1343,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.validtime,
       textPattern: [
         ["", "label", ": "],
@@ -1335,7 +1373,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.dailyModelCycle,
       textPattern: [
         ["", "label", ": "],
@@ -1363,7 +1401,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.performanceDiagram,
       textPattern: [
         ["", "label", ": "],
@@ -1390,7 +1428,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.map,
       textPattern: [
         ["", "data-source", ": "],
@@ -1415,7 +1453,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.histogram,
       textPattern: [
         ["", "label", ": "],
@@ -1444,7 +1482,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.contour,
       textPattern: [
         ["", "label", ": "],
@@ -1470,7 +1508,7 @@ const doCurveTextPatterns = function () {
       ],
       groupSize: 6,
     });
-    matsCollections.CurveTextPatterns.insert({
+    await matsCollections.CurveTextPatterns.insertAsync({
       plotType: matsTypes.PlotTypes.contourDiff,
       textPattern: [
         ["", "label", ": "],
@@ -1499,83 +1537,88 @@ const doCurveTextPatterns = function () {
   }
 };
 
-const doSavedCurveParams = function () {
+const doSavedCurveParams = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    matsCollections.SavedCurveParams.remove({});
+    await matsCollections.SavedCurveParams.removeAsync({});
   }
-  if (matsCollections.SavedCurveParams.find().count() === 0) {
-    matsCollections.SavedCurveParams.insert({ clName: "changeList", changeList: [] });
+  if ((await matsCollections.SavedCurveParams.find().countAsync()) === 0) {
+    await matsCollections.SavedCurveParams.insertAsync({
+      clName: "changeList",
+      changeList: [],
+    });
   }
 };
 
-const doPlotGraph = function () {
+const doPlotGraph = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
   if (
-    matsCollections.Settings.findOne({}) === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === undefined ||
-    matsCollections.Settings.findOne({}).resetFromCode === true
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
   ) {
-    matsCollections.PlotGraphFunctions.remove({});
+    await matsCollections.PlotGraphFunctions.removeAsync({});
   }
-  if (matsCollections.PlotGraphFunctions.find().count() === 0) {
-    matsCollections.PlotGraphFunctions.insert({
+  if ((await matsCollections.PlotGraphFunctions.find().countAsync()) === 0) {
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.timeSeries,
       graphFunction: "graphPlotly",
       dataFunction: "dataSeries",
       checked: true,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.dieoff,
       graphFunction: "graphPlotly",
       dataFunction: "dataDieoff",
       checked: false,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.threshold,
       graphFunction: "graphPlotly",
       dataFunction: "dataThreshold",
       checked: false,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.validtime,
       graphFunction: "graphPlotly",
       dataFunction: "dataValidTime",
       checked: false,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.dailyModelCycle,
       graphFunction: "graphPlotly",
       dataFunction: "dataDailyModelCycle",
       checked: false,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.performanceDiagram,
       graphFunction: "graphPlotly",
       dataFunction: "dataPerformanceDiagram",
       checked: false,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.map,
       graphFunction: "graphPlotly",
       dataFunction: "dataMap",
       checked: false,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.histogram,
       graphFunction: "graphPlotly",
       dataFunction: "dataHistogram",
       checked: false,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.contour,
       graphFunction: "graphPlotly",
       dataFunction: "dataContour",
       checked: false,
     });
-    matsCollections.PlotGraphFunctions.insert({
+    await matsCollections.PlotGraphFunctions.insertAsync({
       plotType: matsTypes.PlotTypes.contourDiff,
       graphFunction: "graphPlotly",
       dataFunction: "dataContourDiff",
@@ -1584,16 +1627,16 @@ const doPlotGraph = function () {
   }
 };
 
-Meteor.startup(function () {
-  matsCollections.Databases.remove({});
-  if (matsCollections.Databases.find({}).count() < 0) {
+Meteor.startup(async function () {
+  await matsCollections.Databases.removeAsync({});
+  if ((await matsCollections.Databases.find({}).countAsync()) < 0) {
     // eslint-disable-next-line no-console
     console.warn(
       "main startup: corrupted Databases collection: dropping Databases collection"
     );
-    matsCollections.Databases.drop();
+    await matsCollections.Databases.dropAsync();
   }
-  if (matsCollections.Databases.find({}).count() === 0) {
+  if ((await matsCollections.Databases.find({}).countAsync()) === 0) {
     let databases;
     if (
       Meteor.settings === undefined ||
@@ -1606,7 +1649,7 @@ Meteor.startup(function () {
     }
     if (databases !== null && databases !== undefined && Array.isArray(databases)) {
       for (let di = 0; di < databases.length; di += 1) {
-        matsCollections.Databases.insert(databases[di]);
+        await matsCollections.Databases.insertAsync(databases[di]);
       }
     }
   }
@@ -1615,7 +1658,7 @@ Meteor.startup(function () {
   const allPools = [];
 
   // connect to the couchbase cluster
-  const cbConnection = matsCollections.Databases.findOne(
+  const cbConnection = await matsCollections.Databases.findOneAsync(
     {
       role: matsTypes.DatabaseRoles.COUCHBASE,
       status: "active",
@@ -1631,19 +1674,22 @@ Meteor.startup(function () {
     }
   );
   if (cbConnection) {
-    // global cbScorecardSettingsPool
-    // eslint-disable-next-line no-undef
-    cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
-      cbConnection.host,
-      cbConnection.bucket,
-      cbConnection.scope,
-      cbConnection.collection,
-      cbConnection.user,
-      cbConnection.password
-    );
+    try {
+      global.cbScorecardSettingsPool = new matsCouchbaseUtils.CBUtilities(
+        cbConnection.host,
+        cbConnection.bucket,
+        cbConnection.scope,
+        cbConnection.collection,
+        cbConnection.user,
+        cbConnection.password
+      );
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn(`Error when initializing couchbase conenction: ${e.message}`);
+    }
   }
 
-  const metadataSettings = matsCollections.Databases.findOne(
+  const metadataSettings = await matsCollections.Databases.findOneAsync(
     {
       role: matsTypes.DatabaseRoles.META_DATA,
       status: "active",
@@ -1659,12 +1705,18 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (metadataSettings) {
-    // eslint-disable-next-line no-undef
-    metadataPool = mysql.createPool(metadataSettings);
+    global.metadataPool = mysql.createPool({
+      host: metadataSettings.host,
+      port: metadataSettings.port,
+      user: metadataSettings.user,
+      password: metadataSettings.password,
+      database: metadataSettings.database,
+      connectionLimit: metadataSettings.connectionLimit,
+    });
     allPools.push({ pool: "metadataPool", role: matsTypes.DatabaseRoles.META_DATA });
   }
 
-  const sumSettings = matsCollections.Databases.findOne(
+  const sumSettings = await matsCollections.Databases.findOneAsync(
     {
       role: matsTypes.DatabaseRoles.SUMS_DATA,
       status: "active",
@@ -1680,8 +1732,14 @@ Meteor.startup(function () {
   );
   // the pool is intended to be global
   if (sumSettings) {
-    // eslint-disable-next-line no-undef
-    sumPool = mysql.createPool(sumSettings);
+    global.sumPool = mysql.createPool({
+      host: sumSettings.host,
+      port: sumSettings.port,
+      user: sumSettings.user,
+      password: sumSettings.password,
+      database: sumSettings.database,
+      connectionLimit: sumSettings.connectionLimit,
+    });
     allPools.push({ pool: "sumPool", role: matsTypes.DatabaseRoles.SUMS_DATA });
   }
 
@@ -1712,8 +1770,7 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
-// eslint-disable-next-line no-undef
-appSpecificResetRoutines = [
+global.appSpecificResetRoutines = [
   doPlotGraph,
   doCurveParams,
   doSavedCurveParams,

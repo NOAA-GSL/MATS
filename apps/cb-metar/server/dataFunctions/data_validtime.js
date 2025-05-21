@@ -2,7 +2,7 @@
  * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
  */
 
-/* global cbPool, Assets */
+/* global Assets */
 
 import {
   matsCollections,
@@ -16,8 +16,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataValidTime = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataValidTime = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.validtime,
@@ -59,26 +60,27 @@ dataValidTime = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const variableValuesMap = matsCollections.variable.findOne({
-      name: "variable",
-    }).valuesMap;
+    const variableValuesMap = (
+      await matsCollections.variable.findOneAsync({
+        name: "variable",
+      })
+    ).valuesMap;
     const queryVariable = Object.keys(variableValuesMap).filter(
       (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
     )[0];
     const variableDetails = variableValuesMap[queryVariable][0][variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     const thresholdStr = curve.threshold;
     let threshold = "";
     if (variableValuesMap[queryVariable][1]) {
-      threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-      ).find(
-        (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
-            key
-          ] === thresholdStr
+      const thresholdValues = (
+        await matsCollections.threshold.findOneAsync({ name: "threshold" })
+      ).valuesMap[variable];
+      threshold = Object.keys(thresholdValues).find(
+        (key) => thresholdValues[key] === thresholdStr
       );
       threshold = threshold.replace(/_/g, ".");
     }
@@ -89,9 +91,8 @@ dataValidTime = function (plotParams, plotFunction) {
     const toSecs = dateRange.toSeconds;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     [statType] = statisticOptionsMap[variable][statisticSelect];
     allStatTypes.push(statType);
@@ -179,18 +180,17 @@ dataValidTime = function (plotParams, plotFunction) {
       // as a predefined region that we will have to do filtering on.
       // the regionType constant defined above knows which on.
       const regionStr = curve.region;
-      const region = Object.keys(
-        matsCollections.region.findOne({ name: "region" }).valuesMap
-      ).find(
-        (key) =>
-          matsCollections.region.findOne({ name: "region" }).valuesMap[key] ===
-          regionStr
+      const regionValues = (
+        await matsCollections.region.findOneAsync({ name: "region" })
+      ).valuesMap;
+      const region = Object.keys(regionValues).find(
+        (key) => regionValues[key] === regionStr
       );
 
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        queryTemplate = Assets.getText("sqlTemplates/tmpl_ValidTime.sql");
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_ValidTime.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
@@ -201,12 +201,12 @@ dataValidTime = function (plotParams, plotFunction) {
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
         if (statType === "ctc") {
-          statTemplate = Assets.getText("sqlTemplates/tmpl_CTC.sql");
+          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
           queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
           queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
         } else {
-          statTemplate = Assets.getText("sqlTemplates/tmpl_PartialSums.sql");
+          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
           queryTemplate = queryTemplate.replace(
             /{{vxSUBVARIABLE}}/g,
@@ -216,7 +216,10 @@ dataValidTime = function (plotParams, plotFunction) {
         }
       } else {
         // Predefined region, with filtering. Treat like station plot.
-        sitesList = matsDataQueryUtils.getStationsInCouchbaseRegion(cbPool, region);
+        sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(
+          global.cbPool,
+          region
+        );
       }
     } else {
       // Station plot, with or without filtering
@@ -249,12 +252,12 @@ dataValidTime = function (plotParams, plotFunction) {
       let finishMoment;
       try {
         if (regionType === "Predefined region") {
-          statement = cbPool.trfmSQLForDbTarget(queryTemplate);
+          statement = global.cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleValidTime.MatsMiddleValidTime(cbPool);
-          rows = tss.processStationQuery(
+          const tss = new matsMiddleValidTime.MatsMiddleValidTime(global.cbPool);
+          rows = await tss.processStationQuery(
             statType,
             variableDetails[1],
             sitesList,
@@ -268,8 +271,8 @@ dataValidTime = function (plotParams, plotFunction) {
         }
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(
-          cbPool,
+        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+          global.cbPool,
           regionType === "Predefined region" ? statement : rows,
           appParams,
           statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
@@ -342,7 +345,7 @@ dataValidTime = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -380,12 +383,12 @@ dataValidTime = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };

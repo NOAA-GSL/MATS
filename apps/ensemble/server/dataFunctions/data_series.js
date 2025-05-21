@@ -13,8 +13,9 @@ import {
 } from "meteor/randyp:mats-common";
 import { moment } from "meteor/momentjs:moment";
 
-// eslint-disable-next-line no-undef
-dataSeries = function (plotParams, plotFunction) {
+/* eslint-disable no-await-in-loop */
+
+global.dataSeries = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
     plotType: matsTypes.PlotTypes.timeSeries,
@@ -59,10 +60,12 @@ dataSeries = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
-      .optionsMap[variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
-      .optionsMap[variable][curve["data-source"]][0];
+    const databaseRef = (
+      await matsCollections.variable.findOneAsync({ name: "variable" })
+    ).optionsMap[variable];
+    const model = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap[variable][curve["data-source"]][0];
 
     const { threshold } = curve;
     const thresholdClause = `and m0.trsh = ${threshold}`;
@@ -83,17 +86,15 @@ dataSeries = function (plotParams, plotFunction) {
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
 
     const statisticSelect = curve.statistic;
-    const statisticOptionsMap = matsCollections.statistic.findOne(
-      { name: "statistic" },
-      { optionsMap: 1 }
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap[appParams.plotType];
     const [statisticClause] = statisticOptionsMap[statisticSelect];
     const tableStatPrefix = statisticOptionsMap[statisticSelect][2];
 
     const averageStr = curve.average;
-    const averageOptionsMap = matsCollections.average.findOne(
-      { name: "average" },
-      { optionsMap: 1 }
+    const averageOptionsMap = (
+      await matsCollections.average.findOneAsync({ name: "average" })
     ).optionsMap;
     const average = averageOptionsMap[averageStr][0];
 
@@ -118,11 +119,10 @@ dataSeries = function (plotParams, plotFunction) {
     }
 
     const regionStr = curve.region;
-    let region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
-      (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
+      .valuesMap;
+    let region = Object.keys(regionValues).find(
+      (key) => regionValues[key] === regionStr
     );
     region = region === "Full" ? "Full_domain" : region; // this db doesn't handle the full domain the way the others do
 
@@ -188,8 +188,8 @@ dataSeries = function (plotParams, plotFunction) {
         }
 
         // send the query statement to the query function
-        queryResult = matsDataQueryUtils.queryDBTimeSeries(
-          sumPool, // eslint-disable-line no-undef
+        queryResult = await matsDataQueryUtils.queryDBTimeSeries(
+          global.sumPool,
           statement,
           model,
           forecastLength,
@@ -269,7 +269,7 @@ dataSeries = function (plotParams, plotFunction) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -307,12 +307,12 @@ dataSeries = function (plotParams, plotFunction) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataXYCurve(
     dataset,
     appParams,
     curveInfoParams,
     plotParams,
     bookkeepingParams
   );
-  plotFunction(result);
+  return result;
 };
