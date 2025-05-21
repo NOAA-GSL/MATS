@@ -51,14 +51,14 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
     const { diffFrom } = curve;
 
     const binParam = curve["bin-parameter"];
-    const binClause = matsCollections["bin-parameter"].findOne({
+    const binClause = matsCollections["bin-parameter"].findOneAsync({
       name: "bin-parameter",
     }).optionsMap[binParam];
 
     const { variable } = curve;
-    const databaseRef = matsCollections.variable.findOne({ name: "variable" })
+    const databaseRef = matsCollections.variable.findOneAsync({ name: "variable" })
       .optionsMap[variable];
-    const model = matsCollections["data-source"].findOne({ name: "data-source" })
+    const model = matsCollections["data-source"].findOneAsync({ name: "data-source" })
       .optionsMap[variable][curve["data-source"]][0];
 
     let thresholdClause = "";
@@ -70,10 +70,10 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
         );
       }
       const threshold = Object.keys(
-        matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable]
-      ).find(
+        matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[variable]
+      ).findAsync(
         (key) =>
-          matsCollections.threshold.findOne({ name: "threshold" }).valuesMap[variable][
+          matsCollections.threshold.findOneAsync({ name: "threshold" }).valuesMap[variable][
             key
           ] === thresholdStr
       );
@@ -82,10 +82,10 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
 
     const scaleStr = curve.scale;
     const scale = Object.keys(
-      matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable]
-    ).find(
+      matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable]
+    ).findAsync(
       (key) =>
-        matsCollections.scale.findOne({ name: "scale" }).valuesMap[variable][key] ===
+        matsCollections.scale.findOneAsync({ name: "scale" }).valuesMap[variable][key] ===
         scaleStr
     );
 
@@ -124,10 +124,10 @@ dataPerformanceDiagram = function (plotParams, plotFunction) {
 
     const regionStr = curve.region;
     const region = Object.keys(
-      matsCollections.region.findOne({ name: "region" }).valuesMap
-    ).find(
+      matsCollections.region.findOneAsync({ name: "region" }).valuesMap
+    ).findAsync(
       (key) =>
-        matsCollections.region.findOne({ name: "region" }).valuesMap[key] === regionStr
+        matsCollections.region.findOneAsync({ name: "region" }).valuesMap[key] === regionStr
     );
     const queryTableClause = `from ${databaseRef}.${model}_${scale}_${region} as m0`;
 
