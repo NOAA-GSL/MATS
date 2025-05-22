@@ -417,7 +417,7 @@ global.dataMap = async function (plotParams) {
     ); // generate red text layer
     dataset.push(cOptions);
   } else {
-    let cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(
+    let cOptions = await matsDataCurveOpsUtils.generateMapCurveOptions(
       curve,
       d,
       appParams,
