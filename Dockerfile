@@ -32,14 +32,25 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash \
-    ca-certificates \
-    python3 \
-    python3-pip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && python3 -m pip install --no-cache-dir \
-      numpy \
-      pymysql
+  bash \
+  ca-certificates \
+  python3 \
+  python3-pip \
+  python3-venv \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create & activate a Python virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv ${VIRTUAL_ENV}
+ENV  PATH="${VIRTUAL_ENV}/bin:$PATH"
+
+# Ensure the Python tooling is up-to-date
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Install Python dependencies for MATScomon in the virtual environment
+RUN python3 -m pip install --no-cache-dir \
+  numpy \
+  pymysql
 
 # Set Environment
 ENV APP_FOLDER=/usr/app
