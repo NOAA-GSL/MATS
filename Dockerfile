@@ -76,11 +76,11 @@ COPY container-scripts/run_app.sh ${APP_FOLDER}/
 
 # The app won't work without a writeable settings dir and local Node fileCache
 RUN mkdir -p ${SETTINGS_DIR} \
-  && chown -R node:node ${APP_FOLDER}/settings \
-  && chmod -R 755 ${APP_FOLDER}/settings \
-  && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
-  && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
-  && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache
+    && chown -R node:node ${APP_FOLDER}/settings \
+    && chmod -R 755 ${APP_FOLDER}/settings \
+    && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
+    && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
+    && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache
 
 # Install the Meteor app's NPM dependencies
 # g++ & build-essential would be needed for ARM/Apple Silicon builds in order to recompile fibers
@@ -88,8 +88,8 @@ RUN bash $SCRIPTS_FOLDER/build-meteor-npm-dependencies.sh
 
 # Update the OS packages in the container
 RUN apt-get update \
-  && apt-get -y upgrade \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get -y upgrade \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 EXPOSE ${PORT}
 USER node
