@@ -70,7 +70,7 @@ jobs:
             # PR build
             echo "BRANCH=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
             echo "VERSION=dev-${{ github.sha }}-$DATE" >> $GITHUB_ENV
-            elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            elif [[ "${GITHUB_EVENT_NAME}" == "push" || "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             # Handle differences between branches/tags
             if [[ "${GITHUB_REF}" == *"heads"* ]]; then
                 # Branch build
@@ -81,11 +81,11 @@ jobs:
                 echo "BRANCH=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
                 echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
             else
-                echo "ERROR: Unanticipated Git Ref"
+                echo "ERROR: Unanticipated Git Ref - ${GITHUB_REF}"
                 exit 1
             fi
             else
-            echo "ERROR: Unanticipated GitHub Event"
+            echo "ERROR: Unanticipated GitHub Event - ${GITHUB_EVENT_NAME}"
             exit 1
             fi
 
