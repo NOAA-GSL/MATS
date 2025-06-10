@@ -8,8 +8,12 @@ export default async (page) => {
      * The URL to navigate to
      * @type {String}
      */
-    const url = browser.options.baseUrl + page;
-    await browser.url(url);
+    const url = browser.options.baseUrl;
+    if (url.includes("localhost")) {
+        await browser.url(url);
+    } else {
+        await browser.url(url + page);
+    }
     const ms = 120000;
     // wait for the curve label selector to exist
     // noinspection JSJQueryEfficiency
