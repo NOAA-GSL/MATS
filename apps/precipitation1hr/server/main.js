@@ -707,7 +707,7 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = await matsCollections.truth.findOne({ name: "truth" });
+    const currentParam = await matsCollections.truth.findOneAsync({ name: "truth" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, sourceOptionsMap)) {
       // have to reload truth data
       await matsCollections.truth.update(

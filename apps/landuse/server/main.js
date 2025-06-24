@@ -470,7 +470,7 @@ const doCurveParams = async function () {
     });
   } else {
     // it is defined but check for necessary update
-    const currentParam = await matsCollections.region.findOneAsync({ name: "vgtyp" });
+    const currentParam = await matsCollections.vgtyp.findOneAsync({ name: "vgtyp" });
     if (
       !matsDataUtils.areObjectsEqual(currentParam.optionsMap, vgtypsModelOptionsMap) ||
       !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allVgtypValuesMap)
