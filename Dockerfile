@@ -1,5 +1,5 @@
 # This tag here should match the app's Meteor version, per .meteor/release
-FROM geoffreybooth/meteor-base:3.2 AS meteor-builder
+FROM geoffreybooth/meteor-base:3.3 AS meteor-builder
 
 ARG APPNAME
 
