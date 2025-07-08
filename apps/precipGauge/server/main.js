@@ -337,6 +337,8 @@ const doCurveParams = async function () {
   const modelOptionsMap = {};
   let modelDateRangeMap = {};
   const regionModelOptionsMap = {};
+  const siteOptionsMap = {};
+  const sitesLocationMap = [];
   const forecastLengthOptionsMap = {};
   const thresholdsModelOptionsMap = {};
   const sourceOptionsMap = {};
@@ -406,7 +408,8 @@ const doCurveParams = async function () {
         .map(Function.prototype.call, String.prototype.trim)
         .map(function (threshold) {
           return allThresholdValuesMap[threshold.replace(/'|\[|\]/g, "")];
-        });
+        })
+        .filter((trsh) => trsh !== "0.00 (precip >= 0.00 in)"); // remove useless > 0 threshold (it's in the DB for some reason but we don't use it)
 
       const { regions } = rows[i];
       regionModelOptionsMap[model] = regions
@@ -420,6 +423,56 @@ const doCurveParams = async function () {
     throw new Error(err.message);
   }
 
+  try {
+    await matsCollections.SiteMap.removeAsync({});
+    const rows = await matsDataQueryUtils.queryMySQL(
+      global.sumPool,
+      "select madis_id,name,lat,lon,elev,description from madis3.metars_mats_global where lat > -16380 and lat < 16380 and lon > -32760 and lon < 32760 order by name;"
+    );
+    for (let i = 0; i < rows.length; i += 1) {
+      const siteName = rows[i].name === undefined ? "unknown" : rows[i].name;
+      const siteDescription =
+        rows[i].description === undefined ? "unknown" : rows[i].description;
+      const siteId = rows[i].madis_id;
+      const siteLat = rows[i].lat === undefined ? -90 : rows[i].lat / 182;
+      const siteLon = rows[i].lon === undefined ? 0 : rows[i].lon / 182;
+      const siteElev = rows[i].elev === undefined ? 0 : rows[i].elev;
+
+      // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
+      // Also exclude stations with missing data
+      if (siteLat < 90 && siteLat > -90) {
+        siteOptionsMap[siteName] = [siteId];
+
+        const point = [siteLat, siteLon];
+        const obj = {
+          name: siteName,
+          origName: siteName,
+          point,
+          elevation: siteElev,
+          options: {
+            title: siteDescription,
+            color: "red",
+            size: 5,
+            network: "METAR",
+            peerOption: siteName,
+            id: siteId,
+            highLightColor: "blue",
+          },
+        };
+        sitesLocationMap.push(obj);
+        await matsCollections.SiteMap.insertAsync({ siteName, siteId });
+      }
+    }
+  } catch (err) {
+    throw new Error(err.message);
+  }
+
+  await matsCollections.StationMap.removeAsync({});
+  await matsCollections.StationMap.insertAsync({
+    name: "stations",
+    optionsMap: sitesLocationMap,
+  });
+
   if ((await matsCollections.label.findOneAsync({ name: "label" })) === undefined) {
     await matsCollections.label.insertAsync({
       name: "label",
@@ -431,6 +484,28 @@ const doCurveParams = async function () {
       unique: true,
       controlButtonVisibility: "block",
       displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  }
+
+  if (
+    (await matsCollections["region-type"].findOneAsync({ name: "region-type" })) ===
+    undefined
+  ) {
+    await matsCollections["region-type"].insertAsync({
+      name: "region-type",
+      type: matsTypes.InputTypes.select,
+      options: ["Predefined region", "Select stations"],
+      default: "Predefined region",
+      hideOtherFor: {
+        region: ["Select stations"],
+        sites: ["Predefined region"],
+        sitesMap: ["Predefined region"],
+      },
+      controlButtonCovered: true,
+      controlButtonText: "Region mode",
+      displayOrder: 2,
       displayPriority: 1,
       displayGroup: 1,
     });
@@ -892,6 +967,46 @@ const doCurveParams = async function () {
     });
   }
 
+  if ((await matsCollections.sites.findOneAsync({ name: "sites" })) === undefined) {
+    await matsCollections.sites.insertAsync({
+      name: "sites",
+      type: matsTypes.InputTypes.select,
+      optionsMap: siteOptionsMap,
+      options: Object.keys(siteOptionsMap),
+      peerName: "sitesMap", // name of the select parameter that is going to be set by selecting from this map
+      controlButtonCovered: true,
+      unique: false,
+      default: matsTypes.InputTypes.unused,
+      controlButtonVisibility: "block",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 5,
+      multiple: true,
+    });
+  }
+
+  if (
+    (await matsCollections.sitesMap.findOneAsync({ name: "sitesMap" })) === undefined
+  ) {
+    await matsCollections.sitesMap.insertAsync({
+      name: "sitesMap",
+      type: matsTypes.InputTypes.selectMap,
+      optionsMap: sitesLocationMap,
+      options: Object.keys(sitesLocationMap),
+      peerName: "sites", // name of the select parameter that is going to be set by selecting from this map
+      controlButtonCovered: true,
+      unique: false,
+      default: matsTypes.InputTypes.unused,
+      controlButtonVisibility: "block",
+      controlButtonText: "sites (Map display)",
+      displayOrder: 5,
+      displayPriority: 1,
+      displayGroup: 5,
+      multiple: true,
+      defaultMapView: { point: [50, -92.5], zoomLevel: 1.25 },
+    });
+  }
+
   if (
     (await matsCollections["bin-parameter"].findOneAsync({ name: "bin-parameter" })) ===
     undefined
@@ -1023,6 +1138,7 @@ const doCurveTextPatterns = async function () {
       textPattern: [
         ["", "label", ": "],
         ["", "data-source", " in "],
+        ["", "sites", ": "],
         ["", "region", ", "],
         ["", "threshold", " "],
         ["", "statistic", ", "],
@@ -1034,6 +1150,7 @@ const doCurveTextPatterns = async function () {
       displayParams: [
         "label",
         "data-source",
+        "region-type",
         "region",
         "statistic",
         "threshold",
@@ -1041,6 +1158,8 @@ const doCurveTextPatterns = async function () {
         "forecast-length",
         "valid-time",
         "truth",
+        "sites",
+        "sitesMap",
       ],
       groupSize: 6,
     });
@@ -1049,6 +1168,7 @@ const doCurveTextPatterns = async function () {
       textPattern: [
         ["", "label", ": "],
         ["", "data-source", " in "],
+        ["", "sites", ": "],
         ["", "region", ", "],
         ["", "threshold", " "],
         ["", "statistic", ", "],
@@ -1061,6 +1181,7 @@ const doCurveTextPatterns = async function () {
       displayParams: [
         "label",
         "data-source",
+        "region-type",
         "region",
         "statistic",
         "threshold",
@@ -1068,6 +1189,8 @@ const doCurveTextPatterns = async function () {
         "valid-time",
         "utc-cycle-start",
         "truth",
+        "sites",
+        "sitesMap",
         "curve-dates",
       ],
       groupSize: 6,
@@ -1101,6 +1224,7 @@ const doCurveTextPatterns = async function () {
       textPattern: [
         ["", "label", ": "],
         ["", "data-source", " in "],
+        ["", "sites", ": "],
         ["", "region", ", "],
         ["", "threshold", " "],
         ["", "statistic", ", "],
@@ -1111,11 +1235,14 @@ const doCurveTextPatterns = async function () {
       displayParams: [
         "label",
         "data-source",
+        "region-type",
         "region",
         "statistic",
         "threshold",
         "forecast-length",
         "truth",
+        "sites",
+        "sitesMap",
         "curve-dates",
       ],
       groupSize: 6,
@@ -1125,6 +1252,7 @@ const doCurveTextPatterns = async function () {
       textPattern: [
         ["", "label", ": "],
         ["", "data-source", " in "],
+        ["", "sites", ": "],
         ["", "region", ", "],
         ["", "threshold", " "],
         ["", "statistic", ", "],
@@ -1134,11 +1262,14 @@ const doCurveTextPatterns = async function () {
       displayParams: [
         "label",
         "data-source",
+        "region-type",
         "region",
         "statistic",
         "threshold",
         "utc-cycle-start",
         "truth",
+        "sites",
+        "sitesMap",
       ],
       groupSize: 6,
     });
@@ -1164,6 +1295,28 @@ const doCurveTextPatterns = async function () {
         "truth",
         "bin-parameter",
         "curve-dates",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.map,
+      textPattern: [
+        ["", "data-source", ": "],
+        ["", "sites", ": "],
+        ["", "threshold", " "],
+        ["", "statistic", ", "],
+        ["fcst_len: ", "forecast-length", " h "],
+        [" valid-time:", "valid-time", ""],
+      ],
+      displayParams: [
+        "data-source",
+        "statistic",
+        "threshold",
+        "forecast-length",
+        "valid-time",
+        "truth",
+        "sites",
+        "sitesMap",
       ],
       groupSize: 6,
     });
@@ -1305,6 +1458,12 @@ const doPlotGraph = async function () {
       plotType: matsTypes.PlotTypes.performanceDiagram,
       graphFunction: "graphPlotly",
       dataFunction: "dataPerformanceDiagram",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.map,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataMap",
       checked: false,
     });
     await matsCollections.PlotGraphFunctions.insertAsync({

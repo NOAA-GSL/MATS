@@ -1321,7 +1321,6 @@ const doCurveTextPatterns = async function () {
       textPattern: [
         ["", "label", ": "],
         ["", "data-source", " in "],
-        ["", "sites", ": "],
         ["", "region", ", "],
         ["", "variable", " "],
         ["", "statistic", ", "],
@@ -1458,7 +1457,6 @@ const doCurveTextPatterns = async function () {
       textPattern: [
         ["", "label", ": "],
         ["", "data-source", " in "],
-        ["", "sites", ": "],
         ["", "region", ", "],
         ["", "variable", " "],
         ["", "statistic", " at "],
