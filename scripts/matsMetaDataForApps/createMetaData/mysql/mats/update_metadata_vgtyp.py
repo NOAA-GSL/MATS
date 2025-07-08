@@ -19,7 +19,7 @@ try:
 except ImportError:
     raise ImportError('--------------------IMPORTANT: This script now requires python 3 to run. \
                       You can do this in the amb-verif conda environment by running "conda activate \
-                      avid_verify_py3" and then trying this script again.-------------------------')
+                      avid_verify_py3_6" and then trying this script again.-------------------------')
 
 
 ############################################################################
