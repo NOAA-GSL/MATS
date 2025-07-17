@@ -427,34 +427,41 @@ const doCurveParams = async function () {
     await matsCollections.SiteMap.removeAsync({});
     const rows = await matsDataQueryUtils.queryMySQL(
       global.sumPool,
-      "select madis_id,name,lat,lon,elev,description from madis3.metars_mats_global where lat > -16380 and lat < 16380 and lon > -32760 and lon < 32760 order by name;"
+      "select madis_id,name,lat,lon,elev,descript,net from precip_mesonets2.stations_for_mats where lat > -9000 and lat < 9000 and lon > -18000 and lon < 18000 order by name;"
     );
     for (let i = 0; i < rows.length; i += 1) {
       const siteName = rows[i].name === undefined ? "unknown" : rows[i].name;
       const siteDescription =
-        rows[i].description === undefined ? "unknown" : rows[i].description;
+        rows[i].descript !== null
+          ? rows[i].descript.replace(/\.|\(|\)/g, "").replace("  ", " ")
+          : siteName;
+      const siteNet = rows[i].net === undefined ? 0 : rows[i].net;
+      const descSiteName =
+        siteDescription !== siteName
+          ? `${siteDescription} ${siteNet} (${siteName})`
+          : siteName;
       const siteId = rows[i].madis_id;
-      const siteLat = rows[i].lat === undefined ? -90 : rows[i].lat / 182;
-      const siteLon = rows[i].lon === undefined ? 0 : rows[i].lon / 182;
+      const siteLat = rows[i].lat === undefined ? -90 : rows[i].lat / 100;
+      const siteLon = rows[i].lon === undefined ? 0 : rows[i].lon / 100;
       const siteElev = rows[i].elev === undefined ? 0 : rows[i].elev;
 
       // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
       // Also exclude stations with missing data
       if (siteLat < 90 && siteLat > -90) {
-        siteOptionsMap[siteName] = [siteId];
+        siteOptionsMap[descSiteName] = [siteId];
 
         const point = [siteLat, siteLon];
         const obj = {
-          name: siteName,
+          name: descSiteName,
           origName: siteName,
           point,
           elevation: siteElev,
           options: {
-            title: siteDescription,
+            title: descSiteName,
             color: "red",
             size: 5,
-            network: "METAR",
-            peerOption: siteName,
+            network: siteNet,
+            peerOption: descSiteName,
             id: siteId,
             highLightColor: "blue",
           },
@@ -500,6 +507,7 @@ const doCurveParams = async function () {
       default: "Predefined region",
       hideOtherFor: {
         region: ["Select stations"],
+        truth: ["Select stations"],
         sites: ["Predefined region"],
         sitesMap: ["Predefined region"],
       },
