@@ -111,7 +111,7 @@ global.dataSeries = async function (plotParams) {
       queryTableClause = `from ${model}_${region}${source} as m0`;
       thresholdClause = `and m0.thresh = ${threshold}`;
       statisticClause =
-        "sum(m0.yy) as hit, sum(m0.ny) as fa, sum(m0.yn) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.ny, ';', m0.yn, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0";
+        "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0";
       dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
     } else {
       const modelDB = "precip_mesonets2";
@@ -121,7 +121,7 @@ global.dataSeries = async function (plotParams) {
         "sum(if((m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0)) as hit, sum(if((m0.precip >= {{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0)) as fa, " +
         "sum(if(NOT (m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0)) as miss, sum(if(NOT (m0.precip >= {{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0)) as cn, " +
         "group_concat(m0.valid_time, ';', if((m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0), ';', " +
-        "if((m0.precip >= {{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0), ';', if(NOT (m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0), ';', " +
+        "if((m0.precip >={{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0), ';', if(NOT (m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0), ';', " +
         "if(NOT (m0.precip >= {{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0) order by m0.valid_time) as sub_data, count(m0.precip) as n0";
       statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
 
@@ -150,7 +150,7 @@ global.dataSeries = async function (plotParams) {
       dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
       siteDateClause = `and o.valid_time >= ${fromSecs} and o.valid_time <= ${toSecs}`;
       siteMatchClause =
-        "and m0.madis_id = o.madis_id and m0.valid_time = o.valid_time and o.bilin_pcp <= 300 ";
+        "and m0.madis_id = o.madis_id and m0.valid_time = o.valid_time and o.bilin_pcp <= 256 ";
     }
 
     // axisKey is used to determine which axis a curve should use.

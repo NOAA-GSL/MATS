@@ -57,7 +57,9 @@ global.dataValidTime = async function (plotParams) {
     const model = (
       await matsCollections["data-source"].findOneAsync({ name: "data-source" })
     ).optionsMap[curve["data-source"]][0];
+    let queryTableClause = "";
 
+    let thresholdClause = "";
     const thresholdStr = curve.threshold;
     const thresholdValues = (
       await matsCollections.threshold.findOneAsync({ name: "threshold" })
@@ -65,32 +67,79 @@ global.dataValidTime = async function (plotParams) {
     const threshold = Object.keys(thresholdValues).find(
       (key) => thresholdValues[key] === thresholdStr
     );
-    const thresholdClause = `and m0.thresh = ${threshold}`;
 
     const forecastLength = curve["forecast-length"];
     const forecastLengthClause = `and m0.fcst_len = ${forecastLength}`;
 
-    const source = curve.truth === "All" ? "" : `_${curve.truth}`;
-
+    let statisticClause;
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
       await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
-    const statisticClause =
-      "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0";
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    const dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
 
-    const regionStr = curve.region;
-    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
-      .valuesMap;
-    const region = Object.keys(regionValues).find(
-      (key) => regionValues[key] === regionStr
-    );
-    const queryTableClause = `from ${model}_${region}${source} as m0`;
+    let dateClause;
+    let siteDateClause = "";
+    let siteMatchClause = "";
+    let sitesClause = "";
+
+    const regionType = curve["region-type"];
+    if (regionType === "Predefined region") {
+      const source = curve.truth === "All" ? "" : `_${curve.truth}`;
+      const regionStr = curve.region;
+      const regionValues = (
+        await matsCollections.region.findOneAsync({ name: "region" })
+      ).valuesMap;
+      const region = Object.keys(regionValues).find(
+        (key) => regionValues[key] === regionStr
+      );
+      queryTableClause = `from ${model}_${region}${source} as m0`;
+      thresholdClause = `and m0.thresh = ${threshold}`;
+      statisticClause =
+        "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0";
+      dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
+    } else {
+      const modelDB = "precip_mesonets2";
+      const obsTable = "hourly_pcp2";
+      queryTableClause = `from ${modelDB}.${obsTable} as o, ${modelDB}.${model} as m0 `;
+      statisticClause =
+        "sum(if((m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0)) as hit, sum(if((m0.precip >= {{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0)) as fa, " +
+        "sum(if(NOT (m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0)) as miss, sum(if(NOT (m0.precip >= {{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0)) as cn, " +
+        "group_concat(m0.valid_time, ';', if((m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0), ';', " +
+        "if((m0.precip >={{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0), ';', if(NOT (m0.precip >= {{threshold}}) and (o.bilin_pcp >= {{threshold}}),1,0), ';', " +
+        "if(NOT (m0.precip >= {{threshold}}) and NOT (o.bilin_pcp >= {{threshold}}),1,0) order by m0.valid_time) as sub_data, count(m0.precip) as n0";
+      statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
+
+      const siteMap = (
+        await matsCollections.StationMap.findOneAsync({
+          name: "stations",
+        })
+      ).optionsMap;
+      const sitesList = curve.sites === undefined ? [] : curve.sites;
+      let querySites = [];
+      if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
+        querySites = sitesList.map(function (site) {
+          const possibleSiteNames = site.match(/\(([^)]*)\)[^(]*$/);
+          const thisSite =
+            possibleSiteNames === null
+              ? site
+              : possibleSiteNames[possibleSiteNames.length - 1];
+          return siteMap.find((obj) => obj.origName === thisSite).options.id;
+        });
+        sitesClause = ` and m0.madis_id in('${querySites.join("','")}')`;
+      } else {
+        throw new Error(
+          "INFO:  Please add sites in order to get a single/multi station plot."
+        );
+      }
+      dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
+      siteDateClause = `and o.valid_time >= ${fromSecs} and o.valid_time <= ${toSecs}`;
+      siteMatchClause =
+        "and m0.madis_id = o.madis_id and m0.valid_time = o.valid_time and o.bilin_pcp <= 256 ";
+    }
 
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -119,7 +168,10 @@ global.dataValidTime = async function (plotParams) {
           "{{statisticClause}} " +
           "{{queryTableClause}} " +
           "where 1=1 " +
+          "{{siteMatchClause}} " +
+          "{{sitesClause}} " +
           "{{dateClause}} " +
+          "{{siteDateClause}} " +
           "{{thresholdClause}} " +
           "{{forecastLengthClause}} " +
           "group by hr_of_day " +
@@ -128,9 +180,12 @@ global.dataValidTime = async function (plotParams) {
 
         statement = statement.replace("{{statisticClause}}", statisticClause);
         statement = statement.replace("{{queryTableClause}}", queryTableClause);
+        statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
+        statement = statement.replace("{{sitesClause}}", sitesClause);
         statement = statement.replace("{{thresholdClause}}", thresholdClause);
         statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{dateClause}}", dateClause);
+        statement = statement.replace("{{siteDateClause}}", siteDateClause);
         dataRequests[label] = statement;
 
         // send the query statement to the query function
