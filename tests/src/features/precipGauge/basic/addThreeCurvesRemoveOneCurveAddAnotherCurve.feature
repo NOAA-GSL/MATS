@@ -18,20 +18,20 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
     Scenario: addThreeCurvesRemoveOneCurveAddAnotherCurve
         When I set the plot type to "TimeSeries"
         Then the plot type should be "TimeSeries"
-        When I change the "data-source" parameter to "RAP_GSL"
-        Then the "data-source" parameter value matches "RAP_GSL"
-        When I set the dates to "09/21/2019 00:00 - 09/24/2019 00:00"
-        Then the dates value is "09/21/2019 00:00 - 09/24/2019 00:00"
+        When I change the "data-source" parameter to "HRRR_OPS"
+        Then the "data-source" parameter value matches "HRRR_OPS"
+        When I set the dates to "07/22/2025 00:00 - 07/22/2025 23:59"
+        Then the dates value is "07/22/2025 00:00 - 07/22/2025 23:59"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "HRRR_GSL"
-        Then the "data-source" parameter value matches "HRRR_GSL"
+        When I change the "data-source" parameter to "MPAS_physics_dev1"
+        Then the "data-source" parameter value matches "MPAS_physics_dev1"
         When I click the "Add Curve" button
         Then "Curve1" is added
 
-        When I change the "data-source" parameter to "HRRR_OPS"
-        Then the "data-source" parameter value matches "HRRR_OPS"
+        When I change the "data-source" parameter to "MPAS_physics_dev2"
+        Then the "data-source" parameter value matches "MPAS_physics_dev2"
         When I click the "Add Curve" button
         Then "Curve2" is added
         And I should see a list of curves containing "Curve0,Curve1,Curve2"
@@ -47,8 +47,8 @@ Feature: addThreeCurvesRemoveOneCurveAddAnotherCurve
         Then I click the "Remove curve Curve1" button
         And I should see a list of curves containing "Curve0,Curve2"
 
-        When I change the "data-source" parameter to "HRRR_GSL"
-        Then the "data-source" parameter value matches "HRRR_GSL"
+        When I change the "data-source" parameter to "MPAS_dev3"
+        Then the "data-source" parameter value matches "MPAS_dev3"
         When I click the "Add Curve" button
         Then "Curve3" is added
 
