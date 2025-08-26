@@ -7,16 +7,16 @@
     "format": "prettier --ignore-path ../../.prettierignore --write . && eslint --ignore-path ../../.gitignore --fix ."
   },
   "dependencies": {
-    "@babel/runtime": "^7.27.6",
+    "@babel/runtime": "^7.28.3",
     "@fortawesome/fontawesome-free": "^6.7.2",
-    "bootstrap": "^4.6.2",
+    "bootstrap": "^5.3.8",
     "daterangepicker": "^3.1.0",
     "downsample-lttb": "0.0.1",
-    "fs-extra": "^11.3.0",
+    "fs-extra": "^11.3.1",
     "html2canvas": "^1.4.1",
-    "jquery": "^2.2.4",
+    "jquery": "^3.7.1",
     "modules": "^0.4.0",
-    "mysql2": "^3.14.1",
+    "mysql2": "^3.14.3",
     "object-hash": "^3.0.0",
     "object-sizeof": "^2.6.5",
     "xmlbuilder": "^15.1.1"
