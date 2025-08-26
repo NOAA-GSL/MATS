@@ -16,7 +16,6 @@
     "fs-extra": "^11.3.0",
     "html2canvas": "^1.4.1",
     "jquery": "^2.2.4",
-    "jspdf": "^3.0.1",
     "lighten-darken-color": "^1.0.0",
     "modules": "^0.4.0",
     "mysql2": "^3.14.1",
