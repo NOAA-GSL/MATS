@@ -14,7 +14,7 @@ import {
   matsDataProcessUtils,
   matsMiddleTimeSeries,
 } from "meteor/randyp:mats-common";
-import { moment } from "meteor/momentjs:moment";
+import moment from "moment";
 
 /* eslint-disable no-await-in-loop */
 
