@@ -23,6 +23,18 @@ body {
   src: url("/packages/randyp_mats-common/public/fonts/PublicSans-Medium.ttf");
 }
 
+.boldedPublicSans {
+  font-family: PublicSans-SemiBold, Arial, Helvetica, serif;
+}
+
+.regularPublicSans {
+  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+}
+
+.mediumPublicSans {
+  font-family: PublicSans-Medium, Arial, Helvetica, serif;
+}
+
 body {
   padding: 0;
   background-color: grey;
@@ -44,27 +56,6 @@ body {
   background-color: #fff;
   border: none;
   -webkit-box-shadow: none;
-}
-
-.modal-backdrop {
-  background-color: #ccc;
-}
-
-.modal-header {
-  border-bottom: none;
-}
-
-.modal-footer {
-  border-top: none;
-}
-
-.form-control {
-  color: #000000;
-  border-color: #000000;
-}
-
-.label-default {
-  background-color: #333333;
 }
 
 .btn-default {
@@ -167,23 +158,6 @@ hr {
 
 .input {
   max-width: 100%;
-}
-
-.select2-selection--multiple {
-  max-height: 200px;
-  overflow: auto;
-}
-
-.boldedPublicSans {
-  font-family: PublicSans-SemiBold, Arial, Helvetica, serif;
-}
-
-.regularPublicSans {
-  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
-}
-
-.mediumPublicSans {
-  font-family: PublicSans-Medium, Arial, Helvetica, serif;
 }
 
 .item + .tooltip > .tooltip-inner {
