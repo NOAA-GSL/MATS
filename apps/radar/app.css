@@ -160,6 +160,11 @@ hr {
   border: none;
 }
 
+.modal-style {
+  background-color: #cccccc;
+  overflow-y: initial;
+}
+
 .input {
   max-width: 100%;
 }
@@ -240,4 +245,8 @@ hr {
 
 .text-blue {
   color: #005ea2;
+}
+
+.text-dark-blue {
+  color: #114466;
 }
