@@ -241,30 +241,38 @@ hr {
 }
 
 .bg-lightgray {
-    background-color: #dddddd;
+  background-color: #dddddd;
 }
 
 .bg-noaa-blue {
-    background-color: #000066;
+  background-color: #000066;
 }
 
 .bg-disclaimer {
-    background-color: #d9edf7
+  background-color: #d9edf7;
+}
+
+.noaa-logo-size {
+  width: 60px;
 }
 
 .icon-size {
-    width: 25px;
-  }
-  
-.icon-size-small {
-    width: 15px;
+  width: 25px;
 }
-  
+
+.icon-size-small {
+  width: 15px;
+}
+
 .small-text {
     font-size: small;
 }
 
-.text-blue {
-    color: #005ea2;
+.white-link-text {
+  color: white;
+  text-decoration: none;
 }
 
+.text-blue {
+  color: #005ea2;
+}
