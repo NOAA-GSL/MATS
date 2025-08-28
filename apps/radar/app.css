@@ -239,3 +239,32 @@ hr {
   font-size: 18px !important;
   color: #990000;
 }
+
+.bg-lightgray {
+    background-color: #dddddd;
+}
+
+.bg-noaa-blue {
+    background-color: #000066;
+}
+
+.bg-disclaimer {
+    background-color: #d9edf7
+}
+
+.icon-size {
+    width: 25px;
+  }
+  
+.icon-size-small {
+    width: 15px;
+}
+  
+.small-text {
+    font-size: small;
+}
+
+.text-blue {
+    color: #005ea2;
+}
+
