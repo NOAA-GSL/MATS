@@ -152,22 +152,22 @@ hr {
 }
 
 .modal-style {
-  background-color: #cccccc;
-  overflow-y: initial;
+  background-color: #cccccc !important;
+  overflow-y: initial !important;
 }
 
 .input {
-  max-width: 100%;
+  max-width: 100% !important;
 }
 
 .item + .tooltip > .tooltip-inner {
-  background-color: #73ad21;
-  color: #ffffff;
-  border: 1px solid green;
-  padding: 5px;
-  font-size: 15px;
-  max-width: 350px;
-  width: 350px;
+  background-color: #73ad21 !important;
+  color: #ffffff !important;
+  border: 1px solid green !important;
+  padding: 5px !important;
+  font-size: 15px !important;
+  max-width: 350px !important;
+  width: 350px !important;
 }
 
 .daterangepicker .ranges li {
