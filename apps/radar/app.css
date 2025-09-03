@@ -60,9 +60,9 @@ body {
 }
 
 .well {
-  background-color: #fff;
-  border: none;
-  -webkit-box-shadow: none;
+  background-color: #fff !important;
+  border: none !important;
+  -webkit-box-shadow: none !important;
 }
 
 .btn-default {
