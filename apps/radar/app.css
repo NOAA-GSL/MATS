@@ -6,6 +6,11 @@
 html,
 body {
   height: 100%;
+  padding: 0;
+  --bs-body-bg: grey;
+  --bs-body-font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+  --bs-body-font-size: 15px;
+  --bs-body-color: black;
 }
 
 @font-face {
@@ -33,14 +38,6 @@ body {
 
 .mediumPublicSans {
   font-family: PublicSans-Medium, Arial, Helvetica, serif;
-}
-
-body {
-  padding: 0;
-  background-color: grey;
-  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
-  font-size: 15px;
-  color: black;
 }
 
 .main {
