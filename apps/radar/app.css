@@ -80,16 +80,16 @@ body {
 
 .btn-success {
   --bs-btn-color: #000000 !important;
-  --bs-btn-bg: #d1e7dd !important;
+  --bs-btn-bg: #c6f7e1 !important;
   --bs-btn-border-color: #336633 !important;
   --bs-btn-hover-color: #000000 !important;
-  --bs-btn-hover-bg: #aaffcc !important;
+  --bs-btn-hover-bg: #99eebb !important;
   --bs-btn-hover-border-color: #336633 !important;
 }
 
 .btn-danger {
   --bs-btn-color: #000000 !important;
-  --bs-btn-bg: #f8d7da !important;
+  --bs-btn-bg: #ffcccc !important;
   --bs-btn-border-color: #d43f3a !important;
   --bs-btn-hover-color: #000000 !important;
   --bs-btn-hover-bg: #ff9999 !important;
@@ -98,7 +98,7 @@ body {
 
 .btn-warning {
   --bs-btn-color: #000000 !important;
-  --bs-btn-bg: #fff3cd !important;
+  --bs-btn-bg: #ffeebb !important;
   --bs-btn-border-color: #eebb33 !important;
   --bs-btn-hover-color: #000000 !important;
   --bs-btn-hover-bg: #ffff99 !important;
