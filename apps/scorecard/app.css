@@ -6,6 +6,11 @@
 html,
 body {
   height: 100%;
+  padding: 0;
+  --bs-body-bg: grey;
+  --bs-body-font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+  --bs-body-font-size: 15px;
+  --bs-body-color: black;
 }
 
 @font-face {
@@ -23,137 +28,81 @@ body {
   src: url("/packages/randyp_mats-common/public/fonts/PublicSans-Medium.ttf");
 }
 
-body {
-  padding: 0;
-  background-color: grey;
-  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
-  font-size: 15px;
-  color: black;
+.boldedPublicSans {
+  font-family: PublicSans-SemiBold, Arial, Helvetica, serif;
 }
 
-.main {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: white;
+.regularPublicSans {
   font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
-  font-size: 15px;
+}
+
+.mediumPublicSans {
+  font-family: PublicSans-Medium, Arial, Helvetica, serif;
+}
+
+.item-button-group {
+  margin-left: 0;
+  margin-right: 1em;
 }
 
 .well {
-  background-color: #fff;
-  border: none;
-  -webkit-box-shadow: none;
-}
-
-.modal-backdrop {
-  background-color: #ccc;
-}
-
-.modal-header {
-  border-bottom: none;
-}
-
-.modal-footer {
-  border-top: none;
-}
-
-.form-control {
-  color: #000000;
-  border-color: #000000;
-}
-
-.label-default {
-  background-color: #333333;
+  background-color: #fff !important;
+  border: none !important;
+  -webkit-box-shadow: none !important;
 }
 
 .btn-default {
-  color: #000000;
-  background-color: #fff;
-  border-color: #ccc;
-}
-
-.btn-default:hover,
-.btn-default:focus,
-.btn-default:active,
-.btn-default.active,
-.open > .dropdown-toggle.btn-default {
-  color: #000000;
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #ffffff !important;
+  --bs-btn-border-color: #cccccc !important;
+  --bs-btn-hover-color: #ffffff !important;
+  --bs-btn-hover-bg: #777777 !important;
+  --bs-btn-hover-border-color: #cccccc !important;
 }
 
 .btn-primary {
-  color: #fff;
-  background-color: #052c65;
-  border-color: #2e6da4;
-}
-
-.btn-primary:hover,
-.btn-primary:focus,
-.btn-primary:active,
-.btn-primary.active,
-.open > .dropdown-toggle.btn-primary {
-  color: #fff;
-  background-color: #114466;
+  --bs-btn-color: #ffffff !important;
+  --bs-btn-bg: #052c65 !important;
+  --bs-btn-border-color: #2e6da4 !important;
+  --bs-btn-hover-color: #ffffff !important;
+  --bs-btn-hover-bg: #114466 !important;
+  --bs-btn-hover-border-color: #2e6da4 !important;
 }
 
 .btn-info {
-  color: #000000;
-  background-color: #ddeeff;
-  border-color: #2e6da4;
-}
-
-.btn-info:hover,
-.btn-info:focus,
-.btn-info:active,
-.btn-info.active,
-.open > .dropdown-toggle.btn-info {
-  color: #000000;
-  background-color: #99ccff;
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #ddeeff !important;
+  --bs-btn-border-color: #2e6da4 !important;
+  --bs-btn-hover-color: #000000 !important;
+  --bs-btn-hover-bg: #99ccff !important;
+  --bs-btn-hover-border-color: #2e6da4 !important;
 }
 
 .btn-success {
-  color: #000000;
-  background-color: #d1e7dd;
-  border-color: #336633;
-}
-
-.btn-success:hover,
-.btn-success:focus,
-.btn-success:active,
-.btn-success.active,
-.open > .dropdown-toggle.btn-success {
-  color: #000000;
-  background-color: #aaffcc;
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #c6f7e1 !important;
+  --bs-btn-border-color: #336633 !important;
+  --bs-btn-hover-color: #000000 !important;
+  --bs-btn-hover-bg: #99eebb !important;
+  --bs-btn-hover-border-color: #336633 !important;
 }
 
 .btn-danger {
-  color: #000000;
-  background-color: #f8d7da;
-  border-color: #d43f3a;
-}
-
-.btn-danger:hover,
-.btn-danger:focus,
-.btn-danger:active,
-.btn-danger.active,
-.open > .dropdown-toggle.btn-danger {
-  color: #000000;
-  background-color: #ff9999;
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #ffcccc !important;
+  --bs-btn-border-color: #d43f3a !important;
+  --bs-btn-hover-color: #000000 !important;
+  --bs-btn-hover-bg: #ff9999 !important;
+  --bs-btn-hover-border-color: #d43f3a !important;
 }
 
 .btn-warning {
-  color: #000000;
-  background-color: #fff3cd;
-  border-color: #eebb33;
-}
-
-.btn-warning:hover,
-.btn-warning:focus,
-.btn-warning:active,
-.btn-warning.active,
-.open > .dropdown-toggle.btn-warning {
-  color: #000000;
-  background-color: #ffff99;
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #ffeebb !important;
+  --bs-btn-border-color: #eebb33 !important;
+  --bs-btn-hover-color: #000000 !important;
+  --bs-btn-hover-bg: #ffff99 !important;
+  --bs-btn-hover-border-color: #eebb33 !important;
 }
 
 #placeholder .button {
@@ -168,62 +117,28 @@ body {
   padding: 2px;
 }
 
-.message {
-  padding-left: 50px;
-  font-size: smaller;
-}
-
-hr {
-  height: 0;
-  border-top: 1px;
-  color: #eee;
-  background-color: #eee;
-}
-
-.spacer {
-  padding-left: 1em;
-}
-
-.rule {
-  width: 100%;
-  height: 7px;
-  overflow: hidden;
-}
-
 .spacebutton {
   background: transparent;
   border: none;
 }
 
+.modal-style {
+  background-color: #cccccc !important;
+  overflow-y: initial !important;
+}
+
 .input {
-  max-width: 100%;
-}
-
-.select2-selection--multiple {
-  max-height: 200px;
-  overflow: auto;
-}
-
-.boldedPublicSans {
-  font-family: PublicSans-SemiBold, Arial, Helvetica, serif;
-}
-
-.regularPublicSans {
-  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
-}
-
-.mediumPublicSans {
-  font-family: PublicSans-Medium, Arial, Helvetica, serif;
+  max-width: 100% !important;
 }
 
 .item + .tooltip > .tooltip-inner {
-  background-color: #73ad21;
-  color: #ffffff;
-  border: 1px solid green;
-  padding: 5px;
-  font-size: 15px;
-  max-width: 350px;
-  width: 350px;
+  background-color: #73ad21 !important;
+  color: #ffffff !important;
+  border: 1px solid green !important;
+  padding: 5px !important;
+  font-size: 15px !important;
+  max-width: 350px !important;
+  width: 350px !important;
 }
 
 .daterangepicker .ranges li {
@@ -238,6 +153,54 @@ hr {
 .daterangepicker .drp-selected {
   font-size: 18px !important;
   color: #990000;
+}
+
+.bg-lightgray {
+  background-color: #dddddd;
+}
+
+.bg-darkgray {
+  background-color: #333333;
+}
+
+.bg-noaa-blue {
+  background-color: #000066;
+}
+
+.noaa-logo-size {
+  width: 60px;
+}
+
+.icon-size {
+  width: 25px;
+}
+
+.icon-size-small {
+  width: 15px;
+}
+
+.small-text {
+  font-size: small;
+}
+
+.white-link-text {
+  color: white;
+  text-decoration: none;
+}
+
+.text-blue {
+  color: #005ea2;
+}
+
+.text-dark-blue {
+  color: #114466;
+}
+
+.added-curve {
+  background-color: #f5f5f5;
+  border: solid;
+  border-width: thick;
+  border-radius: 10px;
 }
 
 .scDiv {
