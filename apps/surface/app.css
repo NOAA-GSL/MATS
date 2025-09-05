@@ -60,6 +60,12 @@ body {
   --bs-btn-hover-border-color: #cccccc !important;
 }
 
+.btn-default:disabled {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
+}
+
 .btn-primary {
   --bs-btn-color: #ffffff !important;
   --bs-btn-bg: #052c65 !important;
@@ -67,6 +73,12 @@ body {
   --bs-btn-hover-color: #ffffff !important;
   --bs-btn-hover-bg: #114466 !important;
   --bs-btn-hover-border-color: #2e6da4 !important;
+}
+
+.btn-primary:disabled {
+  background-color: #052c65 !important;
+  color: #ffffff !important;
+  opacity: 0.6 !important;
 }
 
 .btn-info {
@@ -78,6 +90,12 @@ body {
   --bs-btn-hover-border-color: #2e6da4 !important;
 }
 
+.btn-info:disabled {
+  background-color: #ddeeff !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
+}
+
 .btn-success {
   --bs-btn-color: #000000 !important;
   --bs-btn-bg: #c6f7e1 !important;
@@ -85,6 +103,12 @@ body {
   --bs-btn-hover-color: #000000 !important;
   --bs-btn-hover-bg: #99eebb !important;
   --bs-btn-hover-border-color: #336633 !important;
+}
+
+.btn-success:disabled {
+  background-color: #c6f7e1 !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
 }
 
 .btn-danger {
@@ -96,6 +120,12 @@ body {
   --bs-btn-hover-border-color: #d43f3a !important;
 }
 
+.btn-danger:disabled {
+  background-color: #ffcccc !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
+}
+
 .btn-warning {
   --bs-btn-color: #000000 !important;
   --bs-btn-bg: #ffeebb !important;
@@ -103,6 +133,12 @@ body {
   --bs-btn-hover-color: #000000 !important;
   --bs-btn-hover-bg: #ffff99 !important;
   --bs-btn-hover-border-color: #eebb33 !important;
+}
+
+.btn-warning:disabled {
+  background-color: #ffeebb !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
 }
 
 #placeholder .button {
