@@ -722,7 +722,7 @@ const doCurveParams = async function () {
       selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: 6,
+      default: "6",
       controlButtonVisibility: "block",
       controlButtonText: "forecast lead time (h)",
       displayOrder: 1,
