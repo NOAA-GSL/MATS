@@ -690,16 +690,24 @@ const doCurveParams = async function () {
     }
   }
 
+  const sourceOptions = sourceOptionsMap[Object.keys(modelOptionsMap)[0]];
+  let sourceDefault;
+  if (sourceOptions.indexOf("MRMS") !== -1) {
+    sourceDefault = "MRMS";
+  } else {
+    [sourceDefault] = sourceOptions;
+  }
+
   if ((await matsCollections.truth.findOneAsync({ name: "truth" })) === undefined) {
     await matsCollections.truth.insertAsync({
       name: "truth",
       type: matsTypes.InputTypes.select,
       optionsMap: sourceOptionsMap,
-      options: sourceOptionsMap[Object.keys(sourceOptionsMap)[0]],
+      options: sourceOptions,
       superiorNames: ["data-source"],
       controlButtonCovered: true,
       unique: false,
-      default: sourceOptionsMap[Object.keys(sourceOptionsMap)[0]][0],
+      default: sourceDefault,
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
@@ -715,8 +723,8 @@ const doCurveParams = async function () {
         {
           $set: {
             optionsMap: sourceOptionsMap,
-            options: sourceOptionsMap[Object.keys(sourceOptionsMap)[0]],
-            default: sourceOptionsMap[Object.keys(sourceOptionsMap)[0]][0],
+            options: sourceOptions,
+            default: sourceDefault,
           },
         }
       );
