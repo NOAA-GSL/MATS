@@ -512,27 +512,6 @@ const doPlotParams = async function () {
 
   if (
     (await matsCollections.PlotParams.findOneAsync({
-      name: "scorecard-color-theme",
-    })) === undefined
-  ) {
-    await matsCollections.PlotParams.insertAsync({
-      name: "scorecard-color-theme",
-      type: matsTypes.InputTypes.radioGroup,
-      options: ["RedGreen", "RedBlue"],
-      controlButtonCovered: false,
-      default: "RedBlue",
-      controlButtonVisibility: "block",
-      displayOrder: 1,
-      displayPriority: 1,
-      displayGroup: 8,
-      tooltip: `The color scheme for the major and minor symbols,
-            you can use the eyedropper tool in the color editor to customize colors.`,
-      tooltipPlacement: "right",
-    });
-  }
-
-  if (
-    (await matsCollections.PlotParams.findOneAsync({
       name: "minor-truth-color",
     })) === undefined
   ) {
@@ -546,7 +525,7 @@ const doPlotParams = async function () {
       controlButtonFA: "fa-sm fa-solid fa-caret-down",
       default: "#ff0000",
       controlButtonVisibility: "block",
-      displayOrder: 2,
+      displayOrder: 1,
       displayPriority: 1,
       displayGroup: 8,
       tooltip: `The color for cases in which the control data source performs better 
@@ -571,7 +550,7 @@ const doPlotParams = async function () {
       controlButtonFA: "fa-lg fa-solid fa-caret-down",
       default: "#ff0000",
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 2,
       displayPriority: 1,
       displayGroup: 8,
       tooltip: `The color for cases in which the control data source performs better 
@@ -596,7 +575,7 @@ const doPlotParams = async function () {
       controlButtonFA: "fa-sm fa-solid fa-caret-up",
       default: "#0000ff",
       controlButtonVisibility: "block",
-      displayOrder: 4,
+      displayOrder: 3,
       displayPriority: 1,
       displayGroup: 8,
       tooltip: `The color for cases in which the experimental data source performs better 
@@ -621,7 +600,7 @@ const doPlotParams = async function () {
       controlButtonFA: "fa-lg fa-solid fa-caret-up",
       default: "#0000ff",
       controlButtonVisibility: "block",
-      displayOrder: 5,
+      displayOrder: 4,
       displayPriority: 1,
       displayGroup: 8,
       tooltip: `The color for cases in which the control data source performs better 
