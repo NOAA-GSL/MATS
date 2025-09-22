@@ -1,0 +1,61 @@
+# Citation File Format (CFF) for MATS
+# See https://citation-file-format.github.io/ for more information
+
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "MATS: Model Analysis Tool Suite"
+abstract: "MATS is a quick & interactive way to view verification statistics. A web-based visualization frontend for meteorological model verification data."
+repository-code: "https://github.com/NOAA-GSL/MATS"
+url: "https://gsl.noaa.gov/mats/"
+keywords:
+  - meteorology
+  - verification
+  - visualization
+  - model-analysis
+  - weather-forecasting
+  - atmospheric-science
+
+authors:
+  - family-names: "NOAA Global Systems Laboratory"
+    affiliation: "National Oceanic and Atmospheric Administration"
+    # Add individual authors here:
+  - given-names: "Molly"
+    family-names: "Smith"
+    orcid: "https://orcid.org/0000-0001-5966-7633"
+    affiliation: "University of Colorado Boulder/CIRES"
+  - given-names: "Randy"
+    family-names: "Pierce"
+    orcid: "https://orcid.org/0009-0005-1090-1907"
+    affiliation: "Colorado State University/CIRA"
+  - given-names: "Ian"
+    family-names: "McGinnis"
+    orcid: "https://orcid.org/0009-0002-6285-774X"
+    affiliation: "Colorado State University/CIRA"
+  - given-names: "Jeff"
+    family-names: "Hamilton"
+    orcid: "https://orcid.org/0009-0003-3546-274X"
+    affiliation: "NOAA Global Systems Laboratory"
+  - given-names: "Gopa"
+    family-names: "Padmanabhan"
+    orcid: "https://orcid.org/0009-0001-8122-1395"
+    affiliation: "University of Colorado Boulder/CIRES"
+  - given-names: "Natalie"
+    family-names: "Babij"
+    orcid: "https://orcid.org/0009-0005-2773-5079"
+    affiliation: "Colorado State University/CIRA"
+
+# Related software/dependencies
+references:
+  - type: software
+    title: "VxIngest: Verification Data Ingest System"
+    abstract: "Backend data retrieval and processing system for MATS visualization"
+    repository-code: "https://github.com/NOAA-GSL/VxIngest"
+    authors:
+      - family-names: "NOAA Global Systems Laboratory"
+        affiliation: "National Oceanic and Atmospheric Administration"
+    notes: "Backend data processing component that feeds MATS frontend"
+
+contact:
+  - email: "mats.gsl@noaa.gov"
+    name: "MATS Development Team"
