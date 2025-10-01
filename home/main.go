@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -47,6 +48,14 @@ func parseConfig(file string) (ConfigJSON, error) {
 	return conf, nil
 }
 
+// Create a template function to allow the input string to be displayed
+// unescaped - as raw HTML.
+//
+// Warning: This should ONLY be used on trusted input.
+func displayAsRawHTML(text string) template.HTML {
+	return template.HTML(text)
+}
+
 func main() {
 	// FIXME: Let user specify config location or pass an env var with config
 	conf, err := parseConfig("settings.json")
@@ -56,6 +65,11 @@ func main() {
 
 	router := gin.Default()
 	router.Use(prometheusMiddleware()) // Attach our prometheus middleware
+
+	// Register custom template functions on the router
+	router.SetFuncMap(template.FuncMap{
+		"displayAsRawHTML": displayAsRawHTML,
+	})
 
 	// Load in the HTML templates
 	router.LoadHTMLGlob("templates/*")
