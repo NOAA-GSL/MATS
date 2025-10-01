@@ -2,7 +2,7 @@
 
 <div class="container-fluid p-3 bg-white">
   <div class="alert alert-danger" role="alert">
-    <p>{{ .Config.AlertMessage }}</p>
+    <p>{{ .Config.AlertMessage | displayAsRawHTML }}</p>
     <!-- When congress hands out shutdown lemons, sometimes you need to make shutdown lemonade :-) -->
     <!-- <marquee>{{ .Config.AlertMessage }}</marquee> -->
   </div>
