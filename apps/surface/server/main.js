@@ -643,78 +643,6 @@ const doCurveParams = async function () {
     }
   }
 
-  const statOptionsMap = {
-    RMSE: "scalar",
-
-    "Bias (Model - Obs)": "scalar",
-
-    N: "scalar",
-
-    "Model average": "scalar",
-
-    "Obs average": "scalar",
-
-    "Std deviation": "scalar",
-
-    "MAE (temp and dewpoint only)": "scalar",
-  };
-
-  if (
-    (await matsCollections.statistic.findOneAsync({ name: "statistic" })) === undefined
-  ) {
-    await matsCollections.statistic.insertAsync({
-      name: "statistic",
-      type: matsTypes.InputTypes.select,
-      optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
-      controlButtonCovered: true,
-      unique: false,
-      default: Object.keys(statOptionsMap)[0],
-      controlButtonVisibility: "block",
-      displayOrder: 2,
-      displayPriority: 1,
-      displayGroup: 3,
-    });
-  }
-
-  if (
-    (await matsCollections["x-statistic"].findOneAsync({ name: "x-statistic" })) ===
-    undefined
-  ) {
-    await matsCollections["x-statistic"].insertAsync({
-      name: "x-statistic",
-      type: matsTypes.InputTypes.select,
-      optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
-      controlButtonCovered: true,
-      unique: false,
-      default: Object.keys(statOptionsMap)[0],
-      controlButtonVisibility: "block",
-      displayOrder: 4,
-      displayPriority: 1,
-      displayGroup: 2,
-    });
-  }
-
-  if (
-    (await matsCollections["y-statistic"].findOneAsync({ name: "y-statistic" })) ===
-    undefined
-  ) {
-    await matsCollections["y-statistic"].insertAsync({
-      name: "y-statistic",
-      type: matsTypes.InputTypes.select,
-      optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
-      controlButtonCovered: true,
-      unique: false,
-      default: Object.keys(statOptionsMap)[0],
-      controlButtonVisibility: "block",
-      displayOrder: 4,
-      displayPriority: 1,
-      displayGroup: 3,
-    });
-  }
-
   const statVarOptionsMap = {
     // THIS IS KEYED BY REGION-TYPE BECAUSE OUR MYSQL OBS TABLE DOESN'T HAVE RH
     // FOR SOME REASON OR OTHER, SO IT NEEDS TO BE EXCLUDED AS A VARIABLE
@@ -760,6 +688,8 @@ const doCurveParams = async function () {
         "m0.sum_ob_ws",
         "0",
       ],
+      "U-Wind Speed at 10m (m/s)": ["0", "m0.N_dw", "m0.sum_du", "0", "0", "0"],
+      "V-Wind Speed at 10m (m/s)": ["0", "m0.N_dw", "m0.sum_dv", "0", "0", "0"],
     },
     "Select stations": {
       "Temperature at 2m (°C)": [
@@ -786,6 +716,22 @@ const doCurveParams = async function () {
         "(if(m0.ws is not null,o.ws,null))",
         "(abs(o.ws - m0.ws))",
       ],
+      "U-Wind Speed at 10m (m/s)": [
+        "0",
+        "(o.ws + m0.ws)",
+        "(o.ws*sin(o.wd/57.2658) - m0.ws*sin(m0.wd/57.2658))",
+        "0",
+        "0",
+        "0",
+      ],
+      "V-Wind Speed at 10m (m/s)": [
+        "0",
+        "(o.ws + m0.ws)",
+        "(o.ws*cos(o.wd/57.2658) - m0.ws*cos(m0.wd/57.2658))",
+        "0",
+        "0",
+        "0",
+      ],
     },
   };
 
@@ -801,12 +747,16 @@ const doCurveParams = async function () {
       "Relative Humidity at 2m (%)": "RH (%)",
       "Dewpoint at 2m (°C)": "°C",
       "Wind Speed at 10m (m/s)": "m/s",
+      "U-Wind Speed at 10m (m/s)": "m/s",
+      "V-Wind Speed at 10m (m/s)": "m/s",
     },
     N: {
       "Temperature at 2m (°C)": "Number",
       "Relative Humidity at 2m (%)": "Number",
       "Dewpoint at 2m (°C)": "Number",
       "Wind Speed at 10m (m/s)": "Number",
+      "U-Wind Speed at 10m (m/s)": "Number",
+      "V-Wind Speed at 10m (m/s)": "Number",
     },
     "Model average": {
       "Temperature at 2m (°C)": "°C",
@@ -834,6 +784,9 @@ const doCurveParams = async function () {
     },
   };
 
+  const defaultVariableOptions = Object.keys(statVarOptionsMap["Predefined region"]);
+  const defaultVariable = defaultVariableOptions[0];
+
   if (
     (await matsCollections.variable.findOneAsync({ name: "variable" })) === undefined
   ) {
@@ -842,11 +795,12 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       superiorNames: ["region-type"],
       optionsMap: statVarOptionsMap,
+      dependentNames: ["statistic"],
       statVarUnitMap,
-      options: Object.keys(statVarOptionsMap["Predefined region"]),
+      options: defaultVariableOptions,
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statVarOptionsMap["Predefined region"])[0],
+      default: defaultVariable,
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
@@ -863,11 +817,12 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       superiorNames: ["region-type"],
       optionsMap: statVarOptionsMap,
+      dependentNames: ["x-statistic"],
       statVarUnitMap,
-      options: Object.keys(statVarOptionsMap["Predefined region"]),
+      options: defaultVariableOptions,
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statVarOptionsMap["Predefined region"])[0],
+      default: defaultVariable,
       controlButtonVisibility: "block",
       displayOrder: 5,
       displayPriority: 1,
@@ -884,13 +839,120 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       superiorNames: ["region-type"],
       optionsMap: statVarOptionsMap,
+      dependentNames: ["y-statistic"],
       statVarUnitMap,
-      options: Object.keys(statVarOptionsMap["Predefined region"]),
+      options: defaultVariableOptions,
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statVarOptionsMap["Predefined region"])[0],
+      default: defaultVariable,
       controlButtonVisibility: "block",
       displayOrder: 5,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  }
+
+  const statOptionsMap = {
+    "Temperature at 2m (°C)": {
+      RMSE: "scalar",
+      "Bias (Model - Obs)": "scalar",
+      N: "scalar",
+      "Model average": "scalar",
+      "Obs average": "scalar",
+      "Std deviation": "scalar",
+      "MAE (temp and dewpoint only)": "scalar",
+    },
+    "Relative Humidity at 2m (%)": {
+      RMSE: "scalar",
+      "Bias (Model - Obs)": "scalar",
+      N: "scalar",
+      "Model average": "scalar",
+      "Obs average": "scalar",
+      "Std deviation": "scalar",
+      "MAE (temp and dewpoint only)": "scalar",
+    },
+    "Dewpoint at 2m (°C)": {
+      RMSE: "scalar",
+      "Bias (Model - Obs)": "scalar",
+      N: "scalar",
+      "Model average": "scalar",
+      "Obs average": "scalar",
+      "Std deviation": "scalar",
+      "MAE (temp and dewpoint only)": "scalar",
+    },
+    "Wind Speed at 10m (m/s)": {
+      RMSE: "scalar",
+      "Bias (Model - Obs)": "scalar",
+      N: "scalar",
+      "Model average": "scalar",
+      "Obs average": "scalar",
+      "Std deviation": "scalar",
+      "MAE (temp and dewpoint only)": "scalar",
+    },
+    "U-Wind Speed at 10m (m/s)": {
+      "Bias (Model - Obs)": "scalar",
+      N: "scalar",
+    },
+    "V-Wind Speed at 10m (m/s)": {
+      "Bias (Model - Obs)": "scalar",
+      N: "scalar",
+    },
+  };
+
+  if (
+    (await matsCollections.statistic.findOneAsync({ name: "statistic" })) === undefined
+  ) {
+    await matsCollections.statistic.insertAsync({
+      name: "statistic",
+      type: matsTypes.InputTypes.select,
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap[defaultVariable]),
+      superiorNames: ["variable"],
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(statOptionsMap[defaultVariable])[0],
+      controlButtonVisibility: "block",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  }
+
+  if (
+    (await matsCollections["x-statistic"].findOneAsync({ name: "x-statistic" })) ===
+    undefined
+  ) {
+    await matsCollections["x-statistic"].insertAsync({
+      name: "x-statistic",
+      type: matsTypes.InputTypes.select,
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap[defaultVariable]),
+      superiorNames: ["x-variable"],
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(statOptionsMap[defaultVariable])[0],
+      controlButtonVisibility: "block",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  }
+
+  if (
+    (await matsCollections["y-statistic"].findOneAsync({ name: "y-statistic" })) ===
+    undefined
+  ) {
+    await matsCollections["y-statistic"].insertAsync({
+      name: "y-statistic",
+      type: matsTypes.InputTypes.select,
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap[defaultVariable]),
+      superiorNames: ["y-variable"],
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(statOptionsMap[defaultVariable])[0],
+      controlButtonVisibility: "block",
+      displayOrder: 4,
       displayPriority: 1,
       displayGroup: 3,
     });
