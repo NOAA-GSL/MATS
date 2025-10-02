@@ -1,5 +1,6 @@
 /* eslint-disable no-shadow */
 /* eslint-disable no-console */
+/* eslint-disable no-await-in-loop */
 import { Meteor } from "meteor/meteor";
 import { matsTypes, matsParamUtils, matsCollections } from "meteor/randyp:mats-common";
 import { fetch } from "meteor/fetch";
@@ -227,7 +228,8 @@ global.processScorecard = async function (plotParams) {
   scorecardDocument.results.blocks = {};
   scorecardDocument.queryMap.blocks = {};
   // fill in the blocks - these are all initially default values
-  plotParams.curves.forEach(async function (curve) {
+  for (let cidx = 0; cidx < plotParams.curves.length; cidx += 1) {
+    const curve = plotParams.curves[cidx];
     /**
      * Here we are going to pre-load as much as possible for the queries, *before*
      * we start with the hideous 6th degree loop. This will include:
@@ -399,19 +401,22 @@ global.processScorecard = async function (plotParams) {
         : scorecardCurve.threshold;
     scorecardCurve.level =
       scorecardCurve.level === undefined ? ["level_NA"] : scorecardCurve.level;
-    regions.forEach(function (regionText) {
+    for (let ridx = 0; ridx < regions.length; ridx += 1) {
+      const regionText = regions[ridx];
       const region = sanitizeKeys(regionText);
       if (scorecardDocument.results.blocks[label].data[region] === undefined) {
         scorecardDocument.results.blocks[label].data[region] = {};
         scorecardDocument.queryMap.blocks[label].data[region] = {};
       }
-      scorecardCurve.statistic.forEach(function (statText) {
+      for (let sidx = 0; sidx < scorecardCurve.statistic.length; sidx += 1) {
+        const statText = scorecardCurve.statistic[sidx];
         const stat = sanitizeKeys(statText);
         if (scorecardDocument.results.blocks[label].data[region][stat] === undefined) {
           scorecardDocument.results.blocks[label].data[region][stat] = {};
           scorecardDocument.queryMap.blocks[label].data[region][stat] = {};
         }
-        scorecardCurve.variable.forEach(function (variableText) {
+        for (let vidx = 0; vidx < scorecardCurve.variable.length; vidx += 1) {
+          const variableText = scorecardCurve.variable[vidx];
           const variable = sanitizeKeys(variableText);
           if (
             scorecardDocument.results.blocks[label].data[region][stat][variable] ===
@@ -420,7 +425,8 @@ global.processScorecard = async function (plotParams) {
             scorecardDocument.results.blocks[label].data[region][stat][variable] = {};
             scorecardDocument.queryMap.blocks[label].data[region][stat][variable] = {};
           }
-          scorecardCurve.threshold.forEach(function (thresholdText) {
+          for (let tidx = 0; tidx < scorecardCurve.threshold.length; tidx += 1) {
+            const thresholdText = scorecardCurve.threshold[tidx];
             const threshold = sanitizeKeys(thresholdText);
             if (
               scorecardDocument.results.blocks[label].data[region][stat][variable][
@@ -434,7 +440,8 @@ global.processScorecard = async function (plotParams) {
                 threshold
               ] = {};
             }
-            scorecardCurve.level.forEach(function (levelText) {
+            for (let lidx = 0; lidx < scorecardCurve.level.length; lidx += 1) {
+              const levelText = scorecardCurve.level[lidx];
               const level = sanitizeKeys(levelText);
               if (
                 scorecardDocument.results.blocks[label].data[region][stat][variable][
@@ -448,7 +455,8 @@ global.processScorecard = async function (plotParams) {
                   threshold
                 ][level] = {};
               }
-              fcstLengths.forEach(function (fcstlenText) {
+              for (let fidx = 0; fidx < fcstLengths.length; fidx += 1) {
+                const fcstlenText = fcstLengths[fidx];
                 const fcstlen = sanitizeKeys(fcstlenText);
 
                 // make deep copy of query template
@@ -577,13 +585,13 @@ global.processScorecard = async function (plotParams) {
                     threshold
                   ][level][fcstlen] = "undefined";
                 }
-              });
-            });
-          });
-        });
-      });
-    });
-  });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   // store the document
   try {
