@@ -85,7 +85,7 @@ global.dataDieoff = async function (plotParams) {
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
       await matsCollections.statistic.findOneAsync({ name: "statistic" })
-    ).optionsMap;
+    ).optionsMap[variableStr];
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;

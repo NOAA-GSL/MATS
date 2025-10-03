@@ -89,7 +89,7 @@ global.dataDailyModelCycle = async function (plotParams) {
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
       await matsCollections.statistic.findOneAsync({ name: "statistic" })
-    ).optionsMap;
+    ).optionsMap[variableStr];
 
     let timeVar;
     let dateClause;

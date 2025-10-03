@@ -135,7 +135,7 @@ global.dataSimpleScatter = async function (plotParams) {
     const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
       name: "variable",
     });
-    statType = statisticOptionsMap[statisticXSelect];
+    statType = statisticOptionsMap[variableXStr][statisticXSelect];
     varUnitsX = statVarUnitMap[statisticXSelect][variableXStr];
     varUnitsY = statVarUnitMap[statisticYSelect][variableYStr];
 
