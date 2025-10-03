@@ -368,7 +368,7 @@ global.dataContourDiff = async function (plotParams) {
   const newPlotParams = plotParams;
   newPlotParams.curves = matsDataUtils.getDiffContourCurveParams(plotParams.curves);
   curves = newPlotParams.curves;
-  dataset[0].name = matsPlotUtils.getCurveText(
+  dataset[0].name = await matsPlotUtils.getCurveText(
     matsTypes.PlotTypes.contourDiff,
     curves[0]
   );
