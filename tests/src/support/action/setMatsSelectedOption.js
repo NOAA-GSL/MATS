@@ -36,9 +36,9 @@ export default async (parameter, selectionValue) => {
     await $(`#${parameter}-select-done`).click();
   } else {
     // noinspection JSJQueryEfficiency
-    await $(`[data-value="${selectionValue}"]`).scrollIntoView();
-    await $(`[data-value="${selectionValue}"]`).waitForClickable();
-    await $(`[data-value="${selectionValue}"]`).click();
+    await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).scrollIntoView();
+    await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).waitForClickable();
+    await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).click();
   }
 
   let matchValue = selectionValue;

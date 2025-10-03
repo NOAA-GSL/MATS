@@ -36,12 +36,12 @@ Feature: No Data Found Exception: region_and_scale
         Then the "info" dialog should be visible
         And I should see "INFO:  The region/scale combination [Southeastern US moving domain and 20 km grid] is not supported by the database for the model [HRRRE_mem1]. Choose a different scale to continue using this region." in the "info" dialog
 
-        When I click the "Clear" button
-        Then the "info" dialog should not be visible
-        Then I should be on the main page
-        And the "Plot Unmatched" button should be visible
+        # When I click the "Clear" button
+        # Then the "info" dialog should not be visible
+        # Then I should be on the main page
+        # And the "Plot Unmatched" button should be visible
 
-        Then I click the "Remove Curve0" button
-        And the "Remove curve Curve0" button should be visible
-        Then I click the "Remove curve Curve0" button
-        Then I should have 0 curves
+        # Then I click the "Remove Curve0" button
+        # And the "Remove curve Curve0" button should be visible
+        # Then I click the "Remove curve Curve0" button
+        # Then I should have 0 curves

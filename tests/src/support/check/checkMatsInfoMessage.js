@@ -3,12 +3,10 @@
  *  @param   {String}   message      the modal message
  */
 export default async (message) => {
-    const command = 'getText';
     const expectedText = message;
-    const elem = $('#info').$('.modal-body').$('<p />');
-    await elem.waitForDisplayed();
-    await elem.scrollIntoView();
-    const text = await elem[command]();
+    await $('#infoModalText').waitForDisplayed();
+    await $('#infoModalText').scrollIntoView();
+    const text = await $('#infoModalText').getText();
     // notice that the expectedText contains the actual text.
     // that is because the expected text has a leading "Info:  "
     // that the actual modal text selector filters out
