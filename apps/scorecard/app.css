@@ -167,16 +167,6 @@ body {
   max-width: 100% !important;
 }
 
-.item + .tooltip > .tooltip-inner {
-  background-color: #73ad21 !important;
-  color: #ffffff !important;
-  border: 1px solid green !important;
-  padding: 5px !important;
-  font-size: 15px !important;
-  max-width: 350px !important;
-  width: 350px !important;
-}
-
 .daterangepicker .ranges li {
   background-color: #bfdfff;
   font-size: 14px !important;
