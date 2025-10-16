@@ -14,7 +14,17 @@
   <link href="bs/css/bootstrap.min.css" , rel="stylesheet" />
   <link href="css/home.css" , rel="stylesheet" />
   {{ if .Config.UseProductionAnalytics}}
+  <!-- analytics.usa.gov tag -->
   <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=DOC&subagency=NOAA"></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-VBF2XM0Y9M"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-VBF2XM0Y9M');
+  </script>
   {{ else }}
   <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=DOC&subagency=NOAA&dapdev=true"></script>
   {{ end }}
