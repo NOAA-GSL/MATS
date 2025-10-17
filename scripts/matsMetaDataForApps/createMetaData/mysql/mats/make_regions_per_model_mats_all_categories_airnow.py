@@ -219,7 +219,7 @@ def regions_per_model_mats_all_categories(mode):
                 val = list(row.values())[0]
                 this_scales.append(int(val))
             this_scales.sort(key=int)
-            per_table[tablename]['scales'] = this_trshs
+            per_table[tablename]['scales'] = this_scales
             # print(tablename + " this_scales: " + str(per_table[tablename]['this_scales']) )
 
             # get statistics for this table
