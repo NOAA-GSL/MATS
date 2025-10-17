@@ -210,6 +210,18 @@ def regions_per_model_mats_all_categories(mode):
             per_table[tablename]['trshs'] = this_trshs
             # print(tablename + " this_trshs: " + str(per_table[tablename]['this_trshs']) )
 
+            # get scales from this table
+            get_scales = ("SELECT DISTINCT scale FROM " + tablename + ";")
+            cursor.execute(get_scales)
+            per_table[tablename]['scales'] = []
+            this_scales = []
+            for row in cursor:
+                val = list(row.values())[0]
+                this_scales.append(int(val))
+            this_scales.sort(key=int)
+            per_table[tablename]['scales'] = this_trshs
+            # print(tablename + " this_scales: " + str(per_table[tablename]['this_scales']) )
+
             # get statistics for this table
             get_tablestats = "SELECT min(valid_time) AS mindate, max(valid_time) AS maxdate, count(valid_time) AS numrecs FROM " + tablename + ";"
             cursor.execute(get_tablestats)
@@ -225,7 +237,7 @@ def regions_per_model_mats_all_categories(mode):
             qd.append(str(per_table[tablename]['region']))
             qd.append(str(per_table[tablename]['fcst_lens']))
             qd.append(str(per_table[tablename]['trshs']))
-            qd.append(str(per_table[tablename]['scale']))
+            qd.append(str(per_table[tablename]['scales']))
             qd.append(stats['numrecs'])
             cursor.execute(replace_tablestats_rec, qd)
             cnx.commit()
@@ -388,13 +400,16 @@ def regions_per_model_mats_all_categories(mode):
 
         # get scales for all tables pertaining to this model
         get_these_scales = "select distinct(scle) from " + db + ".TABLESTATS_build where tablename like '" + \
-            model + "%' and scle != '[]' and model = '" + model + "' and numrecs > 0;"
+            model + "%' and scle != '[]' and model = '" + model + \
+            "' and numrecs > 0 order by length(scle) desc;"
         cursor.execute(get_these_scales)
         these_scales = []
         for row in cursor:
-            val = str(list(row.values())[0])
-            these_scales.append(val)
-        these_scales.sort()
+            val_array = ast.literal_eval(list(row.values())[0])
+            for val in val_array:
+                if val not in these_scales:
+                    these_scales.append(val)
+        these_scales.sort(key=int)
         # print( "these_scales:\n" + str(these_scales) )
 
         # get statistics for all tables pertaining to this model
@@ -406,7 +421,7 @@ def regions_per_model_mats_all_categories(mode):
         # print( "catstats:\n" + str(catstats) )
 
         # update the metadata for this data source in the build table
-        if len(these_regions) > 0 and len(these_fcst_lens) > 0 and len(these_trshs) > 0:
+        if len(these_regions) > 0 and len(these_fcst_lens) > 0 and len(these_trshs) > 0 and len(these_scales) > 0:
             update_rpm_record(cnx, cursor, model, display_text, these_regions, these_fcst_lens, these_trshs,
                               these_scales, cat, do, catstats['mindate'], catstats['maxdate'], catstats['numrecs'])
 
