@@ -199,7 +199,7 @@ def regions_per_model_mats_all_categories(mode):
             # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
 
             # get thresholds from this table
-            get_trshs = ("SELECT DISTINCT trsh FROM " + tablename + ";")
+            get_trshs = ("SELECT DISTINCT thresh_10 FROM " + tablename + ";")
             cursor.execute(get_trshs)
             per_table[tablename]['trshs'] = []
             this_trshs = []
@@ -211,7 +211,7 @@ def regions_per_model_mats_all_categories(mode):
             # print(tablename + " this_trshs: " + str(per_table[tablename]['this_trshs']) )
 
             # get statistics for this table
-            get_tablestats = "SELECT min(time) AS mindate, max(time) AS maxdate, count(time) AS numrecs FROM " + tablename + ";"
+            get_tablestats = "SELECT min(valid_time) AS mindate, max(valid_time) AS maxdate, count(valid_time) AS numrecs FROM " + tablename + ";"
             cursor.execute(get_tablestats)
             stats = cursor.fetchall()[0]
             # print(tablename + " stats:\n" + str(stats) )
