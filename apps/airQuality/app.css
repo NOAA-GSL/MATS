@@ -1,0 +1,230 @@
+/*
+ * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
+/* CSS declarations go here */
+html,
+body {
+  height: 100%;
+  padding: 0;
+  --bs-body-bg: grey;
+  --bs-body-font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+  --bs-body-font-size: 15px;
+  --bs-body-color: black;
+}
+
+@font-face {
+  font-family: "PublicSans-Regular";
+  src: url("/packages/randyp_mats-common/public/fonts/PublicSans-Regular.ttf");
+}
+
+@font-face {
+  font-family: "PublicSans-SemiBold";
+  src: url("/packages/randyp_mats-common/public/fonts/PublicSans-SemiBold.ttf");
+}
+
+@font-face {
+  font-family: "PublicSans-Medium";
+  src: url("/packages/randyp_mats-common/public/fonts/PublicSans-Medium.ttf");
+}
+
+.boldedPublicSans {
+  font-family: PublicSans-SemiBold, Arial, Helvetica, serif;
+}
+
+.regularPublicSans {
+  font-family: PublicSans-Regular, Arial, Helvetica, sans-serif;
+}
+
+.mediumPublicSans {
+  font-family: PublicSans-Medium, Arial, Helvetica, serif;
+}
+
+.item-button-group {
+  margin-left: 0;
+  margin-right: 1em;
+}
+
+.well {
+  background-color: #fff !important;
+  border: none !important;
+  -webkit-box-shadow: none !important;
+}
+
+.btn-default {
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #ffffff !important;
+  --bs-btn-border-color: #cccccc !important;
+  --bs-btn-hover-color: #ffffff !important;
+  --bs-btn-hover-bg: #777777 !important;
+  --bs-btn-hover-border-color: #cccccc !important;
+}
+
+.btn-default:disabled {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
+}
+
+.btn-primary {
+  --bs-btn-color: #ffffff !important;
+  --bs-btn-bg: #052c65 !important;
+  --bs-btn-border-color: #2e6da4 !important;
+  --bs-btn-hover-color: #ffffff !important;
+  --bs-btn-hover-bg: #114466 !important;
+  --bs-btn-hover-border-color: #2e6da4 !important;
+}
+
+.btn-primary:disabled {
+  background-color: #052c65 !important;
+  color: #ffffff !important;
+  opacity: 0.6 !important;
+}
+
+.btn-info {
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #ddeeff !important;
+  --bs-btn-border-color: #2e6da4 !important;
+  --bs-btn-hover-color: #000000 !important;
+  --bs-btn-hover-bg: #99ccff !important;
+  --bs-btn-hover-border-color: #2e6da4 !important;
+}
+
+.btn-info:disabled {
+  background-color: #ddeeff !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
+}
+
+.btn-success {
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #c6f7e1 !important;
+  --bs-btn-border-color: #336633 !important;
+  --bs-btn-hover-color: #000000 !important;
+  --bs-btn-hover-bg: #99eebb !important;
+  --bs-btn-hover-border-color: #336633 !important;
+}
+
+.btn-success:disabled {
+  background-color: #c6f7e1 !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
+}
+
+.btn-danger {
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #ffcccc !important;
+  --bs-btn-border-color: #d43f3a !important;
+  --bs-btn-hover-color: #000000 !important;
+  --bs-btn-hover-bg: #ff9999 !important;
+  --bs-btn-hover-border-color: #d43f3a !important;
+}
+
+.btn-danger:disabled {
+  background-color: #ffcccc !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
+}
+
+.btn-warning {
+  --bs-btn-color: #000000 !important;
+  --bs-btn-bg: #ffeebb !important;
+  --bs-btn-border-color: #eebb33 !important;
+  --bs-btn-hover-color: #000000 !important;
+  --bs-btn-hover-bg: #ffff99 !important;
+  --bs-btn-hover-border-color: #eebb33 !important;
+}
+
+.btn-warning:disabled {
+  background-color: #ffeebb !important;
+  color: #000000 !important;
+  opacity: 0.6 !important;
+}
+
+#placeholder .button {
+  position: absolute;
+  cursor: pointer;
+}
+
+#placeholder div.button {
+  font-size: smaller;
+  color: #999;
+  background-color: #eee;
+  padding: 2px;
+}
+
+.spacebutton {
+  background: transparent;
+  border: none;
+}
+
+.modal-style {
+  background-color: #cccccc !important;
+  overflow-y: initial !important;
+}
+
+.input {
+  max-width: 100% !important;
+}
+
+.daterangepicker .ranges li {
+  background-color: #bfdfff;
+  font-size: 14px !important;
+  margin: 5px 2px;
+  border-radius: 10px;
+  border-color: #dddddd;
+  border-width: 1px;
+}
+
+.daterangepicker .drp-selected {
+  font-size: 18px !important;
+  color: #990000;
+}
+
+.bg-lightgray {
+  background-color: #dddddd;
+}
+
+.bg-darkgray {
+  background-color: #333333;
+}
+
+.bg-noaa-blue {
+  background-color: #000066;
+}
+
+.noaa-logo-size {
+  width: 60px;
+}
+
+.icon-size {
+  width: 25px;
+}
+
+.icon-size-small {
+  width: 15px;
+}
+
+.small-text {
+  font-size: small;
+}
+
+.white-link-text {
+  color: white;
+  text-decoration: none;
+}
+
+.text-blue {
+  color: #005ea2;
+}
+
+.text-dark-blue {
+  color: #114466;
+}
+
+.added-curve {
+  background-color: #f5f5f5;
+  border: solid;
+  border-width: thick;
+  border-radius: 10px;
+}
