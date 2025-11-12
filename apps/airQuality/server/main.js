@@ -482,7 +482,7 @@ const doCurveParams = async function () {
         : rows[i].disc.replace(/\.|\(|\)| $/g, "").replace("  ", " ");
       const descSiteName =
         siteDescription !== siteName && siteDescription !== "N/A"
-          ? `${siteName}, ${siteDescription}`
+          ? `${siteName} | ${siteDescription}`
           : siteName;
       const siteId = rows[i].id;
       const siteLat = rows[i].lat === undefined ? -90 : rows[i].lat / 100;
@@ -1041,34 +1041,40 @@ const doCurveParams = async function () {
 
   if ((await matsCollections.average.findOneAsync({ name: "average" })) === undefined) {
     const optionsMap = {
-      None: [`ceil(${3600}*floor(((m0.time)+${3600}/2)/${3600}))`],
-      "3hr": [`ceil(${3600 * 3}*floor(((m0.time)+${3600 * 3}/2)/${3600 * 3}))`],
-      "6hr": [`ceil(${3600 * 6}*floor(((m0.time)+${3600 * 6}/2)/${3600 * 6}))`],
-      "12hr": [`ceil(${3600 * 12}*floor(((m0.time)+${3600 * 12}/2)/${3600 * 12}))`],
-      "1D": [`ceil(${3600 * 24}*floor(((m0.time)+${3600 * 24}/2)/${3600 * 24}))`],
+      None: [`ceil(${3600}*floor(((m0.valid_time)+${3600}/2)/${3600}))`],
+      "3hr": [`ceil(${3600 * 3}*floor(((m0.valid_time)+${3600 * 3}/2)/${3600 * 3}))`],
+      "6hr": [`ceil(${3600 * 6}*floor(((m0.valid_time)+${3600 * 6}/2)/${3600 * 6}))`],
+      "12hr": [
+        `ceil(${3600 * 12}*floor(((m0.valid_time)+${3600 * 12}/2)/${3600 * 12}))`,
+      ],
+      "1D": [`ceil(${3600 * 24}*floor(((m0.valid_time)+${3600 * 24}/2)/${3600 * 24}))`],
       "3D": [
-        `ceil(${3600 * 24 * 3}*floor(((m0.time)+${3600 * 24 * 3}/2)/${3600 * 24 * 3}))`,
+        `ceil(${3600 * 24 * 3}*floor(((m0.valid_time)+${3600 * 24 * 3}/2)/${
+          3600 * 24 * 3
+        }))`,
       ],
       "7D": [
-        `ceil(${3600 * 24 * 7}*floor(((m0.time)+${3600 * 24 * 7}/2)/${3600 * 24 * 7}))`,
+        `ceil(${3600 * 24 * 7}*floor(((m0.valid_time)+${3600 * 24 * 7}/2)/${
+          3600 * 24 * 7
+        }))`,
       ],
       "30D": [
-        `ceil(${3600 * 24 * 30}*floor(((m0.time)+${3600 * 24 * 30}/2)/${
+        `ceil(${3600 * 24 * 30}*floor(((m0.valid_time)+${3600 * 24 * 30}/2)/${
           3600 * 24 * 30
         }))`,
       ],
       "60D": [
-        `ceil(${3600 * 24 * 60}*floor(((m0.time)+${3600 * 24 * 60}/2)/${
+        `ceil(${3600 * 24 * 60}*floor(((m0.valid_time)+${3600 * 24 * 60}/2)/${
           3600 * 24 * 60
         }))`,
       ],
       "90D": [
-        `ceil(${3600 * 24 * 90}*floor(((m0.time)+${3600 * 24 * 90}/2)/${
+        `ceil(${3600 * 24 * 90}*floor(((m0.valid_time)+${3600 * 24 * 90}/2)/${
           3600 * 24 * 90
         }))`,
       ],
       "180D": [
-        `ceil(${3600 * 24 * 180}*floor(((m0.time)+${3600 * 24 * 180}/2)/${
+        `ceil(${3600 * 24 * 180}*floor(((m0.valid_time)+${3600 * 24 * 180}/2)/${
           3600 * 24 * 180
         }))`,
       ],
@@ -1136,10 +1142,11 @@ const doCurveParams = async function () {
     const optionsMap = {
       "Fcst lead time": "select m0.fcst_len as binVal, ",
       Threshold: "select m0.trsh/100 as binVal, ",
-      "Valid UTC hour": "select m0.time%(24*3600)/3600 as binVal, ",
-      "Init UTC hour": "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
-      "Valid Date": "select m0.time as binVal, ",
-      "Init Date": "select m0.time-m0.fcst_len*3600 as binVal, ",
+      "Valid UTC hour": "select m0.valid_time%(24*3600)/3600 as binVal, ",
+      "Init UTC hour":
+        "select (m0.valid_time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
+      "Valid Date": "select m0.valid_time as binVal, ",
+      "Init Date": "select m0.valid_time-m0.fcst_len*3600 as binVal, ",
     };
 
     await matsCollections["bin-parameter"].insertAsync({
