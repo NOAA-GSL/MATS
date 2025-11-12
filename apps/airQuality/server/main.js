@@ -17,12 +17,9 @@ import mysql from "mysql2/promise";
 
 /* eslint-disable no-await-in-loop */
 
-// This app combines two previous apps, ceiling and visibility.
-// This is where we store the databases referenced by those apps.
+// This is where we store the databases referenced by this app.
 const variableDBNames = {
-  Ceiling: { modelDB: "ceiling2", sumsDB: "ceiling_sums2" },
-  "Cloud Base Height": { modelDB: "cloud_base", sumsDB: "cloud_base_sums" },
-  Visibility: { modelDB: "visibility", sumsDB: "visibility_sums2" },
+  PM25: { modelDB: "airnow", sumsDB: "airnow_sums" },
 };
 const variables = Object.keys(variableDBNames);
 
@@ -239,11 +236,12 @@ const doPlotParams = async function () {
 
     const xOptionsMap = {
       "Fcst lead time": "select m0.fcst_len as xVal, ",
-      Threshold: "select m0.trsh/100 as xVal, ",
-      "Valid UTC hour": "select m0.time%(24*3600)/3600 as xVal, ",
-      "Init UTC hour": "select (m0.time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
-      "Valid Date": "select m0.time as xVal, ",
-      "Init Date": "select m0.time-m0.fcst_len*3600 as xVal, ",
+      Threshold: "select m0.thresh_10/10 as xVal, ",
+      "Valid UTC hour": "select m0.valid_time%(24*3600)/3600 as xVal, ",
+      "Init UTC hour":
+        "select (m0.valid_time-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
+      "Valid Date": "select m0.valid_time as xVal, ",
+      "Init Date": "select m0.valid_time-m0.fcst_len*3600 as xVal, ",
     };
 
     await matsCollections.PlotParams.insertAsync({
@@ -263,11 +261,11 @@ const doPlotParams = async function () {
 
     const yOptionsMap = {
       "Fcst lead time": "m0.fcst_len as yVal, ",
-      Threshold: "m0.trsh/100 as yVal, ",
-      "Valid UTC hour": "m0.time%(24*3600)/3600 as yVal, ",
-      "Init UTC hour": "(m0.time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
-      "Valid Date": "m0.time as yVal, ",
-      "Init Date": "m0.time-m0.fcst_len*3600 as yVal, ",
+      Threshold: "m0.thresh_10/10 as yVal, ",
+      "Valid UTC hour": "m0.valid_time%(24*3600)/3600 as yVal, ",
+      "Init UTC hour": "(m0.valid_time-m0.fcst_len*3600)%(24*3600)/3600 as yVal, ",
+      "Valid Date": "m0.valid_time as yVal, ",
+      "Init Date": "m0.valid_time-m0.fcst_len*3600 as yVal, ",
     };
 
     await matsCollections.PlotParams.insertAsync({
@@ -349,8 +347,10 @@ const doCurveParams = async function () {
   const sitesLocationMap = [];
   const forecastLengthOptionsMap = {};
   const thresholdsModelOptionsMap = {};
+  const scaleModelOptionsMap = {};
   const allRegionValuesMap = {};
   const allThresholdValuesMap = {};
+  const allScaleValuesMap = {};
 
   try {
     const rows = await matsDataQueryUtils.queryMySQL(
@@ -384,16 +384,35 @@ const doCurveParams = async function () {
 
   try {
     for (let didx = 0; didx < variables.length; didx += 1) {
+      allScaleValuesMap[variables[didx]] = {};
+      const rows = await matsDataQueryUtils.queryMySQL(
+        global.sumPool,
+        `select scale,description from ${
+          variableDBNames[variables[didx]].modelDB
+        }.scale_descriptions;`
+      );
+      for (let j = 0; j < rows.length; j += 1) {
+        allScaleValuesMap[variables[didx]][rows[j].scale.trim()] =
+          rows[j].description.trim();
+      }
+    }
+  } catch (err) {
+    throw new Error(err.message);
+  }
+
+  try {
+    for (let didx = 0; didx < variables.length; didx += 1) {
       const variable = variables[didx];
       modelOptionsMap[variable] = {};
       modelDateRangeMap[variable] = {};
       forecastLengthOptionsMap[variable] = {};
       thresholdsModelOptionsMap[variable] = {};
+      scaleModelOptionsMap[variable] = {};
       regionModelOptionsMap[variable] = {};
 
       const rows = await matsDataQueryUtils.queryMySQL(
         global.sumPool,
-        `select model,regions,display_text,fcst_lens,trsh,mindate,maxdate from ${variableDBNames[variable].sumsDB}.regions_per_model_mats_all_categories order by display_category, display_order;`
+        `select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from ${variableDBNames[variable].sumsDB}.regions_per_model_mats_all_categories order by display_category, display_order;`
       );
       for (let i = 0; i < rows.length; i += 1) {
         const modelValue = rows[i].model.trim();
@@ -427,6 +446,14 @@ const doCurveParams = async function () {
             return allThresholdValuesMap[variable][threshold.replace(/'|\[|\]/g, "")];
           });
 
+        const scales = rows[i].scale;
+        scaleModelOptionsMap[variable][model] = scales
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (scale) {
+            return allScaleValuesMap[variable][scale.replace(/'|\[|\]/g, "")];
+          });
+
         const { regions } = rows[i];
         regionModelOptionsMap[variable][model] = regions
           .split(",")
@@ -444,15 +471,17 @@ const doCurveParams = async function () {
     await matsCollections.SiteMap.removeAsync({});
     const rows = await matsDataQueryUtils.queryMySQL(
       global.sumPool,
-      "select madis_id,name,lat,lon,elev,description from madis3.metars_mats_global where lat > -16380 and lat < 16380 and lon > -32760 and lon < 32760 order by name;"
+      "select id,name,lat,lon,elev,disc from airnow.stations where lat > -9000 and lat < 9000 and lon > -18000 and lon < 18000 order by name;"
     );
     for (let i = 0; i < rows.length; i += 1) {
-      const siteName = rows[i].name === undefined ? "unknown" : rows[i].name;
-      const siteDescription =
-        rows[i].description === undefined ? "unknown" : rows[i].description;
-      const siteId = rows[i].madis_id;
-      const siteLat = rows[i].lat === undefined ? -90 : rows[i].lat / 182;
-      const siteLon = rows[i].lon === undefined ? 0 : rows[i].lon / 182;
+      const siteName =
+        !rows[i].name || !rows[i].name.replace(/\./g, "").length
+          ? "unknown"
+          : rows[i].name.replace(/\./g, "");
+      const siteDescription = rows[i].disc === undefined ? "unknown" : rows[i].disc;
+      const siteId = rows[i].id;
+      const siteLat = rows[i].lat === undefined ? -90 : rows[i].lat / 100;
+      const siteLon = rows[i].lon === undefined ? 0 : rows[i].lon / 100;
       const siteElev = rows[i].elev === undefined ? 0 : rows[i].elev;
 
       // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
@@ -470,7 +499,7 @@ const doCurveParams = async function () {
             title: siteDescription,
             color: "red",
             size: 5,
-            network: "METAR",
+            network: "AirNow",
             peerOption: siteName,
             id: siteId,
             highLightColor: "blue",
@@ -578,6 +607,7 @@ const doCurveParams = async function () {
         "region",
         "forecast-length",
         "threshold",
+        "scale",
         "dates",
         "curve-dates",
       ],
@@ -667,9 +697,9 @@ const doCurveParams = async function () {
 
       "TSS (True Skill Score)": ["ctc", "x100", 100],
 
-      "PODy (POD of value < threshold)": ["ctc", "x100", 100],
+      "PODy (POD of value > threshold)": ["ctc", "x100", 100],
 
-      "PODn (POD of value > threshold)": ["ctc", "x100", 100],
+      "PODn (POD of value < threshold)": ["ctc", "x100", 100],
 
       "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
 
@@ -679,19 +709,23 @@ const doCurveParams = async function () {
 
       "ETS (Equitable Threat Score)": ["ctc", "x100", 100],
 
-      "Nlow (Number of obs < threshold (hits + misses))": ["ctc", "Number", null],
-
-      "Nhigh (Number of obs > threshold (false alarms + correct nulls))": [
+      "Nlow (Number of obs < threshold (false alarms + correct nulls))": [
         "ctc",
         "Number",
         null,
       ],
 
+      "Nhigh (Number of obs > threshold (hits + misses))": ["ctc", "Number", null],
+
       "Ntot (Total number of obs, (Nlow + Nhigh))": ["ctc", "Number", null],
 
-      "Ratio Nlow / Ntot ((hit + miss)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
+      "Ratio Nlow / Ntot ((fa + cn)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
 
-      "Ratio Nhigh / Ntot ((fa + cn)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
+      "Ratio Nhigh / Ntot ((hit + miss)/(hit + miss + fa + cn))": [
+        "ctc",
+        "Ratio",
+        null,
+      ],
 
       "N times*levels(*stations if station plot) per graph point": [
         "ctc",
@@ -708,7 +742,7 @@ const doCurveParams = async function () {
       unique: false,
       default: Object.keys(optionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 2,
+      displayOrder: 1,
       displayPriority: 1,
       displayGroup: 3,
     });
@@ -734,7 +768,7 @@ const doCurveParams = async function () {
           Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
-      displayOrder: 1,
+      displayOrder: 2,
       displayPriority: 1,
       displayGroup: 3,
     });
@@ -764,6 +798,56 @@ const doCurveParams = async function () {
             default:
               thresholdsModelOptionsMap[variables[0]][
                 Object.keys(thresholdsModelOptionsMap[variables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if ((await matsCollections.scale.findOneAsync({ name: "scale" })) === undefined) {
+    await matsCollections.scale.insertAsync({
+      name: "scale",
+      type: matsTypes.InputTypes.select,
+      optionsMap: scaleModelOptionsMap,
+      options:
+        scaleModelOptionsMap[variables[0]][
+          Object.keys(scaleModelOptionsMap[variables[0]])[0]
+        ],
+      valuesMap: allScaleValuesMap,
+      superiorNames: ["variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        scaleModelOptionsMap[variables[0]][
+          Object.keys(scaleModelOptionsMap[variables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections.scale.findOneAsync({ name: "scale" });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allScaleValuesMap)
+    ) {
+      // have to reload scale data
+      await matsCollections.scale.updateAsync(
+        { name: "scale" },
+        {
+          $set: {
+            optionsMap: scaleModelOptionsMap,
+            valuesMap: allScaleValuesMap,
+            options:
+              scaleModelOptionsMap[variables[0]][
+                Object.keys(scaleModelOptionsMap[variables[0]])[0]
+              ],
+            default:
+              scaleModelOptionsMap[variables[0]][
+                Object.keys(scaleModelOptionsMap[variables[0]])[0]
               ][0],
           },
         }
@@ -1172,6 +1256,7 @@ const doCurveTextPatterns = async function () {
         ["", "data-source", " in "],
         ["", "sites", ": "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " "],
         ["", "statistic", " at "],
         ["", "threshold", ", "],
@@ -1187,6 +1272,7 @@ const doCurveTextPatterns = async function () {
         "region",
         "statistic",
         "threshold",
+        "scale",
         "average",
         "forecast-length",
         "valid-time",
@@ -1202,6 +1288,7 @@ const doCurveTextPatterns = async function () {
         ["", "data-source", " in "],
         ["", "sites", ": "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " "],
         ["", "statistic", " at "],
         ["", "threshold", ", "],
@@ -1218,6 +1305,7 @@ const doCurveTextPatterns = async function () {
         "region",
         "statistic",
         "threshold",
+        "scale",
         "dieoff-type",
         "valid-time",
         "utc-cycle-start",
@@ -1233,6 +1321,7 @@ const doCurveTextPatterns = async function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " "],
         ["", "statistic", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
@@ -1245,6 +1334,7 @@ const doCurveTextPatterns = async function () {
         "data-source",
         "region",
         "statistic",
+        "scale",
         "forecast-length",
         "valid-time",
         "curve-dates",
@@ -1258,6 +1348,7 @@ const doCurveTextPatterns = async function () {
         ["", "data-source", " in "],
         ["", "sites", ": "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " "],
         ["", "statistic", " at "],
         ["", "threshold", ", "],
@@ -1272,6 +1363,7 @@ const doCurveTextPatterns = async function () {
         "region",
         "statistic",
         "threshold",
+        "scale",
         "forecast-length",
         "sites",
         "sitesMap",
@@ -1286,6 +1378,7 @@ const doCurveTextPatterns = async function () {
         ["", "data-source", " in "],
         ["", "sites", ": "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " "],
         ["", "statistic", " at "],
         ["", "threshold", ", "],
@@ -1299,6 +1392,7 @@ const doCurveTextPatterns = async function () {
         "region",
         "statistic",
         "threshold",
+        "scale",
         "utc-cycle-start",
         "sites",
         "sitesMap",
@@ -1311,6 +1405,7 @@ const doCurveTextPatterns = async function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " at "],
         ["", "threshold", ", "],
         ["fcst_len: ", "forecast-length", "h, "],
@@ -1323,6 +1418,7 @@ const doCurveTextPatterns = async function () {
         "data-source",
         "region",
         "threshold",
+        "scale",
         "forecast-length",
         "valid-time",
         "bin-parameter",
@@ -1359,6 +1455,7 @@ const doCurveTextPatterns = async function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " "],
         ["", "statistic", " at "],
         ["", "threshold", ", "],
@@ -1373,6 +1470,7 @@ const doCurveTextPatterns = async function () {
         "region",
         "statistic",
         "threshold",
+        "scale",
         "forecast-length",
         "valid-time",
         "curve-dates",
@@ -1385,6 +1483,7 @@ const doCurveTextPatterns = async function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " "],
         ["", "statistic", " at "],
         ["", "threshold", ", "],
@@ -1398,6 +1497,7 @@ const doCurveTextPatterns = async function () {
         "region",
         "statistic",
         "threshold",
+        "scale",
         "forecast-length",
         "valid-time",
       ],
@@ -1409,6 +1509,7 @@ const doCurveTextPatterns = async function () {
         ["", "label", ": "],
         ["", "data-source", " in "],
         ["", "region", ", "],
+        ["", "scale", " "],
         ["", "variable", " "],
         ["", "statistic", " at "],
         ["", "threshold", ", "],
@@ -1422,6 +1523,7 @@ const doCurveTextPatterns = async function () {
         "region",
         "statistic",
         "threshold",
+        "scale",
         "forecast-length",
         "valid-time",
       ],
@@ -1647,6 +1749,7 @@ Meteor.startup(async function () {
   for (let didx = 0; didx < variables.length; didx += 1) {
     mdr.addRecord("sumPool", variableDBNames[variables[didx]].modelDB, [
       "threshold_descriptions",
+      "scale_descriptions",
     ]);
     mdr.addRecord("sumPool", variableDBNames[variables[didx]].sumsDB, [
       "regions_per_model_mats_all_categories",
