@@ -474,11 +474,16 @@ const doCurveParams = async function () {
       "select id,name,lat,lon,elev,disc from airnow.stations where lat > -9000 and lat < 9000 and lon > -18000 and lon < 18000 order by name;"
     );
     for (let i = 0; i < rows.length; i += 1) {
-      const siteName =
-        !rows[i].name || !rows[i].name.replace(/\./g, "").length
-          ? "unknown"
-          : rows[i].name.replace(/\./g, "");
-      const siteDescription = rows[i].disc === undefined ? "unknown" : rows[i].disc;
+      const siteName = !rows[i].name
+        ? "unknown"
+        : rows[i].name.replace(/\.|\(|\)| $/g, "").replace("  ", " ");
+      const siteDescription = !rows[i].disc
+        ? "unknown"
+        : rows[i].disc.replace(/\.|\(|\)| $/g, "").replace("  ", " ");
+      const descSiteName =
+        siteDescription !== siteName && siteDescription !== "N/A"
+          ? `${siteName}, ${siteDescription}`
+          : siteName;
       const siteId = rows[i].id;
       const siteLat = rows[i].lat === undefined ? -90 : rows[i].lat / 100;
       const siteLon = rows[i].lon === undefined ? 0 : rows[i].lon / 100;
@@ -487,20 +492,20 @@ const doCurveParams = async function () {
       // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
       // Also exclude stations with missing data
       if (siteLat < 90 && siteLat > -90) {
-        siteOptionsMap[siteName] = [siteId];
+        siteOptionsMap[descSiteName] = [siteId];
 
         const point = [siteLat, siteLon];
         const obj = {
-          name: siteName,
+          name: descSiteName,
           origName: siteName,
           point,
           elevation: siteElev,
           options: {
-            title: siteDescription,
+            title: descSiteName,
             color: "red",
             size: 5,
             network: "AirNow",
-            peerOption: siteName,
+            peerOption: descSiteName,
             id: siteId,
             highLightColor: "blue",
           },
