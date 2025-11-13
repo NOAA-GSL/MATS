@@ -80,14 +80,20 @@ global.dataPerformanceDiagram = async function (plotParams) {
       const threshold = Object.keys(thresholdValues).find(
         (key) => thresholdValues[key] === thresholdStr
       );
-      thresholdClause = `and m0.trsh = ${threshold}`;
+      thresholdClause = `and m0.thresh_10 = ${threshold}`;
     }
+
+    const scaleStr = curve.scale;
+    const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+      .valuesMap[variable];
+    const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
+    const scaleClause = `and m0.scale = ${scale}`;
 
     let validTimeClause = "";
     if (binParam !== "Valid UTC hour") {
       const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
       if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-        validTimeClause = `and floor((m0.time)%(24*3600)/3600) IN(${validTimes})`;
+        validTimeClause = `and floor((m0.valid_time)%(24*3600)/3600) IN(${validTimes})`;
       }
     }
 
@@ -110,9 +116,9 @@ global.dataPerformanceDiagram = async function (plotParams) {
     let dateString = "";
     let dateClause = "";
     if (binParam === "Init Date") {
-      dateString = "m0.time-m0.fcst_len*3600";
+      dateString = "m0.valid_time-m0.fcst_len*3600";
     } else {
-      dateString = "m0.time";
+      dateString = "m0.valid_time";
     }
     dateClause = `and ${dateString} >= ${fromSecs} and ${dateString} <= ${toSecs}`;
 
@@ -142,13 +148,14 @@ global.dataPerformanceDiagram = async function (plotParams) {
           "count(distinct {{dateString}}) as nTimes, " +
           "min({{dateString}}) as min_secs, " +
           "max({{dateString}}) as max_secs, " +
-          "((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) as pod, ((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) as far, " +
-          "sum(m0.yy+m0.ny) as oy_all, sum(m0.yn+m0.nn) as on_all, group_concat(m0.time, ';', m0.yy, ';', " +
-          "m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as n0 " +
+          "((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) as pod, ((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) as far, " +
+          "sum(m0.yy+m0.yn) as oy_all, sum(m0.ny+m0.nn) as on_all, group_concat(m0.valid_time, ';', m0.yy, ';', " +
+          "m0.ny, ';', m0.yn, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0 " +
           "{{queryTableClause}} " +
           "where 1=1 " +
           "{{dateClause}} " +
           "{{thresholdClause}} " +
+          "{{scaleClause}} " +
           "{{validTimeClause}} " +
           "{{forecastLengthClause}} " +
           "group by binVal " +
@@ -158,6 +165,7 @@ global.dataPerformanceDiagram = async function (plotParams) {
         statement = statement.replace("{{binClause}}", binClause);
         statement = statement.replace("{{queryTableClause}}", queryTableClause);
         statement = statement.replace("{{thresholdClause}}", thresholdClause);
+        statement = statement.replace("{{scaleClause}}", scaleClause);
         statement = statement.replace("{{validTimeClause}}", validTimeClause);
         statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{dateClause}}", dateClause);

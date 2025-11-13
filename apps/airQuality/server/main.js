@@ -1141,7 +1141,7 @@ const doCurveParams = async function () {
   ) {
     const optionsMap = {
       "Fcst lead time": "select m0.fcst_len as binVal, ",
-      Threshold: "select m0.trsh/100 as binVal, ",
+      Threshold: "select m0.thresh_10/10 as binVal, ",
       "Valid UTC hour": "select m0.valid_time%(24*3600)/3600 as binVal, ",
       "Init UTC hour":
         "select (m0.valid_time-m0.fcst_len*3600)%(24*3600)/3600 as binVal, ",
