@@ -144,12 +144,7 @@ global.dataSeries = async function (plotParams) {
       let querySites = [];
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         querySites = sitesList.map(function (site) {
-          let thisSite;
-          if (site.includes(" | ")) {
-            [thisSite] = site.split(" | ");
-          } else {
-            thisSite = site;
-          }
+          const thisSite = site.includes(" | ") ? site.split(" | ")[0] : site;
           return siteMap.find((obj) => obj.origName === thisSite).options.id;
         });
         sitesClause = ` and m0.id in('${querySites.join("','")}')`;
