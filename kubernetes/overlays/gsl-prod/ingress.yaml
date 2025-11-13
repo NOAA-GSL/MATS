@@ -18,6 +18,13 @@ spec:
                 name: scorecard
                 port:
                   name: http
+          - path: /mats-dev/airQuality
+            pathType: Prefix
+            backend:
+              service:
+                name: airQuality
+                port:
+                  number: 80
           - path: /mats-dev/cb-metar
             pathType: Prefix
             backend:

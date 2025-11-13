@@ -1,4 +1,5 @@
 resources:
+  - airQuality
   - cb-metar
   - ceil-vis
   - ceil-vis15

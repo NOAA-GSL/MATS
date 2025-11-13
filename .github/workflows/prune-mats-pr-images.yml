@@ -14,6 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         app:
+          - airQuality
           - cb-metar
           - ceil-vis
           - ceil-vis15

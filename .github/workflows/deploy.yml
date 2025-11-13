@@ -17,6 +17,7 @@ jobs:
       fail-fast: true
       matrix:
         deploy: # List of apps to deploy
+          - airQuality
           - cb-metar
           - ceil-vis
           - ceil-vis15

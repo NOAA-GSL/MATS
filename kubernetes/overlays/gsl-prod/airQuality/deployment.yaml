@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airQuality
+spec:
+  template:
+    spec:
+      containers:
+        - name: airQuality
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "0.25"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          envFrom:
+            - secretRef:
+                name: airQuality-secret
+          volumeMounts:
+            - name: airQuality-settings-file
+              mountPath: /usr/app/settings/airQuality/settings.json
+              subPath: settings.json
+              readOnly: true
+          imagePullPolicy: Always  # Since we track a long-lived tag
+      imagePullSecrets:
+        - name: mats-ghcr
+      volumes:
+        - name: airQuality-settings-file
+          configMap:
+            name: airQuality-config

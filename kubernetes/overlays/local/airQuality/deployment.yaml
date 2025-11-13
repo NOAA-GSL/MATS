@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airQuality
+spec:
+  template:
+    spec:
+      containers:
+        - name: airQuality
+          # resources:
+          #   requests:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          #   limits:
+          #     memory: "4Gi"
+          #     cpu: "2"
+          envFrom:
+            - secretRef:
+                name: airQuality-secret
+          volumeMounts:
+            - name: airQuality-settings-file
+              mountPath: /usr/app/settings/airQuality/settings.json
+              subPath: settings.json
+              readOnly: true
+      volumes:
+        - name: airQuality-settings-file
+          configMap:
+            name: airQuality-config

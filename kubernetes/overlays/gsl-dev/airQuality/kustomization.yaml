@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../base/airQuality
+
+patches:
+  - path: deployment.yaml
+
+images:
+  - name: ghcr.io/noaa-gsl/mats/development/airQuality
+    newTag: development
+
+configMapGenerator:
+  - name: airQuality-config
+    files:
+      - settings.json # Should mirror the appropriate settings.json file in mats-settings
+
+secretGenerator:
+  - name: airQuality-secret
+    envs:
+      - .env # Should contain mongo_url, root_url, and delay

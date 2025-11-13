@@ -3,6 +3,7 @@
 set -euo pipefail
 
 apps=(
+    "airQuality"
     "cb-metar"
     "ceil-vis"
     "ceil-vis15"

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airQuality
+  labels:
+    app.kubernetes.io/name: airQuality
+    app.kubernetes.io/part-of: mats
+    app.kubernetes.io/component: frontend
+    app: airQuality
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airQuality
+  template:
+    metadata:
+      labels:
+        app: airQuality
+    spec:
+      containers:
+        - name: airQuality
+          image: ghcr.io/noaa-gsl/mats/development/airQuality:development
+          ports:
+            - containerPort: 9000
+          securityContext:
+            allowPrivilegeEscalation: false
+
