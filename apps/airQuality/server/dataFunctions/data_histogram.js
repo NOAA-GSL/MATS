@@ -70,12 +70,18 @@ global.dataHistogram = async function (plotParams) {
     const threshold = Object.keys(thresholdValues).find(
       (key) => thresholdValues[key] === thresholdStr
     );
-    const thresholdClause = `and m0.trsh = ${threshold}`;
+    const thresholdClause = `and m0.thresh_10 = ${threshold}`;
+
+    const scaleStr = curve.scale;
+    const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+      .valuesMap[variable];
+    const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
+    const scaleClause = `and m0.scale = ${scale}`;
 
     let validTimeClause = "";
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-      validTimeClause = `and floor((m0.time)%(24*3600)/3600) IN(${validTimes})`;
+      validTimeClause = `and floor((m0.valid_time)%(24*3600)/3600) IN(${validTimes})`;
     }
 
     const forecastLength = curve["forecast-length"];
@@ -86,12 +92,12 @@ global.dataHistogram = async function (plotParams) {
       await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
     const statisticClause =
-      "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as n0";
+      "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0";
 
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
-    const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
+    const dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
 
     const regionStr = curve.region;
     const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
@@ -121,15 +127,16 @@ global.dataHistogram = async function (plotParams) {
       let finishMoment;
       try {
         statement =
-          "select m0.time as avtime, " +
-          "count(distinct m0.time) as nTimes, " +
-          "min(m0.time) as min_secs, " +
-          "max(m0.time) as max_secs, " +
+          "select m0.valid_time as avtime, " +
+          "count(distinct m0.valid_time) as nTimes, " +
+          "min(m0.valid_time) as min_secs, " +
+          "max(m0.valid_time) as max_secs, " +
           "{{statisticClause}} " +
           "{{queryTableClause}} " +
           "where 1=1 " +
           "{{dateClause}} " +
           "{{thresholdClause}} " +
+          "{{scaleClause}} " +
           "{{validTimeClause}} " +
           "{{forecastLengthClause}} " +
           "group by avtime " +
@@ -139,6 +146,7 @@ global.dataHistogram = async function (plotParams) {
         statement = statement.replace("{{statisticClause}}", statisticClause);
         statement = statement.replace("{{queryTableClause}}", queryTableClause);
         statement = statement.replace("{{thresholdClause}}", thresholdClause);
+        statement = statement.replace("{{scaleClause}}", scaleClause);
         statement = statement.replace("{{validTimeClause}}", validTimeClause);
         statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{dateClause}}", dateClause);
