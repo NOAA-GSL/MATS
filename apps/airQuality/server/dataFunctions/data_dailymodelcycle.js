@@ -77,6 +77,12 @@ global.dataDailyModelCycle = async function (plotParams) {
       (key) => thresholdValues[key] === thresholdStr
     );
 
+    const scaleStr = curve.scale;
+    const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+      .valuesMap[variable];
+    const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
+    const scaleClause = `and m0.scale = ${scale}`;
+
     if (curve["utc-cycle-start"].length !== 1) {
       throw new Error(
         "INFO:  Please select exactly one UTC Cycle Init Hour for this plot type."
@@ -84,7 +90,7 @@ global.dataDailyModelCycle = async function (plotParams) {
     }
     const utcCycleStart = Number(curve["utc-cycle-start"][0]);
     utcCycleStarts[curveIndex] = utcCycleStart;
-    const utcCycleStartClause = `and floor(((m0.time+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(${utcCycleStart})`;
+    const utcCycleStartClause = `and floor(((m0.valid_time+1800) - m0.fcst_len*3600)%(24*3600)/3600) IN(${utcCycleStart})`;
 
     const forecastLengthClause = "and m0.fcst_len < 24";
 
@@ -109,28 +115,21 @@ global.dataDailyModelCycle = async function (plotParams) {
         (key) => regionValues[key] === regionStr
       );
       queryTableClause = `from ${databaseRef.sumsDB}.${model}_${region} as m0`;
-      thresholdClause = `and m0.trsh = ${threshold}`;
+      thresholdClause = `and m0.thresh_10 = ${threshold}`;
       statisticClause =
-        "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.time) as sub_data, count(m0.yy) as n0";
-      dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
+        "sum(m0.yy) as hit, sum(m0.yn) as fa, sum(m0.ny) as miss, sum(m0.nn) as cn, group_concat(m0.valid_time, ';', m0.yy, ';', m0.yn, ';', m0.ny, ';', m0.nn order by m0.valid_time) as sub_data, count(m0.yy) as n0";
+      dateClause = `and m0.valid_time >= ${fromSecs} and m0.valid_time <= ${toSecs}`;
     } else {
       const obsTable =
-        model.includes("ret_") || model.includes("Ret_") ? "obs_retro" : "obs";
+        model.includes("ret_") || model.includes("Ret_") ? "retro_obs2p5" : "obs2p5";
       queryTableClause = `from ${databaseRef.modelDB}.${obsTable} as o, ${databaseRef.modelDB}.${model} as m0 `;
       statisticClause =
-        "sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, " +
-        "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, " +
-        "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
-        "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
-        "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as n0";
+        "sum(if((m0.pm2p5_10 > {{threshold}}) and (o.pm2p5_10 > {{threshold}}),1,0)) as hit, sum(if((m0.pm2p5_10 > {{threshold}}) and NOT (o.pm2p5_10 > {{threshold}}),1,0)) as fa, " +
+        "sum(if(NOT (m0.pm2p5_10 > {{threshold}}) and (o.pm2p5_10 > {{threshold}}),1,0)) as miss, sum(if(NOT (m0.pm2p5_10 > {{threshold}}) and NOT (o.pm2p5_10 > {{threshold}}),1,0)) as cn, " +
+        "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.pm2p5_10 > {{threshold}}) and (o.pm2p5_10 > {{threshold}}),1,0), ';', " +
+        "if((m0.pm2p5_10 > {{threshold}}) and NOT (o.pm2p5_10 > {{threshold}}),1,0), ';', if(NOT (m0.pm2p5_10 > {{threshold}}) and (o.pm2p5_10 > {{threshold}}),1,0), ';', " +
+        "if(NOT (m0.pm2p5_10 > {{threshold}}) and NOT (o.pm2p5_10 > {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.pm2p5_10) as n0";
       statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
-      if (variable.includes("Visibility")) {
-        statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
-        statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
-      } else if (variable.includes("Cloud Base")) {
-        statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.cloud_base");
-        statisticClause = statisticClause.replace(/o\.ceil/g, "o.cloud_base");
-      }
 
       const siteMap = (
         await matsCollections.StationMap.findOneAsync({
@@ -141,9 +140,10 @@ global.dataDailyModelCycle = async function (plotParams) {
       let querySites = [];
       if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
         querySites = sitesList.map(function (site) {
-          return siteMap.find((obj) => obj.origName === site).options.id;
+          const thisSite = site.includes(" | ") ? site.split(" | ")[0] : site;
+          return siteMap.find((obj) => obj.origName === thisSite).options.id;
         });
-        sitesClause = ` and m0.madis_id in('${querySites.join("','")}')`;
+        sitesClause = ` and m0.id in('${querySites.join("','")}')`;
       } else {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
@@ -151,7 +151,7 @@ global.dataDailyModelCycle = async function (plotParams) {
       }
       dateClause = `and m0.time >= ${fromSecs} - 900 and m0.time <= ${toSecs} + 900`;
       siteDateClause = `and o.time >= ${fromSecs} - 900 and o.time <= ${toSecs} + 900`;
-      siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time ";
+      siteMatchClause = "and m0.id = o.id and m0.time = o.time ";
     }
 
     // axisKey is used to determine which axis a curve should use.
@@ -174,10 +174,10 @@ global.dataDailyModelCycle = async function (plotParams) {
       let finishMoment;
       try {
         statement =
-          "select ceil(3600*floor((m0.time+1800)/3600)) as avtime, " +
-          "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as nTimes, " +
-          "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
-          "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
+          "select ceil(3600*floor((m0.valid_time+1800)/3600)) as avtime, " +
+          "count(distinct ceil(3600*floor((m0.valid_time+1800)/3600))) as nTimes, " +
+          "min(ceil(3600*floor((m0.valid_time+1800)/3600))) as min_secs, " +
+          "max(ceil(3600*floor((m0.valid_time+1800)/3600))) as max_secs, " +
           "{{statisticClause}} " +
           "{{queryTableClause}} " +
           "where 1=1 " +
@@ -187,6 +187,7 @@ global.dataDailyModelCycle = async function (plotParams) {
           "{{siteDateClause}} " +
           "{{utcCycleStartClause}} " +
           "{{thresholdClause}} " +
+          "{{scaleClause}} " +
           "{{forecastLengthClause}} " +
           "group by avtime " +
           "order by avtime" +
@@ -198,9 +199,12 @@ global.dataDailyModelCycle = async function (plotParams) {
         statement = statement.replace("{{sitesClause}}", sitesClause);
         statement = statement.replace("{{utcCycleStartClause}}", utcCycleStartClause);
         statement = statement.replace("{{thresholdClause}}", thresholdClause);
+        statement = statement.replace("{{scaleClause}}", scaleClause);
         statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
         statement = statement.replace("{{dateClause}}", dateClause);
         statement = statement.replace("{{siteDateClause}}", siteDateClause);
+        if (regionType === "Select stations")
+          statement = statement.replace(/m0\.valid_time/g, "m0.time");
         dataRequests[label] = statement;
 
         // send the query statement to the query function
