@@ -53,7 +53,9 @@ global.dataMap = async function (plotParams) {
     await matsCollections["data-source"].findOneAsync({ name: "data-source" })
   ).optionsMap[variable][curve["data-source"]][0];
   const obsTable =
-    modelTable.includes("ret_") || modelTable.includes("Ret_") ? "obs_retro" : "obs";
+    modelTable.includes("ret_") || modelTable.includes("Ret_")
+      ? "retro_obs2p5"
+      : "obs2p5";
   const queryTableClause = `from ${databaseRef.modelDB}.${obsTable} as o, ${databaseRef.modelDB}.${modelTable} as m0 `;
 
   const thresholdStr = curve.threshold;
@@ -63,6 +65,12 @@ global.dataMap = async function (plotParams) {
   const threshold = Object.keys(thresholdValues).find(
     (key) => thresholdValues[key] === thresholdStr
   );
+
+  const scaleStr = curve.scale;
+  const scaleValues = (await matsCollections.scale.findOneAsync({ name: "scale" }))
+    .valuesMap[variable];
+  const scale = Object.keys(scaleValues).find((key) => scaleValues[key] === scaleStr);
+  const scaleClause = `and m0.scale = ${scale}`;
 
   let validTimeClause = "";
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
@@ -75,19 +83,12 @@ global.dataMap = async function (plotParams) {
 
   const { statistic } = curve;
   let statisticClause =
-    "sum(if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as hit, sum(if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as fa, " +
-    "sum(if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0)) as miss, sum(if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0)) as cn, " +
-    "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
-    "if((m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0), ';', if(NOT (m0.ceil < {{threshold}}) and (o.ceil < {{threshold}}),1,0), ';', " +
-    "if(NOT (m0.ceil < {{threshold}}) and NOT (o.ceil < {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.ceil) as n0";
+    "sum(if((m0.pm2p5_10 > {{threshold}}) and (o.pm2p5_10 > {{threshold}}),1,0)) as hit, sum(if((m0.pm2p5_10 > {{threshold}}) and NOT (o.pm2p5_10 > {{threshold}}),1,0)) as fa, " +
+    "sum(if(NOT (m0.pm2p5_10 > {{threshold}}) and (o.pm2p5_10 > {{threshold}}),1,0)) as miss, sum(if(NOT (m0.pm2p5_10 > {{threshold}}) and NOT (o.pm2p5_10 > {{threshold}}),1,0)) as cn, " +
+    "group_concat(ceil(3600*floor((m0.time+1800)/3600)), ';', if((m0.pm2p5_10 > {{threshold}}) and (o.pm2p5_10 > {{threshold}}),1,0), ';', " +
+    "if((m0.pm2p5_10 > {{threshold}}) and NOT (o.pm2p5_10 > {{threshold}}),1,0), ';', if(NOT (m0.pm2p5_10 > {{threshold}}) and (o.pm2p5_10 > {{threshold}}),1,0), ';', " +
+    "if(NOT (m0.pm2p5_10 > {{threshold}}) and NOT (o.pm2p5_10 > {{threshold}}),1,0) order by ceil(3600*floor((m0.time+1800)/3600))) as sub_data, count(m0.pm2p5_10) as n0";
   statisticClause = statisticClause.replace(/\{\{threshold\}\}/g, threshold);
-  if (variable.includes("Visibility")) {
-    statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.vis100");
-    statisticClause = statisticClause.replace(/o\.ceil/g, "o.vis100");
-  } else if (variable.includes("Cloud Base")) {
-    statisticClause = statisticClause.replace(/m0\.ceil/g, "m0.cloud_base");
-    statisticClause = statisticClause.replace(/o\.ceil/g, "o.cloud_base");
-  }
 
   let sitesClause = "";
 
@@ -100,9 +101,10 @@ global.dataMap = async function (plotParams) {
   let querySites = [];
   if (sitesList.length > 0 && sitesList !== matsTypes.InputTypes.unused) {
     querySites = sitesList.map(function (site) {
-      return siteMap.find((obj) => obj.origName === site).options.id;
+      const thisSite = site.includes(" | ") ? site.split(" | ")[0] : site;
+      return siteMap.find((obj) => obj.origName === thisSite).options.id;
     });
-    sitesClause = ` and m0.madis_id in('${querySites.join("','")}')`;
+    sitesClause = ` and m0.id in('${querySites.join("','")}')`;
   } else {
     throw new Error(
       "INFO:  Please add sites in order to get a single/multi station plot."
@@ -110,7 +112,7 @@ global.dataMap = async function (plotParams) {
   }
   const dateClause = `and m0.time >= ${fromSecs} - 900 and m0.time <= ${toSecs} + 900`;
   const siteDateClause = `and o.time >= ${fromSecs} - 900 and o.time <= ${toSecs} + 900`;
-  const siteMatchClause = "and m0.madis_id = o.madis_id and m0.time = o.time";
+  const siteMatchClause = "and m0.id = o.id and m0.time = o.time ";
 
   let d;
   let dPurple;
@@ -130,7 +132,7 @@ global.dataMap = async function (plotParams) {
     let finishMoment;
     try {
       statement =
-        "select m0.madis_id as sta_id, " +
+        "select m0.id as sta_id, " +
         "count(distinct ceil(3600*floor((m0.time+1800)/3600))) as nTimes, " +
         "min(ceil(3600*floor((m0.time+1800)/3600))) as min_secs, " +
         "max(ceil(3600*floor((m0.time+1800)/3600))) as max_secs, " +
@@ -141,6 +143,7 @@ global.dataMap = async function (plotParams) {
         "{{sitesClause}} " +
         "{{dateClause}} " +
         "{{siteDateClause}} " +
+        "{{scaleClause}} " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
         "group by sta_id " +
@@ -151,6 +154,7 @@ global.dataMap = async function (plotParams) {
       statement = statement.replace("{{queryTableClause}}", queryTableClause);
       statement = statement.replace("{{siteMatchClause}}", siteMatchClause);
       statement = statement.replace("{{sitesClause}}", sitesClause);
+      statement = statement.replace("{{scaleClause}}", scaleClause);
       statement = statement.replace("{{validTimeClause}}", validTimeClause);
       statement = statement.replace("{{forecastLengthClause}}", forecastLengthClause);
       statement = statement.replace("{{dateClause}}", dateClause);
