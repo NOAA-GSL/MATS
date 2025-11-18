@@ -609,6 +609,24 @@ const doPlotParams = async function () {
       tooltipPlacement: "top",
     });
   }
+
+  if (
+    (await matsCollections.PlotParams.findOneAsync({
+      name: "name-this-scorecard",
+    })) === undefined
+  ) {
+    await matsCollections.PlotParams.insertAsync({
+      name: "name-this-scorecard",
+      type: matsTypes.InputTypes.textInput,
+      optionsMap: {},
+      options: [],
+      default: "No Name",
+      controlButtonCovered: true,
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  }
 };
 
 const doCurveParams = async function () {
