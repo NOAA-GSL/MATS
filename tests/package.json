@@ -3,10 +3,10 @@
     "type": "module",
     "private": true,
     "devDependencies": {
-        "@wdio/cli": "^9.20.0",
-        "@wdio/cucumber-framework": "^9.20.0",
+        "@wdio/cli": "^9.20.1",
+        "@wdio/cucumber-framework": "^9.20.1",
         "@wdio/junit-reporter": "^9.20.0",
-        "@wdio/local-runner": "^9.20.0",
+        "@wdio/local-runner": "^9.20.1",
         "@wdio/spec-reporter": "^9.20.0"
     },
     "scripts": {
