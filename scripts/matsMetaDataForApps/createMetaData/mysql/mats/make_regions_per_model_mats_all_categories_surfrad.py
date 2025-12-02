@@ -133,7 +133,8 @@ def regions_per_model_mats_all_categories(mode):
             # print(tablename + " fcst_lens: " + str(per_table[tablename]['fcst_lens']) )
 
             # get scales from this table
-            get_scales = ("SELECT DISTINCT scale FROM " + tablename + ";")
+            get_scales = ("SELECT DISTINCT scale FROM " +
+                          tablename + " where dswrf is not NULL;")
             cursor.execute(get_scales)
             per_table[tablename]['scales'] = []
             this_scales = []

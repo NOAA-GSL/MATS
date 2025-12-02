@@ -265,7 +265,8 @@ def reprocess_specific_metadata(models_to_reprocess):
                             set(per_model[model]['fcst_len']) | set(thisfcst_lens))
                         per_model[model]['fcst_len'].sort(key=int)
 
-                        get_scales = ("SELECT DISTINCT scale FROM " + tablename + ";")
+                        get_scales = ("SELECT DISTINCT scale FROM " +
+                                      tablename + " where dswrf is not NULL;")
                         cursor2.execute(get_scales)
                         thisscales = []
                         for row2 in cursor2:
