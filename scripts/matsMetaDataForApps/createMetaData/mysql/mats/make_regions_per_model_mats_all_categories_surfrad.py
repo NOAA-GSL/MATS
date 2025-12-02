@@ -134,7 +134,7 @@ def regions_per_model_mats_all_categories(mode):
 
             # get scales from this table
             get_scales = ("SELECT DISTINCT scale FROM " +
-                          tablename + " where dswrf is not NULL;")
+                          tablename + " where sum_d_dswrf is not NULL;")
             cursor.execute(get_scales)
             per_table[tablename]['scales'] = []
             this_scales = []
