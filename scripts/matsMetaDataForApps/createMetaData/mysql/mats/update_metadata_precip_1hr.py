@@ -353,7 +353,7 @@ def reprocess_specific_metadata(models_to_reprocess):
 
     for model in models_to_reprocess:
         for valid_source in valid_sources[model]:
-            if len(per_model[model][valid_source]['region']) > 0 and len(per_model[model]['fcst_len'][valid_source]) > 0 and len(per_model[model][valid_source]['trshs']) > 0 and len(per_model[model][valid_source]['scale']) > 0:
+            if len(per_model[model][valid_source]['region']) > 0 and len(per_model[model][valid_source]['fcst_len']) > 0 and len(per_model[model][valid_source]['trshs']) > 0 and len(per_model[model][valid_source]['scale']) > 0:
                 update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model][valid_source]['region'], per_model[model][valid_source]['sources'], per_model[model][valid_source]['fcst_len'], per_model[model][valid_source]['trshs'],
                                 per_model[model][valid_source]['scale'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model][valid_source]['mindate'], per_model[model][valid_source]['maxdate'], per_model[model][valid_source]['numrecs'], valid_source)
 
