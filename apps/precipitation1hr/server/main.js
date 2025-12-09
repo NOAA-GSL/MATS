@@ -38,7 +38,7 @@ const doPlotParams = async function () {
       options: [""],
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ["data-source"],
+      superiorNames: ["data-source", "truth"],
       controlButtonCovered: true,
       default: dstr,
       controlButtonVisibility: "block",
@@ -343,6 +343,7 @@ const doCurveParams = async function () {
   const allRegionValuesMap = {};
   const allThresholdValuesMap = {};
   const allScaleValuesMap = {};
+  const allSources = new Set();
 
   try {
     const rows = await matsDataQueryUtils.queryMySQL(
@@ -383,59 +384,88 @@ const doCurveParams = async function () {
   try {
     const rows = await matsDataQueryUtils.queryMySQL(
       global.sumPool,
-      "select model,regions,sources,display_text,fcst_lens,thresh,scale,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;"
+      "select model,display_text,sources from regions_per_model_mats_all_categories order by display_category, display_order;"
     );
-    for (let i = 0; i < rows.length; i += 1) {
-      const modelValue = rows[i].model.trim();
-      const model = rows[i].display_text.trim();
+    for (let j = 0; j < rows.length; j += 1) {
+      const modelValue = rows[j].model.trim();
+      const model = rows[j].display_text.trim();
       modelOptionsMap[model] = [modelValue];
 
-      const rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-      const rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-      modelDateRangeMap[model] = {
-        minDate: rowMinDate,
-        maxDate: rowMaxDate,
-      };
-
-      const { sources } = rows[i];
+      const { sources } = rows[j];
       sourceOptionsMap[model] = sources
         .split(",")
         .map(Function.prototype.call, String.prototype.trim)
         .map(function (source) {
           return source.replace(/'|\[|\]/g, "");
-        });
+        })
+        .sort();
+      sourceOptionsMap[model].forEach((source) => {
+        allSources.add(source);
+      });
 
-      const forecastLengths = rows[i].fcst_lens;
-      forecastLengthOptionsMap[model] = forecastLengths
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim)
-        .map(function (fhr) {
-          return fhr.replace(/'|\[|\]/g, "");
-        });
+      modelDateRangeMap[model] = {};
+      forecastLengthOptionsMap[model] = {};
+      thresholdsModelOptionsMap[model] = {};
+      regionModelOptionsMap[model] = {};
+      scaleModelOptionsMap[model] = {};
+    }
+  } catch (err) {
+    throw new Error(err.message);
+  }
 
-      const thresholds = rows[i].thresh;
-      thresholdsModelOptionsMap[model] = thresholds
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim)
-        .map(function (threshold) {
-          return allThresholdValuesMap[threshold.replace(/'|\[|\]/g, "")];
-        });
+  try {
+    const allSourceArray = [...allSources].sort();
+    for (let sidx = 0; sidx < allSourceArray.length; sidx += 1) {
+      const source = allSourceArray[sidx];
+      const rows = await matsDataQueryUtils.queryMySQL(
+        global.sumPool,
+        `select regions,display_text,fcst_lens,thresh,scale,mindate,maxdate from ${source}_per_model_mats_all_categories order by display_category, display_order;`
+      );
+      for (let i = 0; i < rows.length; i += 1) {
+        const model = rows[i].display_text.trim();
+        const rowMinDate = moment
+          .utc(rows[i].mindate * 1000)
+          .format("MM/DD/YYYY HH:mm");
+        const rowMaxDate = moment
+          .utc(rows[i].maxdate * 1000)
+          .format("MM/DD/YYYY HH:mm");
+        modelDateRangeMap[model][source] = {
+          minDate: rowMinDate,
+          maxDate: rowMaxDate,
+        };
 
-      const scales = rows[i].scale;
-      scaleModelOptionsMap[model] = scales
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim)
-        .map(function (scale) {
-          return allScaleValuesMap[scale.replace(/'|\[|\]/g, "")];
-        });
+        const forecastLengths = rows[i].fcst_lens;
+        forecastLengthOptionsMap[model][source] = forecastLengths
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (fhr) {
+            return fhr.replace(/'|\[|\]/g, "");
+          });
 
-      const { regions } = rows[i];
-      regionModelOptionsMap[model] = regions
-        .split(",")
-        .map(Function.prototype.call, String.prototype.trim)
-        .map(function (region) {
-          return allRegionValuesMap[region.replace(/'|\[|\]/g, "")];
-        });
+        const thresholds = rows[i].thresh;
+        thresholdsModelOptionsMap[model][source] = thresholds
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (threshold) {
+            return allThresholdValuesMap[threshold.replace(/'|\[|\]/g, "")];
+          });
+
+        const scales = rows[i].scale;
+        scaleModelOptionsMap[model][source] = scales
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (scale) {
+            return allScaleValuesMap[scale.replace(/'|\[|\]/g, "")];
+          });
+
+        const { regions } = rows[i];
+        regionModelOptionsMap[model][source] = regions
+          .split(",")
+          .map(Function.prototype.call, String.prototype.trim)
+          .map(function (region) {
+            return allRegionValuesMap[region.replace(/'|\[|\]/g, "")];
+          });
+      }
     }
   } catch (err) {
     throw new Error(err.message);
@@ -457,6 +487,9 @@ const doCurveParams = async function () {
     });
   }
 
+  const modelOptions = Object.keys(modelOptionsMap);
+  const [modelDefault] = modelOptions;
+
   if (
     (await matsCollections["data-source"].findOneAsync({ name: "data-source" })) ===
     undefined
@@ -466,18 +499,10 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       optionsMap: modelOptionsMap,
       dates: modelDateRangeMap,
-      options: Object.keys(modelOptionsMap),
-      dependentNames: [
-        "region",
-        "forecast-length",
-        "threshold",
-        "scale",
-        "truth",
-        "dates",
-        "curve-dates",
-      ],
+      options: modelOptions,
+      dependentNames: ["truth"],
       controlButtonCovered: true,
-      default: Object.keys(modelOptionsMap)[0],
+      default: modelDefault,
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 3,
@@ -500,12 +525,20 @@ const doCurveParams = async function () {
           $set: {
             optionsMap: modelOptionsMap,
             dates: modelDateRangeMap,
-            options: Object.keys(modelOptionsMap),
-            default: Object.keys(modelOptionsMap)[0],
+            options: modelOptions,
+            default: modelDefault,
           },
         }
       );
     }
+  }
+
+  const sourceOptions = sourceOptionsMap[modelDefault];
+  let sourceDefault;
+  if (sourceOptions.indexOf("MRMS") !== -1) {
+    sourceDefault = "MRMS";
+  } else {
+    [sourceDefault] = sourceOptions;
   }
 
   if ((await matsCollections.region.findOneAsync({ name: "region" })) === undefined) {
@@ -513,12 +546,12 @@ const doCurveParams = async function () {
       name: "region",
       type: matsTypes.InputTypes.select,
       optionsMap: regionModelOptionsMap,
-      options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
+      options: regionModelOptionsMap[modelDefault][sourceDefault],
       valuesMap: allRegionValuesMap,
-      superiorNames: ["data-source"],
+      superiorNames: ["data-source", "truth"],
       controlButtonCovered: true,
       unique: false,
-      default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+      default: regionModelOptionsMap[modelDefault][sourceDefault][0],
       controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
@@ -538,8 +571,8 @@ const doCurveParams = async function () {
           $set: {
             optionsMap: regionModelOptionsMap,
             valuesMap: allRegionValuesMap,
-            options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],
-            default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+            options: regionModelOptionsMap[modelDefault][sourceDefault],
+            default: regionModelOptionsMap[modelDefault][sourceDefault][0],
           },
         }
       );
@@ -612,12 +645,12 @@ const doCurveParams = async function () {
       name: "threshold",
       type: matsTypes.InputTypes.select,
       optionsMap: thresholdsModelOptionsMap,
-      options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],
+      options: thresholdsModelOptionsMap[modelDefault][sourceDefault],
       valuesMap: allThresholdValuesMap,
-      superiorNames: ["data-source"],
+      superiorNames: ["data-source", "truth"],
       controlButtonCovered: true,
       unique: false,
-      default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
+      default: thresholdsModelOptionsMap[modelDefault][sourceDefault][0],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,
@@ -642,10 +675,8 @@ const doCurveParams = async function () {
           $set: {
             optionsMap: thresholdsModelOptionsMap,
             valuesMap: allThresholdValuesMap,
-            options:
-              thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],
-            default:
-              thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
+            options: thresholdsModelOptionsMap[modelDefault][sourceDefault],
+            default: thresholdsModelOptionsMap[modelDefault][sourceDefault][0],
           },
         }
       );
@@ -657,12 +688,12 @@ const doCurveParams = async function () {
       name: "scale",
       type: matsTypes.InputTypes.select,
       optionsMap: scaleModelOptionsMap,
-      options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],
+      options: scaleModelOptionsMap[modelDefault][sourceDefault],
       valuesMap: allScaleValuesMap,
-      superiorNames: ["data-source"],
+      superiorNames: ["data-source", "truth"],
       controlButtonCovered: true,
       unique: false,
-      default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
+      default: scaleModelOptionsMap[modelDefault][sourceDefault][0],
       controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
@@ -682,20 +713,12 @@ const doCurveParams = async function () {
           $set: {
             optionsMap: scaleModelOptionsMap,
             valuesMap: allScaleValuesMap,
-            options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],
-            default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
+            options: scaleModelOptionsMap[modelDefault][sourceDefault],
+            default: scaleModelOptionsMap[modelDefault][sourceDefault][0],
           },
         }
       );
     }
-  }
-
-  const sourceOptions = sourceOptionsMap[Object.keys(modelOptionsMap)[0]];
-  let sourceDefault;
-  if (sourceOptions.indexOf("MRMS") !== -1) {
-    sourceDefault = "MRMS";
-  } else {
-    [sourceDefault] = sourceOptions;
   }
 
   if ((await matsCollections.truth.findOneAsync({ name: "truth" })) === undefined) {
@@ -705,6 +728,14 @@ const doCurveParams = async function () {
       optionsMap: sourceOptionsMap,
       options: sourceOptions,
       superiorNames: ["data-source"],
+      dependentNames: [
+        "region",
+        "forecast-length",
+        "threshold",
+        "scale",
+        "dates",
+        "curve-dates",
+      ],
       controlButtonCovered: true,
       unique: false,
       default: sourceDefault,
@@ -740,8 +771,8 @@ const doCurveParams = async function () {
       name: "forecast-length",
       type: matsTypes.InputTypes.select,
       optionsMap: forecastLengthOptionsMap,
-      options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],
-      superiorNames: ["data-source"],
+      options: forecastLengthOptionsMap[modelDefault][sourceDefault],
+      superiorNames: ["data-source", "truth"],
       selected: "",
       controlButtonCovered: true,
       unique: false,
@@ -766,7 +797,7 @@ const doCurveParams = async function () {
         {
           $set: {
             optionsMap: forecastLengthOptionsMap,
-            options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],
+            options: forecastLengthOptionsMap[modelDefault][sourceDefault],
           },
         }
       );
@@ -992,12 +1023,14 @@ const doCurveParams = async function () {
   const defaultDataSource = (
     await matsCollections["data-source"].findOneAsync({ name: "data-source" })
   ).default;
+  const defaultSource = (await matsCollections.truth.findOneAsync({ name: "truth" }))
+    .default;
   modelDateRangeMap = (
     await matsCollections["data-source"].findOneAsync({ name: "data-source" })
   ).dates;
 
-  minDate = modelDateRangeMap[defaultDataSource].minDate;
-  maxDate = modelDateRangeMap[defaultDataSource].maxDate;
+  minDate = modelDateRangeMap[defaultDataSource][defaultSource].minDate;
+  maxDate = modelDateRangeMap[defaultDataSource][defaultSource].maxDate;
 
   // need to turn the raw max and min from the metadata into the last valid month of data
   const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
@@ -1027,7 +1060,7 @@ const doCurveParams = async function () {
       options: Object.keys(optionsMap).sort(),
       startDate: minDate,
       stopDate: maxDate,
-      superiorNames: ["data-source"],
+      superiorNames: ["data-source", "truth"],
       controlButtonCovered: true,
       unique: false,
       default: dstr,
