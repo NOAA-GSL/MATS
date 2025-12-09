@@ -345,9 +345,9 @@ def reprocess_specific_metadata(models_to_reprocess):
                     zip(region_orders, per_model[model][valid_source]['region']))]
                 
             if valid_source == "regions":
-                print("All source metadata:\n" + per_model[model][valid_source])
+                print("All source metadata:\n" + str(per_model[model][valid_source]))
             else:
-                print(valid_source + " metadata:\n" + per_model[model][valid_source])
+                print(valid_source + " metadata:\n" + str(per_model[model][valid_source]))
 
     # sys.exit(-1)
 
