@@ -136,6 +136,7 @@ def regions_per_model_mats_all_categories(mode):
     # get an array of all relevant data sources in this db
     all_data_sources = []
     per_table = {}
+    valid_sources = set()
 
     show_tables = "show tables;"
     cursor.execute(show_tables)
@@ -156,6 +157,7 @@ def regions_per_model_mats_all_categories(mode):
                 per_table[tablename]['model'] = model
                 per_table[tablename]['region'] = region
                 source = temp2[0]
+                valid_sources.add(source)
                 per_table[tablename]['source'] = source
                 temp1 = "^" + model + "_"
                 temp2 = "_" + source + "_" + region + "$"
@@ -164,7 +166,8 @@ def regions_per_model_mats_all_categories(mode):
                 per_table[tablename]['scale'] = scale
                 # print("model is " + model + ", region is " + region + ", scale is " + scale + ", source is " + source )
 
-    # sys.exit(-1)
+    print(valid_sources)
+    sys.exit(-1)
 
     # parse the other metadata contained in the tables
     if TScleaned:
