@@ -259,10 +259,10 @@ def reprocess_specific_metadata(models_to_reprocess):
                 temp = "^" + model + "_[0-9][0-9]km_"
                 temp1 = re.sub(temp, "", tablename)
                 temp2 = re.split('_', temp1)
-                valid_sources.add(temp2[0])
+                valid_sources[model].add(temp2[0])
                 all_tablenames.append(tablename)
 
-        for valid_source in valid_sources:
+        for valid_source in valid_sources[model]:
             per_model[model][valid_source] = {}
             per_model[model][valid_source]['region'] = []
             per_model[model][valid_source]['sources'] = []
@@ -352,7 +352,7 @@ def reprocess_specific_metadata(models_to_reprocess):
     # sys.exit(-1)
 
     for model in models_to_reprocess:
-        for valid_source in valid_sources:
+        for valid_source in valid_sources[model]:
             if len(per_model[model][valid_source]['region']) > 0 and len(per_model[model]['fcst_len'][valid_source]) > 0 and len(per_model[model][valid_source]['trshs']) > 0 and len(per_model[model][valid_source]['scale']) > 0:
                 update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model][valid_source]['region'], per_model[model][valid_source]['sources'], per_model[model][valid_source]['fcst_len'], per_model[model][valid_source]['trshs'],
                                 per_model[model][valid_source]['scale'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model][valid_source]['mindate'], per_model[model][valid_source]['maxdate'], per_model[model][valid_source]['numrecs'], valid_source)
