@@ -135,6 +135,7 @@ def regions_per_model_mats_all_categories(mode):
 
     # get an array of all relevant data sources in this db
     all_data_sources = []
+    all_tablenames = []
     per_table = {}
     valid_sources = set()
 
@@ -142,6 +143,7 @@ def regions_per_model_mats_all_categories(mode):
     cursor.execute(show_tables)
     for row in cursor:
         tablename = str(list(row.values())[0])
+        all_tablenames.append(tablename)
         # print( "tablename is " + tablename)
         if " " + tablename + " " not in skiptables:
             # parse the data sources, scales, and regions from the table names
@@ -166,8 +168,7 @@ def regions_per_model_mats_all_categories(mode):
                 per_table[tablename]['scale'] = scale
                 # print("model is " + model + ", region is " + region + ", scale is " + scale + ", source is " + source )
 
-    print(valid_sources)
-    sys.exit(-1)
+    #sys.exit(-1)
 
     # parse the other metadata contained in the tables
     if TScleaned:
@@ -294,7 +295,22 @@ def regions_per_model_mats_all_categories(mode):
     set_ai = "alter table regions_per_model_mats_all_categories_build auto_increment = 1"
     cursor.execute(set_ai)
     cnx.commit()
-
+    for valid_source in valid_sources:
+        if valid_source + "_per_model_mats_all_categories_build" not in all_tablenames:
+            create_rpmmac_build = "create table " + valid_source + "_per_model_mats_all_categories_build like regions_per_model_mats_all_categories_build"
+            cursor.execute(create_rpmmac_build)
+            cnx.commit()
+            create_rpmmac = "create table " + valid_source + "_per_model_mats_all_categories like regions_per_model_mats_all_categories"
+            cursor.execute(create_rpmmac)
+            cnx.commit()
+        else:
+            clean_rpmmac = "delete from " + valid_source + "_per_model_mats_all_categories_build"
+            cursor.execute(clean_rpmmac)
+            cnx.commit()
+            set_ai = "alter table " + valid_source + "_per_model_mats_all_categories_build auto_increment = 1"
+            cursor.execute(set_ai)
+            cnx.commit()
+    sys.exit(0)
     # sort the data sources into groups
     data_sources_in_this_app = all_data_sources
     data_sources_in_this_app.sort(key=str.lower)
