@@ -303,6 +303,7 @@ def reprocess_specific_metadata(models_to_reprocess):
                         source = temp2[0]
                         if source not in per_model[model][valid_source]['sources']:
                             per_model[model][valid_source]['sources'].append(source)
+                        per_model[model][valid_source]['sources'].sort()
                         temp1 = "^" + model + "_"
                         temp2 = "_" + source + "_" + region + "$"
                         scale1 = re.sub(temp1, "", tablename)
