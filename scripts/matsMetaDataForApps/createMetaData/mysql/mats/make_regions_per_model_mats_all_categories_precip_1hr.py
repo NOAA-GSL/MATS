@@ -14,10 +14,10 @@ import MySQLdb
 
 ############################################################################
 
-def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, fcst_lens, trshs, scales, display_category, display_order, mindate, maxdate, numrecs):
+def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, fcst_lens, trshs, scales, display_category, display_order, mindate, maxdate, numrecs, valid_source):
 
     # see if this record already exists (it shouldn't, because this script cleaned the tables when it started)
-    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE model = '" + \
+    find_rpm_rec = "SELECT id FROM " + valid_source + "_per_model_mats_all_categories_build WHERE model = '" + \
         str(table_name) + "'"
     cursor.execute(find_rpm_rec)
     record_id = int(0)
@@ -30,7 +30,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
         updated_utc = datetime.utcnow().strftime('%s')
         # if it's a new record (it should be) add it
         if record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, sources, fcst_lens, thresh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO " + valid_source + "_per_model_mats_all_categories_build (model, display_text, regions, sources, fcst_lens, thresh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(regions))
@@ -49,7 +49,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
             cnx.commit()
         else:
             # if there's a pre-existing record, update it
-            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET regions = %s, sources = %s, fcst_lens = %s, thresh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
+            update_rpm_rec = "UPDATE " + valid_source + "_per_model_mats_all_categories_build SET regions = %s, sources = %s, fcst_lens = %s, thresh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(regions))
             qd.append(str(sources))
             qd.append(str(fcst_lens))
@@ -123,8 +123,8 @@ def regions_per_model_mats_all_categories(mode):
     # clean TABLESTATS_build in order to get updated data source information. If nothing has changed, you can set
     # TScleaned to False and just use the old data source info.
     clean_tablestats = "delete from " + db + ".TABLESTATS_build"
-    # TScleaned = False
-    TScleaned = True
+    TScleaned = False
+    # TScleaned = True
     if TScleaned:
         cursor.execute(clean_tablestats)
     else:
@@ -137,7 +137,7 @@ def regions_per_model_mats_all_categories(mode):
     all_data_sources = []
     all_tablenames = []
     per_table = {}
-    valid_sources = set()
+    valid_sources = {"regions"}
 
     show_tables = "show tables;"
     cursor.execute(show_tables)
@@ -168,7 +168,7 @@ def regions_per_model_mats_all_categories(mode):
                 per_table[tablename]['scale'] = scale
                 # print("model is " + model + ", region is " + region + ", scale is " + scale + ", source is " + source )
 
-    #sys.exit(-1)
+    # sys.exit(-1)
 
     # parse the other metadata contained in the tables
     if TScleaned:
@@ -289,28 +289,26 @@ def regions_per_model_mats_all_categories(mode):
     # sys.exit(-1)
 
     # clean metadata build table
-    clean_rpmmac = "delete from regions_per_model_mats_all_categories_build"
-    cursor.execute(clean_rpmmac)
-    cnx.commit()
-    set_ai = "alter table regions_per_model_mats_all_categories_build auto_increment = 1"
-    cursor.execute(set_ai)
-    cnx.commit()
     for valid_source in valid_sources:
         if valid_source + "_per_model_mats_all_categories_build" not in all_tablenames:
-            create_rpmmac_build = "create table " + valid_source + "_per_model_mats_all_categories_build like regions_per_model_mats_all_categories_build"
+            create_rpmmac_build = "create table " + valid_source + \
+                "_per_model_mats_all_categories_build like regions_per_model_mats_all_categories_build"
             cursor.execute(create_rpmmac_build)
             cnx.commit()
-            create_rpmmac = "create table " + valid_source + "_per_model_mats_all_categories like regions_per_model_mats_all_categories"
+            create_rpmmac = "create table " + valid_source + \
+                "_per_model_mats_all_categories like regions_per_model_mats_all_categories"
             cursor.execute(create_rpmmac)
             cnx.commit()
         else:
-            clean_rpmmac = "delete from " + valid_source + "_per_model_mats_all_categories_build"
+            clean_rpmmac = "delete from " + valid_source + \
+                "_per_model_mats_all_categories_build"
             cursor.execute(clean_rpmmac)
             cnx.commit()
-            set_ai = "alter table " + valid_source + "_per_model_mats_all_categories_build auto_increment = 1"
+            set_ai = "alter table " + valid_source + \
+                "_per_model_mats_all_categories_build auto_increment = 1"
             cursor.execute(set_ai)
             cnx.commit()
-    sys.exit(0)
+
     # sort the data sources into groups
     data_sources_in_this_app = all_data_sources
     data_sources_in_this_app.sort(key=str.lower)
@@ -345,99 +343,108 @@ def regions_per_model_mats_all_categories(mode):
             do = do_non_main + 1
             do_non_main = do_non_main + 1
 
-        # get regions for all tables pertaining to this model
-        get_these_regions = "select distinct(region) as region from " + db + \
-            ".TABLESTATS_build where tablename like '" + model + \
-            "%' and model = '" + model + "' and numrecs > 0;"
-        cursor.execute(get_these_regions)
-        these_regions_raw = []
-        these_regions_orders = []
-        for row in cursor:
-            val = str(list(row.values())[0])
-            these_regions_raw.append(val)
-            these_regions_orders.append(valid_region_orders[val])
-        these_regions = [x for _, x in sorted(
-            zip(these_regions_orders, these_regions_raw))]
-        # print( "these_regions:\n" + str(these_regions) )
+        for valid_source in valid_sources:
+            source_clause = ""
+            if valid_source != "regions":
+                source_clause = "and tablename like '%" + valid_source + "%'"
+            # get regions for all tables pertaining to this model
+            get_these_regions = "select distinct(region) as region from " + db + \
+                ".TABLESTATS_build where tablename like '" + model + \
+                "%' and model = '" + model + "' " + source_clause + " and numrecs > 0;"
+            cursor.execute(get_these_regions)
+            these_regions_raw = []
+            these_regions_orders = []
+            for row in cursor:
+                val = str(list(row.values())[0])
+                these_regions_raw.append(val)
+                these_regions_orders.append(valid_region_orders[val])
+            these_regions = [x for _, x in sorted(
+                zip(these_regions_orders, these_regions_raw))]
+            # print( "these_regions:\n" + str(these_regions) )
 
-        # get sources for all tables pertaining to this model
-        get_these_sources = "select distinct(sources) as sources from " + db + ".TABLESTATS_build where tablename like '" + \
-            model + "%' and model = '" + model + \
-            "' and numrecs > 0 order by length(sources) desc;"
-        cursor.execute(get_these_sources)
-        these_sources = []
-        for row in cursor:
-            val = str(list(row.values())[0])
-            these_sources.append(val)
-        these_sources.sort()
-        # print( "these_sources:\n" + str(these_sources) )
+            # get sources for all tables pertaining to this model
+            get_these_sources = "select distinct(sources) as sources from " + db + ".TABLESTATS_build where tablename like '" + \
+                model + "%' and model = '" + model + \
+                "' " + source_clause + \
+                " and numrecs > 0 order by length(sources) desc;"
+            cursor.execute(get_these_sources)
+            these_sources = []
+            for row in cursor:
+                val = str(list(row.values())[0])
+                these_sources.append(val)
+            these_sources.sort()
+            # print( "these_sources:\n" + str(these_sources) )
 
-        # get forecast lengths for all tables pertaining to this model
-        get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db + ".TABLESTATS_build where tablename like '" + \
-            model + "%' and fcst_lens != '[]' and model = '" + model + \
-            "' and numrecs > 0 order by length(fcst_lens) desc;"
-        cursor.execute(get_these_fcst_lens)
-        these_fcst_lens = []
-        for row in cursor:
-            val_array = ast.literal_eval(list(row.values())[0])
-            for val in val_array:
-                if val not in these_fcst_lens:
-                    these_fcst_lens.append(val)
-        these_fcst_lens.sort(key=int)
-        # print( "these_fcst_lens:\n" + str(these_fcst_lens) )
+            # get forecast lengths for all tables pertaining to this model
+            get_these_fcst_lens = "select distinct(fcst_lens) as fcst_lens from " + db + ".TABLESTATS_build where tablename like '" + \
+                model + "%' and fcst_lens != '[]' and model = '" + model + \
+                "' " + source_clause + \
+                " and numrecs > 0 order by length(fcst_lens) desc;"
+            cursor.execute(get_these_fcst_lens)
+            these_fcst_lens = []
+            for row in cursor:
+                val_array = ast.literal_eval(list(row.values())[0])
+                for val in val_array:
+                    if val not in these_fcst_lens:
+                        these_fcst_lens.append(val)
+            these_fcst_lens.sort(key=int)
+            # print( "these_fcst_lens:\n" + str(these_fcst_lens) )
 
-        # get thresholds for all tables pertaining to this model
-        get_these_trshs = "select distinct(thresh) from " + db + ".TABLESTATS_build where tablename like '" + \
-            model + "%' and thresh != '[]' and model = '" + model + \
-            "' and numrecs > 0 order by length(thresh) desc;"
-        cursor.execute(get_these_trshs)
-        these_trshs = []
-        for row in cursor:
-            val_array = ast.literal_eval(list(row.values())[0])
-            for val in val_array:
-                if val not in these_trshs:
-                    these_trshs.append(val)
-        these_trshs.sort(key=int)
-        # print( "these_trshs:\n" + str(these_trshs) )
+            # get thresholds for all tables pertaining to this model
+            get_these_trshs = "select distinct(thresh) from " + db + ".TABLESTATS_build where tablename like '" + \
+                model + "%' and thresh != '[]' and model = '" + model + \
+                "' " + source_clause + \
+                " and numrecs > 0 order by length(thresh) desc;"
+            cursor.execute(get_these_trshs)
+            these_trshs = []
+            for row in cursor:
+                val_array = ast.literal_eval(list(row.values())[0])
+                for val in val_array:
+                    if val not in these_trshs:
+                        these_trshs.append(val)
+            these_trshs.sort(key=int)
+            # print( "these_trshs:\n" + str(these_trshs) )
 
-        # get scales for all tables pertaining to this model
-        get_these_scales = "select distinct(scale) from " + db + ".TABLESTATS_build where tablename like '" + \
-            model + "%' and scale != '[]' and model = '" + model + "' and numrecs > 0;"
-        cursor.execute(get_these_scales)
-        these_scales = []
-        for row in cursor:
-            val = str(list(row.values())[0])
-            these_scales.append(val)
-        these_scales.sort()
-        # print( "these_scales:\n" + str(these_scales) )
+            # get scales for all tables pertaining to this model
+            get_these_scales = "select distinct(scale) from " + db + ".TABLESTATS_build where tablename like '" + \
+                model + "%' and scale != '[]' and model = '" + \
+                model + "' " + source_clause + " and numrecs > 0;"
+            cursor.execute(get_these_scales)
+            these_scales = []
+            for row in cursor:
+                val = str(list(row.values())[0])
+                these_scales.append(val)
+            these_scales.sort()
+            # print( "these_scales:\n" + str(these_scales) )
 
-        # get statistics for all tables pertaining to this model
-        get_cat_stats = "select min(mindate) as mindate, max(maxdate) as maxdate, sum(numrecs) as numrecs from " + \
-            db + ".TABLESTATS_build where tablename like '" + model + \
-            "%' and model = '" + model + "' and numrecs > 0"
-        cursor.execute(get_cat_stats)
-        catstats = cursor.fetchall()[0]
-        # print( "catstats:\n" + str(catstats) )
+            # get statistics for all tables pertaining to this model
+            get_cat_stats = "select min(mindate) as mindate, max(maxdate) as maxdate, sum(numrecs) as numrecs from " + \
+                db + ".TABLESTATS_build where tablename like '" + model + \
+                "%' and model = '" + model + "' " + source_clause + " and numrecs > 0"
+            cursor.execute(get_cat_stats)
+            catstats = cursor.fetchall()[0]
+            # print( "catstats:\n" + str(catstats) )
 
-        # update the metadata for this data source in the build table
-        if len(these_regions) > 0 and len(these_fcst_lens) > 0 and len(these_trshs) > 0 and len(these_sources) > 0:
-            update_rpm_record(cnx, cursor, model, display_text, these_regions, these_sources, these_fcst_lens,
-                              these_trshs, these_scales, cat, do, catstats['mindate'], catstats['maxdate'], catstats['numrecs'])
+            # update the metadata for this data source in the build table
+            if len(these_regions) > 0 and len(these_fcst_lens) > 0 and len(these_trshs) > 0 and len(these_sources) > 0:
+                update_rpm_record(cnx, cursor, model, display_text, these_regions, these_sources, these_fcst_lens,
+                                  these_trshs, these_scales, cat, do, catstats['mindate'], catstats['maxdate'], catstats['numrecs'], valid_source)
 
     # clean metadata publication table and add the build data into it
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
     if 'deploy' in mode:
-        clean_rpmmac = "delete from regions_per_model_mats_all_categories"
-        cursor.execute(clean_rpmmac)
-        cnx.commit()
-        set_ai = "alter table regions_per_model_mats_all_categories auto_increment = 1"
-        cursor.execute(set_ai)
-        cnx.commit()
-        sync_rpm = "insert into regions_per_model_mats_all_categories select * from regions_per_model_mats_all_categories_build"
-        cursor.execute(sync_rpm)
-        cnx.commit()
-        print("deploy " + db +
-              ".regions_per_model_mats_all_categories complete at " + str(updated_utc))
+        for valid_source in valid_sources:
+            clean_rpmmac = "delete from " + valid_source + "_per_model_mats_all_categories"
+            cursor.execute(clean_rpmmac)
+            cnx.commit()
+            set_ai = "alter table " + valid_source + "_per_model_mats_all_categories auto_increment = 1"
+            cursor.execute(set_ai)
+            cnx.commit()
+            sync_rpm = "insert into " + valid_source + "_per_model_mats_all_categories select * from " + valid_source + "_per_model_mats_all_categories_build"
+            cursor.execute(sync_rpm)
+            cnx.commit()
+            print("deploy " + db +
+                "." + valid_source + "_per_model_mats_all_categories complete at " + str(updated_utc))
     else:
         print("skipping deployment at " + str(updated_utc))
 
