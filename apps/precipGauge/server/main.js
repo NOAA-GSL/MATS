@@ -733,7 +733,7 @@ const doCurveParams = async function () {
     const currentParam = await matsCollections.truth.findOneAsync({ name: "truth" });
     if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, sourceOptionsMap)) {
       // have to reload truth data
-      await matsCollections.truth.update(
+      await matsCollections.truth.updateAsync(
         { name: "truth" },
         {
           $set: {
