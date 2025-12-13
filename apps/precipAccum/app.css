@@ -51,6 +51,10 @@ body {
   -webkit-box-shadow: none !important;
 }
 
+.dropdown-menu {
+  background-color: #ffffff !important;
+}
+
 .btn-default {
   --bs-btn-color: #000000 !important;
   --bs-btn-bg: #ffffff !important;
