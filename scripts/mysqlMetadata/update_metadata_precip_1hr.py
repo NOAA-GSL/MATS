@@ -25,11 +25,11 @@ except ImportError:
 
 ############################################################################
 
-def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, fcst_lens, trshs, scales, display_category, display_order, mindate, maxdate, numrecs):
+def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, fcst_lens, trshs, scales, display_category, display_order, mindate, maxdate, numrecs, valid_source):
 
     # see if this record already exists in the build table
     # (does not guarantee the result will be the same for the prod table)
-    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories_build WHERE model = '" + \
+    find_rpm_rec = "SELECT id FROM " + valid_source + "_per_model_mats_all_categories_build WHERE model = '" + \
         str(table_name) + "'"
     cursor.execute(find_rpm_rec)
     build_record_id = int(0)
@@ -39,7 +39,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
 
     # see if this record already exists in the prod table
     # (does not guarantee the result will be the same for the build table)
-    find_rpm_rec = "SELECT id FROM regions_per_model_mats_all_categories WHERE model = '" + \
+    find_rpm_rec = "SELECT id FROM " + valid_source + "_per_model_mats_all_categories WHERE model = '" + \
         str(table_name) + "'"
     cursor.execute(find_rpm_rec)
     prod_record_id = int(0)
@@ -52,7 +52,8 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
         updated_utc = datetime.utcnow().strftime('%s')
         # if it's a new record for the build table, add it
         if build_record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories_build (model, display_text, regions, sources, fcst_lens, thresh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO " + valid_source + \
+                "_per_model_mats_all_categories_build (model, display_text, regions, sources, fcst_lens, thresh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(regions))
@@ -71,7 +72,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
             cnx.commit()
         else:
             # if there's a pre-existing record for the build table, update it
-            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories_build SET regions = %s, sources = %s, fcst_lens = %s, thresh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
+            update_rpm_rec = "UPDATE " + valid_source + "_per_model_mats_all_categories_build SET regions = %s, sources = %s, fcst_lens = %s, thresh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(regions))
             qd.append(str(sources))
             qd.append(str(fcst_lens))
@@ -91,7 +92,8 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
         qd = []
         # if it's a new record for the prod table, add it
         if prod_record_id == 0:
-            insert_rpm_rec = "INSERT INTO regions_per_model_mats_all_categories (model, display_text, regions, sources, fcst_lens, thresh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+            insert_rpm_rec = "INSERT INTO " + valid_source + \
+                "_per_model_mats_all_categories (model, display_text, regions, sources, fcst_lens, thresh, scale, display_category, display_order, id, mindate, maxdate, numrecs, updated) values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
             qd.append(str(table_name))
             qd.append(str(display_text))
             qd.append(str(regions))
@@ -110,7 +112,7 @@ def update_rpm_record(cnx, cursor, table_name, display_text, regions, sources, f
             cnx.commit()
         else:
             # if there's a pre-existing record for the prod table, update it
-            update_rpm_rec = "UPDATE regions_per_model_mats_all_categories SET regions = %s, sources = %s, fcst_lens = %s, thresh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
+            update_rpm_rec = "UPDATE " + valid_source + "_per_model_mats_all_categories SET regions = %s, sources = %s, fcst_lens = %s, thresh = %s, scale = %s, display_category = %s, display_order = %s, mindate = %s, maxdate = %s, numrecs = %s, updated = %s WHERE id = %s"
             qd.append(str(regions))
             qd.append(str(sources))
             qd.append(str(fcst_lens))
@@ -221,18 +223,12 @@ def reprocess_specific_metadata(models_to_reprocess):
     cnx3.close()
 
     per_model = {}
+    valid_sources = {}
     for model in models_to_reprocess:
         # initialize output object
         per_model[model] = {}
-        per_model[model]['display_text'] = ""
-        per_model[model]['region'] = []
-        per_model[model]['sources'] = []
-        per_model[model]['fcst_len'] = []
-        per_model[model]['trshs'] = []
-        per_model[model]['scale'] = []
-        per_model[model]['mindate'] = sys.float_info.max
-        per_model[model]['maxdate'] = 0
-        per_model[model]['numrecs'] = 0
+        valid_sources[model] = {"regions"}
+        all_tablenames = []
 
         if model in main_model_keys and main_models[model] in main_model_order_keys:
             per_model[model]['display_text'] = main_models[model]
@@ -252,89 +248,114 @@ def reprocess_specific_metadata(models_to_reprocess):
                     per_model[model]['display_category'] = row['display_category']
                     per_model[model]['display_order'] = row['display_order']
 
-        # get all tables that remotely resemble this model name
+        # get valid sources for this model
         show_tables = ("show tables like '" + model + "_%';")
+        # get all tables that remotely resemble this model name
         cursor.execute(show_tables)
         for row in cursor:
             tablename = str(list(row.values())[0])
             table_model = re.sub('_[0-9][0-9]km_.*', '', tablename)
             if table_model == model:
-                # this is a table that does belong to this model
-                get_tablestats = "SELECT min(time) AS mindate, max(time) AS maxdate, count(time) AS numrecs FROM " + tablename + ";"
-                cursor2.execute(get_tablestats)
-                stats = {}
-                for row2 in cursor2:
-                    rowkeys = row2.keys()
-                    for rowkey in rowkeys:
-                        val = str(row2[rowkey])
-                        stats[rowkey] = val
+                temp = "^" + model + "_[0-9][0-9]km_"
+                temp1 = re.sub(temp, "", tablename)
+                temp2 = re.split('_', temp1)
+                valid_sources[model].add(temp2[0])
+                all_tablenames.append(tablename)
 
-                if int(stats['numrecs']) > 0:
-                    # make sure the table actually has data
-                    per_model[model]['mindate'] = int(stats['mindate']) if stats['mindate'] != 'None' and int(
-                        stats['mindate']) < per_model[model]['mindate'] else per_model[model]['mindate']
-                    per_model[model]['maxdate'] = int(stats['maxdate']) if stats['maxdate'] != 'None' and int(
-                        stats['maxdate']) > per_model[model]['maxdate'] else per_model[model]['maxdate']
-                    per_model[model]['numrecs'] = per_model[model]['numrecs'] + \
-                        int(stats['numrecs'])
+        for valid_source in valid_sources[model]:
+            per_model[model][valid_source] = {}
+            per_model[model][valid_source]['region'] = []
+            per_model[model][valid_source]['sources'] = []
+            per_model[model][valid_source]['fcst_len'] = []
+            per_model[model][valid_source]['trshs'] = []
+            per_model[model][valid_source]['scale'] = []
+            per_model[model][valid_source]['mindate'] = sys.float_info.max
+            per_model[model][valid_source]['maxdate'] = 0
+            per_model[model][valid_source]['numrecs'] = 0
 
-                    temp = "^" + model + "_[0-9][0-9]km_"
-                    temp1 = re.sub(temp, "", tablename)
-                    temp2 = re.split('_', temp1)
-                    region = '_'.join(temp2[1:])
-                    if region not in per_model[model]['region']:
-                        per_model[model]['region'].append(region)
-                    source = temp2[0]
-                    if source not in per_model[model]['sources']:
-                        per_model[model]['sources'].append(source)
-                    temp1 = "^" + model + "_"
-                    temp2 = "_" + source + "_" + region + "$"
-                    scale1 = re.sub(temp1, "", tablename)
-                    scale = re.sub(temp2, "", scale1)
-                    if scale not in per_model[model]['scale']:
-                        per_model[model]['scale'].append(scale)
-
-                    get_fcst_lens = (
-                        "SELECT DISTINCT fcst_len FROM " + tablename + ";")
-                    cursor2.execute(get_fcst_lens)
-                    thisfcst_lens = []
+            for tablename in all_tablenames:
+                temp = "^" + model + "_[0-9][0-9]km_"
+                temp1 = re.sub(temp, "", tablename)
+                temp2 = re.split('_', temp1)
+                if valid_source == temp2[0] or valid_source == "regions":
+                    # this is a table that does belong to this source
+                    get_tablestats = "SELECT min(time) AS mindate, max(time) AS maxdate, count(time) AS numrecs FROM " + tablename + ";"
+                    cursor2.execute(get_tablestats)
+                    stats = {}
                     for row2 in cursor2:
-                        val = list(row2.values())[0]
-                        thisfcst_lens.append(int(val))
-                    per_model[model]['fcst_len'] = list(
-                        set(per_model[model]['fcst_len']) | set(thisfcst_lens))
-                    per_model[model]['fcst_len'].sort(key=int)
+                        rowkeys = row2.keys()
+                        for rowkey in rowkeys:
+                            val = str(row2[rowkey])
+                            stats[rowkey] = val
 
-                    get_trsh = ("SELECT DISTINCT trsh FROM " + tablename + ";")
-                    cursor2.execute(get_trsh)
-                    thistrsh = []
-                    for row2 in cursor2:
-                        val = list(row2.values())[0]
-                        thistrsh.append(int(val))
-                    per_model[model]['trshs'] = list(
-                        set(per_model[model]['trshs']) | set(thistrsh))
-                    per_model[model]['trshs'].sort(key=int)
+                    if int(stats['numrecs']) > 0:
+                        # make sure the table actually has data
+                        per_model[model][valid_source]['mindate'] = int(stats['mindate']) if stats['mindate'] != 'None' and int(
+                            stats['mindate']) < per_model[model][valid_source]['mindate'] else per_model[model][valid_source]['mindate']
+                        per_model[model][valid_source]['maxdate'] = int(stats['maxdate']) if stats['maxdate'] != 'None' and int(
+                            stats['maxdate']) > per_model[model][valid_source]['maxdate'] else per_model[model][valid_source]['maxdate']
+                        per_model[model][valid_source]['numrecs'] = per_model[model][valid_source]['numrecs'] + \
+                            int(stats['numrecs'])
 
-        if per_model[model]['mindate'] == sys.float_info.max:
-            per_model[model]['mindate'] = str(datetime.now().strftime('%s'))
-        if per_model[model]['maxdate'] == 0:
-            per_model[model]['maxdate'] = str(datetime.now().strftime('%s'))
+                        region = '_'.join(temp2[1:])
+                        if region not in per_model[model][valid_source]['region']:
+                            per_model[model][valid_source]['region'].append(region)
+                        source = temp2[0]
+                        if source not in per_model[model][valid_source]['sources']:
+                            per_model[model][valid_source]['sources'].append(source)
+                        temp1 = "^" + model + "_"
+                        temp2 = "_" + source + "_" + region + "$"
+                        scale1 = re.sub(temp1, "", tablename)
+                        scale = re.sub(temp2, "", scale1)
+                        if scale not in per_model[model][valid_source]['scale']:
+                            per_model[model][valid_source]['scale'].append(scale)
 
-        if len(per_model[model]['region']) > 0:
-            region_orders = []
-            for region in per_model[model]['region']:
-                region_orders.append(valid_region_orders[region])
-            per_model[model]['region'] = [x for _, x in sorted(
-                zip(region_orders, per_model[model]['region']))]
+                        get_fcst_lens = (
+                            "SELECT DISTINCT fcst_len FROM " + tablename + ";")
+                        cursor2.execute(get_fcst_lens)
+                        thisfcst_lens = []
+                        for row2 in cursor2:
+                            val = list(row2.values())[0]
+                            thisfcst_lens.append(int(val))
+                        per_model[model][valid_source]['fcst_len'] = list(
+                            set(per_model[model][valid_source]['fcst_len']) | set(thisfcst_lens))
+                        per_model[model][valid_source]['fcst_len'].sort(key=int)
 
-    print(per_model)
+                        get_trsh = (
+                            "SELECT DISTINCT trsh FROM " + tablename + ";")
+                        cursor2.execute(get_trsh)
+                        thistrsh = []
+                        for row2 in cursor2:
+                            val = list(row2.values())[0]
+                            thistrsh.append(int(val * 100))
+                        per_model[model][valid_source]['trshs'] = list(
+                            set(per_model[model][valid_source]['trshs']) | set(thistrsh))
+                        per_model[model][valid_source]['trshs'].sort(key=int)
+
+            if per_model[model][valid_source]['mindate'] == sys.float_info.max:
+                per_model[model][valid_source]['mindate'] = str(datetime.now().strftime('%s'))
+            if per_model[model][valid_source]['maxdate'] == 0:
+                per_model[model][valid_source]['maxdate'] = str(datetime.now().strftime('%s'))
+
+            if len(per_model[model][valid_source]['region']) > 0:
+                region_orders = []
+                for region in per_model[model][valid_source]['region']:
+                    region_orders.append(valid_region_orders[region])
+                per_model[model][valid_source]['region'] = [x for _, x in sorted(
+                    zip(region_orders, per_model[model][valid_source]['region']))]
+                
+            if valid_source == "regions":
+                print("All source metadata:\n" + str(per_model[model][valid_source]))
+            else:
+                print(valid_source + " metadata:\n" + str(per_model[model][valid_source]))
 
     # sys.exit(-1)
 
     for model in models_to_reprocess:
-        if len(per_model[model]['region']) > 0 and len(per_model[model]['fcst_len']) > 0 and len(per_model[model]['trshs']) > 0 and len(per_model[model]['scale']) > 0:
-            update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model]['region'], per_model[model]['sources'], per_model[model]['fcst_len'], per_model[model]['trshs'],
-                              per_model[model]['scale'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model]['mindate'], per_model[model]['maxdate'], per_model[model]['numrecs'])
+        for valid_source in valid_sources[model]:
+            if len(per_model[model][valid_source]['region']) > 0 and len(per_model[model][valid_source]['fcst_len']) > 0 and len(per_model[model][valid_source]['trshs']) > 0 and len(per_model[model][valid_source]['scale']) > 0:
+                update_rpm_record(cnx, cursor, model, per_model[model]['display_text'], per_model[model][valid_source]['region'], per_model[model][valid_source]['sources'], per_model[model][valid_source]['fcst_len'], per_model[model][valid_source]['trshs'],
+                                per_model[model][valid_source]['scale'], per_model[model]['display_category'], per_model[model]['display_order'], per_model[model][valid_source]['mindate'], per_model[model][valid_source]['maxdate'], per_model[model][valid_source]['numrecs'], valid_source)
 
     updated_utc = datetime.utcnow().strftime('%Y/%m/%d %H:%M')
     print("deploy " + db +
