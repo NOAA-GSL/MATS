@@ -33,9 +33,9 @@ export default async (parameter, selectionValue) => {
       await $(`[value="${selectionValue}"]`).click();
     } else {
       // noinspection JSJQueryEfficiency
-      await $(`[data-value="${selectionValue}"]`).scrollIntoView();
-      await $(`[data-value="${selectionValue}"]`).waitForClickable();
-      await $(`[data-value="${selectionValue}"]`).click();
+      await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).scrollIntoView();
+      await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).waitForClickable();
+      await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).click();
     }
     // if it is a multi-select selector, have to click the done button
     await $(`#${parameter}-select-done`).scrollIntoView();
@@ -43,9 +43,9 @@ export default async (parameter, selectionValue) => {
     await $(`#${parameter}-select-done`).click();
   } else {
     // noinspection JSJQueryEfficiency
-    await $(`[data-value="${selectionValue}"]`).scrollIntoView();
-    await $(`[data-value="${selectionValue}"]`).waitForClickable();
-    await $(`[data-value="${selectionValue}"]`).click();
+    await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).scrollIntoView();
+    await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).waitForClickable();
+    await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).click();
   }
 
   let matchValue = selectionValue;
