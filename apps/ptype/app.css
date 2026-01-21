@@ -197,8 +197,12 @@ body {
   background-color: #000066;
 }
 
+.mats-logo-size {
+  width: 110px;
+}
+
 .noaa-logo-size {
-  width: 60px;
+  width: 170px;
 }
 
 .icon-size {
