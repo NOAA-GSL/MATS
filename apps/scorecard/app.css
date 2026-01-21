@@ -201,8 +201,16 @@ body {
   width: 110px;
 }
 
+.metexpress-logo-size {
+  width: 160px;
+}
+
 .noaa-logo-size {
   width: 170px;
+}
+
+.dtc-logo-size {
+  width: 60px;
 }
 
 .icon-size {
