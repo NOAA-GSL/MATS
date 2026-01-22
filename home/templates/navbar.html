@@ -68,16 +68,24 @@
     aria-label="MATS navigation bar"
   >
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">
-        <div class="row">
-          <div class="col-3">
+      <a class="navbar-brand w-100 h-100 m-0" href="#">
+        <div class="row align-items-center">
+          <div class="col-lg-3 col-6 text-lg-start text-end">
+            {{ if .Config.IsMETexpress }}
             <img
-              class="text-center h-100"
-              src="img/noaa-logo-rgb-2022.svg"
-              alt="NOAA Logo"
+              style="height: 80px;"
+              src="img/metexpress_transparent.png"
+              alt="METexpress Logo"
             />
+            {{ else }}
+            <img
+              style="height: 80px;"
+              src="img/mats_transparent.png"
+              alt="MATS Logo"
+            />
+            {{ end }}
           </div>
-          <div class="col-9">
+          <div class="col-lg-6 col-0 d-none d-lg-block text-center">
             {{ if .Config.IsMETexpress }}
             <span class="fs-6">National Weather Service</span>
             {{ else }}
@@ -92,6 +100,21 @@
             {{ if .Config.EnvironmentLabel }}
             <span class="d-none d-lg-block fs-6">{{ .Config.EnvironmentLabel }} Server</span>
             {{ else }}
+            {{ end }}
+          </div>
+          <div class="col-lg-3 col-6 text-lg-end text-start">
+            {{ if .Config.IsMETexpress }}
+            <img
+              style="height: 80px;"
+              src="img/dtc_transparent.png"
+              alt="DTC Logo"
+            />
+            {{ else }}
+            <img
+              style="height: 80px;"
+              src="img/noaa_gsl_transparent.png"
+              alt="NOAA Logo"
+            />
             {{ end }}
           </div>
         </div>
