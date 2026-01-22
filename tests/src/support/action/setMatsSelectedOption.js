@@ -27,25 +27,18 @@ export default async (parameter, selectionValue) => {
     await $(`#${parameter}-select-clear`).waitForClickable();
     await $(`#${parameter}-select-clear`).click();
     // noinspection JSJQueryEfficiency
-    if (parameter === "sites") {
-      await $(`[value="${selectionValue}"]`).scrollIntoView();
-      await $(`[value="${selectionValue}"]`).waitForClickable();
-      await $(`[value="${selectionValue}"]`).click();
-    } else {
-      // noinspection JSJQueryEfficiency
-      await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).scrollIntoView();
-      await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).waitForClickable();
-      await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).click();
-    }
+    await $(`[value="${selectionValue}"]`).scrollIntoView();
+    await $(`[value="${selectionValue}"]`).waitForClickable();
+    await $(`[value="${selectionValue}"]`).click();
     // if it is a multi-select selector, have to click the done button
     await $(`#${parameter}-select-done`).scrollIntoView();
     await $(`#${parameter}-select-done`).waitForClickable();
     await $(`#${parameter}-select-done`).click();
   } else {
     // noinspection JSJQueryEfficiency
-    await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).scrollIntoView();
-    await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).waitForClickable();
-    await $(`#element-${parameter} > div:nth-child(2) > div > div > div.dropdown-menu.w-100 > div [data-value="${selectionValue}"]`).click();
+    await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).scrollIntoView();
+    await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).waitForClickable();
+    await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).click();
   }
 
   let matchValue = selectionValue;
