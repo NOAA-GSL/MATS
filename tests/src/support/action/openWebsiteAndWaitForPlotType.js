@@ -14,7 +14,7 @@ export default async (page) => {
     } else {
         await browser.url(url + page);
     }
-    const ms = 120000;
+    const ms = 20000;
     // wait for the curve label selector to exist
     // noinspection JSJQueryEfficiency
     await $('#controlButton-label-value').waitForExist({ timeout: ms });
