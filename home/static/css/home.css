@@ -86,10 +86,14 @@
 
 .icon-size {
     width: 25px;
-  }
+}
   
 .icon-size-small {
     width: 15px;
+}
+
+.agency-icon-height {
+    height: 80px;
 }
   
 .small-text {
