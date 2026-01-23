@@ -16,12 +16,12 @@ Feature: Add Remove Performance Diagram Curve
     Scenario: addRemovePerformanceDiagramCurve
         When I set the plot type to "PerformanceDiagram"
         Then the plot type should be "PerformanceDiagram"
-        When I change the "data-source" parameter to "RAP_OPS"
-        Then the "data-source" parameter value matches "RAP_OPS"
+        When I change the "data-source" parameter to "HRRR_OPS"
+        Then the "data-source" parameter value matches "HRRR_OPS"
         When I change the "bin-parameter" parameter to "Fcst lead time"
         Then the "bin-parameter" parameter value matches "Fcst lead time"
-        When I set the curve-dates to "11/10/2023 00:00 - 11/13/2023 00:00"
-        Then the curve-dates value is "11/10/2023 00:00 - 11/13/2023 00:00"
+        When I set the curve-dates to "11/10/2025 00:00 - 11/13/2025 00:00"
+        Then the curve-dates value is "11/10/2025 00:00 - 11/13/2025 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
 

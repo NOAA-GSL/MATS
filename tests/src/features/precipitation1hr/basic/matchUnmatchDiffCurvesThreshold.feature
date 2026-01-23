@@ -15,15 +15,15 @@ Feature: Match Unmatch Diff Curves Threshold
     Scenario: matchUnmatchDiffCurvesThreshold
         When I set the plot type to "Threshold"
         Then the plot type should be "Threshold"
-        When I change the "data-source" parameter to "RAP_OPS"
-        Then the "data-source" parameter value matches "RAP_OPS"
-        When I set the curve-dates to "11/10/2023 00:00 - 11/13/2023 00:00"
-        Then the curve-dates value is "11/10/2023 00:00 - 11/13/2023 00:00"
+        When I change the "data-source" parameter to "HRRR_OPS"
+        Then the "data-source" parameter value matches "HRRR_OPS"
+        When I set the curve-dates to "11/10/2025 00:00 - 11/13/2025 00:00"
+        Then the curve-dates value is "11/10/2025 00:00 - 11/13/2025 00:00"
         When I click the "Add Curve" button
         Then "Curve0" is added
 
-        When I change the "data-source" parameter to "HRRR_OPS"
-        Then the "data-source" parameter value matches "HRRR_OPS"
+        When I change the "data-source" parameter to "MPAS_physics_dev1"
+        Then the "data-source" parameter value matches "MPAS_physics_dev1"
         When I click the "Add Curve" button
         Then "Curve1" is added
         And I should see a list of curves containing "Curve0,Curve1"
