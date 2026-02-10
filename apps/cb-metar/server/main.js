@@ -1218,7 +1218,7 @@ const doCurveParams = async function () {
       selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(optionsMap)[4],
       controlButtonVisibility: "block",
       displayOrder: 1,
       displayPriority: 1,

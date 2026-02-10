@@ -1715,6 +1715,7 @@ const doCurveTextPatterns = async function () {
       ],
       displayParams: [
         "label",
+        "database",
         "data-source",
         "region-type",
         "region",
