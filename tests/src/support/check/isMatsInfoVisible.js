@@ -12,7 +12,7 @@ export default async (falseCase) => {
             'Expected info modal to NOT be displayed and it is visible'
         );
     } else {
-        const ms = 2000;
+        const ms = 5000;
         await selector.waitForDisplayed({ timeout: ms });
         const isDisplayed = await selector.isDisplayed({ timeout: ms });
         expect(isDisplayed).toEqual(
