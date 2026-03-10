@@ -583,6 +583,11 @@ const doCurveParams = async function () {
       controlButtonCovered: true,
       default: dbs[0],
       hideOtherFor: {
+        "region-type": [
+          "AMDAR (Traditional)",
+          "AMDAR (GDAS)",
+          "AMDAR (GDAS; Only Obs That Include Vapor)",
+        ],
         phase: ["RAOBs (Traditional)", "RAOBs (GDAS)"],
       },
       unique: false,
