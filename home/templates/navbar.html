@@ -71,58 +71,64 @@
       <nav class="navbar-brand w-100 h-100 m-0 pb-0">
         <div class="row w-100 h-100 mx-2">
           <div class="col-md-3 col-5 text-md-start text-end">
-            {{ if .Config.IsMETexpress }}
             <img
-              class="agency-icon-height mt-md-3 mt-0"
-              src="img/metexpress_transparent.png"
-              alt="METexpress Logo"
+              {{ if .Config.EnvironmentLabel }}
+                class="agency-icon-height mt-md-3 mt-0"
+              {{ else }}
+                class="agency-icon-height mt-md-1 mt-0"
+              {{ end }}
+              {{ if .Config.IsMETexpress }}
+                src="img/metexpress_transparent.png"
+                alt="METexpress Logo"
+              {{ else }}
+                src="img/mats_transparent.png"
+                alt="MATS Logo"
+              {{ end }}
             />
-            {{ else }}
-            <img
-              class="agency-icon-height mt-md-3 mt-0"
-              src="img/mats_transparent.png"
-              alt="MATS Logo"
-            />
-            {{ end }}
           </div>
           <div class="col-md-6 col-0 d-none d-md-block text-center">
             <div class="row">
               <div class="col-12">
-                {{ if .Config.IsMETexpress }}
-                <span class="fs-6">National Weather Service</span>
-                {{ else }}
-                <span class="fs-6">Global Systems Laboratory</span>
-                {{ end }}
+                <span class="fs-6">
+                  {{ if .Config.IsMETexpress }}
+                    National Weather Service
+                  {{ else }}
+                    Global Systems Laboratory
+                  {{ end }}
+                </span>
               </div>
             </div>
             <div class="row">
               <div class="col-12">
-                {{ if .Config.IsMETexpress }}
-                <span class="fs-3">METexpress</span>
-                {{ else }}
-                <span class="fs-3">Model Analysis Tool Suite (MATS)</span>
-                {{ end }}
+                <span class="fs-3">
+                  {{ if .Config.IsMETexpress }}
+                    METexpress
+                  {{ else }}
+                    Model Analysis Tool Suite (MATS)
+                  {{ end }}
+                </span>
                 {{ if .Config.EnvironmentLabel }}
-                <span class="d-none d-lg-block fs-6">{{ .Config.EnvironmentLabel }} Server</span>
+                  <span class="d-none d-lg-block fs-6">{{ .Config.EnvironmentLabel }} Server</span>
                 {{ else }}
                 {{ end }}
               </div>
             </div>
           </div>
           <div class="col-md-3 col-7 text-md-end text-start">
-            {{ if .Config.IsMETexpress }}
             <img
-              class="agency-icon-height mt-md-3 mt-0"
-              src="img/dtc_transparent.png"
-              alt="DTC Logo"
+              {{ if .Config.EnvironmentLabel }}
+                class="agency-icon-height mt-md-3 mt-0"
+              {{ else }}
+                class="agency-icon-height mt-md-1 mt-0"
+              {{ end }}
+              {{ if .Config.IsMETexpress }}
+                src="img/dtc_transparent.png"
+                alt="DTC Logo"
+              {{ else }}
+                src="img/noaa_gsl_transparent.png"
+                alt="NOAA Logo"
+              {{ end }}
             />
-            {{ else }}
-            <img
-              class="agency-icon-height mt-md-3 mt-0"
-              src="img/noaa_gsl_transparent.png"
-              alt="NOAA Logo"
-            />
-            {{ end }}
           </div>
         </div>
         <div class="row bg-info bg-opacity-50 w-100 h-100 mt-3 mx-0 pt-1 pb-2">
@@ -135,30 +141,19 @@
           <span class="col-lg-4 col-3 text-center">
             {{ if .Config.IsMETexpress }}
               <a class="white-link-text fs-6" href="https://github.com/dtcenter/METexpress" target="_blank">
-                GitHub
-              </a>
             {{ else }}
               <a class="white-link-text fs-6" href="https://github.com/NOAA-GSL/MATS" target="_blank">
-                GitHub
-              </a>
             {{ end }}
+              GitHub
+            </a>
           </span>
           <span class="col-lg-2 col-4 text-center">
-            {{ if .Config.IsMETexpress }}
-              <a
-                class="white-link-text fs-6"
-                href="mailto:mats.gsl@noaa.gov?Subject=Feedback from METexpress"
-                target="_blank">
-                Contact Us
-              </a>
-            {{ else }}
-              <a
-                class="white-link-text fs-6"
-                href="mailto:mats.gsl@noaa.gov?Subject=Feedback from MATS"
-                target="_blank">
-                Contact Us
-              </a>
-            {{ end }}
+            <a
+              class="white-link-text fs-6"
+              href="mailto:mats.gsl@noaa.gov?Subject=Feedback from MATS/METexpress"
+              target="_blank">
+              Contact Us
+            </a>
           </span>
           <span class="col-lg-2 col-0 text-center"></span>
         </div>
