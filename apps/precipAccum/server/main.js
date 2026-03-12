@@ -1030,7 +1030,7 @@ const doCurveTextPatterns = async function () {
         ["", "statistic", " at "],
         ["", "threshold", ", "],
         ["fcst_type: ", "forecast-type", ""],
-        ["avg: ", "average", ""],
+        ["", "average", " average"],
       ],
       displayParams: [
         "label",

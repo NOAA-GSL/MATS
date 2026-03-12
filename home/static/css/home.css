@@ -93,11 +93,16 @@
 }
 
 .agency-icon-height {
-    height: 80px;
+    height: 70px;
 }
   
 .small-text {
     font-size: small;
+}
+
+.white-link-text {
+  color: white;
+  text-decoration: none;
 }
 
 .text-blue {

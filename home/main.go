@@ -18,6 +18,7 @@ type ConfigJSON struct {
 		UseProductionAnalytics bool   `json:"use_production_analytics"`
 		EnvironmentLabel       string `json:"environment_label"`
 		AlertMessage           string `json:"alert_message"`
+		DocumentationLink      string `json:"documentation"`
 	} `json:"config"`
 	Groups []struct {
 		Name string `json:"name"`
