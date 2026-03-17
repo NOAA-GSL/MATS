@@ -26,3 +26,16 @@ updates:
     target-branch: "development"
     assignees:
       - "ian-noaa"
+
+  # Maintain dependencies for NPM
+  - package-ecosystem: "npm"
+    directory: "/"
+    # Disable version updates for npm dependencies - just do security updates
+    open-pull-requests-limit: 0
+    schedule:
+      interval: "monthly"
+    pull-request-branch-name:
+      separator: "-"
+    target-branch: "development"
+    assignees:
+      - "mollybsmith-noaa"
