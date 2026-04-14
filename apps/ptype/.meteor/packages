@@ -22,8 +22,8 @@ jquery@3.0.0
 google-config-ui@1.0.4
 dynamic-import@0.7.4
 underscore@1.6.1
-pwix:blaze-layout
+pwix:blaze-layout@=2.3.3
 ostrio:flow-router-extra
 fetch@0.1.6
 aldeed:simple-schema
-randyp:mats-common@6.2.7
+randyp:mats-common@6.2.8
