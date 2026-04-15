@@ -399,15 +399,26 @@ const doCurveParams = async function () {
           return source.replace(/'|\[|\]/g, "");
         })
         .sort();
-      sourceOptionsMap[model].forEach((source) => {
-        allSources.add(source);
-      });
 
-      modelDateRangeMap[model] = {};
-      forecastLengthOptionsMap[model] = {};
-      thresholdsModelOptionsMap[model] = {};
-      regionModelOptionsMap[model] = {};
-      scaleModelOptionsMap[model] = {};
+      // for now we're banning StageIV
+      const index = sourceOptionsMap[model].indexOf("StageIV");
+      if (index > -1) {
+        sourceOptionsMap[model].splice(index, 1);
+      }
+
+      if (!sourceOptionsMap[model].length) {
+        delete modelOptionsMap[model];
+        delete sourceOptionsMap[model];
+      } else {
+        sourceOptionsMap[model].forEach((source) => {
+          allSources.add(source);
+        });
+        modelDateRangeMap[model] = {};
+        forecastLengthOptionsMap[model] = {};
+        thresholdsModelOptionsMap[model] = {};
+        regionModelOptionsMap[model] = {};
+        scaleModelOptionsMap[model] = {};
+      }
     }
   } catch (err) {
     throw new Error(err.message);
