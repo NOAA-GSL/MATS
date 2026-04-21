@@ -34,16 +34,10 @@ const variableMetadataDocs = {
       "Relative Humidity at 2m (%)": ["RelativeHumidity", "RH", "RH (%)"],
       "Surface Pressure (hPa)": ["SurfacePressure", "Surface Pressure", "hPa"],
       "Normalized Surface Pressure (hPa)": [
-        "Normalized SurfacePressure",
+        "Normalized Surface Pressure",
         "Normalized Surface Pressure",
         "hPa",
       ],
-      "Mean Sea Level Pressure (hPa)": [
-        "Mean Sea Level Pressure",
-        "Mean Sea Level Pressure",
-        "hPa",
-      ],
-      "Elevation (m)": ["Elevation", "Elevation", "m"],
       "Wind Speed at 10m (m/s)": ["WindSpeed", "WS", "m/s"],
       "U-Wind at 10m (m/s)": ["WindU", "WindU", "m/s"],
       "V-Wind at 10m (m/s)": ["WindV", "WindV", "m/s"],
