@@ -14,8 +14,16 @@ import {
 
 /* eslint-disable no-await-in-loop */
 
-// first field of each value array is sub-variables, second field is metadata document key,
-// third is boolean for whether or not there are thresholds
+// this is organized as:
+//  name of metadata doc containint these variables : [{
+//    variable name as it appears in the selector: {
+//      [variable name in sums/ctc docs,
+//       variable name in model/obs docs,
+//       units to plot in
+//      ]
+//    },
+//    boolean for if this variable has thresholds
+//  }]
 const variableMetadataDocs = {
   Ceiling: [{ "Ceiling (ft)": ["Ceiling", "Ceiling", "ft"] }, true],
   Visibility: [{ "Visibility (mi)": ["Visibility", "Visibility", "mi"] }, true],
@@ -25,6 +33,17 @@ const variableMetadataDocs = {
       "Dewpoint at 2m (°C)": ["DewPoint", "DewPoint", "°C"],
       "Relative Humidity at 2m (%)": ["RelativeHumidity", "RH", "RH (%)"],
       "Surface Pressure (hPa)": ["SurfacePressure", "Surface Pressure", "hPa"],
+      "Normalized Surface Pressure (hPa)": [
+        "Normalized SurfacePressure",
+        "Normalized Surface Pressure",
+        "hPa",
+      ],
+      "Mean Sea Level Pressure (hPa)": [
+        "Mean Sea Level Pressure",
+        "Mean Sea Level Pressure",
+        "hPa",
+      ],
+      "Elevation (m)": ["Elevation", "Elevation", "m"],
       "Wind Speed at 10m (m/s)": ["WindSpeed", "WS", "m/s"],
       "U-Wind at 10m (m/s)": ["WindU", "WindU", "m/s"],
       "V-Wind at 10m (m/s)": ["WindV", "WindV", "m/s"],
