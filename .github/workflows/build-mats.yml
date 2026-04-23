@@ -164,8 +164,8 @@ jobs:
             BUILDVER=${{ env.VERSION }}
             COMMITBRANCH=${{ github.BRANCH }}
             COMMITSHA=${{ github.sha }}
-          # cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.app }} # add each app to GHA cache to avoid redownloading dependencies if they haven't changed
-          # cache-to: type=gha,mode=min,scope=${{ github.ref_name }}-${{ matrix.app }} # add each app to GHA cache to avoid redownloading dependencies if they haven't changed
+          cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.app }} # add each app to GHA cache to avoid redownloading dependencies if they haven't changed
+          cache-to: type=gha,mode=min,scope=${{ github.ref_name }}-${{ matrix.app }} # add each app to GHA cache to avoid redownloading dependencies if they haven't changed
           push: true
 
       - name: Scan image with Trivy
