@@ -63,7 +63,7 @@ jobs:
       security-events: write
     strategy:
       fail-fast: false # Temporary workaround for job timeouts (ESOCKETTIMEDOUT errors)
-      max-parallel: 5 # Temporary workaround for job timeouts (ESOCKETTIMEDOUT errors)
+      max-parallel: 15 # Temporary workaround for job timeouts (ESOCKETTIMEDOUT errors)
       matrix:
         app: 
           - airQuality
@@ -181,7 +181,7 @@ jobs:
       
       - name: Upload Resource Metrics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: resource-metrics-${{ matrix.app }}.log
           path: resource-metrics.log
