@@ -101,7 +101,7 @@ jobs:
         - name: Build image and push
           uses: docker/build-push-action@v7
           with:
-            context: .
+            context: ./home
             tags: ${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}
             build-args: |
               BUILDVER=${{ env.VERSION }}
