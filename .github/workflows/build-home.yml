@@ -121,7 +121,3 @@ jobs:
           uses: github/codeql-action/upload-sarif@v4
           with:
             sarif_file: 'trivy-results-home.sarif'
-
-        - name: Push image to dev registry
-          run: |
-            docker push ${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}
