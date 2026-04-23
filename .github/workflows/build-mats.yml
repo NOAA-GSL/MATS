@@ -82,6 +82,29 @@ jobs:
           - surfrad
           - upperair
     steps:
+      - name: Gather Resource Metrics
+        run: |
+          while true; do
+            echo "========== $(date -u) ==========" >> resource-metrics.log
+            
+            echo "--- Memory ---" >> resource-metrics.log
+            free -m >> resource-metrics.log
+            
+            echo "--- CPU & Load ---" >> resource-metrics.log
+            top -b -n 1 -E=m -e=m | head -n 15 >> resource-metrics.log
+            
+            echo "--- Disk I/O ---" >> resource-metrics.log
+            # Print column headers for /proc/diskstats manually for readability
+            echo "Major Minor Name Reads ReadMerges SectorsRead MsReading Writes WriteMerges SectorsWritten MsWriting I/O_InProgress MsIO WeightedMsIO Discards DiscardMerges SectorsDiscarded MsDiscarding Flushing FlushTicks" >> resource-metrics.log
+            # Filter out loop devices (virtual filesystems) to reduce noise
+            cat /proc/diskstats | grep -v 'loop' >> resource-metrics.log
+            
+            echo "--- Network I/O ---" >> resource-metrics.log
+            cat /proc/net/dev | grep -E 'eth0|docker0' >> resource-metrics.log
+            
+            echo "" >> resource-metrics.log
+            sleep 5
+          done &
       - name: Checkout code
         uses: actions/checkout@v6
         with:
@@ -155,3 +178,10 @@ jobs:
       - name: Push image to dev registry
         run: |
             docker push ${{ env.DEV_REGISTRY }}/${{ env.APP_LOWERCASE }}:${{ env.BRANCH }}
+      
+      - name: Upload Resource Metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resource-metrics-${{ matrix.app }}.log
+          path: resource-metrics.log
