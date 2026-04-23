@@ -62,7 +62,7 @@ jobs:
       packages: write
       security-events: write
     strategy:
-      fail-fast: true
+      fail-fast: false # Temporary workaround for job timeouts (ESOCKETTIMEDOUT errors)
       max-parallel: 5 # Temporary workaround for job timeouts (ESOCKETTIMEDOUT errors)
       matrix:
         app: 
