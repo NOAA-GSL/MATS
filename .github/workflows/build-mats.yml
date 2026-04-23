@@ -63,7 +63,6 @@ jobs:
       security-events: write
     strategy:
       fail-fast: false # Temporary workaround for job timeouts (ESOCKETTIMEDOUT errors)
-      max-parallel: 15 # Temporary workaround for job timeouts (ESOCKETTIMEDOUT errors)
       matrix:
         app: 
           - airQuality
