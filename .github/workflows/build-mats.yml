@@ -82,7 +82,7 @@ jobs:
           - upperair
     steps:
       - name: Gather Resource Metrics
-        run: |
+        run: | # Temporary workaround to help debug job timeouts (ESOCKETTIMEDOUT errors)
           while true; do
             echo "========== $(date -u) ==========" >> resource-metrics.log
             
