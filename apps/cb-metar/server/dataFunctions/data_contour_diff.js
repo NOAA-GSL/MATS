@@ -231,7 +231,7 @@ global.dataContourDiff = async function (plotParams) {
     // For contours, this functions as the colorbar label.
     curve.unitKey =
       statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[2]
+        ? variableDetails[1]
         : statisticOptionsMap[variable][statisticSelect][1];
     if (statType === "ctc") {
       allStatistics.push(statisticSelect);

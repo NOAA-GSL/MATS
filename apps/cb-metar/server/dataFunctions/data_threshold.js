@@ -150,7 +150,7 @@ global.dataThreshold = async function (plotParams) {
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     const axisKey =
       statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[2]
+        ? variableDetails[1]
         : statisticOptionsMap[variable][statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[variable][statisticSelect][2];

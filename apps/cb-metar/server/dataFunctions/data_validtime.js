@@ -237,7 +237,7 @@ global.dataValidTime = async function (plotParams) {
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
     const axisKey =
       statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[2]
+        ? variableDetails[1]
         : statisticOptionsMap[variable][statisticSelect][1];
     curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
     const idealVal = statisticOptionsMap[variable][statisticSelect][2];
@@ -259,7 +259,7 @@ global.dataValidTime = async function (plotParams) {
           const tss = new matsMiddleValidTime.MatsMiddleValidTime(global.cbPool);
           rows = await tss.processStationQuery(
             statType,
-            variableDetails[1],
+            variableDetails[0],
             sitesList,
             model,
             forecastLength,

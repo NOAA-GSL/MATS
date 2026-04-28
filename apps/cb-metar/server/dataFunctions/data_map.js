@@ -84,7 +84,7 @@ global.dataMap = async function (plotParams) {
   const statType = statisticOptionsMap[variable][statisticSelect][0];
   const varUnits =
     statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-      ? variableDetails[2]
+      ? variableDetails[1]
       : statisticOptionsMap[variable][statisticSelect][1];
 
   const filterModelBy = curve["filter-model-by"];
@@ -198,7 +198,7 @@ global.dataMap = async function (plotParams) {
       const tss = new matsMiddleMap.MatsMiddleMap(global.cbPool);
       rows = await tss.processStationQuery(
         statType,
-        variableDetails[1],
+        variableDetails[0],
         sitesList,
         model,
         forecastLength,
