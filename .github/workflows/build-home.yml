@@ -89,14 +89,25 @@ jobs:
             exit 1
             fi
 
-        - name: Build image
-          run: |
-            docker build \
-            --build-arg BUILDVER="${{ env.VERSION }}" \
-            --build-arg COMMITBRANCH=${{ env.BRANCH }} \
-            --build-arg COMMITSHA=${{ github.sha }} \
-            -t ${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }} \
-            .
+        - name: Login to GitHub Container Registry
+          uses: docker/login-action@v4
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+        - uses: docker/setup-qemu-action@v4
+        - uses: docker/setup-buildx-action@v4
+        - name: Build image and push
+          uses: docker/build-push-action@v7
+          with:
+            context: ./home
+            tags: ${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}
+            build-args: |
+              BUILDVER=${{ env.VERSION }}
+              COMMITBRANCH=${{ env.BRANCH }}
+              COMMITSHA=${{ github.sha }}
+            push: true
 
         - name: Scan image with Trivy
           uses: aquasecurity/trivy-action@master
@@ -110,14 +121,3 @@ jobs:
           uses: github/codeql-action/upload-sarif@v4
           with:
             sarif_file: 'trivy-results-home.sarif'
-
-        - name: Login to GitHub Container Registry
-          uses: docker/login-action@v4
-          with:
-            registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ secrets.GITHUB_TOKEN }}
-
-        - name: Push image to dev registry
-          run: |
-            docker push ${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}
