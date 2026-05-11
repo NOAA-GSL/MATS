@@ -20,6 +20,8 @@ Feature: Add Remove Valid Time Curve
         Then the "variable" parameter value matches "PM25"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
+        When I change the "threshold" parameter to "30 ug/m^3"
+        Then the "threshold" parameter value matches "30 ug/m^3"
         When I set the curve-dates to "09/21/2025 00:00 - 09/24/2025 00:00"
         Then the curve-dates value is "09/21/2025 00:00 - 09/24/2025 00:00"
         Then I click the "Add Curve" button
