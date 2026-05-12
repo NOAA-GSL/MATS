@@ -24,6 +24,7 @@ Feature: Add Remove ContourDiff
         Then the dates value is "05/10/2023 12:00 - 05/16/2023 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
+        And I should see a list of curves containing "Curve0"
 
         When I change the "data-source" parameter to "RRFSE_MP"
         Then the "data-source" parameter value matches "RRFSE_MP"

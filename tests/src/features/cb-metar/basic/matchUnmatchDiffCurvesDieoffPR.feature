@@ -25,6 +25,7 @@ Feature: Match Unmatch Diff Curves Dieoff
         Then the "dieoff-type" parameter value matches "Dieoff for a specified UTC cycle init hour"
         Then I click the "Add Curve" button
         Then "Curve0" is added
+        And I should see a list of curves containing "Curve0"
 
         When I change the "variable" parameter to "Temperature at 2m (°C)"
         Then the "variable" parameter value matches "Temperature at 2m (°C)"

@@ -12,13 +12,14 @@ export default async (parameter, selectionValue) => {
    */
 
   // noinspection JSJQueryEfficiency
+  const intMs = 500;
   await $(`#controlButton-${parameter}`).waitForDisplayed();
   await $(`#controlButton-${parameter}`).scrollIntoView();
-  await $(`#controlButton-${parameter}`).waitForClickable();
+  pause(intMs);
   await $(`#controlButton-${parameter}`).click();
   await $(`#${parameter}-numberSpinner`).waitForDisplayed();
   await $(`#${parameter}-numberSpinner`).setValue(parseInt(selectionValue));
-  await $(`#controlButton-${parameter}`).waitForClickable();
+  pause(intMs);
   await $(`#controlButton-${parameter}`).click();
 
   let matchValue = selectionValue;
@@ -39,6 +40,7 @@ export default async (parameter, selectionValue) => {
   }
   expect(text).toEqual(
     matchValue,
-    `Expexted ${text} to be ${matchValue} for parameter: ${parameter}`
+    `Expexted ${text} to be ${matchValue} for parameter: ${parameter}`,
   );
+  pause(intMs);
 };

@@ -23,6 +23,7 @@ Feature: Histogram Bin Spacings
         Then the curve-dates value is "03/02/2021 00:00 - 03/03/2021 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
+        And I should see a list of curves containing "Curve0"
 
         When I change the "data-source" parameter to "RAP_OPS"
         Then the "data-source" parameter value matches "RAP_OPS"

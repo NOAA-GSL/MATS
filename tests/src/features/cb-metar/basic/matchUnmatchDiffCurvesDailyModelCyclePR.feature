@@ -23,6 +23,7 @@ Feature: Match Unmatch Diff Curves DailyModelCycle
         Then the dates value is "08/01/2023 00:00 - 08/15/2023 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
+        And I should see a list of curves containing "Curve0"
 
         When I change the "variable" parameter to "Temperature at 2m (°C)"
         Then the "variable" parameter value matches "Temperature at 2m (°C)"

@@ -2,13 +2,12 @@
  * Check if the graph page is visible
  */
 export default async () => {
-    /**
-     * Is the main page visible?
-     */
-    const isDisplayed = await $('#plotType').isDisplayed();
+  /**
+   * Is the main page visible?
+   */
 
-    expect(isDisplayed).toEqual(
-        true,
-        'Expected element "plotType" to be displayed'
-    );
+  await $("#controlButton-label-value").waitForDisplayed();
+  const isDisplayed = await $("#controlButton-label-value").isDisplayed();
+
+  expect(isDisplayed).toEqual(true, 'Expected element "#controlButton-label-value" to be displayed');
 };
