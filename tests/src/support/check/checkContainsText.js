@@ -6,51 +6,56 @@
  *                                  the given text or not
  * @param  {String}   expectedText  The text to check against
  */
+import pause from "../action/pause";
+
 export default async (elementType, selector, falseCase, expectedText) => {
-    /**
-     * The command to perform on the browser object
-     * @type {String}
-     */
-    let command = 'getValue';
+  /**
+   * The command to perform on the browser object
+   * @type {String}
+   */
+  let command = "getValue";
+  const intMs = 500;
 
-    if (
-        ['button', 'container'].includes(elementType)
-        || await $(selector).getAttribute('value') === null
-    ) {
-        command = 'getText';
-    }
+  if (
+    ["button", "container"].includes(elementType) ||
+    (await $(selector).getAttribute("value")) === null
+  ) {
+    command = "getText";
+  }
 
-    /**
-     * False case
-     * @type {Boolean}
-     */
-    let boolFalseCase;
+  /**
+   * False case
+   * @type {Boolean}
+   */
+  let boolFalseCase;
 
-    /**
-     * The expected text
-     * @type {String}
-     */
-    let stringExpectedText = expectedText;
+  /**
+   * The expected text
+   * @type {String}
+   */
+  let stringExpectedText = expectedText;
 
-    /**
-     * The text of the element
-     * @type {String}
-     */
-    const elem = $(selector);
-    await elem.waitForDisplayed();
-    await elem.scrollIntoView();
-    const text = await elem[command]();
+  /**
+   * The text of the element
+   * @type {String}
+   */
+  const elem = $(selector);
+  await elem.waitForDisplayed();
+  await elem.scrollIntoView();
+  pause(intMs);
+  const text = await elem[command]();
 
-    if (typeof expectedText === 'undefined') {
-        stringExpectedText = falseCase;
-        boolFalseCase = false;
-    } else {
-        boolFalseCase = (falseCase === ' not');
-    }
+  if (typeof expectedText === "undefined") {
+    stringExpectedText = falseCase;
+    boolFalseCase = false;
+  } else {
+    boolFalseCase = falseCase === " not";
+  }
 
-    if (boolFalseCase) {
-        expect(text).not.toContain(stringExpectedText);
-    } else {
-        expect(text).toContain(stringExpectedText);
-    }
+  if (boolFalseCase) {
+    expect(text).not.toContain(stringExpectedText);
+  } else {
+    expect(text).toContain(stringExpectedText);
+  }
+  pause(intMs);
 };

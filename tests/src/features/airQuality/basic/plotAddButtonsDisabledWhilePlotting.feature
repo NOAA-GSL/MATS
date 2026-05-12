@@ -21,10 +21,13 @@ Feature: Plot and Add buttons are disabled while plotting
         And I change the "average" parameter to "1D"
         Then the "data-source" parameter value matches "RRFS_A"
         And the "average" parameter value matches "1D"
+        When I change the "threshold" parameter to "30 ug/m^3"
+        Then the "threshold" parameter value matches "30 ug/m^3"
         When I set the dates to "03/28/2025 00:00 - 09/24/2025 00:00"
         Then the dates value is "03/28/2025 00:00 - 09/24/2025 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
+        And I should see a list of curves containing "Curve0"
 
         When I click the "Plot Unmatched" button
         Then the "Add Curve" button should not be enabled

@@ -32,6 +32,7 @@ Feature: Add Remove Two Curves
         Then the dates value is "10/12/2024 00:00 - 10/12/2024 23:59"
         Then I click the "Add Curve" button
         Then "Curve0" is added
+        And I should see a list of curves containing "Curve0"
 
         When I change the "data-source" parameter to "RAP_OPS_130"
         Then the "data-source" parameter value matches "RAP_OPS_130"

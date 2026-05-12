@@ -21,6 +21,7 @@ Feature: Match Unmatch Diff Curves Valid Time
         Then the curve-dates value is "09/21/2019 00:00 - 09/24/2019 00:00"
         When I click the "Add Curve" button
         Then "Curve0" is added
+        And I should see a list of curves containing "Curve0"
 
         When I change the "data-source" parameter to "RAP_OPS_130"
         Then the "data-source" parameter value matches "RAP_OPS_130"

@@ -17,6 +17,8 @@ Feature: Add Remove Map
         Then the plot type should be "Map"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
+        When I change the "threshold" parameter to "30 ug/m^3"
+        Then the "threshold" parameter value matches "30 ug/m^3"
         When I change the "sites" parameter to "Los Angeles - N Main Street | Los Angeles-Long Beach-Santa Ana, CA US"
         Then the "sites" parameter value matches "Los Angeles - N Main Street | Los Angeles-Long Beach-Santa Ana, CA US"
         When I set the dates to "11/09/2025 00:00 - 11/09/2025 23:59"

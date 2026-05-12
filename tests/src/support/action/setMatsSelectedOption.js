@@ -15,8 +15,10 @@ export default async (parameter, selectionValue) => {
   // browser.debug();
 
   // noinspection JSJQueryEfficiency
+  const intMs = 500;
   await $(`#controlButton-${parameter}`).waitForDisplayed();
   await $(`#controlButton-${parameter}`).scrollIntoView();
+  pause(intMs);
   await $(`#controlButton-${parameter}`).click();
 
   let multi = false;
@@ -24,22 +26,23 @@ export default async (parameter, selectionValue) => {
     multi = true;
     // if it is a multi-select selector it has a clear button. Better clear it
     await $(`#${parameter}-select-clear`).scrollIntoView();
-    await $(`#${parameter}-select-clear`).waitForClickable();
+    pause(intMs);
     await $(`#${parameter}-select-clear`).click();
     // noinspection JSJQueryEfficiency
     await $(`[value="${selectionValue}"]`).scrollIntoView();
-    await $(`[value="${selectionValue}"]`).waitForClickable();
+    pause(intMs);
     await $(`[value="${selectionValue}"]`).click();
     // if it is a multi-select selector, have to click the done button
     await $(`#${parameter}-select-done`).scrollIntoView();
-    await $(`#${parameter}-select-done`).waitForClickable();
+    pause(intMs);
     await $(`#${parameter}-select-done`).click();
   } else {
     // noinspection JSJQueryEfficiency
     await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).scrollIntoView();
-    await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).waitForClickable();
+    pause(intMs);
     await $(`[id*="${parameter}"][data-value="${selectionValue}"]`).click();
   }
+  pause(intMs);
 
   let matchValue = selectionValue;
   if (multi) {
@@ -63,6 +66,7 @@ export default async (parameter, selectionValue) => {
   }
   expect(text).toEqual(
     matchValue,
-    `Expexted ${text} to be ${matchValue} for parameter: ${parameter}`
+    `Expexted ${text} to be ${matchValue} for parameter: ${parameter}`,
   );
+  pause(intMs);
 };

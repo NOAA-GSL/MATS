@@ -167,6 +167,10 @@ jobs:
           cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.app }} # add each app to GHA cache to avoid redownloading dependencies if they haven't changed
           cache-to: type=gha,mode=min,scope=${{ github.ref_name }}-${{ matrix.app }} # add each app to GHA cache to avoid redownloading dependencies if they haven't changed
           push: true
+          # Disable provenance & sbom generation for single-arch builds as
+          # they confuse the docker client and result in "manifest unknown" errors
+          provenance: false
+          sbom: false
 
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master

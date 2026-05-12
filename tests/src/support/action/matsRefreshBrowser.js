@@ -6,5 +6,7 @@
  * to avoid creating hundreds of single test files with WDIO.
  */
 export default async () => {
-    await browser.reloadSession();
+  const intMs = 5000;
+  await browser.reloadSession();
+  pause(intMs);
 };

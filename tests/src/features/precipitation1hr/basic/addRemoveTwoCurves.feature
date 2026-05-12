@@ -24,6 +24,7 @@ Feature: Add Remove Two Curves
         Then the dates value is "11/10/2025 00:00 - 11/13/2025 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
+        And I should see a list of curves containing "Curve0"
 
         When I change the "data-source" parameter to "MPAS_physics_dev1"
         Then the "data-source" parameter value matches "MPAS_physics_dev1"
