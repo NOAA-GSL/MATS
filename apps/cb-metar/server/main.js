@@ -416,7 +416,7 @@ const doCurveParams = async function () {
         }
         allVariablesYesThreshold = allVariablesYesThreshold.concat(subVariables);
       } else {
-        rows = [{ NA: "NA" }];
+        rows = [{ "All Data": "All Data" }];
         allVariablesNoThreshold = allVariablesNoThreshold.concat(subVariables);
       }
       for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
@@ -485,7 +485,7 @@ const doCurveParams = async function () {
           forecastLengthOptionsMap[subVariable][model] = rows[i].fcstLens.map(String);
 
           // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
-          const thresholds = rows[i].thresholds ? rows[i].thresholds : ["NA"];
+          const thresholds = rows[i].thresholds ? rows[i].thresholds : ["All Data"];
           thresholdsModelOptionsMap[subVariable][model] = thresholds
             .sort(function (a, b) {
               return Number(a) - Number(b);
@@ -599,6 +599,7 @@ const doCurveParams = async function () {
         matsTypes.PlotTypes.histogram,
         matsTypes.PlotTypes.contour,
         matsTypes.PlotTypes.contourDiff,
+        matsTypes.PlotTypes.simpleScatter,
       ],
       dependentNames: ["variable"],
       controlButtonCovered: false,
@@ -622,6 +623,7 @@ const doCurveParams = async function () {
   varOptionsMap[matsTypes.PlotTypes.histogram] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.contour] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.simpleScatter] = allVariables;
 
   if (
     (await matsCollections.variable.findOneAsync({ name: "variable" })) === undefined
@@ -634,17 +636,14 @@ const doCurveParams = async function () {
       valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
       superiorNames: ["plot-type"],
-      dependentNames: ["data-source", "statistic"],
+      dependentNames: ["data-source", "statistic", "threshold"],
       controlButtonCovered: true,
       default: varOptionsMap[defaultPlotType][0],
-      hideOtherFor: {
-        threshold: allVariablesNoThreshold,
-      },
       unique: false,
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 2,
       displayPriority: 1,
-      displayGroup: 1,
+      displayGroup: 2,
     });
   } else {
     // it is defined but check for necessary update
@@ -658,6 +657,98 @@ const doCurveParams = async function () {
       // have to reload variable data
       await matsCollections.variable.updateAsync(
         { name: "variable" },
+        {
+          $set: {
+            options: varOptionsMap[defaultPlotType],
+            optionsMap: varOptionsMap,
+            valuesMap: variableMetadataDocs,
+            dates: modelDateRangeMap,
+            default: varOptionsMap[defaultPlotType][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["x-variable"].findOneAsync({ name: "x-variable" })) ===
+    undefined
+  ) {
+    await matsCollections["x-variable"].insertAsync({
+      name: "x-variable",
+      type: matsTypes.InputTypes.select,
+      options: varOptionsMap[defaultPlotType],
+      optionsMap: varOptionsMap,
+      valuesMap: variableMetadataDocs,
+      dates: modelDateRangeMap,
+      superiorNames: ["plot-type"],
+      dependentNames: ["data-source", "x-statistic", "x-threshold"],
+      controlButtonCovered: true,
+      default: varOptionsMap[defaultPlotType][0],
+      unique: false,
+      controlButtonVisibility: "block",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["x-variable"].findOneAsync({
+      name: "x-variable",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, varOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
+    ) {
+      // have to reload variable data
+      await matsCollections["x-variable"].updateAsync(
+        { name: "x-variable" },
+        {
+          $set: {
+            options: varOptionsMap[defaultPlotType],
+            optionsMap: varOptionsMap,
+            valuesMap: variableMetadataDocs,
+            dates: modelDateRangeMap,
+            default: varOptionsMap[defaultPlotType][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["y-variable"].findOneAsync({ name: "y-variable" })) ===
+    undefined
+  ) {
+    await matsCollections["y-variable"].insertAsync({
+      name: "y-variable",
+      type: matsTypes.InputTypes.select,
+      options: varOptionsMap[defaultPlotType],
+      optionsMap: varOptionsMap,
+      valuesMap: variableMetadataDocs,
+      dates: modelDateRangeMap,
+      superiorNames: ["plot-type"],
+      dependentNames: ["data-source", "y-statistic", "y-threshold"],
+      controlButtonCovered: true,
+      default: varOptionsMap[defaultPlotType][0],
+      unique: false,
+      controlButtonVisibility: "block",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["y-variable"].findOneAsync({
+      name: "y-variable",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, varOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
+    ) {
+      // have to reload variable data
+      await matsCollections["y-variable"].updateAsync(
+        { name: "y-variable" },
         {
           $set: {
             options: varOptionsMap[defaultPlotType],
@@ -687,9 +778,9 @@ const doCurveParams = async function () {
       },
       controlButtonCovered: true,
       controlButtonText: "Region mode",
-      displayOrder: 1,
+      displayOrder: 3,
       displayPriority: 1,
-      displayGroup: 2,
+      displayGroup: 1,
     });
   }
 
@@ -756,7 +847,7 @@ const doCurveParams = async function () {
           Object.keys(regionModelOptionsMap[allVariables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
-      displayOrder: 2,
+      displayOrder: 1,
       displayPriority: 1,
       displayGroup: 2,
     });
@@ -788,80 +879,121 @@ const doCurveParams = async function () {
     }
   }
 
+  const ctcOptionsMap = {
+    "CSI (Critical Success Index)": ["ctc", "x100", 100],
+
+    "TSS (True Skill Score)": ["ctc", "x100", 100],
+
+    "PODy (POD of value < threshold)": ["ctc", "x100", 100],
+
+    "PODn (POD of value > threshold)": ["ctc", "x100", 100],
+
+    "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
+
+    "Bias (forecast/actual)": ["ctc", "Ratio", 1],
+
+    "HSS (Heidke Skill Score)": ["ctc", "x100", 100],
+
+    "ETS (Equitable Threat Score)": ["ctc", "x100", 100],
+
+    "Nlow (Number of obs < threshold (hits + misses))": ["ctc", "Number", null],
+
+    "Nhigh (Number of obs > threshold (false alarms + correct nulls))": [
+      "ctc",
+      "Number",
+      null,
+    ],
+
+    "Ntot (Total number of obs, (Nlow + Nhigh))": ["ctc", "Number", null],
+
+    "Ratio Nlow / Ntot ((hit + miss)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
+
+    "Ratio Nhigh / Ntot ((fa + cn)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
+
+    "N times*levels(*stations if station plot) per graph point": [
+      "ctc",
+      "Number",
+      null,
+    ],
+  };
+  const scalarOptionsMap = {
+    RMSE: ["scalar", "Unknown", null],
+
+    "Bias (Model - Obs)": ["scalar", "Unknown", null],
+
+    N: ["scalar", "Number", null],
+
+    "Model average": ["scalar", "Unknown", null],
+
+    "Obs average": ["scalar", "Unknown", null],
+
+    "Std deviation": ["scalar", "Unknown", null],
+
+    "MAE (temp and dewpoint only)": ["scalar", "Unknown", null],
+  };
+  const statOptionsMap = {};
+  for (let vidx = 0; vidx < allVariables.length; vidx += 1) {
+    const variable = allVariables[vidx];
+    statOptionsMap[variable] =
+      allVariablesYesThreshold.indexOf(variable) !== -1
+        ? ctcOptionsMap
+        : scalarOptionsMap;
+  }
+
   if (
     (await matsCollections.statistic.findOneAsync({ name: "statistic" })) === undefined
   ) {
-    const ctcOptionsMap = {
-      "CSI (Critical Success Index)": ["ctc", "x100", 100],
-
-      "TSS (True Skill Score)": ["ctc", "x100", 100],
-
-      "PODy (POD of value < threshold)": ["ctc", "x100", 100],
-
-      "PODn (POD of value > threshold)": ["ctc", "x100", 100],
-
-      "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
-
-      "Bias (forecast/actual)": ["ctc", "Ratio", 1],
-
-      "HSS (Heidke Skill Score)": ["ctc", "x100", 100],
-
-      "ETS (Equitable Threat Score)": ["ctc", "x100", 100],
-
-      "Nlow (Number of obs < threshold (hits + misses))": ["ctc", "Number", null],
-
-      "Nhigh (Number of obs > threshold (false alarms + correct nulls))": [
-        "ctc",
-        "Number",
-        null,
-      ],
-
-      "Ntot (Total number of obs, (Nlow + Nhigh))": ["ctc", "Number", null],
-
-      "Ratio Nlow / Ntot ((hit + miss)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
-
-      "Ratio Nhigh / Ntot ((fa + cn)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
-
-      "N times*levels(*stations if station plot) per graph point": [
-        "ctc",
-        "Number",
-        null,
-      ],
-    };
-    const scalarOptionsMap = {
-      RMSE: ["scalar", "Unknown", null],
-
-      "Bias (Model - Obs)": ["scalar", "Unknown", null],
-
-      N: ["scalar", "Number", null],
-
-      "Model average": ["scalar", "Unknown", null],
-
-      "Obs average": ["scalar", "Unknown", null],
-
-      "Std deviation": ["scalar", "Unknown", null],
-
-      "MAE (temp and dewpoint only)": ["scalar", "Unknown", null],
-    };
-    const optionsMap = {};
-    for (let vidx = 0; vidx < allVariables.length; vidx += 1) {
-      const variable = allVariables[vidx];
-      optionsMap[variable] =
-        allVariablesYesThreshold.indexOf(variable) !== -1
-          ? ctcOptionsMap
-          : scalarOptionsMap;
-    }
     await matsCollections.statistic.insertAsync({
       name: "statistic",
       type: matsTypes.InputTypes.select,
-      optionsMap,
-      options: Object.keys(optionsMap),
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
       superiorNames: ["variable"],
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(optionsMap)[0],
+      default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 2,
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  }
+
+  if (
+    (await matsCollections["x-statistic"].findOneAsync({ name: "x-statistic" })) ===
+    undefined
+  ) {
+    await matsCollections["x-statistic"].insertAsync({
+      name: "x-statistic",
+      type: matsTypes.InputTypes.select,
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
+      superiorNames: ["x-variable"],
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(statOptionsMap)[0],
+      controlButtonVisibility: "block",
+      displayOrder: 5,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  }
+
+  if (
+    (await matsCollections["y-statistic"].findOneAsync({ name: "y-statistic" })) ===
+    undefined
+  ) {
+    await matsCollections["y-statistic"].insertAsync({
+      name: "y-statistic",
+      type: matsTypes.InputTypes.select,
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
+      superiorNames: ["y-variable"],
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(statOptionsMap)[0],
+      controlButtonVisibility: "block",
+      displayOrder: 6,
       displayPriority: 1,
       displayGroup: 3,
     });
@@ -906,6 +1038,122 @@ const doCurveParams = async function () {
       // have to reload threshold data
       await matsCollections.threshold.updateAsync(
         { name: "threshold" },
+        {
+          $set: {
+            optionsMap: thresholdsModelOptionsMap,
+            valuesMap: allThresholdValuesMap,
+            options:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ],
+            default:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["x-threshold"].findOneAsync({ name: "x-threshold" })) ===
+    undefined
+  ) {
+    await matsCollections["x-threshold"].insertAsync({
+      name: "x-threshold",
+      type: matsTypes.InputTypes.select,
+      optionsMap: thresholdsModelOptionsMap,
+      options:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ],
+      valuesMap: allThresholdValuesMap,
+      superiorNames: ["x-variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["x-threshold"].findOneAsync({
+      name: "x-threshold",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(
+        currentParam.optionsMap,
+        thresholdsModelOptionsMap
+      ) ||
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
+    ) {
+      // have to reload threshold data
+      await matsCollections["x-threshold"].updateAsync(
+        { name: "x-threshold" },
+        {
+          $set: {
+            optionsMap: thresholdsModelOptionsMap,
+            valuesMap: allThresholdValuesMap,
+            options:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ],
+            default:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["y-threshold"].findOneAsync({ name: "y-threshold" })) ===
+    undefined
+  ) {
+    await matsCollections["y-threshold"].insertAsync({
+      name: "y-threshold",
+      type: matsTypes.InputTypes.select,
+      optionsMap: thresholdsModelOptionsMap,
+      options:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ],
+      valuesMap: allThresholdValuesMap,
+      superiorNames: ["y-variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["y-threshold"].findOneAsync({
+      name: "y-threshold",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(
+        currentParam.optionsMap,
+        thresholdsModelOptionsMap
+      ) ||
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
+    ) {
+      // have to reload threshold data
+      await matsCollections["y-threshold"].updateAsync(
+        { name: "y-threshold" },
         {
           $set: {
             optionsMap: thresholdsModelOptionsMap,
@@ -1890,6 +2138,50 @@ const doCurveTextPatterns = async function () {
       ],
       groupSize: 6,
     });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.simpleScatter,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "x-variable", " "],
+        ["", "x-statistic", " at "],
+        ["", "x-threshold", " vs "],
+        ["", "y-variable", " "],
+        ["", "y-statistic", " at "],
+        ["", "y-threshold", ", "],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "x-variable",
+        "y-variable",
+        "data-source",
+        "region",
+        "x-statistic",
+        "x-threshold",
+        "y-statistic",
+        "y-threshold",
+        "valid-time",
+        "forecast-length",
+        "bin-parameter",
+        "curve-dates",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
   }
 };
 
@@ -1978,6 +2270,12 @@ const doPlotGraph = async function () {
       plotType: matsTypes.PlotTypes.contourDiff,
       graphFunction: "graphPlotly",
       dataFunction: "dataContourDiff",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.simpleScatter,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataSimpleScatter",
       checked: false,
     });
   }

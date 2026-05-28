@@ -123,7 +123,7 @@ global.dataContour = async function (plotParams) {
   } else {
     // threshold is not an axis param and this is a scalar app
     // so create a dummy threshold for the loop later
-    allThresholds = ["NA"];
+    allThresholds = ["All Data"];
   }
 
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
