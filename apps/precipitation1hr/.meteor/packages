@@ -26,4 +26,4 @@ pwix:blaze-layout@=2.3.3
 ostrio:flow-router-extra
 fetch@0.1.6
 aldeed:simple-schema
-randyp:mats-common@6.2.9
+randyp:mats-common@6.2.10
