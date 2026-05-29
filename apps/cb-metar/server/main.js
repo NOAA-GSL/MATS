@@ -29,7 +29,7 @@ const variableMetadataDocs = {
   Visibility: [{ "Visibility (mi)": ["Visibility", "Visibility", "mi"] }, true],
   Surface: [
     {
-      Elevation: ["Elevation", "Elevation", "m"],
+      "Elevation (m)": ["Elevation", "Elevation", "m"],
       "Temperature at 2m (°C)": ["Temperature", "Temperature", "°C"],
       "Dewpoint at 2m (°C)": ["DewPoint", "DewPoint", "°C"],
       "Relative Humidity at 2m (%)": ["RelativeHumidity", "RH", "RH (%)"],
@@ -506,8 +506,8 @@ const doCurveParams = async function () {
       }
     }
     allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
-    allVariablesNoneOption = [...new Set(["None"].concat(allVariables))];
-    allVariablesMapOption = [...new Set(["Elevation"].concat(allVariables))];
+    allVariablesMapOption = [...new Set(["Elevation (m)"].concat(allVariables))];
+    allVariablesNoneOption = [...new Set(["None"].concat(allVariablesMapOption))];
   } catch (err) {
     throw new Error(err.message);
   }
