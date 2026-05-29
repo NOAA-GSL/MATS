@@ -531,7 +531,8 @@ const doCurveParams = async function () {
       const siteId = rows[i].id;
       const siteLat = rows[i].geo === undefined ? -90 : Number(rows[i].geo[0].lat);
       const siteLon = rows[i].geo === undefined ? 0 : Number(rows[i].geo[0].lon);
-      const siteElev = rows[i].geo === undefined ? 0 : rows[i].geo[0].elev;
+      let siteElev = rows[i].geo === undefined ? 0 : rows[i].geo[0].elev;
+      siteElev = siteElev === 9999 ? undefined : siteElev; // convert the 9999 value used for missing elevation to undefined
 
       // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
       // Also exclude stations with missing data
