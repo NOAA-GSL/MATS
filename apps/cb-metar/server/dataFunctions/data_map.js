@@ -170,6 +170,11 @@ global.dataMap = async function (plotParams) {
       name: "stations",
     })
   ).optionsMap;
+  const elevMap = (
+    await matsCollections.StationMap.findOneAsync({
+      name: "elevations",
+    })
+  ).optionsMap;
 
   let d;
   let dPurple;
@@ -206,7 +211,8 @@ global.dataMap = async function (plotParams) {
         fromSecs,
         toSecs,
         validTimes,
-        filterInfo
+        filterInfo,
+        elevMap
       );
 
       // send the query statement to the query function
