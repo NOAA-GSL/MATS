@@ -172,7 +172,15 @@ global.dataValidTime = async function (plotParams) {
     let queryTemplate;
     let sitesList;
     const regionType =
-      filterModelBy === "None" && filterObsBy === "None"
+      filterModelBy === "None" && // not filtering the model by anything
+      filterObsBy === "None" && // not filtering the obs by anything
+      !(
+        // not a thresholded variable that we're forcing into a scalar stat
+        (
+          variableValuesMap[queryVariable][1] &&
+          statisticOptionsMap[variable][statisticSelect][0] === "scalar"
+        )
+      )
         ? curve["region-type"]
         : "Select stations";
     if (curve["region-type"] === "Predefined region") {

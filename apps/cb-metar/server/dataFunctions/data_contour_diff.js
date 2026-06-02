@@ -145,6 +145,15 @@ global.dataContourDiff = async function (plotParams) {
     [statType] = statisticOptionsMap[variable][statisticSelect];
     allStatTypes.push(statType);
 
+    if (
+      variableValuesMap[queryVariable][1] &&
+      statisticOptionsMap[variable][statisticSelect][0] === "scalar"
+    ) {
+      throw new Error(
+        "INFO:  Plotting thresholded variables (e.g. ceiling, visibility) with scalar statistics (e.g. RMSE, additive bias) is not available for this plot type."
+      );
+    }
+
     let queryTemplate;
     const regionType = curve["region-type"];
     if (regionType === "Select stations") {

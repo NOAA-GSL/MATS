@@ -900,11 +900,23 @@ const doCurveParams = async function () {
 
     "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
 
-    "Bias (forecast/actual)": ["ctc", "Ratio", 1],
+    "Bias (Forecast / Actual)": ["ctc", "Ratio", 1],
+
+    "Bias (Model - Obs)": ["scalar", "Unknown", null],
 
     "HSS (Heidke Skill Score)": ["ctc", "x100", 100],
 
     "ETS (Equitable Threat Score)": ["ctc", "x100", 100],
+
+    "Model average": ["scalar", "Unknown", null],
+
+    "Obs average": ["scalar", "Unknown", null],
+
+    RMSE: ["scalar", "Unknown", null],
+
+    "Std deviation": ["scalar", "Unknown", null],
+
+    "MAE (temp and dewpoint only)": ["scalar", "Unknown", null],
 
     "Nlow (Number of obs < threshold (hits + misses))": ["ctc", "Number", null],
 

@@ -632,7 +632,7 @@ const doCurveParams = async function () {
     (await matsCollections.statistic.findOneAsync({ name: "statistic" })) === undefined
   ) {
     const statOptionsMap = {
-      "Bias (forecast/actual)": [
+      "Bias (Forecast / Actual)": [
         "avg((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as stat, group_concat(m0.time, ';', (m0.nhdfcstcount/m0.mem)/m0.nhdhitcount order by m0.time) as sub_data, count((m0.nhdfcstcount/m0.mem)/m0.nhdhitcount) as n0",
         "precalculated",
         "count",
@@ -670,7 +670,7 @@ const doCurveParams = async function () {
           "GridScaleProb",
           "Reliability",
         ],
-        radius: ["Bias (forecast/actual)", "GridScaleProb", "Reliability"],
+        radius: ["Bias (Forecast / Actual)", "GridScaleProb", "Reliability"],
       },
       superiorNames: ["plot-type"],
       controlButtonCovered: true,
