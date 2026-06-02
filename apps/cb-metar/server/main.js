@@ -29,6 +29,7 @@ const variableMetadataDocs = {
   Visibility: [{ "Visibility (mi)": ["Visibility", "mi"] }, true],
   Surface: [
     {
+      "Elevation (m)": ["Elevation", "m"],
       "Temperature at 2m (°C)": ["Temperature", "°C"],
       "Dewpoint at 2m (°C)": ["Dewpoint", "°C"],
       "Relative Humidity at 2m (%)": ["Relative Humidity", "RH (%)"],
@@ -46,6 +47,7 @@ let allVariables = [];
 let allVariablesNoThreshold = [];
 let allVariablesYesThreshold = [];
 let allVariablesNoneOption = [];
+let allVariablesMapOption = [];
 
 // determined in doCurveParanms
 let minDate;
@@ -373,6 +375,7 @@ const doCurveParams = async function () {
   const regionModelOptionsMap = {};
   const siteOptionsMap = {};
   const sitesLocationMap = [];
+  const sitesElevationMap = {};
   const forecastLengthOptionsMap = {};
   const thresholdsModelOptionsMap = {};
   const allRegionValuesMap = {};
@@ -499,7 +502,8 @@ const doCurveParams = async function () {
       }
     }
     allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
-    allVariablesNoneOption = [...new Set(["None"].concat(allVariables))];
+    allVariablesMapOption = [...new Set(["Elevation (m)"].concat(allVariables))].sort();
+    allVariablesNoneOption = [...new Set(["None"].concat(allVariablesMapOption))];
   } catch (err) {
     throw new Error(err.message);
   }
@@ -523,12 +527,14 @@ const doCurveParams = async function () {
       const siteId = rows[i].id;
       const siteLat = rows[i].geo === undefined ? -90 : Number(rows[i].geo[0].lat);
       const siteLon = rows[i].geo === undefined ? 0 : Number(rows[i].geo[0].lon);
-      const siteElev = rows[i].geo === undefined ? 0 : rows[i].geo[0].elev;
+      let siteElev = rows[i].geo === undefined ? 0 : rows[i].geo[0].elev;
+      siteElev = siteElev === 9999 ? undefined : siteElev; // convert the 9999 value used for missing elevation to undefined
 
       // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
       // Also exclude stations with missing data
       if (siteLat < 90 && siteLat > -90) {
         siteOptionsMap[siteName] = [siteId];
+        sitesElevationMap[siteName] = siteElev;
 
         const point = [siteLat, siteLon];
         const obj = {
@@ -558,6 +564,10 @@ const doCurveParams = async function () {
   await matsCollections.StationMap.insertAsync({
     name: "stations",
     optionsMap: sitesLocationMap,
+  });
+  await matsCollections.StationMap.insertAsync({
+    name: "elevations",
+    optionsMap: sitesElevationMap,
   });
 
   if ((await matsCollections.label.findOneAsync({ name: "label" })) === undefined) {
@@ -614,7 +624,7 @@ const doCurveParams = async function () {
   varOptionsMap[matsTypes.PlotTypes.validtime] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.dailyModelCycle] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariablesYesThreshold;
-  varOptionsMap[matsTypes.PlotTypes.map] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.map] = allVariablesMapOption;
   varOptionsMap[matsTypes.PlotTypes.histogram] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.contour] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
@@ -1534,7 +1544,6 @@ const doCurveTextPatterns = async function () {
         "forecast-length",
         "valid-time",
         "sites",
-        "sitesMap",
         "filter-model-by",
         "filter-model-min",
         "filter-model-max",
@@ -1577,7 +1586,6 @@ const doCurveTextPatterns = async function () {
         "valid-time",
         "utc-cycle-start",
         "sites",
-        "sitesMap",
         "curve-dates",
         "filter-model-by",
         "filter-model-min",
@@ -1654,7 +1662,6 @@ const doCurveTextPatterns = async function () {
         "threshold",
         "forecast-length",
         "sites",
-        "sitesMap",
         "curve-dates",
         "filter-model-by",
         "filter-model-min",
@@ -1693,7 +1700,6 @@ const doCurveTextPatterns = async function () {
         "threshold",
         "utc-cycle-start",
         "sites",
-        "sitesMap",
         "filter-model-by",
         "filter-model-min",
         "filter-model-max",
@@ -1765,7 +1771,6 @@ const doCurveTextPatterns = async function () {
         "forecast-length",
         "valid-time",
         "sites",
-        "sitesMap",
         "filter-model-by",
         "filter-model-min",
         "filter-model-max",

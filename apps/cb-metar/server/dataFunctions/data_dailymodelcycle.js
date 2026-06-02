@@ -242,6 +242,11 @@ global.dataDailyModelCycle = async function (plotParams) {
         );
       }
     }
+    const elevMap = (
+      await matsCollections.StationMap.findOneAsync({
+        name: "elevations",
+      })
+    ).optionsMap;
 
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -280,7 +285,8 @@ global.dataDailyModelCycle = async function (plotParams) {
             fromSecs,
             toSecs,
             utcCycleStart,
-            filterInfo
+            filterInfo,
+            elevMap
           );
         }
 
