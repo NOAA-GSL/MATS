@@ -506,7 +506,7 @@ const doCurveParams = async function () {
       }
     }
     allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
-    allVariablesMapOption = [...new Set(["Elevation (m)"].concat(allVariables))];
+    allVariablesMapOption = [...new Set(["Elevation (m)"].concat(allVariables))].sort();
     allVariablesNoneOption = [...new Set(["None"].concat(allVariablesMapOption))];
   } catch (err) {
     throw new Error(err.message);
