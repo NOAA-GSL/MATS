@@ -233,7 +233,7 @@ global.dataSimpleScatter = async function (plotParams) {
       const region = Object.keys(regionValues).find(
         (key) => regionValues[key] === regionStr
       );
-debugger;
+      debugger;
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
@@ -397,18 +397,10 @@ debugger;
         ymax = ymax > d.ymax ? ymax : d.ymax;
       }
     } else {
-      // this is a difference curve
-      const diffResult = matsDataDiffUtils.getDataForDiffCurve(
-        dataset,
-        diffFrom,
-        appParams,
-        allStatTypes
+      // this is a difference curve -- not supported for scatter plots
+      throw new Error(
+        "INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves."
       );
-      d = diffResult.dataset;
-      xmin = xmin < d.xmin ? xmin : d.xmin;
-      xmax = xmax > d.xmax ? xmax : d.xmax;
-      ymin = ymin < d.ymin ? ymin : d.ymin;
-      ymax = ymax > d.ymax ? ymax : d.ymax;
     }
 
     // set curve annotation to be the curve mean -- may be recalculated later
@@ -424,11 +416,14 @@ debugger;
     curve.xmax = d.xmax;
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
-    curve.axisKey = axisKey;
-    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    curve.axisXKey = varUnitsX;
+    curve.axisYKey = varUnitsY;
+    curve.binParam = binParam;
+    const cOptions = await matsDataCurveOpsUtils.generateScatterCurveOptions(
       curve,
       curveIndex,
-      axisMap,
+      axisXMap,
+      axisYMap,
       d,
       appParams
     ); // generate plot with data, curve annotation, axis labels, etc.
@@ -452,10 +447,9 @@ debugger;
   const curveInfoParams = {
     curves,
     curvesLength,
-    idealValues,
-    utcCycleStarts,
-    statType: allStatTypes,
-    axisMap,
+    statType,
+    axisXMap,
+    axisYMap,
     xmax,
     xmin,
   };
@@ -463,7 +457,7 @@ debugger;
     dataRequests,
     totalProcessingStart,
   };
-  const result = await matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataSimpleScatter(
     dataset,
     appParams,
     curveInfoParams,
