@@ -9,7 +9,6 @@ import {
   matsTypes,
   matsDataUtils,
   matsDataQueryUtils,
-  matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
   matsMiddleTimeSeries,
@@ -18,10 +17,10 @@ import moment from "moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataSeries = async function (plotParams) {
+global.dataSimpleScatter = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
-    plotType: matsTypes.PlotTypes.timeSeries,
+    plotType: matsTypes.PlotTypes.simpleScatter,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
     completeness: plotParams.completeness,
     outliers: plotParams.outliers,
@@ -37,25 +36,22 @@ global.dataSeries = async function (plotParams) {
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
 
-  const axisMap = Object.create(null);
+  const axisXMap = Object.create(null);
+  const axisYMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
 
-  let statType;
-  const allStatTypes = [];
-  const utcCycleStarts = [];
-  const idealValues = [];
+  let statTypeX;
+  let statTypeY;
+  let varUnitsX;
+  let varUnitsY;
 
   let statement = "";
   let rows = "";
   let error = "";
   const dataset = [];
-
-  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  const fromSecs = dateRange.fromSeconds;
-  const toSecs = dateRange.toSeconds;
 
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
@@ -63,47 +59,75 @@ global.dataSeries = async function (plotParams) {
     const { label } = curve;
     const { diffFrom } = curve;
 
-    const { variable } = curve;
+    const binParam = curve["bin-parameter"];
+    const binClause = (
+      await matsCollections["bin-parameter"].findOneAsync({
+        name: "bin-parameter",
+      })
+    ).optionsMap[binParam];
+
+    const variableX = curve["x-variable"];
+    const variableY = curve["y-variable"];
     const variableValuesMap = (
       await matsCollections.variable.findOneAsync({
         name: "variable",
       })
     ).valuesMap;
-    const queryVariable = Object.keys(variableValuesMap).filter(
-      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
+    const queryVariableX = Object.keys(variableValuesMap).filter(
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variableX) !== -1
     )[0];
-    const variableDetails = variableValuesMap[queryVariable][0][variable];
-    const model = (
-      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
-    ).optionsMap[variable][curve["data-source"]][0];
+    const queryVariableY = Object.keys(variableValuesMap).filter(
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variableY) !== -1
+    )[0];
+    const variableDetailsX = variableValuesMap[queryVariableX][0][variableX];
+    const variableDetailsY = variableValuesMap[queryVariableY][0][variableY];
 
-    const thresholdStr = curve.threshold;
-    let threshold = "";
-    if (variableValuesMap[queryVariable][1]) {
-      const thresholdValues = (
-        await matsCollections.threshold.findOneAsync({ name: "threshold" })
-      ).valuesMap[variable];
-      threshold = Object.keys(thresholdValues).find(
-        (key) => thresholdValues[key] === thresholdStr
+    const modelOptionsMap = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap;
+    if (!modelOptionsMap[variableX] || !modelOptionsMap[variableY]) {
+      throw new Error(
+        "INFO:  At least one of your selected variables is not available for this model."
       );
-      threshold = threshold.replace(/_/g, ".");
+    }
+    const model = modelOptionsMap[variableX][curve["data-source"]][0];
+
+    const thresholdStrX = curve["x-threshold"];
+    const thresholdStrY = curve["y-threshold"];
+    let thresholdX = "";
+    let thresholdY = "";
+    if (variableValuesMap[queryVariableX][1]) {
+      const thresholdValuesX = (
+        await matsCollections["x-threshold"].findOneAsync({ name: "x-threshold" })
+      ).valuesMap[variableX];
+      thresholdX = Object.keys(thresholdValuesX).find(
+        (key) => thresholdValuesX[key] === thresholdStrX
+      );
+      thresholdX = thresholdX.replace(/_/g, ".");
+    }
+    if (variableValuesMap[queryVariableY][1]) {
+      const thresholdValuesY = (
+        await matsCollections["y-threshold"].findOneAsync({ name: "y-threshold" })
+      ).valuesMap[variableY];
+      thresholdY = Object.keys(thresholdValuesY).find(
+        (key) => thresholdValuesY[key] === thresholdStrY
+      );
+      thresholdY = thresholdY.replace(/_/g, ".");
     }
 
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     let forecastLength = curve["forecast-length"];
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
 
-    const statisticSelect = curve.statistic;
+    const statisticSelectX = curve["x-statistic"];
+    const statisticSelectY = curve["y-statistic"];
     const statisticOptionsMap = (
       await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
-    [statType] = statisticOptionsMap[variable][statisticSelect];
-    allStatTypes.push(statType);
-
-    const averageStr = curve.average;
-    const averageOptionsMap = (
-      await matsCollections.average.findOneAsync({ name: "average" })
-    ).optionsMap;
-    const average = averageOptionsMap[averageStr][0];
+    [statTypeX] = statisticOptionsMap[variableX][statisticSelectX];
+    [statTypeY] = statisticOptionsMap[variableY][statisticSelectY];
 
     const filterModelBy = curve["filter-model-by"];
     const filterObsBy = curve["filter-obs-by"];
@@ -180,7 +204,22 @@ global.dataSeries = async function (plotParams) {
     let queryTemplate;
     let sitesList;
     const regionType =
-      filterModelBy === "None" && filterObsBy === "None"
+      filterModelBy === "None" && // not filtering the model by anything
+      filterObsBy === "None" && // not filtering the obs by anything
+      !(
+        // not a thresholded variable that we're forcing into a scalar stat
+        (
+          variableValuesMap[queryVariableX][1] &&
+          statisticOptionsMap[variableX][statisticSelectX][0] === "scalar"
+        )
+      ) &&
+      !(
+        // not a thresholded variable that we're forcing into a scalar stat
+        (
+          variableValuesMap[queryVariableY][1] &&
+          statisticOptionsMap[variableY][statisticSelectY][0] === "scalar"
+        )
+      )
         ? curve["region-type"]
         : "Select stations";
     if (curve["region-type"] === "Predefined region") {
@@ -194,7 +233,7 @@ global.dataSeries = async function (plotParams) {
       const region = Object.keys(regionValues).find(
         (key) => regionValues[key] === regionStr
       );
-
+debugger;
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
