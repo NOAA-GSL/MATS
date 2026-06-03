@@ -233,34 +233,82 @@ global.dataSimpleScatter = async function (plotParams) {
       const region = Object.keys(regionValues).find(
         (key) => regionValues[key] === regionStr
       );
-      debugger;
+
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_TimeSeries.sql");
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Scatter.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
         queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-        queryTemplate = queryTemplate.replace(
-          /{{vxVARIABLE}}/g,
-          queryVariable.toUpperCase()
-        );
-        queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-        queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
-        if (statType === "ctc") {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+        if (queryVariableX === queryVariableY) {
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxVARIABLEX}}', '{{vxVARIABLEY}}'\]/g,
+            `= '${queryVariableX.toUpperCase()}'`
+          );
         } else {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
+          queryTemplate = queryTemplate.replace(
+            /{{vxVARIABLEX}}/g,
+            queryVariableX.toUpperCase()
+          );
+          queryTemplate = queryTemplate.replace(
+            /{{vxVARIABLEY}}/g,
+            queryVariableY.toUpperCase()
+          );
+        }
+        queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
+        if (statTypeX === "ctc" && statTypeY === "ctc") {
+          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC_2d.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDX}}/g, thresholdX);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDY}}/g, thresholdY);
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
+            "= 'CTC'"
+          );
+        } else if (statTypeX === "ctc" && statTypeY === "scalar") {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_CTC_PartialSums_2d.sql"
+          );
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDX}}/g, thresholdX);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEY}}/g,
+            variableDetailsY[0]
+          );
+          queryTemplate = queryTemplate.replace(/{{vxTYPEX}}/g, "CTC");
+          queryTemplate = queryTemplate.replace(/{{vxTYPEY}}/g, "SUMS");
+        } else if (statTypeX === "scalar" && statTypeY === "ctc") {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_PartialSums_CTC_2d.sql"
+          );
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
           queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLE}}/g,
-            variableDetails[0]
+            /{{vxSUBVARIABLEX}}/g,
+            variableDetailsX[0]
           );
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDY}}/g, thresholdY);
+          queryTemplate = queryTemplate.replace(/{{vxTYPEX}}/g, "SUMS");
+          queryTemplate = queryTemplate.replace(/{{vxTYPEY}}/g, "CTC");
+        } else {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_PartialSums_2d.sql"
+          );
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEX}}/g,
+            variableDetailsX[0]
+          );
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEY}}/g,
+            variableDetailsY[0]
+          );
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
+            "= 'SUMS'"
+          );
         }
 
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
@@ -300,15 +348,14 @@ global.dataSimpleScatter = async function (plotParams) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const axisKey =
-      statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[2]
-        : statisticOptionsMap[variable][statisticSelect][1];
-    curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-    const idealVal = statisticOptionsMap[variable][statisticSelect][2];
-    if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
-      idealValues.push(idealVal);
-    }
+    varUnitsX =
+      statisticOptionsMap[variableX][statisticSelectX][1] === "Unknown"
+        ? variableDetailsX[2]
+        : statisticOptionsMap[variableX][statisticSelectX][1];
+    varUnitsY =
+      statisticOptionsMap[variableY][statisticSelectY][1] === "Unknown"
+        ? variableDetailsY[2]
+        : statisticOptionsMap[variableY][statisticSelectY][1];
 
     let d;
     if (!diffFrom) {
@@ -344,18 +391,12 @@ global.dataSimpleScatter = async function (plotParams) {
         }
 
         // send the query statement to the query function
-        queryResult = await matsDataQueryUtils.queryDBTimeSeries(
+        queryResult = await matsDataQueryUtils.queryDBSimpleScatter(
           global.cbPool,
           regionType === "Predefined region" ? statement : rows,
-          model,
-          forecastLength,
-          fromSecs,
-          toSecs,
-          averageStr,
-          statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`,
-          validTimes,
           appParams,
-          false
+          statTypeX === "ctc" ? statisticSelectX : `${statisticSelectX}_${variableX}`,
+          statTypeY === "ctc" ? statisticSelectY : `${statisticSelectY}_${variableY}`
         );
 
         finishMoment = moment();
@@ -447,7 +488,7 @@ global.dataSimpleScatter = async function (plotParams) {
   const curveInfoParams = {
     curves,
     curvesLength,
-    statType,
+    statTypeX,
     axisXMap,
     axisYMap,
     xmax,
