@@ -348,6 +348,10 @@ global.dataSimpleScatter = async function (plotParams) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
+    const trimmedVariableX = variableX.split(" (")[0];
+    const trimmedVariableY = variableY.split(" (")[0];
+    const trimmedStatisticX = statisticSelectX.split(" (")[0];
+    const trimmedStatisticY = statisticSelectY.split(" (")[0];
     varUnitsX =
       statisticOptionsMap[variableX][statisticSelectX][1] === "Unknown"
         ? variableDetailsX[2]
@@ -356,6 +360,8 @@ global.dataSimpleScatter = async function (plotParams) {
       statisticOptionsMap[variableY][statisticSelectY][1] === "Unknown"
         ? variableDetailsY[2]
         : statisticOptionsMap[variableY][statisticSelectY][1];
+    varUnitsX = `${trimmedVariableX} ${trimmedStatisticX} (${varUnitsX})`;
+    varUnitsY = `${trimmedVariableY} ${trimmedStatisticY} (${varUnitsY})`;
 
     let d;
     if (!diffFrom) {
@@ -395,6 +401,8 @@ global.dataSimpleScatter = async function (plotParams) {
           global.cbPool,
           regionType === "Predefined region" ? statement : rows,
           appParams,
+          statTypeX,
+          statTypeY,
           statTypeX === "ctc" ? statisticSelectX : `${statisticSelectX}_${variableX}`,
           statTypeY === "ctc" ? statisticSelectY : `${statisticSelectY}_${variableY}`
         );
@@ -489,6 +497,7 @@ global.dataSimpleScatter = async function (plotParams) {
     curves,
     curvesLength,
     statTypeX,
+    statTypeY,
     axisXMap,
     axisYMap,
     xmax,

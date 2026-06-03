@@ -32,7 +32,7 @@ const variableMetadataDocs = {
       "Elevation (m)": ["Elevation", "Elevation", "m"],
       "Temperature at 2m (°C)": ["Temperature", "Temperature", "°C"],
       "Dewpoint at 2m (°C)": ["DewPoint", "DewPoint", "°C"],
-      "Relative Humidity at 2m (%)": ["RelativeHumidity", "RH", "RH (%)"],
+      "Relative Humidity at 2m (%)": ["RelativeHumidity", "RH", "%"],
       "Surface Pressure (hPa)": ["SurfacePressure", "Surface Pressure", "hPa"],
       "Normalized Surface Pressure (hPa)": [
         "Normalized Surface Pressure",

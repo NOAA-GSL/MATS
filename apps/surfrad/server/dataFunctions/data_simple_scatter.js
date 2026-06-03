@@ -210,6 +210,8 @@ global.dataSimpleScatter = async function (plotParams) {
           global.sumPool,
           statement,
           appParams,
+          statType,
+          statType, // the x- and y-statTypes will always be the same for this app
           `${statisticXSelect}_${variableXStr}`,
           `${statisticYSelect}_${variableYStr}`
         );
