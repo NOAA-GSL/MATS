@@ -47,6 +47,7 @@ global.dataSimpleScatter = async function (plotParams) {
   let statTypeY;
   let varUnitsX;
   let varUnitsY;
+  const allStatTypes = [];
 
   let statement = "";
   let rows = "";
@@ -91,6 +92,12 @@ global.dataSimpleScatter = async function (plotParams) {
       );
     }
     const model = modelOptionsMap[variableX][curve["data-source"]][0];
+
+    if (binParam === "Threshold") {
+      throw new Error(
+        `INFO:  Binning by thresholds is currently not supported for scatter plots in this app (performance diagrams and contours only). Please select a different binning parameter.`
+      );
+    }
 
     const thresholdStrX = curve["x-threshold"];
     const thresholdStrY = curve["y-threshold"];
@@ -257,7 +264,19 @@ global.dataSimpleScatter = async function (plotParams) {
             queryVariableY.toUpperCase()
           );
         }
-        queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        if (binParam !== "Fcst lead time") {
+          if (forecastLength === undefined) {
+            throw new Error(
+              `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
+            );
+          }
+          queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        } else {
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxFCST_LEN}}"
+          );
+        }
         queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
         if (statTypeX === "ctc" && statTypeY === "ctc") {
           statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC_2d.sql");
@@ -311,11 +330,25 @@ global.dataSimpleScatter = async function (plotParams) {
           );
         }
 
-        if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-          queryTemplate = queryTemplate.replace(
-            /{{vxVALID_TIMES}}/g,
-            global.cbPool.trfmListToCSVString(validTimes, null, false)
-          );
+        let dateString = "";
+        if (binParam === "Init Date") {
+          dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
+        } else {
+          dateString = "m0.fcstValidEpoch";
+        }
+        queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
+        if (binParam !== "Valid UTC hour") {
+          if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            queryTemplate = queryTemplate.replace(
+              /{{vxVALID_TIMES}}/g,
+              global.cbPool.trfmListToCSVString(validTimes, null, false)
+            );
+          } else {
+            queryTemplate = global.cbPool.trfmSQLRemoveClause(
+              queryTemplate,
+              "{{vxVALID_TIMES}}"
+            );
+          }
         } else {
           queryTemplate = global.cbPool.trfmSQLRemoveClause(
             queryTemplate,
@@ -362,6 +395,7 @@ global.dataSimpleScatter = async function (plotParams) {
         : statisticOptionsMap[variableY][statisticSelectY][1];
     varUnitsX = `${trimmedVariableX} ${trimmedStatisticX} (${varUnitsX})`;
     varUnitsY = `${trimmedVariableY} ${trimmedStatisticY} (${varUnitsY})`;
+    allStatTypes.push([statTypeX, statTypeY]);
 
     let d;
     if (!diffFrom) {
@@ -496,8 +530,7 @@ global.dataSimpleScatter = async function (plotParams) {
   const curveInfoParams = {
     curves,
     curvesLength,
-    statTypeX,
-    statTypeY,
+    statType: allStatTypes,
     axisXMap,
     axisYMap,
     xmax,

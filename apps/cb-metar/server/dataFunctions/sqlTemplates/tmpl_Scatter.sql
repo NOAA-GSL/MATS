@@ -13,7 +13,7 @@ WHERE m0.type = 'DD'
     AND m0.region = '{{vxREGION}}'
     AND m0.fcstLen = {{vxFCST_LEN}}
     AND m0.fcstValidEpoch %(24 * 3600) / 3600 IN [{{vxVALID_TIMES}}]
-    AND m0.fcstValidEpoch >= {{vxFROM_SECS}}
-    AND m0.fcstValidEpoch <= {{vxTO_SECS}}
+    AND {{vxDATE_STRING}} >= {{vxFROM_SECS}}
+    AND {{vxDATE_STRING}} <= {{vxTO_SECS}}
 GROUP BY {{vxBIN_CLAUSE}}
 ORDER BY binVal;
