@@ -11,7 +11,7 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleTimeSeries,
+  matsMiddleSimpleScatter,
 } from "meteor/randyp:mats-common";
 import moment from "moment";
 
@@ -413,15 +413,20 @@ global.dataSimpleScatter = async function (plotParams) {
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(global.cbPool);
+          const tss = new matsMiddleSimpleScatter.matsMiddleSimpleScatter(
+            global.cbPool
+          );
           rows = await tss.processStationQuery(
-            statType,
-            variableDetails[1],
+            binClause,
+            statTypeX,
+            statTypeY,
+            variableDetailsX[1],
+            variableDetailsY[1],
             sitesList,
             model,
             forecastLength,
-            threshold,
-            average,
+            thresholdX,
+            thresholdY,
             fromSecs,
             toSecs,
             validTimes,
