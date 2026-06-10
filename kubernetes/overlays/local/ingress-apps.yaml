@@ -72,13 +72,6 @@ spec:
                 name: precipitation1hr
                 port:
                   number: 80
-          - path: /ptype
-            pathType: Prefix
-            backend:
-              service:
-                name: ptype
-                port:
-                  number: 80
           - path: /radar
             pathType: Prefix
             backend:
