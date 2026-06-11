@@ -413,7 +413,7 @@ global.dataSimpleScatter = async function (plotParams) {
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleSimpleScatter.matsMiddleSimpleScatter(
+          const tss = new matsMiddleSimpleScatter.MatsMiddleSimpleScatter(
             global.cbPool
           );
           rows = await tss.processStationQuery(
