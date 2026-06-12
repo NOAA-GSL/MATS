@@ -417,7 +417,7 @@ global.dataSimpleScatter = async function (plotParams) {
             global.cbPool
           );
           rows = await tss.processStationQuery(
-            binClause,
+            binParam,
             statTypeX,
             statTypeY,
             variableDetailsX[1],
