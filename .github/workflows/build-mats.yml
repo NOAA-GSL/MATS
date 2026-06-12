@@ -32,7 +32,6 @@ jobs:
           - precipAccum
           - precipGauge
           - precipitation1hr
-          - ptype
           - radar
           - scorecard
           - surface
@@ -74,7 +73,6 @@ jobs:
           - precipAccum
           - precipGauge
           - precipitation1hr
-          - ptype
           - radar
           - scorecard
           - surface

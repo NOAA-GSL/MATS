@@ -12,7 +12,6 @@ apps=(
     "precipAccum"
     "precipGauge"
     "precipitation1hr"
-    "ptype"
     "radar"
     "scorecard"
     "surface"
