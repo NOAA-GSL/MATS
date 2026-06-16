@@ -9,19 +9,18 @@ import {
   matsTypes,
   matsDataUtils,
   matsDataQueryUtils,
-  matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleDieoff,
+  matsMiddleSimpleScatter,
 } from "meteor/randyp:mats-common";
 import moment from "moment";
 
 /* eslint-disable no-await-in-loop */
 
-global.dataDieoff = async function (plotParams) {
+global.dataSimpleScatter = async function (plotParams) {
   // initialize variables common to all curves
   const appParams = {
-    plotType: matsTypes.PlotTypes.dieoff,
+    plotType: matsTypes.PlotTypes.simpleScatter,
     matching: plotParams.plotAction === matsTypes.PlotActions.matched,
     completeness: plotParams.completeness,
     outliers: plotParams.outliers,
@@ -37,16 +36,18 @@ global.dataDieoff = async function (plotParams) {
   const curves = JSON.parse(JSON.stringify(plotParams.curves));
   const curvesLength = curves.length;
 
-  const axisMap = Object.create(null);
+  const axisXMap = Object.create(null);
+  const axisYMap = Object.create(null);
   let xmax = -1 * Number.MAX_VALUE;
   let ymax = -1 * Number.MAX_VALUE;
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
 
-  let statType;
+  let statTypeX;
+  let statTypeY;
+  let varUnitsX;
+  let varUnitsY;
   const allStatTypes = [];
-  const utcCycleStarts = [];
-  const idealValues = [];
 
   let statement = "";
   let rows = "";
@@ -59,49 +60,81 @@ global.dataDieoff = async function (plotParams) {
     const { label } = curve;
     const { diffFrom } = curve;
 
-    const { variable } = curve;
+    const binParam = curve["bin-parameter"];
+    const binClause = (
+      await matsCollections["bin-parameter"].findOneAsync({
+        name: "bin-parameter",
+      })
+    ).optionsMap[binParam];
+
+    const variableX = curve["x-variable"];
+    const variableY = curve["y-variable"];
     const variableValuesMap = (
       await matsCollections.variable.findOneAsync({
         name: "variable",
       })
     ).valuesMap;
-    const queryVariable = Object.keys(variableValuesMap).filter(
-      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
+    const queryVariableX = Object.keys(variableValuesMap).filter(
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variableX) !== -1
     )[0];
-    const variableDetails = variableValuesMap[queryVariable][0][variable];
-    const model = (
-      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
-    ).optionsMap[variable][curve["data-source"]][0];
+    const queryVariableY = Object.keys(variableValuesMap).filter(
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variableY) !== -1
+    )[0];
+    const variableDetailsX = variableValuesMap[queryVariableX][0][variableX];
+    const variableDetailsY = variableValuesMap[queryVariableY][0][variableY];
 
-    const thresholdStr = curve.threshold;
-    let threshold = "";
-    if (variableValuesMap[queryVariable][1]) {
-      const thresholdValues = (
-        await matsCollections.threshold.findOneAsync({ name: "threshold" })
-      ).valuesMap[variable];
-      threshold = Object.keys(thresholdValues).find(
-        (key) => thresholdValues[key] === thresholdStr
+    const modelOptionsMap = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap;
+    if (!modelOptionsMap[variableX] || !modelOptionsMap[variableY]) {
+      throw new Error(
+        "INFO:  At least one of your selected variables is not available for this model."
       );
-      threshold = threshold.replace(/_/g, ".");
+    }
+    const model = modelOptionsMap[variableX][curve["data-source"]][0];
+
+    if (binParam === "Threshold") {
+      throw new Error(
+        `INFO:  Binning by thresholds is currently not supported for scatter plots in this app (performance diagrams and contours only). Please select a different binning parameter.`
+      );
     }
 
-    let validTimes;
-    let utcCycleStart;
-    const forecastLengthStr = curve["dieoff-type"];
-    const forecastLengthOptionsMap = (
-      await matsCollections["dieoff-type"].findOneAsync({ name: "dieoff-type" })
-    ).optionsMap;
-    const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+    const thresholdStrX = curve["x-threshold"];
+    const thresholdStrY = curve["y-threshold"];
+    let thresholdX = "";
+    let thresholdY = "";
+    if (variableValuesMap[queryVariableX][1]) {
+      const thresholdValuesX = (
+        await matsCollections["x-threshold"].findOneAsync({ name: "x-threshold" })
+      ).valuesMap[variableX];
+      thresholdX = Object.keys(thresholdValuesX).find(
+        (key) => thresholdValuesX[key] === thresholdStrX
+      );
+      thresholdX = thresholdX.replace(/_/g, ".");
+    }
+    if (variableValuesMap[queryVariableY][1]) {
+      const thresholdValuesY = (
+        await matsCollections["y-threshold"].findOneAsync({ name: "y-threshold" })
+      ).valuesMap[variableY];
+      thresholdY = Object.keys(thresholdValuesY).find(
+        (key) => thresholdValuesY[key] === thresholdStrY
+      );
+      thresholdY = thresholdY.replace(/_/g, ".");
+    }
+
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    let forecastLength = curve["forecast-length"];
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
 
-    const statisticSelect = curve.statistic;
+    const statisticSelectX = curve["x-statistic"];
+    const statisticSelectY = curve["y-statistic"];
     const statisticOptionsMap = (
       await matsCollections.statistic.findOneAsync({ name: "statistic" })
     ).optionsMap;
-    [statType] = statisticOptionsMap[variable][statisticSelect];
-    allStatTypes.push(statType);
+    [statTypeX] = statisticOptionsMap[variableX][statisticSelectX];
+    [statTypeY] = statisticOptionsMap[variableY][statisticSelectY];
 
     const filterModelBy = curve["filter-model-by"];
     const filterObsBy = curve["filter-obs-by"];
@@ -177,15 +210,21 @@ global.dataDieoff = async function (plotParams) {
 
     let queryTemplate;
     let sitesList;
-    let singleCycle;
     const regionType =
       filterModelBy === "None" && // not filtering the model by anything
       filterObsBy === "None" && // not filtering the obs by anything
       !(
         // not a thresholded variable that we're forcing into a scalar stat
         (
-          variableValuesMap[queryVariable][1] &&
-          statisticOptionsMap[variable][statisticSelect][0] === "scalar"
+          variableValuesMap[queryVariableX][1] &&
+          statisticOptionsMap[variableX][statisticSelectX][0] === "scalar"
+        )
+      ) &&
+      !(
+        // not a thresholded variable that we're forcing into a scalar stat
+        (
+          variableValuesMap[queryVariableY][1] &&
+          statisticOptionsMap[variableY][statisticSelectY][0] === "scalar"
         )
       )
         ? curve["region-type"]
@@ -205,41 +244,100 @@ global.dataDieoff = async function (plotParams) {
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-          queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff.sql");
-        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-          queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff_UTC.sql");
-        } else {
-          queryTemplate = await Assets.getTextAsync(
-            "sqlTemplates/tmpl_DieOff_SingleCycle.sql"
-          );
-          singleCycle = fromSecs;
-        }
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Scatter.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
         queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-        queryTemplate = queryTemplate.replace(
-          /{{vxVARIABLE}}/g,
-          queryVariable.toUpperCase()
-        );
-        if (statType === "ctc") {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+        if (queryVariableX === queryVariableY) {
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxVARIABLEX}}', '{{vxVARIABLEY}}'\]/g,
+            `= '${queryVariableX.toUpperCase()}'`
+          );
         } else {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
+          queryTemplate = queryTemplate.replace(
+            /{{vxVARIABLEX}}/g,
+            queryVariableX.toUpperCase()
+          );
+          queryTemplate = queryTemplate.replace(
+            /{{vxVARIABLEY}}/g,
+            queryVariableY.toUpperCase()
+          );
+        }
+        if (binParam !== "Fcst lead time") {
+          if (forecastLength === undefined) {
+            throw new Error(
+              `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
+            );
+          }
+          queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        } else {
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxFCST_LEN}}"
+          );
+        }
+        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
+        if (statTypeX === "ctc" && statTypeY === "ctc") {
+          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC_2d.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDX}}/g, thresholdX);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDY}}/g, thresholdY);
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
+            "= 'CTC'"
+          );
+        } else if (statTypeX === "ctc" && statTypeY === "scalar") {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_CTC_PartialSums_2d.sql"
+          );
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDX}}/g, thresholdX);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEY}}/g,
+            variableDetailsY[0]
+          );
+          queryTemplate = queryTemplate.replace(/{{vxTYPEX}}/g, "CTC");
+          queryTemplate = queryTemplate.replace(/{{vxTYPEY}}/g, "SUMS");
+        } else if (statTypeX === "scalar" && statTypeY === "ctc") {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_PartialSums_CTC_2d.sql"
+          );
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
           queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLE}}/g,
-            variableDetails[0]
+            /{{vxSUBVARIABLEX}}/g,
+            variableDetailsX[0]
           );
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDY}}/g, thresholdY);
+          queryTemplate = queryTemplate.replace(/{{vxTYPEX}}/g, "SUMS");
+          queryTemplate = queryTemplate.replace(/{{vxTYPEY}}/g, "CTC");
+        } else {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_PartialSums_2d.sql"
+          );
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEX}}/g,
+            variableDetailsX[0]
+          );
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEY}}/g,
+            variableDetailsY[0]
+          );
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
+            "= 'SUMS'"
+          );
         }
 
-        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-          validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+        let dateString = "";
+        if (binParam === "Init Date") {
+          dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
+        } else {
+          dateString = "m0.fcstValidEpoch";
+        }
+        queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
+        if (binParam !== "Valid UTC hour") {
           if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             queryTemplate = queryTemplate.replace(
               /{{vxVALID_TIMES}}/g,
@@ -251,23 +349,11 @@ global.dataDieoff = async function (plotParams) {
               "{{vxVALID_TIMES}}"
             );
           }
-        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-          utcCycleStart =
-            curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
-          if (
-            utcCycleStart.length !== 0 &&
-            utcCycleStart !== matsTypes.InputTypes.unused
-          ) {
-            queryTemplate = queryTemplate.replace(
-              /{{vxUTC_CYCLE_START}}/g,
-              global.cbPool.trfmListToCSVString(utcCycleStart, null, false)
-            );
-          } else {
-            queryTemplate = global.cbPool.trfmSQLRemoveClause(
-              queryTemplate,
-              "{{vxUTC_CYCLE_START}}"
-            );
-          }
+        } else {
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
         }
       } else {
         // Predefined region, with filtering. Treat like station plot.
@@ -295,15 +381,21 @@ global.dataDieoff = async function (plotParams) {
     // This axisKeySet object is used like a set and if a curve has the same
     // units (axisKey) it will use the same axis.
     // The axis number is assigned to the axisKeySet value, which is the axisKey.
-    const axisKey =
-      statisticOptionsMap[variable][statisticSelect][1] === "Unknown"
-        ? variableDetails[1]
-        : statisticOptionsMap[variable][statisticSelect][1];
-    curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-    const idealVal = statisticOptionsMap[variable][statisticSelect][2];
-    if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
-      idealValues.push(idealVal);
-    }
+    const trimmedVariableX = variableX.split(" (")[0];
+    const trimmedVariableY = variableY.split(" (")[0];
+    const trimmedStatisticX = statisticSelectX.split(" (")[0];
+    const trimmedStatisticY = statisticSelectY.split(" (")[0];
+    varUnitsX =
+      statisticOptionsMap[variableX][statisticSelectX][1] === "Unknown"
+        ? variableDetailsX[2]
+        : statisticOptionsMap[variableX][statisticSelectX][1];
+    varUnitsY =
+      statisticOptionsMap[variableY][statisticSelectY][1] === "Unknown"
+        ? variableDetailsY[2]
+        : statisticOptionsMap[variableY][statisticSelectY][1];
+    varUnitsX = `${trimmedVariableX} ${trimmedStatisticX} (${varUnitsX})`;
+    varUnitsY = `${trimmedVariableY} ${trimmedStatisticY} (${varUnitsY})`;
+    allStatTypes.push([statTypeX, statTypeY]);
 
     let d;
     if (!diffFrom) {
@@ -311,35 +403,47 @@ global.dataDieoff = async function (plotParams) {
       const startMoment = moment();
       let finishMoment;
       try {
+        // math is done on forecastLength later on -- set all analyses to 0
+        if (forecastLength === "-99") {
+          forecastLength = "0";
+        }
+
         if (regionType === "Predefined region") {
           statement = global.cbPool.trfmSQLForDbTarget(queryTemplate);
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleDieoff.MatsMiddleDieoff(global.cbPool);
+          const tss = new matsMiddleSimpleScatter.MatsMiddleSimpleScatter(
+            global.cbPool
+          );
           rows = await tss.processStationQuery(
-            statType,
-            variableDetails[0],
+            binParam,
+            statTypeX,
+            statTypeY,
+            variableDetailsX[1],
+            variableDetailsY[1],
             sitesList,
             model,
-            null,
-            threshold,
+            forecastLength,
+            thresholdX,
+            thresholdY,
             fromSecs,
             toSecs,
             validTimes,
-            utcCycleStart,
-            singleCycle,
             filterInfo,
             elevMap
           );
         }
 
         // send the query statement to the query function
-        queryResult = await matsDataQueryUtils.queryDBSpecialtyCurve(
+        queryResult = await matsDataQueryUtils.queryDBSimpleScatter(
           global.cbPool,
           regionType === "Predefined region" ? statement : rows,
           appParams,
-          statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
+          statTypeX,
+          statTypeY,
+          statTypeX === "ctc" ? statisticSelectX : `${statisticSelectX}_${variableX}`,
+          statTypeY === "ctc" ? statisticSelectY : `${statisticSelectY}_${variableY}`
         );
 
         finishMoment = moment();
@@ -381,18 +485,10 @@ global.dataDieoff = async function (plotParams) {
         ymax = ymax > d.ymax ? ymax : d.ymax;
       }
     } else {
-      // this is a difference curve
-      const diffResult = matsDataDiffUtils.getDataForDiffCurve(
-        dataset,
-        diffFrom,
-        appParams,
-        allStatTypes
+      // this is a difference curve -- not supported for scatter plots
+      throw new Error(
+        "INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves."
       );
-      d = diffResult.dataset;
-      xmin = xmin < d.xmin ? xmin : d.xmin;
-      xmax = xmax > d.xmax ? xmax : d.xmax;
-      ymin = ymin < d.ymin ? ymin : d.ymin;
-      ymax = ymax > d.ymax ? ymax : d.ymax;
     }
 
     // set curve annotation to be the curve mean -- may be recalculated later
@@ -408,11 +504,14 @@ global.dataDieoff = async function (plotParams) {
     curve.xmax = d.xmax;
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
-    curve.axisKey = axisKey;
-    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    curve.axisXKey = varUnitsX;
+    curve.axisYKey = varUnitsY;
+    curve.binParam = binParam;
+    const cOptions = await matsDataCurveOpsUtils.generateScatterCurveOptions(
       curve,
       curveIndex,
-      axisMap,
+      axisXMap,
+      axisYMap,
       d,
       appParams
     ); // generate plot with data, curve annotation, axis labels, etc.
@@ -436,10 +535,9 @@ global.dataDieoff = async function (plotParams) {
   const curveInfoParams = {
     curves,
     curvesLength,
-    idealValues,
-    utcCycleStarts,
     statType: allStatTypes,
-    axisMap,
+    axisXMap,
+    axisYMap,
     xmax,
     xmin,
   };
@@ -447,7 +545,7 @@ global.dataDieoff = async function (plotParams) {
     dataRequests,
     totalProcessingStart,
   };
-  const result = await matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataSimpleScatter(
     dataset,
     appParams,
     curveInfoParams,

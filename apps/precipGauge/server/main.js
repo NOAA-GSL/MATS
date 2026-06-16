@@ -621,7 +621,7 @@ const doCurveParams = async function () {
 
       "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
 
-      "Bias (forecast/actual)": ["ctc", "Ratio", 1],
+      "Bias (Forecast / Actual)": ["ctc", "Ratio", 1],
 
       "HSS (Heidke Skill Score)": ["ctc", "x100", 100],
 

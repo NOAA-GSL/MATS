@@ -123,7 +123,7 @@ global.dataContour = async function (plotParams) {
   } else {
     // threshold is not an axis param and this is a scalar app
     // so create a dummy threshold for the loop later
-    allThresholds = ["NA"];
+    allThresholds = ["All Data"];
   }
 
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
@@ -134,6 +134,15 @@ global.dataContour = async function (plotParams) {
     await matsCollections.statistic.findOneAsync({ name: "statistic" })
   ).optionsMap;
   const statType = statisticOptionsMap[variable][statisticSelect][0];
+
+  if (
+    variableValuesMap[queryVariable][1] &&
+    statisticOptionsMap[variable][statisticSelect][0] === "scalar"
+  ) {
+    throw new Error(
+      "INFO:  Plotting thresholded variables (e.g. ceiling, visibility) with scalar statistics (e.g. RMSE, additive bias) is not available for this plot type."
+    );
+  }
 
   let queryTemplate;
   const regionType = curve["region-type"];

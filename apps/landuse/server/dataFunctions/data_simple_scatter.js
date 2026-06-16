@@ -40,9 +40,11 @@ global.dataSimpleScatter = async function (plotParams) {
   let xmin = Number.MAX_VALUE;
   let ymin = Number.MAX_VALUE;
 
-  let statType;
+  let statTypeX;
+  let statTypeY;
   let varUnitsX;
   let varUnitsY;
+  const allStatTypes = [];
 
   let statement = "";
   let error = "";
@@ -125,9 +127,11 @@ global.dataSimpleScatter = async function (plotParams) {
     const { statVarUnitMap } = await matsCollections.variable.findOneAsync({
       name: "variable",
     });
-    statType = statisticOptionsMap[statisticXSelect];
+    statTypeX = statisticOptionsMap[statisticXSelect];
+    statTypeY = statisticOptionsMap[statisticYSelect];
     varUnitsX = statVarUnitMap[statisticXSelect][variableXStr];
     varUnitsY = statVarUnitMap[statisticYSelect][variableYStr];
+    allStatTypes.push([statTypeX, statTypeY]);
 
     let d;
     if (!diffFrom) {
@@ -166,6 +170,8 @@ global.dataSimpleScatter = async function (plotParams) {
           global.sumPool,
           statement,
           appParams,
+          statTypeX,
+          statTypeY,
           `${statisticXSelect}_${variableXStr}`,
           `${statisticYSelect}_${variableYStr}`
         );
@@ -265,7 +271,7 @@ global.dataSimpleScatter = async function (plotParams) {
   const curveInfoParams = {
     curves,
     curvesLength,
-    statType,
+    statType: allStatTypes,
     axisXMap,
     axisYMap,
     xmax,
