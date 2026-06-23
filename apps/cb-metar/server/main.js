@@ -697,9 +697,9 @@ const doCurveParams = async function () {
       default: varOptionsMap[defaultPlotType][0],
       unique: false,
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 1,
       displayPriority: 1,
-      displayGroup: 2,
+      displayGroup: 3,
     });
   } else {
     // it is defined but check for necessary update
@@ -745,7 +745,7 @@ const doCurveParams = async function () {
       controlButtonVisibility: "block",
       displayOrder: 4,
       displayPriority: 1,
-      displayGroup: 2,
+      displayGroup: 3,
     });
   } else {
     // it is defined but check for necessary update
@@ -971,13 +971,24 @@ const doCurveParams = async function () {
       optionsMap: statOptionsMap,
       options: Object.keys(statOptionsMap),
       superiorNames: ["variable"],
+      hideOtherFor: {
+        threshold: [
+          "RMSE",
+          "Bias (Model - Obs)",
+          "N",
+          "Model average",
+          "Obs average",
+          "Std deviation",
+          "MAE (temp and dewpoint only)",
+        ],
+      },
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 4,
+      displayOrder: 3,
       displayPriority: 1,
-      displayGroup: 3,
+      displayGroup: 2,
     });
   }
 
@@ -991,11 +1002,22 @@ const doCurveParams = async function () {
       optionsMap: statOptionsMap,
       options: Object.keys(statOptionsMap),
       superiorNames: ["x-variable"],
+      hideOtherFor: {
+        "x-threshold": [
+          "RMSE",
+          "Bias (Model - Obs)",
+          "N",
+          "Model average",
+          "Obs average",
+          "Std deviation",
+          "MAE (temp and dewpoint only)",
+        ],
+      },
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 5,
+      displayOrder: 2,
       displayPriority: 1,
       displayGroup: 3,
     });
@@ -1011,11 +1033,22 @@ const doCurveParams = async function () {
       optionsMap: statOptionsMap,
       options: Object.keys(statOptionsMap),
       superiorNames: ["y-variable"],
+      hideOtherFor: {
+        "y-threshold": [
+          "RMSE",
+          "Bias (Model - Obs)",
+          "N",
+          "Model average",
+          "Obs average",
+          "Std deviation",
+          "MAE (temp and dewpoint only)",
+        ],
+      },
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(statOptionsMap)[0],
       controlButtonVisibility: "block",
-      displayOrder: 6,
+      displayOrder: 5,
       displayPriority: 1,
       displayGroup: 3,
     });
@@ -1041,9 +1074,9 @@ const doCurveParams = async function () {
           Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
-      displayOrder: 1,
+      displayOrder: 4,
       displayPriority: 1,
-      displayGroup: 3,
+      displayGroup: 2,
     });
   } else {
     // it is defined but check for necessary update
@@ -1099,7 +1132,7 @@ const doCurveParams = async function () {
           Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
-      displayOrder: 2,
+      displayOrder: 3,
       displayPriority: 1,
       displayGroup: 3,
     });
@@ -1157,7 +1190,7 @@ const doCurveParams = async function () {
           Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
         ][0],
       controlButtonVisibility: "block",
-      displayOrder: 3,
+      displayOrder: 6,
       displayPriority: 1,
       displayGroup: 3,
     });
