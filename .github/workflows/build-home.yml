@@ -126,8 +126,9 @@ jobs:
             sysdig-secure-url: ${{ vars.SYSDIG_SECURE_ENDPOINT }}
             image-tag: '${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}'
             stop-on-failed-policy-eval: false
-            stop-on-processing-error: false
+            stop-on-processing-error: true
             severity-at-least: high
+            group-by-package: true
 
         - name: Upload Sysdig scan results
           if: success() || failure()
