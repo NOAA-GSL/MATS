@@ -4,6 +4,7 @@ about: Describe the requirements for a new or improved feature
 title: ""
 labels: ["feature", "needs requirements"]
 assignees: ""
+type: "Feature"
 ---
 
 ## Problem

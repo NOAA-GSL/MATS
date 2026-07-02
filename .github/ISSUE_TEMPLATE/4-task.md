@@ -4,6 +4,7 @@ about: A bit of work that isn't an epic, feature, or bug
 title: ""
 labels: ["task"]
 assignees: ""
+type: "Task"
 ---
 
 Describe what needs to be done here.
