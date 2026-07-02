@@ -123,7 +123,7 @@ jobs:
           uses: sysdiglabs/scan-action@v6
           with:
             sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-            sysdig-secure-url: ${{ secrets.SYSDIG_SECURE_ENDPOINT }}
+            sysdig-secure-url: ${{ vars.SYSDIG_SECURE_ENDPOINT }}
             image-tag: '${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}'
             stop-on-failed-policy-eval: false
             stop-on-processing-error: false
