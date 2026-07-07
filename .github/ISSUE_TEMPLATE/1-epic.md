@@ -4,6 +4,7 @@ about: Describe the requirements for a larger initiative
 title: ""
 labels: ["epic", "needs requirements"]
 assignees: ""
+type: "Epic"
 ---
 
 ## Problem

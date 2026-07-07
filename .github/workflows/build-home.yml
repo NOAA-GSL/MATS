@@ -118,6 +118,24 @@ jobs:
             output: 'trivy-results-home.sarif'
             ignore-unfixed: true
 
+        - name: Scan image with Sysdig
+          id: scan
+          uses: sysdiglabs/scan-action@v6
+          with:
+            sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+            sysdig-secure-url: ${{ vars.SYSDIG_SECURE_ENDPOINT }}
+            image-tag: '${{ env.DEV_REGISTRY }}/home:${{ env.BRANCH }}'
+            stop-on-failed-policy-eval: false # TODO - switch to true once we're ready to use sysdig as our primary scanner
+            stop-on-processing-error: true
+            severity-at-least: high
+            group-by-package: true
+
+        - name: Upload Sysdig scan results
+          if: success() || failure()
+          uses: github/codeql-action/upload-sarif@v4
+          with:
+            sarif_file: ${{ github.workspace }}/sarif.json
+
         - name: Upload Trivy scan results to GitHub Security tab
           uses: github/codeql-action/upload-sarif@v4
           with:
