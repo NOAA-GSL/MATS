@@ -82,7 +82,7 @@ COPY container-scripts/run_app.sh ${APP_FOLDER}/
 RUN mkdir -p ${SETTINGS_DIR} \
     && chown -R node:node ${APP_FOLDER}/settings \
     && chmod -R 755 ${APP_FOLDER}/settings \
-    && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache \
+    && mkdir -p ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache \
     && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache \
     && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache
 
