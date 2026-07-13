@@ -78,13 +78,13 @@ COPY --from=meteor-builder /opt/bundle ${APP_BUNDLE_FOLDER}/
 # We want to use our own launcher script
 COPY container-scripts/run_app.sh ${APP_FOLDER}/
 
-# The app won't work without a writeable settings dir and local Node fileCache
+# The app won't work without a writeable settings dir and local Node .cache
 RUN mkdir -p ${SETTINGS_DIR} \
     && chown -R node:node ${APP_FOLDER}/settings \
     && chmod -R 755 ${APP_FOLDER}/settings \
-    && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
-    && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache \
-    && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/fileCache
+    && touch ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache \
+    && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache \
+    && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache
 
 # Install the Meteor app's NPM dependencies
 # g++ & build-essential would be needed for ARM/Apple Silicon builds in order to recompile fibers
