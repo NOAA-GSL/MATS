@@ -84,7 +84,7 @@ RUN mkdir -p ${SETTINGS_DIR} \
     && chmod -R 755 ${APP_FOLDER}/settings \
     && mkdir -p ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache \
     && chown node:node ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache \
-    && chmod 644 ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache
+    && chmod 777 ${APP_BUNDLE_FOLDER}/bundle/programs/server/.cache
 
 # Install the Meteor app's NPM dependencies
 # g++ & build-essential would be needed for ARM/Apple Silicon builds in order to recompile fibers
