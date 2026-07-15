@@ -356,7 +356,7 @@ def regions_per_model_mats_all_categories(mode):
         this_model_type = "retro"
         for row in cursor:
             val = str(list(row.values())[0])
-            if val == model + "qp1f":
+            if val == model + "qp":
                 this_model_type = "realtime"
         usedb = "use " + db
         cursor.execute(usedb)
