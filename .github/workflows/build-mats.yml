@@ -47,7 +47,7 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         working-directory: apps/${{ matrix.app }}
-        run: npm ci --force
+        run: npm ci
       - name: Lint
         working-directory: apps/${{ matrix.app }}
         run: npm run lint 
