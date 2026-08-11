@@ -19,8 +19,8 @@ import mysql from "mysql2/promise";
 
 // This app references two databases, which are listed here.
 const obsDBNames = {
-  Instantaneous: { sumsDB: "surfrad3_sums" },
-  "Time-averaged according to scale": { sumsDB: "surfrad3_avg_sums" },
+  "Instantaneous Surface Radiation": { sumsDB: "surfrad3_sums" },
+  "Time-averaged Surface Radiation": { sumsDB: "surfrad3_avg_sums" },
 };
 const obs = Object.keys(obsDBNames);
 
