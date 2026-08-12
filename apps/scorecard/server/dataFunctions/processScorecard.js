@@ -51,6 +51,24 @@ const dealWithUATables = function (
   return updatedQueryTemplate;
 };
 
+const dealWithSurfradTables = function (regionValue, localQueryTemplate) {
+  let aggRegionOption = "";
+  let updatedQueryTemplate = localQueryTemplate;
+  if (regionValue === "all_stat") {
+    aggRegionOption = "_all_site_sums";
+  } else if (regionValue === "all_surf") {
+    aggRegionOption = "_all_surfrad_sums";
+  } else if (regionValue === "all_sol") {
+    aggRegionOption = "_all_solrad_sums";
+  }
+  // either add the m1 clause to the template or remove the secondary model option entirely
+  updatedQueryTemplate = updatedQueryTemplate.replace(
+    /_site_\{\{region\}\}/g,
+    aggRegionOption
+  );
+  return updatedQueryTemplate;
+};
+
 global.processScorecard = async function (plotParams) {
   /*
     displayScorecard structure:
@@ -503,31 +521,8 @@ global.processScorecard = async function (plotParams) {
                   );
                 }
 
-                // populate variable in query template -- excepting partial sums
-                if (localQueryTemplate.includes("{{variable}}")) {
-                  const variableValue = variableMap
-                    ? variableMap[variableText]
-                    : variableText;
-                  localQueryTemplate = localQueryTemplate.replace(
-                    /\{\{variable\}\}/g,
-                    variableValue
-                  );
-                }
-
-                // populate variable in query template -- partial sums
-                if (localQueryTemplate.includes("{{variable0}}")) {
-                  const variableArray = variableMap[variableText];
-                  for (let vidx = 0; vidx < variableArray.length; vidx += 1) {
-                    const replaceString = `{{variable${vidx.toString()}}}`;
-                    const regex = new RegExp(replaceString, "g");
-                    localQueryTemplate = localQueryTemplate.replace(
-                      regex,
-                      variableArray[vidx]
-                    );
-                  }
-                }
-
                 // populate region in query template
+                let needStationData = false;
                 if (localQueryTemplate.includes("{{region}}")) {
                   const regionValue = Object.keys(regionMap).find(
                     (key) => regionMap[key] === regionText
@@ -540,11 +535,62 @@ global.processScorecard = async function (plotParams) {
                       databaseValue,
                       localQueryTemplate
                     );
+                  } else if (application === "surfrad") {
+                    if (regionValue.includes("all")) {
+                      // the surfrad aggregate tables need special handling
+                      localQueryTemplate = dealWithSurfradTables(
+                        regionValue,
+                        localQueryTemplate
+                      );
+                    } else {
+                      // for surfrad non-aggregate tables, we need station-specific data in the variable section below
+                      needStationData = true;
+                    }
                   }
                   localQueryTemplate = localQueryTemplate.replace(
                     /\{\{region\}\}/g,
                     regionValue
                   );
+                }
+
+                // populate variable in query template -- excepting partial sums
+                if (localQueryTemplate.includes("{{variable}}")) {
+                  let variableValue = variableMap
+                    ? variableMap[variableText]
+                    : variableText;
+                  if (Object.keys(variableValue).includes("Predefined region")) {
+                    // we know if we need station data from the region section above
+                    if (needStationData) {
+                      variableValue = variableValue["Select stations"];
+                    } else {
+                      variableValue = variableValue["Predefined region"];
+                    }
+                  }
+                  localQueryTemplate = localQueryTemplate.replace(
+                    /\{\{variable\}\}/g,
+                    variableValue
+                  );
+                }
+
+                // populate variable in query template -- partial sums
+                if (localQueryTemplate.includes("{{variable0}}")) {
+                  let variableArray = variableMap[variableText];
+                  if (Object.keys(variableArray).includes("Predefined region")) {
+                    // we know if we need station data from the region section above
+                    if (needStationData) {
+                      variableArray = variableArray["Select stations"];
+                    } else {
+                      variableArray = variableArray["Predefined region"];
+                    }
+                  }
+                  for (let vidx = 0; vidx < variableArray.length; vidx += 1) {
+                    const replaceString = `{{variable${vidx.toString()}}}`;
+                    const regex = new RegExp(replaceString, "g");
+                    localQueryTemplate = localQueryTemplate.replace(
+                      regex,
+                      variableArray[vidx]
+                    );
+                  }
                 }
 
                 // populate experimental model in query template
