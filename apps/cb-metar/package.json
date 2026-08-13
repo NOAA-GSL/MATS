@@ -13,7 +13,7 @@
     "couchbase": "^4.7.1",
     "jquery": "^3.7.1",
     "moment": "^2.30.1",
-    "mysql2": "^3.23.2"
+    "mysql2": "^3.23.3"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
