@@ -114,7 +114,7 @@ global.dataDieoff = async function (plotParams) {
       )[0];
       const filterModelVariableDetails =
         variableValuesMap[filterModelVariable][0][filterModelBy];
-      [, filterInfo.filterModelBy] = filterModelVariableDetails;
+      [, [filterInfo.filterModelBy]] = filterModelVariableDetails;
 
       // get the bounds and make sure they're in the right units
       let filterModelMin = Number(curve["filter-model-min"]);
@@ -148,7 +148,7 @@ global.dataDieoff = async function (plotParams) {
       )[0];
       const filterObsVariableDetails =
         variableValuesMap[filterObsVariable][0][filterObsBy];
-      [, filterInfo.filterObsBy] = filterObsVariableDetails;
+      [, [, filterInfo.filterObsBy]] = filterObsVariableDetails;
 
       // get the bounds and make sure they're in the right units
       let filterObsMin = Number(curve["filter-obs-min"]);

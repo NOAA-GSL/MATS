@@ -25,23 +25,30 @@ import {
 //    boolean for if this variable has thresholds
 //  }]
 const variableMetadataDocs = {
-  Ceiling: [{ "Ceiling (ft)": ["Ceiling", "Ceiling", "ft"] }, true],
-  Visibility: [{ "Visibility (mi)": ["Visibility", "Visibility", "mi"] }, true],
+  Ceiling: [{ "Ceiling (ft)": ["Ceiling", ["Ceiling", "Ceiling"], "ft"] }, true],
+  Visibility: [
+    { "Visibility (mi)": ["Visibility", ["Visibility", "Visibility"], "mi"] },
+    true,
+  ],
   Surface: [
     {
-      "Elevation (m)": ["Elevation", "Elevation", "m"],
-      "Temperature at 2m (°C)": ["Temperature", "Temperature", "°C"],
-      "Dewpoint at 2m (°C)": ["DewPoint", "DewPoint", "°C"],
-      "Relative Humidity at 2m (%)": ["RelativeHumidity", "RH", "%"],
-      "Surface Pressure (hPa)": ["SurfacePressure", "Surface Pressure", "hPa"],
-      "Normalized Surface Pressure (hPa)": [
-        "Normalized Surface Pressure",
-        "Normalized Surface Pressure",
+      "Elevation (m)": ["Elevation", ["Elevation", "Elevation"], "m"],
+      "Temperature at 2m (°C)": ["Temperature", ["Temperature", "Temperature"], "°C"],
+      "Dewpoint at 2m (°C)": ["DewPoint", ["DewPoint", "DewPoint"], "°C"],
+      "Relative Humidity at 2m (%)": ["RelativeHumidity", ["RH", "RH"], "%"],
+      "Surface Pressure (hPa)": [
+        "SurfacePressure",
+        ["Surface Pressure", "Surface Pressure"],
         "hPa",
       ],
-      "Wind Speed at 10m (m/s)": ["WindSpeed", "WS", "m/s"],
-      "U-Wind at 10m (m/s)": ["WindU", "WindU", "m/s"],
-      "V-Wind at 10m (m/s)": ["WindV", "WindV", "m/s"],
+      "Normalized Surface Pressure (hPa)": [
+        "Normalized Surface Pressure",
+        ["Normalized Surface Pressure", "Surface Pressure"],
+        "hPa",
+      ],
+      "Wind Speed at 10m (m/s)": ["WindSpeed", ["WS", "WS"], "m/s"],
+      "U-Wind at 10m (m/s)": ["WindU", ["WindU", "WindU"], "m/s"],
+      "V-Wind at 10m (m/s)": ["WindV", ["WindV", "WindV"], "m/s"],
     },
     false,
   ],
