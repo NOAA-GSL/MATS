@@ -1652,7 +1652,7 @@ Meteor.startup(async function () {
     "regions_per_model_mats_all_categories",
   ]);
   try {
-    matsMethods.resetApp({
+    await matsMethods.resetApp({
       appPools: allPools,
       appMdr: mdr,
       appType: matsTypes.AppTypes.mats,

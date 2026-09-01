@@ -1875,7 +1875,7 @@ Meteor.startup(async function () {
   ]);
   mdr.addRecord("sumPool", "surface_sums2", ["regions_per_model_mats_all_categories"]);
   try {
-    matsMethods.resetApp({
+    await matsMethods.resetApp({
       appPools: allPools,
       appMdr: mdr,
       appType: matsTypes.AppTypes.mats,

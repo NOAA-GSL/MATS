@@ -1826,7 +1826,7 @@ Meteor.startup(async function () {
     ]);
   }
   try {
-    matsMethods.resetApp({
+    await matsMethods.resetApp({
       appPools: allPools,
       appMdr: mdr,
       appType: matsTypes.AppTypes.mats,
