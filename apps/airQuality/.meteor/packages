@@ -7,4 +7,4 @@
 meteor-base@1.5.2             # Packages every Meteor app needs to have
 dynamic-import@0.7.4          # Allows dynamic imports of needed modules at runtime
 ostrio:flow-router-extra      # Route incoming client-side requests
-randyp:mats-common@6.3.3      # MATScommon package
+randyp:mats-common@6.3.4      # MATScommon package
