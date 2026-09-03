@@ -1488,7 +1488,8 @@ const doCurveTextPatterns = async function () {
         ["", "neighborhood-size", " km neighborhood, "],
         ["", "kernel", " km kernel, "],
         ["", "radius", " km radius, "],
-        ["valid at: ", "valid-time", ""],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["", "curve-dates", ""],
       ],
       displayParams: [
         "label",
@@ -1502,6 +1503,7 @@ const doCurveTextPatterns = async function () {
         "radius",
         "forecast-length",
         "valid-time",
+        "curve-dates",
       ],
       groupSize: 6,
     });

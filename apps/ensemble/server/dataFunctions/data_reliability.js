@@ -45,10 +45,6 @@ global.dataReliability = async function (plotParams) {
   let error = "";
   const dataset = [];
 
-  const dateRange = matsDataUtils.getDateRange(plotParams.dates);
-  const fromSecs = dateRange.fromSeconds;
-  const toSecs = dateRange.toSeconds;
-
   for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
     // initialize variables specific to each curve
     const curve = curves[curveIndex];
@@ -87,6 +83,9 @@ global.dataReliability = async function (plotParams) {
       "m0.fcstcount, ';', m0.nhdhitcount order by m0.time) as sub_data, count(m0.nhdfcstcount) as n0";
     const tableStatPrefix = "count";
 
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
     const dateClause = `and m0.time >= ${fromSecs} and m0.time <= ${toSecs}`;
 
     let kernelClause = "";
