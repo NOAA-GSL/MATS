@@ -12,7 +12,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleDieoff,
+  matsMiddleXYCurve,
 } from "meteor/randyp:mats-common";
 import moment from "moment";
 
@@ -316,14 +316,16 @@ global.dataDieoff = async function (plotParams) {
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleDieoff.MatsMiddleDieoff(global.cbPool);
-          rows = await tss.processStationQuery(
+          const mdw = new matsMiddleXYCurve.MatsMiddleXYCurve(global.cbPool);
+          rows = await mdw.processStationQuery(
+            "Fcst lead time",
             statType,
             variableDetails[1],
             sitesList,
             model,
-            null,
+            undefined,
             threshold,
+            undefined,
             fromSecs,
             toSecs,
             validTimes,
