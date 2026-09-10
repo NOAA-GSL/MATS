@@ -18,7 +18,7 @@ import {
 //  name of metadata doc containint these variables : [{
 //    variable name as it appears in the selector: {
 //      [variable name in sums/ctc docs,
-//       variable name in model/obs docs,
+//       [variable name in model docs, variable name in obs docs],
 //       units to plot in
 //      ]
 //    },
