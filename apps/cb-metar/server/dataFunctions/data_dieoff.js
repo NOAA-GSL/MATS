@@ -87,6 +87,7 @@ global.dataDieoff = async function (plotParams) {
 
     let validTimes;
     let utcCycleStart;
+    let singleCycle;
     const forecastLengthStr = curve["dieoff-type"];
     const forecastLengthOptionsMap = (
       await matsCollections["dieoff-type"].findOneAsync({ name: "dieoff-type" })
@@ -95,6 +96,19 @@ global.dataDieoff = async function (plotParams) {
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     let toSecs = dateRange.toSeconds;
+
+    if (forecastLength === matsTypes.ForecastTypes.dieoff) {
+      // get valid times
+      validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+      // get UTC cycle start times
+      utcCycleStart =
+        curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
+    } else {
+      // just query this one date
+      singleCycle = fromSecs;
+      toSecs = fromSecs;
+    }
 
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
@@ -177,7 +191,6 @@ global.dataDieoff = async function (plotParams) {
 
     let queryTemplate;
     let sitesList;
-    let singleCycle;
     const regionType =
       filterModelBy === "None" && // not filtering the model by anything
       filterObsBy === "None" && // not filtering the obs by anything
@@ -206,10 +219,7 @@ global.dataDieoff = async function (plotParams) {
         // Predefined region, no filtering.
         let statTemplate;
         queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff.sql");
-        if (forecastLength === matsTypes.ForecastTypes.singleCycle) {
-          singleCycle = fromSecs;
-          toSecs = fromSecs;
-        }
+
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
@@ -239,8 +249,6 @@ global.dataDieoff = async function (plotParams) {
             queryTemplate,
             "{{vxUTC_CYCLE_START}}"
           );
-          // get valid times
-          validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
           if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
             // if we have valid times place them in the query
             queryTemplate = queryTemplate.replace(
@@ -262,9 +270,6 @@ global.dataDieoff = async function (plotParams) {
             queryTemplate,
             "{{vxVALID_TIMES}}"
           );
-          // get UTC cycle start times
-          utcCycleStart =
-            curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
           if (
             utcCycleStart.length !== 0 &&
             utcCycleStart !== matsTypes.InputTypes.unused
