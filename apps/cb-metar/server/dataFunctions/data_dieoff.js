@@ -94,7 +94,7 @@ global.dataDieoff = async function (plotParams) {
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
-    const toSecs = dateRange.toSeconds;
+    let toSecs = dateRange.toSeconds;
 
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
@@ -205,15 +205,10 @@ global.dataDieoff = async function (plotParams) {
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-          queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff.sql");
-        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-          queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff_UTC.sql");
-        } else {
-          queryTemplate = await Assets.getTextAsync(
-            "sqlTemplates/tmpl_DieOff_SingleCycle.sql"
-          );
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff.sql");
+        if (forecastLength === matsTypes.ForecastTypes.singleCycle) {
           singleCycle = fromSecs;
+          toSecs = fromSecs;
         }
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -239,35 +234,73 @@ global.dataDieoff = async function (plotParams) {
         }
 
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
+          // remove the UTC Cycle Start part of the query, we don't need it for this type of dieoff
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxUTC_CYCLE_START}}"
+          );
+          // get valid times
           validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
           if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            // if we have valid times place them in the query
             queryTemplate = queryTemplate.replace(
               /{{vxVALID_TIMES}}/g,
               global.cbPool.trfmListToCSVString(validTimes, null, false)
             );
           } else {
+            // if we don't have valid times remove the clause from the query
             queryTemplate = global.cbPool.trfmSQLRemoveClause(
               queryTemplate,
               "{{vxVALID_TIMES}}"
             );
           }
+          // set the time variable
+          queryTemplate = queryTemplate.replace(/{{vxTIME_VAR}}/g, "m0.fcstValidEpoch");
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+          // remove the Valid Times part of the query, we don't need it for this type of dieoff
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
+          // get UTC cycle start times
           utcCycleStart =
             curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
           if (
             utcCycleStart.length !== 0 &&
             utcCycleStart !== matsTypes.InputTypes.unused
           ) {
+            // if we have UTC cycle start times place them in the query
             queryTemplate = queryTemplate.replace(
               /{{vxUTC_CYCLE_START}}/g,
               global.cbPool.trfmListToCSVString(utcCycleStart, null, false)
             );
           } else {
+            // if we don't have UTC cycle start times remove the clause from the query
             queryTemplate = global.cbPool.trfmSQLRemoveClause(
               queryTemplate,
               "{{vxUTC_CYCLE_START}}"
             );
           }
+          // set the time variable
+          queryTemplate = queryTemplate.replace(
+            /{{vxTIME_VAR}}/g,
+            "m0.fcstValidEpoch - m0.fcstLen * 3600"
+          );
+        } else {
+          // this is a single cycle dieoff, so remove both the UTC Cycle Start and Valid Times clauses from the query
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxUTC_CYCLE_START}}"
+          );
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
+          // set the time variable
+          queryTemplate = queryTemplate.replace(
+            /{{vxTIME_VAR}}/g,
+            "m0.fcstValidEpoch - m0.fcstLen * 3600"
+          );
         }
       } else {
         // Predefined region, with filtering. Treat like station plot.
