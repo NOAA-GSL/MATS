@@ -430,6 +430,7 @@ global.dataSimpleScatter = async function (plotParams) {
             fromSecs,
             toSecs,
             validTimes,
+            undefined,
             filterInfo,
             elevMap
           );
