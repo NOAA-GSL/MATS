@@ -12,7 +12,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleDailyModelCycle,
+  matsMiddleXYCurve,
 } from "meteor/randyp:mats-common";
 import moment from "moment";
 
@@ -281,18 +281,21 @@ global.dataDailyModelCycle = async function (plotParams) {
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleDailyModelCycle.MatsMiddleDailyModelCycle(
-            global.cbPool
-          );
-          rows = await tss.processStationQuery(
+          const mdw = new matsMiddleXYCurve.MatsMiddleXYCurve(global.cbPool);
+          rows = await mdw.processStationQuery(
+            "Valid Date",
             statType,
             variableDetails[1],
             sitesList,
             model,
+            undefined,
             threshold,
+            undefined,
             fromSecs,
             toSecs,
-            utcCycleStart,
+            undefined,
+            [utcCycleStart],
+            undefined,
             filterInfo,
             elevMap
           );
