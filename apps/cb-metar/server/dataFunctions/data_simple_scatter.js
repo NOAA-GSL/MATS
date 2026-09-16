@@ -337,18 +337,15 @@ global.dataSimpleScatter = async function (plotParams) {
           dateString = "m0.fcstValidEpoch";
         }
         queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
-        if (binParam !== "Valid UTC hour") {
-          if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
-            queryTemplate = queryTemplate.replace(
-              /{{vxVALID_TIMES}}/g,
-              global.cbPool.trfmListToCSVString(validTimes, null, false)
-            );
-          } else {
-            queryTemplate = global.cbPool.trfmSQLRemoveClause(
-              queryTemplate,
-              "{{vxVALID_TIMES}}"
-            );
-          }
+        if (
+          binParam !== "Valid UTC hour" &&
+          validTimes.length !== 0 &&
+          validTimes !== matsTypes.InputTypes.unused
+        ) {
+          queryTemplate = queryTemplate.replace(
+            /{{vxVALID_TIMES}}/g,
+            global.cbPool.trfmListToCSVString(validTimes, null, false)
+          );
         } else {
           queryTemplate = global.cbPool.trfmSQLRemoveClause(
             queryTemplate,
@@ -413,10 +410,10 @@ global.dataSimpleScatter = async function (plotParams) {
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleSimpleScatter.MatsMiddleSimpleScatter(
+          const mdw = new matsMiddleSimpleScatter.MatsMiddleSimpleScatter(
             global.cbPool
           );
-          rows = await tss.processStationQuery(
+          rows = await mdw.processStationQuery(
             binParam,
             statTypeX,
             statTypeY,
