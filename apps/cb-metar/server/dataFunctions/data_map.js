@@ -200,8 +200,8 @@ global.dataMap = async function (plotParams) {
     try {
       // send to matsMiddle
       statement = "Station plot -- no one query.";
-      const tss = new matsMiddleMap.MatsMiddleMap(global.cbPool);
-      rows = await tss.processStationQuery(
+      const mdw = new matsMiddleMap.MatsMiddleMap(global.cbPool);
+      rows = await mdw.processStationQuery(
         statType,
         variableDetails[1],
         sitesList,
