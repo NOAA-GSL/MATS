@@ -1,4 +1,4 @@
-SELECT {{vxAVERAGE}} AS avtime,
+SELECT {{vxBIN_CLAUSE}} AS {{vxBIN_PARAM}},
        COUNT(DISTINCT m0.fcstValidEpoch) nTimes,
        MIN(m0.fcstValidEpoch) min_secs,
        MAX(m0.fcstValidEpoch) max_secs,
@@ -13,7 +13,8 @@ WHERE m0.type = 'DD'
     AND m0.region = '{{vxREGION}}'
     AND m0.fcstLen = {{vxFCST_LEN}}
     AND m0.fcstValidEpoch %(24 * 3600) / 3600 IN [{{vxVALID_TIMES}}]
-    AND m0.fcstValidEpoch >= {{vxFROM_SECS}}
-    AND m0.fcstValidEpoch <= {{vxTO_SECS}}
-GROUP BY {{vxAVERAGE}}
-ORDER BY avtime;
+    AND (m0.fcstValidEpoch - m0.fcstLen * 3600) %(24 * 3600) / 3600 IN [{{vxUTC_CYCLE_START}}]
+    AND {{vxTIME_VAR}} >= {{vxFROM_SECS}}
+    AND {{vxTIME_VAR}} <= {{vxTO_SECS}}
+GROUP BY {{vxBIN_CLAUSE}}
+ORDER BY {{vxBIN_PARAM}};

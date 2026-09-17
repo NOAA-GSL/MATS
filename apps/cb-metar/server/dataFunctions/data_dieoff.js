@@ -218,8 +218,7 @@ global.dataDieoff = async function (plotParams) {
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff.sql");
-
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
@@ -228,6 +227,13 @@ global.dataDieoff = async function (plotParams) {
           /{{vxVARIABLE}}/g,
           queryVariable.toUpperCase()
         );
+        // dieoff plots by definition don't filter the available forecast leads
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxFCST_LEN}}"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, "m0.fcstLen");
+        queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "fcst_lead");
         if (statType === "ctc") {
           statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);

@@ -198,16 +198,31 @@ global.dataValidTime = async function (plotParams) {
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_ValidTime.sql");
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
         queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+        queryTemplate = queryTemplate.replace(/{{vxTIME_VAR}}/g, "m0.fcstValidEpoch");
         queryTemplate = queryTemplate.replace(
           /{{vxVARIABLE}}/g,
           queryVariable.toUpperCase()
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        // valid time plots by definition don't filter the available valid times or UTC start times
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxVALID_TIMES}}"
+        );
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxUTC_CYCLE_START}}"
+        );
+        queryTemplate = queryTemplate.replace(
+          /{{vxBIN_CLAUSE}}/g,
+          "m0.fcstValidEpoch%(24*3600)/3600"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "hr_of_day");
         if (statType === "ctc") {
           statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
