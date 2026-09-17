@@ -121,16 +121,19 @@ global.dataThreshold = async function (plotParams) {
     );
 
     // SQL template replacements
-    queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Threshold.sql");
+    queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
     queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
     queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
     queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
     queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+    queryTemplate = queryTemplate.replace(/{{vxTIME_VAR}}/g, "m0.fcstValidEpoch");
     queryTemplate = queryTemplate.replace(
       /{{vxVARIABLE}}/g,
       queryVariable.toUpperCase()
     );
     queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+    queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, "{{vxTHRESHOLD}}");
+    queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "thresh");
     if (statType === "ctc") {
       const statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
       queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
@@ -152,6 +155,11 @@ global.dataThreshold = async function (plotParams) {
         "{{vxVALID_TIMES}}"
       );
     }
+    // threshold plots by definition don't filter the available UTC start times
+    queryTemplate = global.cbPool.trfmSQLRemoveClause(
+      queryTemplate,
+      "{{vxUTC_CYCLE_START}}"
+    );
 
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
