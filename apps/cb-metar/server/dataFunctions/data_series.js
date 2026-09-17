@@ -217,11 +217,6 @@ global.dataSeries = async function (plotParams) {
           queryVariable.toUpperCase()
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-        // timeseries plots by definition don't filter the available UTC start times
-        queryTemplate = global.cbPool.trfmSQLRemoveClause(
-          queryTemplate,
-          "{{vxUTC_CYCLE_START}}"
-        );
         queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, average);
         queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "avtime");
         if (statType === "ctc") {
@@ -250,6 +245,11 @@ global.dataSeries = async function (plotParams) {
             "{{vxVALID_TIMES}}"
           );
         }
+        // timeseries plots by definition don't filter the available UTC start times
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxUTC_CYCLE_START}}"
+        );
       } else {
         // Predefined region, with filtering. Treat like station plot.
         sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(

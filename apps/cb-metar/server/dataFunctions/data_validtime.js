@@ -209,15 +209,6 @@ global.dataValidTime = async function (plotParams) {
           queryVariable.toUpperCase()
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-        // valid time plots by definition don't filter the available valid times or UTC start times
-        queryTemplate = global.cbPool.trfmSQLRemoveClause(
-          queryTemplate,
-          "{{vxVALID_TIMES}}"
-        );
-        queryTemplate = global.cbPool.trfmSQLRemoveClause(
-          queryTemplate,
-          "{{vxUTC_CYCLE_START}}"
-        );
         queryTemplate = queryTemplate.replace(
           /{{vxBIN_CLAUSE}}/g,
           "m0.fcstValidEpoch%(24*3600)/3600"
@@ -237,6 +228,15 @@ global.dataValidTime = async function (plotParams) {
           );
           queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
         }
+        // valid time plots by definition don't filter the available valid times or UTC start times
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxVALID_TIMES}}"
+        );
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxUTC_CYCLE_START}}"
+        );
       } else {
         // Predefined region, with filtering. Treat like station plot.
         sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(
