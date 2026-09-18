@@ -12,7 +12,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleTimeSeries,
+  matsMiddleXYCurve,
 } from "meteor/randyp:mats-common";
 import moment from "moment";
 
@@ -206,17 +206,19 @@ global.dataSeries = async function (plotParams) {
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_TimeSeries.sql");
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
         queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+        queryTemplate = queryTemplate.replace(/{{vxTIME_VAR}}/g, "m0.fcstValidEpoch");
         queryTemplate = queryTemplate.replace(
           /{{vxVARIABLE}}/g,
           queryVariable.toUpperCase()
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-        queryTemplate = queryTemplate.replace(/{{vxAVERAGE}}/g, average);
+        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, average);
+        queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "avtime");
         if (statType === "ctc") {
           statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
@@ -243,6 +245,11 @@ global.dataSeries = async function (plotParams) {
             "{{vxVALID_TIMES}}"
           );
         }
+        // timeseries plots by definition don't filter the available UTC start times
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxUTC_CYCLE_START}}"
+        );
       } else {
         // Predefined region, with filtering. Treat like station plot.
         sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(
@@ -295,8 +302,9 @@ global.dataSeries = async function (plotParams) {
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleTimeSeries.MatsMiddleTimeSeries(global.cbPool);
-          rows = await tss.processStationQuery(
+          const mdw = new matsMiddleXYCurve.MatsMiddleXYCurve(global.cbPool);
+          rows = await mdw.processStationQuery(
+            "Valid Date",
             statType,
             variableDetails[1],
             sitesList,
@@ -307,6 +315,8 @@ global.dataSeries = async function (plotParams) {
             fromSecs,
             toSecs,
             validTimes,
+            undefined,
+            undefined,
             filterInfo,
             elevMap
           );

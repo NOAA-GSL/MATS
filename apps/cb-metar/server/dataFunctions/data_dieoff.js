@@ -12,7 +12,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleDieoff,
+  matsMiddleXYCurve,
 } from "meteor/randyp:mats-common";
 import moment from "moment";
 
@@ -87,6 +87,7 @@ global.dataDieoff = async function (plotParams) {
 
     let validTimes;
     let utcCycleStart;
+    let singleCycle;
     const forecastLengthStr = curve["dieoff-type"];
     const forecastLengthOptionsMap = (
       await matsCollections["dieoff-type"].findOneAsync({ name: "dieoff-type" })
@@ -94,7 +95,20 @@ global.dataDieoff = async function (plotParams) {
     const forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
-    const toSecs = dateRange.toSeconds;
+    let toSecs = dateRange.toSeconds;
+
+    if (forecastLength === matsTypes.ForecastTypes.dieoff) {
+      // get valid times
+      validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+      // get UTC cycle start times
+      utcCycleStart =
+        curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
+    } else {
+      // just query this one date
+      singleCycle = fromSecs;
+      toSecs = fromSecs;
+    }
 
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
@@ -177,7 +191,6 @@ global.dataDieoff = async function (plotParams) {
 
     let queryTemplate;
     let sitesList;
-    let singleCycle;
     const regionType =
       filterModelBy === "None" && // not filtering the model by anything
       filterObsBy === "None" && // not filtering the obs by anything
@@ -205,16 +218,7 @@ global.dataDieoff = async function (plotParams) {
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-          queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff.sql");
-        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-          queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_DieOff_UTC.sql");
-        } else {
-          queryTemplate = await Assets.getTextAsync(
-            "sqlTemplates/tmpl_DieOff_SingleCycle.sql"
-          );
-          singleCycle = fromSecs;
-        }
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
@@ -223,6 +227,13 @@ global.dataDieoff = async function (plotParams) {
           /{{vxVARIABLE}}/g,
           queryVariable.toUpperCase()
         );
+        // dieoff plots by definition don't filter the available forecast leads
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxFCST_LEN}}"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, "m0.fcstLen");
+        queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "fcst_lead");
         if (statType === "ctc") {
           statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
@@ -239,35 +250,68 @@ global.dataDieoff = async function (plotParams) {
         }
 
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
-          validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+          // remove the UTC Cycle Start part of the query, we don't need it for this type of dieoff
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxUTC_CYCLE_START}}"
+          );
           if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+            // if we have valid times place them in the query
             queryTemplate = queryTemplate.replace(
               /{{vxVALID_TIMES}}/g,
               global.cbPool.trfmListToCSVString(validTimes, null, false)
             );
           } else {
+            // if we don't have valid times remove the clause from the query
             queryTemplate = global.cbPool.trfmSQLRemoveClause(
               queryTemplate,
               "{{vxVALID_TIMES}}"
             );
           }
+          // set the time variable
+          queryTemplate = queryTemplate.replace(/{{vxTIME_VAR}}/g, "m0.fcstValidEpoch");
         } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
-          utcCycleStart =
-            curve["utc-cycle-start"] === undefined ? [] : curve["utc-cycle-start"];
+          // remove the Valid Times part of the query, we don't need it for this type of dieoff
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
           if (
             utcCycleStart.length !== 0 &&
             utcCycleStart !== matsTypes.InputTypes.unused
           ) {
+            // if we have UTC cycle start times place them in the query
             queryTemplate = queryTemplate.replace(
               /{{vxUTC_CYCLE_START}}/g,
               global.cbPool.trfmListToCSVString(utcCycleStart, null, false)
             );
           } else {
+            // if we don't have UTC cycle start times remove the clause from the query
             queryTemplate = global.cbPool.trfmSQLRemoveClause(
               queryTemplate,
               "{{vxUTC_CYCLE_START}}"
             );
           }
+          // set the time variable
+          queryTemplate = queryTemplate.replace(
+            /{{vxTIME_VAR}}/g,
+            "m0.fcstValidEpoch - m0.fcstLen * 3600"
+          );
+        } else {
+          // this is a single cycle dieoff, so remove both the UTC Cycle Start and Valid Times clauses from the query
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxUTC_CYCLE_START}}"
+          );
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
+          // set the time variable
+          queryTemplate = queryTemplate.replace(
+            /{{vxTIME_VAR}}/g,
+            "m0.fcstValidEpoch - m0.fcstLen * 3600"
+          );
         }
       } else {
         // Predefined region, with filtering. Treat like station plot.
@@ -316,14 +360,16 @@ global.dataDieoff = async function (plotParams) {
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleDieoff.MatsMiddleDieoff(global.cbPool);
-          rows = await tss.processStationQuery(
+          const mdw = new matsMiddleXYCurve.MatsMiddleXYCurve(global.cbPool);
+          rows = await mdw.processStationQuery(
+            "Fcst lead time",
             statType,
             variableDetails[1],
             sitesList,
             model,
-            null,
+            undefined,
             threshold,
+            undefined,
             fromSecs,
             toSecs,
             validTimes,

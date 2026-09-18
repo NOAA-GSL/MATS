@@ -1,8 +1,9 @@
-Feature: Add Remove Curve
+Feature: Add Remove Contour
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want to add one curve
+    I want click the contour radio button,
+    I want to add one curve.
     then plot that curve and see the graph,
     then go back to the curve management page,
     then delete that curve.
@@ -12,9 +13,9 @@ Feature: Add Remove Curve
         Then I expect the app title to be "METAR"
 
     @watch
-    Scenario: addRemoveCurve
-        When I set the plot type to "TimeSeries"
-        Then the plot type should be "TimeSeries"
+    Scenario: addRemoveContour
+        When I set the plot type to "Contour"
+        Then the plot type should be "Contour"
         When I change the "variable" parameter to "Ceiling (ft)"
         Then the "variable" parameter value matches "Ceiling (ft)"
         When I change the "data-source" parameter to "HRRR_OPS"
@@ -31,7 +32,7 @@ Feature: Add Remove Curve
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Time Series" plot
+        And I should have a "Contour" plot
 
         When I click the "Back" button
         Then I should be on the main page

@@ -1,6 +1,6 @@
        SUM(m0.data.['{{vxTHRESHOLDX}}'].hits) hitX,
-       SUM(m0.data.['{{vxTHRESHOLDX}}'].false_alarmsX) faX,
-       SUM(m0.data.['{{vxTHRESHOLDX}}'].missesX) missX,
+       SUM(m0.data.['{{vxTHRESHOLDX}}'].false_alarms) faX,
+       SUM(m0.data.['{{vxTHRESHOLDX}}'].misses) missX,
        SUM(m0.data.['{{vxTHRESHOLDX}}'].correct_negatives) cnX,
        SUM(m0.data.['{{vxSUBVARIABLEY}}'].sum2_diff) square_diff_sumY,
        SUM(m0.data.['{{vxSUBVARIABLEY}}'].num_recs) N_sumY,

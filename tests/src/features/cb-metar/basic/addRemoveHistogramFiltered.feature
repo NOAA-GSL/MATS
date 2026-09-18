@@ -1,9 +1,9 @@
-Feature: Add Remove Contour
+Feature: Add Remove Histogram
 
     As an unauthenticated user to the app,
     with the app in its default state,
-    I want click the contour radio button,
-    I want to add one curve.
+    I want click the histogram radio button,
+    I want to add one curve
     then plot that curve and see the graph,
     then go back to the curve management page,
     then delete that curve.
@@ -13,22 +13,26 @@ Feature: Add Remove Contour
         Then I expect the app title to be "METAR"
 
     @watch
-    Scenario: addRemoveContour
-        When I set the plot type to "Contour"
-        Then the plot type should be "Contour"
-        When I change the "variable" parameter to "Temperature at 2m (°C)"
-        Then the "variable" parameter value matches "Temperature at 2m (°C)"
+    Scenario: addRemoveHistogram
+        When I set the plot type to "Histogram"
+        Then the plot type should be "Histogram"
+        When I change the "variable" parameter to "Ceiling (ft)"
+        Then the "variable" parameter value matches "Ceiling (ft)"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
-        When I set the dates to "08/01/2023 00:00 - 08/15/2023 00:00"
-        Then the dates value is "08/01/2023 00:00 - 08/15/2023 00:00"
+        When I change the "filter-model-by" parameter to "Wind Speed at 10m (m/s)"
+        Then the "filter-model-by" parameter value matches "Wind Speed at 10m (m/s)"
+        When I change the "filter-obs-by" parameter to "Temperature at 2m (°C)"
+        Then the "filter-obs-by" parameter value matches "Temperature at 2m (°C)"
+        When I set the curve-dates to "10/12/2024 00:00 - 10/12/2024 23:59"
+        Then the curve-dates value is "10/12/2024 00:00 - 10/12/2024 23:59"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
 
         When I click the "Plot Unmatched" button
         Then I should be on the graph page
-        And I should have a "Contour" plot
+        And I should have a "Histogram" plot
 
         When I click the "Back" button
         Then I should be on the main page

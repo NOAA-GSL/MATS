@@ -12,7 +12,7 @@ import {
   matsDataDiffUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
-  matsMiddleValidTime,
+  matsMiddleXYCurve,
 } from "meteor/randyp:mats-common";
 import moment from "moment";
 
@@ -198,16 +198,22 @@ global.dataValidTime = async function (plotParams) {
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
         let statTemplate;
-        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_ValidTime.sql");
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
         queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
         queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+        queryTemplate = queryTemplate.replace(/{{vxTIME_VAR}}/g, "m0.fcstValidEpoch");
         queryTemplate = queryTemplate.replace(
           /{{vxVARIABLE}}/g,
           queryVariable.toUpperCase()
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        queryTemplate = queryTemplate.replace(
+          /{{vxBIN_CLAUSE}}/g,
+          "m0.fcstValidEpoch%(24*3600)/3600"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "hr_of_day");
         if (statType === "ctc") {
           statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
           queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
@@ -222,6 +228,15 @@ global.dataValidTime = async function (plotParams) {
           );
           queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
         }
+        // valid time plots by definition don't filter the available valid times or UTC start times
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxVALID_TIMES}}"
+        );
+        queryTemplate = global.cbPool.trfmSQLRemoveClause(
+          queryTemplate,
+          "{{vxUTC_CYCLE_START}}"
+        );
       } else {
         // Predefined region, with filtering. Treat like station plot.
         sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(
@@ -269,16 +284,21 @@ global.dataValidTime = async function (plotParams) {
         } else {
           // send to matsMiddle
           statement = "Station plot -- no one query.";
-          const tss = new matsMiddleValidTime.MatsMiddleValidTime(global.cbPool);
-          rows = await tss.processStationQuery(
+          const mdw = new matsMiddleXYCurve.MatsMiddleXYCurve(global.cbPool);
+          rows = await mdw.processStationQuery(
+            "Valid UTC hour",
             statType,
             variableDetails[1],
             sitesList,
             model,
             forecastLength,
             threshold,
+            undefined,
             fromSecs,
             toSecs,
+            undefined,
+            undefined,
+            undefined,
             filterInfo,
             elevMap
           );
