@@ -14,8 +14,9 @@ WHERE m0.type = 'DD'
     AND m0.region = '{{vxREGION}}'
     AND m0.fcstLen = {{vxFCST_LEN}}
     AND m0.fcstValidEpoch %(24 * 3600) / 3600 IN [{{vxVALID_TIMES}}]
-    AND {{vxDATE_STRING}} >= {{vxFROM_SECS}}
-    AND {{vxDATE_STRING}} <= {{vxTO_SECS}}
+    AND (m0.fcstValidEpoch - m0.fcstLen * 3600) %(24 * 3600) / 3600 IN [{{vxUTC_CYCLE_START}}]
+    AND {{vxTIME_VAR}} >= {{vxFROM_SECS}}
+    AND {{vxTIME_VAR}} <= {{vxTO_SECS}}
 GROUP BY {{vxXVAL_CLAUSE}},
          {{vxYVAL_CLAUSE}}
 ORDER BY xVal,

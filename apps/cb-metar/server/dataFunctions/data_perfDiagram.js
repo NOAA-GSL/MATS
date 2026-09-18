@@ -250,7 +250,7 @@ global.dataPerformanceDiagram = async function (plotParams) {
         } else {
           dateString = "m0.fcstValidEpoch";
         }
-        queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
+        queryTemplate = queryTemplate.replace(/{{vxTIME_VAR}}/g, dateString);
         if (
           binParam !== "Valid UTC hour" &&
           validTimes.length !== 0 &&
