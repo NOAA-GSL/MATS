@@ -31,8 +31,8 @@ Feature: Add Remove Curve
         Then the "filter-model-by" parameter value matches "Wind Speed at 10m (m/s)"
         When I change the "filter-obs-by" parameter to "Temperature at 2m (°C)"
         Then the "filter-obs-by" parameter value matches "Temperature at 2m (°C)"
-        When I set the curve-dates to "08/01/2023 00:00 - 08/15/2023 00:00"
-        Then the curve-dates value is "08/01/2023 00:00 - 08/15/2023 00:00"
+        When I set the curve-dates to "10/12/2024 00:00 - 10/12/2024 23:59"
+        Then the curve-dates value is "10/12/2024 00:00 - 10/12/2024 23:59"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
