@@ -11,6 +11,7 @@ import {
   matsDataQueryUtils,
   matsDataCurveOpsUtils,
   matsDataProcessUtils,
+  matsMiddleXYCurve,
 } from "meteor/randyp:mats-common";
 import moment from "moment";
 
@@ -44,6 +45,7 @@ global.dataPerformanceDiagram = async function (plotParams) {
   let statType;
 
   let statement = "";
+  let rows = "";
   let error = "";
   const dataset = [];
 
@@ -71,10 +73,12 @@ global.dataPerformanceDiagram = async function (plotParams) {
     const queryVariable = Object.keys(variableValuesMap).filter(
       (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variable) !== -1
     )[0];
+    const variableDetails = variableValuesMap[queryVariable][0][variable];
     const model = (
       await matsCollections["data-source"].findOneAsync({ name: "data-source" })
     ).optionsMap[variable][curve["data-source"]][0];
 
+    let threshold = "";
     if (binParam !== "Threshold") {
       const thresholdStr = curve.threshold;
       if (thresholdStr === undefined) {
@@ -85,10 +89,11 @@ global.dataPerformanceDiagram = async function (plotParams) {
       const thresholdValues = (
         await matsCollections.threshold.findOneAsync({ name: "threshold" })
       ).valuesMap[variable];
-      const threshold = Object.keys(thresholdValues).find(
+      threshold = Object.keys(thresholdValues).find(
         (key) => thresholdValues[key] === thresholdStr
       );
-      allThresholds = [threshold.replace(/_/g, ".")];
+      threshold = threshold.replace(/_/g, ".");
+      allThresholds = [threshold];
     } else {
       // catalogue the thresholds now, we'll need to do a separate query for each
       allThresholds = Object.keys(
@@ -113,81 +118,175 @@ global.dataPerformanceDiagram = async function (plotParams) {
     const statisticSelect = "PerformanceDiagram";
     statType = "ctc";
 
+    const filterModelBy = curve["filter-model-by"];
+    const filterObsBy = curve["filter-obs-by"];
+    const filterInfo = {};
+
+    if (filterModelBy !== "None") {
+      // get the variable text that we'll query off of
+      const filterModelVariable = Object.keys(variableValuesMap).filter(
+        (fv) => Object.keys(variableValuesMap[fv][0]).indexOf(filterModelBy) !== -1
+      )[0];
+      const filterModelVariableDetails =
+        variableValuesMap[filterModelVariable][0][filterModelBy];
+      [, [filterInfo.filterModelBy]] = filterModelVariableDetails;
+
+      // get the bounds and make sure they're in the right units
+      let filterModelMin = Number(curve["filter-model-min"]);
+      let filterModelMax = Number(curve["filter-model-max"]);
+      if (
+        filterModelBy.toLowerCase().includes("temperature") ||
+        filterModelBy.toLowerCase().includes("dewpoint")
+      ) {
+        // convert temperature and dewpoint bounds from Celsius
+        // to Fahrenheit, which is in the database
+        filterModelMin = filterModelMin * 1.8 + 32;
+        filterModelMax = filterModelMax * 1.8 + 32;
+      } else if (
+        filterModelBy.toLowerCase().includes("wind") &&
+        filterModelBy.toLowerCase().includes("speed")
+      ) {
+        // convert wind speed bounds from m/s
+        // to mph, which is in the database.
+        // Note that the u- and v- components are stored in m/s
+        filterModelMin *= 2.23693629;
+        filterModelMax *= 2.23693629;
+      }
+      filterInfo.filterModelMin = filterModelMin;
+      filterInfo.filterModelMax = filterModelMax;
+    }
+
+    if (filterObsBy !== "None") {
+      // get the variable text that we'll query off of
+      const filterObsVariable = Object.keys(variableValuesMap).filter(
+        (fv) => Object.keys(variableValuesMap[fv][0]).indexOf(filterObsBy) !== -1
+      )[0];
+      const filterObsVariableDetails =
+        variableValuesMap[filterObsVariable][0][filterObsBy];
+      [, [, filterInfo.filterObsBy]] = filterObsVariableDetails;
+
+      // get the bounds and make sure they're in the right units
+      let filterObsMin = Number(curve["filter-obs-min"]);
+      let filterObsMax = Number(curve["filter-obs-max"]);
+      if (
+        filterObsBy.toLowerCase().includes("temperature") ||
+        filterObsBy.toLowerCase().includes("dewpoint")
+      ) {
+        // convert temperature and dewpoint bounds from Celsius
+        // to Fahrenheit, which is in the database
+        filterObsMin = filterObsMin * 1.8 + 32;
+        filterObsMax = filterObsMax * 1.8 + 32;
+      } else if (
+        filterObsBy.toLowerCase().includes("wind") &&
+        filterObsBy.toLowerCase().includes("speed")
+      ) {
+        // convert wind speed bounds from m/s
+        // to mph, which is in the database.
+        // Note that the u- and v- components are stored in m/s
+        filterObsMin *= 2.23693629;
+        filterObsMax *= 2.23693629;
+      }
+      filterInfo.filterObsMin = filterObsMin;
+      filterInfo.filterObsMax = filterObsMax;
+    }
+
+    if (statType !== "ctc") {
+      throw new Error(
+        "INFO: Threshold plots are not for continuous variables. Try ceiling or visibility instead?"
+      );
+    }
+
     let queryTemplate;
-    const regionType = curve["region-type"];
-    if (regionType === "Select stations") {
-      throw new Error(
-        "INFO:  Single/multi station plotting is not available for performance diagrams."
+    let sitesList;
+    const regionType =
+      filterModelBy === "None" && // not filtering the model by anything
+      filterObsBy === "None" // not filtering the obs by anything
+        ? curve["region-type"]
+        : "Select stations";
+    if (curve["region-type"] === "Predefined region") {
+      // either a true predefined region or a station plot masquerading
+      // as a predefined region that we will have to do filtering on.
+      // the regionType constant defined above knows which on.
+      const regionStr = curve.region;
+      const regionValues = (
+        await matsCollections.region.findOneAsync({ name: "region" })
+      ).valuesMap;
+      const region = Object.keys(regionValues).find(
+        (key) => regionValues[key] === regionStr
       );
-    }
-    const regionStr = curve.region;
-    const regionValues = (await matsCollections.region.findOneAsync({ name: "region" }))
-      .valuesMap;
-    const region = Object.keys(regionValues).find(
-      (key) => regionValues[key] === regionStr
-    );
 
-    // SQL template replacements
-    queryTemplate = await Assets.getTextAsync(
-      "sqlTemplates/tmpl_PerformanceDiagram.sql"
-    );
-    queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
-    queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
-    queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
-    queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
-    queryTemplate = queryTemplate.replace(
-      /{{vxVARIABLE}}/g,
-      queryVariable.toUpperCase()
-    );
-    queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
-    if (statType === "ctc") {
-      queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
-    } else {
-      throw new Error(
-        "INFO: Performance diagrams are not for continuous variables. Try ceiling or visibility instead?"
-      );
-    }
-
-    if (binParam !== "Valid UTC hour") {
-      if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
+      if (regionType === "Predefined region") {
+        // Predefined region, no filtering.
+        queryTemplate = await Assets.getTextAsync(
+          "sqlTemplates/tmpl_PerformanceDiagram.sql"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+        queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+        queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+        queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
         queryTemplate = queryTemplate.replace(
-          /{{vxVALID_TIMES}}/g,
-          global.cbPool.trfmListToCSVString(validTimes, null, false)
+          /{{vxVARIABLE}}/g,
+          queryVariable.toUpperCase()
         );
+        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
+        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
+        if (binParam !== "Fcst lead time") {
+          if (forecastLength === undefined) {
+            throw new Error(
+              `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
+            );
+          }
+          queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        } else {
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxFCST_LEN}}"
+          );
+        }
+
+        let dateString = "";
+        if (binParam === "Init Date") {
+          dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
+        } else {
+          dateString = "m0.fcstValidEpoch";
+        }
+        queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
+        if (
+          binParam !== "Valid UTC hour" &&
+          validTimes.length !== 0 &&
+          validTimes !== matsTypes.InputTypes.unused
+        ) {
+          queryTemplate = queryTemplate.replace(
+            /{{vxVALID_TIMES}}/g,
+            global.cbPool.trfmListToCSVString(validTimes, null, false)
+          );
+        } else {
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
+        }
       } else {
-        queryTemplate = global.cbPool.trfmSQLRemoveClause(
-          queryTemplate,
-          "{{vxVALID_TIMES}}"
+        // Predefined region, with filtering. Treat like station plot.
+        sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(
+          global.cbPool,
+          region
         );
       }
     } else {
-      queryTemplate = global.cbPool.trfmSQLRemoveClause(
-        queryTemplate,
-        "{{vxVALID_TIMES}}"
-      );
-    }
-
-    if (binParam !== "Fcst lead time") {
-      if (forecastLength === undefined) {
+      // Station plot, with or without filtering
+      sitesList = curve.sites === undefined ? [] : curve.sites;
+      if (sitesList.length === 0 || sitesList === matsTypes.InputTypes.unused) {
         throw new Error(
-          `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
+          "INFO:  Please add sites in order to get a single/multi station plot."
         );
       }
-      queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
-    } else {
-      queryTemplate = global.cbPool.trfmSQLRemoveClause(
-        queryTemplate,
-        "{{vxFCST_LEN}}"
-      );
     }
-
-    let dateString = "";
-    if (binParam === "Init Date") {
-      dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
-    } else {
-      dateString = "m0.fcstValidEpoch";
-    }
-    queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
+    const elevMap = (
+      await matsCollections.StationMap.findOneAsync({
+        name: "elevations",
+      })
+    ).optionsMap;
 
     // axisKey is used to determine which axis a curve should use.
     // This axisKeySet object is used like a set and if a curve has the same
@@ -203,22 +302,45 @@ global.dataPerformanceDiagram = async function (plotParams) {
         thresholdIndex < allThresholds.length;
         thresholdIndex += 1
       ) {
-        const threshold = allThresholds[thresholdIndex];
-        const queryTemplateThreshold = queryTemplate.replace(
-          /{{vxTHRESHOLD}}/g,
-          threshold
-        );
+        threshold = allThresholds[thresholdIndex];
+        let queryTemplateThreshold;
+        if (regionType === "Predefined region") {
+          queryTemplateThreshold = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
+        }
 
         let queryResult;
         const startMoment = moment();
         let finishMoment;
         try {
-          statement = global.cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
+          if (regionType === "Predefined region") {
+            statement = global.cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
+          } else {
+            // send to matsMiddle
+            statement = "Station plot -- no one query.";
+            const mdw = new matsMiddleXYCurve.MatsMiddleXYCurve(global.cbPool);
+            rows = await mdw.processStationQuery(
+              binParam,
+              "Performance Diagram",
+              variableDetails[1],
+              sitesList,
+              model,
+              forecastLength,
+              threshold,
+              undefined,
+              fromSecs,
+              toSecs,
+              validTimes,
+              undefined,
+              undefined,
+              filterInfo,
+              elevMap
+            );
+          }
 
           // send the query statement to the query function
           queryResult = await matsDataQueryUtils.queryDBPerformanceDiagram(
             global.cbPool,
-            statement,
+            regionType === "Predefined region" ? statement : rows,
             appParams
           );
 
