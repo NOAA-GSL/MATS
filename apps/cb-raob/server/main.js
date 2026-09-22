@@ -25,40 +25,21 @@ import {
 //    boolean for if this variable has thresholds
 //  }]
 const variableMetadataDocs = {
-  Ceiling: [{ "Ceiling (ft)": ["Ceiling", ["Ceiling", "Ceiling"], "ft"] }, true],
-  Visibility: [
-    { "Visibility (mi)": ["Visibility", ["Visibility", "Visibility"], "mi"] },
-    true,
-  ],
-  Surface: [
+  RAOB: [
     {
-      "Elevation (m)": ["Elevation", ["Elevation", "Elevation"], "m"],
       "Temperature at 2m (°C)": ["Temperature", ["Temperature", "Temperature"], "°C"],
       "Dewpoint at 2m (°C)": ["DewPoint", ["DewPoint", "DewPoint"], "°C"],
       "Relative Humidity at 2m (%)": ["RelativeHumidity", ["RH", "RH"], "%"],
-      "Surface Pressure (hPa)": [
-        "SurfacePressure",
-        ["Surface Pressure", "Surface Pressure"],
-        "hPa",
-      ],
-      "Normalized Surface Pressure (hPa)": [
-        "Normalized Surface Pressure",
-        ["Normalized Surface Pressure", "Surface Pressure"],
-        "hPa",
-      ],
+      "Geopotential Height (m)": ["Height", ["Height", "Height"], "m"],
       "Wind Speed at 10m (m/s)": ["WindSpeed", ["WS", "WS"], "m/s"],
       "U-Wind at 10m (m/s)": ["WindU", ["WindU", "WindU"], "m/s"],
       "V-Wind at 10m (m/s)": ["WindV", ["WindV", "WindV"], "m/s"],
     },
-    false,
   ],
 };
 const variables = Object.keys(variableMetadataDocs);
 let allVariables = [];
-let allVariablesNoThreshold = [];
-let allVariablesYesThreshold = [];
 let allVariablesNoneOption = [];
-let allVariablesMapOption = [];
 
 // determined in doCurveParanms
 let minDate;
@@ -273,7 +254,7 @@ const doPlotParams = async function () {
 
     const xOptionsMap = {
       "Fcst lead time": "m0.fcstLen",
-      Threshold: "'{{vxTHRESHOLD}}'",
+      Level: "m0.level",
       "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
       "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
       "Valid Date": "m0.fcstValidEpoch",
@@ -297,7 +278,7 @@ const doPlotParams = async function () {
 
     const yOptionsMap = {
       "Fcst lead time": "m0.fcstLen",
-      Threshold: "'{{vxTHRESHOLD}}'",
+      Level: "m0.level",
       "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
       "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
       "Valid Date": "m0.fcstValidEpoch",
@@ -388,13 +369,12 @@ const doCurveParams = async function () {
   const sitesLocationMap = [];
   const sitesElevationMap = {};
   const forecastLengthOptionsMap = {};
-  const thresholdsModelOptionsMap = {};
+  const levelsModelOptionsMap = {};
   const allRegionValuesMap = {};
-  const allThresholdValuesMap = {};
 
   try {
     const queryStr = global.cbPool.trfmSQLForDbTarget(
-      'select name, description from {{vxDBTARGET}} where type="MD" and docType="region" and version = "V01"  and subset="COMMON"'
+      'select name, description from {{vxDBTARGET}} where type="MD" and docType="region" and version = "V01" and subset="COMMON"'
     );
     const rows = await global.cbPool.queryCB(queryStr);
     if (rows.includes("queryCB ERROR: ")) {
@@ -405,44 +385,6 @@ const doCurveParams = async function () {
     for (let j = 0; j < rows.length; j += 1) {
       allRegionValuesMap[rows[j].name.trim()] = rows[j].description.trim();
     }
-  } catch (err) {
-    throw new Error(err.message);
-  }
-
-  try {
-    for (let didx = 0; didx < variables.length; didx += 1) {
-      const variable = variables[didx];
-      const subVariables = Object.keys(variableMetadataDocs[variable][0]);
-      const hasThresholds = variableMetadataDocs[variable][1];
-      let rows;
-      if (hasThresholds) {
-        const queryStr = global.cbPool.trfmSQLForDbTarget(
-          `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} use keys "MD:matsAux:COMMON:V01"`
-        );
-        rows = await global.cbPool.queryCB(queryStr);
-        if (rows.includes("queryCB ERROR: ")) {
-          // have this local try catch fail properly if the metadata isn't there
-          throw new Error(rows);
-        }
-        allVariablesYesThreshold = allVariablesYesThreshold.concat(subVariables);
-      } else {
-        rows = [{ "All Data": "All Data" }];
-        allVariablesNoThreshold = allVariablesNoThreshold.concat(subVariables);
-      }
-      for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
-        const subVariable = subVariables[sidx];
-        allThresholdValuesMap[subVariable] = {};
-        const allThresholds = Object.keys(rows[0]);
-        for (let j = 0; j < allThresholds.length; j += 1) {
-          // The replace here is because JSON doesn't like dots in the middle of keys
-          allThresholdValuesMap[subVariable][
-            allThresholds[j].trim().replace(/\./g, "_")
-          ] = rows[0][allThresholds[j]].trim();
-        }
-      }
-    }
-    allVariablesYesThreshold = [...new Set(allVariablesYesThreshold)].sort(); // make sure all variables are unique, then sort
-    allVariablesNoThreshold = [...new Set(allVariablesNoThreshold)].sort(); // make sure all variables are unique, then sort
   } catch (err) {
     throw new Error(err.message);
   }
@@ -473,7 +415,7 @@ const doCurveParams = async function () {
         modelOptionsMap[subVariable] = {};
         modelDateRangeMap[subVariable] = {};
         forecastLengthOptionsMap[subVariable] = {};
-        thresholdsModelOptionsMap[subVariable] = {};
+        levelsModelOptionsMap[subVariable] = {};
         regionModelOptionsMap[subVariable] = {};
 
         for (let i = 0; i < rows.length; i += 1) {
@@ -494,15 +436,7 @@ const doCurveParams = async function () {
 
           forecastLengthOptionsMap[subVariable][model] = rows[i].fcstLens.map(String);
 
-          // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
-          const thresholds = rows[i].thresholds ? rows[i].thresholds : ["All Data"];
-          thresholdsModelOptionsMap[subVariable][model] = thresholds
-            .sort(function (a, b) {
-              return Number(a) - Number(b);
-            })
-            .map(function (threshold) {
-              return allThresholdValuesMap[subVariable][threshold.replace(/\./g, "_")];
-            });
+          levelsModelOptionsMap[subVariable][model] = rows[i].levels.map(String);
 
           // we want the full region descriptions in thresholdsModelOptionsMap, not just the regions
           const { regions } = rows[i];
@@ -513,8 +447,7 @@ const doCurveParams = async function () {
       }
     }
     allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
-    allVariablesMapOption = [...new Set(["Elevation (m)"].concat(allVariables))].sort();
-    allVariablesNoneOption = [...new Set(["None"].concat(allVariablesMapOption))];
+    allVariablesNoneOption = [...new Set(["None"].concat(allVariables))];
   } catch (err) {
     throw new Error(err.message);
   }
@@ -530,9 +463,11 @@ const doCurveParams = async function () {
       // have this local try catch fail properly if the metadata isn't there
       throw new Error(rows);
     }
-    rows = rows.sort((a, b) => (a.name > b.name ? 1 : -1));
+    rows = rows.sort((a, b) =>
+      a.description && b.description && a.description > b.description ? 1 : -1
+    );
     for (let i = 0; i < rows.length; i += 1) {
-      const siteName = rows[i].name === undefined ? "unknown" : rows[i].name;
+      const siteName = rows[i].wmoid === undefined ? "unknown" : rows[i].wmoid;
       const siteDescription =
         rows[i].description === undefined ? "unknown" : rows[i].description;
       const siteId = rows[i].id;
@@ -549,7 +484,7 @@ const doCurveParams = async function () {
 
         const point = [siteLat, siteLon];
         const obj = {
-          name: siteName,
+          name: `${siteName} (${siteDescription})`,
           origName: siteName,
           point,
           elevation: siteElev,
@@ -557,7 +492,7 @@ const doCurveParams = async function () {
             title: siteDescription,
             color: "red",
             size: 5,
-            network: "METAR",
+            network: "RAOB",
             peerOption: siteName,
             id: siteId,
             highLightColor: "blue",
@@ -607,11 +542,10 @@ const doCurveParams = async function () {
       type: matsTypes.InputTypes.select,
       options: [
         matsTypes.PlotTypes.timeSeries,
+        matsTypes.PlotTypes.profile,
         matsTypes.PlotTypes.dieoff,
-        matsTypes.PlotTypes.threshold,
         matsTypes.PlotTypes.validtime,
         matsTypes.PlotTypes.dailyModelCycle,
-        matsTypes.PlotTypes.performanceDiagram,
         matsTypes.PlotTypes.map,
         matsTypes.PlotTypes.histogram,
         matsTypes.PlotTypes.contour,
@@ -631,12 +565,11 @@ const doCurveParams = async function () {
 
   const varOptionsMap = {};
   varOptionsMap[matsTypes.PlotTypes.timeSeries] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.profile] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.dieoff] = allVariables;
-  varOptionsMap[matsTypes.PlotTypes.threshold] = allVariablesYesThreshold;
   varOptionsMap[matsTypes.PlotTypes.validtime] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.dailyModelCycle] = allVariables;
-  varOptionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariablesYesThreshold;
-  varOptionsMap[matsTypes.PlotTypes.map] = allVariablesMapOption;
+  varOptionsMap[matsTypes.PlotTypes.map] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.histogram] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.contour] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
@@ -653,7 +586,7 @@ const doCurveParams = async function () {
       valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
       superiorNames: ["plot-type"],
-      dependentNames: ["data-source", "statistic", "threshold"],
+      dependentNames: ["data-source", "statistic"],
       controlButtonCovered: true,
       default: varOptionsMap[defaultPlotType][0],
       unique: false,
@@ -699,7 +632,7 @@ const doCurveParams = async function () {
       valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
       superiorNames: ["plot-type"],
-      dependentNames: ["data-source", "x-statistic", "x-threshold"],
+      dependentNames: ["data-source", "x-statistic"],
       controlButtonCovered: true,
       default: varOptionsMap[defaultPlotType][0],
       unique: false,
@@ -745,7 +678,7 @@ const doCurveParams = async function () {
       valuesMap: variableMetadataDocs,
       dates: modelDateRangeMap,
       superiorNames: ["plot-type"],
-      dependentNames: ["data-source", "y-statistic", "y-threshold"],
+      dependentNames: ["data-source", "y-statistic"],
       controlButtonCovered: true,
       default: varOptionsMap[defaultPlotType][0],
       unique: false,
@@ -811,13 +744,7 @@ const doCurveParams = async function () {
       optionsMap: modelOptionsMap,
       options: Object.keys(modelOptionsMap[allVariables[0]]),
       superiorNames: ["variable"],
-      dependentNames: [
-        "region",
-        "forecast-length",
-        "threshold",
-        "dates",
-        "curve-dates",
-      ],
+      dependentNames: ["region", "forecast-length", "level", "dates", "curve-dates"],
       controlButtonCovered: true,
       default: Object.keys(modelOptionsMap[allVariables[0]])[0],
       unique: false,
@@ -896,55 +823,6 @@ const doCurveParams = async function () {
     }
   }
 
-  const ctcOptionsMap = {
-    "CSI (Critical Success Index)": ["ctc", "x100", 100],
-
-    "TSS (True Skill Score)": ["ctc", "x100", 100],
-
-    "PODy (POD of value < threshold)": ["ctc", "x100", 100],
-
-    "PODn (POD of value > threshold)": ["ctc", "x100", 100],
-
-    "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
-
-    "Bias (Forecast / Actual)": ["ctc", "Ratio", 1],
-
-    "Bias (Model - Obs)": ["scalar", "Unknown", null],
-
-    "HSS (Heidke Skill Score)": ["ctc", "x100", 100],
-
-    "ETS (Equitable Threat Score)": ["ctc", "x100", 100],
-
-    "Model average": ["scalar", "Unknown", null],
-
-    "Obs average": ["scalar", "Unknown", null],
-
-    RMSE: ["scalar", "Unknown", null],
-
-    "Std deviation": ["scalar", "Unknown", null],
-
-    "MAE (temp and dewpoint only)": ["scalar", "Unknown", null],
-
-    "Nlow (Number of obs < threshold (hits + misses))": ["ctc", "Number", null],
-
-    "Nhigh (Number of obs > threshold (false alarms + correct nulls))": [
-      "ctc",
-      "Number",
-      null,
-    ],
-
-    "Ntot (Total number of obs, (Nlow + Nhigh))": ["ctc", "Number", null],
-
-    "Ratio Nlow / Ntot ((hit + miss)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
-
-    "Ratio Nhigh / Ntot ((fa + cn)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
-
-    "N times*levels(*stations if station plot) per graph point": [
-      "ctc",
-      "Number",
-      null,
-    ],
-  };
   const scalarOptionsMap = {
     RMSE: ["scalar", "Unknown", null],
 
@@ -963,10 +841,7 @@ const doCurveParams = async function () {
   const statOptionsMap = {};
   for (let vidx = 0; vidx < allVariables.length; vidx += 1) {
     const variable = allVariables[vidx];
-    statOptionsMap[variable] =
-      allVariablesYesThreshold.indexOf(variable) !== -1
-        ? ctcOptionsMap
-        : scalarOptionsMap;
+    statOptionsMap[variable] = scalarOptionsMap;
   }
 
   if (
@@ -978,17 +853,6 @@ const doCurveParams = async function () {
       optionsMap: statOptionsMap,
       options: Object.keys(statOptionsMap),
       superiorNames: ["variable"],
-      hideOtherFor: {
-        threshold: [
-          "RMSE",
-          "Bias (Model - Obs)",
-          "N",
-          "Model average",
-          "Obs average",
-          "Std deviation",
-          "MAE (temp and dewpoint only)",
-        ],
-      },
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(statOptionsMap)[0],
@@ -1009,17 +873,6 @@ const doCurveParams = async function () {
       optionsMap: statOptionsMap,
       options: Object.keys(statOptionsMap),
       superiorNames: ["x-variable"],
-      hideOtherFor: {
-        "x-threshold": [
-          "RMSE",
-          "Bias (Model - Obs)",
-          "N",
-          "Model average",
-          "Obs average",
-          "Std deviation",
-          "MAE (temp and dewpoint only)",
-        ],
-      },
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(statOptionsMap)[0],
@@ -1040,17 +893,6 @@ const doCurveParams = async function () {
       optionsMap: statOptionsMap,
       options: Object.keys(statOptionsMap),
       superiorNames: ["y-variable"],
-      hideOtherFor: {
-        "y-threshold": [
-          "RMSE",
-          "Bias (Model - Obs)",
-          "N",
-          "Model average",
-          "Obs average",
-          "Std deviation",
-          "MAE (temp and dewpoint only)",
-        ],
-      },
       controlButtonCovered: true,
       unique: false,
       default: Object.keys(statOptionsMap)[0],
@@ -1059,179 +901,6 @@ const doCurveParams = async function () {
       displayPriority: 1,
       displayGroup: 3,
     });
-  }
-
-  if (
-    (await matsCollections.threshold.findOneAsync({ name: "threshold" })) === undefined
-  ) {
-    await matsCollections.threshold.insertAsync({
-      name: "threshold",
-      type: matsTypes.InputTypes.select,
-      optionsMap: thresholdsModelOptionsMap,
-      options:
-        thresholdsModelOptionsMap[allVariables[0]][
-          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-        ],
-      valuesMap: allThresholdValuesMap,
-      superiorNames: ["variable", "data-source"],
-      controlButtonCovered: true,
-      unique: false,
-      default:
-        thresholdsModelOptionsMap[allVariables[0]][
-          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-        ][0],
-      controlButtonVisibility: "block",
-      displayOrder: 4,
-      displayPriority: 1,
-      displayGroup: 2,
-    });
-  } else {
-    // it is defined but check for necessary update
-    const currentParam = await matsCollections.threshold.findOneAsync({
-      name: "threshold",
-    });
-    if (
-      !matsDataUtils.areObjectsEqual(
-        currentParam.optionsMap,
-        thresholdsModelOptionsMap
-      ) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
-    ) {
-      // have to reload threshold data
-      await matsCollections.threshold.updateAsync(
-        { name: "threshold" },
-        {
-          $set: {
-            optionsMap: thresholdsModelOptionsMap,
-            valuesMap: allThresholdValuesMap,
-            options:
-              thresholdsModelOptionsMap[allVariables[0]][
-                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-              ],
-            default:
-              thresholdsModelOptionsMap[allVariables[0]][
-                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-              ][0],
-          },
-        }
-      );
-    }
-  }
-
-  if (
-    (await matsCollections["x-threshold"].findOneAsync({ name: "x-threshold" })) ===
-    undefined
-  ) {
-    await matsCollections["x-threshold"].insertAsync({
-      name: "x-threshold",
-      type: matsTypes.InputTypes.select,
-      optionsMap: thresholdsModelOptionsMap,
-      options:
-        thresholdsModelOptionsMap[allVariables[0]][
-          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-        ],
-      valuesMap: allThresholdValuesMap,
-      superiorNames: ["x-variable", "data-source"],
-      controlButtonCovered: true,
-      unique: false,
-      default:
-        thresholdsModelOptionsMap[allVariables[0]][
-          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-        ][0],
-      controlButtonVisibility: "block",
-      displayOrder: 3,
-      displayPriority: 1,
-      displayGroup: 3,
-    });
-  } else {
-    // it is defined but check for necessary update
-    const currentParam = await matsCollections["x-threshold"].findOneAsync({
-      name: "x-threshold",
-    });
-    if (
-      !matsDataUtils.areObjectsEqual(
-        currentParam.optionsMap,
-        thresholdsModelOptionsMap
-      ) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
-    ) {
-      // have to reload threshold data
-      await matsCollections["x-threshold"].updateAsync(
-        { name: "x-threshold" },
-        {
-          $set: {
-            optionsMap: thresholdsModelOptionsMap,
-            valuesMap: allThresholdValuesMap,
-            options:
-              thresholdsModelOptionsMap[allVariables[0]][
-                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-              ],
-            default:
-              thresholdsModelOptionsMap[allVariables[0]][
-                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-              ][0],
-          },
-        }
-      );
-    }
-  }
-
-  if (
-    (await matsCollections["y-threshold"].findOneAsync({ name: "y-threshold" })) ===
-    undefined
-  ) {
-    await matsCollections["y-threshold"].insertAsync({
-      name: "y-threshold",
-      type: matsTypes.InputTypes.select,
-      optionsMap: thresholdsModelOptionsMap,
-      options:
-        thresholdsModelOptionsMap[allVariables[0]][
-          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-        ],
-      valuesMap: allThresholdValuesMap,
-      superiorNames: ["y-variable", "data-source"],
-      controlButtonCovered: true,
-      unique: false,
-      default:
-        thresholdsModelOptionsMap[allVariables[0]][
-          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-        ][0],
-      controlButtonVisibility: "block",
-      displayOrder: 6,
-      displayPriority: 1,
-      displayGroup: 3,
-    });
-  } else {
-    // it is defined but check for necessary update
-    const currentParam = await matsCollections["y-threshold"].findOneAsync({
-      name: "y-threshold",
-    });
-    if (
-      !matsDataUtils.areObjectsEqual(
-        currentParam.optionsMap,
-        thresholdsModelOptionsMap
-      ) ||
-      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
-    ) {
-      // have to reload threshold data
-      await matsCollections["y-threshold"].updateAsync(
-        { name: "y-threshold" },
-        {
-          $set: {
-            optionsMap: thresholdsModelOptionsMap,
-            valuesMap: allThresholdValuesMap,
-            options:
-              thresholdsModelOptionsMap[allVariables[0]][
-                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-              ],
-            default:
-              thresholdsModelOptionsMap[allVariables[0]][
-                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
-              ][0],
-          },
-        }
-      );
-    }
   }
 
   if (
@@ -1475,6 +1144,54 @@ const doCurveParams = async function () {
     });
   }
 
+  if (
+    (await matsCollections.level.findOneAsync({
+      name: "level",
+    })) === undefined
+  ) {
+    await matsCollections.level.insertAsync({
+      name: "level",
+      type: matsTypes.InputTypes.select,
+      optionsMap: levelsModelOptionsMap,
+      options:
+        levelsModelOptionsMap[allVariables[0]][
+          Object.keys(levelsModelOptionsMap[allVariables[0]])[0]
+        ],
+      superiorNames: ["variable", "data-source"],
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: matsTypes.InputTypes.unused,
+      controlButtonVisibility: "block",
+      controlButtonText: "Pressure level (mb)",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 5,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections.level.findOneAsync({
+      name: "level",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, levelsModelOptionsMap)
+    ) {
+      // have to reload forecast length data
+      await matsCollections.level.updateAsync(
+        { name: "level" },
+        {
+          $set: {
+            optionsMap: levelsModelOptionsMap,
+            options:
+              levelsModelOptionsMap[allVariables[0]][
+                Object.keys(levelsModelOptionsMap[allVariables[0]])[0]
+              ],
+          },
+        }
+      );
+    }
+  }
+
   if ((await matsCollections.sites.findOneAsync({ name: "sites" })) === undefined) {
     await matsCollections.sites.insertAsync({
       name: "sites",
@@ -1521,7 +1238,7 @@ const doCurveParams = async function () {
   ) {
     const optionsMap = {
       "Fcst lead time": "m0.fcstLen",
-      Threshold: "'{{vxTHRESHOLD}}'",
+      Level: "'m0.level'",
       "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
       "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
       "Valid Date": "m0.fcstValidEpoch",
@@ -1535,7 +1252,7 @@ const doCurveParams = async function () {
       optionsMap,
       hideOtherFor: {
         "forecast-length": ["Fcst lead time"],
-        threshold: ["Threshold"],
+        level: ["Level"],
         "valid-time": ["Valid UTC hour"],
       },
       selected: "",
@@ -1825,9 +1542,9 @@ const doCurveTextPatterns = async function () {
         ["", "region", ", "],
         ["", "forecast-length", "h "],
         ["", "variable", " "],
-        ["", "statistic", " at "],
-        ["", "threshold", ", "],
+        ["", "statistic", ", "],
         ["valid at: ", "valid-time", " UTC, "],
+        ["", "level", ", "],
         ["", "average", " average."],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
@@ -1843,10 +1560,10 @@ const doCurveTextPatterns = async function () {
         "region-type",
         "region",
         "statistic",
-        "threshold",
         "average",
         "forecast-length",
         "valid-time",
+        "level",
         "sites",
         "filter-model-by",
         "filter-model-min",
@@ -1858,50 +1575,7 @@ const doCurveTextPatterns = async function () {
       groupSize: 6,
     });
     await matsCollections.CurveTextPatterns.insertAsync({
-      plotType: matsTypes.PlotTypes.dieoff,
-      textPattern: [
-        ["", "label", ": "],
-        ["", "data-source", " at "],
-        ["", "sites", ", "],
-        ["", "region", ", "],
-        ["initialized ", "utc-cycle-start", " UTC, "],
-        ["", "variable", " "],
-        ["", "statistic", " at "],
-        ["", "threshold", ", "],
-        ["", "dieoff-type", ", "],
-        ["valid at: ", "valid-time", " UTC, "],
-        ["", "curve-dates", ". "],
-        ["Model filtered by: ", "filter-model-by", " "],
-        ["range: ", "filter-model-min", " "],
-        ["to ", "filter-model-max", ". "],
-        ["Obs filtered by: ", "filter-obs-by", " "],
-        ["range: ", "filter-obs-min", " "],
-        ["to ", "filter-obs-max", ". "],
-      ],
-      displayParams: [
-        "label",
-        "variable",
-        "data-source",
-        "region-type",
-        "region",
-        "statistic",
-        "threshold",
-        "dieoff-type",
-        "valid-time",
-        "utc-cycle-start",
-        "sites",
-        "curve-dates",
-        "filter-model-by",
-        "filter-model-min",
-        "filter-model-max",
-        "filter-obs-by",
-        "filter-obs-min",
-        "filter-obs-max",
-      ],
-      groupSize: 6,
-    });
-    await matsCollections.CurveTextPatterns.insertAsync({
-      plotType: matsTypes.PlotTypes.threshold,
+      plotType: matsTypes.PlotTypes.profile,
       textPattern: [
         ["", "label", ": "],
         ["", "data-source", " at "],
@@ -1940,16 +1614,18 @@ const doCurveTextPatterns = async function () {
       groupSize: 6,
     });
     await matsCollections.CurveTextPatterns.insertAsync({
-      plotType: matsTypes.PlotTypes.validtime,
+      plotType: matsTypes.PlotTypes.dieoff,
       textPattern: [
         ["", "label", ": "],
         ["", "data-source", " at "],
         ["", "sites", ", "],
         ["", "region", ", "],
-        ["", "forecast-length", "h "],
+        ["initialized ", "utc-cycle-start", " UTC, "],
         ["", "variable", " "],
-        ["", "statistic", " at "],
-        ["", "threshold", ", "],
+        ["", "statistic", ", "],
+        ["", "dieoff-type", ", "],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["", "level", ", "],
         ["", "curve-dates", ". "],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
@@ -1965,8 +1641,49 @@ const doCurveTextPatterns = async function () {
         "region-type",
         "region",
         "statistic",
-        "threshold",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "level",
+        "sites",
+        "curve-dates",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.validtime,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " "],
+        ["", "statistic", ", "],
+        ["", "level", ", "],
+        ["", "curve-dates", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
         "forecast-length",
+        "level",
         "sites",
         "curve-dates",
         "filter-model-by",
@@ -1987,8 +1704,8 @@ const doCurveTextPatterns = async function () {
         ["", "region", ", "],
         ["initialized ", "utc-cycle-start", " UTC. "],
         ["", "variable", " "],
-        ["", "statistic", " at "],
-        ["", "threshold", ", "],
+        ["", "statistic", ", "],
+        ["", "level", ", "],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
         ["to ", "filter-model-max", ". "],
@@ -2003,48 +1720,9 @@ const doCurveTextPatterns = async function () {
         "region-type",
         "region",
         "statistic",
-        "threshold",
         "utc-cycle-start",
+        "level",
         "sites",
-        "filter-model-by",
-        "filter-model-min",
-        "filter-model-max",
-        "filter-obs-by",
-        "filter-obs-min",
-        "filter-obs-max",
-      ],
-      groupSize: 6,
-    });
-    await matsCollections.CurveTextPatterns.insertAsync({
-      plotType: matsTypes.PlotTypes.performanceDiagram,
-      textPattern: [
-        ["", "label", ": "],
-        ["", "data-source", " in "],
-        ["", "region", ", "],
-        ["", "forecast-length", "h "],
-        ["", "variable", " at "],
-        ["", "threshold", ", "],
-        ["valid at: ", "valid-time", " UTC, "],
-        ["", "curve-dates", ". "],
-        ["Model filtered by: ", "filter-model-by", " "],
-        ["range: ", "filter-model-min", " "],
-        ["to ", "filter-model-max", ". "],
-        ["Obs filtered by: ", "filter-obs-by", " "],
-        ["range: ", "filter-obs-min", " "],
-        ["to ", "filter-obs-max", ". "],
-      ],
-      displayParams: [
-        "label",
-        "variable",
-        "data-source",
-        "region-type",
-        "region",
-        "threshold",
-        "forecast-length",
-        "valid-time",
-        "sites",
-        "bin-parameter",
-        "curve-dates",
         "filter-model-by",
         "filter-model-min",
         "filter-model-max",
@@ -2061,9 +1739,9 @@ const doCurveTextPatterns = async function () {
         ["", "sites", ", "],
         ["", "forecast-length", "h "],
         ["", "variable", " "],
-        ["", "statistic", " at "],
-        ["", "threshold", ", "],
+        ["", "statistic", ", "],
         [" valid-time:", "valid-time", ". "],
+        ["", "level", ", "],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
         ["to ", "filter-model-max", ". "],
@@ -2075,9 +1753,9 @@ const doCurveTextPatterns = async function () {
         "variable",
         "data-source",
         "statistic",
-        "threshold",
         "forecast-length",
         "valid-time",
+        "level",
         "sites",
         "filter-model-by",
         "filter-model-min",
@@ -2098,8 +1776,8 @@ const doCurveTextPatterns = async function () {
         ["", "forecast-length", "h "],
         ["", "variable", " "],
         ["", "statistic", " at "],
-        ["", "threshold", ", "],
         ["valid at: ", "valid-time", " UTC, "],
+        ["", "level", ", "],
         ["", "curve-dates", ". "],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
@@ -2115,9 +1793,9 @@ const doCurveTextPatterns = async function () {
         "region-type",
         "region",
         "statistic",
-        "threshold",
         "forecast-length",
         "valid-time",
+        "level",
         "sites",
         "curve-dates",
         "filter-model-by",
@@ -2138,9 +1816,9 @@ const doCurveTextPatterns = async function () {
         ["", "region", ", "],
         ["", "forecast-length", "h "],
         ["", "variable", " "],
-        ["", "statistic", " at "],
-        ["", "threshold", ", "],
+        ["", "statistic", ", "],
         ["valid at: ", "valid-time", ". "],
+        ["", "level", ", "],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
         ["to ", "filter-model-max", ". "],
@@ -2155,9 +1833,9 @@ const doCurveTextPatterns = async function () {
         "region-type",
         "region",
         "statistic",
-        "threshold",
         "forecast-length",
         "valid-time",
+        "level",
         "sites",
         "filter-model-by",
         "filter-model-min",
@@ -2177,9 +1855,9 @@ const doCurveTextPatterns = async function () {
         ["", "region", ", "],
         ["", "forecast-length", "h "],
         ["", "variable", " "],
-        ["", "statistic", " at "],
-        ["", "threshold", ", "],
+        ["", "statistic", ", "],
         ["valid at: ", "valid-time", ". "],
+        ["", "level", ", "],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
         ["to ", "filter-model-max", ". "],
@@ -2194,9 +1872,9 @@ const doCurveTextPatterns = async function () {
         "region-type",
         "region",
         "statistic",
-        "threshold",
         "forecast-length",
         "valid-time",
+        "level",
         "sites",
         "filter-model-by",
         "filter-model-min",
@@ -2216,12 +1894,12 @@ const doCurveTextPatterns = async function () {
         ["", "region", ", "],
         ["", "forecast-length", "h "],
         ["", "x-variable", " "],
-        ["", "x-statistic", " at "],
-        ["", "x-threshold", " vs "],
+        ["", "x-statistic", " vs "],
         ["", "y-variable", " "],
-        ["", "y-statistic", " at "],
-        ["", "y-threshold", ", "],
+        ["", "y-statistic", ", "],
         ["valid at: ", "valid-time", " UTC, "],
+        ["", "level", ", "],
+        ["", "curve-dates", ". "],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
         ["to ", "filter-model-max", ". "],
@@ -2231,17 +1909,16 @@ const doCurveTextPatterns = async function () {
       ],
       displayParams: [
         "label",
-        "x-variable",
-        "y-variable",
         "data-source",
         "region-type",
         "region",
+        "x-variable",
         "x-statistic",
-        "x-threshold",
+        "y-variable",
         "y-statistic",
-        "y-threshold",
         "forecast-length",
         "valid-time",
+        "level",
         "sites",
         "bin-parameter",
         "curve-dates",
@@ -2291,15 +1968,15 @@ const doPlotGraph = async function () {
       checked: true,
     });
     await matsCollections.PlotGraphFunctions.insertAsync({
-      plotType: matsTypes.PlotTypes.dieoff,
+      plotType: matsTypes.PlotTypes.profile,
       graphFunction: "graphPlotly",
-      dataFunction: "dataDieoff",
+      dataFunction: "dataProfile",
       checked: false,
     });
     await matsCollections.PlotGraphFunctions.insertAsync({
-      plotType: matsTypes.PlotTypes.threshold,
+      plotType: matsTypes.PlotTypes.dieoff,
       graphFunction: "graphPlotly",
-      dataFunction: "dataThreshold",
+      dataFunction: "dataDieoff",
       checked: false,
     });
     await matsCollections.PlotGraphFunctions.insertAsync({
@@ -2312,12 +1989,6 @@ const doPlotGraph = async function () {
       plotType: matsTypes.PlotTypes.dailyModelCycle,
       graphFunction: "graphPlotly",
       dataFunction: "dataDailyModelCycle",
-      checked: false,
-    });
-    await matsCollections.PlotGraphFunctions.insertAsync({
-      plotType: matsTypes.PlotTypes.performanceDiagram,
-      graphFunction: "graphPlotly",
-      dataFunction: "dataPerformanceDiagram",
       checked: false,
     });
     await matsCollections.PlotGraphFunctions.insertAsync({
@@ -2415,12 +2086,7 @@ Meteor.startup(async function () {
   const mdr = new matsTypes.MetaDataDBRecord(
     "cbPool",
     `${cbConnection.bucket}:${cbConnection.scope}:${cbConnection.collection}`,
-    [
-      "MD:matsAux:COMMON:V01",
-      "MD:matsGui:ceiling:COMMON:V01",
-      "MD:matsGui:visibility:COMMON:V01",
-      "MD:matsGui:surface:COMMON:V01",
-    ]
+    ["MD:matsAux:COMMON:V01", "MD:matsGui:raob:COMMON:V01"]
   );
   try {
     await matsMethods.resetApp({
