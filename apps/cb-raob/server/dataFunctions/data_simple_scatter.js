@@ -1,0 +1,554 @@
+/*
+ * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+
+/* global Assets */
+
+import {
+  matsCollections,
+  matsTypes,
+  matsDataUtils,
+  matsDataQueryUtils,
+  matsDataCurveOpsUtils,
+  matsDataProcessUtils,
+  matsMiddleSimpleScatter,
+} from "meteor/randyp:mats-common";
+import moment from "moment";
+
+/* eslint-disable no-await-in-loop */
+
+global.dataSimpleScatter = async function (plotParams) {
+  // initialize variables common to all curves
+  const appParams = {
+    plotType: matsTypes.PlotTypes.simpleScatter,
+    matching: plotParams.plotAction === matsTypes.PlotActions.matched,
+    completeness: plotParams.completeness,
+    outliers: plotParams.outliers,
+    hideGaps: plotParams.noGapsCheck,
+    hasLevels: false,
+  };
+
+  const totalProcessingStart = moment();
+  const dataRequests = {}; // used to store data queries
+  let dataFoundForCurve = true;
+  let dataFoundForAnyCurve = false;
+
+  const curves = JSON.parse(JSON.stringify(plotParams.curves));
+  const curvesLength = curves.length;
+
+  const axisXMap = Object.create(null);
+  const axisYMap = Object.create(null);
+  let xmax = -1 * Number.MAX_VALUE;
+  let ymax = -1 * Number.MAX_VALUE;
+  let xmin = Number.MAX_VALUE;
+  let ymin = Number.MAX_VALUE;
+
+  let statTypeX;
+  let statTypeY;
+  let varUnitsX;
+  let varUnitsY;
+  const allStatTypes = [];
+
+  let statement = "";
+  let rows = "";
+  let error = "";
+  const dataset = [];
+
+  for (let curveIndex = 0; curveIndex < curvesLength; curveIndex += 1) {
+    // initialize variables specific to each curve
+    const curve = curves[curveIndex];
+    const { label } = curve;
+    const { diffFrom } = curve;
+
+    const binParam = curve["bin-parameter"];
+    const binClause = (
+      await matsCollections["bin-parameter"].findOneAsync({
+        name: "bin-parameter",
+      })
+    ).optionsMap[binParam];
+
+    const variableX = curve["x-variable"];
+    const variableY = curve["y-variable"];
+    const variableValuesMap = (
+      await matsCollections.variable.findOneAsync({
+        name: "variable",
+      })
+    ).valuesMap;
+    const queryVariableX = Object.keys(variableValuesMap).filter(
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variableX) !== -1
+    )[0];
+    const queryVariableY = Object.keys(variableValuesMap).filter(
+      (qv) => Object.keys(variableValuesMap[qv][0]).indexOf(variableY) !== -1
+    )[0];
+    const variableDetailsX = variableValuesMap[queryVariableX][0][variableX];
+    const variableDetailsY = variableValuesMap[queryVariableY][0][variableY];
+
+    const modelOptionsMap = (
+      await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+    ).optionsMap;
+    if (!modelOptionsMap[variableX] || !modelOptionsMap[variableY]) {
+      throw new Error(
+        "INFO:  At least one of your selected variables is not available for this model."
+      );
+    }
+    const model = modelOptionsMap[variableX][curve["data-source"]][0];
+
+    if (binParam === "Threshold") {
+      throw new Error(
+        `INFO:  Binning by thresholds is currently not supported for scatter plots in this app (performance diagrams and contours only). Please select a different binning parameter.`
+      );
+    }
+
+    const thresholdStrX = curve["x-threshold"];
+    const thresholdStrY = curve["y-threshold"];
+    let thresholdX = "";
+    let thresholdY = "";
+    if (variableValuesMap[queryVariableX][1]) {
+      const thresholdValuesX = (
+        await matsCollections["x-threshold"].findOneAsync({ name: "x-threshold" })
+      ).valuesMap[variableX];
+      thresholdX = Object.keys(thresholdValuesX).find(
+        (key) => thresholdValuesX[key] === thresholdStrX
+      );
+      thresholdX = thresholdX.replace(/_/g, ".");
+    }
+    if (variableValuesMap[queryVariableY][1]) {
+      const thresholdValuesY = (
+        await matsCollections["y-threshold"].findOneAsync({ name: "y-threshold" })
+      ).valuesMap[variableY];
+      thresholdY = Object.keys(thresholdValuesY).find(
+        (key) => thresholdValuesY[key] === thresholdStrY
+      );
+      thresholdY = thresholdY.replace(/_/g, ".");
+    }
+
+    const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
+    let forecastLength = curve["forecast-length"];
+    const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+
+    const statisticSelectX = curve["x-statistic"];
+    const statisticSelectY = curve["y-statistic"];
+    const statisticOptionsMap = (
+      await matsCollections.statistic.findOneAsync({ name: "statistic" })
+    ).optionsMap;
+    [statTypeX] = statisticOptionsMap[variableX][statisticSelectX];
+    [statTypeY] = statisticOptionsMap[variableY][statisticSelectY];
+
+    const filterModelBy = curve["filter-model-by"];
+    const filterObsBy = curve["filter-obs-by"];
+    const filterInfo = {};
+
+    if (filterModelBy !== "None") {
+      // get the variable text that we'll query off of
+      const filterModelVariable = Object.keys(variableValuesMap).filter(
+        (fv) => Object.keys(variableValuesMap[fv][0]).indexOf(filterModelBy) !== -1
+      )[0];
+      const filterModelVariableDetails =
+        variableValuesMap[filterModelVariable][0][filterModelBy];
+      [, [filterInfo.filterModelBy]] = filterModelVariableDetails;
+
+      // get the bounds and make sure they're in the right units
+      let filterModelMin = Number(curve["filter-model-min"]);
+      let filterModelMax = Number(curve["filter-model-max"]);
+      if (
+        filterModelBy.toLowerCase().includes("temperature") ||
+        filterModelBy.toLowerCase().includes("dewpoint")
+      ) {
+        // convert temperature and dewpoint bounds from Celsius
+        // to Fahrenheit, which is in the database
+        filterModelMin = filterModelMin * 1.8 + 32;
+        filterModelMax = filterModelMax * 1.8 + 32;
+      } else if (
+        filterModelBy.toLowerCase().includes("wind") &&
+        filterModelBy.toLowerCase().includes("speed")
+      ) {
+        // convert wind speed bounds from m/s
+        // to mph, which is in the database.
+        // Note that the u- and v- components are stored in m/s
+        filterModelMin *= 2.23693629;
+        filterModelMax *= 2.23693629;
+      }
+      filterInfo.filterModelMin = filterModelMin;
+      filterInfo.filterModelMax = filterModelMax;
+    }
+
+    if (filterObsBy !== "None") {
+      // get the variable text that we'll query off of
+      const filterObsVariable = Object.keys(variableValuesMap).filter(
+        (fv) => Object.keys(variableValuesMap[fv][0]).indexOf(filterObsBy) !== -1
+      )[0];
+      const filterObsVariableDetails =
+        variableValuesMap[filterObsVariable][0][filterObsBy];
+      [, [, filterInfo.filterObsBy]] = filterObsVariableDetails;
+
+      // get the bounds and make sure they're in the right units
+      let filterObsMin = Number(curve["filter-obs-min"]);
+      let filterObsMax = Number(curve["filter-obs-max"]);
+      if (
+        filterObsBy.toLowerCase().includes("temperature") ||
+        filterObsBy.toLowerCase().includes("dewpoint")
+      ) {
+        // convert temperature and dewpoint bounds from Celsius
+        // to Fahrenheit, which is in the database
+        filterObsMin = filterObsMin * 1.8 + 32;
+        filterObsMax = filterObsMax * 1.8 + 32;
+      } else if (
+        filterObsBy.toLowerCase().includes("wind") &&
+        filterObsBy.toLowerCase().includes("speed")
+      ) {
+        // convert wind speed bounds from m/s
+        // to mph, which is in the database.
+        // Note that the u- and v- components are stored in m/s
+        filterObsMin *= 2.23693629;
+        filterObsMax *= 2.23693629;
+      }
+      filterInfo.filterObsMin = filterObsMin;
+      filterInfo.filterObsMax = filterObsMax;
+    }
+
+    let queryTemplate;
+    let sitesList;
+    const regionType =
+      filterModelBy === "None" && // not filtering the model by anything
+      filterObsBy === "None" && // not filtering the obs by anything
+      !(
+        // not a thresholded variable that we're forcing into a scalar stat
+        (
+          variableValuesMap[queryVariableX][1] &&
+          statisticOptionsMap[variableX][statisticSelectX][0] === "scalar"
+        )
+      ) &&
+      !(
+        // not a thresholded variable that we're forcing into a scalar stat
+        (
+          variableValuesMap[queryVariableY][1] &&
+          statisticOptionsMap[variableY][statisticSelectY][0] === "scalar"
+        )
+      )
+        ? curve["region-type"]
+        : "Select stations";
+    if (curve["region-type"] === "Predefined region") {
+      // either a true predefined region or a station plot masquerading
+      // as a predefined region that we will have to do filtering on.
+      // the regionType constant defined above knows which on.
+      const regionStr = curve.region;
+      const regionValues = (
+        await matsCollections.region.findOneAsync({ name: "region" })
+      ).valuesMap;
+      const region = Object.keys(regionValues).find(
+        (key) => regionValues[key] === regionStr
+      );
+
+      if (regionType === "Predefined region") {
+        // Predefined region, no filtering.
+        let statTemplate;
+        queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Scatter.sql");
+        queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
+        queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
+        queryTemplate = queryTemplate.replace(/{{vxFROM_SECS}}/g, fromSecs);
+        queryTemplate = queryTemplate.replace(/{{vxTO_SECS}}/g, toSecs);
+        if (queryVariableX === queryVariableY) {
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxVARIABLEX}}', '{{vxVARIABLEY}}'\]/g,
+            `= '${queryVariableX.toUpperCase()}'`
+          );
+        } else {
+          queryTemplate = queryTemplate.replace(
+            /{{vxVARIABLEX}}/g,
+            queryVariableX.toUpperCase()
+          );
+          queryTemplate = queryTemplate.replace(
+            /{{vxVARIABLEY}}/g,
+            queryVariableY.toUpperCase()
+          );
+        }
+        if (binParam !== "Fcst lead time") {
+          if (forecastLength === undefined) {
+            throw new Error(
+              `INFO:  ${label}'s forecast lead time is undefined. Please assign it a value.`
+            );
+          }
+          queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        } else {
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxFCST_LEN}}"
+          );
+        }
+        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
+        if (statTypeX === "ctc" && statTypeY === "ctc") {
+          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC_2d.sql");
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDX}}/g, thresholdX);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDY}}/g, thresholdY);
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
+            "= 'CTC'"
+          );
+        } else if (statTypeX === "ctc" && statTypeY === "scalar") {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_CTC_PartialSums_2d.sql"
+          );
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDX}}/g, thresholdX);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEY}}/g,
+            variableDetailsY[0]
+          );
+          queryTemplate = queryTemplate.replace(/{{vxTYPEX}}/g, "CTC");
+          queryTemplate = queryTemplate.replace(/{{vxTYPEY}}/g, "SUMS");
+        } else if (statTypeX === "scalar" && statTypeY === "ctc") {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_PartialSums_CTC_2d.sql"
+          );
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEX}}/g,
+            variableDetailsX[0]
+          );
+          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDY}}/g, thresholdY);
+          queryTemplate = queryTemplate.replace(/{{vxTYPEX}}/g, "SUMS");
+          queryTemplate = queryTemplate.replace(/{{vxTYPEY}}/g, "CTC");
+        } else {
+          statTemplate = await Assets.getTextAsync(
+            "sqlTemplates/tmpl_PartialSums_2d.sql"
+          );
+          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEX}}/g,
+            variableDetailsX[0]
+          );
+          queryTemplate = queryTemplate.replace(
+            /{{vxSUBVARIABLEY}}/g,
+            variableDetailsY[0]
+          );
+          queryTemplate = queryTemplate.replace(
+            /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
+            "= 'SUMS'"
+          );
+        }
+
+        let dateString = "";
+        if (binParam === "Init Date") {
+          dateString = "m0.fcstValidEpoch-m0.fcstLen*3600";
+        } else {
+          dateString = "m0.fcstValidEpoch";
+        }
+        queryTemplate = queryTemplate.replace(/{{vxDATE_STRING}}/g, dateString);
+        if (
+          binParam !== "Valid UTC hour" &&
+          validTimes.length !== 0 &&
+          validTimes !== matsTypes.InputTypes.unused
+        ) {
+          queryTemplate = queryTemplate.replace(
+            /{{vxVALID_TIMES}}/g,
+            global.cbPool.trfmListToCSVString(validTimes, null, false)
+          );
+        } else {
+          queryTemplate = global.cbPool.trfmSQLRemoveClause(
+            queryTemplate,
+            "{{vxVALID_TIMES}}"
+          );
+        }
+      } else {
+        // Predefined region, with filtering. Treat like station plot.
+        sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(
+          global.cbPool,
+          region
+        );
+      }
+    } else {
+      // Station plot, with or without filtering
+      sitesList = curve.sites === undefined ? [] : curve.sites;
+      if (sitesList.length === 0 || sitesList === matsTypes.InputTypes.unused) {
+        throw new Error(
+          "INFO:  Please add sites in order to get a single/multi station plot."
+        );
+      }
+    }
+    const elevMap = (
+      await matsCollections.StationMap.findOneAsync({
+        name: "elevations",
+      })
+    ).optionsMap;
+
+    // axisKey is used to determine which axis a curve should use.
+    // This axisKeySet object is used like a set and if a curve has the same
+    // units (axisKey) it will use the same axis.
+    // The axis number is assigned to the axisKeySet value, which is the axisKey.
+    const trimmedVariableX = variableX.split(" (")[0];
+    const trimmedVariableY = variableY.split(" (")[0];
+    const trimmedStatisticX = statisticSelectX.split(" (")[0];
+    const trimmedStatisticY = statisticSelectY.split(" (")[0];
+    varUnitsX =
+      statisticOptionsMap[variableX][statisticSelectX][1] === "Unknown"
+        ? variableDetailsX[2]
+        : statisticOptionsMap[variableX][statisticSelectX][1];
+    varUnitsY =
+      statisticOptionsMap[variableY][statisticSelectY][1] === "Unknown"
+        ? variableDetailsY[2]
+        : statisticOptionsMap[variableY][statisticSelectY][1];
+    varUnitsX = `${trimmedVariableX} ${trimmedStatisticX} (${varUnitsX})`;
+    varUnitsY = `${trimmedVariableY} ${trimmedStatisticY} (${varUnitsY})`;
+    allStatTypes.push([statTypeX, statTypeY]);
+
+    let d;
+    if (!diffFrom) {
+      let queryResult;
+      const startMoment = moment();
+      let finishMoment;
+      try {
+        // math is done on forecastLength later on -- set all analyses to 0
+        if (forecastLength === "-99") {
+          forecastLength = "0";
+        }
+
+        if (regionType === "Predefined region") {
+          statement = global.cbPool.trfmSQLForDbTarget(queryTemplate);
+        } else {
+          // send to matsMiddle
+          statement = "Station plot -- no one query.";
+          const mdw = new matsMiddleSimpleScatter.MatsMiddleSimpleScatter(
+            global.cbPool
+          );
+          rows = await mdw.processStationQuery(
+            binParam,
+            statTypeX,
+            statTypeY,
+            variableDetailsX[1],
+            variableDetailsY[1],
+            sitesList,
+            model,
+            forecastLength,
+            thresholdX,
+            thresholdY,
+            fromSecs,
+            toSecs,
+            validTimes,
+            undefined,
+            filterInfo,
+            elevMap
+          );
+        }
+
+        // send the query statement to the query function
+        queryResult = await matsDataQueryUtils.queryDBSimpleScatter(
+          global.cbPool,
+          regionType === "Predefined region" ? statement : rows,
+          appParams,
+          statTypeX,
+          statTypeY,
+          statTypeX === "ctc" ? statisticSelectX : `${statisticSelectX}_${variableX}`,
+          statTypeY === "ctc" ? statisticSelectY : `${statisticSelectY}_${variableY}`
+        );
+
+        finishMoment = moment();
+        dataRequests[label] = statement;
+        dataRequests[`data retrieval (query) time - ${label}`] = {
+          begin: startMoment.format(),
+          finish: finishMoment.format(),
+          duration: `${moment
+            .duration(finishMoment.diff(startMoment))
+            .asSeconds()} seconds`,
+          recordCount: queryResult.data.x.length,
+        };
+        // get the data back from the query
+        d = queryResult.data;
+      } catch (e) {
+        // this is an error produced by a bug in the query function, not an error returned by the mysql database
+        e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
+        throw new Error(e.message);
+      }
+
+      if (queryResult.error !== undefined && queryResult.error !== "") {
+        if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+          // this is NOT an error just a no data condition
+          dataFoundForCurve = false;
+        } else {
+          // this is an error returned by the mysql database
+          error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
+          throw new Error(error);
+        }
+      } else {
+        dataFoundForAnyCurve = true;
+      }
+
+      // set axis limits based on returned data
+      if (dataFoundForCurve) {
+        xmin = xmin < d.xmin ? xmin : d.xmin;
+        xmax = xmax > d.xmax ? xmax : d.xmax;
+        ymin = ymin < d.ymin ? ymin : d.ymin;
+        ymax = ymax > d.ymax ? ymax : d.ymax;
+      }
+    } else {
+      // this is a difference curve -- not supported for scatter plots
+      throw new Error(
+        "INFO:  Difference curves are not supported for performance diagrams, as they do not feature consistent x or y values across all curves."
+      );
+    }
+
+    // set curve annotation to be the curve mean -- may be recalculated later
+    // also pass previously calculated axis stats to curve options
+    const postQueryStartMoment = moment();
+    const mean = d.sum / d.x.length;
+    const annotation =
+      mean === undefined
+        ? `${label}- mean = NoData`
+        : `${label}- mean = ${mean.toPrecision(4)}`;
+    curve.annotation = annotation;
+    curve.xmin = d.xmin;
+    curve.xmax = d.xmax;
+    curve.ymin = d.ymin;
+    curve.ymax = d.ymax;
+    curve.axisXKey = varUnitsX;
+    curve.axisYKey = varUnitsY;
+    curve.binParam = binParam;
+    const cOptions = await matsDataCurveOpsUtils.generateScatterCurveOptions(
+      curve,
+      curveIndex,
+      axisXMap,
+      axisYMap,
+      d,
+      appParams
+    ); // generate plot with data, curve annotation, axis labels, etc.
+    dataset.push(cOptions);
+    const postQueryFinishMoment = moment();
+    dataRequests[`post data retrieval (query) process time - ${label}`] = {
+      begin: postQueryStartMoment.format(),
+      finish: postQueryFinishMoment.format(),
+      duration: `${moment
+        .duration(postQueryFinishMoment.diff(postQueryStartMoment))
+        .asSeconds()} seconds`,
+    };
+  } // end for curves
+
+  if (!dataFoundForAnyCurve) {
+    // we found no data for any curves so don't bother proceeding
+    throw new Error("INFO:  No valid data for any curves.");
+  }
+
+  // process the data returned by the query
+  const curveInfoParams = {
+    curves,
+    curvesLength,
+    statType: allStatTypes,
+    axisXMap,
+    axisYMap,
+    xmax,
+    xmin,
+  };
+  const bookkeepingParams = {
+    dataRequests,
+    totalProcessingStart,
+  };
+  const result = await matsDataProcessUtils.processDataSimpleScatter(
+    dataset,
+    appParams,
+    curveInfoParams,
+    plotParams,
+    bookkeepingParams
+  );
+  return result;
+};

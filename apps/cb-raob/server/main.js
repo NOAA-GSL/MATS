@@ -1,0 +1,2447 @@
+/*
+ * Copyright (c) 2021 Colorado State University and Regents of the University of Colorado. All rights reserved.
+ */
+import { Meteor } from "meteor/meteor";
+import moment from "moment";
+import {
+  matsMethods,
+  matsTypes,
+  matsCollections,
+  matsDataUtils,
+  matsParamUtils,
+  matsCouchbaseUtils,
+} from "meteor/randyp:mats-common";
+
+/* eslint-disable no-await-in-loop */
+
+// this is organized as:
+//  name of metadata doc containint these variables : [{
+//    variable name as it appears in the selector: {
+//      [variable name in sums/ctc docs,
+//       [variable name in model docs, variable name in obs docs],
+//       units to plot in
+//      ]
+//    },
+//    boolean for if this variable has thresholds
+//  }]
+const variableMetadataDocs = {
+  Ceiling: [{ "Ceiling (ft)": ["Ceiling", ["Ceiling", "Ceiling"], "ft"] }, true],
+  Visibility: [
+    { "Visibility (mi)": ["Visibility", ["Visibility", "Visibility"], "mi"] },
+    true,
+  ],
+  Surface: [
+    {
+      "Elevation (m)": ["Elevation", ["Elevation", "Elevation"], "m"],
+      "Temperature at 2m (°C)": ["Temperature", ["Temperature", "Temperature"], "°C"],
+      "Dewpoint at 2m (°C)": ["DewPoint", ["DewPoint", "DewPoint"], "°C"],
+      "Relative Humidity at 2m (%)": ["RelativeHumidity", ["RH", "RH"], "%"],
+      "Surface Pressure (hPa)": [
+        "SurfacePressure",
+        ["Surface Pressure", "Surface Pressure"],
+        "hPa",
+      ],
+      "Normalized Surface Pressure (hPa)": [
+        "Normalized Surface Pressure",
+        ["Normalized Surface Pressure", "Surface Pressure"],
+        "hPa",
+      ],
+      "Wind Speed at 10m (m/s)": ["WindSpeed", ["WS", "WS"], "m/s"],
+      "U-Wind at 10m (m/s)": ["WindU", ["WindU", "WindU"], "m/s"],
+      "V-Wind at 10m (m/s)": ["WindV", ["WindV", "WindV"], "m/s"],
+    },
+    false,
+  ],
+};
+const variables = Object.keys(variableMetadataDocs);
+let allVariables = [];
+let allVariablesNoThreshold = [];
+let allVariablesYesThreshold = [];
+let allVariablesNoneOption = [];
+let allVariablesMapOption = [];
+
+// determined in doCurveParanms
+let minDate;
+let maxDate;
+let dstr;
+
+const doPlotParams = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
+  if (
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
+  ) {
+    await matsCollections.PlotParams.removeAsync({});
+  }
+  if ((await matsCollections.PlotParams.find().countAsync()) === 0) {
+    await matsCollections.PlotParams.insertAsync({
+      name: "dates",
+      type: matsTypes.InputTypes.dateRange,
+      options: [""],
+      startDate: minDate,
+      stopDate: maxDate,
+      superiorNames: ["variable", "data-source"],
+      controlButtonCovered: true,
+      default: dstr,
+      controlButtonVisibility: "block",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+
+    const plotFormats = {};
+    plotFormats[matsTypes.PlotFormats.none] = "no diffs";
+    plotFormats[matsTypes.PlotFormats.matching] = "show matching diffs";
+    plotFormats[matsTypes.PlotFormats.pairwise] = "pairwise diffs";
+    await matsCollections.PlotParams.insertAsync({
+      name: "plotFormat",
+      type: matsTypes.InputTypes.select,
+      optionsMap: plotFormats,
+      options: [
+        matsTypes.PlotFormats.none,
+        matsTypes.PlotFormats.matching,
+        matsTypes.PlotFormats.pairwise,
+      ],
+      default: matsTypes.PlotFormats.none,
+      controlButtonCovered: true,
+      controlButtonText: "Difference Curves",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+
+    const yAxisOptionsMap = {
+      "Relative frequency": ["relFreq"],
+      Number: ["number"],
+    };
+    await matsCollections.PlotParams.insertAsync({
+      name: "histogram-yaxis-controls",
+      type: matsTypes.InputTypes.select,
+      optionsMap: yAxisOptionsMap,
+      options: Object.keys(yAxisOptionsMap),
+      default: Object.keys(yAxisOptionsMap)[0],
+      controlButtonCovered: true,
+      controlButtonText: "Y-axis mode",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    const binOptionsMap = {
+      "Default bins": ["default"],
+      "Set number of bins": ["binNumber"],
+      "Make zero a bin bound": ["zeroBound"],
+      "Choose a bin bound": ["chooseBound"],
+      "Set number of bins and make zero a bin bound": ["binNumberWithZero"],
+      "Set number of bins and choose a bin bound": ["binNumberWithChosen"],
+      "Manual bins": ["manual"],
+      "Manual bin start, number, and stride": ["manualStride"],
+    };
+    await matsCollections.PlotParams.insertAsync({
+      name: "histogram-bin-controls",
+      type: matsTypes.InputTypes.select,
+      optionsMap: binOptionsMap,
+      options: Object.keys(binOptionsMap),
+      hideOtherFor: {
+        "bin-number": [
+          "Default bins",
+          "Make zero a bin bound",
+          "Manual bins",
+          "Choose a bin bound",
+        ],
+        "bin-pivot": [
+          "Default bins",
+          "Set number of bins",
+          "Make zero a bin bound",
+          "Set number of bins and make zero a bin bound",
+          "Manual bins",
+          "Manual bin start, number, and stride",
+        ],
+        "bin-start": [
+          "Default bins",
+          "Set number of bins",
+          "Make zero a bin bound",
+          "Choose a bin bound",
+          "Set number of bins and make zero a bin bound",
+          "Set number of bins and choose a bin bound",
+          "Manual bins",
+        ],
+        "bin-stride": [
+          "Default bins",
+          "Set number of bins",
+          "Make zero a bin bound",
+          "Choose a bin bound",
+          "Set number of bins and make zero a bin bound",
+          "Set number of bins and choose a bin bound",
+          "Manual bins",
+        ],
+        "bin-bounds": [
+          "Default bins",
+          "Set number of bins",
+          "Make zero a bin bound",
+          "Choose a bin bound",
+          "Set number of bins and make zero a bin bound",
+          "Set number of bins and choose a bin bound",
+          "Manual bin start, number, and stride",
+        ],
+      },
+      default: Object.keys(binOptionsMap)[0],
+      controlButtonCovered: true,
+      controlButtonText: "customize bins",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    await matsCollections.PlotParams.insertAsync({
+      name: "bin-number",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "2",
+      max: "100",
+      step: "any",
+      default: "12",
+      controlButtonCovered: true,
+      controlButtonText: "number of bins",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    await matsCollections.PlotParams.insertAsync({
+      name: "bin-pivot",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-10000",
+      max: "10000",
+      step: "any",
+      default: "0",
+      controlButtonCovered: true,
+      controlButtonText: "bin pivot value",
+      displayOrder: 5,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    await matsCollections.PlotParams.insertAsync({
+      name: "bin-start",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-10000",
+      max: "10000",
+      step: "any",
+      default: "0",
+      controlButtonCovered: true,
+      controlButtonText: "bin start",
+      displayOrder: 6,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    await matsCollections.PlotParams.insertAsync({
+      name: "bin-stride",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: "-10000",
+      max: "10000",
+      step: "any",
+      default: "0",
+      controlButtonCovered: true,
+      controlButtonText: "bin stride",
+      displayOrder: 7,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    await matsCollections.PlotParams.insertAsync({
+      name: "bin-bounds",
+      type: matsTypes.InputTypes.textInput,
+      optionsMap: {},
+      options: [],
+      default: " ",
+      controlButtonCovered: true,
+      controlButtonText: "bin bounds (Enter numbers separated by commas)",
+      displayOrder: 8,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    const xOptionsMap = {
+      "Fcst lead time": "m0.fcstLen",
+      Threshold: "'{{vxTHRESHOLD}}'",
+      "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
+      "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+      "Valid Date": "m0.fcstValidEpoch",
+      "Init Date": "m0.fcstValidEpoch-m0.fcstLen*3600",
+    };
+
+    await matsCollections.PlotParams.insertAsync({
+      name: "x-axis-parameter",
+      type: matsTypes.InputTypes.select,
+      options: Object.keys(xOptionsMap),
+      optionsMap: xOptionsMap,
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(xOptionsMap)[2],
+      controlButtonVisibility: "block",
+      displayOrder: 9,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    const yOptionsMap = {
+      "Fcst lead time": "m0.fcstLen",
+      Threshold: "'{{vxTHRESHOLD}}'",
+      "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
+      "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+      "Valid Date": "m0.fcstValidEpoch",
+      "Init Date": "m0.fcstValidEpoch-m0.fcstLen*3600",
+    };
+
+    await matsCollections.PlotParams.insertAsync({
+      name: "y-axis-parameter",
+      type: matsTypes.InputTypes.select,
+      options: Object.keys(yOptionsMap),
+      optionsMap: yOptionsMap,
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(yOptionsMap)[0],
+      controlButtonVisibility: "block",
+      displayOrder: 10,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+
+    await matsCollections.PlotParams.insertAsync({
+      name: "significance",
+      type: matsTypes.InputTypes.select,
+      options: [
+        "none",
+        "95th percentile -- bootstrapping (SKILL SCORES ONLY)",
+        "95th percentile -- standard t-test (CONTINUOUS VARIABLES ONLY)",
+        "95th percentile -- t-test with infinite degrees of freedom (CONTINUOUS VARIABLES ONLY)",
+      ],
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: "none",
+      controlButtonVisibility: "block",
+      controlButtonText: "overlay significance",
+      displayOrder: 11,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  } else {
+    // need to update the dates selector if the metadata has changed
+    const currentParam = await matsCollections.PlotParams.findOneAsync({
+      name: "dates",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
+      !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
+      !matsDataUtils.areObjectsEqual(currentParam.default, dstr)
+    ) {
+      // have to reload model data
+      await matsCollections.PlotParams.updateAsync(
+        { name: "dates" },
+        {
+          $set: {
+            startDate: minDate,
+            stopDate: maxDate,
+            default: dstr,
+          },
+        }
+      );
+    }
+  }
+};
+
+const doCurveParams = async function () {
+  // force a reset if requested - simply remove all the existing params to force a reload
+  const settings = await matsCollections.Settings.findOneAsync({});
+  if (
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
+  ) {
+    const params = (
+      await matsCollections.CurveParamsInfo.findOneAsync({
+        curve_params: { $exists: true },
+      })
+    ).curve_params;
+    for (let cp = 0; cp < params.length; cp += 1) {
+      await matsCollections[params[cp]].removeAsync({});
+    }
+  }
+
+  const modelOptionsMap = {};
+  let modelDateRangeMap = {};
+  const regionModelOptionsMap = {};
+  const siteOptionsMap = {};
+  const sitesLocationMap = [];
+  const sitesElevationMap = {};
+  const forecastLengthOptionsMap = {};
+  const thresholdsModelOptionsMap = {};
+  const allRegionValuesMap = {};
+  const allThresholdValuesMap = {};
+
+  try {
+    const queryStr = global.cbPool.trfmSQLForDbTarget(
+      'select name, description from {{vxDBTARGET}} where type="MD" and docType="region" and version = "V01"  and subset="COMMON"'
+    );
+    const rows = await global.cbPool.queryCB(queryStr);
+    if (rows.includes("queryCB ERROR: ")) {
+      // have this local try catch fail properly if the metadata isn't there
+      throw new Error(rows);
+    }
+
+    for (let j = 0; j < rows.length; j += 1) {
+      allRegionValuesMap[rows[j].name.trim()] = rows[j].description.trim();
+    }
+  } catch (err) {
+    throw new Error(err.message);
+  }
+
+  try {
+    for (let didx = 0; didx < variables.length; didx += 1) {
+      const variable = variables[didx];
+      const subVariables = Object.keys(variableMetadataDocs[variable][0]);
+      const hasThresholds = variableMetadataDocs[variable][1];
+      let rows;
+      if (hasThresholds) {
+        const queryStr = global.cbPool.trfmSQLForDbTarget(
+          `select raw thresholdDescriptions.${variable.toLowerCase()} from {{vxDBTARGET}} use keys "MD:matsAux:COMMON:V01"`
+        );
+        rows = await global.cbPool.queryCB(queryStr);
+        if (rows.includes("queryCB ERROR: ")) {
+          // have this local try catch fail properly if the metadata isn't there
+          throw new Error(rows);
+        }
+        allVariablesYesThreshold = allVariablesYesThreshold.concat(subVariables);
+      } else {
+        rows = [{ "All Data": "All Data" }];
+        allVariablesNoThreshold = allVariablesNoThreshold.concat(subVariables);
+      }
+      for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
+        const subVariable = subVariables[sidx];
+        allThresholdValuesMap[subVariable] = {};
+        const allThresholds = Object.keys(rows[0]);
+        for (let j = 0; j < allThresholds.length; j += 1) {
+          // The replace here is because JSON doesn't like dots in the middle of keys
+          allThresholdValuesMap[subVariable][
+            allThresholds[j].trim().replace(/\./g, "_")
+          ] = rows[0][allThresholds[j]].trim();
+        }
+      }
+    }
+    allVariablesYesThreshold = [...new Set(allVariablesYesThreshold)].sort(); // make sure all variables are unique, then sort
+    allVariablesNoThreshold = [...new Set(allVariablesNoThreshold)].sort(); // make sure all variables are unique, then sort
+  } catch (err) {
+    throw new Error(err.message);
+  }
+
+  try {
+    for (let didx = 0; didx < variables.length; didx += 1) {
+      const variable = variables[didx];
+      const subVariables = Object.keys(variableMetadataDocs[variable][0]);
+      allVariables = allVariables.concat(subVariables);
+
+      const queryStr = global.cbPool.trfmSQLForDbTarget(
+        "select raw models from {{vxDBTARGET}} " +
+          `USE KEYS "MD:matsGui:${variable.toLowerCase()}:COMMON:V01"`
+      );
+      const [rows] = await global.cbPool.queryCB(queryStr);
+      if (rows.includes("queryCB ERROR: ")) {
+        // have this local try catch fail properly if the metadata isn't there
+        throw new Error(rows);
+      }
+
+      rows.sort(
+        (a, b) =>
+          Number(a.displayCategory) - Number(b.displayCategory) ||
+          Number(a.displayOrder) - Number(b.displayOrder)
+      );
+      for (let sidx = 0; sidx < subVariables.length; sidx += 1) {
+        const subVariable = subVariables[sidx];
+        modelOptionsMap[subVariable] = {};
+        modelDateRangeMap[subVariable] = {};
+        forecastLengthOptionsMap[subVariable] = {};
+        thresholdsModelOptionsMap[subVariable] = {};
+        regionModelOptionsMap[subVariable] = {};
+
+        for (let i = 0; i < rows.length; i += 1) {
+          const modelValue = rows[i].model.trim();
+          const model = rows[i].displayText.trim();
+          modelOptionsMap[subVariable][model] = [modelValue];
+
+          const rowMinDate = moment
+            .utc(rows[i].mindate * 1000)
+            .format("MM/DD/YYYY HH:mm");
+          const rowMaxDate = moment
+            .utc(rows[i].maxdate * 1000)
+            .format("MM/DD/YYYY HH:mm");
+          modelDateRangeMap[subVariable][model] = {
+            minDate: rowMinDate,
+            maxDate: rowMaxDate,
+          };
+
+          forecastLengthOptionsMap[subVariable][model] = rows[i].fcstLens.map(String);
+
+          // we want the full threshold descriptions in thresholdsModelOptionsMap, not just the thresholds
+          const thresholds = rows[i].thresholds ? rows[i].thresholds : ["All Data"];
+          thresholdsModelOptionsMap[subVariable][model] = thresholds
+            .sort(function (a, b) {
+              return Number(a) - Number(b);
+            })
+            .map(function (threshold) {
+              return allThresholdValuesMap[subVariable][threshold.replace(/\./g, "_")];
+            });
+
+          // we want the full region descriptions in thresholdsModelOptionsMap, not just the regions
+          const { regions } = rows[i];
+          regionModelOptionsMap[subVariable][model] = regions.map(function (region) {
+            return allRegionValuesMap[region];
+          });
+        }
+      }
+    }
+    allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
+    allVariablesMapOption = [...new Set(["Elevation (m)"].concat(allVariables))].sort();
+    allVariablesNoneOption = [...new Set(["None"].concat(allVariablesMapOption))];
+  } catch (err) {
+    throw new Error(err.message);
+  }
+
+  try {
+    await matsCollections.SiteMap.removeAsync({});
+    let rows = await global.cbPool.queryCB(
+      global.cbPool.trfmSQLForDbTarget(
+        'select {{vxCOLLECTION}}.* from {{vxDBTARGET}} where type="MD" and docType="station" and version = "V01" and subset="{{vxCOLLECTION}}";'
+      )
+    );
+    if (rows.includes("queryCB ERROR: ")) {
+      // have this local try catch fail properly if the metadata isn't there
+      throw new Error(rows);
+    }
+    rows = rows.sort((a, b) => (a.name > b.name ? 1 : -1));
+    for (let i = 0; i < rows.length; i += 1) {
+      const siteName = rows[i].name === undefined ? "unknown" : rows[i].name;
+      const siteDescription =
+        rows[i].description === undefined ? "unknown" : rows[i].description;
+      const siteId = rows[i].id;
+      const siteLat = rows[i].geo === undefined ? -90 : Number(rows[i].geo[0].lat);
+      const siteLon = rows[i].geo === undefined ? 0 : Number(rows[i].geo[0].lon);
+      let siteElev = rows[i].geo === undefined ? 0 : rows[i].geo[0].elev;
+      siteElev = siteElev === 9999 ? undefined : siteElev; // convert the 9999 value used for missing elevation to undefined
+
+      // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
+      // Also exclude stations with missing data
+      if (siteLat < 90 && siteLat > -90) {
+        siteOptionsMap[siteName] = [siteId];
+        sitesElevationMap[siteName] = siteElev;
+
+        const point = [siteLat, siteLon];
+        const obj = {
+          name: siteName,
+          origName: siteName,
+          point,
+          elevation: siteElev,
+          options: {
+            title: siteDescription,
+            color: "red",
+            size: 5,
+            network: "METAR",
+            peerOption: siteName,
+            id: siteId,
+            highLightColor: "blue",
+          },
+        };
+        sitesLocationMap.push(obj);
+        await matsCollections.SiteMap.insertAsync({ siteName, siteId });
+      }
+    }
+  } catch (err) {
+    throw new Error(err.message);
+  }
+
+  await matsCollections.StationMap.removeAsync({});
+  await matsCollections.StationMap.insertAsync({
+    name: "stations",
+    optionsMap: sitesLocationMap,
+  });
+  await matsCollections.StationMap.insertAsync({
+    name: "elevations",
+    optionsMap: sitesElevationMap,
+  });
+
+  if ((await matsCollections.label.findOneAsync({ name: "label" })) === undefined) {
+    await matsCollections.label.insertAsync({
+      name: "label",
+      type: matsTypes.InputTypes.textInput,
+      optionsMap: {},
+      options: [],
+      controlButtonCovered: true,
+      default: "",
+      unique: true,
+      controlButtonVisibility: "block",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  }
+
+  const defaultPlotType = matsTypes.PlotTypes.timeSeries;
+  if (
+    (await matsCollections["plot-type"].findOneAsync({ name: "plot-type" })) ===
+    undefined
+  ) {
+    await matsCollections["plot-type"].insertAsync({
+      name: "plot-type",
+      type: matsTypes.InputTypes.select,
+      options: [
+        matsTypes.PlotTypes.timeSeries,
+        matsTypes.PlotTypes.dieoff,
+        matsTypes.PlotTypes.threshold,
+        matsTypes.PlotTypes.validtime,
+        matsTypes.PlotTypes.dailyModelCycle,
+        matsTypes.PlotTypes.performanceDiagram,
+        matsTypes.PlotTypes.map,
+        matsTypes.PlotTypes.histogram,
+        matsTypes.PlotTypes.contour,
+        matsTypes.PlotTypes.contourDiff,
+        matsTypes.PlotTypes.simpleScatter,
+      ],
+      dependentNames: ["variable"],
+      controlButtonCovered: false,
+      default: defaultPlotType,
+      unique: false,
+      controlButtonVisibility: "none",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  }
+
+  const varOptionsMap = {};
+  varOptionsMap[matsTypes.PlotTypes.timeSeries] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.dieoff] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.threshold] = allVariablesYesThreshold;
+  varOptionsMap[matsTypes.PlotTypes.validtime] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.dailyModelCycle] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.performanceDiagram] = allVariablesYesThreshold;
+  varOptionsMap[matsTypes.PlotTypes.map] = allVariablesMapOption;
+  varOptionsMap[matsTypes.PlotTypes.histogram] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.contour] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
+  varOptionsMap[matsTypes.PlotTypes.simpleScatter] = allVariables;
+
+  if (
+    (await matsCollections.variable.findOneAsync({ name: "variable" })) === undefined
+  ) {
+    await matsCollections.variable.insertAsync({
+      name: "variable",
+      type: matsTypes.InputTypes.select,
+      options: varOptionsMap[defaultPlotType],
+      optionsMap: varOptionsMap,
+      valuesMap: variableMetadataDocs,
+      dates: modelDateRangeMap,
+      superiorNames: ["plot-type"],
+      dependentNames: ["data-source", "statistic", "threshold"],
+      controlButtonCovered: true,
+      default: varOptionsMap[defaultPlotType][0],
+      unique: false,
+      controlButtonVisibility: "block",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections.variable.findOneAsync({
+      name: "variable",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, varOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
+    ) {
+      // have to reload variable data
+      await matsCollections.variable.updateAsync(
+        { name: "variable" },
+        {
+          $set: {
+            options: varOptionsMap[defaultPlotType],
+            optionsMap: varOptionsMap,
+            valuesMap: variableMetadataDocs,
+            dates: modelDateRangeMap,
+            default: varOptionsMap[defaultPlotType][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["x-variable"].findOneAsync({ name: "x-variable" })) ===
+    undefined
+  ) {
+    await matsCollections["x-variable"].insertAsync({
+      name: "x-variable",
+      type: matsTypes.InputTypes.select,
+      options: varOptionsMap[defaultPlotType],
+      optionsMap: varOptionsMap,
+      valuesMap: variableMetadataDocs,
+      dates: modelDateRangeMap,
+      superiorNames: ["plot-type"],
+      dependentNames: ["data-source", "x-statistic", "x-threshold"],
+      controlButtonCovered: true,
+      default: varOptionsMap[defaultPlotType][0],
+      unique: false,
+      controlButtonVisibility: "block",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["x-variable"].findOneAsync({
+      name: "x-variable",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, varOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
+    ) {
+      // have to reload variable data
+      await matsCollections["x-variable"].updateAsync(
+        { name: "x-variable" },
+        {
+          $set: {
+            options: varOptionsMap[defaultPlotType],
+            optionsMap: varOptionsMap,
+            valuesMap: variableMetadataDocs,
+            dates: modelDateRangeMap,
+            default: varOptionsMap[defaultPlotType][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["y-variable"].findOneAsync({ name: "y-variable" })) ===
+    undefined
+  ) {
+    await matsCollections["y-variable"].insertAsync({
+      name: "y-variable",
+      type: matsTypes.InputTypes.select,
+      options: varOptionsMap[defaultPlotType],
+      optionsMap: varOptionsMap,
+      valuesMap: variableMetadataDocs,
+      dates: modelDateRangeMap,
+      superiorNames: ["plot-type"],
+      dependentNames: ["data-source", "y-statistic", "y-threshold"],
+      controlButtonCovered: true,
+      default: varOptionsMap[defaultPlotType][0],
+      unique: false,
+      controlButtonVisibility: "block",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["y-variable"].findOneAsync({
+      name: "y-variable",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, varOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)
+    ) {
+      // have to reload variable data
+      await matsCollections["y-variable"].updateAsync(
+        { name: "y-variable" },
+        {
+          $set: {
+            options: varOptionsMap[defaultPlotType],
+            optionsMap: varOptionsMap,
+            valuesMap: variableMetadataDocs,
+            dates: modelDateRangeMap,
+            default: varOptionsMap[defaultPlotType][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["region-type"].findOneAsync({ name: "region-type" })) ===
+    undefined
+  ) {
+    await matsCollections["region-type"].insertAsync({
+      name: "region-type",
+      type: matsTypes.InputTypes.select,
+      options: ["Predefined region", "Select stations"],
+      default: "Predefined region",
+      hideOtherFor: {
+        region: ["Select stations"],
+        sites: ["Predefined region"],
+        sitesMap: ["Predefined region"],
+      },
+      controlButtonCovered: true,
+      controlButtonText: "Region mode",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  }
+
+  if (
+    (await matsCollections["data-source"].findOneAsync({ name: "data-source" })) ===
+    undefined
+  ) {
+    await matsCollections["data-source"].insertAsync({
+      name: "data-source",
+      type: matsTypes.InputTypes.select,
+      optionsMap: modelOptionsMap,
+      options: Object.keys(modelOptionsMap[allVariables[0]]),
+      superiorNames: ["variable"],
+      dependentNames: [
+        "region",
+        "forecast-length",
+        "threshold",
+        "dates",
+        "curve-dates",
+      ],
+      controlButtonCovered: true,
+      default: Object.keys(modelOptionsMap[allVariables[0]])[0],
+      unique: false,
+      controlButtonVisibility: "block",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 1,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["data-source"].findOneAsync({
+      name: "data-source",
+    });
+    if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
+      // have to reload model data
+      await matsCollections["data-source"].updateAsync(
+        { name: "data-source" },
+        {
+          $set: {
+            optionsMap: modelOptionsMap,
+            options: Object.keys(modelOptionsMap[allVariables[0]]),
+            default: Object.keys(modelOptionsMap[allVariables[0]])[0],
+          },
+        }
+      );
+    }
+  }
+
+  if ((await matsCollections.region.findOneAsync({ name: "region" })) === undefined) {
+    await matsCollections.region.insertAsync({
+      name: "region",
+      type: matsTypes.InputTypes.select,
+      optionsMap: regionModelOptionsMap,
+      options:
+        regionModelOptionsMap[allVariables[0]][
+          Object.keys(regionModelOptionsMap[allVariables[0]])[0]
+        ],
+      valuesMap: allRegionValuesMap,
+      superiorNames: ["variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        regionModelOptionsMap[allVariables[0]][
+          Object.keys(regionModelOptionsMap[allVariables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections.region.findOneAsync({ name: "region" });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap) ||
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allRegionValuesMap)
+    ) {
+      // have to reload region data
+      await matsCollections.region.updateAsync(
+        { name: "region" },
+        {
+          $set: {
+            optionsMap: regionModelOptionsMap,
+            valuesMap: allRegionValuesMap,
+            options:
+              regionModelOptionsMap[allVariables[0]][
+                Object.keys(regionModelOptionsMap[allVariables[0]])[0]
+              ],
+            default:
+              regionModelOptionsMap[allVariables[0]][
+                Object.keys(regionModelOptionsMap[allVariables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  const ctcOptionsMap = {
+    "CSI (Critical Success Index)": ["ctc", "x100", 100],
+
+    "TSS (True Skill Score)": ["ctc", "x100", 100],
+
+    "PODy (POD of value < threshold)": ["ctc", "x100", 100],
+
+    "PODn (POD of value > threshold)": ["ctc", "x100", 100],
+
+    "FAR (False Alarm Ratio)": ["ctc", "x100", 0],
+
+    "Bias (Forecast / Actual)": ["ctc", "Ratio", 1],
+
+    "Bias (Model - Obs)": ["scalar", "Unknown", null],
+
+    "HSS (Heidke Skill Score)": ["ctc", "x100", 100],
+
+    "ETS (Equitable Threat Score)": ["ctc", "x100", 100],
+
+    "Model average": ["scalar", "Unknown", null],
+
+    "Obs average": ["scalar", "Unknown", null],
+
+    RMSE: ["scalar", "Unknown", null],
+
+    "Std deviation": ["scalar", "Unknown", null],
+
+    "MAE (temp and dewpoint only)": ["scalar", "Unknown", null],
+
+    "Nlow (Number of obs < threshold (hits + misses))": ["ctc", "Number", null],
+
+    "Nhigh (Number of obs > threshold (false alarms + correct nulls))": [
+      "ctc",
+      "Number",
+      null,
+    ],
+
+    "Ntot (Total number of obs, (Nlow + Nhigh))": ["ctc", "Number", null],
+
+    "Ratio Nlow / Ntot ((hit + miss)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
+
+    "Ratio Nhigh / Ntot ((fa + cn)/(hit + miss + fa + cn))": ["ctc", "Ratio", null],
+
+    "N times*levels(*stations if station plot) per graph point": [
+      "ctc",
+      "Number",
+      null,
+    ],
+  };
+  const scalarOptionsMap = {
+    RMSE: ["scalar", "Unknown", null],
+
+    "Bias (Model - Obs)": ["scalar", "Unknown", null],
+
+    N: ["scalar", "Number", null],
+
+    "Model average": ["scalar", "Unknown", null],
+
+    "Obs average": ["scalar", "Unknown", null],
+
+    "Std deviation": ["scalar", "Unknown", null],
+
+    "MAE (temp and dewpoint only)": ["scalar", "Unknown", null],
+  };
+  const statOptionsMap = {};
+  for (let vidx = 0; vidx < allVariables.length; vidx += 1) {
+    const variable = allVariables[vidx];
+    statOptionsMap[variable] =
+      allVariablesYesThreshold.indexOf(variable) !== -1
+        ? ctcOptionsMap
+        : scalarOptionsMap;
+  }
+
+  if (
+    (await matsCollections.statistic.findOneAsync({ name: "statistic" })) === undefined
+  ) {
+    await matsCollections.statistic.insertAsync({
+      name: "statistic",
+      type: matsTypes.InputTypes.select,
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
+      superiorNames: ["variable"],
+      hideOtherFor: {
+        threshold: [
+          "RMSE",
+          "Bias (Model - Obs)",
+          "N",
+          "Model average",
+          "Obs average",
+          "Std deviation",
+          "MAE (temp and dewpoint only)",
+        ],
+      },
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(statOptionsMap)[0],
+      controlButtonVisibility: "block",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  }
+
+  if (
+    (await matsCollections["x-statistic"].findOneAsync({ name: "x-statistic" })) ===
+    undefined
+  ) {
+    await matsCollections["x-statistic"].insertAsync({
+      name: "x-statistic",
+      type: matsTypes.InputTypes.select,
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
+      superiorNames: ["x-variable"],
+      hideOtherFor: {
+        "x-threshold": [
+          "RMSE",
+          "Bias (Model - Obs)",
+          "N",
+          "Model average",
+          "Obs average",
+          "Std deviation",
+          "MAE (temp and dewpoint only)",
+        ],
+      },
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(statOptionsMap)[0],
+      controlButtonVisibility: "block",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  }
+
+  if (
+    (await matsCollections["y-statistic"].findOneAsync({ name: "y-statistic" })) ===
+    undefined
+  ) {
+    await matsCollections["y-statistic"].insertAsync({
+      name: "y-statistic",
+      type: matsTypes.InputTypes.select,
+      optionsMap: statOptionsMap,
+      options: Object.keys(statOptionsMap),
+      superiorNames: ["y-variable"],
+      hideOtherFor: {
+        "y-threshold": [
+          "RMSE",
+          "Bias (Model - Obs)",
+          "N",
+          "Model average",
+          "Obs average",
+          "Std deviation",
+          "MAE (temp and dewpoint only)",
+        ],
+      },
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(statOptionsMap)[0],
+      controlButtonVisibility: "block",
+      displayOrder: 5,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  }
+
+  if (
+    (await matsCollections.threshold.findOneAsync({ name: "threshold" })) === undefined
+  ) {
+    await matsCollections.threshold.insertAsync({
+      name: "threshold",
+      type: matsTypes.InputTypes.select,
+      optionsMap: thresholdsModelOptionsMap,
+      options:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ],
+      valuesMap: allThresholdValuesMap,
+      superiorNames: ["variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 2,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections.threshold.findOneAsync({
+      name: "threshold",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(
+        currentParam.optionsMap,
+        thresholdsModelOptionsMap
+      ) ||
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
+    ) {
+      // have to reload threshold data
+      await matsCollections.threshold.updateAsync(
+        { name: "threshold" },
+        {
+          $set: {
+            optionsMap: thresholdsModelOptionsMap,
+            valuesMap: allThresholdValuesMap,
+            options:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ],
+            default:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["x-threshold"].findOneAsync({ name: "x-threshold" })) ===
+    undefined
+  ) {
+    await matsCollections["x-threshold"].insertAsync({
+      name: "x-threshold",
+      type: matsTypes.InputTypes.select,
+      optionsMap: thresholdsModelOptionsMap,
+      options:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ],
+      valuesMap: allThresholdValuesMap,
+      superiorNames: ["x-variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["x-threshold"].findOneAsync({
+      name: "x-threshold",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(
+        currentParam.optionsMap,
+        thresholdsModelOptionsMap
+      ) ||
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
+    ) {
+      // have to reload threshold data
+      await matsCollections["x-threshold"].updateAsync(
+        { name: "x-threshold" },
+        {
+          $set: {
+            optionsMap: thresholdsModelOptionsMap,
+            valuesMap: allThresholdValuesMap,
+            options:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ],
+            default:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["y-threshold"].findOneAsync({ name: "y-threshold" })) ===
+    undefined
+  ) {
+    await matsCollections["y-threshold"].insertAsync({
+      name: "y-threshold",
+      type: matsTypes.InputTypes.select,
+      optionsMap: thresholdsModelOptionsMap,
+      options:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ],
+      valuesMap: allThresholdValuesMap,
+      superiorNames: ["y-variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default:
+        thresholdsModelOptionsMap[allVariables[0]][
+          Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+        ][0],
+      controlButtonVisibility: "block",
+      displayOrder: 6,
+      displayPriority: 1,
+      displayGroup: 3,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["y-threshold"].findOneAsync({
+      name: "y-threshold",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(
+        currentParam.optionsMap,
+        thresholdsModelOptionsMap
+      ) ||
+      !matsDataUtils.areObjectsEqual(currentParam.valuesMap, allThresholdValuesMap)
+    ) {
+      // have to reload threshold data
+      await matsCollections["y-threshold"].updateAsync(
+        { name: "y-threshold" },
+        {
+          $set: {
+            optionsMap: thresholdsModelOptionsMap,
+            valuesMap: allThresholdValuesMap,
+            options:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ],
+            default:
+              thresholdsModelOptionsMap[allVariables[0]][
+                Object.keys(thresholdsModelOptionsMap[allVariables[0]])[0]
+              ][0],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["forecast-length"].findOneAsync({
+      name: "forecast-length",
+    })) === undefined
+  ) {
+    await matsCollections["forecast-length"].insertAsync({
+      name: "forecast-length",
+      type: matsTypes.InputTypes.select,
+      optionsMap: forecastLengthOptionsMap,
+      options:
+        forecastLengthOptionsMap[allVariables[0]][
+          Object.keys(forecastLengthOptionsMap[allVariables[0]])[0]
+        ],
+      superiorNames: ["variable", "data-source"],
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: "6",
+      controlButtonVisibility: "block",
+      controlButtonText: "forecast lead time (h)",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 4,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["forecast-length"].findOneAsync({
+      name: "forecast-length",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)
+    ) {
+      // have to reload forecast length data
+      await matsCollections["forecast-length"].updateAsync(
+        { name: "forecast-length" },
+        {
+          $set: {
+            optionsMap: forecastLengthOptionsMap,
+            options:
+              forecastLengthOptionsMap[allVariables[0]][
+                Object.keys(forecastLengthOptionsMap[allVariables[0]])[0]
+              ],
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["dieoff-type"].findOneAsync({ name: "dieoff-type" })) ===
+    undefined
+  ) {
+    const dieoffOptionsMap = {
+      Dieoff: [matsTypes.ForecastTypes.dieoff],
+      "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
+      "Single cycle forecast (uses first date in range)": [
+        matsTypes.ForecastTypes.singleCycle,
+      ],
+    };
+    await matsCollections["dieoff-type"].insertAsync({
+      name: "dieoff-type",
+      type: matsTypes.InputTypes.select,
+      optionsMap: dieoffOptionsMap,
+      options: Object.keys(dieoffOptionsMap),
+      hideOtherFor: {
+        "valid-time": [
+          "Dieoff for a specified UTC cycle init hour",
+          "Single cycle forecast (uses first date in range)",
+        ],
+        "utc-cycle-start": [
+          "Dieoff",
+          "Single cycle forecast (uses first date in range)",
+        ],
+      },
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(dieoffOptionsMap)[0],
+      controlButtonVisibility: "block",
+      controlButtonText: "dieoff type",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 4,
+    });
+  }
+
+  if (
+    (await matsCollections["valid-time"].findOneAsync({ name: "valid-time" })) ===
+    undefined
+  ) {
+    await matsCollections["valid-time"].insertAsync({
+      name: "valid-time",
+      type: matsTypes.InputTypes.select,
+      options: [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+      ],
+      controlButtonCovered: true,
+      selected: [],
+      unique: false,
+      default: matsTypes.InputTypes.unused,
+      controlButtonVisibility: "block",
+      controlButtonText: "valid utc hour",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 4,
+      multiple: true,
+    });
+  }
+
+  if (
+    (await matsCollections["utc-cycle-start"].findOneAsync({
+      name: "utc-cycle-start",
+    })) === undefined
+  ) {
+    await matsCollections["utc-cycle-start"].insertAsync({
+      name: "utc-cycle-start",
+      type: matsTypes.InputTypes.select,
+      options: [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+      ],
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: ["12"],
+      controlButtonVisibility: "block",
+      controlButtonText: "utc cycle init hour",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 4,
+      multiple: true,
+    });
+  }
+
+  if ((await matsCollections.average.findOneAsync({ name: "average" })) === undefined) {
+    const optionsMap = {
+      None: ["m0.fcstValidEpoch"],
+      "3hr": [
+        `ceil(${3600 * 3}*floor(((m0.fcstValidEpoch)+${3600 * 3}/2)/${3600 * 3}))`,
+      ],
+      "6hr": [
+        `ceil(${3600 * 6}*floor(((m0.fcstValidEpoch)+${3600 * 6}/2)/${3600 * 6}))`,
+      ],
+      "12hr": [
+        `ceil(${3600 * 12}*floor(((m0.fcstValidEpoch)+${3600 * 12}/2)/${3600 * 12}))`,
+      ],
+      "1D": [
+        `ceil(${3600 * 24}*floor(((m0.fcstValidEpoch)+${3600 * 24}/2)/${3600 * 24}))`,
+      ],
+      "3D": [
+        `ceil(${3600 * 24 * 3}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 3}/2)/${
+          3600 * 24 * 3
+        }))`,
+      ],
+      "7D": [
+        `ceil(${3600 * 24 * 7}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 7}/2)/${
+          3600 * 24 * 7
+        }))`,
+      ],
+      "30D": [
+        `ceil(${3600 * 24 * 30}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 30}/2)/${
+          3600 * 24 * 30
+        }))`,
+      ],
+      "60D": [
+        `ceil(${3600 * 24 * 60}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 60}/2)/${
+          3600 * 24 * 60
+        }))`,
+      ],
+      "90D": [
+        `ceil(${3600 * 24 * 90}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 90}/2)/${
+          3600 * 24 * 90
+        }))`,
+      ],
+      "180D": [
+        `ceil(${3600 * 24 * 180}*floor(((m0.fcstValidEpoch)+${3600 * 24 * 180}/2)/${
+          3600 * 24 * 180
+        }))`,
+      ],
+    };
+    await matsCollections.average.insertAsync({
+      name: "average",
+      type: matsTypes.InputTypes.select,
+      optionsMap,
+      options: Object.keys(optionsMap),
+      controlButtonCovered: true,
+      unique: false,
+      selected: "None",
+      default: "None",
+      controlButtonVisibility: "block",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 5,
+    });
+  }
+
+  if ((await matsCollections.sites.findOneAsync({ name: "sites" })) === undefined) {
+    await matsCollections.sites.insertAsync({
+      name: "sites",
+      type: matsTypes.InputTypes.select,
+      optionsMap: siteOptionsMap,
+      options: Object.keys(siteOptionsMap),
+      peerName: "sitesMap", // name of the select parameter that is going to be set by selecting from this map
+      controlButtonCovered: true,
+      unique: false,
+      default: matsTypes.InputTypes.unused,
+      controlButtonVisibility: "block",
+      displayOrder: 4,
+      displayPriority: 1,
+      displayGroup: 5,
+      multiple: true,
+    });
+  }
+
+  if (
+    (await matsCollections.sitesMap.findOneAsync({ name: "sitesMap" })) === undefined
+  ) {
+    await matsCollections.sitesMap.insertAsync({
+      name: "sitesMap",
+      type: matsTypes.InputTypes.selectMap,
+      optionsMap: sitesLocationMap,
+      options: Object.keys(sitesLocationMap),
+      peerName: "sites", // name of the select parameter that is going to be set by selecting from this map
+      controlButtonCovered: true,
+      unique: false,
+      default: matsTypes.InputTypes.unused,
+      controlButtonVisibility: "block",
+      controlButtonText: "sites (Map display)",
+      displayOrder: 5,
+      displayPriority: 1,
+      displayGroup: 5,
+      multiple: true,
+      defaultMapView: { point: [50, -92.5], zoomLevel: 1.25 },
+    });
+  }
+
+  if (
+    (await matsCollections["bin-parameter"].findOneAsync({ name: "bin-parameter" })) ===
+    undefined
+  ) {
+    const optionsMap = {
+      "Fcst lead time": "m0.fcstLen",
+      Threshold: "'{{vxTHRESHOLD}}'",
+      "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
+      "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
+      "Valid Date": "m0.fcstValidEpoch",
+      "Init Date": "m0.fcstValidEpoch-m0.fcstLen*3600",
+    };
+
+    await matsCollections["bin-parameter"].insertAsync({
+      name: "bin-parameter",
+      type: matsTypes.InputTypes.select,
+      options: Object.keys(optionsMap),
+      optionsMap,
+      hideOtherFor: {
+        "forecast-length": ["Fcst lead time"],
+        threshold: ["Threshold"],
+        "valid-time": ["Valid UTC hour"],
+      },
+      selected: "",
+      controlButtonCovered: true,
+      unique: false,
+      default: Object.keys(optionsMap)[4],
+      controlButtonVisibility: "block",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 6,
+    });
+  }
+
+  if (
+    (await matsCollections["filter-model-by"].findOneAsync({
+      name: "filter-model-by",
+    })) === undefined
+  ) {
+    await matsCollections["filter-model-by"].insertAsync({
+      name: "filter-model-by",
+      type: matsTypes.InputTypes.select,
+      options: allVariablesNoneOption,
+      controlButtonCovered: true,
+      default: "None",
+      hideOtherFor: {
+        "filter-model-max": ["None"],
+        "filter-model-min": ["None"],
+      },
+      unique: false,
+      controlButtonVisibility: "block",
+      controlButtonText: "Filter model by",
+      gapAbove: true,
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 8,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["filter-model-by"].findOneAsync({
+      name: "filter-model-by",
+    });
+    if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
+      // have to reload variable data
+      await matsCollections["filter-model-by"].updateAsync(
+        { name: "filter-model-by" },
+        {
+          $set: {
+            options: allVariablesNoneOption,
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["filter-model-min"].findOneAsync({
+      name: "filter-model-min",
+    })) === undefined
+  ) {
+    await matsCollections["filter-model-min"].insertAsync({
+      name: "filter-model-min",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: -1000000000,
+      max: 1000000000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 0,
+      controlButtonVisibility: "block",
+      controlButtonText: "minimum",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 8,
+    });
+  }
+
+  if (
+    (await matsCollections["filter-model-max"].findOneAsync({
+      name: "filter-model-max",
+    })) === undefined
+  ) {
+    await matsCollections["filter-model-max"].insertAsync({
+      name: "filter-model-max",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: -1000000000,
+      max: 1000000000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 60000,
+      controlButtonVisibility: "block",
+      controlButtonText: "maximum",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 8,
+    });
+  }
+
+  if (
+    (await matsCollections["filter-obs-by"].findOneAsync({ name: "filter-obs-by" })) ===
+    undefined
+  ) {
+    await matsCollections["filter-obs-by"].insertAsync({
+      name: "filter-obs-by",
+      type: matsTypes.InputTypes.select,
+      options: allVariablesNoneOption,
+      controlButtonCovered: true,
+      default: "None",
+      hideOtherFor: {
+        "filter-obs-max": ["None"],
+        "filter-obs-min": ["None"],
+      },
+      unique: false,
+      controlButtonVisibility: "block",
+      controlButtonText: "Filter obs by",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["filter-obs-by"].findOneAsync({
+      name: "filter-obs-by",
+    });
+    if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
+      // have to reload variable data
+      await matsCollections["filter-obs-by"].updateAsync(
+        { name: "filter-obs-by" },
+        {
+          $set: {
+            options: allVariablesNoneOption,
+          },
+        }
+      );
+    }
+  }
+
+  if (
+    (await matsCollections["filter-obs-min"].findOneAsync({
+      name: "filter-obs-min",
+    })) === undefined
+  ) {
+    await matsCollections["filter-obs-min"].insertAsync({
+      name: "filter-obs-min",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: -1000000000,
+      max: 1000000000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 0,
+      controlButtonVisibility: "block",
+      controlButtonText: "minimum",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  }
+
+  if (
+    (await matsCollections["filter-obs-max"].findOneAsync({
+      name: "filter-obs-max",
+    })) === undefined
+  ) {
+    await matsCollections["filter-obs-max"].insertAsync({
+      name: "filter-obs-max",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: -1000000000,
+      max: 1000000000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 60000,
+      controlButtonVisibility: "block",
+      controlButtonText: "maximum",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  }
+
+  // determine date defaults for dates and curveDates
+  const defaultDataSource = (
+    await matsCollections["data-source"].findOneAsync({ name: "data-source" })
+  ).default;
+  modelDateRangeMap = (
+    await matsCollections.variable.findOneAsync({ name: "variable" })
+  ).dates;
+
+  minDate = modelDateRangeMap[allVariables[0]][defaultDataSource].minDate;
+  maxDate = modelDateRangeMap[allVariables[0]][defaultDataSource].maxDate;
+
+  // need to turn the raw max and min from the metadata into the last valid month of data
+  const newDateRange = matsParamUtils.getMinMaxDates(minDate, maxDate);
+  const minusMonthMinDate = newDateRange.minDate;
+  maxDate = newDateRange.maxDate;
+  dstr = `${moment.utc(minusMonthMinDate).format("MM/DD/YYYY HH:mm")} - ${moment
+    .utc(maxDate)
+    .format("MM/DD/YYYY HH:mm")}`;
+
+  if (
+    (await matsCollections["curve-dates"].findOneAsync({ name: "curve-dates" })) ===
+    undefined
+  ) {
+    const optionsMap = {
+      "1 day": ["1 day"],
+      "3 days": ["3 days"],
+      "7 days": ["7 days"],
+      "31 days": ["31 days"],
+      "90 days": ["90 days"],
+      "180 days": ["180 days"],
+      "365 days": ["365 days"],
+    };
+    await matsCollections["curve-dates"].insertAsync({
+      name: "curve-dates",
+      type: matsTypes.InputTypes.dateRange,
+      optionsMap,
+      options: Object.keys(optionsMap).sort(),
+      startDate: minDate,
+      stopDate: maxDate,
+      superiorNames: ["variable", "data-source"],
+      controlButtonCovered: true,
+      unique: false,
+      default: dstr,
+      controlButtonVisibility: "block",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 7,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["curve-dates"].findOneAsync({
+      name: "curve-dates",
+    });
+    if (
+      !matsDataUtils.areObjectsEqual(currentParam.startDate, minDate) ||
+      !matsDataUtils.areObjectsEqual(currentParam.stopDate, maxDate) ||
+      !matsDataUtils.areObjectsEqual(currentParam.default, dstr)
+    ) {
+      // have to reload dates data
+      await matsCollections["curve-dates"].updateAsync(
+        { name: "curve-dates" },
+        {
+          $set: {
+            startDate: minDate,
+            stopDate: maxDate,
+            default: dstr,
+          },
+        }
+      );
+    }
+  }
+};
+
+/* The format of a curveTextPattern is an array of arrays, each sub array has
+ [labelString, localVariableName, delimiterString]  any of which can be null.
+ Each sub array will be joined (the localVariableName is always dereferenced first)
+ and then the sub arrays will be joined maintaining order.
+
+ The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
+ See curve_item.js and standAlone.js.
+ */
+const doCurveTextPatterns = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
+  if (
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
+  ) {
+    await matsCollections.CurveTextPatterns.removeAsync({});
+  }
+  if ((await matsCollections.CurveTextPatterns.find().countAsync()) === 0) {
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.timeSeries,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["", "average", " average."],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
+        "threshold",
+        "average",
+        "forecast-length",
+        "valid-time",
+        "sites",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.dieoff,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["initialized ", "utc-cycle-start", " UTC, "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["", "dieoff-type", ", "],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["", "curve-dates", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
+        "threshold",
+        "dieoff-type",
+        "valid-time",
+        "utc-cycle-start",
+        "sites",
+        "curve-dates",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.threshold,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " "],
+        ["", "statistic", ", "],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["", "curve-dates", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
+        "forecast-length",
+        "valid-time",
+        "sites",
+        "curve-dates",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.validtime,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["", "curve-dates", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
+        "threshold",
+        "forecast-length",
+        "sites",
+        "curve-dates",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.dailyModelCycle,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["initialized ", "utc-cycle-start", " UTC. "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
+        "threshold",
+        "utc-cycle-start",
+        "sites",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.performanceDiagram,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " at "],
+        ["", "threshold", ", "],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["", "curve-dates", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "threshold",
+        "forecast-length",
+        "valid-time",
+        "sites",
+        "bin-parameter",
+        "curve-dates",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.map,
+      textPattern: [
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        [" valid-time:", "valid-time", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "variable",
+        "data-source",
+        "statistic",
+        "threshold",
+        "forecast-length",
+        "valid-time",
+        "sites",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.histogram,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["", "curve-dates", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
+        "threshold",
+        "forecast-length",
+        "valid-time",
+        "sites",
+        "curve-dates",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.contour,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["valid at: ", "valid-time", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
+        "threshold",
+        "forecast-length",
+        "valid-time",
+        "sites",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.contourDiff,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " at "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "variable", " "],
+        ["", "statistic", " at "],
+        ["", "threshold", ", "],
+        ["valid at: ", "valid-time", ". "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "variable",
+        "data-source",
+        "region-type",
+        "region",
+        "statistic",
+        "threshold",
+        "forecast-length",
+        "valid-time",
+        "sites",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+    await matsCollections.CurveTextPatterns.insertAsync({
+      plotType: matsTypes.PlotTypes.simpleScatter,
+      textPattern: [
+        ["", "label", ": "],
+        ["", "data-source", " in "],
+        ["", "sites", ", "],
+        ["", "region", ", "],
+        ["", "forecast-length", "h "],
+        ["", "x-variable", " "],
+        ["", "x-statistic", " at "],
+        ["", "x-threshold", " vs "],
+        ["", "y-variable", " "],
+        ["", "y-statistic", " at "],
+        ["", "y-threshold", ", "],
+        ["valid at: ", "valid-time", " UTC, "],
+        ["Model filtered by: ", "filter-model-by", " "],
+        ["range: ", "filter-model-min", " "],
+        ["to ", "filter-model-max", ". "],
+        ["Obs filtered by: ", "filter-obs-by", " "],
+        ["range: ", "filter-obs-min", " "],
+        ["to ", "filter-obs-max", ". "],
+      ],
+      displayParams: [
+        "label",
+        "x-variable",
+        "y-variable",
+        "data-source",
+        "region-type",
+        "region",
+        "x-statistic",
+        "x-threshold",
+        "y-statistic",
+        "y-threshold",
+        "forecast-length",
+        "valid-time",
+        "sites",
+        "bin-parameter",
+        "curve-dates",
+        "filter-model-by",
+        "filter-model-min",
+        "filter-model-max",
+        "filter-obs-by",
+        "filter-obs-min",
+        "filter-obs-max",
+      ],
+      groupSize: 6,
+    });
+  }
+};
+
+const doSavedCurveParams = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
+  if (
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
+  ) {
+    await matsCollections.SavedCurveParams.removeAsync({});
+  }
+  if ((await matsCollections.SavedCurveParams.find().countAsync()) === 0) {
+    await matsCollections.SavedCurveParams.insertAsync({
+      clName: "changeList",
+      changeList: [],
+    });
+  }
+};
+
+const doPlotGraph = async function () {
+  const settings = await matsCollections.Settings.findOneAsync({});
+  if (
+    settings === undefined ||
+    settings.resetFromCode === undefined ||
+    settings.resetFromCode === true
+  ) {
+    await matsCollections.PlotGraphFunctions.removeAsync({});
+  }
+  if ((await matsCollections.PlotGraphFunctions.find().countAsync()) === 0) {
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.timeSeries,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataSeries",
+      checked: true,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.dieoff,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataDieoff",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.threshold,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataThreshold",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.validtime,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataValidTime",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.dailyModelCycle,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataDailyModelCycle",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.performanceDiagram,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataPerformanceDiagram",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.map,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataMap",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.histogram,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataHistogram",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.contour,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataContour",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.contourDiff,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataContourDiff",
+      checked: false,
+    });
+    await matsCollections.PlotGraphFunctions.insertAsync({
+      plotType: matsTypes.PlotTypes.simpleScatter,
+      graphFunction: "graphPlotly",
+      dataFunction: "dataSimpleScatter",
+      checked: false,
+    });
+  }
+};
+
+Meteor.startup(async function () {
+  await matsCollections.Databases.removeAsync({});
+  if ((await matsCollections.Databases.find({}).countAsync()) < 0) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "main startup: corrupted Databases collection: dropping Databases collection"
+    );
+    await matsCollections.Databases.dropAsync();
+  }
+  if ((await matsCollections.Databases.find({}).countAsync()) === 0) {
+    let databases;
+    if (
+      Meteor.settings === undefined ||
+      Meteor.settings.private === undefined ||
+      Meteor.settings.private.databases === undefined
+    ) {
+      databases = undefined;
+    } else {
+      databases = Meteor.settings.private.databases;
+    }
+    if (databases !== null && databases !== undefined && Array.isArray(databases)) {
+      for (let di = 0; di < databases.length; di += 1) {
+        await matsCollections.Databases.insertAsync(databases[di]);
+      }
+    }
+  }
+
+  // create list of all pools
+  const allPools = [];
+
+  // connect to the couchbase cluster
+  const cbConnection = await matsCollections.Databases.findOneAsync(
+    {
+      role: matsTypes.DatabaseRoles.COUCHBASE,
+      status: "active",
+    },
+    {
+      host: 1,
+      port: 1,
+      bucket: 1,
+      scope: 1,
+      collection: 1,
+      user: 1,
+      password: 1,
+    }
+  );
+
+  if (cbConnection) {
+    global.cbPool = new matsCouchbaseUtils.CBUtilities(
+      cbConnection.host,
+      cbConnection.bucket,
+      cbConnection.scope,
+      cbConnection.collection,
+      cbConnection.user,
+      cbConnection.password
+    );
+  }
+  allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
+  // create list of tables we need to monitor for update
+  const mdr = new matsTypes.MetaDataDBRecord(
+    "cbPool",
+    `${cbConnection.bucket}:${cbConnection.scope}:${cbConnection.collection}`,
+    [
+      "MD:matsAux:COMMON:V01",
+      "MD:matsGui:ceiling:COMMON:V01",
+      "MD:matsGui:visibility:COMMON:V01",
+      "MD:matsGui:surface:COMMON:V01",
+    ]
+  );
+  try {
+    await matsMethods.resetApp({
+      appPools: allPools,
+      appMdr: mdr,
+      appType: matsTypes.AppTypes.mats,
+      dbType: matsTypes.DbTypes.couchbase,
+    });
+  } catch (error) {
+    throw new Error(error.message);
+  }
+});
+
+// this object is global so that the reset code can get to it
+// These are application specific mongo data - like curve params
+// The appSpecificResetRoutines object is a special name,
+// as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+global.appSpecificResetRoutines = [
+  doPlotGraph,
+  doCurveParams,
+  doSavedCurveParams,
+  doPlotParams,
+  doCurveTextPatterns,
+];
