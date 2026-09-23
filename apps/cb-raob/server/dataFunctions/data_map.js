@@ -62,20 +62,10 @@ global.dataMap = async function (plotParams) {
     await matsCollections["data-source"].findOneAsync({ name: "data-source" })
   ).optionsMap[variable][curve["data-source"]][0];
 
-  const thresholdStr = curve.threshold;
-  let threshold = "";
-  if (variableValuesMap[queryVariable][1]) {
-    const thresholdValues = (
-      await matsCollections.threshold.findOneAsync({ name: "threshold" })
-    ).valuesMap[variable];
-    threshold = Object.keys(thresholdValues).find(
-      (key) => thresholdValues[key] === thresholdStr
-    );
-    threshold = threshold.replace(/_/g, ".");
-  }
-
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
   const forecastLength = curve["forecast-length"];
+
+  const { level } = curve;
 
   const statisticSelect = curve.statistic;
   const statisticOptionsMap = (
@@ -207,7 +197,8 @@ global.dataMap = async function (plotParams) {
         sitesList,
         model,
         forecastLength,
-        threshold,
+        undefined,
+        level,
         fromSecs,
         toSecs,
         validTimes,

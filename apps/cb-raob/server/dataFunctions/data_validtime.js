@@ -73,22 +73,12 @@ global.dataValidTime = async function (plotParams) {
       await matsCollections["data-source"].findOneAsync({ name: "data-source" })
     ).optionsMap[variable][curve["data-source"]][0];
 
-    const thresholdStr = curve.threshold;
-    let threshold = "";
-    if (variableValuesMap[queryVariable][1]) {
-      const thresholdValues = (
-        await matsCollections.threshold.findOneAsync({ name: "threshold" })
-      ).valuesMap[variable];
-      threshold = Object.keys(thresholdValues).find(
-        (key) => thresholdValues[key] === thresholdStr
-      );
-      threshold = threshold.replace(/_/g, ".");
-    }
-
     const forecastLength = curve["forecast-length"];
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
+
+    const { level } = curve;
 
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
@@ -173,14 +163,7 @@ global.dataValidTime = async function (plotParams) {
     let sitesList;
     const regionType =
       filterModelBy === "None" && // not filtering the model by anything
-      filterObsBy === "None" && // not filtering the obs by anything
-      !(
-        // not a thresholded variable that we're forcing into a scalar stat
-        (
-          variableValuesMap[queryVariable][1] &&
-          statisticOptionsMap[variable][statisticSelect][0] === "scalar"
-        )
-      )
+      filterObsBy === "None" // not filtering the obs by anything
         ? curve["region-type"]
         : "Select stations";
     if (curve["region-type"] === "Predefined region") {
@@ -197,7 +180,6 @@ global.dataValidTime = async function (plotParams) {
 
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
-        let statTemplate;
         queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -209,25 +191,18 @@ global.dataValidTime = async function (plotParams) {
           queryVariable.toUpperCase()
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        queryTemplate = queryTemplate.replace(/{{vxLEVEL}}/g, level);
         queryTemplate = queryTemplate.replace(
           /{{vxBIN_CLAUSE}}/g,
           "m0.fcstValidEpoch%(24*3600)/3600"
         );
         queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "hr_of_day");
-        if (statType === "ctc") {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
-        } else {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLE}}/g,
-            variableDetails[0]
-          );
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
-        }
+        const statTemplate = await Assets.getTextAsync(
+          "sqlTemplates/tmpl_PartialSums.sql"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+        queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
+        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
         // valid time plots by definition don't filter the available valid times or UTC start times
         queryTemplate = global.cbPool.trfmSQLRemoveClause(
           queryTemplate,
@@ -292,7 +267,8 @@ global.dataValidTime = async function (plotParams) {
             sitesList,
             model,
             forecastLength,
-            threshold,
+            undefined,
+            level,
             undefined,
             fromSecs,
             toSecs,

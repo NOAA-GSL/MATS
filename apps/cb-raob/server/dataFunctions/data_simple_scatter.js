@@ -93,40 +93,13 @@ global.dataSimpleScatter = async function (plotParams) {
     }
     const model = modelOptionsMap[variableX][curve["data-source"]][0];
 
-    if (binParam === "Threshold") {
-      throw new Error(
-        `INFO:  Binning by thresholds is currently not supported for scatter plots in this app (performance diagrams and contours only). Please select a different binning parameter.`
-      );
-    }
-
-    const thresholdStrX = curve["x-threshold"];
-    const thresholdStrY = curve["y-threshold"];
-    let thresholdX = "";
-    let thresholdY = "";
-    if (variableValuesMap[queryVariableX][1]) {
-      const thresholdValuesX = (
-        await matsCollections["x-threshold"].findOneAsync({ name: "x-threshold" })
-      ).valuesMap[variableX];
-      thresholdX = Object.keys(thresholdValuesX).find(
-        (key) => thresholdValuesX[key] === thresholdStrX
-      );
-      thresholdX = thresholdX.replace(/_/g, ".");
-    }
-    if (variableValuesMap[queryVariableY][1]) {
-      const thresholdValuesY = (
-        await matsCollections["y-threshold"].findOneAsync({ name: "y-threshold" })
-      ).valuesMap[variableY];
-      thresholdY = Object.keys(thresholdValuesY).find(
-        (key) => thresholdValuesY[key] === thresholdStrY
-      );
-      thresholdY = thresholdY.replace(/_/g, ".");
-    }
-
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     let forecastLength = curve["forecast-length"];
     const dateRange = matsDataUtils.getDateRange(curve["curve-dates"]);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
+
+    const { level } = curve;
 
     const statisticSelectX = curve["x-statistic"];
     const statisticSelectY = curve["y-statistic"];
@@ -212,21 +185,7 @@ global.dataSimpleScatter = async function (plotParams) {
     let sitesList;
     const regionType =
       filterModelBy === "None" && // not filtering the model by anything
-      filterObsBy === "None" && // not filtering the obs by anything
-      !(
-        // not a thresholded variable that we're forcing into a scalar stat
-        (
-          variableValuesMap[queryVariableX][1] &&
-          statisticOptionsMap[variableX][statisticSelectX][0] === "scalar"
-        )
-      ) &&
-      !(
-        // not a thresholded variable that we're forcing into a scalar stat
-        (
-          variableValuesMap[queryVariableY][1] &&
-          statisticOptionsMap[variableY][statisticSelectY][0] === "scalar"
-        )
-      )
+      filterObsBy === "None" // not filtering the obs by anything
         ? curve["region-type"]
         : "Select stations";
     if (curve["region-type"] === "Predefined region") {
@@ -243,7 +202,6 @@ global.dataSimpleScatter = async function (plotParams) {
 
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
-        let statTemplate;
         queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Scatter.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -277,58 +235,24 @@ global.dataSimpleScatter = async function (plotParams) {
             "{{vxFCST_LEN}}"
           );
         }
+        queryTemplate = queryTemplate.replace(/{{vxLEVEL}}/g, level);
         queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, binClause);
-        if (statTypeX === "ctc" && statTypeY === "ctc") {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC_2d.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDX}}/g, thresholdX);
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDY}}/g, thresholdY);
-          queryTemplate = queryTemplate.replace(
-            /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
-            "= 'CTC'"
-          );
-        } else if (statTypeX === "ctc" && statTypeY === "scalar") {
-          statTemplate = await Assets.getTextAsync(
-            "sqlTemplates/tmpl_CTC_PartialSums_2d.sql"
-          );
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDX}}/g, thresholdX);
-          queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLEY}}/g,
-            variableDetailsY[0]
-          );
-          queryTemplate = queryTemplate.replace(/{{vxTYPEX}}/g, "CTC");
-          queryTemplate = queryTemplate.replace(/{{vxTYPEY}}/g, "SUMS");
-        } else if (statTypeX === "scalar" && statTypeY === "ctc") {
-          statTemplate = await Assets.getTextAsync(
-            "sqlTemplates/tmpl_PartialSums_CTC_2d.sql"
-          );
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLEX}}/g,
-            variableDetailsX[0]
-          );
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLDY}}/g, thresholdY);
-          queryTemplate = queryTemplate.replace(/{{vxTYPEX}}/g, "SUMS");
-          queryTemplate = queryTemplate.replace(/{{vxTYPEY}}/g, "CTC");
-        } else {
-          statTemplate = await Assets.getTextAsync(
-            "sqlTemplates/tmpl_PartialSums_2d.sql"
-          );
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLEX}}/g,
-            variableDetailsX[0]
-          );
-          queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLEY}}/g,
-            variableDetailsY[0]
-          );
-          queryTemplate = queryTemplate.replace(
-            /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
-            "= 'SUMS'"
-          );
-        }
+        const statTemplate = await Assets.getTextAsync(
+          "sqlTemplates/tmpl_PartialSums_2d.sql"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+        queryTemplate = queryTemplate.replace(
+          /{{vxSUBVARIABLEX}}/g,
+          variableDetailsX[0]
+        );
+        queryTemplate = queryTemplate.replace(
+          /{{vxSUBVARIABLEY}}/g,
+          variableDetailsY[0]
+        );
+        queryTemplate = queryTemplate.replace(
+          /IN \['{{vxTYPEX}}', '{{vxTYPEY}}'\]/g,
+          "= 'SUMS'"
+        );
 
         let dateString = "";
         if (binParam === "Init Date") {
@@ -422,8 +346,9 @@ global.dataSimpleScatter = async function (plotParams) {
             sitesList,
             model,
             forecastLength,
-            thresholdX,
-            thresholdY,
+            undefined,
+            undefined,
+            level,
             fromSecs,
             toSecs,
             validTimes,

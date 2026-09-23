@@ -61,8 +61,6 @@ global.dataContour = async function (plotParams) {
     })
   ).optionsMap[yAxisParam];
 
-  let allThresholds;
-
   // initialize variables specific to this curve
   const curve = curves[0];
   const { label } = curve;
@@ -82,56 +80,10 @@ global.dataContour = async function (plotParams) {
     await matsCollections["data-source"].findOneAsync({ name: "data-source" })
   ).optionsMap[variable][curve["data-source"]][0];
 
-  let threshold = "";
-  if (
-    xAxisParam !== "Threshold" &&
-    yAxisParam !== "Threshold" &&
-    variableValuesMap[queryVariable][1]
-  ) {
-    // threshold is not an axis param and this is a CTC app
-    // so find which threshold was selected
-    const thresholdStr = curve.threshold;
-    if (thresholdStr === undefined) {
-      throw new Error(
-        `INFO:  ${label}'s threshold is undefined. Please assign it a value.`
-      );
-    }
-    const thresholdValues = (
-      await matsCollections.threshold.findOneAsync({ name: "threshold" })
-    ).valuesMap[variable];
-    threshold = Object.keys(thresholdValues).find(
-      (key) => thresholdValues[key] === thresholdStr
-    );
-    threshold = threshold.replace(/_/g, ".");
-    allThresholds = [threshold];
-  } else if (variableValuesMap[queryVariable][1]) {
-    // threshold is an axis param and this is a CTC app
-    // so catalogue the thresholds now, we'll need to do a separate query for each
-    allThresholds = Object.keys(
-      (await matsCollections.threshold.findOneAsync({ name: "threshold" })).valuesMap[
-        variable
-      ]
-    )
-      .map(function (x) {
-        return x.replace(/_/g, ".");
-      })
-      .sort(function (a, b) {
-        return Number(a) - Number(b);
-      });
-  } else if (xAxisParam === "Threshold" || yAxisParam === "Threshold") {
-    // threshold is an axis param and this is a scalar app
-    // so throw an error, that's not doable
-    throw new Error(
-      "INFO: Using threshold as an axis parameter doesn't work with this variable. Try ceiling or visibility?"
-    );
-  } else {
-    // threshold is not an axis param and this is a scalar app
-    // so create a dummy threshold for the loop later
-    allThresholds = ["All Data"];
-  }
-
   const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
   const forecastLength = curve["forecast-length"];
+
+  const { level } = curve;
 
   const statisticSelect = curve.statistic;
   const statisticOptionsMap = (
@@ -215,14 +167,7 @@ global.dataContour = async function (plotParams) {
   let sitesList;
   const regionType =
     filterModelBy === "None" && // not filtering the model by anything
-    filterObsBy === "None" && // not filtering the obs by anything
-    !(
-      // not a thresholded variable that we're forcing into a scalar stat
-      (
-        variableValuesMap[queryVariable][1] &&
-        statisticOptionsMap[variable][statisticSelect][0] === "scalar"
-      )
-    )
+    filterObsBy === "None" // not filtering the obs by anything
       ? curve["region-type"]
       : "Select stations";
   if (curve["region-type"] === "Predefined region") {
@@ -238,7 +183,6 @@ global.dataContour = async function (plotParams) {
 
     if (regionType === "Predefined region") {
       // Predefined region, no filtering.
-      let statTemplate;
       queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_Contour.sql");
       queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
       queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -248,18 +192,15 @@ global.dataContour = async function (plotParams) {
         /{{vxVARIABLE}}/g,
         queryVariable.toUpperCase()
       );
+      queryTemplate = queryTemplate.replace(/{{vxLEVEL}}/g, level);
       queryTemplate = queryTemplate.replace(/{{vxXVAL_CLAUSE}}/g, xValClause);
       queryTemplate = queryTemplate.replace(/{{vxYVAL_CLAUSE}}/g, yValClause);
-      if (statType === "ctc") {
-        statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
-        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
-      } else {
-        statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
-        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-        queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
-        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
-      }
+      const statTemplate = await Assets.getTextAsync(
+        "sqlTemplates/tmpl_PartialSums.sql"
+      );
+      queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+      queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
+      queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
       if (xAxisParam !== "Fcst lead time" && yAxisParam !== "Fcst lead time") {
         if (forecastLength === undefined) {
           throw new Error(
@@ -337,84 +278,74 @@ global.dataContour = async function (plotParams) {
   let d = {};
   let dTemp;
   if (!diffFrom) {
-    for (
-      let thresholdIndex = 0;
-      thresholdIndex < allThresholds.length;
-      thresholdIndex += 1
-    ) {
-      threshold = allThresholds[thresholdIndex];
-      let queryTemplateThreshold;
+    let queryResult;
+    const startMoment = moment();
+    let finishMoment;
+    try {
       if (regionType === "Predefined region") {
-        queryTemplateThreshold = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-      }
-
-      let queryResult;
-      const startMoment = moment();
-      let finishMoment;
-      try {
-        if (regionType === "Predefined region") {
-          statement = global.cbPool.trfmSQLForDbTarget(queryTemplateThreshold);
-        } else {
-          // send to matsMiddle
-          statement = "Station plot -- no one query.";
-          const mdw = new matsMiddleContour.MatsMiddleContour(global.cbPool);
-          rows = await mdw.processStationQuery(
-            xAxisParam,
-            yAxisParam,
-            statType,
-            variableDetails[1],
-            sitesList,
-            model,
-            forecastLength,
-            threshold,
-            fromSecs,
-            toSecs,
-            validTimes,
-            undefined,
-            filterInfo,
-            elevMap
-          );
-        }
-
-        // send the query statement to the query function
-        queryResult = await matsDataQueryUtils.queryDBContour(
-          global.cbPool,
-          regionType === "Predefined region" ? statement : rows,
-          appParams,
-          statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
-        );
-
-        finishMoment = moment();
-        dataRequests[label] = statement;
-        dataRequests[`data retrieval (query) time - ${label}`] = {
-          begin: startMoment.format(),
-          finish: finishMoment.format(),
-          duration: `${moment
-            .duration(finishMoment.diff(startMoment))
-            .asSeconds()} seconds`,
-          recordCount: queryResult.data.xTextOutput.length,
-        };
-        // get the data back from the query
-        dTemp = queryResult.data;
-      } catch (e) {
-        // this is an error produced by a bug in the query function, not an error returned by the mysql database
-        e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
-        throw new Error(e.message);
-      }
-
-      if (queryResult.error !== undefined && queryResult.error !== "") {
-        if (queryResult.error !== matsTypes.Messages.NO_DATA_FOUND) {
-          // this is an error returned by the mysql database
-          error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
-          throw new Error(error);
-        }
+        statement = global.cbPool.trfmSQLForDbTarget(queryTemplate);
       } else {
-        dataFoundForAnyCurve = true;
+        // send to matsMiddle
+        statement = "Station plot -- no one query.";
+        const mdw = new matsMiddleContour.MatsMiddleContour(global.cbPool);
+        rows = await mdw.processStationQuery(
+          xAxisParam,
+          yAxisParam,
+          statType,
+          variableDetails[1],
+          sitesList,
+          model,
+          forecastLength,
+          undefined,
+          level,
+          fromSecs,
+          toSecs,
+          validTimes,
+          undefined,
+          filterInfo,
+          elevMap
+        );
       }
 
-      // consolidate data
-      d = matsDataUtils.consolidateContour(d, dTemp, statType, xAxisParam, yAxisParam);
+      // send the query statement to the query function
+      queryResult = await matsDataQueryUtils.queryDBContour(
+        global.cbPool,
+        regionType === "Predefined region" ? statement : rows,
+        appParams,
+        statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
+      );
+
+      finishMoment = moment();
+      dataRequests[label] = statement;
+      dataRequests[`data retrieval (query) time - ${label}`] = {
+        begin: startMoment.format(),
+        finish: finishMoment.format(),
+        duration: `${moment
+          .duration(finishMoment.diff(startMoment))
+          .asSeconds()} seconds`,
+        recordCount: queryResult.data.xTextOutput.length,
+      };
+      // get the data back from the query
+      dTemp = queryResult.data;
+    } catch (e) {
+      // this is an error produced by a bug in the query function, not an error returned by the mysql database
+      e.message = `Error in queryDB: ${e.message} for statement: ${statement}`;
+      throw new Error(e.message);
     }
+
+    if (queryResult.error !== undefined && queryResult.error !== "") {
+      if (queryResult.error !== matsTypes.Messages.NO_DATA_FOUND) {
+        // this is an error returned by the mysql database
+        error += `Error from verification query: <br>${queryResult.error}<br> query: <br>${statement}<br>`;
+        throw new Error(error);
+      }
+    } else {
+      dataFoundForAnyCurve = true;
+    }
+
+    // consolidate data
+    d = matsDataUtils.consolidateContour(d, dTemp, statType, xAxisParam, yAxisParam);
+
     d.glob_stats.mean = matsDataUtils.average(
       [].concat(...d.z).filter(function (n) {
         return n !== null;

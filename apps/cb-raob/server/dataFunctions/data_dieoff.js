@@ -73,18 +73,6 @@ global.dataDieoff = async function (plotParams) {
       await matsCollections["data-source"].findOneAsync({ name: "data-source" })
     ).optionsMap[variable][curve["data-source"]][0];
 
-    const thresholdStr = curve.threshold;
-    let threshold = "";
-    if (variableValuesMap[queryVariable][1]) {
-      const thresholdValues = (
-        await matsCollections.threshold.findOneAsync({ name: "threshold" })
-      ).valuesMap[variable];
-      threshold = Object.keys(thresholdValues).find(
-        (key) => thresholdValues[key] === thresholdStr
-      );
-      threshold = threshold.replace(/_/g, ".");
-    }
-
     let validTimes;
     let utcCycleStart;
     let singleCycle;
@@ -109,6 +97,8 @@ global.dataDieoff = async function (plotParams) {
       singleCycle = fromSecs;
       toSecs = fromSecs;
     }
+
+    const { level } = curve;
 
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
@@ -193,14 +183,7 @@ global.dataDieoff = async function (plotParams) {
     let sitesList;
     const regionType =
       filterModelBy === "None" && // not filtering the model by anything
-      filterObsBy === "None" && // not filtering the obs by anything
-      !(
-        // not a thresholded variable that we're forcing into a scalar stat
-        (
-          variableValuesMap[queryVariable][1] &&
-          statisticOptionsMap[variable][statisticSelect][0] === "scalar"
-        )
-      )
+      filterObsBy === "None" // not filtering the obs by anything
         ? curve["region-type"]
         : "Select stations";
     if (curve["region-type"] === "Predefined region") {
@@ -217,7 +200,6 @@ global.dataDieoff = async function (plotParams) {
 
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
-        let statTemplate;
         queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -232,22 +214,15 @@ global.dataDieoff = async function (plotParams) {
           queryTemplate,
           "{{vxFCST_LEN}}"
         );
+        queryTemplate = queryTemplate.replace(/{{vxLEVEL}}/g, level);
         queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, "m0.fcstLen");
         queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "fcst_lead");
-        if (statType === "ctc") {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
-        } else {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLE}}/g,
-            variableDetails[0]
-          );
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
-        }
+        const statTemplate = await Assets.getTextAsync(
+          "sqlTemplates/tmpl_PartialSums.sql"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+        queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
+        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
 
         if (forecastLength === matsTypes.ForecastTypes.dieoff) {
           // remove the UTC Cycle Start part of the query, we don't need it for this type of dieoff
@@ -368,7 +343,8 @@ global.dataDieoff = async function (plotParams) {
             sitesList,
             model,
             undefined,
-            threshold,
+            undefined,
+            level,
             undefined,
             fromSecs,
             toSecs,
