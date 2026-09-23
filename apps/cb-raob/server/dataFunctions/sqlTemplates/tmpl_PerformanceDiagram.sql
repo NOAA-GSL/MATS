@@ -12,11 +12,12 @@ FROM {{vxDBTARGET}} m0
 WHERE m0.type = 'DD'
     AND m0.docType = 'CTC'
     AND m0.subDocType = '{{vxVARIABLE}}'
-    AND m0.subset = 'METAR'
+    AND m0.subset = 'RAOB'
     AND m0.version = 'V01'
     AND m0.model = '{{vxMODEL}}'
     AND m0.region = '{{vxREGION}}'
     AND m0.fcstLen = {{vxFCST_LEN}}
+    AND m0.level = {{vxLEVEL}}
     AND m0.fcstValidEpoch %(24 * 3600) / 3600 IN [{{vxVALID_TIMES}}]
     AND {{vxTIME_VAR}} >= {{vxFROM_SECS}}
     AND {{vxTIME_VAR}} <= {{vxTO_SECS}}

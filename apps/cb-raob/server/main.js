@@ -21,8 +21,7 @@ import {
 //       [variable name in model docs, variable name in obs docs],
 //       units to plot in
 //      ]
-//    },
-//    boolean for if this variable has thresholds
+//    }
 //  }]
 const variableMetadataDocs = {
   RAOB: [

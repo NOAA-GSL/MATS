@@ -77,20 +77,10 @@ global.dataSeries = async function (plotParams) {
       await matsCollections["data-source"].findOneAsync({ name: "data-source" })
     ).optionsMap[variable][curve["data-source"]][0];
 
-    const thresholdStr = curve.threshold;
-    let threshold = "";
-    if (variableValuesMap[queryVariable][1]) {
-      const thresholdValues = (
-        await matsCollections.threshold.findOneAsync({ name: "threshold" })
-      ).valuesMap[variable];
-      threshold = Object.keys(thresholdValues).find(
-        (key) => thresholdValues[key] === thresholdStr
-      );
-      threshold = threshold.replace(/_/g, ".");
-    }
-
     const validTimes = curve["valid-time"] === undefined ? [] : curve["valid-time"];
     let forecastLength = curve["forecast-length"];
+
+    const { level } = curve;
 
     const statisticSelect = curve.statistic;
     const statisticOptionsMap = (
@@ -205,7 +195,6 @@ global.dataSeries = async function (plotParams) {
 
       if (regionType === "Predefined region") {
         // Predefined region, no filtering.
-        let statTemplate;
         queryTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_xyCurve.sql");
         queryTemplate = queryTemplate.replace(/{{vxMODEL}}/g, model);
         queryTemplate = queryTemplate.replace(/{{vxREGION}}/g, region);
@@ -217,22 +206,15 @@ global.dataSeries = async function (plotParams) {
           queryVariable.toUpperCase()
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
+        queryTemplate = queryTemplate.replace(/{{vxLEVEL}}/g, level);
         queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, average);
         queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "avtime");
-        if (statType === "ctc") {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_CTC.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(/{{vxTHRESHOLD}}/g, threshold);
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "CTC");
-        } else {
-          statTemplate = await Assets.getTextAsync("sqlTemplates/tmpl_PartialSums.sql");
-          queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
-          queryTemplate = queryTemplate.replace(
-            /{{vxSUBVARIABLE}}/g,
-            variableDetails[0]
-          );
-          queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
-        }
+        const statTemplate = await Assets.getTextAsync(
+          "sqlTemplates/tmpl_PartialSums.sql"
+        );
+        queryTemplate = queryTemplate.replace(/{{vxSTATISTIC}}/g, statTemplate);
+        queryTemplate = queryTemplate.replace(/{{vxSUBVARIABLE}}/g, variableDetails[0]);
+        queryTemplate = queryTemplate.replace(/{{vxTYPE}}/g, "SUMS");
 
         if (validTimes.length !== 0 && validTimes !== matsTypes.InputTypes.unused) {
           queryTemplate = queryTemplate.replace(
@@ -310,7 +292,8 @@ global.dataSeries = async function (plotParams) {
             sitesList,
             model,
             forecastLength,
-            threshold,
+            undefined,
+            level,
             average,
             fromSecs,
             toSecs,
