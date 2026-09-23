@@ -424,6 +424,7 @@ global.dataSimpleScatter = async function (plotParams) {
             forecastLength,
             thresholdX,
             thresholdY,
+            undefined,
             fromSecs,
             toSecs,
             validTimes,

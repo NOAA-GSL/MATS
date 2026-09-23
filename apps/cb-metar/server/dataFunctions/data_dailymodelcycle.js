@@ -301,6 +301,7 @@ global.dataDailyModelCycle = async function (plotParams) {
             undefined,
             threshold,
             undefined,
+            undefined,
             fromSecs,
             toSecs,
             undefined,

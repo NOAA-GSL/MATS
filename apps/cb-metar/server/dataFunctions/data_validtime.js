@@ -294,6 +294,7 @@ global.dataValidTime = async function (plotParams) {
             forecastLength,
             threshold,
             undefined,
+            undefined,
             fromSecs,
             toSecs,
             undefined,

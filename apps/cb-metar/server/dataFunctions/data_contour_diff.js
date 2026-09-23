@@ -386,6 +386,7 @@ global.dataContourDiff = async function (plotParams) {
               model,
               forecastLength,
               threshold,
+              undefined,
               fromSecs,
               toSecs,
               validTimes,
