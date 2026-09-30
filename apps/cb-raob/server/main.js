@@ -26,13 +26,22 @@ import {
 const variableMetadataDocs = {
   RAOB: [
     {
-      "Temperature at 2m (°C)": ["Temperature", ["Temperature", "Temperature"], "°C"],
-      "Dewpoint at 2m (°C)": ["DewPoint", ["DewPoint", "DewPoint"], "°C"],
-      "Relative Humidity at 2m (%)": ["RelativeHumidity", ["RH", "RH"], "%"],
-      "Geopotential Height (m)": ["Height", ["Height", "Height"], "m"],
-      "Wind Speed at 10m (m/s)": ["WindSpeed", ["WS", "WS"], "m/s"],
-      "U-Wind at 10m (m/s)": ["WindU", ["WindU", "WindU"], "m/s"],
-      "V-Wind at 10m (m/s)": ["WindV", ["WindV", "WindV"], "m/s"],
+      "Temperature (°C)": ["Temperature", ["temperature", "temperature"], "°C"],
+      "Dewpoint (°C)": ["DewPoint", ["dewpoint", "dewpoint"], "°C"],
+      "Relative Humidity (%)": [
+        "RelativeHumidity",
+        ["relative_humidity", "relative_humidity"],
+        "%",
+      ],
+      "Specific Humidity (g/kg)": [
+        "SpecificHumidity",
+        ["specific_humidity", "specific_humidity"],
+        "g/kg",
+      ],
+      "Geopotential Height (m)": ["Height", ["height", "height"], "m"],
+      "Wind Speed (m/s)": ["WindSpeed", ["wind_speed", "wind_speed"], "m/s"],
+      "U-Wind (m/s)": ["WindU", ["u-wind", "u-wind"], "m/s"],
+      "V-Wind (m/s)": ["WindV", ["v-wind", "v-wind"], "m/s"],
     },
   ],
 };
