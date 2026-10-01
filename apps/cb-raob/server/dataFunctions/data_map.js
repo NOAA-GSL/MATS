@@ -167,16 +167,6 @@ global.dataMap = async function (plotParams) {
   ).optionsMap;
 
   let d;
-  let dPurple;
-  let dPurpleBlue;
-  let dBlue;
-  let dBlueGreen;
-  let dGreen;
-  let dGreenYellow;
-  let dYellow;
-  let dOrange;
-  let dOrangeRed;
-  let dRed;
   let dLowest;
   let dLow;
   let dModerate;
@@ -207,28 +197,17 @@ global.dataMap = async function (plotParams) {
       );
 
       // send the query statement to the query function
-      if (statType === "ctc") {
-        queryResult = await matsDataQueryUtils.queryDBMapCTC(
-          global.cbPool,
-          rows,
-          model,
-          statisticSelect,
-          siteMap,
-          appParams
-        );
-      } else {
-        queryResult = await matsDataQueryUtils.queryDBMapScalar(
-          global.cbPool,
-          rows,
-          model,
-          statisticSelect,
-          variable,
-          varUnits,
-          siteMap,
-          appParams,
-          plotParams
-        );
-      }
+      queryResult = await matsDataQueryUtils.queryDBMapScalar(
+        global.cbPool,
+        rows,
+        model,
+        statisticSelect,
+        variable,
+        varUnits,
+        siteMap,
+        appParams,
+        plotParams
+      );
 
       finishMoment = moment();
       dataRequests[label] = "Station plot -- no one query.";
@@ -242,24 +221,11 @@ global.dataMap = async function (plotParams) {
       };
       // get the data back from the query
       d = queryResult.data;
-      if (statType === "ctc") {
-        dPurple = queryResult.dataPurple;
-        dPurpleBlue = queryResult.dataPurpleBlue;
-        dBlue = queryResult.dataBlue;
-        dBlueGreen = queryResult.dataBlueGreen;
-        dGreen = queryResult.dataGreen;
-        dGreenYellow = queryResult.dataGreenYellow;
-        dYellow = queryResult.dataYellow;
-        dOrange = queryResult.dataOrange;
-        dOrangeRed = queryResult.dataOrangeRed;
-        dRed = queryResult.dataRed;
-      } else {
-        dLowest = queryResult.dataLowest;
-        dLow = queryResult.dataLow;
-        dModerate = queryResult.dataModerate;
-        dHigh = queryResult.dataHigh;
-        dHighest = queryResult.dataHighest;
-      }
+      dLowest = queryResult.dataLowest;
+      dLow = queryResult.dataLow;
+      dModerate = queryResult.dataModerate;
+      dHigh = queryResult.dataHigh;
+      dHighest = queryResult.dataHighest;
       valueLimits = queryResult.valueLimits;
     } catch (e) {
       // this is an error produced by a bug in the query function, not an error returned by the mysql database
@@ -282,205 +248,72 @@ global.dataMap = async function (plotParams) {
   }
 
   const postQueryStartMoment = moment();
-  if (statType === "ctc") {
-    let cOptions = await matsDataCurveOpsUtils.generateCTCMapCurveOptions(
-      curve,
-      d,
-      appParams
-    ); // generate map with site data
-    dataset.push(cOptions);
+  let cOptions = await matsDataCurveOpsUtils.generateMapCurveOptions(
+    curve,
+    d,
+    appParams,
+    valueLimits.maxValue
+  ); // generate map with site data
+  dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCPurpleCurveText,
-      `Values <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.1
-      ).toPrecision(3)}`,
-      dPurple
-    ); // generate purple text layer
-    dataset.push(cOptions);
+  cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
+    matsTypes.ReservedWords.ScalarLowestCurveText,
+    `Values <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
+    ).toFixed(1)}${varUnits}`,
+    dLowest
+  ); // generate lowest text layer
+  dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCPurpleBlueCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.1
-      ).toPrecision(3)} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
-      ).toPrecision(3)}`,
-      dPurpleBlue
-    ); // generate purple-blue text layer
-    dataset.push(cOptions);
+  cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
+    matsTypes.ReservedWords.ScalarLowCurveText,
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
+    ).toFixed(1)}${varUnits} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
+    ).toFixed(1)}${varUnits}`,
+    dLow
+  ); // generate low text layer
+  dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCBlueCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
-      ).toPrecision(3)} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.3
-      ).toPrecision(3)}`,
-      dBlue
-    ); // generate blue text layer
-    dataset.push(cOptions);
+  cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
+    matsTypes.ReservedWords.ScalarModerateCurveText,
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
+    ).toFixed(1)}${varUnits} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
+    ).toFixed(1)}${varUnits}`,
+    dModerate
+  ); // generate moderate text layer
+  dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCBlueGreenCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.3
-      ).toPrecision(3)} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
-      ).toPrecision(3)}`,
-      dBlueGreen
-    ); // generate blue-green text layer
-    dataset.push(cOptions);
+  cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
+    matsTypes.ReservedWords.ScalarHighCurveText,
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
+    ).toFixed(1)}${varUnits} and <= ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
+    ).toFixed(1)}${varUnits}`,
+    dHigh
+  ); // generate high text layer
+  dataset.push(cOptions);
 
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCGreenCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
-      ).toPrecision(3)} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.5
-      ).toPrecision(3)}`,
-      dGreen
-    ); // generate green text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCGreenYellowCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.5
-      ).toPrecision(3)} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
-      ).toPrecision(3)}`,
-      dGreenYellow
-    ); // generate green-yellow text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCYellowCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
-      ).toPrecision(3)} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.7
-      ).toPrecision(3)}`,
-      dYellow
-    ); // generate yellow text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCOrangeCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.7
-      ).toPrecision(3)} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
-      ).toPrecision(3)}`,
-      dOrange
-    ); // generate orange text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCOrangeRedCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
-      ).toPrecision(3)} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.9
-      ).toPrecision(3)}`,
-      dOrangeRed
-    ); // generate orange-red text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.CTCRedCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.9
-      ).toPrecision(3)}`,
-      dRed
-    ); // generate red text layer
-    dataset.push(cOptions);
-  } else {
-    let cOptions = await matsDataCurveOpsUtils.generateMapCurveOptions(
-      curve,
-      d,
-      appParams,
-      valueLimits.maxValue
-    ); // generate map with site data
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.ScalarLowestCurveText,
-      `Values <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
-      ).toFixed(1)}${varUnits}`,
-      dLowest
-    ); // generate lowest text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.ScalarLowCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.2
-      ).toFixed(1)}${varUnits} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
-      ).toFixed(1)}${varUnits}`,
-      dLow
-    ); // generate low text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.ScalarModerateCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.4
-      ).toFixed(1)}${varUnits} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
-      ).toFixed(1)}${varUnits}`,
-      dModerate
-    ); // generate moderate text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.ScalarHighCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.6
-      ).toFixed(1)}${varUnits} and <= ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
-      ).toFixed(1)}${varUnits}`,
-      dHigh
-    ); // generate high text layer
-    dataset.push(cOptions);
-
-    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
-      matsTypes.ReservedWords.ScalarHighestCurveText,
-      `Values > ${(
-        valueLimits.lowLimit +
-        (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
-      ).toFixed(1)}${varUnits}`,
-      dHighest
-    ); // generate highest text layer
-    dataset.push(cOptions);
-  }
+  cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(
+    matsTypes.ReservedWords.ScalarHighestCurveText,
+    `Values > ${(
+      valueLimits.lowLimit +
+      (valueLimits.highLimit - valueLimits.lowLimit) * 0.8
+    ).toFixed(1)}${varUnits}`,
+    dHighest
+  ); // generate highest text layer
+  dataset.push(cOptions);
 
   const postQueryFinishMoment = moment();
   dataRequests[`post data retrieval (query) process time - ${label}`] = {

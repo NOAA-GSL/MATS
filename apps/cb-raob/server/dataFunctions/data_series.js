@@ -307,7 +307,7 @@ global.dataSeries = async function (plotParams) {
           fromSecs,
           toSecs,
           averageStr,
-          statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`,
+          `${statisticSelect}_${variable}`,
           validTimes,
           appParams,
           false

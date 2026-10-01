@@ -45,7 +45,6 @@ global.dataProfile = async function (plotParams) {
 
   let statType;
   const allStatTypes = [];
-  const utcCycleStarts = [];
   const idealValues = [];
 
   let statement = "";
@@ -192,7 +191,7 @@ global.dataProfile = async function (plotParams) {
         );
         queryTemplate = queryTemplate.replace(/{{vxFCST_LEN}}/g, forecastLength);
         queryTemplate = global.cbPool.trfmSQLRemoveClause(queryTemplate, "{{vxLEVEL}}");
-        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, "m0.level");
+        queryTemplate = queryTemplate.replace(/{{vxBIN_CLAUSE}}/g, "m0.`level`");
         queryTemplate = queryTemplate.replace(/{{vxBIN_PARAM}}/g, "avVal");
         const statTemplate = await Assets.getTextAsync(
           "sqlTemplates/tmpl_PartialSums.sql"
@@ -290,7 +289,7 @@ global.dataProfile = async function (plotParams) {
           global.cbPool,
           regionType === "Predefined region" ? statement : rows,
           appParams,
-          statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
+          `${statisticSelect}_${variable}`
         );
 
         finishMoment = moment();
@@ -301,7 +300,7 @@ global.dataProfile = async function (plotParams) {
           duration: `${moment
             .duration(finishMoment.diff(startMoment))
             .asSeconds()} seconds`,
-          recordCount: queryResult.data.x.length,
+          recordCount: queryResult.data.y.length,
         };
         // get the data back from the query
         d = queryResult.data;
@@ -349,7 +348,7 @@ global.dataProfile = async function (plotParams) {
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
     const postQueryStartMoment = moment();
-    const mean = d.sum / d.x.length;
+    const mean = d.sum / d.y.length;
     const annotation =
       mean === undefined
         ? `${label}- mean = NoData`
@@ -360,7 +359,7 @@ global.dataProfile = async function (plotParams) {
     curve.ymin = d.ymin;
     curve.ymax = d.ymax;
     curve.axisKey = axisKey;
-    const cOptions = await matsDataCurveOpsUtils.generateSeriesCurveOptions(
+    const cOptions = await matsDataCurveOpsUtils.generateProfileCurveOptions(
       curve,
       curveIndex,
       axisMap,
@@ -388,17 +387,14 @@ global.dataProfile = async function (plotParams) {
     curves,
     curvesLength,
     idealValues,
-    utcCycleStarts,
     statType: allStatTypes,
     axisMap,
-    xmax,
-    xmin,
   };
   const bookkeepingParams = {
     dataRequests,
     totalProcessingStart,
   };
-  const result = await matsDataProcessUtils.processDataXYCurve(
+  const result = await matsDataProcessUtils.processDataProfile(
     dataset,
     appParams,
     curveInfoParams,

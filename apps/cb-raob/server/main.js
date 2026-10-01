@@ -26,22 +26,22 @@ import {
 const variableMetadataDocs = {
   RAOB: [
     {
-      "Temperature (°C)": ["Temperature", ["temperature", "temperature"], "°C"],
-      "Dewpoint (°C)": ["DewPoint", ["dewpoint", "dewpoint"], "°C"],
+      "Temperature (°C)": ["temperature", ["temperature", "temperature"], "°C"],
+      "Dewpoint (°C)": ["dewpoint", ["dewpoint", "dewpoint"], "°C"],
       "Relative Humidity (%)": [
-        "RelativeHumidity",
+        "relative_humidity",
         ["relative_humidity", "relative_humidity"],
         "%",
       ],
       "Specific Humidity (g/kg)": [
-        "SpecificHumidity",
+        "specific_humidity",
         ["specific_humidity", "specific_humidity"],
         "g/kg",
       ],
-      "Geopotential Height (m)": ["Height", ["height", "height"], "m"],
-      "Wind Speed (m/s)": ["WindSpeed", ["wind_speed", "wind_speed"], "m/s"],
-      "U-Wind (m/s)": ["WindU", ["u-wind", "u-wind"], "m/s"],
-      "V-Wind (m/s)": ["WindV", ["v-wind", "v-wind"], "m/s"],
+      "Geopotential Height (m)": ["height", ["height", "height"], "m"],
+      "Wind Speed (m/s)": ["wind_speed", ["wind_speed", "wind_speed"], "m/s"],
+      "U-Wind (m/s)": ["u-wind", ["u-wind", "u-wind"], "m/s"],
+      "V-Wind (m/s)": ["v-wind", ["v-wind", "v-wind"], "m/s"],
     },
   ],
 };
@@ -262,7 +262,7 @@ const doPlotParams = async function () {
 
     const xOptionsMap = {
       "Fcst lead time": "m0.fcstLen",
-      Level: "m0.level",
+      Level: "m0.`level`",
       "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
       "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
       "Valid Date": "m0.fcstValidEpoch",
@@ -286,7 +286,7 @@ const doPlotParams = async function () {
 
     const yOptionsMap = {
       "Fcst lead time": "m0.fcstLen",
-      Level: "m0.level",
+      Level: "m0.`level`",
       "Valid UTC hour": "m0.fcstValidEpoch%(24*3600)/3600",
       "Init UTC hour": "(m0.fcstValidEpoch-m0.fcstLen*3600)%(24*3600)/3600",
       "Valid Date": "m0.fcstValidEpoch",
@@ -313,9 +313,8 @@ const doPlotParams = async function () {
       type: matsTypes.InputTypes.select,
       options: [
         "none",
-        "95th percentile -- bootstrapping (SKILL SCORES ONLY)",
-        "95th percentile -- standard t-test (CONTINUOUS VARIABLES ONLY)",
-        "95th percentile -- t-test with infinite degrees of freedom (CONTINUOUS VARIABLES ONLY)",
+        "95th percentile -- standard t-test",
+        "95th percentile -- t-test with infinite degrees of freedom",
       ],
       selected: "",
       controlButtonCovered: true,
@@ -583,6 +582,8 @@ const doCurveParams = async function () {
   varOptionsMap[matsTypes.PlotTypes.contourDiff] = allVariables;
   varOptionsMap[matsTypes.PlotTypes.simpleScatter] = allVariables;
 
+  const defaultVariable = "Temperature (°C)";
+
   if (
     (await matsCollections.variable.findOneAsync({ name: "variable" })) === undefined
   ) {
@@ -596,7 +597,7 @@ const doCurveParams = async function () {
       superiorNames: ["plot-type"],
       dependentNames: ["data-source", "statistic"],
       controlButtonCovered: true,
-      default: varOptionsMap[defaultPlotType][0],
+      default: defaultVariable,
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 2,
@@ -621,7 +622,6 @@ const doCurveParams = async function () {
             optionsMap: varOptionsMap,
             valuesMap: variableMetadataDocs,
             dates: modelDateRangeMap,
-            default: varOptionsMap[defaultPlotType][0],
           },
         }
       );
@@ -642,7 +642,7 @@ const doCurveParams = async function () {
       superiorNames: ["plot-type"],
       dependentNames: ["data-source", "x-statistic"],
       controlButtonCovered: true,
-      default: varOptionsMap[defaultPlotType][0],
+      default: defaultVariable,
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 1,
@@ -667,7 +667,6 @@ const doCurveParams = async function () {
             optionsMap: varOptionsMap,
             valuesMap: variableMetadataDocs,
             dates: modelDateRangeMap,
-            default: varOptionsMap[defaultPlotType][0],
           },
         }
       );
@@ -688,7 +687,7 @@ const doCurveParams = async function () {
       superiorNames: ["plot-type"],
       dependentNames: ["data-source", "y-statistic"],
       controlButtonCovered: true,
-      default: varOptionsMap[defaultPlotType][0],
+      default: defaultVariable,
       unique: false,
       controlButtonVisibility: "block",
       displayOrder: 4,
@@ -713,7 +712,6 @@ const doCurveParams = async function () {
             optionsMap: varOptionsMap,
             valuesMap: variableMetadataDocs,
             dates: modelDateRangeMap,
-            default: varOptionsMap[defaultPlotType][0],
           },
         }
       );
@@ -859,11 +857,11 @@ const doCurveParams = async function () {
       name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
+      options: Object.keys(statOptionsMap[defaultVariable]),
       superiorNames: ["variable"],
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statOptionsMap)[0],
+      default: Object.keys(statOptionsMap[defaultVariable])[0],
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
@@ -879,11 +877,11 @@ const doCurveParams = async function () {
       name: "x-statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
+      options: Object.keys(statOptionsMap[defaultVariable]),
       superiorNames: ["x-variable"],
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statOptionsMap)[0],
+      default: Object.keys(statOptionsMap[defaultVariable])[0],
       controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
@@ -899,11 +897,11 @@ const doCurveParams = async function () {
       name: "y-statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
+      options: Object.keys(statOptionsMap[defaultVariable]),
       superiorNames: ["y-variable"],
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statOptionsMap)[0],
+      default: Object.keys(statOptionsMap[defaultVariable])[0],
       controlButtonVisibility: "block",
       displayOrder: 5,
       displayPriority: 1,
@@ -1169,7 +1167,7 @@ const doCurveParams = async function () {
       selected: "",
       controlButtonCovered: true,
       unique: false,
-      default: matsTypes.InputTypes.unused,
+      default: "500",
       controlButtonVisibility: "block",
       controlButtonText: "Pressure level (mb)",
       displayOrder: 2,

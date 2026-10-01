@@ -361,7 +361,7 @@ global.dataDieoff = async function (plotParams) {
           global.cbPool,
           regionType === "Predefined region" ? statement : rows,
           appParams,
-          statType === "ctc" ? statisticSelect : `${statisticSelect}_${variable}`
+          `${statisticSelect}_${variable}`
         );
 
         finishMoment = moment();

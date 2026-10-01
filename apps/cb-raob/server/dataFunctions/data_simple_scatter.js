@@ -365,8 +365,8 @@ global.dataSimpleScatter = async function (plotParams) {
           appParams,
           statTypeX,
           statTypeY,
-          statTypeX === "ctc" ? statisticSelectX : `${statisticSelectX}_${variableX}`,
-          statTypeY === "ctc" ? statisticSelectY : `${statisticSelectY}_${variableY}`
+          `${statisticSelectX}_${variableX}`,
+          `${statisticSelectY}_${variableY}`
         );
 
         finishMoment = moment();
