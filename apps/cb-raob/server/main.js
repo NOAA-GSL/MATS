@@ -381,10 +381,10 @@ const doCurveParams = async function () {
   const allRegionValuesMap = {};
 
   try {
-    const queryStr = global.cbPool.trfmSQLForDbTarget(
+    const queryStr = global.cbMetadataPool.trfmSQLForDbTarget(
       'select name, description from {{vxDBTARGET}} where type="MD" and docType="region" and version = "V01" and subset="COMMON"'
     );
-    const rows = await global.cbPool.queryCB(queryStr);
+    const rows = await global.cbMetadataPool.queryCB(queryStr);
     if (rows.includes("queryCB ERROR: ")) {
       // have this local try catch fail properly if the metadata isn't there
       throw new Error(rows);
@@ -2090,11 +2090,41 @@ Meteor.startup(async function () {
     );
   }
   allPools.push({ pool: "cbPool", role: matsTypes.DatabaseRoles.COUCHBASE });
+
+  // connect to the couchbase cluster
+  const cbMetadataConnection = await matsCollections.Databases.findOneAsync(
+    {
+      role: matsTypes.DatabaseRoles.META_DATA,
+      status: "active",
+    },
+    {
+      host: 1,
+      port: 1,
+      bucket: 1,
+      scope: 1,
+      collection: 1,
+      user: 1,
+      password: 1,
+    }
+  );
+
+  if (cbMetadataConnection) {
+    global.cbMetadataPool = new matsCouchbaseUtils.CBUtilities(
+      cbMetadataConnection.host,
+      cbMetadataConnection.bucket,
+      cbMetadataConnection.scope,
+      cbMetadataConnection.collection,
+      cbMetadataConnection.user,
+      cbMetadataConnection.password
+    );
+  }
+  allPools.push({ pool: "cbMetadataPool", role: matsTypes.DatabaseRoles.META_DATA });
+
   // create list of tables we need to monitor for update
   const mdr = new matsTypes.MetaDataDBRecord(
     "cbPool",
     `${cbConnection.bucket}:${cbConnection.scope}:${cbConnection.collection}`,
-    ["MD:matsAux:COMMON:V01", "MD:matsGui:raob:COMMON:V01"]
+    ["MD:matsGui:raob:COMMON:V01"]
   );
   try {
     await matsMethods.resetApp({
