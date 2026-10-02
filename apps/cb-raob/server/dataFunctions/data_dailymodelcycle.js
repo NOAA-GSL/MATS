@@ -168,6 +168,7 @@ global.dataDailyModelCycle = async function (plotParams) {
 
     let queryTemplate;
     let sitesList;
+    let querySites;
     const regionType =
       filterModelBy === "None" && // not filtering the model by anything
       filterObsBy === "None" // not filtering the obs by anything
@@ -233,6 +234,20 @@ global.dataDailyModelCycle = async function (plotParams) {
         throw new Error(
           "INFO:  Please add sites in order to get a single/multi station plot."
         );
+      } else {
+        const siteMap = (
+          await matsCollections.StationMap.findOneAsync({
+            name: "stations",
+          })
+        ).optionsMap;
+        querySites = sitesList.map(function (site) {
+          const possibleSiteNames = site.match(/\(([^)]*)\)[^(]*$/);
+          const thisSite =
+            possibleSiteNames === null
+              ? site
+              : possibleSiteNames[possibleSiteNames.length - 1];
+          return siteMap.find((obj) => obj.origName === thisSite).origName;
+        });
       }
     }
     const elevMap = (
@@ -271,7 +286,7 @@ global.dataDailyModelCycle = async function (plotParams) {
             "Valid Date",
             statType,
             variableDetails[1],
-            sitesList,
+            querySites,
             model,
             undefined,
             undefined,

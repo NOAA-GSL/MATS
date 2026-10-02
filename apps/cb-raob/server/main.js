@@ -474,10 +474,13 @@ const doCurveParams = async function () {
       a.description && b.description && a.description > b.description ? 1 : -1
     );
     for (let i = 0; i < rows.length; i += 1) {
-      const siteName = rows[i].wmoid === undefined ? "unknown" : rows[i].wmoid;
+      const siteName =
+        rows[i].wmoid === undefined ? "unknown" : rows[i].wmoid.toString();
       const siteDescription =
         rows[i].description === undefined ? "unknown" : rows[i].description;
-      const siteId = rows[i].id;
+      const descSiteName =
+        siteDescription !== siteName ? `${siteDescription} (${siteName})` : siteName;
+      const siteId = rows[i].siteName;
       const siteLat = rows[i].geo === undefined ? -90 : Number(rows[i].geo[0].lat);
       const siteLon = rows[i].geo === undefined ? 0 : Number(rows[i].geo[0].lon);
       let siteElev = rows[i].geo === undefined ? 0 : rows[i].geo[0].elev;
@@ -486,21 +489,21 @@ const doCurveParams = async function () {
       // There's one station right at the south pole that the map doesn't know how to render at all, so exclude it.
       // Also exclude stations with missing data
       if (siteLat < 90 && siteLat > -90) {
-        siteOptionsMap[siteName] = [siteId];
-        sitesElevationMap[siteName] = siteElev;
+        siteOptionsMap[descSiteName] = [siteId];
+        sitesElevationMap[descSiteName] = siteElev;
 
         const point = [siteLat, siteLon];
         const obj = {
-          name: `${siteName} (${siteDescription})`,
+          name: descSiteName,
           origName: siteName,
           point,
           elevation: siteElev,
           options: {
-            title: siteDescription,
+            title: descSiteName,
             color: "red",
             size: 5,
             network: "RAOB",
-            peerOption: siteName,
+            peerOption: descSiteName,
             id: siteId,
             highLightColor: "blue",
           },

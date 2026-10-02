@@ -160,6 +160,14 @@ global.dataMap = async function (plotParams) {
       name: "stations",
     })
   ).optionsMap;
+  const querySites = sitesList.map(function (site) {
+    const possibleSiteNames = site.match(/\(([^)]*)\)[^(]*$/);
+    const thisSite =
+      possibleSiteNames === null
+        ? site
+        : possibleSiteNames[possibleSiteNames.length - 1];
+    return siteMap.find((obj) => obj.origName === thisSite).origName;
+  });
   const elevMap = (
     await matsCollections.StationMap.findOneAsync({
       name: "elevations",
@@ -184,7 +192,7 @@ global.dataMap = async function (plotParams) {
       rows = await mdw.processStationQuery(
         statType,
         variableDetails[1],
-        sitesList,
+        querySites,
         model,
         forecastLength,
         undefined,
