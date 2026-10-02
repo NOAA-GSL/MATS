@@ -91,8 +91,10 @@ global.dataContour = async function (plotParams) {
   ).optionsMap;
   const statType = statisticOptionsMap[variable][statisticSelect][0];
 
-  const filterModelBy = curve["filter-model-by"];
-  const filterObsBy = curve["filter-obs-by"];
+  // const filterModelBy = curve["filter-model-by"];
+  // const filterObsBy = curve["filter-obs-by"];
+  const filterModelBy = "None";
+  const filterObsBy = "None";
   const filterInfo = {};
 
   if (filterModelBy !== "None") {

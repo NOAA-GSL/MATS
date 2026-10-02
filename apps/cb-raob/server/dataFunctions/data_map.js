@@ -77,8 +77,10 @@ global.dataMap = async function (plotParams) {
       ? variableDetails[2]
       : statisticOptionsMap[variable][statisticSelect][1];
 
-  const filterModelBy = curve["filter-model-by"];
-  const filterObsBy = curve["filter-obs-by"];
+  // const filterModelBy = curve["filter-model-by"];
+  // const filterObsBy = curve["filter-obs-by"];
+  const filterModelBy = "None";
+  const filterObsBy = "None";
   const filterInfo = {};
 
   if (filterModelBy !== "None") {

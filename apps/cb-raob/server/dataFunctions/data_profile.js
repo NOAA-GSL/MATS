@@ -86,8 +86,10 @@ global.dataProfile = async function (plotParams) {
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
 
-    const filterModelBy = curve["filter-model-by"];
-    const filterObsBy = curve["filter-obs-by"];
+    // const filterModelBy = curve["filter-model-by"];
+    // const filterObsBy = curve["filter-obs-by"];
+    const filterModelBy = "None";
+    const filterObsBy = "None";
     const filterInfo = {};
 
     if (filterModelBy !== "None") {

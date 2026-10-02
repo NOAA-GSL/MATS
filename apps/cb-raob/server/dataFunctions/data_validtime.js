@@ -87,8 +87,10 @@ global.dataValidTime = async function (plotParams) {
     [statType] = statisticOptionsMap[variable][statisticSelect];
     allStatTypes.push(statType);
 
-    const filterModelBy = curve["filter-model-by"];
-    const filterObsBy = curve["filter-obs-by"];
+    // const filterModelBy = curve["filter-model-by"];
+    // const filterObsBy = curve["filter-obs-by"];
+    const filterModelBy = "None";
+    const filterObsBy = "None";
     const filterInfo = {};
 
     if (filterModelBy !== "None") {

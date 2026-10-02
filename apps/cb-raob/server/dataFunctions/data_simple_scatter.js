@@ -109,8 +109,10 @@ global.dataSimpleScatter = async function (plotParams) {
     [statTypeX] = statisticOptionsMap[variableX][statisticSelectX];
     [statTypeY] = statisticOptionsMap[variableY][statisticSelectY];
 
-    const filterModelBy = curve["filter-model-by"];
-    const filterObsBy = curve["filter-obs-by"];
+    // const filterModelBy = curve["filter-model-by"];
+    // const filterObsBy = curve["filter-obs-by"];
+    const filterModelBy = "None";
+    const filterObsBy = "None";
     const filterInfo = {};
 
     if (filterModelBy !== "None") {
