@@ -311,6 +311,7 @@ global.dataSeries = async function (plotParams) {
             model,
             forecastLength,
             threshold,
+            undefined,
             average,
             fromSecs,
             toSecs,

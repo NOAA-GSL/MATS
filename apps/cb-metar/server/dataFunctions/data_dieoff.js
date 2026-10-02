@@ -370,6 +370,7 @@ global.dataDieoff = async function (plotParams) {
             undefined,
             threshold,
             undefined,
+            undefined,
             fromSecs,
             toSecs,
             validTimes,

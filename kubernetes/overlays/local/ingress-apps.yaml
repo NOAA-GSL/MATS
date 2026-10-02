@@ -30,6 +30,13 @@ spec:
                 name: cb-metar
                 port:
                   number: 80
+          - path: /cb-raob
+            pathType: Prefix
+            backend:
+              service:
+                name: cb-raob
+                port:
+                  number: 80
           - path: /ceil-vis
             pathType: Prefix
             backend:

@@ -1,0 +1,10 @@
+# Meteor packages used by this project, one per line.
+# Check this file (and the other files in this directory) into your repository.
+#
+# 'meteor add' and 'meteor remove' will edit this file for you,
+# but you can also edit it by hand.
+
+meteor-base@1.5.2             # Packages every Meteor app needs to have
+dynamic-import@0.7.4          # Allows dynamic imports of needed modules at runtime
+ostrio:flow-router-extra      # Route incoming client-side requests
+randyp:mats-common@6.3.5      # MATScommon package

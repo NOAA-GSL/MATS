@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cb-metar-capella
+  name: cb-raob
 spec:
   template:
     spec:
       containers:
-        - name: cb-metar-capella
+        - name: cb-raob
           resources:
             requests:
               memory: "500Mi" # based on test suite performance, appears to hover around 1 GB
@@ -16,16 +16,16 @@ spec:
               cpu: "1.5"
           envFrom:
             - secretRef:
-                name: cb-metar-capella-secret
+                name: cb-raob-secret
           volumeMounts:
-            - name: cb-metar-capella-settings-file
-              mountPath: /usr/app/settings/cb-metar/settings.json
+            - name: cb-raob-settings-file
+              mountPath: /usr/app/settings/cb-raob/settings.json
               subPath: settings.json
               readOnly: true
           imagePullPolicy: Always  # Since we track a long-lived tag
       imagePullSecrets:
         - name: mats-ghcr
       volumes:
-        - name: cb-metar-capella-settings-file
+        - name: cb-raob-settings-file
           configMap:
-            name: cb-metar-capella-config
+            name: cb-raob-config

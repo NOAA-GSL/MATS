@@ -327,6 +327,7 @@ global.dataPerformanceDiagram = async function (plotParams) {
               forecastLength,
               threshold,
               undefined,
+              undefined,
               fromSecs,
               toSecs,
               validTimes,

@@ -5,6 +5,7 @@ set -euo pipefail
 apps=(
     "airQuality"
     "cb-metar"
+    "cb-raob"
     "ceil-vis"
     "ceil-vis15"
     "ensemble"

@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - airQuality
   - cb-metar
-  - cb-metar-capella
+  - cb-raob
   - ceil-vis
   - ceil-vis15
   - ensemble

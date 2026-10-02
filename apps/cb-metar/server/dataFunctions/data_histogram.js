@@ -302,6 +302,7 @@ global.dataHistogram = async function (plotParams) {
             forecastLength,
             threshold,
             undefined,
+            undefined,
             fromSecs,
             toSecs,
             validTimes,

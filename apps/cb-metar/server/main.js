@@ -394,7 +394,7 @@ const doCurveParams = async function () {
 
   try {
     const queryStr = global.cbPool.trfmSQLForDbTarget(
-      'select name, description from {{vxDBTARGET}} where type="MD" and docType="region" and version = "V01"  and subset="COMMON"'
+      'select name, description from {{vxDBTARGET}} where type="MD" and docType="region" and version = "V01" and subset="COMMON"'
     );
     const rows = await global.cbPool.queryCB(queryStr);
     if (rows.includes("queryCB ERROR: ")) {
@@ -976,7 +976,7 @@ const doCurveParams = async function () {
       name: "statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
+      options: Object.keys(statOptionsMap[varOptionsMap[defaultPlotType][0]]),
       superiorNames: ["variable"],
       hideOtherFor: {
         threshold: [
@@ -991,7 +991,7 @@ const doCurveParams = async function () {
       },
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statOptionsMap)[0],
+      default: Object.keys(statOptionsMap[varOptionsMap[defaultPlotType][0]])[0],
       controlButtonVisibility: "block",
       displayOrder: 3,
       displayPriority: 1,
@@ -1007,7 +1007,7 @@ const doCurveParams = async function () {
       name: "x-statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
+      options: Object.keys(statOptionsMap[varOptionsMap[defaultPlotType][0]]),
       superiorNames: ["x-variable"],
       hideOtherFor: {
         "x-threshold": [
@@ -1022,7 +1022,7 @@ const doCurveParams = async function () {
       },
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statOptionsMap)[0],
+      default: Object.keys(statOptionsMap[varOptionsMap[defaultPlotType][0]])[0],
       controlButtonVisibility: "block",
       displayOrder: 2,
       displayPriority: 1,
@@ -1038,7 +1038,7 @@ const doCurveParams = async function () {
       name: "y-statistic",
       type: matsTypes.InputTypes.select,
       optionsMap: statOptionsMap,
-      options: Object.keys(statOptionsMap),
+      options: Object.keys(statOptionsMap[varOptionsMap[defaultPlotType][0]]),
       superiorNames: ["y-variable"],
       hideOtherFor: {
         "y-threshold": [
@@ -1053,7 +1053,7 @@ const doCurveParams = async function () {
       },
       controlButtonCovered: true,
       unique: false,
-      default: Object.keys(statOptionsMap)[0],
+      default: Object.keys(statOptionsMap[varOptionsMap[defaultPlotType][0]])[0],
       controlButtonVisibility: "block",
       displayOrder: 5,
       displayPriority: 1,
@@ -2222,6 +2222,7 @@ const doCurveTextPatterns = async function () {
         ["", "y-statistic", " at "],
         ["", "y-threshold", ", "],
         ["valid at: ", "valid-time", " UTC, "],
+        ["", "curve-dates", ". "],
         ["Model filtered by: ", "filter-model-by", " "],
         ["range: ", "filter-model-min", " "],
         ["to ", "filter-model-max", ". "],
@@ -2231,13 +2232,13 @@ const doCurveTextPatterns = async function () {
       ],
       displayParams: [
         "label",
-        "x-variable",
-        "y-variable",
         "data-source",
         "region-type",
         "region",
+        "x-variable",
         "x-statistic",
         "x-threshold",
+        "y-variable",
         "y-statistic",
         "y-threshold",
         "forecast-length",

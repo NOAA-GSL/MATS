@@ -307,6 +307,7 @@ global.dataThreshold = async function (plotParams) {
               forecastLength,
               threshold,
               undefined,
+              undefined,
               fromSecs,
               toSecs,
               validTimes,

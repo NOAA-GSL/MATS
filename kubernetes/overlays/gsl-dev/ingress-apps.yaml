@@ -32,11 +32,11 @@ spec:
                 name: cb-metar
                 port:
                   number: 80
-          - path: /mats-dev/capella/cb-metar
+          - path: /mats-dev/cb-raob
             pathType: Prefix
             backend:
               service:
-                name: cb-metar-capella
+                name: cb-raob
                 port:
                   number: 80
           - path: /mats-dev/ceil-vis
