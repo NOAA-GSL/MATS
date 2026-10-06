@@ -2127,6 +2127,11 @@ Meteor.startup(async function () {
     `${cbConnection.bucket}:${cbConnection.scope}:${cbConnection.collection}`,
     ["MD:matsGui:raob:COMMON:V01"]
   );
+  mdr.addRecord(
+    "cbMetadataPool",
+    `${cbMetadataConnection.bucket}:${cbMetadataConnection.scope}:${cbMetadataConnection.collection}`,
+    ["MD:matsAux:COMMON:V01"]
+  );
   try {
     await matsMethods.resetApp({
       appPools: allPools,
