@@ -95,10 +95,8 @@ global.dataSeries = async function (plotParams) {
     ).optionsMap;
     const average = averageOptionsMap[averageStr][0];
 
-    // const filterModelBy = curve["filter-model-by"];
-    // const filterObsBy = curve["filter-obs-by"];
-    const filterModelBy = "None";
-    const filterObsBy = "None";
+    const filterModelBy = curve["filter-model-by"];
+    const filterObsBy = curve["filter-obs-by"];
     const filterInfo = {};
 
     if (filterModelBy !== "None") {
@@ -232,8 +230,10 @@ global.dataSeries = async function (plotParams) {
         // Predefined region, with filtering. Treat like station plot.
         sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(
           global.cbPool,
-          region
+          region,
+          "wmoid"
         );
+        querySites = sitesList.map(String);
       }
     } else {
       // Station plot, with or without filtering
