@@ -241,7 +241,8 @@ global.dataValidTime = async function (plotParams) {
         // Predefined region, with filtering. Treat like station plot.
         sitesList = await matsDataQueryUtils.getStationsInCouchbaseRegion(
           global.cbPool,
-          region
+          region,
+          "name"
         );
       }
     } else {

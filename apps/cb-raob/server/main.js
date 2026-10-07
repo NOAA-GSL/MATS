@@ -47,7 +47,7 @@ const variableMetadataDocs = {
 };
 const variables = Object.keys(variableMetadataDocs);
 let allVariables = [];
-// let allVariablesNoneOption = [];
+let allVariablesNoneOption = [];
 
 // determined in doCurveParanms
 let minDate;
@@ -454,7 +454,7 @@ const doCurveParams = async function () {
       }
     }
     allVariables = [...new Set(allVariables)].sort(); // make sure all variables are unique, then sort
-    // allVariablesNoneOption = [...new Set(["None"].concat(allVariables))];
+    allVariablesNoneOption = [...new Set(["None"].concat(allVariables))];
   } catch (err) {
     throw new Error(err.message);
   }
@@ -1275,181 +1275,181 @@ const doCurveParams = async function () {
     });
   }
 
-  // if (
-  //   (await matsCollections["filter-model-by"].findOneAsync({
-  //     name: "filter-model-by",
-  //   })) === undefined
-  // ) {
-  //   await matsCollections["filter-model-by"].insertAsync({
-  //     name: "filter-model-by",
-  //     type: matsTypes.InputTypes.select,
-  //     options: allVariablesNoneOption,
-  //     controlButtonCovered: true,
-  //     default: "None",
-  //     hideOtherFor: {
-  //       "filter-model-max": ["None"],
-  //       "filter-model-min": ["None"],
-  //     },
-  //     unique: false,
-  //     controlButtonVisibility: "block",
-  //     controlButtonText: "Filter model by",
-  //     gapAbove: true,
-  //     displayOrder: 1,
-  //     displayPriority: 1,
-  //     displayGroup: 8,
-  //   });
-  // } else {
-  //   // it is defined but check for necessary update
-  //   const currentParam = await matsCollections["filter-model-by"].findOneAsync({
-  //     name: "filter-model-by",
-  //   });
-  //   if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
-  //     // have to reload variable data
-  //     await matsCollections["filter-model-by"].updateAsync(
-  //       { name: "filter-model-by" },
-  //       {
-  //         $set: {
-  //           options: allVariablesNoneOption,
-  //         },
-  //       }
-  //     );
-  //   }
-  // }
+  if (
+    (await matsCollections["filter-model-by"].findOneAsync({
+      name: "filter-model-by",
+    })) === undefined
+  ) {
+    await matsCollections["filter-model-by"].insertAsync({
+      name: "filter-model-by",
+      type: matsTypes.InputTypes.select,
+      options: allVariablesNoneOption,
+      controlButtonCovered: true,
+      default: "None",
+      hideOtherFor: {
+        "filter-model-max": ["None"],
+        "filter-model-min": ["None"],
+      },
+      unique: false,
+      controlButtonVisibility: "block",
+      controlButtonText: "Filter model by",
+      gapAbove: true,
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 8,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["filter-model-by"].findOneAsync({
+      name: "filter-model-by",
+    });
+    if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
+      // have to reload variable data
+      await matsCollections["filter-model-by"].updateAsync(
+        { name: "filter-model-by" },
+        {
+          $set: {
+            options: allVariablesNoneOption,
+          },
+        }
+      );
+    }
+  }
 
-  // if (
-  //   (await matsCollections["filter-model-min"].findOneAsync({
-  //     name: "filter-model-min",
-  //   })) === undefined
-  // ) {
-  //   await matsCollections["filter-model-min"].insertAsync({
-  //     name: "filter-model-min",
-  //     type: matsTypes.InputTypes.numberSpinner,
-  //     optionsMap: {},
-  //     options: [],
-  //     min: -1000000000,
-  //     max: 1000000000,
-  //     step: "any",
-  //     controlButtonCovered: true,
-  //     unique: false,
-  //     default: 0,
-  //     controlButtonVisibility: "block",
-  //     controlButtonText: "minimum",
-  //     displayOrder: 2,
-  //     displayPriority: 1,
-  //     displayGroup: 8,
-  //   });
-  // }
+  if (
+    (await matsCollections["filter-model-min"].findOneAsync({
+      name: "filter-model-min",
+    })) === undefined
+  ) {
+    await matsCollections["filter-model-min"].insertAsync({
+      name: "filter-model-min",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: -1000000000,
+      max: 1000000000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 0,
+      controlButtonVisibility: "block",
+      controlButtonText: "minimum",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 8,
+    });
+  }
 
-  // if (
-  //   (await matsCollections["filter-model-max"].findOneAsync({
-  //     name: "filter-model-max",
-  //   })) === undefined
-  // ) {
-  //   await matsCollections["filter-model-max"].insertAsync({
-  //     name: "filter-model-max",
-  //     type: matsTypes.InputTypes.numberSpinner,
-  //     optionsMap: {},
-  //     options: [],
-  //     min: -1000000000,
-  //     max: 1000000000,
-  //     step: "any",
-  //     controlButtonCovered: true,
-  //     unique: false,
-  //     default: 60000,
-  //     controlButtonVisibility: "block",
-  //     controlButtonText: "maximum",
-  //     displayOrder: 3,
-  //     displayPriority: 1,
-  //     displayGroup: 8,
-  //   });
-  // }
+  if (
+    (await matsCollections["filter-model-max"].findOneAsync({
+      name: "filter-model-max",
+    })) === undefined
+  ) {
+    await matsCollections["filter-model-max"].insertAsync({
+      name: "filter-model-max",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: -1000000000,
+      max: 1000000000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 60000,
+      controlButtonVisibility: "block",
+      controlButtonText: "maximum",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 8,
+    });
+  }
 
-  // if (
-  //   (await matsCollections["filter-obs-by"].findOneAsync({ name: "filter-obs-by" })) ===
-  //   undefined
-  // ) {
-  //   await matsCollections["filter-obs-by"].insertAsync({
-  //     name: "filter-obs-by",
-  //     type: matsTypes.InputTypes.select,
-  //     options: allVariablesNoneOption,
-  //     controlButtonCovered: true,
-  //     default: "None",
-  //     hideOtherFor: {
-  //       "filter-obs-max": ["None"],
-  //       "filter-obs-min": ["None"],
-  //     },
-  //     unique: false,
-  //     controlButtonVisibility: "block",
-  //     controlButtonText: "Filter obs by",
-  //     displayOrder: 1,
-  //     displayPriority: 1,
-  //     displayGroup: 9,
-  //   });
-  // } else {
-  //   // it is defined but check for necessary update
-  //   const currentParam = await matsCollections["filter-obs-by"].findOneAsync({
-  //     name: "filter-obs-by",
-  //   });
-  //   if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
-  //     // have to reload variable data
-  //     await matsCollections["filter-obs-by"].updateAsync(
-  //       { name: "filter-obs-by" },
-  //       {
-  //         $set: {
-  //           options: allVariablesNoneOption,
-  //         },
-  //       }
-  //     );
-  //   }
-  // }
+  if (
+    (await matsCollections["filter-obs-by"].findOneAsync({ name: "filter-obs-by" })) ===
+    undefined
+  ) {
+    await matsCollections["filter-obs-by"].insertAsync({
+      name: "filter-obs-by",
+      type: matsTypes.InputTypes.select,
+      options: allVariablesNoneOption,
+      controlButtonCovered: true,
+      default: "None",
+      hideOtherFor: {
+        "filter-obs-max": ["None"],
+        "filter-obs-min": ["None"],
+      },
+      unique: false,
+      controlButtonVisibility: "block",
+      controlButtonText: "Filter obs by",
+      displayOrder: 1,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  } else {
+    // it is defined but check for necessary update
+    const currentParam = await matsCollections["filter-obs-by"].findOneAsync({
+      name: "filter-obs-by",
+    });
+    if (!matsDataUtils.areObjectsEqual(currentParam.options, allVariablesNoneOption)) {
+      // have to reload variable data
+      await matsCollections["filter-obs-by"].updateAsync(
+        { name: "filter-obs-by" },
+        {
+          $set: {
+            options: allVariablesNoneOption,
+          },
+        }
+      );
+    }
+  }
 
-  // if (
-  //   (await matsCollections["filter-obs-min"].findOneAsync({
-  //     name: "filter-obs-min",
-  //   })) === undefined
-  // ) {
-  //   await matsCollections["filter-obs-min"].insertAsync({
-  //     name: "filter-obs-min",
-  //     type: matsTypes.InputTypes.numberSpinner,
-  //     optionsMap: {},
-  //     options: [],
-  //     min: -1000000000,
-  //     max: 1000000000,
-  //     step: "any",
-  //     controlButtonCovered: true,
-  //     unique: false,
-  //     default: 0,
-  //     controlButtonVisibility: "block",
-  //     controlButtonText: "minimum",
-  //     displayOrder: 2,
-  //     displayPriority: 1,
-  //     displayGroup: 9,
-  //   });
-  // }
+  if (
+    (await matsCollections["filter-obs-min"].findOneAsync({
+      name: "filter-obs-min",
+    })) === undefined
+  ) {
+    await matsCollections["filter-obs-min"].insertAsync({
+      name: "filter-obs-min",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: -1000000000,
+      max: 1000000000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 0,
+      controlButtonVisibility: "block",
+      controlButtonText: "minimum",
+      displayOrder: 2,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  }
 
-  // if (
-  //   (await matsCollections["filter-obs-max"].findOneAsync({
-  //     name: "filter-obs-max",
-  //   })) === undefined
-  // ) {
-  //   await matsCollections["filter-obs-max"].insertAsync({
-  //     name: "filter-obs-max",
-  //     type: matsTypes.InputTypes.numberSpinner,
-  //     optionsMap: {},
-  //     options: [],
-  //     min: -1000000000,
-  //     max: 1000000000,
-  //     step: "any",
-  //     controlButtonCovered: true,
-  //     unique: false,
-  //     default: 60000,
-  //     controlButtonVisibility: "block",
-  //     controlButtonText: "maximum",
-  //     displayOrder: 3,
-  //     displayPriority: 1,
-  //     displayGroup: 9,
-  //   });
-  // }
+  if (
+    (await matsCollections["filter-obs-max"].findOneAsync({
+      name: "filter-obs-max",
+    })) === undefined
+  ) {
+    await matsCollections["filter-obs-max"].insertAsync({
+      name: "filter-obs-max",
+      type: matsTypes.InputTypes.numberSpinner,
+      optionsMap: {},
+      options: [],
+      min: -1000000000,
+      max: 1000000000,
+      step: "any",
+      controlButtonCovered: true,
+      unique: false,
+      default: 60000,
+      controlButtonVisibility: "block",
+      controlButtonText: "maximum",
+      displayOrder: 3,
+      displayPriority: 1,
+      displayGroup: 9,
+    });
+  }
 
   // determine date defaults for dates and curveDates
   const defaultDataSource = (
@@ -2126,6 +2126,11 @@ Meteor.startup(async function () {
     "cbPool",
     `${cbConnection.bucket}:${cbConnection.scope}:${cbConnection.collection}`,
     ["MD:matsGui:raob:COMMON:V01"]
+  );
+  mdr.addRecord(
+    "cbMetadataPool",
+    `${cbMetadataConnection.bucket}:${cbMetadataConnection.scope}:${cbMetadataConnection.collection}`,
+    ["MD:matsAux:COMMON:V01"]
   );
   try {
     await matsMethods.resetApp({
