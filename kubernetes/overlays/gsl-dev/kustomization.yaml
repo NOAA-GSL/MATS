@@ -6,7 +6,6 @@ resources:
   - cb-metar
   - cb-raob
   - ceil-vis
-  - ceil-vis15
   - ensemble
   - home
   - landuse
