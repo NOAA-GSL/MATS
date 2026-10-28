@@ -7,7 +7,6 @@ apps=(
     "cb-metar"
     "cb-raob"
     "ceil-vis"
-    "ensemble"
     "landuse"
     "precipAccum"
     "precipGauge"

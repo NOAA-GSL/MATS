@@ -17,7 +17,6 @@ jobs:
           - cb-metar
           - cb-raob
           - ceil-vis
-          - ensemble
           - home
           - landuse
           - precipAccum
