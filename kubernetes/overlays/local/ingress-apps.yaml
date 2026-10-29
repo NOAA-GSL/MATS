@@ -44,13 +44,6 @@ spec:
                 name: ceil-vis
                 port:
                   number: 80
-          - path: /ceil-vis15
-            pathType: Prefix
-            backend:
-              service:
-                name: ceil-vis15
-                port:
-                  number: 80
           - path: /landuse
             pathType: Prefix
             backend:
