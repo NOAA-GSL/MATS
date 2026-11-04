@@ -21,8 +21,8 @@ Feature: Plot and Add buttons are disabled while plotting
         And I change the "average" parameter to "1D"
         Then the "data-source" parameter value matches "HRRR_OPS"
         And the "average" parameter value matches "1D"
-        When I set the dates to "09/28/2026 00:00 - 10/01/2026 00:00"
-        Then the dates value is "09/28/2026 00:00 - 10/01/2026 00:00"
+        When I set the dates to "10/28/2026 00:00 - 11/01/2026 00:00"
+        Then the dates value is "10/28/2026 00:00 - 11/01/2026 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"

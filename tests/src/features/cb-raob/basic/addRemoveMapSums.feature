@@ -21,8 +21,8 @@ Feature: Add Remove Map
         Then the "data-source" parameter value matches "HRRR_OPS"
         When I change the "sites" parameter to "CO GRAND JUNCTION/WALKER FIELD (72476)"
         Then the "sites" parameter value matches "CO GRAND JUNCTION/WALKER FIELD (72476)"
-        When I set the dates to "09/28/2026 00:00 - 10/01/2026 00:00"
-        Then the dates value is "09/28/2026 00:00 - 10/01/2026 00:00"
+        When I set the dates to "10/28/2026 00:00 - 11/01/2026 00:00"
+        Then the dates value is "10/28/2026 00:00 - 11/01/2026 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
