@@ -19,8 +19,8 @@ Feature: Match Unmatch Diff Curves Dieoff
         Then the "variable" parameter value matches "Temperature (°C)"
         When I change the "data-source" parameter to "HRRR_OPS"
         Then the "data-source" parameter value matches "HRRR_OPS"
-        When I set the curve-dates to "09/28/2026 00:00 - 10/01/2026 00:00"
-        Then the curve-dates value is "09/28/2026 00:00 - 10/01/2026 00:00"
+        When I set the curve-dates to "10/28/2026 00:00 - 11/01/2026 00:00"
+        Then the curve-dates value is "10/28/2026 00:00 - 11/01/2026 00:00"
         When I change the "dieoff-type" parameter to "Dieoff for a specified UTC cycle init hour"
         Then the "dieoff-type" parameter value matches "Dieoff for a specified UTC cycle init hour"
         Then I click the "Add Curve" button

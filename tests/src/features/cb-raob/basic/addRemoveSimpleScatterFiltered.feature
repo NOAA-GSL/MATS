@@ -29,8 +29,8 @@ Feature: Add Remove Curve
         Then the "filter-model-by" parameter value matches "Wind Speed (m/s)"
         When I change the "filter-obs-by" parameter to "Relative Humidity (%)"
         Then the "filter-obs-by" parameter value matches "Relative Humidity (%)"
-        When I set the curve-dates to "09/28/2026 00:00 - 10/01/2026 00:00"
-        Then the curve-dates value is "09/28/2026 00:00 - 10/01/2026 00:00"
+        When I set the curve-dates to "10/28/2026 00:00 - 11/01/2026 00:00"
+        Then the curve-dates value is "10/28/2026 00:00 - 11/01/2026 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"
