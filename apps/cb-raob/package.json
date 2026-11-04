@@ -7,17 +7,17 @@
     "format": "prettier --ignore-path ../../.prettierignore --write . && eslint --ignore-path ../../.gitignore --fix ."
   },
   "dependencies": {
-    "@babel/runtime": "^7.29.10",
+    "@babel/runtime": "^7.29.13",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "bootstrap": "^5.3.8",
-    "couchbase": "^4.7.1",
+    "couchbase": "^4.7.2",
     "jquery": "^3.7.1",
     "moment": "^2.31.0",
-    "mysql2": "^3.24.5"
+    "mysql2": "^3.24.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.7",
-    "@babel/eslint-parser": "^7.29.9",
+    "@babel/core": "^7.29.13",
+    "@babel/eslint-parser": "^7.29.13",
     "eslint": "^8.57.1",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^8.10.2",
@@ -29,5 +29,8 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^4.6.2",
     "prettier": "^2.8.8"
+  },
+  "allowScripts": {
+    "couchbase@4.7.2": true
   }
 }
