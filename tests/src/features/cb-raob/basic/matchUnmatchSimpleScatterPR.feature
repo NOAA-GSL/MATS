@@ -25,8 +25,8 @@ Feature: Match Unmatch Diff Curves SimpleScatter
         Then the "x-statistic" parameter value matches "Model average"
         When I change the "y-statistic" parameter to "Obs average"
         Then the "y-statistic" parameter value matches "Obs average"
-        When I set the curve-dates to "09/28/2026 00:00 - 10/01/2026 00:00"
-        Then the curve-dates value is "09/28/2026 00:00 - 10/01/2026 00:00"
+        When I set the curve-dates to "10/28/2026 00:00 - 11/01/2026 00:00"
+        Then the curve-dates value is "10/28/2026 00:00 - 11/01/2026 00:00"
         Then I click the "Add Curve" button
         Then "Curve0" is added
         And I should see a list of curves containing "Curve0"

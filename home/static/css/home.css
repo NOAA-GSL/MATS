@@ -1,5 +1,10 @@
 /* hover & active colors from https://www.colorhexa.com */
 
+html {
+  background-color: #808080; /* Replace with your desired bottom background color */
+  height: 100%;
+}
+
 .btn {
   border-radius: 10px;
 }

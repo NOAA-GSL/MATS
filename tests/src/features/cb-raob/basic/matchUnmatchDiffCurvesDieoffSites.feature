@@ -23,8 +23,8 @@ Feature: Match Unmatch Diff Curves Dieoff
         Then the "region-type" parameter value matches "Select stations"
         When I change the "sites" parameter to "CO GRAND JUNCTION/WALKER FIELD (72476)"
         Then the "sites" parameter value matches "CO GRAND JUNCTION/WALKER FIELD (72476)"
-        When I set the curve-dates to "08/12/2023 00:00 - 08/15/2023 00:00"
-        Then the curve-dates value is "08/12/2023 00:00 - 08/15/2023 00:00"
+        When I set the curve-dates to "10/28/2026 00:00 - 11/01/2026 00:00"
+        Then the curve-dates value is "10/28/2026 00:00 - 11/01/2026 00:00"
         When I change the "dieoff-type" parameter to "Dieoff for a specified UTC cycle init hour"
         Then the "dieoff-type" parameter value matches "Dieoff for a specified UTC cycle init hour"
         Then I click the "Add Curve" button

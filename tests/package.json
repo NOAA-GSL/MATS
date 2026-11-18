@@ -3,11 +3,11 @@
     "type": "module",
     "private": true,
     "devDependencies": {
-        "@wdio/cli": "^9.32.0",
-        "@wdio/cucumber-framework": "^9.32.0",
-        "@wdio/junit-reporter": "^9.32.0",
-        "@wdio/local-runner": "^9.32.0",
-        "@wdio/spec-reporter": "^9.32.0"
+        "@wdio/cli": "^9.33.1",
+        "@wdio/cucumber-framework": "^9.33.1",
+        "@wdio/junit-reporter": "^9.33.1",
+        "@wdio/local-runner": "^9.33.1",
+        "@wdio/spec-reporter": "^9.33.1"
     },
     "scripts": {
         "clean-logs": "rm -rf logs/*",
@@ -17,5 +17,11 @@
         "test:headless:nofirefox": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" HEADLESS=\"true\" TEST_FIREFOX=\"false\" wdio run ./wdio.conf.js",
         "test:debug": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" wdio run ./wdio.conf.js",
         "test:debug:headless": "npm run clean-logs && env NODE_OPTIONS=\"--max-old-space-size=16384\" DEBUG=\"true\" HEADLESS=\"true\" wdio run ./wdio.conf.js"
+    },
+    "allowScripts": {
+        "edgedriver@6.3.1": true,
+        "geckodriver@6.1.1": true,
+        "esbuild@0.28.2": true,
+        "fsevents@2.3.3": true
     }
 }
